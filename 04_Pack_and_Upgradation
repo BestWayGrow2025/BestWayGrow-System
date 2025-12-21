@@ -1,19 +1,19 @@
 
-# Pack Structure & Upgradation
+# Product Category & Upgradation
 
-## 1. Available Packs
-| Pack Name | Amount | Notes |
-|-----------|--------|-------|
-| Pack 1    | 500    | Free registration pack |
-| Pack 2    | 1000   | ...   |
-| Pack 3    | 2000   | ...   |
-| Pack 4    | 5000   | ...   |
-| Pack 5    | 10000  | ...   |
+## 1. Available Product Categories
+| Category | Amount | Notes |
+|----------|--------|------|
+| Category 1 | 500    | Free registration |
+| Category 2 | 1000   |  |
+| Category 3 | 2000   |  |
+| Category 4 | 5000   |  |
+| Category 5 | 10000  |  |
 
 ## 2. Upgradation Rules
-- Users can upgrade from lower pack to higher pack.
-- No direct commission on repurchase.
-- Other rules as defined in system plan.
+- Users can upgrade from a lower category to any higher category.  
+- No direct commission on repurchase.  
+- Follow system-defined steps for upgrade.
 
 ## 3. Notes
-- Add any additional remarks or exceptions here.
+- Any special rules, exceptions, or future updates will be added here. here.
