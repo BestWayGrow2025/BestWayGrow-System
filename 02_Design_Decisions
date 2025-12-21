@@ -1,1 +1,27 @@
+# Design Decisions – BestWayGrow
 
+## 1. Product Category Model
+- The system uses **Product Categories**, not packs.
+- Five fixed categories are defined: 500, 1000, 2000, 5000, 10000.
+- Category 1 (500) is marked as **Free Registration**.
+
+## 2. Upgradation Logic
+- Users can upgrade only from a **lower category to a higher category**.
+- Downgrade is not allowed.
+- Upgradation rules are system-controlled and documented.
+
+## 3. Repurchase Decision
+- Repurchase is allowed.
+- **No direct commission** is given on repurchase.
+- Repurchase is tracked only for system records.
+
+## 4. Fair Distribution Principle
+- System follows **equal opportunity logic**.
+- No manual advantage is given to any user.
+- Structure decisions are transparent and documented.
+
+## 5. Change Control
+- Any future change must be:
+  - Discussed
+  - Documented
+  - Versioned in this repository
