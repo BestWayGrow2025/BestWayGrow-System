@@ -1,1 +1,22 @@
 
+# Technical Architecture
+
+## 1. System Overview
+- Website built using HTML (BestWayGrow2025 repo).  
+- Documentation and system plan in BestWayGrow-System repo.  
+- Modular design for easy upgrades and maintenance.
+
+## 2. Folder Structure
+- Phase-1 documentation: folders 01–09.  
+- Key files: users_and_roles.md, pack_structure.md, etc.  
+
+## 3. Technology Stack
+| Component | Technology |
+|-----------|------------|
+| Frontend  | HTML, CSS |
+| Backend   | [Specify if any] |
+| Database  | [Specify if any] |
+
+## 4. Notes
+- Detailed architecture diagrams can be added here.  
+- Update as system evolves.
