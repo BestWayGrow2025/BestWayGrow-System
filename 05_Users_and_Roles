@@ -1,1 +1,17 @@
 
+# Users & Roles
+
+## 1. User Types
+| Role | Permissions | Notes |
+|------|------------|------|
+| Admin | Full access to system settings, content, and users |  |
+| User  | Can register, purchase categories, upgrade, and view own data |  |
+| Guest | Can browse basic info only, no purchase or upgrade |  |
+
+## 2. Role Rules
+- Each user must be assigned exactly one role.  
+- Permissions are enforced automatically by the system.  
+- Future roles or exceptions must be documented here.
+
+## 3. Notes
+- Keep all role changes and assignments updated in this file.
