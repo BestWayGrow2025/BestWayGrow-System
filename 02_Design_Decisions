@@ -1,14 +1,15 @@
 # Design Decisions – BestWayGrow
-
 ## 1. Product Category Model
 - The system uses **Product Categories**, not packs.
-- Five fixed categories are defined:
+- Five fixed product categories are defined:
   - 500
   - 1500
   - 3000
   - 5000
   - 10000
-- Category 1 (500) is marked as **Free Registration**.
+- **User registration is free.**
+- Category 1 (500) is the **first purchasable product category**.
+
 ## 2. Upgradation Logic
 - Users can upgrade from **any lower category to any higher category**.
 - **Each category can be upgraded only one time.**
