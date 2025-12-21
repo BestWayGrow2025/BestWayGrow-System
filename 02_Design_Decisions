@@ -9,13 +9,13 @@
   - 5000
   - 10000
 - Category 1 (500) is marked as **Free Registration**.
-
 ## 2. Upgradation Logic
 - Users can upgrade from **any lower category to any higher category**.
 - **Each category can be upgraded only one time.**
-- If the same category is purchased again, it is treated as **repurchase**, not upgradation.
+- Purchasing the **same category again** is treated as **repurchase**.
+- Purchasing **any lower category after a higher category is already active** is treated as **repurchase**.
 - There are **no conditional restrictions** on upgradation.
-- Downgrade is not allowed.
+- Moving from a higher category to a lower category is **not allowed as upgradation**.
 
 ## 3. Repurchase Decision
 - Repurchase is allowed.
