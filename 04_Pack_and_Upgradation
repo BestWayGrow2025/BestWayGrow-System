@@ -1,21 +1,25 @@
 
-# Product Category & Upgradation
+# Product & BV Structure
 
-## 1. Available Product Categories
-| Category | Amount | Notes |
-|----------|--------|------|
-| Category 1 | 500    | Free registration |
-| Category 2 | 1000   |  |
-| Category 3 | 2000   |  |
-| Category 4 | 5000   |  |
-| Category 5 | 10000  |  |
+## 1. Product
+- Company offers digital products for system participation
+- All digital products carry a fixed BV of 2100
+- Product selection is optional and choice-based
+- Physical products may be added as optional add-ons in the future
 
-## 2. Upgradation Rules
-- Users can upgrade from **any lower category to any higher category**.
-- **Each category can be upgraded only one time.**
-- Purchasing the **same category again** is treated as **repurchase**.
-- Purchasing **any lower category after a higher category is already active** is treated as **repurchase**.
-- There are **no conditional restrictions** on upgradation.
-- Moving from a higher category to a lower category is **not allowed as upgradation**.
-## 3. Notes
-- Any special rules, exceptions, or future updates will be added here. here.
+## 2. Activation
+- System activation is required to participate in compensation plans
+- Activation requires completion of BV 2100
+- BV can be accumulated through purchase of digital or optional physical products
+- Activation is independent of product price
+
+## 3. Repurchase & Upgrades
+- Digital or physical products may be repurchased for personal use or continued participation
+- Repurchase contributes to BV accumulation
+- Future system upgrades or participation options will be BV-based
+- No upgrade is linked to product price
+
+## 4. System Principle
+- All participation, activation, and income calculations follow BV-based logic
+- Product price does not affect BV or income
+- Earnings depend on personal effort and system activity
