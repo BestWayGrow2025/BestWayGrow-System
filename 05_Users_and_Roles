@@ -1,17 +1,27 @@
 
-# Users & Roles
+# Users and Roles
 
-## 1. User Types
-| Role | Permissions | Notes |
-|------|------------|------|
-| Admin | Full access to system settings, content, and users |  |
-| User  | Can register, purchase categories, upgrade, and view own data |  |
-| Guest | Can browse basic info only, no purchase or upgrade |  |
+## 1. Member
+- Registered user with free account
+- Can browse products and system information
+- Cannot participate in income plans until activation
 
-## 2. Role Rules
-- Each user must be assigned exactly one role.  
-- Permissions are enforced automatically by the system.  
-- Future roles or exceptions must be documented here.
+## 2. Active Member
+- Completed activation with BV 2100
+- Eligible for participation in level income and repurchase income
 
-## 3. Notes
-- Keep all role changes and assignments updated in this file.
+## 3. Leader
+- Active Member with network activity
+- Eligible for level income up to 30 levels
+- Qualifies for CTO Royalty pins based on system rules
+
+## 4. Admin
+- Full system access
+- Manage users, products, BV, and compensation rules
+- Monitor and update system logic
+
+## 5. Role Principles
+- All roles and income eligibility are based on BV completion
+- Product selection (digital/physical) is optional
+- No income is guaranteed; earnings depend on personal and network activity
+- Role promotions (e.g., Leader, CTO) follow system rules only
