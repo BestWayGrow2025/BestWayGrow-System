@@ -2,21 +2,26 @@
 # Technical Architecture
 
 ## 1. System Overview
-- Website built using HTML (BestWayGrow2025 repo).  
-- Documentation and system plan in BestWayGrow-System repo.  
-- Modular design for easy upgrades and maintenance.
+- Website built using HTML (BestWayGrow2025 repo)
+- Documentation and system plan in BestWayGrow-System repo
+- Modular design for easy upgrades and maintenance
+- All technical modules follow BV-based activation and qualification rules defined in Design Decisions
 
 ## 2. Folder Structure
-- Phase-1 documentation: folders 01–09.  
-- Key files: users_and_roles.md, pack_structure.md, etc.  
+- Phase-1 documentation folders 01–09
+- Key files: users_and_roles.md, pack_structure.md, design_decisions.md, etc.
+- Purpose: documentation and rule definition only
+- No executable business logic included in documentation folders
 
 ## 3. Technology Stack
 | Component | Technology |
 |-----------|------------|
-| Frontend  | HTML, CSS |
-| Backend   | [Specify if any] |
-| Database  | [Specify if any] |
+| Frontend  | HTML, CSS  |
+| Backend   | Node.js / PHP (to be finalized) |
+| Database  | MySQL / PostgreSQL (to be finalized) |
+| Hosting   | Cloud-based (AWS / equivalent) |
 
 ## 4. Notes
-- Detailed architecture diagrams can be added here.  
-- Update as system evolves.
+- Detailed architecture diagrams can be added here
+- Update as system evolves
+- All modules follow BV-first logic for activation, repurchase, and income calculations
