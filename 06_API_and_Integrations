@@ -1,1 +1,31 @@
+# API & Integrations
 
+## 1. Purpose
+- Define system integrations and API endpoints
+- Ensure BV-based logic is applied consistently
+- Support future digital and physical products
+
+## 2. Authentication
+- All API calls require secure authentication
+- Users are authenticated by BV activation status
+
+## 3. Product & BV APIs
+- Endpoints for digital/physical product listing
+- BV assignment and accumulation
+- Repurchase BV contribution
+- Activation check (BV 2100)
+
+## 4. Income & Level APIs
+- APIs for level income calculation (up to 30 levels)
+- APIs for repurchase distribution
+- BV-first calculation only, price-independent
+
+## 5. CTO Royalty APIs
+- Track pin qualification
+- Calculate CTO Royalty based on BV & pins
+- Equal distribution per system rules
+
+## 6. Notes
+- Future add-on products can integrate via same API structure
+- No API exposes guaranteed income
+- System logic remains consistent for all user roles
