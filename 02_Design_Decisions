@@ -1,35 +1,28 @@
-# Design Decisions – BestWayGrow
-## 1. Product Category Model
-- The system uses **Product Categories**, not packs.
-- Five fixed product categories are defined:
-  - 500
-  - 1500
-  - 3000
-  - 5000
-  - 10000
-- **User registration is free.**
-- Category 1 (500) is the **first purchasable product category**.
+# Core Design Decisions
 
-## 2. Upgradation Logic
-- Users can upgrade from **any lower category to any higher category**.
-- **Each category can be upgraded only one time.**
-- Purchasing the **same category again** is treated as **repurchase**.
-- Purchasing **any lower category after a higher category is already active** is treated as **repurchase**.
-- There are **no conditional restrictions** on upgradation.
-- Moving from a higher category to a lower category is **not allowed as upgradation**.
+## 1. System Philosophy
+- The platform follows a Business Volume (BV) driven model
+- All earnings, qualifications, and royalty calculations are based on BV
+- Product price is independent from income calculations
 
-## 3. Repurchase Decision
-- Repurchase is allowed.
-- **No direct commission** is given on repurchase.
-- Repurchase is tracked only for system records.
+## 2. Product Strategy
+- The company offers digital products as primary products
+- Physical products may be introduced as add-on products
+- All products are assigned BV as defined by the company
+- Product selection is optional and choice-based
 
-## 4. Fair Distribution Principle
-- System follows **equal opportunity logic**.
-- No manual advantage is given to any user.
-- Structure decisions are transparent and documented.
+## 3. Activation & Participation
+- Registration is free for all users
+- System activation is required to participate in compensation plans
+- Activation and participation are based on BV completion
+- No product purchase guarantees income
 
-## 5. Change Control
-- Any future change must be:
-  - Discussed
-  - Documented
-  - Versioned in this repository
+## 4. Income Principle
+- Income is generated through real product usage and sales activity
+- There is no assured or fixed return
+- Earnings depend on individual effort and network performance
+
+## 5. Future Expansion
+- The system allows introduction of new products and services
+- Future participation options, if any, will be BV-based
+- No change in product price affects existing BV logic
