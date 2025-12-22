@@ -1,1 +1,23 @@
 
+# Security and Backup
+
+## 1. Security Measures
+- User authentication via secure login
+- Role-based access control (Member, Active Member, Leader, Admin)
+- Encryption of sensitive data in database
+- BV and income-related calculations protected in system backend
+
+## 2. Data Backup
+- Regular database backups (daily/weekly as per system requirement)
+- Backup stored securely on cloud (AWS or equivalent)
+- Restore procedures documented and tested
+
+## 3. Disaster Recovery
+- Contingency plan for system failure
+- Critical data recovery from backups
+- Step-by-step recovery documentation
+
+## 4. Notes
+- BV calculations, product records, and activation logs included in backup
+- Security policies updated as system evolves
+- No user income or personal financial data is exposed publicly
