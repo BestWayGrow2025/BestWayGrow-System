@@ -1,10 +1,15 @@
-# BestWayGrow – Change lot
+v1.0.0 — Foundation Release
 
-## v1.0.0 – Foundation Release
-- Initial system documentation structure
-- Single digital product model (₹3000)
-- Royalty and compliance rules documented
-- Release deployment completed
-- No repurchase or upgrade logic included
+- Free registration
+- Base BV: 2100
+- Direct income: Fresh BV, Level 1 only
 
-> This release focuses on foundation, clarity, and compliance.
+- ID Activation Bonus:
+  • Levels 1–10: ₹50 per level
+  • Levels 11–30: ₹10 per level
+  • One-time incentive on ID activation only
+
+- Level income: Repurchase only (up to 30 levels)
+- CTO Royalty: Fresh Sales BV + Repurchase BV (10 Pins)
+- SDCCS enabled (ON/OFF, Increase/Decrease, Source controls)
+- No retroactive changes
