@@ -3,49 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Company</title>
+    <title>BestWayGrow System</title>
     <style>
-        body { font-family: Arial, sans-serif; margin:0; background:#f4f4f4; }
-        header { background:#007BFF; color:white; text-align:center; padding:20px; }
-        nav { text-align:center; background:#0056b3; padding:10px; }
-        nav a { color:white; margin:0 15px; text-decoration:none; font-weight:bold; }
-        nav a:hover { text-decoration:underline; }
-        section { background:white; margin:20px; padding:20px; border-radius:5px; }
-        footer { background:#333; color:white; text-align:center; padding:10px; }
-        button { background:#007BFF; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; }
-        button:hover { background:#0056b3; }
+        body { font-family: Arial, sans-serif; margin: 0; background: #f0f4f5; }
+        a { text-decoration: none; color: inherit; }
+        header { background: #006633; color: white; padding: 20px 0; text-align: center; }
+        header img { height: 60px; margin-bottom: 10px; }
+        header h1 { margin: 0; font-size: 2rem; }
+        header p { margin: 5px 0 0 0; font-size: 1.1rem; }
+        nav { background: #004d29; display: flex; justify-content: center; flex-wrap: wrap; padding: 10px 0; }
+        nav a { color: white; font-weight: bold; margin: 5px 20px; padding: 5px 10px; border-radius: 5px; transition: background 0.3s; }
+        nav a:hover { background: #007B33; }
+        section { background: white; margin: 20px auto; padding: 25px; border-radius: 10px; max-width: 1000px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        section h2 { color: #006633; }
+        .services { display: flex; flex-wrap: wrap; justify-content: space-around; }
+        .service { background: #e0f7e0; flex: 1 1 250px; margin: 15px; padding: 20px; border-radius: 10px; text-align: center; transition: transform 0.3s; }
+        .service:hover { transform: translateY(-5px); }
+        button { background: #006633; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #004d29; }
+        footer { background: #00331a; color: white; text-align: center; padding: 15px; margin-top: 30px; }
     </style>
 </head>
 <body>
     <header>
-        <h1>My Company</h1>
-        <p>Welcome to my website</p>
+        <img src="design/logo.png" alt="BestWayGrow Logo">
+        <h1>BestWayGrow System</h1>
+        <p>Transparent Plant Growth Management</p>
     </header>
 
     <nav>
-        <a href="#home">Home</a>
+        <a href="#welcome">Home</a>
+        <a href="#services">Services</a>
         <a href="#about">About</a>
         <a href="#contact">Contact</a>
     </nav>
 
     <section id="welcome">
         <h2>Welcome</h2>
-        <p>This is the welcome section of the website.</p>
+        <p>Welcome to BestWayGrow System — your transparent solution for managing plant growth efficiently and professionally.</p>
     </section>
 
     <section id="services">
         <h2>Our Services</h2>
-        <h3>Web Design</h3>
-        <p>We create modern websites.</p>
-        <h3>Development</h3>
-        <p>We build powerful web systems.</p>
-        <h3>Support</h3>
-        <p>We provide technical support.</p>
+        <div class="services">
+            <div class="service">
+                <h3>Web Design</h3>
+                <p>We create modern websites.</p>
+            </div>
+            <div class="service">
+                <h3>Development</h3>
+                <p>We build powerful web systems.</p>
+            </div>
+            <div class="service">
+                <h3>Support</h3>
+                <p>We provide technical support.</p>
+            </div>
+        </div>
         <button>Learn More</button>
     </section>
 
+    <section id="about">
+        <h2>About</h2>
+        <p>BestWayGrow System is designed for professional growers and enthusiasts. Our transparent tools make plant growth management simple and reliable.</p>
+    </section>
+
+    <section id="contact">
+        <h2>Contact</h2>
+        <p>Reach out to us via email or GitHub repository for support and inquiries.</p>
+        <button onclick="window.location.href='https://github.com/BestWayGrow2025/BestWayGrow-System'">Visit GitHub</button>
+    </section>
+
     <footer>
-        © 2026 My Company
+        © 2026 BestWayGrow
     </footer>
 </body>
 </html>
