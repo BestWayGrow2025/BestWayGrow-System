@@ -1,4 +1,4 @@
-<!<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -19,16 +19,16 @@ header {
     color: white;
     padding: 20px;
 }
-header img {
-    height: 60px;
-}
-header h1 {
-    margin: 10px 0 0 0;
-}
+header img { height: 60px; }
 
-/* Section */
-section {
+/* Plan box */
+.plan {
+    background: white;
     margin: 40px auto;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 400px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 /* Button */
@@ -41,9 +41,7 @@ section {
     border-radius: 8px;
     cursor: pointer;
 }
-.btn:hover {
-    background: #005f8a;
-}
+.btn:hover { background: #005f8a; }
 
 /* Footer */
 footer {
@@ -59,37 +57,24 @@ footer {
 <body>
 
 <header>
-    <img src="design/logo.png" alt="Logo">
+    <img src="design/logo.png">
     <h1>BestWayGrow System</h1>
-    <p>Select Your Product Category</p>
+    <p>Select Your Plan</p>
 </header>
 
-<section>
+<div class="plan">
+    <h2>BV 2100 Plan</h2>
+    <p>Amount: 3000</p>
+    <p>Digital Product Category</p>
+
     <a href="BV2100/index.html">
-        <button class="btn">BV 2100</button>
+        <button class="btn">View Details</button>
     </a>
-</section>
+</div>
 
 <footer>
     © 2026 BestWayGrow
 </footer>
-
-</body>
-</html>DOCTYPE html>
-<html>
-<head>
-    <title>BestWayGrow System</title>
-</head>
-<body style="font-family: Arial; text-align:center; padding:40px;">
-
-<h1>BestWayGrow System</h1>
-<p>Select Your Product Category</p>
-
-<br><br>
-
-<a href="BV2100/index.html">
-    <button style="padding:15px 30px; font-size:18px;">BV 2100</button>
-</a>
 
 </body>
 </html>
