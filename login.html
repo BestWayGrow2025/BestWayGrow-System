@@ -25,14 +25,12 @@ body {
     text-align: center;
 }
 
-/* Input */
 input {
     width: 90%;
     padding: 10px;
     margin: 10px 0;
 }
 
-/* Button */
 button {
     background: #006633;
     color: white;
@@ -41,19 +39,6 @@ button {
     cursor: pointer;
 }
 </style>
-
-<script>
-function login() {
-    let user = document.getElementById("username").value;
-    let pass = document.getElementById("password").value;
-
-    if(user === "admin" && pass === "1234") {
-        window.location.href = "dashboard.html";
-    } else {
-        alert("Invalid login");
-    }
-}
-</script>
 
 </head>
 
@@ -67,6 +52,21 @@ function login() {
 
     <button onclick="login()">Login</button>
 </div>
+
+<!-- ✅ SCRIPT MOVED HERE (IMPORTANT) -->
+<script>
+function login() {
+    var user = document.getElementById("username").value;
+    var pass = document.getElementById("password").value;
+
+    if (user === "admin" && pass === "1234") {
+        alert("Login successful");
+        window.location.href = "dashboard.html";
+    } else {
+        alert("Invalid login");
+    }
+}
+</script>
 
 </body>
 </html>
