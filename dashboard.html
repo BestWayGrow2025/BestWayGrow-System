@@ -15,6 +15,13 @@ body {
 }
 </style>
 
+<script>
+// 🔐 Check login
+if (localStorage.getItem("loggedIn") !== "true") {
+    window.location.href = "login.html";
+}
+</script>
+
 </head>
 
 <body>
@@ -23,10 +30,16 @@ body {
     <h1>Welcome to Dashboard</h1>
     <p>System is working ✅</p>
 
-    <a href="index.html">
-        <button>Go Home</button>
-    </a>
+    <button onclick="logout()">Logout</button>
 </div>
+
+<script>
+// Logout function
+function logout() {
+    localStorage.removeItem("loggedIn");
+    window.location.href = "login.html";
+}
+</script>
 
 </body>
 </html>
