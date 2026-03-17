@@ -1,79 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Dashboard</title>
-
-<style>
-body {
-    font-family: Arial;
-    background: #f0f4f5;
-    text-align: center;
-}
-
-.box {
-    margin-top: 80px;
-}
-
-.card {
-    background: white;
-    margin: 20px auto;
-    padding: 20px;
-    width: 300px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-button {
-    padding: 10px 20px;
-    background: #006633;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-</style>
-
 <script>
-// 🔐 Protect page
-if (localStorage.getItem("loggedIn") !== "true") {
-    window.location.href = "login.html";
+function login() {
+    var user = document.getElementById("username").value.trim();
+    var pass = document.getElementById("password").value.trim();
+
+    if (user === "admin" && pass === "1234") {
+        localStorage.setItem("loggedIn", "true");
+        window.location.href = "./dashboard.html";
+    } else {
+        alert("Invalid login");
+    }
 }
 </script>
-
-</head>
-
-<body>
-
-<div class="box">
-
-    <h1>Welcome to Dashboard</h1>
-
-    <div class="card">
-        <h3>User</h3>
-        <p>admin</p>
-    </div>
-
-    <div class="card">
-        <h3>Plan</h3>
-        <p>BV2100</p>
-    </div>
-
-    <div class="card">
-        <h3>Income</h3>
-        <p>₹0 (starting)</p>
-    </div>
-
-    <br>
-
-    <button onclick="logout()">Logout</button>
-
-</div>
-
-<script>
-function logout() {
-    localStorage.removeItem("loggedIn");
-    window.location.href = "login.html";
-}
-</script>
-
-</body>
-</html>
