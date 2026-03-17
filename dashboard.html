@@ -1,98 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard - BestWayGrow</title>
-
 <style>
 body {
     font-family: Arial, sans-serif;
     background: #f0f4f5;
-    margin: 0;
     text-align: center;
+    padding: 20px;
 }
-
-/* Header */
 header {
     background: #006633;
     color: white;
     padding: 20px;
+    border-radius: 8px;
 }
-
-/* Cards */
-.container {
-    margin-top: 40px;
+header h1 {
+    margin: 0 0 10px 0;
 }
-
-.card {
+.dashboard-box {
     background: white;
     margin: 20px auto;
-    padding: 20px;
-    width: 300px;
-    border-radius: 12px;
+    padding: 25px;
+    border-radius: 10px;
+    width: 350px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
-
-/* Button */
 button {
-    padding: 10px 20px;
     background: #006633;
     color: white;
     border: none;
-    border-radius: 6px;
+    padding: 12px 25px;
     cursor: pointer;
+    border-radius: 6px;
+    margin-top: 15px;
 }
-
 button:hover {
-    background: #004d26;
+    background: #004d29;
 }
 </style>
-
-<script>
-// 🔐 Protect dashboard
-if (localStorage.getItem("loggedIn") !== "true") {
-    window.location.href = "login.html";
-}
-</script>
-
 </head>
-
 <body>
 
 <header>
     <h1>BestWayGrow Dashboard</h1>
 </header>
 
-<div class="container">
-
-    <div class="card">
-        <h3>User</h3>
-        <p>admin</p>
-    </div>
-
-    <div class="card">
-        <h3>Active Plan</h3>
-        <p>BV2100</p>
-    </div>
-
-    <div class="card">
-        <h3>Income</h3>
-        <p>₹0</p>
-    </div>
-
-    <div class="card">
-        <h3>Status</h3>
-        <p>Active</p>
-    </div>
-
-    <br>
-
+<div class="dashboard-box">
+    <p><strong>User:</strong> <span id="userName"></span></p>
+    <p><strong>Active Plan:</strong> <span id="userPlan"></span></p>
+    <p><strong>Income:</strong> ₹0</p>
+    <p><strong>Status:</strong> Active</p>
     <button onclick="logout()">Logout</button>
-
 </div>
 
 <script>
+// 1️⃣ Load user info from localStorage
+var loggedIn = localStorage.getItem("loggedIn");
+if (loggedIn !== "true") {
+    window.location.href = "login.html"; // Redirect if not logged in
+}
+
+document.getElementById("userName").innerText = localStorage.getItem("username");
+document.getElementById("userPlan").innerText = localStorage.getItem("plan");
+
+// 2️⃣ Logout function
 function logout() {
-    localStorage.removeItem("loggedIn");
+    localStorage.clear();
     window.location.href = "login.html";
 }
 </script>
