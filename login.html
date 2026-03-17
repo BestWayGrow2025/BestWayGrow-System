@@ -53,7 +53,6 @@ button {
     <button onclick="login()">Login</button>
 </div>
 
-<!-- ✅ SCRIPT MOVED HERE (IMPORTANT) -->
 <script>
 function login() {
     var user = document.getElementById("username").value;
@@ -61,6 +60,10 @@ function login() {
 
     if (user === "admin" && pass === "1234") {
         alert("Login successful");
+
+        // ✅ IMPORTANT LINE (added)
+        localStorage.setItem("loggedIn", "true");
+
         window.location.href = "dashboard.html";
     } else {
         alert("Invalid login");
