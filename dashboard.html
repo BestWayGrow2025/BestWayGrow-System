@@ -1,13 +1,101 @@
-<script>
-function login() {
-    var user = document.getElementById("username").value.trim();
-    var pass = document.getElementById("password").value.trim();
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard - BestWayGrow</title>
 
-    if (user === "admin" && pass === "1234") {
-        localStorage.setItem("loggedIn", "true");
-        window.location.href = "./dashboard.html";
-    } else {
-        alert("Invalid login");
-    }
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f4f5;
+    margin: 0;
+    text-align: center;
+}
+
+/* Header */
+header {
+    background: #006633;
+    color: white;
+    padding: 20px;
+}
+
+/* Cards */
+.container {
+    margin-top: 40px;
+}
+
+.card {
+    background: white;
+    margin: 20px auto;
+    padding: 20px;
+    width: 300px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Button */
+button {
+    padding: 10px 20px;
+    background: #006633;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #004d26;
+}
+</style>
+
+<script>
+// 🔐 Protect dashboard
+if (localStorage.getItem("loggedIn") !== "true") {
+    window.location.href = "login.html";
 }
 </script>
+
+</head>
+
+<body>
+
+<header>
+    <h1>BestWayGrow Dashboard</h1>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h3>User</h3>
+        <p>admin</p>
+    </div>
+
+    <div class="card">
+        <h3>Active Plan</h3>
+        <p>BV2100</p>
+    </div>
+
+    <div class="card">
+        <h3>Income</h3>
+        <p>₹0</p>
+    </div>
+
+    <div class="card">
+        <h3>Status</h3>
+        <p>Active</p>
+    </div>
+
+    <br>
+
+    <button onclick="logout()">Logout</button>
+
+</div>
+
+<script>
+function logout() {
+    localStorage.removeItem("loggedIn");
+    window.location.href = "login.html";
+}
+</script>
+
+</body>
+</html>
