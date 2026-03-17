@@ -14,51 +14,35 @@
     <meta name="author" content="BestWayGrow2025">
 
     <style>
-        /* --- General --- */
         body { font-family: Arial, sans-serif; margin: 0; background: #f0f4f5; scroll-behavior: smooth; }
         a { text-decoration: none; color: inherit; }
 
-        /* --- Header --- */
         header { background: #006633; color: white; padding: 20px 0; text-align: center; }
         header img { height: 60px; margin-bottom: 10px; }
         header h1 { margin: 0; font-size: 2rem; }
         header p { margin: 5px 0 0 0; font-size: 1.1rem; }
 
-        /* --- Navigation --- */
         nav { background: #004d29; display: flex; justify-content: center; flex-wrap: wrap; padding: 10px 0; }
         nav a { color: white; font-weight: bold; margin: 5px 20px; padding: 5px 10px; border-radius: 5px; transition: background 0.3s; }
         nav a:hover { background: #007B33; }
 
-        /* --- Sections --- */
         section { background: white; margin: 20px auto; padding: 25px; border-radius: 10px; max-width: 1000px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s; }
         section h2 { color: #006633; }
 
-        /* --- Services --- */
         .services { display: flex; flex-wrap: wrap; justify-content: space-around; }
         .service { background: #e0f7e0; flex: 1 1 250px; margin: 15px; padding: 20px; border-radius: 10px; text-align: center; transition: transform 0.3s, box-shadow 0.3s; }
         .service:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
 
-        /* --- Buttons --- */
-        button { background: #006633; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: background 0.3s, transform 0.2s; }
-        button:hover { background: #004d29; transform: translateY(-3px); }
+        button { color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: transform 0.2s; }
+        button:hover { transform: translateY(-3px); }
 
-        /* --- Back to Top Button --- */
-        #backToTop {
-            position: fixed; bottom: 30px; right: 30px; display: none; background: #006633; color: white;
-            border: none; padding: 12px 18px; border-radius: 50%; font-size: 18px; cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: background 0.3s, transform 0.2s; z-index: 1000;
-        }
+        #backToTop { position: fixed; bottom: 30px; right: 30px; display: none; background: #006633; color: white; border: none; padding: 12px 18px; border-radius: 50%; font-size: 18px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: background 0.3s, transform 0.2s; z-index: 1000; }
         #backToTop:hover { background: #004d29; transform: translateY(-3px); }
 
-        /* --- Footer --- */
         footer { background: #00331a; color: white; text-align: center; padding: 15px; margin-top: 30px; transition: background 0.3s; }
         footer:hover { background: #004d29; }
 
-        /* --- Responsive --- */
-        @media (max-width: 768px) {
-            .services { flex-direction: column; align-items: center; }
-            nav { flex-direction: column; }
-        }
+        @media (max-width: 768px) { .services { flex-direction: column; align-items: center; } nav { flex-direction: column; } }
     </style>
 </head>
 <body>
@@ -96,7 +80,7 @@
                 <p>We provide technical support.</p>
             </div>
         </div>
-        <button>Learn More</button>
+        <button style="background:#006633;">Learn More</button>
     </section>
 
     <section id="about">
@@ -106,33 +90,30 @@
 
     <section id="contact">
         <h2>Contact</h2>
-        <p>Reach out to us via email or social media:</p>
-        <button onclick="window.location.href='mailto:contact@bestwaygrow.com'">Email Us</button>
-        <a href="https://www.linkedin.com/in/BestWayGrow2025/" target="_blank">LinkedIn</a> |
-        <a href="https://twitter.com/BestWayGrow2025" target="_blank">Twitter</a>
+        <p>Reach out to us for support or inquiries:</p>
+        <div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:10px;">
+            <!-- Email -->
+            <button style="background:#28a745;" onclick="window.location.href='mailto:contact@bestwaygrow.com'">Email Us</button>
+            <!-- LinkedIn -->
+            <button style="background:#0077B5;" onclick="window.open('https://www.linkedin.com/in/BestWayGrow2025/', '_blank')">LinkedIn</button>
+            <!-- Twitter -->
+            <button style="background:#1DA1F2;" onclick="window.open('https://twitter.com/BestWayGrow2025', '_blank')">Twitter</button>
+        </div>
     </section>
 
     <footer>
         © 2026 BestWayGrow
     </footer>
 
-    <!-- Back to Top Button -->
     <button id="backToTop" onclick="scrollToTop()">↑ Top</button>
 
     <script>
-        // Show Back to Top button after scrolling down 200px
         window.onscroll = function() {
             let btn = document.getElementById('backToTop');
-            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-                btn.style.display = "block";
-            } else {
-                btn.style.display = "none";
-            }
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) { btn.style.display = "block"; }
+            else { btn.style.display = "none"; }
         };
-
-        function scrollToTop() {
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        }
+        function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
     </script>
 </body>
 </html>
