@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BestWayGrow System</title>
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="design/favicon.png">
+
+<!-- Font Awesome for Social Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<!-- SEO Meta -->
+<meta name="description" content="BestWayGrow System — Transparent plant growth management for professional growers.">
+<meta name="keywords" content="Plant growth, BestWayGrow, Agriculture, Growth management, Web system">
+<meta name="author" content="BestWayGrow2025">
+
+<style>
+body { font-family: Arial, sans-serif; margin:0; background:#f0f4f5; scroll-behavior:smooth; }
+a { text-decoration:none; color:inherit; }
+
+/* Header */
+header { background:#006633; color:white; padding:20px 0; text-align:center; }
+header img { height:60px; margin-bottom:10px; }
+header h1 { margin:0; font-size:2rem; }
+header p { margin:5px 0 0; font-size:1.1rem; }
+
+/* Navigation */
+nav { background:#004d29; display:flex; justify-content:center; flex-wrap:wrap; padding:10px 0; }
+nav a { color:white; font-weight:bold; margin:5px 20px; padding:5px 10px; border-radius:5px; transition:background 0.3s; }
+nav a:hover { background:#007B33; }
+
+/* Sections */
+section { background:white; margin:20px auto; padding:25px; border-radius:10px; max-width:1000px; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:transform 0.3s; }
+section:hover { transform: translateY(-2px); }
+section h2 { color:#006633; }
+
+/* Services */
+.services { display:flex; flex-wrap:wrap; justify-content:space-around; }
+.service { background:#e0f7e0; flex:1 1 250px; margin:15px; padding:20px; border-radius:10px; text-align:center; transition:transform 0.3s, box-shadow 0.3s; }
+.service:hover { transform:translateY(-5px); box-shadow:0 6px 12px rgba(0,0,0,0.2); }
+
+/* Buttons */
+button { color:white; border:none; padding:12px 25px; border-radius:5px; cursor:pointer; font-weight:bold; transition:transform 0.2s, box-shadow 0.3s; }
+button:hover { transform:scale(1.05); box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+
+/* Contact Buttons */
+#contact div { display:flex; flex-wrap:wrap; gap:15px; margin-top:10px; }
+#contact button i { margin-right:8px; }
+
+/* Back to Top */
+#backToTop { position:fixed; bottom:30px; right:30px; display:none; background:#006633; color:white; border:none; padding:12px 18px; border-radius:50%; font-size:18px; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.2); transition:background 0.3s, transform 0.2s; z-index:1000; }
+#backToTop:hover { background:#004d29; transform:scale(1.1); }
+
+/* Footer */
+footer { background:#00331a; color:white; text-align:center; padding:15px; margin-top:30px; }
+
+/* Responsive */
+@media (max-width:768px) {
+  .services { flex-direction:column; align-items:center; }
+  nav { flex-direction:column; }
+  #contact div { flex-direction:column; }
+  #contact button { width:100%; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="design/logo.png" alt="BestWayGrow Logo">
+  <h1>BestWayGrow System</h1>
+  <p>Transparent Plant Growth Management</p>
+</header>
+
+<nav>
+  <a href="#welcome">Home</a>
+  <a href="#services">Services</a>
+  <a href="#about">About</a>
+  <a href="#contact">Contact</a>
+</nav>
+
+<section id="welcome">
+  <h2>Welcome</h2>
+  <p>Welcome to BestWayGrow System — your transparent solution for managing plant growth efficiently and professionally.</p>
+</section>
+
+<section id="services">
+  <h2>Our Services</h2>
+  <div class="services">
+    <div class="service"><h3>Web Design</h3><p>We create modern websites.</p></div>
+    <div class="service"><h3>Development</h3><p>We build powerful web systems.</p></div>
+    <div class="service"><h3>Support</h3><p>We provide technical support.</p></div>
+  </div>
+  <button style="background:#006633;">Learn More</button>
+</section>
+
+<section id="about">
+  <h2>About</h2>
+  <p>BestWayGrow System is designed for professional growers and enthusiasts. Our transparent tools make plant growth management simple and reliable.</p>
+</section>
+
+<section id="contact">
+  <h2>Contact</h2>
+  <p>Reach out to us for support or inquiries:</p>
+  <div>
+    <button style="background:#28a745;" onclick="window.location.href='mailto:contact@bestwaygrow.com'">
+      <i class="fa-solid fa-envelope"></i> Email Us
+    </button>
+    <button style="background:#0077B5;" onclick="window.open('https://www.linkedin.com/in/BestWayGrow2025/', '_blank')">
+      <i class="fa-brands fa-linkedin"></i> LinkedIn
+    </button>
+    <button style="background:#1DA1F2;" onclick="window.open('https://twitter.com/BestWayGrow2025', '_blank')">
+      <i class="fa-brands fa-twitter"></i> Twitter
+    </button>
+  </div>
+</section>
+
+<footer>
+  © 2026 BestWayGrow
+</footer>
+
+<button id="backToTop" onclick="scrollToTop()">↑ Top</button>
+
+<script>
+window.onscroll = function() {
+  let btn = document.getElementById('backToTop');
+  btn.style.display = (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) ? "block" : "none";
+};
+function scrollToTop() { window.scrollTo({top:0, behavior:'smooth'}); }
+</script>
+
+</body>
+</html>
