@@ -1,22 +1,81 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>BestWayGrow BV500</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BestWayGrow BV500</title>
+
+<link rel="icon" type="image/png" href="../design/favicon.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+body { font-family: Arial, sans-serif; margin:0; background:#f0f4f5; }
+
+/* Header */
+header { background:#006633; color:white; padding:20px; text-align:center; }
+header img { height:60px; }
+header h1 { margin:10px 0 5px; }
+
+/* Section */
+section { background:white; margin:20px auto; padding:25px; border-radius:10px; max-width:900px; box-shadow:0 4px 8px rgba(0,0,0,0.1); }
+section h2 { color:#006633; }
+
+/* Contact */
+#contact div { display:flex; flex-wrap:wrap; gap:10px; }
+
+/* Buttons */
+button { color:white; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; }
+.btn-green { background:#28a745; }
+.btn-blue { background:#0077b5; }
+.btn-light { background:#1DA1F2; }
+
+/* Footer */
+footer { background:#00331a; color:white; text-align:center; padding:15px; margin-top:30px; }
+</style>
+
 </head>
-<body style="font-family: Arial; text-align:center; padding:40px;">
 
-<h1>BestWayGrow System</h1>
-<h2>BV 500 Plan</h2>
+<body>
 
-<p>Category: Digital Product</p>
-<p>BV: 500</p>
-<p>Amount: (write your amount)</p>
+<header>
+  <img src="../design/logo.png">
+  <h1>BestWayGrow</h1>
+  <h2>BV 500 Plan</h2>
+  <p>Amount: (your amount)</p>
+</header>
 
-<br><br>
+<section>
+  <h2>Welcome</h2>
+  <p>This plan is part of BestWayGrow digital product system.</p>
+</section>
 
-<a href="../index.html">
-    <button style="padding:10px 20px;">Back</button>
-</a>
+<section>
+  <h2>Product Details</h2>
+  <p>Category: Digital Product</p>
+  <p>BV: 500</p>
+  <p>Amount: (your amount)</p>
+</section>
+
+<section id="contact">
+  <h2>Contact</h2>
+  <div>
+    <button class="btn-green" onclick="window.location.href='mailto:contact@bestwaygrow.com'">
+      Email
+    </button>
+
+    <button class="btn-blue" onclick="window.open('https://www.linkedin.com/', '_blank')">
+      LinkedIn
+    </button>
+
+    <button class="btn-light" onclick="window.open('https://twitter.com/', '_blank')">
+      Twitter
+    </button>
+  </div>
+</section>
+
+<footer>
+  © 2026 BestWayGrow
+</footer>
 
 </body>
 </html>
