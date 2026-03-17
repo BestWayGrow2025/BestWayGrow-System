@@ -19,15 +19,27 @@ header {
     color: white;
     padding: 20px;
 }
-header img { height: 60px; }
+header img {
+    height: 60px;
+}
+header h1 {
+    margin: 10px 0 0 0;
+}
+
+/* Plan Container */
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
 
 /* Plan box */
 .plan {
     background: white;
-    margin: 40px auto;
+    margin: 20px;
     padding: 30px;
     border-radius: 12px;
-    max-width: 400px;
+    width: 300px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
@@ -36,12 +48,14 @@ header img { height: 60px; }
     background: #0077b5;
     color: white;
     padding: 15px 30px;
-    font-size: 18px;
+    font-size: 16px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
 }
-.btn:hover { background: #005f8a; }
+.btn:hover {
+    background: #005f8a;
+}
 
 /* Footer */
 footer {
@@ -57,19 +71,33 @@ footer {
 <body>
 
 <header>
-    <img src="design/logo.png">
+    <img src="design/logo.png" alt="Logo">
     <h1>BestWayGrow System</h1>
     <p>Select Your Plan</p>
 </header>
 
-<div class="plan">
-    <h2>BV 2100 Plan</h2>
-    <p>Amount: 3000</p>
-    <p>Digital Product Category</p>
+<div class="container">
 
-    <a href="BV2100/index.html">
-        <button class="btn">View Details</button>
-    </a>
+    <div class="plan">
+        <h2>BV 2100 Plan</h2>
+        <p>Amount: 3000</p>
+        <p>Digital Product Category</p>
+
+        <a href="BV2100/index.html">
+            <button class="btn">View Details</button>
+        </a>
+    </div>
+
+    <div class="plan">
+        <h2>BV 500 Plan</h2>
+        <p>Amount: (your amount)</p>
+        <p>Digital Product Category</p>
+
+        <a href="BV500/index.html">
+            <button class="btn">View Details</button>
+        </a>
+    </div>
+
 </div>
 
 <footer>
@@ -78,4 +106,3 @@ footer {
 
 </body>
 </html>
-Create BV500 product page
