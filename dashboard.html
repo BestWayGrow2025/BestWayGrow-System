@@ -36,6 +36,7 @@ button {
     cursor: pointer;
     border-radius: 6px;
     margin-top: 15px;
+    font-weight: bold;
 }
 button:hover {
     background: #004d29;
@@ -57,16 +58,17 @@ button:hover {
 </div>
 
 <script>
-// 1️⃣ Load user info from localStorage
+// 1️⃣ Redirect to login if not logged in
 var loggedIn = localStorage.getItem("loggedIn");
 if (loggedIn !== "true") {
-    window.location.href = "login.html"; // Redirect if not logged in
+    window.location.href = "login.html";
 }
 
+// 2️⃣ Display user info
 document.getElementById("userName").innerText = localStorage.getItem("username");
 document.getElementById("userPlan").innerText = localStorage.getItem("plan");
 
-// 2️⃣ Logout function
+// 3️⃣ Logout
 function logout() {
     localStorage.clear();
     window.location.href = "login.html";
