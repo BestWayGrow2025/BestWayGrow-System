@@ -15,7 +15,6 @@ body {
     height: 100vh;
 }
 
-/* Login box */
 .login-box {
     background: white;
     padding: 30px;
@@ -55,13 +54,16 @@ button {
 
 <script>
 function login() {
-    var user = document.getElementById("username").value;
-    var pass = document.getElementById("password").value;
+
+    var user = document.getElementById("username").value.trim();
+    var pass = document.getElementById("password").value.trim();
+
+    // DEBUG (you will see alert)
+    alert("User: " + user + " | Pass: " + pass);
 
     if (user === "admin" && pass === "1234") {
         alert("Login successful");
 
-        // ✅ IMPORTANT LINE (added)
         localStorage.setItem("loggedIn", "true");
 
         window.location.href = "dashboard.html";
