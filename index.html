@@ -18,16 +18,34 @@ header {
     background: #006633;
     color: white;
     padding: 25px 15px;
+    position: relative;
 }
+
 header img {
     height: 60px;
 }
+
 header h1 {
     margin: 10px 0 5px 0;
 }
+
 header p {
     margin: 0;
     font-size: 16px;
+}
+
+/* Login button (top right) */
+.login-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #ffffff;
+    color: #006633;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
 }
 
 /* Plan Container */
@@ -58,6 +76,7 @@ header p {
     border-radius: 8px;
     cursor: pointer;
 }
+
 .btn:hover {
     background: #005f8a;
 }
@@ -76,9 +95,16 @@ footer {
 <body>
 
 <header>
+
+    <!-- Login Button -->
+    <a href="login.html">
+        <button class="login-btn">Login</button>
+    </a>
+
     <img src="design/logo.png" alt="BestWayGrow Logo">
     <h1>BestWayGrow</h1>
     <p>Select Your Digital Product Plan</p>
+
 </header>
 
 <div class="container">
