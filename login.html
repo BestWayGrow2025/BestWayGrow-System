@@ -33,6 +33,10 @@ button {
     padding: 10px 20px;
     cursor: pointer;
     border-radius: 6px;
+    font-weight: bold;
+}
+button:hover {
+    background: #004d29;
 }
 </style>
 </head>
@@ -50,15 +54,14 @@ function login() {
     var user = document.getElementById("username").value.trim();
     var pass = document.getElementById("password").value.trim();
 
-    // 1️⃣ Check empty fields
+    // 1️⃣ Empty check
     if (user === "" || pass === "") {
         alert("Please enter Username & Password");
         return;
     }
 
-    // 2️⃣ Validate credentials
+    // 2️⃣ Credential check
     if (user === "admin" && pass === "1234") {
-        // Save user info for dashboard
         localStorage.setItem("loggedIn", "true");
         localStorage.setItem("username", user);
         localStorage.setItem("plan", "BV2100");
@@ -66,10 +69,3 @@ function login() {
         alert("Login Successful");
         window.location.href = "dashboard.html";
     } else {
-        alert("Invalid login");
-    }
-}
-</script>
-
-</body>
-</html>
