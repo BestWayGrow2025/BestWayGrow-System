@@ -6,17 +6,34 @@
 <style>
 body {
     font-family: Arial;
-    text-align: center;
     background: #f0f4f5;
+    text-align: center;
 }
 
 .box {
-    margin-top: 100px;
+    margin-top: 80px;
+}
+
+.card {
+    background: white;
+    margin: 20px auto;
+    padding: 20px;
+    width: 300px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+button {
+    padding: 10px 20px;
+    background: #006633;
+    color: white;
+    border: none;
+    cursor: pointer;
 }
 </style>
 
 <script>
-// 🔐 Check login
+// 🔐 Protect page
 if (localStorage.getItem("loggedIn") !== "true") {
     window.location.href = "login.html";
 }
@@ -27,14 +44,31 @@ if (localStorage.getItem("loggedIn") !== "true") {
 <body>
 
 <div class="box">
+
     <h1>Welcome to Dashboard</h1>
-    <p>System is working ✅</p>
+
+    <div class="card">
+        <h3>User</h3>
+        <p>admin</p>
+    </div>
+
+    <div class="card">
+        <h3>Plan</h3>
+        <p>BV2100</p>
+    </div>
+
+    <div class="card">
+        <h3>Income</h3>
+        <p>₹0 (starting)</p>
+    </div>
+
+    <br>
 
     <button onclick="logout()">Logout</button>
+
 </div>
 
 <script>
-// Logout function
 function logout() {
     localStorage.removeItem("loggedIn");
     window.location.href = "login.html";
