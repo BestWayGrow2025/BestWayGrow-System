@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BestWayGrow System</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="design/favicon.png">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="BestWayGrow System — Transparent plant growth management for professional growers.">
+    <meta name="keywords" content="Plant growth, BestWayGrow, Agriculture, Growth management, Web system">
+    <meta name="author" content="BestWayGrow2025">
+
     <style>
         /* --- General --- */
         body { font-family: Arial, sans-serif; margin: 0; background: #f0f4f5; scroll-behavior: smooth; }
@@ -35,20 +44,9 @@
 
         /* --- Back to Top Button --- */
         #backToTop {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: none;
-            background: #006633;
-            color: white;
-            border: none;
-            padding: 12px 18px;
-            border-radius: 50%;
-            font-size: 18px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transition: background 0.3s, transform 0.2s;
-            z-index: 1000;
+            position: fixed; bottom: 30px; right: 30px; display: none; background: #006633; color: white;
+            border: none; padding: 12px 18px; border-radius: 50%; font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: background 0.3s, transform 0.2s; z-index: 1000;
         }
         #backToTop:hover { background: #004d29; transform: translateY(-3px); }
 
@@ -108,8 +106,10 @@
 
     <section id="contact">
         <h2>Contact</h2>
-        <p>Reach out to us via email for support or inquiries.</p>
+        <p>Reach out to us via email or social media:</p>
         <button onclick="window.location.href='mailto:contact@bestwaygrow.com'">Email Us</button>
+        <a href="https://www.linkedin.com/in/BestWayGrow2025/" target="_blank">LinkedIn</a> |
+        <a href="https://twitter.com/BestWayGrow2025" target="_blank">Twitter</a>
     </section>
 
     <footer>
@@ -127,15 +127,6 @@
                 btn.style.display = "block";
             } else {
                 btn.style.display = "none";
-            }
-        };
-
-        function scrollToTop() {
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        }
-    </script>
-</body>
-</html>
             }
         };
 
