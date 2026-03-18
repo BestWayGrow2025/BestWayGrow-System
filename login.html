@@ -50,7 +50,6 @@ button:hover {
 </div>
 
 <script>
-// ✅ Add event listener to ensure button works
 document.getElementById("loginBtn").addEventListener("click", function() {
     var user = document.getElementById("username").value.trim();
     var pass = document.getElementById("password").value.trim();
@@ -60,10 +59,25 @@ document.getElementById("loginBtn").addEventListener("click", function() {
         return;
     }
 
-    if (user === "admin" && pass === "1234") {
+    // Get saved password from localStorage
+    var savedPass = localStorage.getItem("adminPass") || "1234";
+
+    if (user === "admin" && pass === savedPass) {
         localStorage.setItem("loggedIn", "true");
         localStorage.setItem("username", user);
         localStorage.setItem("plan", "BV2100");
+
+        // Check if default password
+        if (savedPass === "1234") {
+            var newPass = prompt("Welcome! Please change your password:");
+            if (newPass && newPass.trim() !== "") {
+                localStorage.setItem("adminPass", newPass.trim());
+                alert("Password updated successfully!");
+            } else {
+                alert("Password not changed. Using default password.");
+            }
+        }
+
         alert("Login Successful");
         window.location.href = "dashboard.html";
     } else {
