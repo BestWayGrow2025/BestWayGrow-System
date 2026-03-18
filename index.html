@@ -3,48 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BestWayGrow</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<title>BestWayGrow System</title>
+
 <style>
-body { font-family: Arial, sans-serif; margin:0; background:#f0f4f5; text-align:center; }
-header { background:#006633; color:white; padding:25px 15px; position:relative; }
-header img { height:60px; }
-header h1 { margin:10px 0 5px; }
-header p { margin:0; font-size:16px; }
-.user-status { position:absolute; top:20px; right:20px; font-weight:bold; }
-.user-status button { background:#ffffff; color:#006633; border:none; border-radius:6px; padding:6px 12px; cursor:pointer; }
-.user-status button:hover { background:#ddd; }
-.container { display:flex; flex-wrap:wrap; justify-content:center; padding:20px; }
-.plan { background:white; margin:20px; padding:30px; border-radius:12px; width:300px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
-.btn { background:#0077b5; color:white; padding:12px 25px; font-size:16px; border:none; border-radius:8px; cursor:pointer; margin-top:10px; }
-.btn:hover { background:#005f8a; }
-footer { background:#00331a; color:white; padding:15px; margin-top:30px; }
+body {
+    font-family: Arial, sans-serif;
+    margin:0;
+    background:#f0f4f5;
+    text-align:center;
+}
+
+/* Header */
+header {
+    background:#006633;
+    color:white;
+    padding:25px 15px;
+    position: relative;
+}
+
+header h1 {
+    margin:10px 0;
+}
+
+/* Login area */
+#loginArea {
+    position:absolute;
+    top:20px;
+    right:20px;
+}
+
+/* Container */
+.container {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding:20px;
+}
+
+/* Plan box */
+.plan {
+    background:white;
+    margin:20px;
+    padding:25px;
+    border-radius:10px;
+    width:280px;
+    box-shadow:0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Buttons */
+button {
+    background:#006633;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+button:hover {
+    background:#004d29;
+}
+
+/* Footer */
+footer {
+    background:#00331a;
+    color:white;
+    padding:15px;
+    margin-top:30px;
+}
 </style>
 </head>
+
 <body>
 
 <header>
-    <img src="design/logo.png" alt="Logo">
     <h1>BestWayGrow</h1>
     <p>Select Your Digital Product Plan</p>
-    <div class="user-status" id="userStatus">
-        <a href="login.html"><button id="loginBtn">Login</button></a>
-    </div>
+
+    <!-- Dynamic Login Area -->
+    <div id="loginArea"></div>
 </header>
 
 <div class="container">
+
     <div class="plan">
         <h2>BV 2100 Plan</h2>
         <p><strong>Amount:</strong> 3000</p>
         <p>Digital Product Category</p>
-        <a href="BV2100/index.html"><button class="btn">View Details</button></a>
+        <a href="BV2100/index.html">
+            <button>View Details</button>
+        </a>
     </div>
+
     <div class="plan">
         <h2>BV 500 Plan</h2>
         <p><strong>Amount:</strong> (your amount)</p>
         <p>Digital Product Category</p>
-        <a href="BV500/index.html"><button class="btn">View Details</button></a>
+        <a href="BV500/index.html">
+            <button>View Details</button>
+        </a>
     </div>
+
 </div>
 
 <footer>
@@ -52,20 +111,35 @@ footer { background:#00331a; color:white; padding:15px; margin-top:30px; }
 </footer>
 
 <script>
-var userStatus = document.getElementById("userStatus");
-var loggedIn = localStorage.getItem("loggedIn") === "true";
-var username = localStorage.getItem("username");
 
-if(loggedIn){
-    userStatus.innerHTML = 'Logged in as ' + username + ' <button onclick="logout()">Logout</button>';
+// Check login status
+var loggedIn = localStorage.getItem("loggedIn");
+var loginArea = document.getElementById("loginArea");
+
+if (loggedIn === "true") {
+
+    var username = localStorage.getItem("username") || "User";
+
+    loginArea.innerHTML = `
+        <span style="margin-right:10px;">Welcome ${username}</span>
+        <button onclick="logout()">Logout</button>
+    `;
+
+} else {
+
+    loginArea.innerHTML = `
+        <a href="login.html">
+            <button>Login</button>
+        </a>
+    `;
 }
 
+// Logout
 function logout() {
-    localStorage.removeItem("loggedIn");
-    localStorage.removeItem("username");
-    localStorage.removeItem("plan");
+    localStorage.clear();
     window.location.href = "login.html";
 }
+
 </script>
 
 </body>
