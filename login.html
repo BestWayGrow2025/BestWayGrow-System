@@ -53,10 +53,9 @@ button {
 
 <script>
 
-// ✅ VERY IMPORTANT: Clear old login
+// ✅ Clear old login session when opening login page
 localStorage.removeItem("loggedIn");
 
-// ✅ Login function
 function login() {
 
     var user = document.getElementById("username").value.trim();
@@ -68,12 +67,28 @@ function login() {
         return;
     }
 
-    // Correct login
-    if (user === "admin" && pass === "1234") {
+    // Get saved password or default
+    var savedPass = localStorage.getItem("userPass") || "1234";
 
+    // Check login
+    if (user === "admin" && pass === savedPass) {
+
+        // Save login session
         localStorage.setItem("loggedIn", "true");
         localStorage.setItem("username", user);
         localStorage.setItem("plan", "BV2100");
+
+        // Ask for password change
+        var change = confirm("Do you want to change password?");
+
+        if (change) {
+            var newPass = prompt("Enter new password:");
+
+            if (newPass && newPass.trim() !== "") {
+                localStorage.setItem("userPass", newPass);
+                alert("Password Updated Successfully");
+            }
+        }
 
         alert("Login Successful");
 
