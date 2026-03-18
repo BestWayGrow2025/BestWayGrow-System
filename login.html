@@ -3,87 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - BestWayGrow</title>
+<title>BestWayGrow Dashboard</title>
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f0f4f5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-.login-box {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    width: 300px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    text-align: center;
-}
-input {
-    width: 90%;
-    padding: 10px;
-    margin: 10px 0;
-}
-button {
-    background: #006633;
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    cursor: pointer;
-    border-radius: 6px;
-    font-weight: bold;
-}
-button:hover {
-    background: #004d29;
-}
+body { font-family: Arial, sans-serif; margin:0; background:#f0f4f5; text-align:center; }
+header { background:#006633; color:white; padding:25px 15px; }
+h1 { margin:10px 0; }
+section { background:white; margin:20px auto; padding:25px; border-radius:10px; max-width:500px; box-shadow:0 4px 8px rgba(0,0,0,0.1); text-align:left; }
+button { background:#006633; color:white; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; margin-top:10px; }
+button:hover { background:#004d29; }
 </style>
 </head>
 <body>
 
-<div class="login-box">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username"><br>
-    <input type="password" id="password" placeholder="Password"><br>
-    <button id="loginBtn">Login</button>
-</div>
+<header>
+    <h1>BestWayGrow Dashboard</h1>
+</header>
+
+<section>
+    <p><strong>User:</strong> <span id="usernameDisplay">admin</span></p>
+    <p><strong>Active Plan:</strong> <span id="planDisplay">BV2100</span></p>
+    <p><strong>Income:</strong> ₹0</p>
+    <p><strong>Status:</strong> Active</p>
+    <button onclick="logout()">Logout</button>
+</section>
 
 <script>
-document.getElementById("loginBtn").addEventListener("click", function() {
-    var user = document.getElementById("username").value.trim();
-    var pass = document.getElementById("password").value.trim();
+var username = localStorage.getItem("username") || "admin";
+var plan = localStorage.getItem("plan") || "BV2100";
 
-    if (user === "" || pass === "") {
-        alert("Please enter Username & Password");
-        return;
-    }
+document.getElementById("usernameDisplay").innerText = username;
+document.getElementById("planDisplay").innerText = plan;
 
-    // Get saved password from localStorage
-    var savedPass = localStorage.getItem("adminPass") || "1234";
-
-    if (user === "admin" && pass === savedPass) {
-        localStorage.setItem("loggedIn", "true");
-        localStorage.setItem("username", user);
-        localStorage.setItem("plan", "BV2100");
-
-        // Check if default password
-        if (savedPass === "1234") {
-            var newPass = prompt("Welcome! Please change your password:");
-            if (newPass && newPass.trim() !== "") {
-                localStorage.setItem("adminPass", newPass.trim());
-                alert("Password updated successfully!");
-            } else {
-                alert("Password not changed. Using default password.");
-            }
-        }
-
-        alert("Login Successful");
-        window.location.href = "dashboard.html";
-    } else {
-        alert("Invalid login");
-    }
-});
+function logout() {
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("username");
+    localStorage.removeItem("plan");
+    window.location.href = "login.html";
+}
 </script>
 
 </body>
