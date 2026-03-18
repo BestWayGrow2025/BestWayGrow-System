@@ -30,7 +30,7 @@ button {
     background: #006633;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 25px;
     cursor: pointer;
     border-radius: 6px;
     font-weight: bold;
@@ -46,26 +46,31 @@ button:hover {
     <h2>Login</h2>
     <input type="text" id="username" placeholder="Username"><br>
     <input type="password" id="password" placeholder="Password"><br>
-    <button onclick="login()">Login</button>
+    <button id="loginBtn">Login</button>
 </div>
 
 <script>
-function login() {
+// ✅ Add event listener to ensure button works
+document.getElementById("loginBtn").addEventListener("click", function() {
     var user = document.getElementById("username").value.trim();
     var pass = document.getElementById("password").value.trim();
 
-    // 1️⃣ Empty check
     if (user === "" || pass === "") {
         alert("Please enter Username & Password");
         return;
     }
 
-    // 2️⃣ Credential check
     if (user === "admin" && pass === "1234") {
         localStorage.setItem("loggedIn", "true");
         localStorage.setItem("username", user);
         localStorage.setItem("plan", "BV2100");
-
         alert("Login Successful");
         window.location.href = "dashboard.html";
     } else {
+        alert("Invalid login");
+    }
+});
+</script>
+
+</body>
+</html>
