@@ -6,23 +6,25 @@
 <title>BestWayGrow System</title>
 
 <style>
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
     margin:0;
-    background:#f0f4f5;
+    background: linear-gradient(135deg, #e6f2ef, #f8fbfa);
     text-align:center;
 }
 
 /* Header */
 header {
-    background:#006633;
+    background: linear-gradient(90deg, #006633, #00994d);
     color:white;
-    padding:25px 15px;
+    padding:30px 15px;
     position: relative;
 }
 
 header h1 {
     margin:10px 0;
+    font-size:28px;
 }
 
 /* Login area */
@@ -37,40 +39,46 @@ header h1 {
     display:flex;
     flex-wrap:wrap;
     justify-content:center;
-    padding:20px;
+    padding:30px;
 }
 
 /* Plan box */
 .plan {
     background:white;
     margin:20px;
-    padding:25px;
-    border-radius:10px;
-    width:280px;
-    box-shadow:0 4px 8px rgba(0,0,0,0.1);
+    padding:30px;
+    border-radius:15px;
+    width:300px;
+    box-shadow:0 6px 15px rgba(0,0,0,0.1);
+    transition:0.3s;
+}
+
+.plan:hover {
+    transform: translateY(-8px);
 }
 
 /* Buttons */
 button {
-    background:#006633;
+    background: linear-gradient(90deg, #0077b5, #00aaff);
     color:white;
     border:none;
-    padding:12px 20px;
-    border-radius:6px;
+    padding:12px 25px;
+    border-radius:8px;
     cursor:pointer;
 }
 
 button:hover {
-    background:#004d29;
+    background: linear-gradient(90deg, #005f8a, #008ecc);
 }
 
 /* Footer */
 footer {
     background:#00331a;
     color:white;
-    padding:15px;
-    margin-top:30px;
+    padding:20px;
+    margin-top:40px;
 }
+
 </style>
 </head>
 
@@ -80,7 +88,7 @@ footer {
     <h1>BestWayGrow</h1>
     <p>Select Your Digital Product Plan</p>
 
-    <!-- Dynamic Login Area -->
+    <!-- Login Area -->
     <div id="loginArea"></div>
 </header>
 
@@ -112,21 +120,18 @@ footer {
 
 <script>
 
-// Check login status
+// Check login
 var loggedIn = localStorage.getItem("loggedIn");
 var loginArea = document.getElementById("loginArea");
 
 if (loggedIn === "true") {
-
     var username = localStorage.getItem("username") || "User";
 
     loginArea.innerHTML = `
         <span style="margin-right:10px;">Welcome ${username}</span>
         <button onclick="logout()">Logout</button>
     `;
-
 } else {
-
     loginArea.innerHTML = `
         <a href="login.html">
             <button>Login</button>
@@ -144,3 +149,4 @@ function logout() {
 
 </body>
 </html>
+
