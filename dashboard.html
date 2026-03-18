@@ -4,15 +4,51 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BestWayGrow Dashboard</title>
+
 <style>
-body { font-family: Arial, sans-serif; margin:0; background:#f0f4f5; text-align:center; }
-header { background:#006633; color:white; padding:25px 15px; }
-h1 { margin:10px 0; }
-section { background:white; margin:20px auto; padding:25px; border-radius:10px; max-width:500px; box-shadow:0 4px 8px rgba(0,0,0,0.1); text-align:left; }
-button { background:#006633; color:white; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; margin-top:10px; }
-button:hover { background:#004d29; }
+body {
+    font-family: Arial, sans-serif;
+    margin:0;
+    background:#f0f4f5;
+    text-align:center;
+}
+
+header {
+    background:#006633;
+    color:white;
+    padding:25px 15px;
+}
+
+h1 {
+    margin:10px 0;
+}
+
+section {
+    background:white;
+    margin:20px auto;
+    padding:25px;
+    border-radius:10px;
+    max-width:500px;
+    box-shadow:0 4px 8px rgba(0,0,0,0.1);
+    text-align:left;
+}
+
+button {
+    background:#006633;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:6px;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+button:hover {
+    background:#004d29;
+}
 </style>
 </head>
+
 <body>
 
 <header>
@@ -20,26 +56,43 @@ button:hover { background:#004d29; }
 </header>
 
 <section>
-    <p><strong>User:</strong> <span id="usernameDisplay">admin</span></p>
-    <p><strong>Active Plan:</strong> <span id="planDisplay">BV2100</span></p>
+    <h3 id="welcomeText">Welcome</h3>
+
+    <p><strong>User:</strong> <span id="usernameDisplay"></span></p>
+    <p><strong>Active Plan:</strong> <span id="planDisplay"></span></p>
     <p><strong>Income:</strong> ₹0</p>
     <p><strong>Status:</strong> Active</p>
+
     <button onclick="logout()">Logout</button>
 </section>
 
 <script>
+
+// ✅ Security: block direct access
+if (localStorage.getItem("loggedIn") !== "true") {
+    window.location.href = "login.html";
+}
+
+// ✅ Load data
 var username = localStorage.getItem("username") || "admin";
 var plan = localStorage.getItem("plan") || "BV2100";
 
+// ✅ Display data
 document.getElementById("usernameDisplay").innerText = username;
 document.getElementById("planDisplay").innerText = plan;
 
+// ✅ Welcome message
+document.getElementById("welcomeText").innerText = "Welcome, " + username + "!";
+
+// ✅ Logout
 function logout() {
     localStorage.removeItem("loggedIn");
     localStorage.removeItem("username");
     localStorage.removeItem("plan");
+
     window.location.href = "login.html";
 }
+
 </script>
 
 </body>
