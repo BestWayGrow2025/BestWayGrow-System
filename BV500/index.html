@@ -4,85 +4,82 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BestWayGrow BV500</title>
-
 <link rel="icon" type="image/png" href="../design/favicon.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
 <style>
 body { font-family: Arial, sans-serif; margin:0; background:#f0f4f5; }
-
-/* Header */
-header { background:#006633; color:white; padding:20px; text-align:center; }
+header { background:#006633; color:white; padding:20px; text-align:center; position:relative; }
 header img { height:60px; }
 header h1 { margin:10px 0 5px; }
-
-/* Section */
+header h2 { margin:5px 0; }
+.user-status { position:absolute; top:20px; right:20px; color:white; font-weight:bold; }
+.user-status button { background:#ffffff; color:#006633; border:none; border-radius:6px; padding:6px 12px; cursor:pointer; margin-left:8px; }
+.user-status button:hover { background:#ddd; }
 section { background:white; margin:20px auto; padding:25px; border-radius:10px; max-width:900px; box-shadow:0 4px 8px rgba(0,0,0,0.1); }
 section h2 { color:#006633; }
-
-/* Contact */
-#contact div { display:flex; flex-wrap:wrap; gap:10px; }
-
-/* Buttons */
-button { color:white; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; }
-.btn-green { background:#28a745; }
-.btn-blue { background:#0077b5; }
-.btn-light { background:#1DA1F2; }
-
-/* Footer */
+#contact div { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px; }
+button.btn-green { background:#28a745; color:white; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; margin:5px; }
+button.btn-blue { background:#0077b5; color:white; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; margin:5px; }
+button.btn-light { background:#1DA1F2; color:white; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; margin:5px; }
 footer { background:#00331a; color:white; text-align:center; padding:15px; margin-top:30px; }
+.back-btn { padding:10px 20px; background:#006633; color:white; border:none; border-radius:6px; cursor:pointer; margin-top:15px; }
 </style>
-
 </head>
-
 <body>
 
 <header>
-  <img src="../design/logo.png">
-  <h1>BestWayGrow</h1>
-  <h2>BV 500 Plan</h2>
-  <p>Amount: (your amount)</p>
+    <img src="../design/logo.png" alt="Logo">
+    <h1>BestWayGrow</h1>
+    <h2>BV 500 Plan</h2>
+
+    <div class="user-status" id="userStatus">
+        <a href="../login.html"><button id="loginBtn">Login</button></a>
+    </div>
 </header>
 
-<!-- ✅ MOVED HERE -->
-<br>
-<button onclick="window.location.href='../index.html'" 
-style="padding:10px 20px; background:#006633; color:white; border:none; border-radius:6px; cursor:pointer;">
-⬅ Back to Home
-</button>
-
 <section>
-  <h2>Welcome</h2>
-  <p>This plan is part of BestWayGrow digital product system.</p>
+    <h2>Welcome</h2>
+    <p>This plan is part of BestWayGrow digital product system.</p>
 </section>
 
 <section>
-  <h2>Product Details</h2>
-  <p>Category: Digital Product</p>
-  <p>BV: 500</p>
-  <p>Amount: (your amount)</p>
+    <h2>Product Details</h2>
+    <p>Category: Digital Product</p>
+    <p>BV: 500</p>
+    <p>Amount: (your amount)</p>
 </section>
 
 <section id="contact">
-  <h2>Contact</h2>
-  <div>
-    <button class="btn-green" onclick="window.location.href='mailto:contact@bestwaygrow.com'">
-      Email
-    </button>
-
-    <button class="btn-blue" onclick="window.open('https://www.linkedin.com/', '_blank')">
-      LinkedIn
-    </button>
-
-    <button class="btn-light" onclick="window.open('https://twitter.com/', '_blank')">
-      Twitter
-    </button>
-  </div>
+    <h2>Contact</h2>
+    <div>
+        <button class="btn-green" onclick="window.location.href='mailto:contact@bestwaygrow.com'">Email</button>
+        <button class="btn-blue" onclick="window.open('https://www.linkedin.com/', '_blank')">LinkedIn</button>
+        <button class="btn-light" onclick="window.open('https://twitter.com/', '_blank')">Twitter</button>
+    </div>
 </section>
 
+<button class="back-btn" onclick="window.location.href='../index.html'">⬅ Back to Home</button>
+
 <footer>
-  © 2026 BestWayGrow
+    © 2026 BestWayGrow
 </footer>
+
+<script>
+var userStatus = document.getElementById("userStatus");
+var loggedIn = localStorage.getItem("loggedIn") === "true";
+var username = localStorage.getItem("username");
+
+if(loggedIn){
+    userStatus.innerHTML = 'Logged in as ' + username + '<button onclick="logout()">Logout</button>';
+}
+
+function logout() {
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("username");
+    localStorage.removeItem("plan");
+    window.location.href = "../login.html";
+}
+</script>
 
 </body>
 </html>
