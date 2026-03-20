@@ -37,5 +37,22 @@ function login() {
 
 </script>
 
+ <script>
+let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+if (!users.find(u => u.userId === "BWG000000")) {
+  users.push({
+    userId: "BWG000000",
+    username: "ADMIN",
+    introducerId: null,
+    position: null
+  });
+
+  localStorage.setItem("users", JSON.stringify(users));
+}
+
+console.log("Admin initialized");
+</script>
+  
 </body>
 </html>
