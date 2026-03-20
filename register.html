@@ -115,5 +115,43 @@ function register() {
 
   return newUser;
 }
+
+  // Load users
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+
+// Save users
+function saveUsers(users) {
+  localStorage.setItem("users", JSON.stringify(users));
+}
+
+// Generate random ID
+function generateUserId() {
+  let num = Math.floor(100000 + Math.random() * 900000);
+  return "BWG" + num;
+}
+
+// Register user
+function registerUser(username, introducerId, position) {
+
+  let users = getUsers();
+
+  let newUserId = generateUserId();
+
+  let newUser = {
+    userId: newUserId,
+    username: username,
+    introducerId: introducerId,
+    position: position
+  };
+
+  users.push(newUser);
+  saveUsers(users);
+
+  alert("Registered Successfully: " + newUserId);
+
+  return newUser;
+}
 </body>
 </html>
