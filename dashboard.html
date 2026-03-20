@@ -91,6 +91,33 @@ function logout() {
   window.location.href = "login.html";
 }
 
+  function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+
+function getIntroducerTree(userId) {
+  let users = getUsers();
+  let result = [];
+
+  let current = users.find(u => u.userId === userId);
+  let level = 1;
+
+  while (current && current.introducerId && level <= 30) {
+    let parent = users.find(u => u.userId === current.introducerId);
+    if (!parent) break;
+
+    result.push({
+      level: "L" + level,
+      userId: parent.userId,
+      name: parent.username
+    });
+
+    current = parent;
+    level++;
+  }
+
+  return result;
+}
 </script>
 
 </body>
