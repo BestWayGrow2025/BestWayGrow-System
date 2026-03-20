@@ -120,6 +120,45 @@ function logout() {
   window.location.href = "login.html";
 }
 
+  // =====================
+// WALLET INIT
+// =====================
+function initWallet(user) {
+  user.wallet = user.wallet || 0;
+  user.incomeHistory = user.incomeHistory || [];
+}
+
+// =====================
+// UGLI INCOME FUNCTION
+// =====================
+function payUGLIIncome(buyerId) {
+
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+  let buyer = users.find(u => u.userId === buyerId);
+  if (!buyer) return;
+
+  let current = buyer;
+  let level = 1;
+
+  while (current && current.introducerId && level <= 30) {
+
+    let parent = users.find(u => u.userId === current.introducerId);
+    if (!parent) break;
+
+    initWallet(parent);
+
+    let income = (level === 1) ? 500 : 25;
+
+    parent.wallet += income;
+
+    current = parent;
+    level++;
+  }
+
+  localStorage.setItem("users", JSON.stringify(users));
+}
+  
 </script>
 
 </body>
