@@ -1,195 +1,58 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Dashboard</title>
-</head>
-<body>
+Dashboard
+User ID: BWG992504
 
-<h2>Dashboard</h2>
+Name: reeta
 
-<div id="userInfo"></div>
+Introducer ID: BWG000000
 
-<hr>
+Position: LEFT
 
-<h3>Your Links</h3>
+Your Links
+UGLI (Upgrade Link):
 
-<p><b>UGLI (Upgrade Link):</b></p>
-<p id="ugliLink"></p>
-<button onclick="copyText('ugliLink')">Copy</button>
+register.html?type=upgrade&id=BWG992504
 
-<br><br>
+Copy
 
-<p><b>RLI (Repurchase Link):</b></p>
-<p id="rliLink"></p>
-<button onclick="copyText('rliLink')">Copy</button>
+RLI (Repurchase Link):
 
-<br><br>
+register.html?type=repurchase&id=BWG992504
 
-<p><b>FR (Friend Referral Link):</b></p>
-<p id="frLink"></p>
-<button onclick="copyText('frLink')">Copy</button>
+Copy
 
-<hr>
+FR (Friend Referral Link):
 
-<h3>Introducer Tree</h3>
-<div id="treeView"></div>
+register.html?ref=BWG992504
 
-<h3>Sponsor Tree (LEFT / RIGHT)</h3>
-<div id="sponsorTree"></div>
+Copy
+Introducer Tree
+L1 → BWG000000 (ADMIN)
 
-<h3>All Users</h3>
-<div id="usersList"></div>
+Sponsor Tree (LEFT / RIGHT)
+LEFT: Empty
 
-<br>
-<button onclick="logout()">Logout</button>
+RIGHT: Empty
 
-<script>
+All Users
+BWG357699 — reeta (Intro: BWG000000, Pos: LEFT)
 
-window.onload = function() {
+BWG946195 — reeta (Intro: BWG000000, Pos: LEFT)
 
-  // =====================
-  // USER LOAD
-  // =====================
-  let user = JSON.parse(localStorage.getItem("loggedInUser"));
+BWG772193 — reeta (Intro: BWG000000, Pos: LEFT)
 
-  if (!user) {
-    alert("Please login first");
-    window.location.href = "login.html";
-    return;
-  }
+BWG950624 — reeta (Intro: BWG000000, Pos: LEFT)
 
-  // =====================
-  // USER INFO
-  // =====================
-  document.getElementById("userInfo").innerHTML = `
-    <p><b>User ID:</b> ${user.userId}</p>
-    <p><b>Name:</b> ${user.username}</p>
-    <p><b>Introducer ID:</b> ${user.introducerId}</p>
-    <p><b>Position:</b> ${user.position}</p>
-  `;
+BWG992504 — reeta (Intro: BWG000000, Pos: LEFT)
 
-  // =====================
-  // 🔥 LINKS (FINAL FIXED)
-  // =====================
-  let ugli = "register.html?type=upgrade&id=" + user.userId;
-  let rli  = "register.html?type=repurchase&id=" + user.userId;
-  let fr   = "register.html?ref=" + user.userId;
+BWG000000 — ADMIN (Intro: null, Pos: null)
 
-  // FORCE SAFE RENDER
-  setTimeout(function() {
-    document.getElementById("ugliLink").innerText = ugli;
-    document.getElementById("rliLink").innerText  = rli;
-    document.getElementById("frLink").innerText   = fr;
-  }, 200);
+BWG623272 — gagan (Intro: BWG000000, Pos: LEFT)
 
-  // =====================
-  // USERS
-  // =====================
-  function getUsers() {
-    return JSON.parse(localStorage.getItem("users") || "[]");
-  }
+BWG617279 — JEET (Intro: BWG000000, Pos: LEFT)
 
-  // =====================
-  // INTRODUCER TREE
-  // =====================
-  function getIntroducerTree(userId) {
-    let users = getUsers();
-    let result = [];
-    let current = users.find(u => u.userId === userId);
-    let level = 1;
+BWG851019 — JEET (Intro: BWG000000, Pos: LEFT)
 
-    while (current && current.introducerId && level <= 30) {
-      let parent = users.find(u => u.userId === current.introducerId);
-      if (!parent) break;
+BWG264409 — JEET (Intro: BWG000000, Pos: LEFT)
 
-      result.push({
-        level: "L" + level,
-        userId: parent.userId,
-        name: parent.username
-      });
 
-      current = parent;
-      level++;
-    }
-
-    return result;
-  }
-
-  let tree = getIntroducerTree(user.userId);
-  let treeHtml = "";
-
-  if (tree.length === 0) {
-    treeHtml = "<p>No introducer tree found</p>";
-  } else {
-    tree.forEach(t => {
-      treeHtml += `<p>${t.level} → ${t.userId} (${t.name})</p>`;
-    });
-  }
-
-  document.getElementById("treeView").innerHTML = treeHtml;
-
-  // =====================
-  // SPONSOR TREE
-  // =====================
-  function getSponsorTree(userId) {
-    let users = getUsers();
-
-    let left = users.find(u => u.introducerId === userId && u.position === "LEFT");
-    let right = users.find(u => u.introducerId === userId && u.position === "RIGHT");
-
-    return { left, right };
-  }
-
-  let sponsor = getSponsorTree(user.userId);
-
-  document.getElementById("sponsorTree").innerHTML = `
-    <p><b>LEFT:</b> ${sponsor.left ? sponsor.left.userId + " (" + sponsor.left.username + ")" : "Empty"}</p>
-    <p><b>RIGHT:</b> ${sponsor.right ? sponsor.right.userId + " (" + sponsor.right.username + ")" : "Empty"}</p>
-  `;
-
-  // =====================
-  // ALL USERS
-  // =====================
-  function renderUsers() {
-    let users = getUsers();
-    let html = "";
-
-    if (users.length === 0) {
-      html = "<p>No users found</p>";
-    } else {
-      users.forEach(u => {
-        html += `<p>
-          ${u.userId} — ${u.username}
-          (Intro: ${u.introducerId}, Pos: ${u.position})
-        </p>`;
-      });
-    }
-
-    document.getElementById("usersList").innerHTML = html;
-  }
-
-  renderUsers();
-
-};
-
-// =====================
-// COPY FUNCTION
-// =====================
-function copyText(id) {
-  let text = document.getElementById(id).innerText;
-  navigator.clipboard.writeText(text);
-  alert("Copied!");
-}
-
-// =====================
-// LOGOUT
-// =====================
-function logout() {
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
-}
-
-</script>
-
-</body>
-</html>
+Logout
