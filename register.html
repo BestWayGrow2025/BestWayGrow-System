@@ -1,119 +1,125 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Register</title>
+  <title>Dashboard</title>
 </head>
 <body>
 
-<h2>Register Page</h2>
+<h2>Dashboard</h2>
 
-<p>Introducer ID: <span id="introId"></span></p>
+<div id="userInfo"></div>
 
-<input type="text" id="username" placeholder="Enter Name" required>
+<hr>
+
+<h3>Your Links</h3>
+
+<p><b>UGLI (Upgrade Link):</b></p>
+<input type="text" id="ugliLink" readonly>
+<button onclick="copyLink('ugliLink')">Copy</button>
+
 <br><br>
 
-<input type="text" id="mobile" placeholder="Enter Mobile" required>
+<p><b>RLI (Repurchase Link):</b></p>
+<input type="text" id="rliLink" readonly>
+<button onclick="copyLink('rliLink')">Copy</button>
+
 <br><br>
 
-<label>Select Position:</label><br>
-<input type="radio" name="position" value="LEFT" checked> LEFT
-<input type="radio" name="position" value="RIGHT"> RIGHT
-<br><br>
+<p><b>FR (Friend Referral Link):</b></p>
+<input type="text" id="frLink" readonly>
+<button onclick="copyLink('frLink')">Copy</button>
 
-<button onclick="handleRegister()">Register</button>
+<hr>
+
+<h3>Introducer Tree</h3>
+<div id="treeView"></div>
+
+<br>
+
+<button onclick="logout()">Logout</button>
 
 <script>
-// Get introducer from URL
-let params = new URLSearchParams(window.location.search);
-let introducerId = params.get("ref") || "BWG000000";
-document.getElementById("introId").innerText = introducerId;
 
-// Load users
+// Get logged in user
+let user = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!user) {
+  alert("Please login first");
+  window.location.href = "login.html";
+}
+
+// Display user info
+document.getElementById("userInfo").innerHTML = `
+  <p><b>User ID:</b> ${user.userId}</p>
+  <p><b>Name:</b> ${user.username}</p>
+  <p><b>Introducer ID:</b> ${user.introducerId}</p>
+  <p><b>Position:</b> ${user.position}</p>
+`;
+
+// Generate Links
+let baseUrl = window.location.origin + window.location.pathname.replace("dashboard.html", "register.html");
+
+document.getElementById("ugliLink").value = baseUrl + "?type=upgrade&id=" + user.userId;
+document.getElementById("rliLink").value = baseUrl + "?type=repurchase&id=" + user.userId;
+document.getElementById("frLink").value = baseUrl + "?ref=" + user.userId;
+
+// Copy function
+function copyLink(id) {
+  let input = document.getElementById(id);
+  input.select();
+  document.execCommand("copy");
+  alert("Copied!");
+}
+
+// Get users
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
 
-// Save users
-function saveUsers(users) {
-  localStorage.setItem("users", JSON.stringify(users));
-}
-
-// Generate unique user ID
-function generateUserId() {
+// Introducer Tree
+function getIntroducerTree(userId) {
   let users = getUsers();
-  let id;
-  do {
-    id = "BWG" + Math.floor(100000 + Math.random() * 900000);
-  } while (users.find(u => u.userId === id));
-  return id;
-}
+  let result = [];
+  let current = users.find(u => u.userId === userId);
+  let level = 1;
 
-// ✅ Find bottom-most placement
-function findBottomPosition(users, introducerId, position) {
-  let queue = [introducerId];
-  let lastFound = introducerId;
+  while (current && current.introducerId && level <= 30) {
+    let parent = users.find(u => u.userId === current.introducerId);
+    if (!parent) break;
 
-  while (queue.length > 0) {
-    let currentId = queue.shift();
+    result.push({
+      level: "L" + level,
+      userId: parent.userId,
+      name: parent.username
+    });
 
-    let children = users.filter(u => 
-      u.introducerId === currentId && u.position === position
-    );
-
-    if (children.length === 0) {
-      lastFound = currentId;
-      break;
-    }
-
-    children.forEach(child => queue.push(child.userId));
+    current = parent;
+    level++;
   }
 
-  return lastFound;
+  return result;
 }
 
-// Register user
-function registerUser(username, mobile, introducerId, position) {
-  let users = getUsers();
+// Render tree
+let tree = getIntroducerTree(user.userId);
+let html = "";
 
-  // Find sponsor (bottom placement)
-  let sponsorId = findBottomPosition(users, introducerId, position);
-
-  let newUser = {
-    userId: generateUserId(),
-    username: username,
-    mobile: mobile,
-    introducerId: introducerId,
-    sponsorId: sponsorId,
-    position: position,
-    createdAt: new Date().toISOString()
-  };
-
-  users.push(newUser);
-  saveUsers(users);
-
-  alert("Registered Successfully! Your ID: " + newUser.userId);
-
-  return newUser;
+if (tree.length === 0) {
+  html = "<p>No introducer tree found</p>";
+} else {
+  tree.forEach(t => {
+    html += `<p>${t.level} → ${t.userId} (${t.name})</p>`;
+  });
 }
 
-// Handle button click
-function handleRegister() {
-  let username = document.getElementById("username").value;
-  let mobile = document.getElementById("mobile").value;
-  let position = document.querySelector('input[name="position"]:checked').value;
+document.getElementById("treeView").innerHTML = html;
 
-  if (!username || !mobile || !position) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  let user = registerUser(username, mobile, introducerId, position);
-
-  // Auto login after registration
-  localStorage.setItem("loggedInUser", JSON.stringify(user));
-
+// Logout
+function logout() {
+  localStorage.removeItem("loggedInUser");
   window.location.href = "login.html";
 }
+
 </script>
 
 </body>
