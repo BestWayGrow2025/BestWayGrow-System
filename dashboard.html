@@ -85,13 +85,13 @@ window.onload = function() {
   document.getElementById("wallet").innerText = freshUser.wallet || 0;
 
   // =====================
-  // 🔥 LINK FIX (FINAL)
+  // 🔥 FINAL LINK FIX (IMPORTANT)
   // =====================
   let base = window.location.origin + "/BestWayGrow-System/";
 
-  let ugli = base + "register.html?type=upgrade&id=" + freshUser.userId;
-  let rli  = base + "register.html?type=repurchase&id=" + freshUser.userId;
-  let fr   = base + "register.html?ref=" + freshUser.userId;
+  let ugli = base + "upgrade.html?id=" + freshUser.userId;   // ✅ FIXED
+  let rli  = base + "repurchase.html?id=" + freshUser.userId; // (next step)
+  let fr   = base + "register.html?ref=" + freshUser.userId;  // correct
 
   document.getElementById("ugliLink").innerText = ugli;
   document.getElementById("rliLink").innerText  = rli;
