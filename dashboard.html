@@ -1,58 +1,121 @@
-Dashboard
-User ID: BWG992504
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+</head>
+<body>
 
-Name: reeta
+<h2>Dashboard</h2>
 
-Introducer ID: BWG000000
+<div id="userInfo"></div>
 
-Position: LEFT
+<h3>💰 Wallet: ₹<span id="wallet">0</span></h3>
 
-Your Links
-UGLI (Upgrade Link):
+<hr>
 
-register.html?type=upgrade&id=BWG992504
+<h3>Your Links</h3>
 
-Copy
+<p><b>UGLI:</b></p>
+<input type="text" id="ugliLink" readonly><br>
+<button onclick="copyLink('ugliLink')">Copy</button>
 
-RLI (Repurchase Link):
+<br><br>
 
-register.html?type=repurchase&id=BWG992504
+<p><b>RLI:</b></p>
+<input type="text" id="rliLink" readonly><br>
+<button onclick="copyLink('rliLink')">Copy</button>
 
-Copy
+<br><br>
 
-FR (Friend Referral Link):
+<p><b>FR:</b></p>
+<input type="text" id="frLink" readonly><br>
+<button onclick="copyLink('frLink')">Copy</button>
 
-register.html?ref=BWG992504
+<hr>
 
-Copy
-Introducer Tree
-L1 → BWG000000 (ADMIN)
+<h3>Introducer Tree</h3>
+<div id="treeView"></div>
 
-Sponsor Tree (LEFT / RIGHT)
-LEFT: Empty
+<br><br>
 
-RIGHT: Empty
+<button onclick="logout()">Logout</button>
 
-All Users
-BWG357699 — reeta (Intro: BWG000000, Pos: LEFT)
+<script>
 
-BWG946195 — reeta (Intro: BWG000000, Pos: LEFT)
+// USER
+let user = JSON.parse(localStorage.getItem("loggedInUser"));
 
-BWG772193 — reeta (Intro: BWG000000, Pos: LEFT)
+if (!user) {
+  alert("Login first");
+  window.location.href = "login.html";
+}
 
-BWG950624 — reeta (Intro: BWG000000, Pos: LEFT)
+// INFO
+document.getElementById("userInfo").innerHTML =
+  "<p>User ID: " + user.userId + "</p>" +
+  "<p>Name: " + user.username + "</p>" +
+  "<p>Introducer: " + user.introducerId + "</p>" +
+  "<p>Position: " + user.position + "</p>";
 
-BWG992504 — reeta (Intro: BWG000000, Pos: LEFT)
+// WALLET
+document.getElementById("wallet").innerText = user.wallet || 0;
 
-BWG000000 — ADMIN (Intro: null, Pos: null)
+// LINKS
+let base = "register.html";
 
-BWG623272 — gagan (Intro: BWG000000, Pos: LEFT)
+document.getElementById("ugliLink").value = base + "?type=upgrade&id=" + user.userId;
+document.getElementById("rliLink").value  = base + "?type=repurchase&id=" + user.userId;
+document.getElementById("frLink").value   = base + "?ref=" + user.userId;
 
-BWG617279 — JEET (Intro: BWG000000, Pos: LEFT)
+// COPY
+function copyLink(id) {
+  let input = document.getElementById(id);
+  input.select();
+  document.execCommand("copy");
+  alert("Copied");
+}
 
-BWG851019 — JEET (Intro: BWG000000, Pos: LEFT)
+// USERS
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
 
-BWG264409 — JEET (Intro: BWG000000, Pos: LEFT)
+// TREE
+function getTree(userId) {
+  let users = getUsers();
+  let result = [];
+  let current = users.find(u => u.userId === userId);
+  let level = 1;
 
+  while (current && current.introducerId && level <= 30) {
+    let parent = users.find(u => u.userId === current.introducerId);
+    if (!parent) break;
 
-Logout
+    result.push("L" + level + " → " + parent.userId + " (" + parent.username + ")");
+    current = parent;
+    level++;
+  }
+
+  return result;
+}
+
+// RENDER TREE
+let tree = getTree(user.userId);
+let html = "";
+
+tree.forEach(t => {
+  html += "<p>" + t + "</p>";
+});
+
+document.getElementById("treeView").innerHTML = html;
+
+// LOGOUT
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
+}
+
+</script>
+
+</body>
+</html>
