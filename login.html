@@ -1,102 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - BestWayGrow</title>
-
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f0f4f5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
-.login-box {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    width: 300px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    text-align: center;
-}
-
-input {
-    width: 90%;
-    padding: 10px;
-    margin: 10px 0;
-}
-
-button {
-    background: #006633;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-}
-</style>
+  <title>Login</title>
 </head>
 
 <body>
 
-<div class="login-box">
-    <h2>Login</h2>
+<h2>Login</h2>
 
-    <input type="text" id="username" placeholder="Username"><br>
-    <input type="password" id="password" placeholder="Password"><br>
+<input type="text" id="userId" placeholder="Enter User ID"><br><br>
 
-    <button onclick="login()">Login</button>
-</div>
+<button onclick="login()">Login</button>
 
 <script>
 
-// ✅ Clear old login session when opening login page
-localStorage.removeItem("loggedIn");
-
 function login() {
 
-    var user = document.getElementById("username").value.trim();
-    var pass = document.getElementById("password").value.trim();
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
 
-    // Empty check
-    if (user === "" || pass === "") {
-        alert("Please enter Username & Password");
-        return;
-    }
+  let userId = document.getElementById("userId").value;
 
-    // Get saved password or default
-    var savedPass = localStorage.getItem("userPass") || "1234";
+  let user = users.find(u => u.userId === userId);
 
-    // Check login
-    if (user === "admin" && pass === savedPass) {
+  if (!user) {
+    alert("User not found");
+    return;
+  }
 
-        // Save login session
-        localStorage.setItem("loggedIn", "true");
-        localStorage.setItem("username", user);
-        localStorage.setItem("plan", "BV2100");
+  // Save session
+  localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-        // Ask for password change
-        var change = confirm("Do you want to change password?");
+  alert("Login successful");
 
-        if (change) {
-            var newPass = prompt("Enter new password:");
-
-            if (newPass && newPass.trim() !== "") {
-                localStorage.setItem("userPass", newPass);
-                alert("Password Updated Successfully");
-            }
-        }
-
-        alert("Login Successful");
-
-        window.location.href = "dashboard.html";
-
-    } else {
-        alert("Invalid login");
-    }
+  window.location.href = "dashboard.html";
 }
 
 </script>
