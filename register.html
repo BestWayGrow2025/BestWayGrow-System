@@ -1,131 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard</title>
+  <title>Register</title>
 </head>
 <body>
 
-<h2>Dashboard</h2>
+<h2>Register Page</h2>
 
-<div id="userInfo"></div>
+<p>Introducer ID: <span id="introId"></span></p>
 
-<hr>
+<input type="text" id="username" placeholder="Enter Name"><br><br>
+<input type="text" id="mobile" placeholder="Enter Mobile"><br><br>
 
-<h3>Your Links</h3>
-
-<p><b>UGLI (Upgrade Link):</b></p>
-<input type="text" id="ugliLink" readonly>
-<button onclick="copyLink('ugliLink')">Copy</button>
-
-<br><br>
-
-<p><b>RLI (Repurchase Link):</b></p>
-<input type="text" id="rliLink" readonly>
-<button onclick="copyLink('rliLink')">Copy</button>
+<label>Select Position:</label><br>
+<input type="radio" name="position" value="LEFT" checked> LEFT
+<input type="radio" name="position" value="RIGHT"> RIGHT
 
 <br><br>
 
-<p><b>FR (Friend Referral Link):</b></p>
-<input type="text" id="frLink" readonly>
-<button onclick="copyLink('frLink')">Copy</button>
-
-<hr>
-
-<h3>Introducer Tree</h3>
-<div id="treeView"></div>
-
-<br>
-
-<button onclick="logout()">Logout</button>
+<button onclick="handleRegister()">Register</button>
 
 <script>
 
-// Get logged in user
-let user = JSON.parse(localStorage.getItem("loggedInUser"));
+// =====================
+// GET INTRODUCER FROM URL
+// =====================
+let params = new URLSearchParams(window.location.search);
+let introducerId = params.get("ref") || "BWG000000";
 
-if (!user) {
-  alert("Please login first");
-  window.location.href = "login.html";
-}
+document.getElementById("introId").innerText = introducerId;
 
-// Display user info
-document.getElementById("userInfo").innerHTML = `
-  <p><b>User ID:</b> ${user.userId}</p>
-  <p><b>Name:</b> ${user.username}</p>
-  <p><b>Introducer ID:</b> ${user.introducerId}</p>
-  <p><b>Position:</b> ${user.position}</p>
-`;
-
-// Generate Links
-let baseUrl = window.location.origin + window.location.pathname.replace("dashboard.html", "register.html");
-
-document.getElementById("ugliLink").value = baseUrl + "?type=upgrade&id=" + user.userId;
-document.getElementById("rliLink").value = baseUrl + "?type=repurchase&id=" + user.userId;
-document.getElementById("frLink").value = baseUrl + "?ref=" + user.userId;
-
-// Copy function
-function copyLink(id) {
-  let input = document.getElementById(id);
-  input.select();
-  document.execCommand("copy");
-  alert("Copied!");
-}
-
-// Get users
+// =====================
+// USERS STORAGE
+// =====================
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
 
-// Introducer Tree
-function getIntroducerTree(userId) {
+function saveUsers(users) {
+  localStorage.setItem("users", JSON.stringify(users));
+}
+
+// =====================
+// GENERATE USER ID
+// =====================
+function generateUserId() {
   let users = getUsers();
-  let result = [];
-  let current = users.find(u => u.userId === userId);
-  let level = 1;
+  let id;
 
-  while (current && current.introducerId && level <= 30) {
-    let parent = users.find(u => u.userId === current.introducerId);
-    if (!parent) break;
+  do {
+    id = "BWG" + Math.floor(100000 + Math.random() * 900000);
+  } while (users.find(u => u.userId === id));
 
-    result.push({
-      level: "L" + level,
-      userId: parent.userId,
-      name: parent.username
-    });
-
-    current = parent;
-    level++;
-  }
-
-  return result;
+  return id;
 }
 
-// Render tree
-let tree = getIntroducerTree(user.userId);
-let html = "";
-
-if (tree.length === 0) {
-  html = "<p>No introducer tree found</p>";
-} else {
-  tree.forEach(t => {
-    html += `<p>${t.level} → ${t.userId} (${t.name})</p>`;
-  });
-}
-
-document.getElementById("treeView").innerHTML = html;
-
-// Logout
-function logout() {
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
-}
-
-  // =====================
+// =====================
 // WALLET INIT
 // =====================
 function initWallet(user) {
   user.wallet = user.wallet || 0;
-  user.incomeHistory = user.incomeHistory || [];
 }
 
 // =====================
@@ -133,8 +67,7 @@ function initWallet(user) {
 // =====================
 function payUGLIIncome(buyerId) {
 
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-
+  let users = getUsers();
   let buyer = users.find(u => u.userId === buyerId);
   if (!buyer) return;
 
@@ -156,9 +89,62 @@ function payUGLIIncome(buyerId) {
     level++;
   }
 
-  localStorage.setItem("users", JSON.stringify(users));
+  saveUsers(users);
 }
-  
+
+// =====================
+// REGISTER USER
+// =====================
+function registerUser(username, mobile, introducerId, position) {
+
+  let users = getUsers();
+
+  let newUser = {
+    userId: generateUserId(),
+    username: username,
+    mobile: mobile,
+    introducerId: introducerId,
+    position: position,
+    createdAt: new Date().toISOString(),
+    wallet: 0
+  };
+
+  users.push(newUser);
+  saveUsers(users);
+
+  return newUser;
+}
+
+// =====================
+// HANDLE REGISTER
+// =====================
+function handleRegister() {
+
+  let username = document.getElementById("username").value;
+  let mobile = document.getElementById("mobile").value;
+  let position = document.querySelector('input[name="position"]:checked').value;
+
+  if (!username || !mobile) {
+    alert("Fill all fields");
+    return;
+  }
+
+  let user = registerUser(username, mobile, introducerId, position);
+
+  // 🔥 CHECK UGLI
+  let type = params.get("type");
+
+  if (type === "upgrade") {
+    payUGLIIncome(user.userId);
+  }
+
+  alert("Registered! ID: " + user.userId);
+
+  localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+  window.location.href = "login.html";
+}
+
 </script>
 
 </body>
