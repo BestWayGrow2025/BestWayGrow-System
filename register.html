@@ -9,26 +9,28 @@
 
 <p>Introducer ID: <span id="introId"></span></p>
 
-<input type="text" id="username" placeholder="Enter Name"><br><br>
-<input type="text" id="mobile" placeholder="Enter Mobile"><br><br>
+<div id="formArea">
+  <input type="text" id="username" placeholder="Enter Name"><br><br>
+  <input type="text" id="mobile" placeholder="Enter Mobile"><br><br>
 
-<label>Select Position:</label><br>
-<input type="radio" name="position" value="LEFT" checked> LEFT
-<input type="radio" name="position" value="RIGHT"> RIGHT
+  <label>Select Position:</label><br>
+  <input type="radio" name="position" value="LEFT" checked> LEFT
+  <input type="radio" name="position" value="RIGHT"> RIGHT
 
-<br><br>
+  <br><br>
 
-<button onclick="handleRegister()">Register</button>
+  <button onclick="handleRegister()">Register</button>
+</div>
 
 <script>
 
 // =====================
-// GET INTRODUCER FROM URL
+// URL PARAMS
 // =====================
 let params = new URLSearchParams(window.location.search);
+let type = params.get("type");
+let upgradeId = params.get("id");
 let introducerId = params.get("ref") || "BWG000000";
-
-document.getElementById("introId").innerText = introducerId;
 
 // =====================
 // USERS STORAGE
@@ -42,20 +44,6 @@ function saveUsers(users) {
 }
 
 // =====================
-// GENERATE USER ID
-// =====================
-function generateUserId() {
-  let users = getUsers();
-  let id;
-
-  do {
-    id = "BWG" + Math.floor(100000 + Math.random() * 900000);
-  } while (users.find(u => u.userId === id));
-
-  return id;
-}
-
-// =====================
 // WALLET INIT
 // =====================
 function initWallet(user) {
@@ -63,7 +51,7 @@ function initWallet(user) {
 }
 
 // =====================
-// UGLI INCOME FUNCTION
+// UGLI INCOME
 // =====================
 function payUGLIIncome(buyerId) {
 
@@ -93,8 +81,35 @@ function payUGLIIncome(buyerId) {
 }
 
 // =====================
-// REGISTER USER
+// 🔥 IF UGLI → DIRECT ACTION (NO FORM)
 // =====================
+if (type === "upgrade" && upgradeId) {
+
+  document.getElementById("formArea").style.display = "none";
+  document.getElementById("introId").innerText = "UPGRADE MODE";
+
+  payUGLIIncome(upgradeId);
+
+  alert("Upgrade Successful!");
+
+}
+
+// =====================
+// NORMAL REGISTER (FR)
+// =====================
+document.getElementById("introId").innerText = introducerId;
+
+function generateUserId() {
+  let users = getUsers();
+  let id;
+
+  do {
+    id = "BWG" + Math.floor(100000 + Math.random() * 900000);
+  } while (users.find(u => u.userId === id));
+
+  return id;
+}
+
 function registerUser(username, mobile, introducerId, position) {
 
   let users = getUsers();
@@ -115,9 +130,6 @@ function registerUser(username, mobile, introducerId, position) {
   return newUser;
 }
 
-// =====================
-// HANDLE REGISTER
-// =====================
 function handleRegister() {
 
   let username = document.getElementById("username").value;
@@ -130,13 +142,6 @@ function handleRegister() {
   }
 
   let user = registerUser(username, mobile, introducerId, position);
-
-  // 🔥 CHECK UGLI
-  let type = params.get("type");
-
-  if (type === "upgrade") {
-    payUGLIIncome(user.userId);
-  }
 
   alert("Registered! ID: " + user.userId);
 
