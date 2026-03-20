@@ -3,7 +3,6 @@
 <head>
   <title>Register</title>
 </head>
-
 <body>
 
 <h2>Register Page</h2>
@@ -19,13 +18,11 @@
 <label>Select Position:</label><br>
 <input type="radio" name="position" value="LEFT" checked> LEFT
 <input type="radio" name="position" value="RIGHT"> RIGHT
-
 <br><br>
 
 <button onclick="handleRegister()">Register</button>
 
 <script>
-
 // Get introducer from URL
 let params = new URLSearchParams(window.location.search);
 let introducerId = params.get("ref") || "BWG000000";
@@ -41,28 +38,52 @@ function saveUsers(users) {
   localStorage.setItem("users", JSON.stringify(users));
 }
 
-// Generate unique random ID
+// Generate unique user ID
 function generateUserId() {
   let users = getUsers();
   let id;
-
   do {
     id = "BWG" + Math.floor(100000 + Math.random() * 900000);
   } while (users.find(u => u.userId === id));
-
   return id;
+}
+
+// ✅ Find bottom-most placement
+function findBottomPosition(users, introducerId, position) {
+  let queue = [introducerId];
+  let lastFound = introducerId;
+
+  while (queue.length > 0) {
+    let currentId = queue.shift();
+
+    let children = users.filter(u => 
+      u.introducerId === currentId && u.position === position
+    );
+
+    if (children.length === 0) {
+      lastFound = currentId;
+      break;
+    }
+
+    children.forEach(child => queue.push(child.userId));
+  }
+
+  return lastFound;
 }
 
 // Register user
 function registerUser(username, mobile, introducerId, position) {
-
   let users = getUsers();
+
+  // Find sponsor (bottom placement)
+  let sponsorId = findBottomPosition(users, introducerId, position);
 
   let newUser = {
     userId: generateUserId(),
     username: username,
     mobile: mobile,
     introducerId: introducerId,
+    sponsorId: sponsorId,
     position: position,
     createdAt: new Date().toISOString()
   };
@@ -77,7 +98,6 @@ function registerUser(username, mobile, introducerId, position) {
 
 // Handle button click
 function handleRegister() {
-
   let username = document.getElementById("username").value;
   let mobile = document.getElementById("mobile").value;
   let position = document.querySelector('input[name="position"]:checked').value;
@@ -89,11 +109,11 @@ function handleRegister() {
 
   let user = registerUser(username, mobile, introducerId, position);
 
+  // Auto login after registration
   localStorage.setItem("loggedInUser", JSON.stringify(user));
 
   window.location.href = "login.html";
 }
-
 </script>
 
 </body>
