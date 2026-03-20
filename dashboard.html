@@ -14,20 +14,20 @@
 <h3>Your Links</h3>
 
 <p><b>UGLI (Upgrade Link):</b></p>
-<input type="text" id="ugliLink" readonly style="width:100%"><br>
-<button onclick="copyLink('ugliLink')">Copy</button>
+<p id="ugliLink"></p>
+<button onclick="copyText('ugliLink')">Copy</button>
 
 <br><br>
 
 <p><b>RLI (Repurchase Link):</b></p>
-<input type="text" id="rliLink" readonly style="width:100%"><br>
-<button onclick="copyLink('rliLink')">Copy</button>
+<p id="rliLink"></p>
+<button onclick="copyText('rliLink')">Copy</button>
 
 <br><br>
 
 <p><b>FR (Friend Referral Link):</b></p>
-<input type="text" id="frLink" readonly style="width:100%"><br>
-<button onclick="copyLink('frLink')">Copy</button>
+<p id="frLink"></p>
+<button onclick="copyText('frLink')">Copy</button>
 
 <hr>
 
@@ -47,9 +47,6 @@
 
 window.onload = function() {
 
-  // =====================
-  // USER LOAD
-  // =====================
   let user = JSON.parse(localStorage.getItem("loggedInUser"));
 
   if (!user) {
@@ -58,9 +55,7 @@ window.onload = function() {
     return;
   }
 
-  // =====================
   // USER INFO
-  // =====================
   document.getElementById("userInfo").innerHTML = `
     <p><b>User ID:</b> ${user.userId}</p>
     <p><b>Name:</b> ${user.username}</p>
@@ -68,36 +63,21 @@ window.onload = function() {
     <p><b>Position:</b> ${user.position}</p>
   `;
 
-  // =====================
-  // 🔥 LINKS FIX (FINAL)
-  // =====================
+  // 🔥 LINKS (FINAL WORKING)
   let ugli = "register.html?type=upgrade&id=" + user.userId;
   let rli  = "register.html?type=repurchase&id=" + user.userId;
   let fr   = "register.html?ref=" + user.userId;
 
-  let ugliInput = document.getElementById("ugliLink");
-  let rliInput  = document.getElementById("rliLink");
-  let frInput   = document.getElementById("frLink");
+  document.getElementById("ugliLink").innerText = ugli;
+  document.getElementById("rliLink").innerText  = rli;
+  document.getElementById("frLink").innerText   = fr;
 
-  ugliInput.value = ugli;
-  rliInput.value  = rli;
-  frInput.value   = fr;
-
-  // FORCE UPDATE (important)
-  ugliInput.setAttribute("value", ugli);
-  rliInput.setAttribute("value", rli);
-  frInput.setAttribute("value", fr);
-
-  // =====================
   // USERS
-  // =====================
   function getUsers() {
     return JSON.parse(localStorage.getItem("users") || "[]");
   }
 
-  // =====================
   // INTRODUCER TREE
-  // =====================
   function getIntroducerTree(userId) {
     let users = getUsers();
     let result = [];
@@ -124,19 +104,13 @@ window.onload = function() {
   let tree = getIntroducerTree(user.userId);
   let treeHtml = "";
 
-  if (tree.length === 0) {
-    treeHtml = "<p>No introducer tree found</p>";
-  } else {
-    tree.forEach(t => {
-      treeHtml += `<p>${t.level} → ${t.userId} (${t.name})</p>`;
-    });
-  }
+  tree.forEach(t => {
+    treeHtml += `<p>${t.level} → ${t.userId} (${t.name})</p>`;
+  });
 
   document.getElementById("treeView").innerHTML = treeHtml;
 
-  // =====================
   // SPONSOR TREE
-  // =====================
   function getSponsorTree(userId) {
     let users = getUsers();
 
@@ -153,9 +127,7 @@ window.onload = function() {
     <p><b>RIGHT:</b> ${sponsor.right ? sponsor.right.userId + " (" + sponsor.right.username + ")" : "Empty"}</p>
   `;
 
-  // =====================
   // ALL USERS
-  // =====================
   function renderUsers() {
     let users = getUsers();
     let html = "";
@@ -174,19 +146,14 @@ window.onload = function() {
 
 };
 
-// =====================
 // COPY
-// =====================
-function copyLink(id) {
-  let input = document.getElementById(id);
-  input.select();
-  document.execCommand("copy");
+function copyText(id) {
+  let text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text);
   alert("Copied!");
 }
 
-// =====================
 // LOGOUT
-// =====================
 function logout() {
   localStorage.removeItem("loggedInUser");
   window.location.href = "login.html";
