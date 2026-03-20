@@ -13,6 +13,9 @@
 <h3>Introducer Tree</h3>
 <div id="treeView"></div>
 
+<h3>Sponsor Tree (LEFT / RIGHT)</h3>
+<div id="sponsorTree"></div>
+
 <br>
 <button onclick="logout()">Logout</button>
 
@@ -39,12 +42,13 @@ function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
 
-// Introducer tree logic
+//////////////////////////////
+// INTRODUCER TREE
+//////////////////////////////
 function getIntroducerTree(userId) {
 
   let users = getUsers();
   let result = [];
-
   let current = users.find(u => u.userId === userId);
   let level = 1;
 
@@ -66,7 +70,7 @@ function getIntroducerTree(userId) {
   return result;
 }
 
-// Render tree
+// Render introducer tree
 let tree = getIntroducerTree(user.userId);
 
 let html = "";
@@ -81,7 +85,31 @@ if (tree.length === 0) {
 
 document.getElementById("treeView").innerHTML = html;
 
-// Logout
+//////////////////////////////
+// SPONSOR TREE
+//////////////////////////////
+function getSponsorTree(userId) {
+  let users = getUsers();
+
+  let left = users.find(u => u.introducerId === userId && u.position === "LEFT");
+  let right = users.find(u => u.introducerId === userId && u.position === "RIGHT");
+
+  return { left, right };
+}
+
+// Render sponsor tree
+let sponsor = getSponsorTree(user.userId);
+
+let sponsorHtml = "";
+
+sponsorHtml += "<p><b>LEFT:</b> " + (sponsor.left ? sponsor.left.userId + " (" + sponsor.left.username + ")" : "Empty") + "</p>";
+sponsorHtml += "<p><b>RIGHT:</b> " + (sponsor.right ? sponsor.right.userId + " (" + sponsor.right.username + ")" : "Empty") + "</p>";
+
+document.getElementById("sponsorTree").innerHTML = sponsorHtml;
+
+//////////////////////////////
+// LOGOUT
+//////////////////////////////
 function logout() {
   localStorage.removeItem("loggedInUser");
   window.location.href = "login.html";
