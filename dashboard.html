@@ -118,6 +118,20 @@ function getIntroducerTree(userId) {
 
   return result;
 }
+
+  let tree = getIntroducerTree(user.userId);
+
+let html = "";
+
+if (tree.length === 0) {
+  html = "<p>No introducer tree found</p>";
+} else {
+  tree.forEach(t => {
+    html += `<p>${t.level} → ${t.userId} (${t.name})</p>`;
+  });
+}
+
+document.getElementById("treeView").innerHTML = html;
 </script>
 
 </body>
