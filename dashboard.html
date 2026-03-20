@@ -16,19 +16,19 @@
 <h3>Your Links</h3>
 
 <p><b>UGLI:</b></p>
-<input type="text" id="ugliLink" readonly><br>
+<input type="text" id="ugliLink" readonly style="width:100%"><br>
 <button onclick="copyLink('ugliLink')">Copy</button>
 
 <br><br>
 
 <p><b>RLI:</b></p>
-<input type="text" id="rliLink" readonly><br>
+<input type="text" id="rliLink" readonly style="width:100%"><br>
 <button onclick="copyLink('rliLink')">Copy</button>
 
 <br><br>
 
 <p><b>FR:</b></p>
-<input type="text" id="frLink" readonly><br>
+<input type="text" id="frLink" readonly style="width:100%"><br>
 <button onclick="copyLink('frLink')">Copy</button>
 
 <hr>
@@ -42,7 +42,9 @@
 
 <script>
 
-// USER
+// =====================
+// LOAD USER
+// =====================
 let user = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!user) {
@@ -50,37 +52,58 @@ if (!user) {
   window.location.href = "login.html";
 }
 
-// INFO
-document.getElementById("userInfo").innerHTML =
-  "<p>User ID: " + user.userId + "</p>" +
-  "<p>Name: " + user.username + "</p>" +
-  "<p>Introducer: " + user.introducerId + "</p>" +
-  "<p>Position: " + user.position + "</p>";
-
-// WALLET
-document.getElementById("wallet").innerText = user.wallet || 0;
-
-// LINKS
-let base = "register.html";
-
-document.getElementById("ugliLink").value = base + "?type=upgrade&id=" + user.userId;
-document.getElementById("rliLink").value  = base + "?type=repurchase&id=" + user.userId;
-document.getElementById("frLink").value   = base + "?ref=" + user.userId;
-
-// COPY
-function copyLink(id) {
-  let input = document.getElementById(id);
-  input.select();
-  document.execCommand("copy");
-  alert("Copied");
-}
-
-// USERS
+// =====================
+// GET USERS LIST
+// =====================
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
 
-// TREE
+// 🔥 ALWAYS GET LATEST USER DATA (IMPORTANT FIX)
+let users = getUsers();
+let freshUser = users.find(u => u.userId === user.userId);
+
+// =====================
+// USER INFO
+// =====================
+document.getElementById("userInfo").innerHTML =
+  "<p>User ID: " + freshUser.userId + "</p>" +
+  "<p>Name: " + freshUser.username + "</p>" +
+  "<p>Introducer: " + freshUser.introducerId + "</p>" +
+  "<p>Position: " + freshUser.position + "</p>";
+
+// =====================
+// WALLET (LIVE UPDATE)
+// =====================
+document.getElementById("wallet").innerText = freshUser.wallet || 0;
+
+// =====================
+// 🔥 FULL URL FIX (IMPORTANT)
+// =====================
+let base = window.location.origin + "/BestWayGrow-System/";
+
+document.getElementById("ugliLink").value =
+  base + "register.html?type=upgrade&id=" + freshUser.userId;
+
+document.getElementById("rliLink").value =
+  base + "register.html?type=repurchase&id=" + freshUser.userId;
+
+document.getElementById("frLink").value =
+  base + "register.html?ref=" + freshUser.userId;
+
+// =====================
+// COPY FUNCTION
+// =====================
+function copyLink(id) {
+  let input = document.getElementById(id);
+  input.select();
+  document.execCommand("copy");
+  alert("Copied!");
+}
+
+// =====================
+// INTRODUCER TREE
+// =====================
 function getTree(userId) {
   let users = getUsers();
   let result = [];
@@ -100,16 +123,22 @@ function getTree(userId) {
 }
 
 // RENDER TREE
-let tree = getTree(user.userId);
+let tree = getTree(freshUser.userId);
 let html = "";
 
-tree.forEach(t => {
-  html += "<p>" + t + "</p>";
-});
+if (tree.length === 0) {
+  html = "<p>No tree found</p>";
+} else {
+  tree.forEach(t => {
+    html += "<p>" + t + "</p>";
+  });
+}
 
 document.getElementById("treeView").innerHTML = html;
 
+// =====================
 // LOGOUT
+// =====================
 function logout() {
   localStorage.removeItem("loggedInUser");
   window.location.href = "login.html";
