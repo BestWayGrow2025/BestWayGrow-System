@@ -8,18 +8,12 @@
 
 <h2>Dashboard</h2>
 
-<div id="userInfo"></div>-
+<div id="userInfo"></div>
 
-  <h3>Introducer Tree</h3>
+<h3>Introducer Tree</h3>
 <div id="treeView"></div>
 
 <br>
-
-<h3>Introducer Tree (L1 → L30)</h3>
-<div id="treeView"></div>
-
-<br>
-
 <button onclick="logout()">Logout</button>
 
 <script>
@@ -40,20 +34,22 @@ document.getElementById("userInfo").innerHTML = `
   <p><b>Position:</b> ${user.position}</p>
 `;
 
-// Get all users
+// Get users
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
 
-// Introducer Tree logic (L1 → L30)
+// Introducer tree logic
 function getIntroducerTree(userId) {
+
   let users = getUsers();
   let result = [];
-  let current = users.find(u => u.userId === userId);
 
+  let current = users.find(u => u.userId === userId);
   let level = 1;
 
   while (current && current.introducerId && level <= 30) {
+
     let parent = users.find(u => u.userId === current.introducerId);
     if (!parent) break;
 
@@ -91,47 +87,6 @@ function logout() {
   window.location.href = "login.html";
 }
 
-  function getUsers() {
-  return JSON.parse(localStorage.getItem("users") || "[]");
-}
-
-function getIntroducerTree(userId) {
-  let users = getUsers();
-  let result = [];
-
-  let current = users.find(u => u.userId === userId);
-  let level = 1;
-
-  while (current && current.introducerId && level <= 30) {
-    let parent = users.find(u => u.userId === current.introducerId);
-    if (!parent) break;
-
-    result.push({
-      level: "L" + level,
-      userId: parent.userId,
-      name: parent.username
-    });
-
-    current = parent;
-    level++;
-  }
-
-  return result;
-}
-
-  let tree = getIntroducerTree(user.userId);
-
-let html = "";
-
-if (tree.length === 0) {
-  html = "<p>No introducer tree found</p>";
-} else {
-  tree.forEach(t => {
-    html += `<p>${t.level} → ${t.userId} (${t.name})</p>`;
-  });
-}
-
-document.getElementById("treeView").innerHTML = html;
 </script>
 
 </body>
