@@ -9,6 +9,28 @@
 
 <div id="userInfo"></div>
 
+<hr>
+
+<h3>Your Links</h3>
+
+<p><b>UGLI (Upgrade Link):</b></p>
+<input type="text" id="ugliLink" readonly>
+<button onclick="copyLink('ugliLink')">Copy</button>
+
+<br><br>
+
+<p><b>RLI (Repurchase Link):</b></p>
+<input type="text" id="rliLink" readonly>
+<button onclick="copyLink('rliLink')">Copy</button>
+
+<br><br>
+
+<p><b>FR (Friend Referral Link):</b></p>
+<input type="text" id="frLink" readonly>
+<button onclick="copyLink('frLink')">Copy</button>
+
+<hr>
+
 <h3>Introducer Tree</h3>
 <div id="treeView"></div>
 
@@ -44,6 +66,23 @@ document.getElementById("userInfo").innerHTML = `
 `;
 
 // =====================
+// LINKS (UGLI / RLI / FR)
+// =====================
+let baseUrl = "register.html";
+
+document.getElementById("ugliLink").value = baseUrl + "?type=upgrade&id=" + user.userId;
+document.getElementById("rliLink").value = baseUrl + "?type=repurchase&id=" + user.userId;
+document.getElementById("frLink").value = baseUrl + "?ref=" + user.userId;
+
+// Copy function
+function copyLink(id) {
+  let input = document.getElementById(id);
+  input.select();
+  document.execCommand("copy");
+  alert("Copied!");
+}
+
+// =====================
 // USERS DATA
 // =====================
 function getUsers() {
@@ -51,7 +90,7 @@ function getUsers() {
 }
 
 // =====================
-// INTRODUCER TREE (UPLINE L1→L30)
+// INTRODUCER TREE
 // =====================
 function getIntroducerTree(userId) {
   let users = getUsers();
@@ -91,7 +130,7 @@ if (tree.length === 0) {
 document.getElementById("treeView").innerHTML = treeHtml;
 
 // =====================
-// SPONSOR TREE (DIRECT CHILDREN)
+// SPONSOR TREE
 // =====================
 function getSponsorTree(userId) {
   let users = getUsers();
