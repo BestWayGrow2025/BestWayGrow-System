@@ -3,7 +3,6 @@
 <head>
   <title>Dashboard</title>
 </head>
-
 <body>
 
 <h2>Dashboard</h2>
@@ -16,12 +15,17 @@
 <h3>Sponsor Tree (LEFT / RIGHT)</h3>
 <div id="sponsorTree"></div>
 
+<h3>All Users</h3>
+<div id="usersList"></div>
+
 <br>
 <button onclick="logout()">Logout</button>
 
 <script>
 
-// Get logged in user
+// =====================
+// GET LOGGED USER
+// =====================
 let user = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!user) {
@@ -29,7 +33,9 @@ if (!user) {
   window.location.href = "login.html";
 }
 
-// Display user info
+// =====================
+// DISPLAY USER INFO
+// =====================
 document.getElementById("userInfo").innerHTML = `
   <p><b>User ID:</b> ${user.userId}</p>
   <p><b>Name:</b> ${user.username}</p>
@@ -37,23 +43,23 @@ document.getElementById("userInfo").innerHTML = `
   <p><b>Position:</b> ${user.position}</p>
 `;
 
-// Get users
+// =====================
+// USERS DATA
+// =====================
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
 
-//////////////////////////////
-// INTRODUCER TREE
-//////////////////////////////
+// =====================
+// INTRODUCER TREE (UPLINE L1→L30)
+// =====================
 function getIntroducerTree(userId) {
-
   let users = getUsers();
   let result = [];
   let current = users.find(u => u.userId === userId);
   let level = 1;
 
   while (current && current.introducerId && level <= 30) {
-
     let parent = users.find(u => u.userId === current.introducerId);
     if (!parent) break;
 
@@ -72,22 +78,21 @@ function getIntroducerTree(userId) {
 
 // Render introducer tree
 let tree = getIntroducerTree(user.userId);
-
-let html = "";
+let treeHtml = "";
 
 if (tree.length === 0) {
-  html = "<p>No introducer tree found</p>";
+  treeHtml = "<p>No introducer tree found</p>";
 } else {
   tree.forEach(t => {
-    html += `<p>${t.level} → ${t.userId} (${t.name})</p>`;
+    treeHtml += `<p>${t.level} → ${t.userId} (${t.name})</p>`;
   });
 }
 
-document.getElementById("treeView").innerHTML = html;
+document.getElementById("treeView").innerHTML = treeHtml;
 
-//////////////////////////////
-// SPONSOR TREE
-//////////////////////////////
+// =====================
+// SPONSOR TREE (DIRECT CHILDREN)
+// =====================
 function getSponsorTree(userId) {
   let users = getUsers();
 
@@ -100,16 +105,39 @@ function getSponsorTree(userId) {
 // Render sponsor tree
 let sponsor = getSponsorTree(user.userId);
 
-let sponsorHtml = "";
-
-sponsorHtml += "<p><b>LEFT:</b> " + (sponsor.left ? sponsor.left.userId + " (" + sponsor.left.username + ")" : "Empty") + "</p>";
-sponsorHtml += "<p><b>RIGHT:</b> " + (sponsor.right ? sponsor.right.userId + " (" + sponsor.right.username + ")" : "Empty") + "</p>";
+let sponsorHtml = `
+  <p><b>LEFT:</b> ${sponsor.left ? sponsor.left.userId + " (" + sponsor.left.username + ")" : "Empty"}</p>
+  <p><b>RIGHT:</b> ${sponsor.right ? sponsor.right.userId + " (" + sponsor.right.username + ")" : "Empty"}</p>
+`;
 
 document.getElementById("sponsorTree").innerHTML = sponsorHtml;
 
-//////////////////////////////
+// =====================
+// ALL USERS LIST
+// =====================
+function renderUsers() {
+  let users = getUsers();
+  let html = "";
+
+  if (users.length === 0) {
+    html = "<p>No users found</p>";
+  } else {
+    users.forEach(u => {
+      html += `<p>
+        ${u.userId} — ${u.username} 
+        (Intro: ${u.introducerId}, Pos: ${u.position})
+      </p>`;
+    });
+  }
+
+  document.getElementById("usersList").innerHTML = html;
+}
+
+renderUsers();
+
+// =====================
 // LOGOUT
-//////////////////////////////
+// =====================
 function logout() {
   localStorage.removeItem("loggedInUser");
   window.location.href = "login.html";
