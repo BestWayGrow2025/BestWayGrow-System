@@ -22,13 +22,11 @@
 
 <script>
 
-// Get introducer from URL
 let params = new URLSearchParams(window.location.search);
 let introducerId = params.get("ref") || "BWG000000";
 
 document.getElementById("introId").innerText = introducerId;
 
-// Generate unique user ID
 function generateUserId(users) {
   let id;
   do {
@@ -37,7 +35,6 @@ function generateUserId(users) {
   return id;
 }
 
-// Register function
 function register() {
 
   let users = JSON.parse(localStorage.getItem("users") || "[]");
