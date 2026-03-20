@@ -33,7 +33,7 @@
 
 <hr>
 
-<h3>Introducer Downline Tree</h3>
+<h3>Linear Next-to-Next Tree</h3>
 <div id="treeView"></div>
 
 <br><br>
@@ -98,31 +98,48 @@ window.onload = function() {
   document.getElementById("frLink").innerText   = fr;
 
   // =====================
-  // TREE (INTRODUCER DOWNLINE TREE)
+  // LINEAR TREE (NEXT → NEXT)
   // =====================
-  function buildDownlineTree(parentId, users) {
-    let children = users.filter(u => u.introducerId === parentId);
+  function buildLinearChain(startUserId, users) {
 
-    if (children.length === 0) return "";
+    let chain = [];
+    let currentId = startUserId;
 
-    let html = "<ul>";
+    while (currentId) {
 
-    children.forEach(child => {
-      html += "<li>" + child.userId + " (" + child.username + ")";
-      html += buildDownlineTree(child.userId, users);
-      html += "</li>";
-    });
+      let currentUser = users.find(u => u.userId === currentId);
+      if (!currentUser) break;
 
-    html += "</ul>";
+      chain.push(currentUser);
 
-    return html;
+      // find children
+      let children = users.filter(u => u.introducerId === currentId);
+
+      if (children.length === 0) break;
+
+      // optional sorting (by creation time)
+      if (children[0].createdAt) {
+        children.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      }
+
+      // take FIRST child as next
+      currentId = children[0].userId;
+    }
+
+    return chain;
   }
 
-  let treeHTML = "<ul><li>" + freshUser.userId;
-  treeHTML += buildDownlineTree(freshUser.userId, users);
-  treeHTML += "</li></ul>";
+  let chain = buildLinearChain(freshUser.userId, users);
 
-  document.getElementById("treeView").innerHTML = treeHTML;
+  let html = "<ul>";
+
+  chain.forEach(u => {
+    html += "<li>" + u.userId + " (" + u.username + ")</li>";
+  });
+
+  html += "</ul>";
+
+  document.getElementById("treeView").innerHTML = html;
 
 };
 
@@ -147,4 +164,3 @@ function logout() {
 
 </body>
 </html>
-
