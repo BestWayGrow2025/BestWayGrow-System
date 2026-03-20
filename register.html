@@ -18,7 +18,6 @@
   <input type="radio" name="position" value="RIGHT"> RIGHT
 
   <br><br>
-
   <button onclick="handleRegister()">Register</button>
 </div>
 
@@ -28,9 +27,10 @@
 // URL PARAMS
 // =====================
 let params = new URLSearchParams(window.location.search);
-let type = params.get("type");
-let upgradeId = params.get("id");
-let introducerId = params.get("ref") || "BWG000000";
+
+let type = params.get("type");   // upgrade / repurchase
+let userId = params.get("id");   // UGLI / RLI user
+let introducerId = params.get("ref") || "BWG000000"; // FR LINK
 
 // =====================
 // USERS STORAGE
@@ -51,12 +51,13 @@ function initWallet(user) {
 }
 
 // =====================
-// UGLI INCOME
+// UGLI INCOME (UPGRADE)
 // =====================
 function payUGLIIncome(buyerId) {
 
   let users = getUsers();
   let buyer = users.find(u => u.userId === buyerId);
+
   if (!buyer) return;
 
   let current = buyer;
@@ -81,25 +82,29 @@ function payUGLIIncome(buyerId) {
 }
 
 // =====================
-// 🔥 IF UGLI → DIRECT ACTION (NO FORM)
+// HANDLE UPGRADE MODE
 // =====================
-if (type === "upgrade" && upgradeId) {
+if (type === "upgrade" && userId) {
 
   document.getElementById("formArea").style.display = "none";
   document.getElementById("introId").innerText = "UPGRADE MODE";
 
-  payUGLIIncome(upgradeId);
+  payUGLIIncome(userId);
 
   alert("Upgrade Successful!");
 
 }
 
 // =====================
-// NORMAL REGISTER (FR)
+// SHOW INTRODUCER
 // =====================
 document.getElementById("introId").innerText = introducerId;
 
+// =====================
+// GENERATE USER ID
+// =====================
 function generateUserId() {
+
   let users = getUsers();
   let id;
 
@@ -110,6 +115,9 @@ function generateUserId() {
   return id;
 }
 
+// =====================
+// REGISTER USER
+// =====================
 function registerUser(username, mobile, introducerId, position) {
 
   let users = getUsers();
@@ -130,6 +138,9 @@ function registerUser(username, mobile, introducerId, position) {
   return newUser;
 }
 
+// =====================
+// FORM SUBMIT
+// =====================
 function handleRegister() {
 
   let username = document.getElementById("username").value;
@@ -147,8 +158,19 @@ function handleRegister() {
 
   localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-  window.location.href = "login.html";
+  window.location.href = "dashboard.html";
 }
+
+// =====================
+// UGLI REDIRECT (IF NEEDED)
+// =====================
+if (type === "upgrade" && userId) {
+  console.log("Upgrade mode active for:", userId);
+}
+
+// =====================
+// COPY CLEANUP (optional future use)
+// =====================
 
 </script>
 
