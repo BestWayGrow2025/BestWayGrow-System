@@ -16,20 +16,20 @@
 <h3>Your Links</h3>
 
 <p><b>UGLI:</b></p>
-<input type="text" id="ugliLink" readonly style="width:100%"><br>
-<button onclick="copyLink('ugliLink')">Copy</button>
+<p id="ugliLink"></p>
+<button onclick="copyText('ugliLink')">Copy</button>
 
 <br><br>
 
 <p><b>RLI:</b></p>
-<input type="text" id="rliLink" readonly style="width:100%"><br>
-<button onclick="copyLink('rliLink')">Copy</button>
+<p id="rliLink"></p>
+<button onclick="copyText('rliLink')">Copy</button>
 
 <br><br>
 
 <p><b>FR:</b></p>
-<input type="text" id="frLink" readonly style="width:100%"><br>
-<button onclick="copyLink('frLink')">Copy</button>
+<p id="frLink"></p>
+<button onclick="copyText('frLink')">Copy</button>
 
 <hr>
 
@@ -53,13 +53,13 @@ if (!user) {
 }
 
 // =====================
-// GET USERS LIST
+// GET USERS
 // =====================
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
 
-// 🔥 ALWAYS GET LATEST USER DATA (IMPORTANT FIX)
+// 🔥 GET LATEST USER DATA
 let users = getUsers();
 let freshUser = users.find(u => u.userId === user.userId);
 
@@ -73,31 +73,30 @@ document.getElementById("userInfo").innerHTML =
   "<p>Position: " + freshUser.position + "</p>";
 
 // =====================
-// WALLET (LIVE UPDATE)
+// WALLET
 // =====================
 document.getElementById("wallet").innerText = freshUser.wallet || 0;
 
 // =====================
-// 🔥 FULL URL FIX (IMPORTANT)
+// 🔥 FULL LINK FIX
 // =====================
 let base = window.location.origin + "/BestWayGrow-System/";
 
-document.getElementById("ugliLink").value =
-  base + "register.html?type=upgrade&id=" + freshUser.userId;
+let ugli = base + "register.html?type=upgrade&id=" + freshUser.userId;
+let rli  = base + "register.html?type=repurchase&id=" + freshUser.userId;
+let fr   = base + "register.html?ref=" + freshUser.userId;
 
-document.getElementById("rliLink").value =
-  base + "register.html?type=repurchase&id=" + freshUser.userId;
-
-document.getElementById("frLink").value =
-  base + "register.html?ref=" + freshUser.userId;
+// SHOW LINKS (VISIBLE FIX)
+document.getElementById("ugliLink").innerText = ugli;
+document.getElementById("rliLink").innerText  = rli;
+document.getElementById("frLink").innerText   = fr;
 
 // =====================
-// COPY FUNCTION
+// COPY (MODERN)
 // =====================
-function copyLink(id) {
-  let input = document.getElementById(id);
-  input.select();
-  document.execCommand("copy");
+function copyText(id) {
+  let text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text);
   alert("Copied!");
 }
 
