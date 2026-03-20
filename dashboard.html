@@ -33,7 +33,7 @@
 
 <hr>
 
-<h3>Introducer Tree</h3>
+<h3>Introducer Downline Tree</h3>
 <div id="treeView"></div>
 
 <br><br>
@@ -85,51 +85,49 @@ window.onload = function() {
   document.getElementById("wallet").innerText = freshUser.wallet || 0;
 
   // =====================
-  // 🔥 FINAL LINK FIX (IMPORTANT)
+  // LINKS
   // =====================
   let base = window.location.origin + "/BestWayGrow-System/";
 
-  let ugli = base + "upgrade.html?id=" + freshUser.userId;   // ✅ FIXED
-  let rli  = base + "repurchase.html?id=" + freshUser.userId; // (next step)
-  let fr   = base + "register.html?ref=" + freshUser.userId;  // correct
+  let ugli = base + "upgrade.html?id=" + freshUser.userId;
+  let rli  = base + "repurchase.html?id=" + freshUser.userId;
+  let fr   = base + "register.html?ref=" + freshUser.userId;
 
   document.getElementById("ugliLink").innerText = ugli;
   document.getElementById("rliLink").innerText  = rli;
   document.getElementById("frLink").innerText   = fr;
 
   // =====================
-  // TREE
+  // TREE (INTRODUCER DOWNLINE TREE)
   // =====================
-  function getTree(userId) {
-    let result = [];
-    let current = users.find(u => u.userId === userId);
-    let level = 1;
+  function buildDownlineTree(parentId, users) {
+    let children = users.filter(u => u.introducerId === parentId);
 
-    while (current && current.introducerId && level <= 30) {
-      let parent = users.find(u => u.userId === current.introducerId);
-      if (!parent) break;
+    if (children.length === 0) return "";
 
-      result.push("L" + level + " → " + parent.userId + " (" + parent.username + ")");
-      current = parent;
-      level++;
-    }
+    let html = "<ul>";
 
-    return result;
+    children.forEach(child => {
+      html += "<li>" + child.userId + " (" + child.username + ")";
+      html += buildDownlineTree(child.userId, users);
+      html += "</li>";
+    });
+
+    html += "</ul>";
+
+    return html;
   }
 
-  let tree = getTree(freshUser.userId);
-  let html = "";
+  let treeHTML = "<ul><li>" + freshUser.userId;
+  treeHTML += buildDownlineTree(freshUser.userId, users);
+  treeHTML += "</li></ul>";
 
-  tree.forEach(t => {
-    html += "<p>" + t + "</p>";
-  });
-
-  document.getElementById("treeView").innerHTML = html;
+  document.getElementById("treeView").innerHTML = treeHTML;
 
 };
 
 // =====================
-// COPY
+// COPY FUNCTION
 // =====================
 function copyText(id) {
   let text = document.getElementById(id).innerText;
@@ -149,5 +147,4 @@ function logout() {
 
 </body>
 </html>
-
 
