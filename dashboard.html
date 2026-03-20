@@ -1,89 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
+Registered! Your ID: BWG992504                                                                                                                                                                                                                <!DOCTYPE html>
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BestWayGrow Dashboard</title>
-<style>
-body {
-    font-family: Arial, sans-serif;
-    margin:0;
-    background:#f0f4f5;
-    text-align:center;
-}
-header {
-    background:#006633;
-    color:white;
-    padding:25px 15px;
-}
-header img {
-    height:60px;
-    margin-bottom:10px;
-}
-h1 {
-    margin:10px 0;
-}
-section {
-    background:white;
-    margin:20px auto;
-    padding:25px;
-    border-radius:10px;
-    max-width:500px;
-    box-shadow:0 4px 8px rgba(0,0,0,0.1);
-    text-align:left;
-}
-button {
-    background:#006633;
-    color:white;
-    border:none;
-    padding:12px 20px;
-    border-radius:6px;
-    cursor:pointer;
-    margin-top:10px;
-}
-button:hover {
-    background:#004d29;
-}
-</style>
+  <title>Dashboard</title>
 </head>
+
 <body>
-<header>
-    <!-- ✅ LOGO -->
-    <img src="./design/logo.png" alt="BestWayGrow Logo">
-    <h1>BestWayGrow Dashboard</h1>
-</header>
-<section>
-    <h3 id="welcomeText">Welcome</h3>
-    <p><strong>User:</strong> <span id="usernameDisplay"></span></p>
-    <p><strong>Active Plan:</strong> <span id="planDisplay"></span></p>
-    <p><strong>Income:</strong> ₹0</p>
-    <p><strong>Status:</strong> Active</p>
-    <button onclick="logout()">Logout</button>
-</section>
+
+<h2>Dashboard</h2>
+
+<div id="userInfo"></div>
+
+<br>
+
+<button onclick="logout()">Logout</button>
+
 <script>
-// ✅ Security: block direct access
-if (localStorage.getItem("loggedIn") !== "true") {
-    window.location.href = "login.html";
+
+// Get logged in user
+let user = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!user) {
+  alert("Please login first");
+  window.location.href = "login.html";
 }
 
-// ✅ Load user data
-var username = localStorage.getItem("username") || "admin";
-var plan = localStorage.getItem("plan") || "BV2100";
+// Display user info
+document.getElementById("userInfo").innerHTML = `
+  <p><b>User ID:</b> ${user.userId}</p>
+  <p><b>Name:</b> ${user.username}</p>
+  <p><b>Introducer ID:</b> ${user.introducerId}</p>
+  <p><b>Position:</b> ${user.position}</p>
+`;
 
-// ✅ Display data
-document.getElementById("usernameDisplay").innerText = username;
-document.getElementById("planDisplay").innerText = plan;
-
-// ✅ Welcome message
-document.getElementById("welcomeText").innerText = "Welcome, " + username + "!";
-
-// ✅ Logout
+// Logout
 function logout() {
-    localStorage.removeItem("loggedIn");
-    localStorage.removeItem("username");
-    localStorage.removeItem("plan");
-    window.location.href = "login.html";
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
 }
+
 </script>
+
 </body>
-</html>
+</html>                                                                                              
