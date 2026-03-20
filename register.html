@@ -10,113 +10,28 @@
 
 <p>Introducer ID: <span id="introId"></span></p>
 
-<input type="text" id="name" placeholder="Enter Name"><br><br>
-<input type="text" id="mobile" placeholder="Enter Mobile"><br><br>
-
-<label>Select Position:</label><br>
-<input type="radio" name="position" value="LEFT"> LEFT
-<input type="radio" name="position" value="RIGHT"> RIGHT
-<br><br>
-
-<h2>Register</h2>
-
 <input type="text" id="username" placeholder="Enter Name" required>
 <br><br>
 
-<input type="text" id="introducerId" value="BWG000000" required>
+<input type="text" id="mobile" placeholder="Enter Mobile" required>
 <br><br>
 
 <label>Select Position:</label><br>
 <input type="radio" name="position" value="LEFT" checked> LEFT
 <input type="radio" name="position" value="RIGHT"> RIGHT
+
 <br><br>
-     
+
 <button onclick="handleRegister()">Register</button>
 
 <script>
 
+// Get introducer from URL
 let params = new URLSearchParams(window.location.search);
 let introducerId = params.get("ref") || "BWG000000";
-
 document.getElementById("introId").innerText = introducerId;
 
-function generateUserId(users) {
-  let id;
-  do {
-    id = "BWG" + Math.floor(100000 + Math.random() * 900000);
-  } while (users.find(u => u.userId === id));
-  return id;
-}
-
-function register() {
-
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-
-  let name = document.getElementById("name").value;
-  let mobile = document.getElementById("mobile").value;
-
-  let position = document.querySelector('input[name="position"]:checked');
-
-  if (!name || !mobile || !position) {
-    alert("Fill all fields");
-    return;
-  }
-
-  let userId = generateUserId(users);
-
-  let newUser = {
-    userId: userId,
-    username: name,
-    mobile: mobile,
-    introducerId: introducerId,
-    position: position.value,
-    createdAt: new Date().toISOString()
-  };
-
-  users.push(newUser);
-
-  localStorage.setItem("users", JSON.stringify(users));
-
-  alert("Registered! Your ID: " + userId);
-
-  window.location.href = "login.html";
-}
-
-</script>
-
-  function generateUserId() {
-  const prefix = "BWG";
-  const randomNum = Math.floor(100000 + Math.random() * 900000);
-  return prefix + randomNum;
-}
-
-  function registerUser(username, introducerId, position) {
-
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-
-  // Generate unique random ID
-  let newUserId;
-  do {
-    newUserId = generateUserId();
-  } while (users.find(u => u.userId === newUserId));
-
-  let newUser = {
-    userId: newUserId,
-    username: username,
-    introducerId: introducerId,
-    position: position
-  };
-
-  users.push(newUser);
-
-  localStorage.setItem("users", JSON.stringify(users));
-
-  alert("Registration Successful! Your ID: " + newUserId);
-
-  return newUser;
-}
-
-  // Load users
+// Load users
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
@@ -126,32 +41,60 @@ function saveUsers(users) {
   localStorage.setItem("users", JSON.stringify(users));
 }
 
-// Generate random ID
+// Generate unique random ID
 function generateUserId() {
-  let num = Math.floor(100000 + Math.random() * 900000);
-  return "BWG" + num;
+  let users = getUsers();
+  let id;
+
+  do {
+    id = "BWG" + Math.floor(100000 + Math.random() * 900000);
+  } while (users.find(u => u.userId === id));
+
+  return id;
 }
 
 // Register user
-function registerUser(username, introducerId, position) {
+function registerUser(username, mobile, introducerId, position) {
 
   let users = getUsers();
 
-  let newUserId = generateUserId();
-
   let newUser = {
-    userId: newUserId,
+    userId: generateUserId(),
     username: username,
+    mobile: mobile,
     introducerId: introducerId,
-    position: position
+    position: position,
+    createdAt: new Date().toISOString()
   };
 
   users.push(newUser);
   saveUsers(users);
 
-  alert("Registered Successfully: " + newUserId);
+  alert("Registered Successfully! Your ID: " + newUser.userId);
 
   return newUser;
 }
+
+// Handle button click
+function handleRegister() {
+
+  let username = document.getElementById("username").value;
+  let mobile = document.getElementById("mobile").value;
+  let position = document.querySelector('input[name="position"]:checked').value;
+
+  if (!username || !mobile || !position) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  let user = registerUser(username, mobile, introducerId, position);
+
+  localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+  window.location.href = "login.html";
+}
+
+</script>
+
 </body>
 </html>
