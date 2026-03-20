@@ -14,19 +14,19 @@
 <h3>Your Links</h3>
 
 <p><b>UGLI (Upgrade Link):</b></p>
-<input type="text" id="ugliLink" readonly>
+<input type="text" id="ugliLink" readonly style="width:100%"><br>
 <button onclick="copyLink('ugliLink')">Copy</button>
 
 <br><br>
 
 <p><b>RLI (Repurchase Link):</b></p>
-<input type="text" id="rliLink" readonly>
+<input type="text" id="rliLink" readonly style="width:100%"><br>
 <button onclick="copyLink('rliLink')">Copy</button>
 
 <br><br>
 
 <p><b>FR (Friend Referral Link):</b></p>
-<input type="text" id="frLink" readonly>
+<input type="text" id="frLink" readonly style="width:100%"><br>
 <button onclick="copyLink('frLink')">Copy</button>
 
 <hr>
@@ -45,11 +45,10 @@
 
 <script>
 
-// WAIT UNTIL PAGE LOADS
 window.onload = function() {
 
   // =====================
-  // GET LOGGED USER
+  // USER LOAD
   // =====================
   let user = JSON.parse(localStorage.getItem("loggedInUser"));
 
@@ -60,7 +59,7 @@ window.onload = function() {
   }
 
   // =====================
-  // DISPLAY USER INFO
+  // USER INFO
   // =====================
   document.getElementById("userInfo").innerHTML = `
     <p><b>User ID:</b> ${user.userId}</p>
@@ -70,21 +69,27 @@ window.onload = function() {
   `;
 
   // =====================
-  // LINKS (FIXED)
+  // 🔥 LINKS FIX (FINAL)
   // =====================
-  let baseUrl = "register.html";
+  let ugli = "register.html?type=upgrade&id=" + user.userId;
+  let rli  = "register.html?type=repurchase&id=" + user.userId;
+  let fr   = "register.html?ref=" + user.userId;
 
-  document.getElementById("ugliLink").value =
-    baseUrl + "?type=upgrade&id=" + user.userId;
+  let ugliInput = document.getElementById("ugliLink");
+  let rliInput  = document.getElementById("rliLink");
+  let frInput   = document.getElementById("frLink");
 
-  document.getElementById("rliLink").value =
-    baseUrl + "?type=repurchase&id=" + user.userId;
+  ugliInput.value = ugli;
+  rliInput.value  = rli;
+  frInput.value   = fr;
 
-  document.getElementById("frLink").value =
-    baseUrl + "?ref=" + user.userId;
+  // FORCE UPDATE (important)
+  ugliInput.setAttribute("value", ugli);
+  rliInput.setAttribute("value", rli);
+  frInput.setAttribute("value", fr);
 
   // =====================
-  // USERS DATA
+  // USERS
   // =====================
   function getUsers() {
     return JSON.parse(localStorage.getItem("users") || "[]");
@@ -143,12 +148,10 @@ window.onload = function() {
 
   let sponsor = getSponsorTree(user.userId);
 
-  let sponsorHtml = `
+  document.getElementById("sponsorTree").innerHTML = `
     <p><b>LEFT:</b> ${sponsor.left ? sponsor.left.userId + " (" + sponsor.left.username + ")" : "Empty"}</p>
     <p><b>RIGHT:</b> ${sponsor.right ? sponsor.right.userId + " (" + sponsor.right.username + ")" : "Empty"}</p>
   `;
-
-  document.getElementById("sponsorTree").innerHTML = sponsorHtml;
 
   // =====================
   // ALL USERS
@@ -157,16 +160,12 @@ window.onload = function() {
     let users = getUsers();
     let html = "";
 
-    if (users.length === 0) {
-      html = "<p>No users found</p>";
-    } else {
-      users.forEach(u => {
-        html += `<p>
-          ${u.userId} — ${u.username}
-          (Intro: ${u.introducerId}, Pos: ${u.position})
-        </p>`;
-      });
-    }
+    users.forEach(u => {
+      html += `<p>
+        ${u.userId} — ${u.username}
+        (Intro: ${u.introducerId}, Pos: ${u.position})
+      </p>`;
+    });
 
     document.getElementById("usersList").innerHTML = html;
   }
@@ -176,7 +175,7 @@ window.onload = function() {
 };
 
 // =====================
-// COPY FUNCTION
+// COPY
 // =====================
 function copyLink(id) {
   let input = document.getElementById(id);
