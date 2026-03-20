@@ -77,5 +77,30 @@ function register() {
   return prefix + randomNum;
 }
 
+  function registerUser(username, introducerId, position) {
+
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+  // Generate unique random ID
+  let newUserId;
+  do {
+    newUserId = generateUserId();
+  } while (users.find(u => u.userId === newUserId));
+
+  let newUser = {
+    userId: newUserId,
+    username: username,
+    introducerId: introducerId,
+    position: position
+  };
+
+  users.push(newUser);
+
+  localStorage.setItem("users", JSON.stringify(users));
+
+  alert("Registration Successful! Your ID: " + newUserId);
+
+  return newUser;
+}
 </body>
 </html>
