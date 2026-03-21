@@ -60,17 +60,17 @@ function registerUser(username, mobile, introducerId, position) {
     username: username,
     mobile: mobile,
 
-    // INTRODUCER TREE (INCOME)
-    introducerId: introducerId,
+    // IMPORTANT ROLE
+    role: "user",
 
-    // SPONSOR TREE (PLACEMENT)
+    // TREE
+    introducerId: introducerId,
     sponsorId: null,
     position: position, // LEFT / RIGHT
 
     createdAt: new Date().toISOString(),
 
     wallet: 0,
-
     status: "inactive",
     isActive: false,
 
@@ -81,37 +81,32 @@ function registerUser(username, mobile, introducerId, position) {
 
     franchiseeStatus: "none",
     trainingCompleted: false,
-
     pinLevel: 0
   };
 
-  // Step 1: Save user
   users.push(newUser);
   saveUsers(users);
 
-  // Step 2: Sponsor placement
+  // Sponsor placement
   placeInSponsorTree(newUser);
 
   return newUser;
 }
 
 // =====================
-// SPONSOR TREE PLACEMENT (SPILLOVER BFS)
+// SPONSOR TREE PLACEMENT (BFS SPILLOVER)
 // =====================
 function placeInSponsorTree(newUser) {
   let users = getUsers();
 
-  // Find introducer node
   let introducer = users.find(u => u.userId === newUser.introducerId);
   if (!introducer) return;
 
-  // BFS queue starting from introducer
   let queue = [introducer];
 
   while (queue.length > 0) {
     let current = queue.shift();
 
-    // Find children of current
     let children = users.filter(u => u.sponsorId === current.userId);
 
     let leftChild = children.find(c => c.position === "LEFT");
@@ -140,7 +135,7 @@ function placeInSponsorTree(newUser) {
 }
 
 // =====================
-// UGLI INCOME (UNCHANGED)
+// UGLI INCOME
 // =====================
 function payUGLIIncome(buyerId) {
   let users = getUsers();
@@ -202,11 +197,12 @@ function handleRegister() {
 
   localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-  window.location.href = "dashboard.html";
+  // IMPORTANT: redirect will later depend on role
+  window.location.href = "dashboard_user.html";
 }
 
 // =====================
-// DEBUG LOG
+// DEBUG
 // =====================
 if (type === "upgrade" && userId) {
   console.log("Upgrade mode active for:", userId);
