@@ -1,1 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Franchisee Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
 
+<h1>FRANCHISEE DASHBOARD</h1>
+<p id="status"></p>
+
+<button onclick="logout()">Logout</button>
+
+<!-- ================= PROFILE ================= -->
+<div class="section">
+  <h2>My Profile</h2>
+  <p id="profile"></p>
+</div>
+
+<!-- ================= MY STATUS ================= -->
+<div class="section">
+  <h2>My Status</h2>
+  <p id="myStatus"></p>
+</div>
+
+<!-- ================= SYSTEM STATUS ================= -->
+<div class="section">
+  <h2>System Status</h2>
+  <p id="systemStatus"></p>
+</div>
+
+<script>
+
+// ================= AUTH =================
+let user = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!user || user.role !== "franchisee") {
+  alert("Access denied");
+  window.location.href = "user_login.html";
+}
+
+// ================= USERS =================
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+
+// ================= SYSTEM SETTINGS =================
+function getSystemSettings() {
+  return JSON.parse(localStorage.getItem("systemSettings") || "{}");
+}
+
+// ================= GET CURRENT USER =================
+function getCurrentUser() {
+  let users = getUsers();
+  return users.find(u => u.userId === user.userId);
+}
+
+// ================= STATUS =================
+function loadStatus() {
+  let currentUser = getCurrentUser();
+
+  document.getElementById("status").innerText =
+    "Welcome " + currentUser.username + " (" + currentUser.userId + ")";
+}
+
+// ================= PROFILE =================
+function loadProfile() {
+  let currentUser = getCurrentUser();
+
+  document.getElementById("profile").innerHTML = `
+    User ID: ${currentUser.userId} <br>
+    Name: ${currentUser.username} <br>
+    Mobile: ${currentUser.mobile} <br>
+    Role: ${currentUser.role}
+  `;
+}
+
+// ================= MY STATUS =================
+function loadMyStatus() {
+  let currentUser = getCurrentUser();
+
+  document.getElementById("myStatus").innerHTML = `
+    Franchisee Status: ${currentUser.franchiseeStatus} <br>
+    Training Completed: ${currentUser.trainingCompleted ? "YES" : "NO"} <br>
+    Account Status: ${currentUser.status}
+  `;
+}
+
+// ================= SYSTEM STATUS =================
+function loadSystemStatus() {
+  let settings = getSystemSettings();
+
+  document.getElementById("systemStatus").innerHTML = `
+    Franchisee Access: ${settings.franchiseeAccess ? "ON" : "OFF"} <br>
+    Registration: ${settings.registrationOpen ? "OPEN" : "CLOSED"} <br>
+    Upgrades: ${settings.upgradesOpen ? "OPEN" : "CLOSED"}
+  `;
+}
+
+// ================= LOGOUT =================
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "user_login.html";
+}
+
+// ================= INIT =================
+loadStatus();
+loadProfile();
+loadMyStatus();
+loadSystemStatus();
+
+</script>
+
+</body>
+</html>
