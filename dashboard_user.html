@@ -28,6 +28,12 @@
   <p id="wallet"></p>
 </div>
 
+<!-- ================= UPGRADE ================= -->
+<div class="section">
+  <h2>Upgrade</h2>
+  <button onclick="upgrade()">Upgrade Account</button>
+</div>
+
 <!-- ================= TREE ================= -->
 <div class="section">
   <h2>My Tree (Binary View)</h2>
@@ -72,6 +78,33 @@ function loadProfile() {
 function loadWallet() {
   document.getElementById("wallet").innerHTML =
     "Balance: ₹ " + (user.wallet || 0);
+}
+
+// ================= UPGRADE FUNCTION =================
+function upgrade() {
+  let users = getUsers();
+
+  let currentUser = users.find(u => u.userId === user.userId);
+
+  if (!currentUser) {
+    alert("User not found");
+    return;
+  }
+
+  if (currentUser.isActive) {
+    alert("Already upgraded");
+    return;
+  }
+
+  // Activate
+  currentUser.isActive = true;
+  currentUser.status = "active";
+
+  localStorage.setItem("users", JSON.stringify(users));
+
+  alert("Upgrade Successful");
+
+  location.reload();
 }
 
 // ================= TREE LOGIC =================
@@ -122,6 +155,7 @@ function renderTree() {
 loadProfile();
 loadWallet();
 renderTree();
+
 </script>
 
 </body>
