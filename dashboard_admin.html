@@ -1,1 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
 
+<h1>ADMIN DASHBOARD</h1>
+<p id="status"></p>
+
+<button onclick="logout()">Logout</button>
+
+<!-- ================= USERS LIST ================= -->
+<div class="section">
+  <h2>Users List</h2>
+  <div id="userList"></div>
+</div>
+
+<!-- ================= SYSTEM STATUS ================= -->
+<div class="section">
+  <h2>System Status</h2>
+  <p id="systemStatus"></p>
+</div>
+
+<script>
+// ================= ACCESS CONTROL =================
+let loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!loggedInUser || loggedInUser.role !== "admin") {
+  alert("Access denied");
+  window.location.href = "user_login.html";
+}
+
+document.getElementById("status").innerText =
+  "Welcome " + loggedInUser.username + " (" + loggedInUser.userId + ")";
+
+// ================= LOGOUT =================
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "user_login.html";
+}
+
+// ================= LOAD USERS =================
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+
+// ================= RENDER USERS =================
+function renderUsers() {
+  let users = getUsers();
+  let html = "<ul>";
+
+  users.forEach(u => {
+    html += `
+      <li>
+        <b>${u.userId}</b> | ${u.username} | ${u.role}
+        <br>
+        Status: ${u.status}
+      </li>
+      <hr>
+    `;
+  });
+
+  html += "</ul>";
+  document.getElementById("userList").innerHTML = html;
+}
+
+// ================= SYSTEM STATUS =================
+function loadSystemStatus() {
+  let settings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+
+  document.getElementById("systemStatus").innerHTML = `
+    Admin Access: ${settings.adminAccess ?? "N/A"} <br>
+    Franchisee Access: ${settings.franchiseeAccess ?? "N/A"} <br>
+    Registration: ${settings.registrationOpen ?? "N/A"} <br>
+    Upgrades: ${settings.upgradesOpen ?? "N/A"}
+  `;
+}
+
+// ================= INIT =================
+renderUsers();
+loadSystemStatus();
+</script>
+
+</body>
+</html>
