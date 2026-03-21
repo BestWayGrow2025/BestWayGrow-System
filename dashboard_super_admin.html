@@ -12,8 +12,9 @@
 <body>
 
 <h1>SUPER ADMIN DASHBOARD</h1>
-
 <p id="status"></p>
+
+<button onclick="logout()">Logout</button>
 
 <!-- ================= SYSTEM CONTROL ================= -->
 <div class="section">
@@ -35,7 +36,7 @@
   <button onclick="toggleSetting('upgradesOpen', false)">Upgrades OFF</button>
 </div>
 
-<!-- ================= CREATE ADMIN / FRANCHISEE ================= -->
+<!-- ================= CREATE ADMIN ================= -->
 <div class="section">
   <h2>Create Admin / Franchisee</h2>
 
@@ -71,6 +72,12 @@ if (!superAdmin || superAdmin.role !== "super_admin") {
 
 document.getElementById("status").innerText =
   "Welcome " + superAdmin.username + " (" + superAdmin.userId + ")";
+
+// ================= LOGOUT =================
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "user_login.html";
+}
 
 // ================= SYSTEM SETTINGS =================
 function getSystemSettings() {
@@ -150,7 +157,6 @@ function deleteAdmin(userId) {
 // ================= RENDER ADMIN LIST =================
 function renderAdmins() {
   let admins = getAdmins();
-
   let html = "<ul>";
 
   admins.forEach(a => {
@@ -168,13 +174,11 @@ function renderAdmins() {
   });
 
   html += "</ul>";
-
   document.getElementById("adminList").innerHTML = html;
 }
 
 // ================= INIT =================
 renderAdmins();
-
 </script>
 
 </body>
