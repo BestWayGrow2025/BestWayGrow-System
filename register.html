@@ -43,16 +43,18 @@ function initWallet(user) {
 function generateUserId() {
   let users = getUsers();
   let id;
+
   do {
     id = "BWG" + Math.floor(100000 + Math.random() * 900000);
   } while (users.find(u => u.userId === id));
+
   return id;
 }
 
 // =====================
 // REGISTER USER
 // =====================
-function registerUser(username, mobile, introducerId, position) {
+function registerUser(username, mobile, password, introducerId, position) {
   let users = getUsers();
 
   let newUser = {
@@ -60,13 +62,14 @@ function registerUser(username, mobile, introducerId, position) {
     username: username,
     mobile: mobile,
 
-    // IMPORTANT ROLE
+    // AUTH
+    password: password,
     role: "user",
 
     // TREE
     introducerId: introducerId,
     sponsorId: null,
-    position: position, // LEFT / RIGHT
+    position: position,
 
     createdAt: new Date().toISOString(),
 
@@ -164,9 +167,12 @@ function payUGLIIncome(buyerId) {
 // =====================
 // HANDLE UPGRADE MODE
 // =====================
-if (type === "upgrade" && userId) {
-  document.getElementById("formArea").style.display = "none";
-  document.getElementById("introId").innerText = "UPGRADE MODE";
+let formArea = document.getElementById("formArea");
+let introLabel = document.getElementById("introId");
+
+if (type === "upgrade" && userId && formArea && introLabel) {
+  formArea.style.display = "none";
+  introLabel.innerText = "UPGRADE MODE";
 
   payUGLIIncome(userId);
 
@@ -176,7 +182,9 @@ if (type === "upgrade" && userId) {
 // =====================
 // SHOW INTRODUCER
 // =====================
-document.getElementById("introId").innerText = introducerId;
+if (introLabel) {
+  introLabel.innerText = introducerId;
+}
 
 // =====================
 // FORM SUBMIT
@@ -184,20 +192,29 @@ document.getElementById("introId").innerText = introducerId;
 function handleRegister() {
   let username = document.getElementById("username").value;
   let mobile = document.getElementById("mobile").value;
-  let position = document.querySelector('input[name="position"]:checked').value;
+  let password = document.getElementById("password").value;
 
-  if (!username || !mobile) {
+  let positionElement = document.querySelector('input[name="position"]:checked');
+  if (!positionElement) {
+    alert("Select position LEFT or RIGHT");
+    return;
+  }
+
+  let position = positionElement.value;
+
+  if (!username || !mobile || !password) {
     alert("Fill all fields");
     return;
   }
 
-  let user = registerUser(username, mobile, introducerId, position);
+  let user = registerUser(username, mobile, password, introducerId, position);
 
   alert("Registered! ID: " + user.userId);
 
+  // Save session
   localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-  // IMPORTANT: redirect will later depend on role
+  // Redirect
   window.location.href = "dashboard_user.html";
 }
 
