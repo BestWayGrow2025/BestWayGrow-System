@@ -6,6 +6,7 @@
     body { font-family: Arial; padding: 20px; }
     .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
     button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
+    pre { background: #f4f4f4; padding: 10px; }
   </style>
 </head>
 <body>
@@ -27,21 +28,22 @@
   <p id="wallet"></p>
 </div>
 
-<!-- ================= TREE VIEW ================= -->
+<!-- ================= TREE ================= -->
 <div class="section">
-  <h2>My Network (Direct)</h2>
-  <div id="network"></div>
+  <h2>My Tree (Binary View)</h2>
+  <div id="tree"></div>
 </div>
 
 <script>
-// ================= ACCESS CONTROL =================
+// ================= AUTH =================
 let user = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!user) {
-  alert("Please login");
+  alert("Please login first");
   window.location.href = "user_login.html";
 }
 
+// ================= STATUS =================
 document.getElementById("status").innerText =
   "Welcome " + user.username + " (" + user.userId + ")";
 
@@ -51,7 +53,7 @@ function logout() {
   window.location.href = "user_login.html";
 }
 
-// ================= LOAD USERS =================
+// ================= USERS =================
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
@@ -72,31 +74,54 @@ function loadWallet() {
     "Balance: ₹ " + (user.wallet || 0);
 }
 
-// ================= NETWORK =================
-function loadNetwork() {
+// ================= TREE LOGIC =================
+function findChildren(parentId) {
   let users = getUsers();
+  return users.filter(u => u.sponsorId === parentId);
+}
 
-  let directUsers = users.filter(u => u.introducerId === user.userId);
+function getLeftRight(parentId) {
+  let children = findChildren(parentId);
 
-  let html = "<ul>";
+  return {
+    left: children.find(c => c.position === "LEFT"),
+    right: children.find(c => c.position === "RIGHT")
+  };
+}
 
-  directUsers.forEach(u => {
-    html += `
-      <li>
-        <b>${u.userId}</b> | ${u.username}
-      </li>
-    `;
-  });
+function formatNode(u) {
+  if (!u) return "[ empty ]";
+  return u.userId;
+}
 
-  html += "</ul>";
+// ================= TREE RENDER =================
+function renderTree() {
+  let level0 = user;
 
-  document.getElementById("network").innerHTML = html;
+  let level1 = getLeftRight(level0.userId);
+
+  let level2Left = level1.left ? getLeftRight(level1.left.userId) : {};
+  let level2Right = level1.right ? getLeftRight(level1.right.userId) : {};
+
+  let html = "<pre>";
+
+  html += "           " + formatNode(level0) + "\n\n";
+
+  html += "     " + formatNode(level1.left) + "        " + formatNode(level1.right) + "\n\n";
+
+  html += "  " + formatNode(level2Left.left) + "   " + formatNode(level2Left.right);
+  html += "      ";
+  html += formatNode(level2Right.left) + "   " + formatNode(level2Right.right);
+
+  html += "</pre>";
+
+  document.getElementById("tree").innerHTML = html;
 }
 
 // ================= INIT =================
 loadProfile();
 loadWallet();
-loadNetwork();
+renderTree();
 </script>
 
 </body>
