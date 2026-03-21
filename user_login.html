@@ -13,11 +13,11 @@
 <button onclick="login()">Login</button>
 
 <script>
+
 // =====================
-// LOGIN FUNCTION
+// LOGIN FUNCTION (UPDATED)
 // =====================
 function login() {
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
 
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value.trim();
@@ -27,14 +27,28 @@ function login() {
     return;
   }
 
-  let user = users.find(u => u.userId === userId && u.password === password);
+  // =====================
+  // LOAD DATA
+  // =====================
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  let admins = JSON.parse(localStorage.getItem("admins") || "[]");
+
+  // Merge both
+  let allUsers = [...users, ...admins];
+
+  // =====================
+  // FIND USER
+  // =====================
+  let user = allUsers.find(u => u.userId === userId && u.password === password);
 
   if (!user) {
     alert("Invalid User ID or Password");
     return;
   }
 
-  // Save session
+  // =====================
+  // SAVE SESSION
+  // =====================
   localStorage.setItem("loggedInUser", JSON.stringify(user));
 
   alert("Login successful");
@@ -55,6 +69,7 @@ function login() {
     window.location.href = "dashboard_user.html";
   }
 }
+
 </script>
 
 </body>
