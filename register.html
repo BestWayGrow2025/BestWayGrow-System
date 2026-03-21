@@ -1,42 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Register</title>
-</head>
-<body>
-
-<h2>Register Page</h2>
-
-<p>Introducer ID: <span id="introId"></span></p>
-
-<div id="formArea">
-  <input type="text" id="username" placeholder="Enter Name"><br><br>
-  <input type="text" id="mobile" placeholder="Enter Mobile"><br><br>
-
-  <label>Select Position:</label><br>
-  <input type="radio" name="position" value="LEFT" checked> LEFT
-  <input type="radio" name="position" value="RIGHT"> RIGHT
-
-  <br><br>
-  <button onclick="handleRegister()">Register</button>
-</div>
-
 <script>
-
 // =====================
 // URL PARAMS
 // =====================
 let params = new URLSearchParams(window.location.search);
-
-let type = params.get("type");   // upgrade / repurchase
-let userId = params.get("id");   // UGLI / RLI user
-let introducerId = params.get("ref") || "BWG000000"; // FR LINK
+let type = params.get("type");   
+let userId = params.get("id");   
+let introducerId = params.get("ref") || "BWG000000";
 
 // =====================
 // USERS STORAGE
 // =====================
 function getUsers() {
-  return JSON.parse(localStorage.getItem("users") || "[]");
+  let data = localStorage.getItem("users");
+
+  if (!data) {
+    localStorage.setItem("users", JSON.stringify([]));
+    return [];
+  }
+
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    localStorage.setItem("users", JSON.stringify([]));
+    return [];
+  }
 }
 
 function saveUsers(users) {
@@ -51,27 +38,81 @@ function initWallet(user) {
 }
 
 // =====================
-// UGLI INCOME (UPGRADE)
+// GENERATE USER ID
+// =====================
+function generateUserId() {
+  let users = getUsers();
+  let id;
+  do {
+    id = "BWG" + Math.floor(100000 + Math.random() * 900000);
+  } while (users.find(u => u.userId === id));
+  return id;
+}
+
+// =====================
+// REGISTER USER (UPGRADED MODEL)
+// =====================
+function registerUser(username, mobile, introducerId, position) {
+  let users = getUsers();
+
+  let newUser = {
+    userId: generateUserId(),
+    username: username,
+    mobile: mobile,
+
+    // TREE STRUCTURE
+    introducerId: introducerId,
+    sponsorId: introducerId, // future placement use
+    position: position,
+
+    // META
+    createdAt: new Date().toISOString(),
+
+    // WALLET
+    wallet: 0,
+
+    // STATUS
+    status: "inactive",
+    isActive: false,
+
+    // PACKAGE TRACKING
+    package: {
+      ugliCount: 0,
+      rliCount: 0
+    },
+
+    // FRANCHISEE
+    franchiseeStatus: "none",
+    trainingCompleted: false,
+
+    // PIN / CTOR
+    pinLevel: 0
+  };
+
+  users.push(newUser);
+  saveUsers(users);
+
+  return newUser;
+}
+
+// =====================
+// UGLI INCOME (UNCHANGED FOR NOW)
 // =====================
 function payUGLIIncome(buyerId) {
-
   let users = getUsers();
   let buyer = users.find(u => u.userId === buyerId);
-
   if (!buyer) return;
 
   let current = buyer;
   let level = 1;
 
   while (current && current.introducerId && level <= 30) {
-
     let parent = users.find(u => u.userId === current.introducerId);
     if (!parent) break;
 
     initWallet(parent);
 
     let income = (level === 1) ? 500 : 25;
-
     parent.wallet += income;
 
     current = parent;
@@ -85,14 +126,12 @@ function payUGLIIncome(buyerId) {
 // HANDLE UPGRADE MODE
 // =====================
 if (type === "upgrade" && userId) {
-
   document.getElementById("formArea").style.display = "none";
   document.getElementById("introId").innerText = "UPGRADE MODE";
 
   payUGLIIncome(userId);
 
   alert("Upgrade Successful!");
-
 }
 
 // =====================
@@ -101,48 +140,9 @@ if (type === "upgrade" && userId) {
 document.getElementById("introId").innerText = introducerId;
 
 // =====================
-// GENERATE USER ID
-// =====================
-function generateUserId() {
-
-  let users = getUsers();
-  let id;
-
-  do {
-    id = "BWG" + Math.floor(100000 + Math.random() * 900000);
-  } while (users.find(u => u.userId === id));
-
-  return id;
-}
-
-// =====================
-// REGISTER USER
-// =====================
-function registerUser(username, mobile, introducerId, position) {
-
-  let users = getUsers();
-
-  let newUser = {
-    userId: generateUserId(),
-    username: username,
-    mobile: mobile,
-    introducerId: introducerId,
-    position: position,
-    createdAt: new Date().toISOString(),
-    wallet: 0
-  };
-
-  users.push(newUser);
-  saveUsers(users);
-
-  return newUser;
-}
-
-// =====================
 // FORM SUBMIT
 // =====================
 function handleRegister() {
-
   let username = document.getElementById("username").value;
   let mobile = document.getElementById("mobile").value;
   let position = document.querySelector('input[name="position"]:checked').value;
@@ -162,17 +162,9 @@ function handleRegister() {
 }
 
 // =====================
-// UGLI REDIRECT (IF NEEDED)
+// DEBUG LOG
 // =====================
 if (type === "upgrade" && userId) {
   console.log("Upgrade mode active for:", userId);
 }
-
-// =====================
-// COPY CLEANUP (optional future use)
-// =====================
-
 </script>
-
-</body>
-</html>
