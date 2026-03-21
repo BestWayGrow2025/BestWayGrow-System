@@ -1,149 +1,102 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard</title>
+  <title>User Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
+  </style>
 </head>
 <body>
 
-<h2>Dashboard</h2>
-
-<div id="userInfo"></div>
-
-<h3>💰 Wallet: ₹<span id="wallet">0</span></h3>
-
-<hr>
-
-<h3>Your Links</h3>
-
-<p><b>UGLI:</b></p>
-<p id="ugliLink">Loading...</p>
-<button onclick="copyText('ugliLink')">Copy</button>
-
-<br><br>
-
-<p><b>RLI:</b></p>
-<p id="rliLink">Loading...</p>
-<button onclick="copyText('rliLink')">Copy</button>
-
-<br><br>
-
-<p><b>FR:</b></p>
-<p id="frLink">Loading...</p>
-<button onclick="copyText('frLink')">Copy</button>
-
-<hr>
-
-<h3>Introducer Downline Tree</h3>
-<div id="treeView"></div>
-
-<br><br>
+<h1>USER DASHBOARD</h1>
+<p id="status"></p>
 
 <button onclick="logout()">Logout</button>
 
+<!-- ================= PROFILE ================= -->
+<div class="section">
+  <h2>My Profile</h2>
+  <p id="profile"></p>
+</div>
+
+<!-- ================= WALLET ================= -->
+<div class="section">
+  <h2>My Wallet</h2>
+  <p id="wallet"></p>
+</div>
+
+<!-- ================= TREE VIEW ================= -->
+<div class="section">
+  <h2>My Network (Direct)</h2>
+  <div id="network"></div>
+</div>
+
 <script>
+// ================= ACCESS CONTROL =================
+let user = JSON.parse(localStorage.getItem("loggedInUser"));
 
-window.onload = function() {
-
-  // =====================
-  // LOAD USER
-  // =====================
-  let user = JSON.parse(localStorage.getItem("loggedInUser"));
-
-  if (!user) {
-    alert("Login first");
-    window.location.href = "login.html";
-    return;
-  }
-
-  // =====================
-  // GET USERS
-  // =====================
-  function getUsers() {
-    return JSON.parse(localStorage.getItem("users") || "[]");
-  }
-
-  let users = getUsers();
-  let freshUser = users.find(u => u.userId === user.userId);
-
-  if (!freshUser) {
-    alert("User not found");
-    return;
-  }
-
-  // =====================
-  // USER INFO
-  // =====================
-  document.getElementById("userInfo").innerHTML =
-    "<p>User ID: " + freshUser.userId + "</p>" +
-    "<p>Name: " + freshUser.username + "</p>" +
-    "<p>Introducer: " + freshUser.introducerId + "</p>" +
-    "<p>Position: " + freshUser.position + "</p>";
-
-  // =====================
-  // WALLET
-  // =====================
-  document.getElementById("wallet").innerText = freshUser.wallet || 0;
-
-  // =====================
-  // LINKS
-  // =====================
-  let base = window.location.origin + "/BestWayGrow-System/";
-
-  let ugli = base + "upgrade.html?id=" + freshUser.userId;
-  let rli  = base + "repurchase.html?id=" + freshUser.userId;
-  let fr   = base + "register.html?ref=" + freshUser.userId;
-
-  document.getElementById("ugliLink").innerText = ugli;
-  document.getElementById("rliLink").innerText  = rli;
-  document.getElementById("frLink").innerText   = fr;
-
-  // =====================
-  // INTRODUCER DOWNLINE TREE (BRANCHING)
-  // =====================
-  function buildDownlineTree(parentId, users) {
-
-    let children = users.filter(u => u.introducerId === parentId);
-
-    if (children.length === 0) return "";
-
-    let html = "<ul>";
-
-    children.forEach(child => {
-      html += "<li>" + child.userId + " (" + child.username + ")";
-      html += buildDownlineTree(child.userId, users);
-      html += "</li>";
-    });
-
-    html += "</ul>";
-
-    return html;
-  }
-
-  let treeHTML = "<ul><li>" + freshUser.userId;
-  treeHTML += buildDownlineTree(freshUser.userId, users);
-  treeHTML += "</li></ul>";
-
-  document.getElementById("treeView").innerHTML = treeHTML;
-
-};
-
-// =====================
-// COPY FUNCTION
-// =====================
-function copyText(id) {
-  let text = document.getElementById(id).innerText;
-  navigator.clipboard.writeText(text);
-  alert("Copied!");
+if (!user) {
+  alert("Please login");
+  window.location.href = "user_login.html";
 }
 
-// =====================
-// LOGOUT
-// =====================
+document.getElementById("status").innerText =
+  "Welcome " + user.username + " (" + user.userId + ")";
+
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
+  window.location.href = "user_login.html";
 }
 
+// ================= LOAD USERS =================
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+
+// ================= PROFILE =================
+function loadProfile() {
+  document.getElementById("profile").innerHTML = `
+    User ID: ${user.userId} <br>
+    Name: ${user.username} <br>
+    Mobile: ${user.mobile} <br>
+    Role: ${user.role}
+  `;
+}
+
+// ================= WALLET =================
+function loadWallet() {
+  document.getElementById("wallet").innerHTML =
+    "Balance: ₹ " + (user.wallet || 0);
+}
+
+// ================= NETWORK =================
+function loadNetwork() {
+  let users = getUsers();
+
+  let directUsers = users.filter(u => u.introducerId === user.userId);
+
+  let html = "<ul>";
+
+  directUsers.forEach(u => {
+    html += `
+      <li>
+        <b>${u.userId}</b> | ${u.username}
+      </li>
+    `;
+  });
+
+  html += "</ul>";
+
+  document.getElementById("network").innerHTML = html;
+}
+
+// ================= INIT =================
+loadProfile();
+loadWallet();
+loadNetwork();
 </script>
 
 </body>
