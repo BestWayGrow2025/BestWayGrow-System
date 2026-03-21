@@ -13,7 +13,6 @@
 
 <h1>SUPER ADMIN DASHBOARD</h1>
 <p id="status"></p>
-
 <button onclick="logout()">Logout</button>
 
 <!-- ================= SYSTEM CONTROL ================= -->
@@ -62,6 +61,7 @@
 </div>
 
 <script>
+
 // ================= ACCESS CONTROL =================
 let superAdmin = JSON.parse(localStorage.getItem("loggedInUser"));
 
@@ -109,11 +109,11 @@ function addAdmin() {
   let admins = getAdmins();
 
   let newAdmin = {
-    userId: document.getElementById("adminId").value,
-    password: document.getElementById("adminPassword").value,
-    name: document.getElementById("adminName").value,
-    mobile: document.getElementById("adminMobile").value,
-    email: document.getElementById("adminEmail").value,
+    userId: document.getElementById("adminId").value.trim(),
+    password: document.getElementById("adminPassword").value.trim(),
+    name: document.getElementById("adminName").value.trim(),
+    mobile: document.getElementById("adminMobile").value.trim(),
+    email: document.getElementById("adminEmail").value.trim(),
     role: document.getElementById("adminRole").value,
     status: "active",
     createdAt: new Date().toISOString()
@@ -121,6 +121,11 @@ function addAdmin() {
 
   if (!newAdmin.userId || !newAdmin.password) {
     alert("User ID and Password required");
+    return;
+  }
+
+  if (admins.find(a => a.userId === newAdmin.userId)) {
+    alert("User already exists");
     return;
   }
 
@@ -179,6 +184,7 @@ function renderAdmins() {
 
 // ================= INIT =================
 renderAdmins();
+
 </script>
 
 </body>
