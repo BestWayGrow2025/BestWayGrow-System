@@ -19,8 +19,8 @@
 function login() {
   let users = JSON.parse(localStorage.getItem("users") || "[]");
 
-  let userId = document.getElementById("userId").value;
-  let password = document.getElementById("password").value;
+  let userId = document.getElementById("userId").value.trim();
+  let password = document.getElementById("password").value.trim();
 
   if (!userId || !password) {
     alert("Enter User ID and Password");
