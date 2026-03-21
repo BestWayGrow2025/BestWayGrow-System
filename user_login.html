@@ -1,29 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
+  <title>User Login</title>
 </head>
-
 <body>
 
 <h2>Login</h2>
 
 <input type="text" id="userId" placeholder="Enter User ID"><br><br>
+<input type="password" id="password" placeholder="Enter Password"><br><br>
 
 <button onclick="login()">Login</button>
 
 <script>
-
+// =====================
+// LOGIN FUNCTION
+// =====================
 function login() {
-
   let users = JSON.parse(localStorage.getItem("users") || "[]");
 
   let userId = document.getElementById("userId").value;
+  let password = document.getElementById("password").value;
 
-  let user = users.find(u => u.userId === userId);
+  if (!userId || !password) {
+    alert("Enter User ID and Password");
+    return;
+  }
+
+  let user = users.find(u => u.userId === userId && u.password === password);
 
   if (!user) {
-    alert("User not found");
+    alert("Invalid User ID or Password");
     return;
   }
 
@@ -32,27 +39,23 @@ function login() {
 
   alert("Login successful");
 
-  window.location.href = "dashboard.html";
+  // =====================
+  // ROLE BASED REDIRECT
+  // =====================
+  if (user.role === "super_admin") {
+    window.location.href = "dashboard_super_admin.html";
+  } 
+  else if (user.role === "admin") {
+    window.location.href = "dashboard_admin.html";
+  } 
+  else if (user.role === "franchisee") {
+    window.location.href = "dashboard_franchisee.html";
+  } 
+  else {
+    window.location.href = "dashboard_user.html";
+  }
 }
-
 </script>
 
- <script>
-let users = JSON.parse(localStorage.getItem("users") || "[]");
-
-if (!users.find(u => u.userId === "BWG000000")) {
-  users.push({
-    userId: "BWG000000",
-    username: "ADMIN",
-    introducerId: null,
-    position: null
-  });
-
-  localStorage.setItem("users", JSON.stringify(users));
-}
-
-console.log("Admin initialized");
-</script>
-  
 </body>
 </html>
