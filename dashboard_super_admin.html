@@ -5,13 +5,15 @@
   <style>
     body { font-family: Arial; padding: 20px; }
     .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-    input, select { margin: 5px 0; padding: 5px; width: 200px; }
+    input, select { margin: 5px 0; padding: 5px; width: 220px; }
     button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
 
 <h1>SUPER ADMIN DASHBOARD</h1>
+
+<p id="status"></p>
 
 <!-- ================= SYSTEM CONTROL ================= -->
 <div class="section">
@@ -59,13 +61,16 @@
 </div>
 
 <script>
-// ================= ACCESS GUARD =================
+// ================= ACCESS CONTROL =================
 let superAdmin = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!superAdmin || superAdmin.role !== "super_admin") {
   alert("Access denied");
   window.location.href = "user_login.html";
 }
+
+document.getElementById("status").innerText =
+  "Welcome " + superAdmin.username + " (" + superAdmin.userId + ")";
 
 // ================= SYSTEM SETTINGS =================
 function getSystemSettings() {
@@ -92,7 +97,7 @@ function saveAdmins(admins) {
   localStorage.setItem("admins", JSON.stringify(admins));
 }
 
-// ================= CREATE ADMIN / FRANCHISEE =================
+// ================= CREATE ADMIN =================
 function addAdmin() {
   let admins = getAdmins();
 
@@ -119,7 +124,7 @@ function addAdmin() {
   renderAdmins();
 }
 
-// ================= TOGGLE ADMIN STATUS =================
+// ================= TOGGLE STATUS =================
 function toggleAdmin(userId) {
   let admins = getAdmins();
 
@@ -142,7 +147,7 @@ function deleteAdmin(userId) {
   renderAdmins();
 }
 
-// ================= RENDER ADMINS =================
+// ================= RENDER ADMIN LIST =================
 function renderAdmins() {
   let admins = getAdmins();
 
