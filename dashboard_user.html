@@ -49,9 +49,23 @@ if (!user) {
   window.location.href = "user_login.html";
 }
 
+// ================= USERS =================
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+
+// ================= GET FRESH USER =================
+function getCurrentUser() {
+  let users = getUsers();
+  return users.find(u => u.userId === user.userId);
+}
+
 // ================= STATUS =================
-document.getElementById("status").innerText =
-  "Welcome " + user.username + " (" + user.userId + ")";
+function loadStatus() {
+  let currentUser = getCurrentUser();
+  document.getElementById("status").innerText =
+    "Welcome " + currentUser.username + " (" + currentUser.userId + ")";
+}
 
 // ================= LOGOUT =================
 function logout() {
@@ -59,31 +73,30 @@ function logout() {
   window.location.href = "user_login.html";
 }
 
-// ================= USERS =================
-function getUsers() {
-  return JSON.parse(localStorage.getItem("users") || "[]");
-}
-
 // ================= PROFILE =================
 function loadProfile() {
+  let currentUser = getCurrentUser();
+
   document.getElementById("profile").innerHTML = `
-    User ID: ${user.userId} <br>
-    Name: ${user.username} <br>
-    Mobile: ${user.mobile} <br>
-    Role: ${user.role}
+    User ID: ${currentUser.userId} <br>
+    Name: ${currentUser.username} <br>
+    Mobile: ${currentUser.mobile} <br>
+    Role: ${currentUser.role} <br>
+    Status: ${currentUser.status}
   `;
 }
 
-// ================= WALLET =================
+// ================= WALLET (LIVE FIX) =================
 function loadWallet() {
+  let currentUser = getCurrentUser();
+
   document.getElementById("wallet").innerHTML =
-    "Balance: ₹ " + (user.wallet || 0);
+    "Balance: ₹ " + (currentUser.wallet || 0);
 }
 
-// ================= UPGRADE FUNCTION =================
+// ================= UPGRADE + INCOME =================
 function upgrade() {
   let users = getUsers();
-
   let currentUser = users.find(u => u.userId === user.userId);
 
   if (!currentUser) {
@@ -100,14 +113,31 @@ function upgrade() {
   currentUser.isActive = true;
   currentUser.status = "active";
 
+  // INCOME
+  let buyer = currentUser;
+  let level = 1;
+
+  while (buyer && buyer.introducerId && level <= 30) {
+    let parent = users.find(u => u.userId === buyer.introducerId);
+    if (!parent) break;
+
+    parent.wallet = parent.wallet || 0;
+
+    let income = (level === 1) ? 500 : 25;
+    parent.wallet += income;
+
+    buyer = parent;
+    level++;
+  }
+
   localStorage.setItem("users", JSON.stringify(users));
 
-  alert("Upgrade Successful");
+  alert("Upgrade Successful + Income Distributed");
 
   location.reload();
 }
 
-// ================= TREE LOGIC =================
+// ================= TREE =================
 function findChildren(parentId) {
   let users = getUsers();
   return users.filter(u => u.sponsorId === parentId);
@@ -127,10 +157,10 @@ function formatNode(u) {
   return u.userId;
 }
 
-// ================= TREE RENDER =================
 function renderTree() {
-  let level0 = user;
+  let currentUser = getCurrentUser();
 
+  let level0 = currentUser;
   let level1 = getLeftRight(level0.userId);
 
   let level2Left = level1.left ? getLeftRight(level1.left.userId) : {};
@@ -139,7 +169,6 @@ function renderTree() {
   let html = "<pre>";
 
   html += "           " + formatNode(level0) + "\n\n";
-
   html += "     " + formatNode(level1.left) + "        " + formatNode(level1.right) + "\n\n";
 
   html += "  " + formatNode(level2Left.left) + "   " + formatNode(level2Left.right);
@@ -152,6 +181,7 @@ function renderTree() {
 }
 
 // ================= INIT =================
+loadStatus();
 loadProfile();
 loadWallet();
 renderTree();
