@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Franchisee Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
 
+<h1>FRANCHISEE DASHBOARD</h1>
+<p id="status"></p>
+
+<button onclick="logout()">Logout</button>
+
+<!-- ================= USERS UNDER FRANCHISEE ================= -->
+<div class="section">
+  <h2>My Network Users</h2>
+  <div id="networkUsers"></div>
+</div>
+
+<!-- ================= SYSTEM STATUS ================= -->
+<div class="section">
+  <h2>System Status</h2>
+  <p id="systemStatus"></p>
+</div>
+
+<script>
+// ================= ACCESS CONTROL =================
+let loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!loggedInUser || loggedInUser.role !== "franchisee") {
+  alert("Access denied");
+  window.location.href = "user_login.html";
+}
+
+document.getElementById("status").innerText =
+  "Welcome " + loggedInUser.username + " (" + loggedInUser.userId + ")";
+
+// ================= LOGOUT =================
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "user_login.html";
+}
+
+// ================= LOAD USERS =================
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+
+// ================= FIND NETWORK USERS =================
+function getNetworkUsers() {
+  let users = getUsers();
+
+  // Users whose introducerId matches franchisee OR indirectly in their tree
+  return users.filter(u => u.introducerId === loggedInUser.userId);
+}
+
+// ================= RENDER NETWORK =================
+function renderNetwork() {
+  let users = getNetworkUsers();
+  let html = "<ul>";
+
+  users.forEach(u => {
+    html += `
+      <li>
+        <b>${u.userId}</b> | ${u.username} | ${u.mobile}
+        <br>
+        Role: ${u.role} | Status: ${u.status}
+      </li>
+      <hr>
+    `;
+  });
+
+  html += "</ul>";
+
+  document.getElementById("networkUsers").innerHTML = html;
+}
+
+// ================= SYSTEM STATUS =================
+function loadSystemStatus() {
+  let settings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+
+  document.getElementById("systemStatus").innerHTML = `
+    Registration: ${settings.registrationOpen ?? "N/A"} <br>
+    Upgrades: ${settings.upgradesOpen ?? "N/A"}
+  `;
+}
+
+// ================= INIT =================
+renderNetwork();
+loadSystemStatus();
+</script>
+
+</body>
+</html>
