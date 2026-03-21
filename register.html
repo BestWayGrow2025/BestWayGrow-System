@@ -50,7 +50,7 @@ function generateUserId() {
 }
 
 // =====================
-// REGISTER USER (UPGRADED MODEL)
+// REGISTER USER
 // =====================
 function registerUser(username, mobile, introducerId, position) {
   let users = getUsers();
@@ -60,43 +60,87 @@ function registerUser(username, mobile, introducerId, position) {
     username: username,
     mobile: mobile,
 
-    // TREE STRUCTURE
+    // INTRODUCER TREE (INCOME)
     introducerId: introducerId,
-    sponsorId: introducerId, // future placement use
-    position: position,
 
-    // META
+    // SPONSOR TREE (PLACEMENT)
+    sponsorId: null,
+    position: position, // LEFT / RIGHT
+
     createdAt: new Date().toISOString(),
 
-    // WALLET
     wallet: 0,
 
-    // STATUS
     status: "inactive",
     isActive: false,
 
-    // PACKAGE TRACKING
     package: {
       ugliCount: 0,
       rliCount: 0
     },
 
-    // FRANCHISEE
     franchiseeStatus: "none",
     trainingCompleted: false,
 
-    // PIN / CTOR
     pinLevel: 0
   };
 
+  // Step 1: Save user
   users.push(newUser);
   saveUsers(users);
+
+  // Step 2: Sponsor placement
+  placeInSponsorTree(newUser);
 
   return newUser;
 }
 
 // =====================
-// UGLI INCOME (UNCHANGED FOR NOW)
+// SPONSOR TREE PLACEMENT (SPILLOVER BFS)
+// =====================
+function placeInSponsorTree(newUser) {
+  let users = getUsers();
+
+  // Find introducer node
+  let introducer = users.find(u => u.userId === newUser.introducerId);
+  if (!introducer) return;
+
+  // BFS queue starting from introducer
+  let queue = [introducer];
+
+  while (queue.length > 0) {
+    let current = queue.shift();
+
+    // Find children of current
+    let children = users.filter(u => u.sponsorId === current.userId);
+
+    let leftChild = children.find(c => c.position === "LEFT");
+    let rightChild = children.find(c => c.position === "RIGHT");
+
+    if (newUser.position === "LEFT") {
+      if (!leftChild) {
+        newUser.sponsorId = current.userId;
+        break;
+      } else {
+        queue.push(leftChild);
+      }
+    }
+
+    if (newUser.position === "RIGHT") {
+      if (!rightChild) {
+        newUser.sponsorId = current.userId;
+        break;
+      } else {
+        queue.push(rightChild);
+      }
+    }
+  }
+
+  saveUsers(users);
+}
+
+// =====================
+// UGLI INCOME (UNCHANGED)
 // =====================
 function payUGLIIncome(buyerId) {
   let users = getUsers();
