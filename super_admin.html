@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Super Admin Panel</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    input, select { margin: 5px 0; padding: 5px; width: 200px; }
+    button { padding: 6px 10px; margin-top: 5px; }
+  </style>
+</head>
+<body>
+
+<h1>SUPER ADMIN PANEL</h1>
+
+<!-- ================= SYSTEM CONTROL ================= -->
+<div class="section">
+  <h2>System Controls</h2>
+
+  <button onclick="toggleSetting('adminAccess', true)">Admin ON</button>
+  <button onclick="toggleSetting('adminAccess', false)">Admin OFF</button>
+
+  <br><br>
+
+  <button onclick="toggleSetting('franchiseeAccess', true)">Franchisee ON</button>
+  <button onclick="toggleSetting('franchiseeAccess', false)">Franchisee OFF</button>
+
+  <br><br>
+
+  <button onclick="toggleSetting('registrationOpen', true)">Registration ON</button>
+  <button onclick="toggleSetting('registrationOpen', false)">Registration OFF</button>
+
+  <br><br>
+
+  <button onclick="toggleSetting('upgradesOpen', true)">Upgrades ON</button>
+  <button onclick="toggleSetting('upgradesOpen', false)">Upgrades OFF</button>
+</div>
+
+<!-- ================= CREATE ADMIN ================= -->
+<div class="section">
+  <h2>Create Admin / Franchisee</h2>
+
+  <input id="adminId" placeholder="User ID"><br>
+  <input id="adminPassword" placeholder="Password" type="password"><br>
+  <input id="adminName" placeholder="Name"><br>
+  <input id="adminMobile" placeholder="Mobile"><br>
+  <input id="adminEmail" placeholder="Email"><br>
+
+  <select id="adminRole">
+    <option value="admin">Admin</option>
+    <option value="franchisee">Franchisee</option>
+    <option value="team">Team Member</option>
+  </select><br>
+
+  <button onclick="addAdmin()">Create</button>
+</div>
+
+<!-- ================= ADMIN LIST ================= -->
+<div class="section">
+  <h2>Admin List</h2>
+  <div id="adminList"></div>
+</div>
+
+<script>
+// ================= SYSTEM SETTINGS =================
+function getSystemSettings() {
+  return JSON.parse(localStorage.getItem("systemSettings") || "{}");
+}
+
+function saveSystemSettings(settings) {
+  localStorage.setItem("systemSettings", JSON.stringify(settings));
+}
+
+function toggleSetting(key, value) {
+  let settings = getSystemSettings();
+  settings[key] = value;
+  saveSystemSettings(settings);
+  alert(key + " = " + value);
+}
+
+// ================= ADMIN STORAGE =================
+function getAdmins() {
+  return JSON.parse(localStorage.getItem("admins") || "[]");
+}
+
+function saveAdmins(admins) {
+  localStorage.setItem("admins", JSON.stringify(admins));
+}
+
+// ================= CREATE ADMIN =================
+function addAdmin() {
+  let admins = getAdmins();
+
+  let newAdmin = {
+    userId: document.getElementById("adminId").value,
+    password: document.getElementById("adminPassword").value,
+    name: document.getElementById("adminName").value,
+    mobile: document.getElementById("adminMobile").value,
+    email: document.getElementById("adminEmail").value,
+    role: document.getElementById("adminRole").value,
+    status: "active",
+    createdAt: new Date().toISOString()
+  };
+
+  if (!newAdmin.userId || !newAdmin.password) {
+    alert("User ID and Password required");
+    return;
+  }
+
+  admins.push(newAdmin);
+  saveAdmins(admins);
+
+  alert("Admin Created");
+  renderAdmins();
+}
+
+// ================= TOGGLE ADMIN STATUS =================
+function toggleAdmin(userId) {
+  let admins = getAdmins();
+
+  admins = admins.map(a => {
+    if (a.userId === userId) {
+      a.status = (a.status === "active") ? "inactive" : "active";
+    }
+    return a;
+  });
+
+  saveAdmins(admins);
+  renderAdmins();
+}
+
+// ================= DELETE ADMIN =================
+function deleteAdmin(userId) {
+  let admins = getAdmins();
+  admins = admins.filter(a => a.userId !== userId);
+  saveAdmins(admins);
+  renderAdmins();
+}
+
+// ================= RENDER ADMINS =================
+function renderAdmins() {
+  let admins = getAdmins();
+  let html = "<ul>";
+
+  admins.forEach(a => {
+    html += `
+      <li>
+        <b>${a.userId}</b> (${a.role}) - ${a.status}
+        <br>
+        ${a.name} | ${a.mobile} | ${a.email}
+        <br>
+        <button onclick="toggleAdmin('${a.userId}')">Toggle</button>
+        <button onclick="deleteAdmin('${a.userId}')">Delete</button>
+      </li>
+      <hr>
+    `;
+  });
+
+  html += "</ul>";
+  document.getElementById("adminList").innerHTML = html;
+}
+
+// ================= INIT =================
+renderAdmins();
+
+</script>
+
+</body>
+</html>
