@@ -11,7 +11,9 @@
 <body>
 
 <h1>ADMIN DASHBOARD</h1>
+
 <p id="status"></p>
+
 <button onclick="logout()">Logout</button>
 
 <!-- PROFILE -->
@@ -44,7 +46,7 @@ function getSystemSettings() {
 // STATUS
 function loadStatus() {
   document.getElementById("status").innerText =
-    "Welcome " + admin.name + " (" + admin.userId + ")";
+    "Welcome " + (admin.name || "ADMIN") + " (" + admin.userId + ")";
 }
 
 // PROFILE
@@ -53,7 +55,7 @@ function loadProfile() {
     User ID: ${admin.userId} <br>
     Name: ${admin.name || "-"} <br>
     Type: ${admin.type || "-"} <br>
-    Departments: ${(admin.departments || []).join(", ")}
+    Departments: ${(admin.departments && admin.departments.length > 0) ? admin.departments.join(", ") : "-"}
   `;
 }
 
