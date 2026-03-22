@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment Request</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    button { padding: 8px 12px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h2>Payment Request</h2>
+
+<div class="box">
+  <label>User ID:</label><br>
+  <input id="userId" placeholder="Enter User ID"><br><br>
+
+  <label>Amount:</label><br>
+  <input id="amount" placeholder="Enter Amount"><br><br>
+
+  <label>Type:</label><br>
+  <select id="type">
+    <option value="upgrade">Upgrade</option>
+    <option value="repurchase">Repurchase</option>
+  </select><br><br>
+
+  <button onclick="submitPayment()">Submit Payment</button>
+</div>
+
+<p id="msg"></p>
+
+<script>
+
+// ===== UNIQUE ID GENERATOR =====
+function generateId() {
+  return "PAY" + Date.now();
+}
+
+// ===== GET STORAGE =====
+function getPayments() {
+  return JSON.parse(localStorage.getItem("payments") || "[]");
+}
+
+// ===== SAVE STORAGE =====
+function savePayments(data) {
+  localStorage.setItem("payments", JSON.stringify(data));
+}
+
+// ===== DUPLICATE CHECK =====
+function hasPendingPayment(userId, type) {
+  let payments = getPayments();
+
+  return payments.find(p =>
+    p.userId === userId &&
+    p.type === type &&
+    (
+      p.status === "processing" ||
+      p.verificationStatus === "pending"
+    )
+  );
+}
+
+// ===== SUBMIT PAYMENT =====
+function submitPayment() {
+
+  let userId = document.getElementById("userId").value.trim();
+  let amount = document.getElementById("amount").value.trim();
+  let type = document.getElementById("type").value;
+
+  if (!userId || !amount) {
+    showMsg("❌ Enter all details");
+    return;
+  }
+
+  let payments = getPayments();
+
+  // 🔐 DUPLICATE PROTECTION
+  if (hasPendingPayment(userId, type)) {
+    showMsg("⚠️ Payment already in process. Please wait.");
+    return;
+  }
+
+  // ✅ CREATE PAYMENT
+  let newPayment = {
+    paymentId: generateId(),
+    userId: userId,
+    amount: Number(amount),
+    type: type,
+
+    status: "processing",              // gateway simulation
+    verificationStatus: "pending",     // finance
+    serviceStatus: "pending",          // franchisee
+
+    createdAt: new Date().toISOString()
+  };
+
+  payments.push(newPayment);
+  savePayments(payments);
+
+  // 🟢 SUCCESS MESSAGE
+  showMsg("✅ Payment request submitted successfully");
+
+  console.log("Payment Created:", newPayment);
+}
+
+// ===== MESSAGE =====
+function showMsg(text) {
+  document.getElementById("msg").innerText = text;
+}
+
+</script>
+
+</body>
+</html>
