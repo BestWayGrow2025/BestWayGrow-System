@@ -12,9 +12,10 @@
 
 <h2>Payment Request</h2>
 
+<!-- USER DISPLAY -->
+<p id="userDisplay"></p>
+
 <div class="box">
-  <label>User ID:</label><br>
-  <input id="userId" placeholder="Enter User ID"><br><br>
 
   <label>Amount:</label><br>
   <input id="amount" placeholder="Enter Amount"><br><br>
@@ -31,6 +32,19 @@
 <p id="msg"></p>
 
 <script>
+
+// ================= AUTH =================
+let loggedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!loggedUser) {
+  alert("Login required");
+  window.location.href = "user_login.html";
+}
+
+// SHOW USER
+document.getElementById("userDisplay").innerText =
+  "User ID: " + loggedUser.userId;
+
 
 // ===== UNIQUE ID GENERATOR =====
 function generateId() {
@@ -64,22 +78,22 @@ function hasPendingPayment(userId, type) {
 // ===== SUBMIT PAYMENT =====
 function submitPayment() {
 
-  let userId = document.getElementById("userId").value.trim();
+  let userId = loggedUser.userId;
   let amount = document.getElementById("amount").value.trim();
   let type = document.getElementById("type").value;
 
-  if (!userId || !amount) {
-    showMsg("❌ Enter all details");
+  if (!amount) {
+    showMsg("❌ Enter amount");
     return;
   }
-
-  let payments = getPayments();
 
   // 🔐 DUPLICATE PROTECTION
   if (hasPendingPayment(userId, type)) {
     showMsg("⚠️ Payment already in process. Please wait.");
     return;
   }
+
+  let payments = getPayments();
 
   // ✅ CREATE PAYMENT
   let newPayment = {
@@ -88,9 +102,11 @@ function submitPayment() {
     amount: Number(amount),
     type: type,
 
-    status: "processing",              // gateway simulation
+    status: "processing",              // gateway
     verificationStatus: "pending",     // finance
     serviceStatus: "pending",          // franchisee
+
+    flow: "payment_to_finance",        // SYSTEM FLOW CONTROL
 
     createdAt: new Date().toISOString()
   };
@@ -99,7 +115,7 @@ function submitPayment() {
   savePayments(payments);
 
   // 🟢 SUCCESS MESSAGE
-  showMsg("✅ Payment request submitted successfully");
+  showMsg("✅ Payment submitted. Waiting for verification.");
 
   console.log("Payment Created:", newPayment);
 }
