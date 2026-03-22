@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Super Admin Login</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { margin-bottom: 10px; padding: 5px; }
+    button { padding: 6px 10px; }
+  </style>
+</head>
+<body>
+
+<h2>Super Admin Login</h2>
+
+<input id="userId" placeholder="User ID"><br>
+<input id="password" type="password" placeholder="Password"><br>
+
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+
+<script>
+
+function login() {
+
+  let userId = document.getElementById("userId").value.trim();
+  let password = document.getElementById("password").value.trim();
+
+  let officeUsers = JSON.parse(localStorage.getItem("officeUsers") || "[]");
+
+  let user = officeUsers.find(u =>
+    u.userId === userId &&
+    u.password === password &&
+    u.role === "super_admin"
+  );
+
+  if (!user) {
+    showMsg("❌ Invalid login");
+    return;
+  }
+
+  localStorage.setItem("loggedInSuperAdmin", JSON.stringify(user));
+
+  showMsg("✅ Login successful");
+
+  setTimeout(() => {
+    window.location.href = "superadmin_dashboard.html";
+  }, 1000);
+}
+
+function showMsg(text) {
+  document.getElementById("msg").innerText = text;
+}
+
+</script>
+
+</body>
+</html>
