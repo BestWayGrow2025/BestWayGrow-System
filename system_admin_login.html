@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Admin Login</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { margin-bottom: 10px; padding: 5px; }
+    button { padding: 6px 10px; }
+  </style>
+</head>
+<body>
+
+<h2>System Admin Login</h2>
+
+<input id="userId" placeholder="System Admin ID"><br>
+<input id="password" type="password" placeholder="Password"><br>
+
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+
+<script>
+
+function login() {
+
+  let userId = document.getElementById("userId").value.trim();
+  let password = document.getElementById("password").value.trim();
+
+  let admins = JSON.parse(localStorage.getItem("admins") || "[]");
+
+  let user = admins.find(a =>
+    a.userId === userId &&
+    a.password === password &&
+    a.role === "system_admin"
+  );
+
+  if (!user) {
+    showMsg("❌ Invalid login");
+    return;
+  }
+
+  localStorage.setItem("loggedInSystemAdmin", JSON.stringify(user));
+
+  showMsg("✅ Login successful");
+
+  setTimeout(() => {
+    window.location.href = "system_admin_dashboard.html";
+  }, 1000);
+}
+
+function showMsg(text) {
+  document.getElementById("msg").innerText = text;
+}
+
+</script>
+
+</body>
+</html>
