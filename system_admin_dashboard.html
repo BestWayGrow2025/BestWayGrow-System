@@ -1,89 +1,126 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>System Admin Dashboard</title>
+  <title>Create Admin</title>
   <style>
     body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-    button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
+    input, select { margin-bottom: 10px; padding: 5px; }
+    button { padding: 6px 10px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h1>SYSTEM ADMIN DASHBOARD</h1>
+<h2>SYSTEM ADMIN → CREATE ADMIN</h2>
 
-<p id="welcome"></p>
+<input id="adminId" placeholder="Admin ID"><br>
+<input id="name" placeholder="Name"><br>
+<input id="password" type="password" placeholder="Password"><br>
 
-<button onclick="logout()">Logout</button>
+<label>Type:</label><br>
+<select id="type" onchange="toggleDepartments()">
+  <option value="all">All-in-One (Type A)</option>
+  <option value="department">Department (Type B)</option>
+</select>
 
-<!-- PROFILE -->
-<div class="box">
-  <h3>My Profile</h3>
-  <p id="profile"></p>
+<br><br>
+
+<div id="departmentsBox" style="display:none;">
+  <label>Select Departments:</label><br>
+  <input type="checkbox" value="finance"> Finance<br>
+  <input type="checkbox" value="franchisee"> Franchisee<br>
+  <input type="checkbox" value="kyc"> KYC<br>
 </div>
 
-<!-- SYSTEM STATUS -->
-<div class="box">
-  <h3>System Status</h3>
-  <p id="systemStatus"></p>
-</div>
+<br>
 
-<!-- ACTIONS -->
-<div class="box">
-  <h3>Actions</h3>
-  <button onclick="goCreateAdmin()">Create Admin</button>
-</div>
+<button onclick="createAdmin()">Create Admin</button>
+
+<p id="msg"></p>
 
 <script>
 
-// ===== AUTH =====
-let admin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
+// AUTH
+let sysAdmin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
 
-if (!admin) {
+if (!sysAdmin) {
   alert("Access denied");
   window.location.href = "system_admin_login.html";
 }
 
-// ===== WELCOME =====
-document.getElementById("welcome").innerText =
-  "Welcome " + (admin.name || "SYSTEM ADMIN") + " (" + admin.userId + ")";
-
-// ===== PROFILE =====
-document.getElementById("profile").innerHTML = `
-  User ID: ${admin.userId} <br>
-  Name: ${admin.name || "-"} <br>
-  Role: ${admin.role || "-"}
-`;
-
-// ===== SYSTEM STATUS =====
-function loadSystem() {
-  let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-
-  document.getElementById("systemStatus").innerHTML = `
-    Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
-    Franchisee Access: ${s.franchiseeAccess ? "ON" : "OFF"} <br>
-    Registration: ${s.registrationOpen ? "OPEN" : "CLOSED"} <br>
-    Upgrades: ${s.upgradesOpen ? "OPEN" : "CLOSED"} <br>
-    Repurchase: ${s.repurchaseOpen ? "OPEN" : "CLOSED"} <br>
-    Finance Dept: ${s.finance ? "ON" : "OFF"} <br>
-    Franchisee Dept: ${s.franchiseeDept ? "ON" : "OFF"} <br>
-    KYC Dept: ${s.kyc ? "ON" : "OFF"}
-  `;
+// SHOW/HIDE DEPARTMENTS
+function toggleDepartments() {
+  let type = document.getElementById("type").value;
+  document.getElementById("departmentsBox").style.display =
+    type === "department" ? "block" : "none";
 }
 
-// ===== NAVIGATION =====
-function goCreateAdmin() {
-  window.location.href = "system_admin_create_admin.html";
+// STORAGE
+function getAdmins() {
+  return JSON.parse(localStorage.getItem("admins") || "[]");
 }
 
-// ===== LOGOUT =====
-function logout() {
-  localStorage.removeItem("loggedInSystemAdmin");
-  window.location.href = "system_admin_login.html";
+function saveAdmins(data) {
+  localStorage.setItem("admins", JSON.stringify(data));
 }
 
-// INIT
-loadSystem();
+// CREATE ADMIN
+function createAdmin() {
+
+  let adminId = document.getElementById("adminId").value.trim();
+  let name = document.getElementById("name").value.trim();
+  let password = document.getElementById("password").value.trim();
+  let type = document.getElementById("type").value;
+
+  if (!adminId || !name || !password) {
+    showMsg("❌ Fill all fields");
+    return;
+  }
+
+  let admins = getAdmins();
+
+  // DUPLICATE CHECK
+  if (admins.find(a => a.userId === adminId)) {
+    showMsg("⚠️ Admin already exists");
+    return;
+  }
+
+  let departments = [];
+
+  if (type === "all") {
+    departments = ["finance", "franchisee", "kyc"];
+  } else {
+    let checkboxes = document.querySelectorAll("#departmentsBox input:checked");
+    checkboxes.forEach(cb => departments.push(cb.value));
+
+    if (departments.length === 0) {
+      showMsg("⚠️ Select at least one department");
+      return;
+    }
+  }
+
+  let newAdmin = {
+    userId: adminId,
+    name: name,
+    password: password,
+    role: "admin",
+    type: type,
+    departments: departments,
+    createdBy: sysAdmin.userId,
+    status: "active"
+  };
+
+  admins.push(newAdmin);
+  saveAdmins(admins);
+
+  showMsg("✅ Admin created successfully");
+
+  console.log("Admin Created:", newAdmin);
+}
+
+// MESSAGE
+function showMsg(text) {
+  document.getElementById("msg").innerText = text;
+}
 
 </script>
 
