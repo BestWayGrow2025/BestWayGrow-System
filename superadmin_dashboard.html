@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Super Admin Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h1>SUPER ADMIN DASHBOARD</h1>
+
+<p id="welcome"></p>
+
+<button onclick="logout()">Logout</button>
+
+<!-- SYSTEM STATUS -->
+<div class="box">
+  <h3>System Status</h3>
+  <p id="systemStatus"></p>
+</div>
+
+<script>
+
+// ===== AUTH CHECK =====
+let admin = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+
+if (!admin) {
+  alert("Access denied");
+  window.location.href = "superadmin_login.html";
+}
+
+// ===== WELCOME =====
+document.getElementById("welcome").innerText =
+  "Welcome " + admin.username + " (" + admin.userId + ")";
+
+// ===== LOAD SYSTEM SETTINGS =====
+function loadSystem() {
+  let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+
+  document.getElementById("systemStatus").innerHTML = `
+    Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
+    Franchisee Access: ${s.franchiseeAccess ? "ON" : "OFF"} <br>
+    Registration: ${s.registrationOpen ? "OPEN" : "CLOSED"} <br>
+    Upgrades: ${s.upgradesOpen ? "OPEN" : "CLOSED"} <br>
+    Finance Dept: ${s.finance ? "ON" : "OFF"} <br>
+    Franchisee Dept: ${s.franchiseeDept ? "ON" : "OFF"} <br>
+    KYC Dept: ${s.kyc ? "ON" : "OFF"}
+  `;
+}
+
+// ===== LOGOUT =====
+function logout() {
+  localStorage.removeItem("loggedInSuperAdmin");
+  window.location.href = "superadmin_login.html";
+}
+
+// ===== INIT =====
+loadSystem();
+
+</script>
+
+</body>
+</html>
