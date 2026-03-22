@@ -11,6 +11,7 @@
 <body>
 
 <h1>ADMIN DASHBOARD</h1>
+
 <p id="status"></p>
 
 <button onclick="logout()">Logout</button>
@@ -29,12 +30,12 @@
 
 <script>
 
-// ================= AUTH =================
-let user = JSON.parse(localStorage.getItem("loggedInUser"));
+// ================= AUTH (FIXED) =================
+let admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
-if (!user || user.role !== "admin") {
+if (!admin) {
   alert("Access denied");
-  window.location.href = "user_login.html";
+  window.location.href = "admin_login.html";
 }
 
 // ================= SYSTEM SETTINGS =================
@@ -45,15 +46,16 @@ function getSystemSettings() {
 // ================= STATUS =================
 function loadStatus() {
   document.getElementById("status").innerText =
-    "Welcome " + user.username + " (" + user.userId + ")";
+    "Welcome " + admin.name + " (" + admin.userId + ")";
 }
 
 // ================= PROFILE =================
 function loadProfile() {
   document.getElementById("profile").innerHTML = `
-    User ID: ${user.userId} <br>
-    Name: ${user.username} <br>
-    Role: ${user.role}
+    User ID: ${admin.userId} <br>
+    Name: ${admin.name || "-"} <br>
+    Type: ${admin.type} <br>
+    Departments: ${(admin.departments || []).join(", ")}
   `;
 }
 
@@ -71,8 +73,8 @@ function loadSystemStatus() {
 
 // ================= LOGOUT =================
 function logout() {
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "user_login.html";
+  localStorage.removeItem("loggedInAdmin");
+  window.location.href = "admin_login.html";
 }
 
 // ================= INIT =================
