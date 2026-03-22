@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login</title>
+</head>
+<body>
+
+<h2>Admin Login</h2>
+
+<input id="adminId" placeholder="Admin ID"><br><br>
+<input id="adminPassword" type="password" placeholder="Password"><br><br>
+
+<button onclick="loginAdmin()">Login</button>
+
+<script>
+function loginAdmin() {
+  let admins = JSON.parse(localStorage.getItem("admins") || "[]");
+
+  let id = document.getElementById("adminId").value.trim();
+  let password = document.getElementById("adminPassword").value.trim();
+
+  if (!id || !password) {
+    alert("Enter credentials");
+    return;
+  }
+
+  let admin = admins.find(a => a.userId === id && a.password === password);
+
+  if (!admin) {
+    alert("Invalid login");
+    return;
+  }
+
+  // Save session
+  localStorage.setItem("loggedInAdmin", JSON.stringify(admin));
+
+  alert("Login successful");
+
+  // For now (no routing yet)
+  console.log("Logged in admin:", admin);
+}
+</script>
+
+</body>
+</html>
