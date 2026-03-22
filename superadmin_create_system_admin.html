@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create System Admin</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { margin-bottom: 10px; padding: 5px; }
+    button { padding: 6px 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h2>CREATE SYSTEM ADMIN</h2>
+
+<input id="sysId" placeholder="System Admin ID"><br>
+<input id="sysName" placeholder="Name"><br>
+<input id="sysPass" placeholder="Password"><br>
+
+<button onclick="createSystemAdmin()">Create System Admin</button>
+
+<p id="msg"></p>
+
+<script>
+
+// AUTH
+let superAdmin = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+
+if (!superAdmin) {
+  alert("Access denied");
+  window.location.href = "superadmin_login.html";
+}
+
+// STORAGE
+function getAdmins() {
+  return JSON.parse(localStorage.getItem("admins") || "[]");
+}
+
+function saveAdmins(data) {
+  localStorage.setItem("admins", JSON.stringify(data));
+}
+
+// CREATE SYSTEM ADMIN
+function createSystemAdmin() {
+
+  let id = document.getElementById("sysId").value.trim();
+  let name = document.getElementById("sysName").value.trim();
+  let pass = document.getElementById("sysPass").value.trim();
+
+  if (!id || !name || !pass) {
+    showMsg("❌ Fill all fields");
+    return;
+  }
+
+  let admins = getAdmins();
+
+  if (admins.find(a => a.userId === id)) {
+    showMsg("⚠️ ID already exists");
+    return;
+  }
+
+  let newAdmin = {
+    userId: id,
+    name: name,
+    password: pass,
+    role: "system_admin",
+    type: "all",
+    departments: ["finance", "franchisee", "kyc"],
+    status: "active"
+  };
+
+  admins.push(newAdmin);
+  saveAdmins(admins);
+
+  showMsg("✅ System Admin created successfully");
+
+  console.log("System Admin:", newAdmin);
+}
+
+// MESSAGE
+function showMsg(text) {
+  document.getElementById("msg").innerText = text;
+}
+
+</script>
+
+</body>
+</html>
