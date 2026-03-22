@@ -2,43 +2,62 @@
 <html>
 <head>
   <title>Admin Login</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { margin-bottom: 10px; padding: 5px; }
+    button { padding: 6px 10px; }
+  </style>
 </head>
 <body>
 
 <h2>Admin Login</h2>
 
-<input id="adminId" placeholder="Admin ID"><br><br>
-<input id="adminPassword" type="password" placeholder="Password"><br><br>
+<input id="adminId" placeholder="Admin ID"><br>
+<input id="adminPassword" type="password" placeholder="Password"><br>
 
 <button onclick="loginAdmin()">Login</button>
 
+<p id="msg"></p>
+
 <script>
+
 function loginAdmin() {
+
   let admins = JSON.parse(localStorage.getItem("admins") || "[]");
 
   let id = document.getElementById("adminId").value.trim();
   let password = document.getElementById("adminPassword").value.trim();
 
   if (!id || !password) {
-    alert("Enter credentials");
+    showMsg("❌ Enter credentials");
     return;
   }
 
-  let admin = admins.find(a => a.userId === id && a.password === password);
+  let admin = admins.find(a =>
+    a.userId === id &&
+    a.password === password &&
+    a.role === "admin"
+  );
 
   if (!admin) {
-    alert("Invalid login");
+    showMsg("❌ Invalid login");
     return;
   }
 
-  // Save session
+  // ✅ SAVE SESSION
   localStorage.setItem("loggedInAdmin", JSON.stringify(admin));
 
-  alert("Login successful");
+  showMsg("✅ Login successful");
 
-  // Redirect to dashboard
-  window.location.href = "dashboard_admin.html";
+  setTimeout(() => {
+    window.location.href = "dashboard_admin.html";
+  }, 1000);
 }
+
+function showMsg(text) {
+  document.getElementById("msg").innerText = text;
+}
+
 </script>
 
 </body>
