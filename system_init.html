@@ -15,12 +15,13 @@
 
 function initSystem() {
 
-  // SYSTEM SETTINGS
+  // ✅ SYSTEM SETTINGS (UPDATED)
   let systemSettings = {
     adminAccess: true,
     franchiseeAccess: true,
     registrationOpen: true,
     upgradesOpen: true,
+    repurchaseOpen: true,   // ✅ ADDED
 
     finance: true,
     franchiseeDept: true,
@@ -29,11 +30,11 @@ function initSystem() {
 
   localStorage.setItem("systemSettings", JSON.stringify(systemSettings));
 
-  // SUPER ADMIN
+  // ✅ SUPER ADMIN
   let officeUsers = [
     {
       userId: "BWG000000",
-      username: "SUPER ADMIN",
+      name: "SUPER ADMIN",   // ✅ FIXED (was username)
       password: "123",
       role: "super_admin"
     }
@@ -41,7 +42,7 @@ function initSystem() {
 
   localStorage.setItem("officeUsers", JSON.stringify(officeUsers));
 
-  // EMPTY DATA
+  // ✅ EMPTY DATA RESET
   localStorage.setItem("admins", "[]");
   localStorage.setItem("franchisees", "[]");
   localStorage.setItem("users", "[]");
