@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Admin</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, select { margin-bottom: 10px; padding: 5px; }
+    button { padding: 6px 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h2>SYSTEM ADMIN → CREATE ADMIN</h2>
+
+<input id="adminId" placeholder="Admin ID"><br>
+<input id="name" placeholder="Name"><br>
+<input id="password" placeholder="Password"><br>
+
+<label>Type:</label><br>
+<select id="type" onchange="toggleDepartments()">
+  <option value="all">All-in-One (Type A)</option>
+  <option value="department">Department (Type B)</option>
+</select><br><br>
+
+<div id="departmentsBox" style="display:none;">
+  <label>Select Departments:</label><br>
+  <input type="checkbox" value="finance"> Finance<br>
+  <input type="checkbox" value="franchisee"> Franchisee<br>
+  <input type="checkbox" value="kyc"> KYC<br>
+</div><br>
+
+<button onclick="createAdmin()">Create Admin</button>
+
+<p id="msg"></p>
+
+<script>
+
+// AUTH
+let sysAdmin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
+
+if (!sysAdmin) {
+  alert("Access denied");
+  window.location.href = "system_admin_login.html";
+}
+
+// SHOW/HIDE DEPARTMENTS
+function toggleDepartments() {
+  let type = document.getElementById("type").value;
+
+  document.getElementById("departmentsBox").style.display =
+    type === "department" ? "block" : "none";
+}
+
+// STORAGE
+function getAdmins() {
+  return JSON.parse(localStorage.getItem("admins") || "[]");
+}
+
+function saveAdmins(data) {
+  localStorage.setItem("admins", JSON.stringify(data));
+}
+
+// CREATE ADMIN
+function createAdmin() {
+
+  let adminId = document.getElementById("adminId").value.trim();
+  let name = document.getElementById("name").value.trim();
+  let password = document.getElementById("password").value.trim();
+  let type = document.getElementById("type").value;
+
+  if (!adminId || !name || !password) {
+    showMsg("❌ Fill all fields");
+    return;
+  }
+
+  let admins = getAdmins();
+
+  // DUPLICATE CHECK
+  if (admins.find(a => a.userId === adminId)) {
+    showMsg("⚠️ Admin already exists");
+    return;
+  }
+
+  let departments = [];
+
+  if (type === "all") {
+    departments = ["finance", "franchisee", "kyc"];
+  } else {
+    let checkboxes = document.querySelectorAll("#departmentsBox input:checked");
+    checkboxes.forEach(cb => departments.push(cb.value));
+
+    if (departments.length === 0) {
+      showMsg("⚠️ Select at least one department");
+      return;
+    }
+  }
+
+  let newAdmin = {
+    userId: adminId,
+    name: name,
+    password: password,
+    role: "admin",
+    type: type,
+    departments: departments,
+    createdBy: sysAdmin.userId,
+    status: "active"
+  };
+
+  admins.push(newAdmin);
+  saveAdmins(admins);
+
+  showMsg("✅ Admin created successfully");
+
+  console.log("Admin Created:", newAdmin);
+}
+
+// MESSAGE
+function showMsg(text) {
+  document.getElementById("msg").innerText = text;
+}
+
+</script>
+
+</body>
+</html>
