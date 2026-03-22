@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Init</title>
+</head>
+<body>
+
+<h2>System Initialization</h2>
+
+<button onclick="initSystem()">Initialize System</button>
+
+<p id="msg"></p>
+
+<script>
+
+function initSystem() {
+
+  // SYSTEM SETTINGS
+  let systemSettings = {
+    adminAccess: true,
+    franchiseeAccess: true,
+    registrationOpen: true,
+    upgradesOpen: true,
+
+    finance: true,
+    franchiseeDept: true,
+    kyc: true
+  };
+
+  localStorage.setItem("systemSettings", JSON.stringify(systemSettings));
+
+  // SUPER ADMIN
+  let officeUsers = [
+    {
+      userId: "BWG000000",
+      username: "SUPER ADMIN",
+      password: "123",
+      role: "super_admin"
+    }
+  ];
+
+  localStorage.setItem("officeUsers", JSON.stringify(officeUsers));
+
+  // EMPTY DATA
+  localStorage.setItem("admins", "[]");
+  localStorage.setItem("franchisees", "[]");
+  localStorage.setItem("users", "[]");
+  localStorage.setItem("payments", "[]");
+
+  document.getElementById("msg").innerText =
+    "✅ System Initialized Successfully";
+}
+
+</script>
+
+</body>
+</html>
