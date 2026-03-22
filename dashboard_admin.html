@@ -11,18 +11,16 @@
 <body>
 
 <h1>ADMIN DASHBOARD</h1>
-
 <p id="status"></p>
-
 <button onclick="logout()">Logout</button>
 
-<!-- ================= PROFILE ================= -->
+<!-- PROFILE -->
 <div class="section">
   <h2>My Profile</h2>
   <p id="profile"></p>
 </div>
 
-<!-- ================= SYSTEM STATUS ================= -->
+<!-- SYSTEM STATUS -->
 <div class="section">
   <h2>System Status</h2>
   <p id="systemStatus"></p>
@@ -30,7 +28,7 @@
 
 <script>
 
-// ================= AUTH (FIXED) =================
+// AUTH
 let admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
 if (!admin) {
@@ -38,28 +36,28 @@ if (!admin) {
   window.location.href = "admin_login.html";
 }
 
-// ================= SYSTEM SETTINGS =================
+// SYSTEM SETTINGS
 function getSystemSettings() {
   return JSON.parse(localStorage.getItem("systemSettings") || "{}");
 }
 
-// ================= STATUS =================
+// STATUS
 function loadStatus() {
   document.getElementById("status").innerText =
     "Welcome " + admin.name + " (" + admin.userId + ")";
 }
 
-// ================= PROFILE =================
+// PROFILE
 function loadProfile() {
   document.getElementById("profile").innerHTML = `
     User ID: ${admin.userId} <br>
     Name: ${admin.name || "-"} <br>
-    Type: ${admin.type} <br>
+    Type: ${admin.type || "-"} <br>
     Departments: ${(admin.departments || []).join(", ")}
   `;
 }
 
-// ================= SYSTEM STATUS =================
+// SYSTEM STATUS
 function loadSystemStatus() {
   let settings = getSystemSettings();
 
@@ -71,13 +69,13 @@ function loadSystemStatus() {
   `;
 }
 
-// ================= LOGOUT =================
+// LOGOUT
 function logout() {
   localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
 }
 
-// ================= INIT =================
+// INIT
 loadStatus();
 loadProfile();
 loadSystemStatus();
