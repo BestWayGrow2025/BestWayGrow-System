@@ -14,15 +14,12 @@
 
 <script>
 // =====================
-// OFFICE LOGIN SYSTEM
+// OFFICE LOGIN FUNCTION
 // =====================
-
-// Get office users from storage
-function getOfficeUsers() {
-  return JSON.parse(localStorage.getItem("officeUsers") || "[]");
-}
-
 function login() {
+
+  let officeUsers = JSON.parse(localStorage.getItem("officeUsers") || "[]");
+
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value.trim();
 
@@ -31,21 +28,19 @@ function login() {
     return;
   }
 
-  let users = getOfficeUsers();
-
-  let user = users.find(u => u.userId === userId && u.password === password);
+  let user = officeUsers.find(u => u.userId === userId && u.password === password);
 
   if (!user) {
-    alert("Invalid Office Credentials");
+    alert("Invalid User ID or Password");
     return;
   }
 
   // Save session
-  localStorage.setItem("loggedInUser", JSON.stringify(user));
+  localStorage.setItem("loggedInOfficeUser", JSON.stringify(user));
 
-  alert("Login Successful");
+  alert("Login successful");
 
-  // Redirect based on role
+  // Role-based redirect
   if (user.role === "super_admin") {
     window.location.href = "dashboard_super_admin.html";
   } 
@@ -53,7 +48,7 @@ function login() {
     window.location.href = "dashboard_admin.html";
   } 
   else {
-    alert("Unknown role");
+    alert("Role not recognized");
   }
 }
 </script>
