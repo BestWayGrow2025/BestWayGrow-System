@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Admin Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h1>SYSTEM ADMIN DASHBOARD</h1>
+
+<p id="welcome"></p>
+
+<button onclick="logout()">Logout</button>
+
+<!-- PROFILE -->
+<div class="box">
+  <h3>My Profile</h3>
+  <p id="profile"></p>
+</div>
+
+<!-- SYSTEM STATUS -->
+<div class="box">
+  <h3>System Status</h3>
+  <p id="systemStatus"></p>
+</div>
+
+<!-- NEXT ACTION -->
+<div class="box">
+  <h3>Actions</h3>
+  <button onclick="goCreateAdmin()">Create Admin</button>
+</div>
+
+<script>
+
+// ===== AUTH =====
+let admin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
+
+if (!admin) {
+  alert("Access denied");
+  window.location.href = "system_admin_login.html";
+}
+
+// ===== WELCOME =====
+document.getElementById("welcome").innerText =
+  "Welcome " + admin.name + " (" + admin.userId + ")";
+
+// ===== PROFILE =====
+document.getElementById("profile").innerHTML = `
+  User ID: ${admin.userId} <br>
+  Name: ${admin.name} <br>
+  Role: ${admin.role}
+`;
+
+// ===== SYSTEM STATUS =====
+function loadSystem() {
+  let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+
+  document.getElementById("systemStatus").innerHTML = `
+    Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
+    Franchisee Access: ${s.franchiseeAccess ? "ON" : "OFF"} <br>
+    Registration: ${s.registrationOpen ? "OPEN" : "CLOSED"} <br>
+    Upgrades: ${s.upgradesOpen ? "OPEN" : "CLOSED"}
+  `;
+}
+
+// ===== NAVIGATION =====
+function goCreateAdmin() {
+  window.location.href = "system_admin_create_admin.html";
+}
+
+// ===== LOGOUT =====
+function logout() {
+  localStorage.removeItem("loggedInSystemAdmin");
+  window.location.href = "system_admin_login.html";
+}
+
+// INIT
+loadSystem();
+
+</script>
+
+</body>
+</html>
