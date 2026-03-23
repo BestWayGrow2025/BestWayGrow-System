@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PIN CONTROL PANEL</title>
+</head>
+<body>
+
+<h2>PIN SYSTEM CONTROL</h2>
+
+<!-- SYSTEM TOGGLES -->
+<div>
+  <h3>System Controls</h3>
+  <label>Upgrade:</label>
+  <select id="upgradeToggle">
+    <option value="true">ON</option>
+    <option value="false">OFF</option>
+  </select>
+
+  <label>Repurchase:</label>
+  <select id="repurchaseToggle">
+    <option value="true">ON</option>
+    <option value="false">OFF</option>
+  </select>
+
+  <button onclick="saveSystem()">Save System</button>
+</div>
+
+<hr>
+
+<!-- CREATE PIN TYPE -->
+<div>
+  <h3>Create Pin Type</h3>
+  <input id="pinName" placeholder="Pin Name"><br>
+  <input id="amount" placeholder="Amount"><br>
+  <input id="bv" placeholder="BV"><br>
+  <button onclick="createPin()">Create Pin</button>
+</div>
+
+<script src="pin_system.js"></script>
+
+<script>
+function saveSystem() {
+  let settings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+
+  settings.upgrade = document.getElementById("upgradeToggle").value === "true";
+  settings.repurchase = document.getElementById("repurchaseToggle").value === "true";
+
+  localStorage.setItem("systemSettings", JSON.stringify(settings));
+
+  alert("System Updated");
+}
+
+function createPin() {
+  let name = document.getElementById("pinName").value;
+  let amount = parseInt(document.getElementById("amount").value);
+  let bv = parseInt(document.getElementById("bv").value);
+
+  createPinType(name, amount, bv);
+
+  alert("Pin Created");
+}
+</script>
+
+</body>
+</html>
