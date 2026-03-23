@@ -1,40 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Register</title>
+</head>
+<body>
+
+<h2 id="introLabel">User Registration</h2>
+
+<div id="formArea">
+  <input type="text" id="username" placeholder="Name"><br><br>
+  <input type="text" id="mobile" placeholder="Mobile"><br><br>
+  <input type="password" id="password" placeholder="Password"><br><br>
+
+  <label>Select Position:</label><br>
+  <input type="radio" name="position" value="LEFT"> LEFT
+  <input type="radio" name="position" value="RIGHT"> RIGHT
+  <br><br>
+
+  <button onclick="handleRegister()">Register</button>
+</div>
+
+<p id="msg"></p>
+
 <script>
 // =====================
 // URL PARAMS
 // =====================
 let params = new URLSearchParams(window.location.search);
-let type = params.get("type");   
-let userId = params.get("id");   
+let type = params.get("type");    
+let userId = params.get("id");    
 let introducerId = params.get("ref") || "BWG000000";
 
 // =====================
-// USERS STORAGE
+// STORAGE HELPERS
 // =====================
 function getUsers() {
   let data = localStorage.getItem("users");
-
   if (!data) {
     localStorage.setItem("users", JSON.stringify([]));
     return [];
   }
-
-  try {
-    return JSON.parse(data);
-  } catch (e) {
-    localStorage.setItem("users", JSON.stringify([]));
-    return [];
-  }
+  return JSON.parse(data);
 }
 
 function saveUsers(users) {
   localStorage.setItem("users", JSON.stringify(users));
-}
-
-// =====================
-// WALLET INIT
-// =====================
-function initWallet(user) {
-  user.wallet = user.wallet || 0;
 }
 
 // =====================
@@ -43,11 +53,9 @@ function initWallet(user) {
 function generateUserId() {
   let users = getUsers();
   let id;
-
   do {
     id = "BWG" + Math.floor(100000 + Math.random() * 900000);
   } while (users.find(u => u.userId === id));
-
   return id;
 }
 
@@ -59,49 +67,38 @@ function registerUser(username, mobile, password, introducerId, position) {
 
   let newUser = {
     userId: generateUserId(),
-    username: username,
+    name: username,
     mobile: mobile,
-
-    // AUTH
     password: password,
     role: "user",
 
-    // TREE
     introducerId: introducerId,
     sponsorId: null,
     position: position,
 
-    createdAt: new Date().toISOString(),
+    joinTime: new Date().toLocaleString(),
 
     wallet: 0,
     status: "inactive",
     isActive: false,
 
-    package: {
-      ugliCount: 0,
-      rliCount: 0
-    },
-
-    franchiseeStatus: "none",
-    trainingCompleted: false,
-    pinLevel: 0
+    kyc: "PENDING",
+    upgrade: "NOT DONE"
   };
 
   users.push(newUser);
   saveUsers(users);
 
-  // Sponsor placement
-  placeInSponsorTree(newUser);
+  placeInTree(newUser);
 
   return newUser;
 }
 
 // =====================
-// SPONSOR TREE PLACEMENT (BFS SPILLOVER)
+// TREE PLACEMENT (LEFT / RIGHT)
 // =====================
-function placeInSponsorTree(newUser) {
+function placeInTree(newUser) {
   let users = getUsers();
-
   let introducer = users.find(u => u.userId === newUser.introducerId);
   if (!introducer) return;
 
@@ -109,28 +106,23 @@ function placeInSponsorTree(newUser) {
 
   while (queue.length > 0) {
     let current = queue.shift();
-
     let children = users.filter(u => u.sponsorId === current.userId);
 
-    let leftChild = children.find(c => c.position === "LEFT");
-    let rightChild = children.find(c => c.position === "RIGHT");
+    let left = children.find(c => c.position === "LEFT");
+    let right = children.find(c => c.position === "RIGHT");
 
     if (newUser.position === "LEFT") {
-      if (!leftChild) {
+      if (!left) {
         newUser.sponsorId = current.userId;
         break;
-      } else {
-        queue.push(leftChild);
-      }
+      } else queue.push(left);
     }
 
     if (newUser.position === "RIGHT") {
-      if (!rightChild) {
+      if (!right) {
         newUser.sponsorId = current.userId;
         break;
-      } else {
-        queue.push(rightChild);
-      }
+      } else queue.push(right);
     }
   }
 
@@ -138,7 +130,7 @@ function placeInSponsorTree(newUser) {
 }
 
 // =====================
-// UGLI INCOME
+// UGLI UPGRADE LOGIC
 // =====================
 function payUGLIIncome(buyerId) {
   let users = getUsers();
@@ -152,7 +144,7 @@ function payUGLIIncome(buyerId) {
     let parent = users.find(u => u.userId === current.introducerId);
     if (!parent) break;
 
-    initWallet(parent);
+    parent.wallet = parent.wallet || 0;
 
     let income = (level === 1) ? 500 : 25;
     parent.wallet += income;
@@ -165,13 +157,19 @@ function payUGLIIncome(buyerId) {
 }
 
 // =====================
-// HANDLE UPGRADE MODE
+// UI INIT
 // =====================
 let formArea = document.getElementById("formArea");
-let introLabel = document.getElementById("introId");
+let introLabel = document.getElementById("introLabel");
 
-if (type === "upgrade" && userId && formArea && introLabel) {
-  formArea.style.display = "none";
+// Show introducer
+if (introLabel) {
+  introLabel.innerText = "Introducer: " + introducerId;
+}
+
+// Upgrade mode
+if (type === "upgrade" && userId) {
+  if (formArea) formArea.style.display = "none";
   introLabel.innerText = "UPGRADE MODE";
 
   payUGLIIncome(userId);
@@ -180,48 +178,38 @@ if (type === "upgrade" && userId && formArea && introLabel) {
 }
 
 // =====================
-// SHOW INTRODUCER
-// =====================
-if (introLabel) {
-  introLabel.innerText = introducerId;
-}
-
-// =====================
 // FORM SUBMIT
 // =====================
 function handleRegister() {
-  let username = document.getElementById("username").value;
-  let mobile = document.getElementById("mobile").value;
+
+  let username = document.getElementById("username").value.trim();
+  let mobile = document.getElementById("mobile").value.trim();
   let password = document.getElementById("password").value;
 
   let positionElement = document.querySelector('input[name="position"]:checked');
-  if (!positionElement) {
-    alert("Select position LEFT or RIGHT");
-    return;
-  }
-
-  let position = positionElement.value;
 
   if (!username || !mobile || !password) {
     alert("Fill all fields");
     return;
   }
 
+  if (!positionElement) {
+    alert("Select LEFT or RIGHT");
+    return;
+  }
+
+  let position = positionElement.value;
+
   let user = registerUser(username, mobile, password, introducerId, position);
 
   alert("Registered! ID: " + user.userId);
 
-  // Save session
   localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-  // Redirect
-  window.location.href = "dashboard_user.html";
+  window.location.href = "user_dashboard.html";
 }
 
-// =====================
-// DEBUG
-// =====================
-if (type === "upgrade" && userId) {
-  console.log("Upgrade mode active for:", userId);
-}
 </script>
+
+</body>
+</html>
