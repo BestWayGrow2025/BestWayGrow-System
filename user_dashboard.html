@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    ul { list-style-type: none; }
+  </style>
+</head>
+<body>
+
+<h1>USER DASHBOARD</h1>
+
+<p id="welcome"></p>
+<button onclick="logout()">Logout</button>
+
+<!-- PROFILE -->
+<div class="box">
+  <h3>My Profile</h3>
+  <p id="profile"></p>
+</div>
+
+<!-- TREE -->
+<div class="box">
+  <h3>My Team Tree (Introducer)</h3>
+  <div id="tree"></div>
+</div>
+
+<script>
+
+let user = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!user) {
+  alert("Access denied");
+  window.location.href = "user_login.html";
+}
+
+let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+// WELCOME
+document.getElementById("welcome").innerText =
+  "Welcome " + user.name + " (" + user.userId + ")";
+
+// GET SPONSOR
+function getSponsor(u) {
+  let sponsor = users.find(x => x.userId === u.sponsorId);
+  return sponsor ? sponsor.name + " (" + sponsor.userId + ")" : "SYSTEM";
+}
+
+// PROFILE
+document.getElementById("profile").innerHTML = `
+  User ID: ${user.userId} <br>
+  Name: ${user.name} <br>
+  Sponsor: ${getSponsor(user)} <br>
+  Join Time: ${user.joinTime} <br>
+  KYC: ${user.kyc} <br>
+  Upgrade Status: ${user.upgrade}
+`;
+
+// TREE FUNCTION (TOP → BOTTOM)
+function buildTree(parentId) {
+  let children = users.filter(u => u.sponsorId === parentId);
+
+  if (children.length === 0) return "";
+
+  let html = "<ul>";
+
+  children.forEach(child => {
+    html += `
+      <li>
+        ${child.name} (${child.userId})
+        ${buildTree(child.userId)}
+      </li>
+    `;
+  });
+
+  html += "</ul>";
+  return html;
+}
+
+// LOAD TREE
+document.getElementById("tree").innerHTML = buildTree(user.userId);
+
+// LOGOUT
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "user_login.html";
+}
+
+</script>
+
+</body>
+</html>
