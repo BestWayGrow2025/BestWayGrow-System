@@ -2,6 +2,10 @@
 <html>
 <head>
   <title>Admin Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; }
+  </style>
 </head>
 <body>
 
@@ -9,11 +13,24 @@
 
 <button onclick="logout()">Logout</button>
 
-<div id="profile"></div>
-<div id="system"></div>
+<div class="box" id="profileBox">
+  <h3>My Profile</h3>
+  <p id="profile"></p>
+</div>
+
+<div class="box">
+  <h3>System Status</h3>
+  <p id="system"></p>
+</div>
+
+<div class="box">
+  <h3>Departments Access</h3>
+  <div id="departments"></div>
+</div>
 
 <script>
 
+// AUTH
 let admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
 if (!admin) {
@@ -27,7 +44,6 @@ document.getElementById("welcome").innerText =
 
 // PROFILE
 document.getElementById("profile").innerHTML = `
-  <h3>My Profile</h3>
   User ID: ${admin.adminId} <br>
   Name: ${admin.name} <br>
   Type: ${admin.type} <br>
@@ -38,13 +54,40 @@ document.getElementById("profile").innerHTML = `
 let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
 
 document.getElementById("system").innerHTML = `
-  <h3>System Status</h3>
   Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
   Franchisee Access: ${s.franchiseeAccess ? "ON" : "OFF"} <br>
   Registration: ${s.registrationOpen ? "OPEN" : "CLOSED"} <br>
   Upgrades: ${s.upgradesOpen ? "OPEN" : "CLOSED"} <br>
   Repurchase: ${s.repurchaseOpen ? "OPEN" : "CLOSED"}
 `;
+
+// DEPARTMENT UI CONTROL
+let deptBox = document.getElementById("departments");
+
+function renderDepartments() {
+
+  deptBox.innerHTML = "";
+
+  let access = admin.departments;
+
+  if (access.includes("finance")) {
+    deptBox.innerHTML += "<p>✅ Finance Panel Access</p>";
+  }
+
+  if (access.includes("franchisee")) {
+    deptBox.innerHTML += "<p>✅ Franchisee Panel Access</p>";
+  }
+
+  if (access.includes("kyc")) {
+    deptBox.innerHTML += "<p>✅ KYC Panel Access</p>";
+  }
+
+  if (access.length === 0) {
+    deptBox.innerHTML = "<p>❌ No department access</p>";
+  }
+}
+
+renderDepartments();
 
 // LOGOUT
 function logout() {
@@ -55,4 +98,4 @@ function logout() {
 </script>
 
 </body>
-</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
