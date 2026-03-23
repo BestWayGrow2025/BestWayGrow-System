@@ -2,35 +2,18 @@
 <html>
 <head>
   <title>Admin Dashboard</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-    button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
-  </style>
 </head>
 <body>
 
-<h1>ADMIN DASHBOARD</h1>
-
-<p id="status"></p>
+<h2 id="welcome"></h2>
 
 <button onclick="logout()">Logout</button>
 
-<!-- PROFILE -->
-<div class="section">
-  <h2>My Profile</h2>
-  <p id="profile"></p>
-</div>
-
-<!-- SYSTEM STATUS -->
-<div class="section">
-  <h2>System Status</h2>
-  <p id="systemStatus"></p>
-</div>
+<div id="profile"></div>
+<div id="system"></div>
 
 <script>
 
-// AUTH
 let admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
 if (!admin) {
@@ -38,38 +21,30 @@ if (!admin) {
   window.location.href = "admin_login.html";
 }
 
-// SYSTEM SETTINGS
-function getSystemSettings() {
-  return JSON.parse(localStorage.getItem("systemSettings") || "{}");
-}
-
-// STATUS
-function loadStatus() {
-  document.getElementById("status").innerText =
-    "Welcome " + (admin.name || "ADMIN") + " (" + admin.userId + ")";
-}
+// WELCOME
+document.getElementById("welcome").innerText =
+  "Welcome ADMIN (" + admin.adminId + ")";
 
 // PROFILE
-function loadProfile() {
-  document.getElementById("profile").innerHTML = `
-    User ID: ${admin.userId} <br>
-    Name: ${admin.name || "-"} <br>
-    Type: ${admin.type || "-"} <br>
-    Departments: ${(admin.departments && admin.departments.length > 0) ? admin.departments.join(", ") : "-"}
-  `;
-}
+document.getElementById("profile").innerHTML = `
+  <h3>My Profile</h3>
+  User ID: ${admin.adminId} <br>
+  Name: ${admin.name} <br>
+  Type: ${admin.type} <br>
+  Departments: ${admin.departments.join(", ")}
+`;
 
 // SYSTEM STATUS
-function loadSystemStatus() {
-  let settings = getSystemSettings();
+let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
 
-  document.getElementById("systemStatus").innerHTML = `
-    Admin Access: ${settings.adminAccess ? "ON" : "OFF"} <br>
-    Franchisee Access: ${settings.franchiseeAccess ? "ON" : "OFF"} <br>
-    Registration: ${settings.registrationOpen ? "OPEN" : "CLOSED"} <br>
-    Upgrades: ${settings.upgradesOpen ? "OPEN" : "CLOSED"}
-  `;
-}
+document.getElementById("system").innerHTML = `
+  <h3>System Status</h3>
+  Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
+  Franchisee Access: ${s.franchiseeAccess ? "ON" : "OFF"} <br>
+  Registration: ${s.registrationOpen ? "OPEN" : "CLOSED"} <br>
+  Upgrades: ${s.upgradesOpen ? "OPEN" : "CLOSED"} <br>
+  Repurchase: ${s.repurchaseOpen ? "OPEN" : "CLOSED"}
+`;
 
 // LOGOUT
 function logout() {
@@ -77,12 +52,7 @@ function logout() {
   window.location.href = "admin_login.html";
 }
 
-// INIT
-loadStatus();
-loadProfile();
-loadSystemStatus();
-
 </script>
 
 </body>
-</html>
+</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
