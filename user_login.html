@@ -5,69 +5,38 @@
 </head>
 <body>
 
-<h2>Login</h2>
+<h2>User Login</h2>
 
-<input type="text" id="userId" placeholder="Enter User ID"><br><br>
-<input type="password" id="password" placeholder="Enter Password"><br><br>
+<form onsubmit="loginUser(event)">
+  <input type="text" id="userId" placeholder="User ID" required><br><br>
+  <input type="password" id="password" placeholder="Password" required><br><br>
+  <button type="submit">Login</button>
+</form>
 
-<button onclick="login()">Login</button>
+<p id="msg"></p>
 
 <script>
 
-// =====================
-// LOGIN FUNCTION (UPDATED)
-// =====================
-function login() {
+function loginUser(e) {
+  e.preventDefault();
 
   let userId = document.getElementById("userId").value.trim();
-  let password = document.getElementById("password").value.trim();
+  let password = document.getElementById("password").value;
 
-  if (!userId || !password) {
-    alert("Enter User ID and Password");
-    return;
-  }
-
-  // =====================
-  // LOAD DATA
-  // =====================
   let users = JSON.parse(localStorage.getItem("users") || "[]");
-  let admins = JSON.parse(localStorage.getItem("admins") || "[]");
 
-  // Merge both
-  let allUsers = [...users, ...admins];
-
-  // =====================
-  // FIND USER
-  // =====================
-  let user = allUsers.find(u => u.userId === userId && u.password === password);
+  let user = users.find(u => u.userId === userId && u.password === password);
 
   if (!user) {
-    alert("Invalid User ID or Password");
+    document.getElementById("msg").innerText = "❌ Invalid login";
     return;
   }
 
-  // =====================
   // SAVE SESSION
-  // =====================
   localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-  alert("Login successful");
-
-  // =====================
-  // ROLE BASED REDIRECT
-  // =====================
-  if (user.role === "super_admin") {
-    window.location.href = "dashboard_super_admin.html";
-  } 
-  else if (user.role === "admin") {
-    window.location.href = "dashboard_admin.html";
-  } 
-  else if (user.role === "franchisee") {
-    window.location.href = "dashboard_franchisee.html";
-  } 
-  else {
-    window.location.href = "dashboard_user.html";
-  }
+  // REDIRECT
+  window.location.href = "user_dashboard.html";
 }
 
 </script>
