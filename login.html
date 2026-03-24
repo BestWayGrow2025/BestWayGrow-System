@@ -21,21 +21,32 @@
 function login() {
 
   let userId = document.getElementById("userId").value.trim();
-  let password = document.getElementById("password").value;
+  let password = document.getElementById("password").value.trim();
 
   let users = JSON.parse(localStorage.getItem("users") || "[]");
 
+  // 🔍 DEBUG (very important)
+  console.log("Entered ID:", userId);
+  console.log("Entered Password:", password);
+  console.log("All Users:", users);
+
+  // ✅ SAFE MATCH (string compare fix)
   let user = users.find(u =>
-    u.userId === userId && u.password === password
+    String(u.userId).trim() === userId &&
+    String(u.password).trim() === password
   );
 
+  console.log("Matched User:", user);
+
   if (!user) {
-    alert("Invalid credentials");
+    alert("❌ Invalid login\nCheck ID & Password");
     return;
   }
 
   // ✅ SAVE SESSION
   localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+  alert("✅ Login Success: " + user.userId);
 
   // ✅ CORRECT REDIRECTS
   if (user.role === "superadmin") {
