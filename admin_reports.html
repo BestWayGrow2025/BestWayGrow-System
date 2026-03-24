@@ -56,6 +56,15 @@
 
 <script>
 
+// ===================== AUTH CHECK =====================
+let admin = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
+let sysAdmin = JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
+
+if (!admin && !sysAdmin) {
+  alert("Access denied");
+  window.location.href = "admin_login.html";
+}
+
 // ===================== USERS =====================
 function loadUsers() {
   let users = JSON.parse(localStorage.getItem("users") || "[]");
@@ -85,7 +94,6 @@ function loadIncome() {
   let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
 
   let total = 0;
-
   txns.forEach(t => {
     total += t.amount || 0;
   });
@@ -99,7 +107,6 @@ function loadHold() {
   let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
 
   let total = 0;
-
   holds.forEach(h => {
     if (h.status === "HOLD") total += h.amount;
   });
@@ -153,6 +160,25 @@ function loadPinLogs() {
   document.getElementById("pinLogs").innerHTML = html;
 }
 
+// ===================== 🔐 ROLE RESTRICTION =====================
+function applyRestrictions() {
+
+  if (admin && admin.type === "department") {
+
+    if (!admin.departments.includes("finance")) {
+      document.getElementById("income").innerText = "Restricted";
+      document.getElementById("hold").innerText = "Restricted";
+      document.getElementById("ctor").innerText = "Restricted";
+    }
+
+    if (!admin.departments.includes("franchisee")) {
+      document.getElementById("pinLogs").innerHTML = "Restricted";
+    }
+
+  }
+
+}
+
 // ===================== INIT =====================
 loadUsers();
 loadPins();
@@ -162,7 +188,10 @@ loadCTOR();
 loadTransactions();
 loadPinLogs();
 
+applyRestrictions();
+
 </script>
 
 </body>
 </html>
+
