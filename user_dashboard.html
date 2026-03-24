@@ -33,6 +33,12 @@
   <div id="transactions"></div>
 </div>
 
+<!-- ✅ NEW: WITHDRAW HISTORY -->
+<div class="box">
+  <h3>Withdraw History</h3>
+  <div id="withdrawHistory"></div>
+</div>
+
 <!-- LINKS -->
 <div class="box">
   <h3>My Links</h3>
@@ -119,7 +125,35 @@ function loadTransactions() {
   });
 
   html += "</ul>";
+
   document.getElementById("transactions").innerHTML = html;
+}
+
+// ===================== ✅ WITHDRAW HISTORY =====================
+function loadWithdrawHistory() {
+
+  let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+
+  let userWithdraws = withdrawals.filter(w => w.userId === user.userId);
+
+  let html = "<ul>";
+
+  userWithdraws.reverse().forEach(w => {
+
+    html += `<li>
+      Request: ${w.requestId} <br>
+      Amount: ₹${w.amount} <br>
+      Charge: ₹${w.charge || 0} <br>
+      Final: ₹${w.finalAmount || w.amount} <br>
+      Status: ${w.status} <br>
+      <small>${w.time}</small>
+    </li><br>`;
+
+  });
+
+  html += "</ul>";
+
+  document.getElementById("withdrawHistory").innerHTML = html;
 }
 
 // ===================== LINKS =====================
@@ -128,10 +162,8 @@ let baseUrl = window.location.origin;
 document.getElementById("links").innerHTML = `
   FR Link:<br>
   ${baseUrl}/register.html?ref=${user.userId}&mode=fr <br><br>
-
   Upgrade Link:<br>
   ${baseUrl}/upgrade.html?user=${user.userId} <br><br>
-
   Repurchase Link:<br>
   ${baseUrl}/repurchase.html?user=${user.userId}
 `;
@@ -140,7 +172,6 @@ document.getElementById("links").innerHTML = `
 function upgrade() {
   let pinId = prompt("Enter Upgrade Pin:");
   if (!pinId) return;
-
   usePin(pinId.trim(), user.userId, "upgrade");
   loadWallet();
   loadTransactions();
@@ -149,7 +180,6 @@ function upgrade() {
 function repurchase() {
   let pinId = prompt("Enter Repurchase Pin:");
   if (!pinId) return;
-
   usePin(pinId.trim(), user.userId, "repurchase");
   loadWallet();
   loadTransactions();
@@ -162,26 +192,26 @@ function withdraw() {
     alert("Invalid amount");
     return;
   }
-
   requestWithdraw(user.userId, parseFloat(amount));
   loadWallet();
   loadTransactions();
+  loadWithdrawHistory();
 }
 
-// ===================== 🔁 RESEND WITHDRAW (IMPROVED) =====================
+// ===================== 🔁 RESEND WITHDRAW =====================
 function resendWithdraw() {
 
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
 
-  let rejectedList = withdrawals
-    .filter(w => w.userId === user.userId && w.status === "REJECTED");
+  let rejectedList = withdrawals.filter(
+    w => w.userId === user.userId && w.status === "REJECTED"
+  );
 
   if (rejectedList.length === 0) {
     alert("No rejected withdrawal found");
     return;
   }
 
-  // latest rejected
   let lastRejected = rejectedList.sort(
     (a, b) => new Date(b.time) - new Date(a.time)
   )[0];
@@ -196,6 +226,7 @@ function resendWithdraw() {
 
   loadWallet();
   loadTransactions();
+  loadWithdrawHistory();
 }
 
 // ===================== TREE =====================
@@ -216,6 +247,7 @@ function buildTree(parentId) {
   });
 
   html += "</ul>";
+
   return html;
 }
 
@@ -223,6 +255,7 @@ function buildTree(parentId) {
 document.getElementById("tree").innerHTML = buildTree(user.userId);
 loadWallet();
 loadTransactions();
+loadWithdrawHistory();
 
 // ===================== LOGOUT =====================
 function logout() {
