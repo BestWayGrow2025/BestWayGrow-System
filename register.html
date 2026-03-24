@@ -23,24 +23,32 @@
 <p id="msg"></p>
 
 <script>
+
 // =====================
 // URL PARAMS
 // =====================
 let params = new URLSearchParams(window.location.search);
-let type = params.get("type");    
-let userId = params.get("id");    
+let type = params.get("type");
+let userId = params.get("id");
 let introducerId = params.get("ref") || "BWG000000";
+
+// =====================
+// SYSTEM SETTINGS
+// =====================
+function getSystemSettings() {
+  return JSON.parse(localStorage.getItem("systemSettings") || "{}");
+}
 
 // =====================
 // STORAGE HELPERS
 // =====================
 function getUsers() {
-  let data = localStorage.getItem("users");
-  if (!data) {
-    localStorage.setItem("users", JSON.stringify([]));
+  try {
+    return JSON.parse(localStorage.getItem("users") || "[]");
+  } catch {
+    localStorage.setItem("users", "[]");
     return [];
   }
-  return JSON.parse(data);
 }
 
 function saveUsers(users) {
@@ -53,9 +61,11 @@ function saveUsers(users) {
 function generateUserId() {
   let users = getUsers();
   let id;
+
   do {
     id = "BWG" + Math.floor(100000 + Math.random() * 900000);
   } while (users.find(u => u.userId === id));
+
   return id;
 }
 
@@ -63,11 +73,12 @@ function generateUserId() {
 // REGISTER USER
 // =====================
 function registerUser(username, mobile, password, introducerId, position) {
+
   let users = getUsers();
 
   let newUser = {
     userId: generateUserId(),
-    name: username,
+    username: username,
     mobile: mobile,
     password: password,
     role: "user",
@@ -76,7 +87,7 @@ function registerUser(username, mobile, password, introducerId, position) {
     sponsorId: null,
     position: position,
 
-    joinTime: new Date().toLocaleString(),
+    createdAt: new Date().toISOString(),
 
     wallet: 0,
     status: "inactive",
@@ -95,16 +106,19 @@ function registerUser(username, mobile, password, introducerId, position) {
 }
 
 // =====================
-// TREE PLACEMENT (LEFT / RIGHT)
+// TREE PLACEMENT
 // =====================
 function placeInTree(newUser) {
+
   let users = getUsers();
   let introducer = users.find(u => u.userId === newUser.introducerId);
+
   if (!introducer) return;
 
   let queue = [introducer];
 
   while (queue.length > 0) {
+
     let current = queue.shift();
     let children = users.filter(u => u.sponsorId === current.userId);
 
@@ -130,33 +144,6 @@ function placeInTree(newUser) {
 }
 
 // =====================
-// UGLI UPGRADE LOGIC
-// =====================
-function payUGLIIncome(buyerId) {
-  let users = getUsers();
-  let buyer = users.find(u => u.userId === buyerId);
-  if (!buyer) return;
-
-  let current = buyer;
-  let level = 1;
-
-  while (current && current.introducerId && level <= 30) {
-    let parent = users.find(u => u.userId === current.introducerId);
-    if (!parent) break;
-
-    parent.wallet = parent.wallet || 0;
-
-    let income = (level === 1) ? 500 : 25;
-    parent.wallet += income;
-
-    current = parent;
-    level++;
-  }
-
-  saveUsers(users);
-}
-
-// =====================
 // UI INIT
 // =====================
 let formArea = document.getElementById("formArea");
@@ -167,20 +154,22 @@ if (introLabel) {
   introLabel.innerText = "Introducer: " + introducerId;
 }
 
-// Upgrade mode
-if (type === "upgrade" && userId) {
-  if (formArea) formArea.style.display = "none";
-  introLabel.innerText = "UPGRADE MODE";
-
-  payUGLIIncome(userId);
-
-  alert("Upgrade Successful!");
-}
-
 // =====================
 // FORM SUBMIT
 // =====================
 function handleRegister() {
+
+  let system = getSystemSettings();
+
+  // 🔒 SYSTEM LOCK
+  if (system.lockMode) {
+    return alert("System is temporarily locked");
+  }
+
+  // 🔐 REGISTRATION CONTROL
+  if (system.registrationOpen === false) {
+    return alert("Registration is closed");
+  }
 
   let username = document.getElementById("username").value.trim();
   let mobile = document.getElementById("mobile").value.trim();
