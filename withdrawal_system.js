@@ -1,5 +1,4 @@
 <script>
-
 // =====================
 // GET WITHDRAW REQUESTS
 // =====================
@@ -33,6 +32,19 @@ function requestWithdraw(userId, amount) {
   user.wallet -= amount;
   localStorage.setItem("users", JSON.stringify(users));
 
+  // 🔥 LOG TRANSACTION (IMPORTANT)
+  let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
+
+  txns.push({
+    userId: userId,
+    amount: amount,
+    type: "DEBIT",
+    reason: "Withdrawal Request",
+    time: new Date().toISOString()
+  });
+
+  localStorage.setItem("transactions", JSON.stringify(txns));
+
   // 🔥 Create request
   let requests = getWithdrawals();
 
@@ -61,7 +73,6 @@ function approveWithdraw(id) {
   if (!req || req.status !== "PENDING") return;
 
   req.status = "APPROVED";
-
   saveWithdrawals(requests);
 
   alert("Withdrawal Approved");
@@ -87,10 +98,9 @@ function rejectWithdraw(id) {
   }
 
   req.status = "REJECTED";
-
   saveWithdrawals(requests);
 
   alert("Withdrawal Rejected & Refunded");
 }
-
 </script>
+
