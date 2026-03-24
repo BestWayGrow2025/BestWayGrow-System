@@ -1,4 +1,5 @@
 <script>
+
 // =====================
 // SYSTEM SETTINGS
 // =====================
@@ -36,6 +37,7 @@ function savePinTransactions(txns) {
 // CREATE PIN TYPE
 // =====================
 function createPinType(name, amount, bv) {
+
   let pins = getPins();
 
   let pin = {
@@ -61,34 +63,43 @@ function createPinType(name, amount, bv) {
 // ADD PIN STOCK
 // =====================
 function addPinStock(pinId, quantity) {
+
   let pins = getPins();
   let pin = pins.find(p => p.pinId === pinId);
+
   if (!pin) return;
 
   pin.stock += quantity;
+
   savePins(pins);
 }
 
 // =====================
-// USE PIN
+// USE PIN (MAIN ENGINE)
 // =====================
 function usePin(pinId, userId, type) {
+
   let pins = getPins();
   let pin = pins.find(p => p.pinId === pinId);
+
   if (!pin) return alert("Invalid pin");
 
   let system = getSystemSettings();
 
-  // Check system ON/OFF
-  if (type === "upgrade" && !system.upgrade) {
+  // =====================
+  // SYSTEM CHECK
+  // =====================
+  if (type === "upgrade" && !system.upgradesOpen) {
     return alert("Upgrade is OFF by system");
   }
 
-  if (type === "repurchase" && !system.repurchase) {
+  if (type === "repurchase" && !system.repurchaseOpen) {
     return alert("Repurchase is OFF by system");
   }
 
-  // Check pin permissions
+  // =====================
+  // PIN PERMISSION CHECK
+  // =====================
   if (type === "upgrade" && !pin.upgradeEnabled) {
     return alert("Upgrade not allowed for this pin");
   }
@@ -97,17 +108,24 @@ function usePin(pinId, userId, type) {
     return alert("Repurchase not allowed for this pin");
   }
 
+  // =====================
+  // STOCK CHECK
+  // =====================
   if (pin.stock <= 0) {
     return alert("No stock available");
   }
 
-  // Deduct stock
+  // =====================
+  // USE PIN
+  // =====================
   pin.stock -= 1;
   pin.used += 1;
 
   savePins(pins);
 
-  // Log transaction
+  // =====================
+  // LOG TRANSACTION
+  // =====================
   let txns = getPinTransactions();
 
   txns.push({
@@ -121,6 +139,23 @@ function usePin(pinId, userId, type) {
 
   savePinTransactions(txns);
 
+  // =====================
+  // 🔥 COMMISSION TRIGGER
+  // =====================
+  if (type === "upgrade") {
+    if (typeof payUGLIIncome === "function") {
+      payUGLIIncome(userId, pin.bv);
+    }
+  }
+
+  // =====================
+  // 🔥 CTOR POOL TRIGGER
+  // =====================
+  if (typeof addToCTORPool === "function") {
+    addToCTORPool(pin.bv);
+  }
+
   alert("Pin used successfully for " + type);
 }
+
 </script>
