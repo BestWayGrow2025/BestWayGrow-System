@@ -33,8 +33,8 @@
 </div>
 
 <br>
-<button onclick="createAdmin()">Create Admin</button>
 
+<button onclick="createAdmin()">Create Admin</button>
 <p id="msg"></p>
 
 <!-- ================= 🔥 PIN REQUEST APPROVAL ================= -->
@@ -43,9 +43,26 @@
   <div id="requests"></div>
 </div>
 
+<!-- ================= 🔐 SYSTEM CONTROL ================= -->
+<div class="box">
+  <h3>System Control</h3>
+
+  <button onclick="lockSystem()">🔒 Lock System</button>
+  <button onclick="unlockSystem()">🔓 Unlock System</button>
+
+  <br><br>
+
+  <button onclick="exportData()">💾 Export Backup</button>
+
+  <br><br>
+
+  <input type="file" onchange="importData(this.files[0])">
+</div>
+
 <!-- ================= SCRIPTS ================= -->
 <script src="pin_system.js"></script>
 <script src="pin_request_system.js"></script>
+<script src="security_system.js"></script>
 
 <script>
 
@@ -87,7 +104,6 @@ function createAdmin() {
 
   let admins = getAdmins();
 
-  // DUPLICATE CHECK
   if (admins.find(a => a.userId === adminId)) {
     showMsg("⚠️ Admin already exists");
     return;
@@ -149,7 +165,6 @@ function loadRequests() {
   let html = "<ul>";
 
   requests.slice().reverse().forEach(r => {
-
     html += `<li>
       ${r.requestId} | Pin: ${r.pinId} | Qty: ${r.quantity} | Status: ${r.status}
       <br>
@@ -158,7 +173,6 @@ function loadRequests() {
         <button onclick="reject('${r.requestId}')">Reject</button>
       ` : ""}
     </li><br>`;
-
   });
 
   html += "</ul>";
@@ -176,6 +190,21 @@ function approve(id) {
 function reject(id) {
   rejectPinRequest(id);
   loadRequests();
+}
+
+// ================= 🔐 SYSTEM CONTROL =================
+function lockSystem() {
+  let settings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+  settings.lockMode = true;
+  localStorage.setItem("systemSettings", JSON.stringify(settings));
+  alert("System Locked");
+}
+
+function unlockSystem() {
+  let settings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+  settings.lockMode = false;
+  localStorage.setItem("systemSettings", JSON.stringify(settings));
+  alert("System Unlocked");
 }
 
 // ================= INIT =================
