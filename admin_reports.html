@@ -40,9 +40,7 @@
 <div class="box">
   <h2>CTOR Pool</h2>
   <p id="ctor"></p>
-
   <br>
-  <!-- 🔥 CTOR BUTTON -->
   <button onclick="distributeCTOR()">Run CTOR Distribution</button>
 </div>
 
@@ -58,12 +56,18 @@
   <div id="pinLogs"></div>
 </div>
 
+<!-- 💰 WITHDRAW REQUESTS -->
+<div class="box">
+  <h2>Withdraw Requests</h2>
+  <div id="withdrawals"></div>
+</div>
+
 <!-- ✅ SCRIPTS -->
 <script src="wallet_system.js"></script>
 <script src="ctor_engine.js"></script>
+<script src="withdrawal_system.js"></script>
 
 <script>
-
 // ===================== AUTH CHECK =====================
 let admin = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
 let sysAdmin = JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
@@ -82,7 +86,6 @@ function loadUsers() {
 // ===================== PIN STATUS =====================
 function loadPins() {
   let pins = JSON.parse(localStorage.getItem("pins") || "[]");
-
   let totalStock = 0;
   let totalUsed = 0;
 
@@ -100,8 +103,8 @@ function loadPins() {
 // ===================== INCOME =====================
 function loadIncome() {
   let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-
   let total = 0;
+
   txns.forEach(t => {
     total += t.amount || 0;
   });
@@ -113,8 +116,8 @@ function loadIncome() {
 // ===================== HOLD =====================
 function loadHold() {
   let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
-
   let total = 0;
+
   holds.forEach(h => {
     if (h.status === "HOLD") total += h.amount;
   });
@@ -126,7 +129,6 @@ function loadHold() {
 // ===================== CTOR =====================
 function loadCTOR() {
   let pool = JSON.parse(localStorage.getItem("ctorPool") || "0");
-
   document.getElementById("ctor").innerText =
     "CTOR Pool: ₹ " + pool;
 }
@@ -134,7 +136,6 @@ function loadCTOR() {
 // ===================== TRANSACTIONS =====================
 function loadTransactions() {
   let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-
   let html = "<ul>";
 
   txns.slice().reverse().forEach(t => {
@@ -145,14 +146,12 @@ function loadTransactions() {
   });
 
   html += "</ul>";
-
   document.getElementById("transactions").innerHTML = html;
 }
 
 // ===================== PIN LOG =====================
 function loadPinLogs() {
   let logs = JSON.parse(localStorage.getItem("pinTransactions") || "[]");
-
   let html = "<ul>";
 
   logs.slice().reverse().forEach(l => {
@@ -164,13 +163,34 @@ function loadPinLogs() {
   });
 
   html += "</ul>";
-
   document.getElementById("pinLogs").innerHTML = html;
+}
+
+// ===================== WITHDRAW =====================
+function loadWithdrawals() {
+
+  let data = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+
+  let html = "<ul>";
+
+  data.slice().reverse().forEach(w => {
+    html += `<li>
+      ${w.requestId} | ${w.userId} | ₹${w.amount} | ${w.status}
+      <br>
+      ${w.status === "PENDING" ? `
+        <button onclick="approveWithdraw('${w.requestId}')">Approve</button>
+        <button onclick="rejectWithdraw('${w.requestId}')">Reject</button>
+      ` : ""}
+    </li><br>`;
+  });
+
+  html += "</ul>";
+
+  document.getElementById("withdrawals").innerHTML = html;
 }
 
 // ===================== ROLE RESTRICTION =====================
 function applyRestrictions() {
-
   if (admin && admin.type === "department") {
 
     if (!admin.departments.includes("finance")) {
@@ -182,7 +202,6 @@ function applyRestrictions() {
     if (!admin.departments.includes("franchisee")) {
       document.getElementById("pinLogs").innerHTML = "Restricted";
     }
-
   }
 }
 
@@ -194,6 +213,7 @@ loadHold();
 loadCTOR();
 loadTransactions();
 loadPinLogs();
+loadWithdrawals();
 applyRestrictions();
 
 </script>
