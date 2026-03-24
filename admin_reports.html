@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Reports</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    h2 { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<h1>📊 SYSTEM REPORTS</h1>
+
+<!-- USERS -->
+<div class="box">
+  <h2>Total Users</h2>
+  <p id="users"></p>
+</div>
+
+<!-- PIN STATUS -->
+<div class="box">
+  <h2>Pin Status</h2>
+  <p id="pins"></p>
+</div>
+
+<!-- INCOME -->
+<div class="box">
+  <h2>Income Summary</h2>
+  <p id="income"></p>
+</div>
+
+<!-- HOLD -->
+<div class="box">
+  <h2>Hold Income</h2>
+  <p id="hold"></p>
+</div>
+
+<!-- CTOR -->
+<div class="box">
+  <h2>CTOR Pool</h2>
+  <p id="ctor"></p>
+</div>
+
+<!-- TRANSACTIONS -->
+<div class="box">
+  <h2>All Transactions</h2>
+  <div id="transactions"></div>
+</div>
+
+<!-- PIN LOG -->
+<div class="box">
+  <h2>Pin Usage Logs</h2>
+  <div id="pinLogs"></div>
+</div>
+
+<script>
+
+// ===================== USERS =====================
+function loadUsers() {
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  document.getElementById("users").innerText = "Total Users: " + users.length;
+}
+
+// ===================== PIN STATUS =====================
+function loadPins() {
+  let pins = JSON.parse(localStorage.getItem("pins") || "[]");
+
+  let totalStock = 0;
+  let totalUsed = 0;
+
+  pins.forEach(p => {
+    totalStock += p.stock;
+    totalUsed += p.used;
+  });
+
+  document.getElementById("pins").innerHTML = `
+    Total Stock: ${totalStock} <br>
+    Total Used: ${totalUsed}
+  `;
+}
+
+// ===================== INCOME =====================
+function loadIncome() {
+  let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
+
+  let total = 0;
+
+  txns.forEach(t => {
+    total += t.amount || 0;
+  });
+
+  document.getElementById("income").innerText =
+    "Total Distributed: ₹ " + total;
+}
+
+// ===================== HOLD =====================
+function loadHold() {
+  let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
+
+  let total = 0;
+
+  holds.forEach(h => {
+    if (h.status === "HOLD") total += h.amount;
+  });
+
+  document.getElementById("hold").innerText =
+    "Hold Amount: ₹ " + total;
+}
+
+// ===================== CTOR =====================
+function loadCTOR() {
+  let pool = JSON.parse(localStorage.getItem("ctorPool") || "0");
+
+  document.getElementById("ctor").innerText =
+    "CTOR Pool: ₹ " + pool;
+}
+
+// ===================== TRANSACTIONS =====================
+function loadTransactions() {
+  let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
+
+  let html = "<ul>";
+
+  txns.slice().reverse().forEach(t => {
+    html += `<li>
+      ${t.userId} → ₹${t.amount} (${t.reason}) <br>
+      <small>${t.time}</small>
+    </li><br>`;
+  });
+
+  html += "</ul>";
+
+  document.getElementById("transactions").innerHTML = html;
+}
+
+// ===================== PIN LOG =====================
+function loadPinLogs() {
+  let logs = JSON.parse(localStorage.getItem("pinTransactions") || "[]");
+
+  let html = "<ul>";
+
+  logs.slice().reverse().forEach(l => {
+    html += `<li>
+      ${l.userId} used ${l.pinId} (${l.type}) <br>
+      BV: ${l.bv} | ₹${l.amount} <br>
+      <small>${l.time}</small>
+    </li><br>`;
+  });
+
+  html += "</ul>";
+
+  document.getElementById("pinLogs").innerHTML = html;
+}
+
+// ===================== INIT =====================
+loadUsers();
+loadPins();
+loadIncome();
+loadHold();
+loadCTOR();
+loadTransactions();
+loadPinLogs();
+
+</script>
+
+</body>
+</html>
