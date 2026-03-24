@@ -33,7 +33,6 @@
 </div>
 
 <br>
-
 <button onclick="createAdmin()">Create Admin</button>
 
 <p id="msg"></p>
@@ -52,7 +51,6 @@
 
 // ================= AUTH =================
 let sysAdmin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
-
 if (!sysAdmin) {
   alert("Access denied");
   window.location.href = "system_admin_login.html";
@@ -61,7 +59,6 @@ if (!sysAdmin) {
 // ================= SHOW/HIDE DEPARTMENTS =================
 function toggleDepartments() {
   let type = document.getElementById("type").value;
-
   document.getElementById("departmentsBox").style.display =
     type === "department" ? "block" : "none";
 }
@@ -102,7 +99,6 @@ function createAdmin() {
     departments = ["finance", "franchisee", "kyc"];
   } else {
     let checkboxes = document.querySelectorAll("#departmentsBox input:checked");
-
     checkboxes.forEach(cb => departments.push(cb.value));
 
     if (departments.length === 0) {
@@ -127,6 +123,11 @@ function createAdmin() {
 
   showMsg("✅ Admin created successfully");
 
+  // CLEAR FORM
+  document.getElementById("adminId").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("password").value = "";
+
   console.log("Admin Created:", newAdmin);
 }
 
@@ -140,20 +141,24 @@ function loadRequests() {
 
   let requests = JSON.parse(localStorage.getItem("pinRequests") || "[]");
 
+  if (requests.length === 0) {
+    document.getElementById("requests").innerHTML = "No requests found";
+    return;
+  }
+
   let html = "<ul>";
 
-  requests.reverse().forEach(r => {
+  requests.slice().reverse().forEach(r => {
 
     html += `<li>
       ${r.requestId} | Pin: ${r.pinId} | Qty: ${r.quantity} | Status: ${r.status}
       <br>
-
       ${r.status === "PENDING" ? `
         <button onclick="approve('${r.requestId}')">Approve</button>
         <button onclick="reject('${r.requestId}')">Reject</button>
       ` : ""}
-
     </li><br>`;
+
   });
 
   html += "</ul>";
