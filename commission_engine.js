@@ -1,4 +1,5 @@
 <script src="wallet_system.js"></script>
+<script src="active_system.js"></script>
 
 <script>
 
@@ -7,7 +8,7 @@
 // =====================
 const COMMISSION_CONFIG = {
 
-  // UGLI LEVEL % (TOTAL ≤ safe limit)
+  // UGLI LEVEL % (TOTAL SAFE DISTRIBUTION)
   ugliLevels: [
     10, // L1
     2,2,2,2,2,2,2,2,2, // L2–10
@@ -17,11 +18,10 @@ const COMMISSION_CONFIG = {
 
   // CTOR %
   ctorPercent: 25
-
 };
 
 // =====================
-// PAY UGLI INCOME (DYNAMIC)
+// PAY UGLI INCOME (DYNAMIC + ACTIVE SAFE)
 // =====================
 function payUGLIIncome(userId, bvAmount) {
 
@@ -38,20 +38,33 @@ function payUGLIIncome(userId, bvAmount) {
     if (!parent) break;
 
     let percent = COMMISSION_CONFIG.ugliLevels[i];
-
     let income = (bvAmount * percent) / 100;
 
     if (income > 0) {
-      creditWallet(
-        parent.userId,
-        income,
-        "UGLI L" + (i + 1) + " (" + percent + "%)"
-      );
+
+      // ✅ ACTIVE CHECK
+      if (isUserActive(parent.userId)) {
+
+        creditWallet(
+          parent.userId,
+          income,
+          "UGLI L" + (i + 1) + " (" + percent + "%)"
+        );
+
+      } else {
+
+        holdIncome(
+          parent.userId,
+          income,
+          "UGLI L" + (i + 1) + " (" + percent + "%)"
+        );
+
+      }
+
     }
 
     current = parent;
   }
-
 }
 
 // =====================
