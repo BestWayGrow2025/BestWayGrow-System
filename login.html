@@ -4,7 +4,7 @@
   <title>Login</title>
   <style>
     body { font-family: Arial; padding: 20px; }
-    input, select, button { display: block; margin: 10px 0; padding: 8px; width: 250px; }
+    input, button { display: block; margin: 10px 0; padding: 8px; width: 250px; }
   </style>
 </head>
 <body>
@@ -20,34 +20,37 @@
 
 function login() {
 
-  let userId = document.getElementById("userId").value;
+  let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value;
 
   let users = JSON.parse(localStorage.getItem("users") || "[]");
 
-  let user = users.find(u => u.userId === userId && u.password === password);
+  let user = users.find(u =>
+    u.userId === userId && u.password === password
+  );
 
   if (!user) {
     alert("Invalid credentials");
     return;
   }
 
-  // Save session
+  // ✅ SAVE SESSION
   localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-  // Redirect based on role
+  // ✅ CORRECT REDIRECTS
   if (user.role === "superadmin") {
-    window.location.href = "super_admin_dashboard.html";
+    window.location.href = "superadmin_dashboard.html";
   }
   else if (user.role === "admin") {
-    window.location.href = "admin_dashboard.html";
+    window.location.href = "system_admin_dashboard.html";
   }
   else if (user.role === "franchise") {
-    window.location.href = "franchise_dashboard.html";
+    window.location.href = "dashboard_franchisee.html";
   }
   else {
     window.location.href = "user_dashboard.html";
   }
+
 }
 
 </script>
