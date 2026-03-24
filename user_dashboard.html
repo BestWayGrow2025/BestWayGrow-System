@@ -2,13 +2,43 @@
 <html>
 <head>
   <title>User Dashboard</title>
+
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-    ul { list-style-type: none; }
-    button { padding: 6px 10px; margin: 5px; cursor: pointer; }
+    body { font-family: Arial; padding: 20px; background: #f5f7fa; }
+
+    .box {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: white;
+    }
+
+    ul { list-style-type: none; padding: 0; }
+
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    /* ✅ STATUS COLORS */
+    .status-pending { color: orange; font-weight: bold; }
+    .status-approved { color: green; font-weight: bold; }
+    .status-rejected { color: red; font-weight: bold; }
+
   </style>
 </head>
+
 <body>
 
 <h1>USER DASHBOARD</h1>
@@ -33,7 +63,7 @@
   <div id="transactions"></div>
 </div>
 
-<!-- ✅ NEW: WITHDRAW HISTORY -->
+<!-- WITHDRAW HISTORY -->
 <div class="box">
   <h3>Withdraw History</h3>
   <div id="withdrawHistory"></div>
@@ -129,7 +159,7 @@ function loadTransactions() {
   document.getElementById("transactions").innerHTML = html;
 }
 
-// ===================== ✅ WITHDRAW HISTORY =====================
+// ===================== WITHDRAW HISTORY =====================
 function loadWithdrawHistory() {
 
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
@@ -140,15 +170,20 @@ function loadWithdrawHistory() {
 
   userWithdraws.reverse().forEach(w => {
 
+    let statusClass = "";
+
+    if (w.status === "PENDING") statusClass = "status-pending";
+    if (w.status === "APPROVED") statusClass = "status-approved";
+    if (w.status === "REJECTED") statusClass = "status-rejected";
+
     html += `<li>
-      Request: ${w.requestId} <br>
-      Amount: ₹${w.amount} <br>
-      Charge: ₹${w.charge || 0} <br>
-      Final: ₹${w.finalAmount || w.amount} <br>
-      Status: ${w.status} <br>
+      <b>Request:</b> ${w.requestId} <br>
+      <b>Amount:</b> ₹${w.amount} <br>
+      <b>Charge:</b> ₹${w.charge || 0} <br>
+      <b>Final:</b> ₹${w.finalAmount || w.amount} <br>
+      <b>Status:</b> <span class="${statusClass}">${w.status}</span> <br>
       <small>${w.time}</small>
     </li><br>`;
-
   });
 
   html += "</ul>";
@@ -168,7 +203,7 @@ document.getElementById("links").innerHTML = `
   ${baseUrl}/repurchase.html?user=${user.userId}
 `;
 
-// ===================== PIN ACTIONS =====================
+// ===================== ACTIONS =====================
 function upgrade() {
   let pinId = prompt("Enter Upgrade Pin:");
   if (!pinId) return;
@@ -185,7 +220,6 @@ function repurchase() {
   loadTransactions();
 }
 
-// ===================== WITHDRAW =====================
 function withdraw() {
   let amount = prompt("Enter withdraw amount:");
   if (!amount || amount <= 0) {
@@ -198,9 +232,7 @@ function withdraw() {
   loadWithdrawHistory();
 }
 
-// ===================== 🔁 RESEND WITHDRAW =====================
 function resendWithdraw() {
-
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
 
   let rejectedList = withdrawals.filter(
@@ -216,9 +248,7 @@ function resendWithdraw() {
     (a, b) => new Date(b.time) - new Date(a.time)
   )[0];
 
-  if (!confirm("Resend withdrawal of ₹ " + lastRejected.amount + " ?")) {
-    return;
-  }
+  if (!confirm("Resend withdrawal of ₹ " + lastRejected.amount + " ?")) return;
 
   requestWithdraw(user.userId, lastRejected.amount);
 
