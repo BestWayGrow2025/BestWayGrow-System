@@ -5,7 +5,8 @@
   <style>
     body { font-family: Arial; padding: 20px; }
     input, select { margin-bottom: 10px; padding: 5px; }
-    button { padding: 6px 10px; cursor: pointer; }
+    button { padding: 6px 10px; cursor: pointer; margin: 3px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -37,9 +38,19 @@
 
 <p id="msg"></p>
 
+<!-- ================= 🔥 PIN REQUEST APPROVAL ================= -->
+<div class="box">
+  <h3>Pin Requests (Franchise)</h3>
+  <div id="requests"></div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="pin_system.js"></script>
+<script src="pin_request_system.js"></script>
+
 <script>
 
-// AUTH
+// ================= AUTH =================
 let sysAdmin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
 
 if (!sysAdmin) {
@@ -47,14 +58,15 @@ if (!sysAdmin) {
   window.location.href = "system_admin_login.html";
 }
 
-// SHOW/HIDE DEPARTMENTS
+// ================= SHOW/HIDE DEPARTMENTS =================
 function toggleDepartments() {
   let type = document.getElementById("type").value;
+
   document.getElementById("departmentsBox").style.display =
     type === "department" ? "block" : "none";
 }
 
-// STORAGE
+// ================= STORAGE =================
 function getAdmins() {
   return JSON.parse(localStorage.getItem("admins") || "[]");
 }
@@ -63,7 +75,7 @@ function saveAdmins(data) {
   localStorage.setItem("admins", JSON.stringify(data));
 }
 
-// CREATE ADMIN
+// ================= CREATE ADMIN =================
 function createAdmin() {
 
   let adminId = document.getElementById("adminId").value.trim();
@@ -90,6 +102,7 @@ function createAdmin() {
     departments = ["finance", "franchisee", "kyc"];
   } else {
     let checkboxes = document.querySelectorAll("#departmentsBox input:checked");
+
     checkboxes.forEach(cb => departments.push(cb.value));
 
     if (departments.length === 0) {
@@ -117,10 +130,51 @@ function createAdmin() {
   console.log("Admin Created:", newAdmin);
 }
 
-// MESSAGE
+// ================= MESSAGE =================
 function showMsg(text) {
   document.getElementById("msg").innerText = text;
 }
+
+// ================= 🔥 LOAD PIN REQUESTS =================
+function loadRequests() {
+
+  let requests = JSON.parse(localStorage.getItem("pinRequests") || "[]");
+
+  let html = "<ul>";
+
+  requests.reverse().forEach(r => {
+
+    html += `<li>
+      ${r.requestId} | Pin: ${r.pinId} | Qty: ${r.quantity} | Status: ${r.status}
+      <br>
+
+      ${r.status === "PENDING" ? `
+        <button onclick="approve('${r.requestId}')">Approve</button>
+        <button onclick="reject('${r.requestId}')">Reject</button>
+      ` : ""}
+
+    </li><br>`;
+  });
+
+  html += "</ul>";
+
+  document.getElementById("requests").innerHTML = html;
+}
+
+// ================= APPROVE =================
+function approve(id) {
+  approvePinRequest(id);
+  loadRequests();
+}
+
+// ================= REJECT =================
+function reject(id) {
+  rejectPinRequest(id);
+  loadRequests();
+}
+
+// ================= INIT =================
+loadRequests();
 
 </script>
 
