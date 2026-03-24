@@ -11,7 +11,6 @@
 <body>
 
 <h1>FRANCHISEE DASHBOARD</h1>
-
 <p id="status"></p>
 <button onclick="logout()">Logout</button>
 
@@ -36,12 +35,9 @@
 <!-- ================= 🔥 PIN REQUEST ================= -->
 <div class="section">
   <h2>Request Pins</h2>
-
   <input type="text" id="pinId" placeholder="Enter Pin ID"><br><br>
   <input type="number" id="qty" placeholder="Quantity"><br><br>
-
   <button onclick="sendRequest()">Request Pin</button>
-
   <p id="requestMsg"></p>
 </div>
 
@@ -52,7 +48,6 @@
 
 // ================= AUTH =================
 let user = JSON.parse(localStorage.getItem("loggedInUser"));
-
 if (!user || user.role !== "franchisee") {
   alert("Access denied");
   window.location.href = "user_login.html";
@@ -77,7 +72,6 @@ function getCurrentUser() {
 // ================= STATUS =================
 function loadStatus() {
   let currentUser = getCurrentUser();
-
   document.getElementById("status").innerText =
     "Welcome " + currentUser.username + " (" + currentUser.userId + ")";
 }
@@ -85,7 +79,6 @@ function loadStatus() {
 // ================= PROFILE =================
 function loadProfile() {
   let currentUser = getCurrentUser();
-
   document.getElementById("profile").innerHTML = `
     User ID: ${currentUser.userId} <br>
     Name: ${currentUser.username} <br>
@@ -97,7 +90,6 @@ function loadProfile() {
 // ================= MY STATUS =================
 function loadMyStatus() {
   let currentUser = getCurrentUser();
-
   document.getElementById("myStatus").innerHTML = `
     Franchisee Status: ${currentUser.franchiseeStatus} <br>
     Training Completed: ${currentUser.trainingCompleted ? "YES" : "NO"} <br>
@@ -108,7 +100,6 @@ function loadMyStatus() {
 // ================= SYSTEM STATUS =================
 function loadSystemStatus() {
   let settings = getSystemSettings();
-
   document.getElementById("systemStatus").innerHTML = `
     Franchisee Access: ${settings.franchiseeAccess ? "ON" : "OFF"} <br>
     Registration: ${settings.registrationOpen ? "OPEN" : "CLOSED"} <br>
@@ -121,17 +112,17 @@ function sendRequest() {
 
   let currentUser = getCurrentUser();
 
-  let pinId = document.getElementById("pinId").value;
+  let pinId = document.getElementById("pinId").value.trim();
   let qty = parseInt(document.getElementById("qty").value);
 
-  if (!pinId || !qty) {
-    document.getElementById("requestMsg").innerText = "Fill all fields";
+  if (!pinId || !qty || qty <= 0) {
+    document.getElementById("requestMsg").innerText = "⚠️ Enter valid details";
     return;
   }
 
   requestPin(currentUser.userId, pinId, qty);
 
-  document.getElementById("requestMsg").innerText = "Request submitted";
+  document.getElementById("requestMsg").innerText = "✅ Request submitted";
 
   document.getElementById("pinId").value = "";
   document.getElementById("qty").value = "";
