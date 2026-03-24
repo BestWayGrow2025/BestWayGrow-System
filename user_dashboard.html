@@ -110,25 +110,29 @@ function loadTransactions() {
   let userTxns = txns.filter(t => t.userId === user.userId);
 
   let html = "<ul>";
+
   userTxns.reverse().forEach(t => {
     html += `<li>
       ${t.type} ₹${t.amount} - ${t.reason} <br>
       <small>${t.time}</small>
     </li><br>`;
   });
-  html += "</ul>";
 
+  html += "</ul>";
   document.getElementById("transactions").innerHTML = html;
 }
 
 // ===================== LINKS =====================
 let baseUrl = window.location.origin;
+
 document.getElementById("links").innerHTML = `
-  FR Link: <br>
+  FR Link:<br>
   ${baseUrl}/register.html?ref=${user.userId}&mode=fr <br><br>
-  Upgrade Link: <br>
+
+  Upgrade Link:<br>
   ${baseUrl}/upgrade.html?user=${user.userId} <br><br>
-  Repurchase Link: <br>
+
+  Repurchase Link:<br>
   ${baseUrl}/repurchase.html?user=${user.userId}
 `;
 
@@ -136,6 +140,7 @@ document.getElementById("links").innerHTML = `
 function upgrade() {
   let pinId = prompt("Enter Upgrade Pin:");
   if (!pinId) return;
+
   usePin(pinId.trim(), user.userId, "upgrade");
   loadWallet();
   loadTransactions();
@@ -144,6 +149,7 @@ function upgrade() {
 function repurchase() {
   let pinId = prompt("Enter Repurchase Pin:");
   if (!pinId) return;
+
   usePin(pinId.trim(), user.userId, "repurchase");
   loadWallet();
   loadTransactions();
@@ -152,27 +158,41 @@ function repurchase() {
 // ===================== WITHDRAW =====================
 function withdraw() {
   let amount = prompt("Enter withdraw amount:");
-  if (!amount) return;
+  if (!amount || amount <= 0) {
+    alert("Invalid amount");
+    return;
+  }
+
   requestWithdraw(user.userId, parseFloat(amount));
   loadWallet();
   loadTransactions();
 }
 
-// ===================== 🔁 RESEND WITHDRAW =====================
+// ===================== 🔁 RESEND WITHDRAW (IMPROVED) =====================
 function resendWithdraw() {
 
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
 
-  let lastRejected = withdrawals
-    .filter(w => w.userId === user.userId && w.status === "REJECTED")
-    .sort((a, b) => new Date(b.time) - new Date(a.time))[0];
+  let rejectedList = withdrawals
+    .filter(w => w.userId === user.userId && w.status === "REJECTED");
 
-  if (!lastRejected) {
-    alert("No rejected withdrawal found to resend");
+  if (rejectedList.length === 0) {
+    alert("No rejected withdrawal found");
+    return;
+  }
+
+  // latest rejected
+  let lastRejected = rejectedList.sort(
+    (a, b) => new Date(b.time) - new Date(a.time)
+  )[0];
+
+  if (!confirm("Resend withdrawal of ₹ " + lastRejected.amount + " ?")) {
     return;
   }
 
   requestWithdraw(user.userId, lastRejected.amount);
+
+  alert("Withdrawal resent successfully");
 
   loadWallet();
   loadTransactions();
@@ -181,9 +201,11 @@ function resendWithdraw() {
 // ===================== TREE =====================
 function buildTree(parentId) {
   let children = users.filter(u => u.sponsorId === parentId);
+
   if (children.length === 0) return "";
 
   let html = "<ul>";
+
   children.forEach(child => {
     html += `
       <li>
@@ -192,8 +214,8 @@ function buildTree(parentId) {
       </li>
     `;
   });
-  html += "</ul>";
 
+  html += "</ul>";
   return html;
 }
 
