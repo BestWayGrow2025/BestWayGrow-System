@@ -22,6 +22,18 @@
   <p id="profile"></p>
 </div>
 
+<!-- WALLET -->
+<div class="box">
+  <h3>My Wallet</h3>
+  <p id="wallet"></p>
+</div>
+
+<!-- TRANSACTIONS -->
+<div class="box">
+  <h3>Transaction History</h3>
+  <div id="transactions"></div>
+</div>
+
 <!-- LINKS -->
 <div class="box">
   <h3>My Links</h3>
@@ -42,6 +54,7 @@
 </div>
 
 <script src="pin_system.js"></script>
+<script src="wallet_system.js"></script>
 
 <script>
 
@@ -84,6 +97,39 @@ document.getElementById("profile").innerHTML = `
 `;
 
 // =====================
+// WALLET DISPLAY
+// =====================
+function loadWallet() {
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  let u = users.find(x => x.userId === user.userId);
+
+  document.getElementById("wallet").innerHTML =
+    "Balance: ₹ " + (u?.wallet || 0);
+}
+
+// =====================
+// TRANSACTION DISPLAY
+// =====================
+function loadTransactions() {
+  let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
+
+  let userTxns = txns.filter(t => t.userId === user.userId);
+
+  let html = "<ul>";
+
+  userTxns.reverse().forEach(t => {
+    html += `<li>
+      ${t.type} ₹${t.amount} - ${t.reason} <br>
+      <small>${t.time}</small>
+    </li><br>`;
+  });
+
+  html += "</ul>";
+
+  document.getElementById("transactions").innerHTML = html;
+}
+
+// =====================
 // LINKS
 // =====================
 let baseUrl = window.location.origin;
@@ -105,20 +151,29 @@ document.getElementById("links").innerHTML = `
 function upgrade() {
   let pinId = prompt("Enter Upgrade Pin:");
   if (!pinId) return;
+
   usePin(pinId.trim(), user.userId, "upgrade");
+
+  loadWallet();
+  loadTransactions();
 }
 
 function repurchase() {
   let pinId = prompt("Enter Repurchase Pin:");
   if (!pinId) return;
+
   usePin(pinId.trim(), user.userId, "repurchase");
+
+  loadWallet();
+  loadTransactions();
 }
 
 // =====================
-// TREE FUNCTION (TOP → BOTTOM)
+// TREE FUNCTION
 // =====================
 function buildTree(parentId) {
   let children = users.filter(u => u.sponsorId === parentId);
+
   if (children.length === 0) return "";
 
   let html = "<ul>";
@@ -137,9 +192,11 @@ function buildTree(parentId) {
 }
 
 // =====================
-// LOAD TREE
+// INIT LOAD
 // =====================
 document.getElementById("tree").innerHTML = buildTree(user.userId);
+loadWallet();
+loadTransactions();
 
 // =====================
 // LOGOUT
