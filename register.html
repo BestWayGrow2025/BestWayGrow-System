@@ -28,8 +28,6 @@
 // URL PARAMS
 // =====================
 let params = new URLSearchParams(window.location.search);
-let type = params.get("type");
-let userId = params.get("id");
 let introducerId = params.get("ref") || "BWG000000";
 
 // =====================
@@ -56,14 +54,23 @@ function saveUsers(users) {
 }
 
 // =====================
-// GENERATE USER ID
+// INTRODUCER VALIDATION
+// =====================
+function isValidIntroducer(id) {
+  let users = getUsers();
+  return users.some(u => u.userId === id);
+}
+
+// =====================
+// RANDOM USER ID
 // =====================
 function generateUserId() {
   let users = getUsers();
   let id;
 
   do {
-    id = "BWG" + Math.floor(100000 + Math.random() * 900000);
+    let randomNum = Math.floor(1 + Math.random() * 999999);
+    id = "BWG" + String(randomNum).padStart(6, "0");
   } while (users.find(u => u.userId === id));
 
   return id;
@@ -82,17 +89,13 @@ function registerUser(username, mobile, password, introducerId, position) {
     mobile: mobile,
     password: password,
     role: "user",
-
     introducerId: introducerId,
     sponsorId: null,
     position: position,
-
     createdAt: new Date().toISOString(),
-
     wallet: 0,
     status: "inactive",
     isActive: false,
-
     kyc: "PENDING",
     upgrade: "NOT DONE"
   };
@@ -129,14 +132,18 @@ function placeInTree(newUser) {
       if (!left) {
         newUser.sponsorId = current.userId;
         break;
-      } else queue.push(left);
+      } else {
+        queue.push(left);
+      }
     }
 
     if (newUser.position === "RIGHT") {
       if (!right) {
         newUser.sponsorId = current.userId;
         break;
-      } else queue.push(right);
+      } else {
+        queue.push(right);
+      }
     }
   }
 
@@ -146,10 +153,8 @@ function placeInTree(newUser) {
 // =====================
 // UI INIT
 // =====================
-let formArea = document.getElementById("formArea");
 let introLabel = document.getElementById("introLabel");
 
-// Show introducer
 if (introLabel) {
   introLabel.innerText = "Introducer: " + introducerId;
 }
@@ -169,6 +174,12 @@ function handleRegister() {
   // 🔐 REGISTRATION CONTROL
   if (system.registrationOpen === false) {
     return alert("Registration is closed");
+  }
+
+  // 🔥 VALIDATE INTRODUCER
+  if (!isValidIntroducer(introducerId)) {
+    alert("Invalid Introducer ID");
+    return;
   }
 
   let username = document.getElementById("username").value.trim();
