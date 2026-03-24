@@ -37,7 +37,6 @@ function savePinTransactions(txns) {
 // CREATE PIN TYPE
 // =====================
 function createPinType(name, amount, bv) {
-
   let pins = getPins();
 
   let pin = {
@@ -63,14 +62,11 @@ function createPinType(name, amount, bv) {
 // ADD PIN STOCK
 // =====================
 function addPinStock(pinId, quantity) {
-
   let pins = getPins();
   let pin = pins.find(p => p.pinId === pinId);
-
   if (!pin) return;
 
   pin.stock += quantity;
-
   savePins(pins);
 }
 
@@ -79,12 +75,24 @@ function addPinStock(pinId, quantity) {
 // =====================
 function usePin(pinId, userId, type) {
 
+  // BASIC VALIDATION
+  if (!pinId || !userId || !type) {
+    return alert("Invalid request");
+  }
+
   let pins = getPins();
   let pin = pins.find(p => p.pinId === pinId);
 
   if (!pin) return alert("Invalid pin");
 
   let system = getSystemSettings();
+
+  // =====================
+  // 🔒 SYSTEM LOCK CHECK
+  // =====================
+  if (system.lockMode) {
+    return alert("System is temporarily locked");
+  }
 
   // =====================
   // SYSTEM CHECK
@@ -120,7 +128,6 @@ function usePin(pinId, userId, type) {
   // =====================
   pin.stock -= 1;
   pin.used += 1;
-
   savePins(pins);
 
   // =====================
