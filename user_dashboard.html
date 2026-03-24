@@ -53,8 +53,10 @@
   <div id="tree"></div>
 </div>
 
-<script src="pin_system.js"></script>
+<!-- ✅ SCRIPT ORDER (VERY IMPORTANT) -->
 <script src="wallet_system.js"></script>
+<script src="commission_engine.js"></script>
+<script src="pin_system.js"></script>
 
 <script>
 
@@ -172,6 +174,7 @@ function repurchase() {
 // TREE FUNCTION
 // =====================
 function buildTree(parentId) {
+
   let children = users.filter(u => u.sponsorId === parentId);
 
   if (children.length === 0) return "";
@@ -188,6 +191,7 @@ function buildTree(parentId) {
   });
 
   html += "</ul>";
+
   return html;
 }
 
