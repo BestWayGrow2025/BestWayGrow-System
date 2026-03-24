@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Withdraw Panel</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background: #f4f4f4; }
+    button { padding: 5px 10px; margin: 2px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h1>ADMIN WITHDRAW PANEL</h1>
+
+<button onclick="loadRequests()">Refresh</button>
+
+<table>
+  <thead>
+    <tr>
+      <th>Request ID</th>
+      <th>User ID</th>
+      <th>Amount</th>
+      <th>Status</th>
+      <th>Time</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="withdrawTable"></tbody>
+</table>
+
+<!-- SCRIPTS -->
+<script src="withdrawal_system.js"></script>
+
+<script>
+
+// ===================== LOAD REQUESTS =====================
+function loadRequests() {
+  let requests = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+  let table = document.getElementById("withdrawTable");
+
+  table.innerHTML = "";
+
+  requests.reverse().forEach(req => {
+
+    let row = `
+      <tr>
+        <td>${req.requestId}</td>
+        <td>${req.userId}</td>
+        <td>₹${req.amount}</td>
+        <td>${req.status}</td>
+        <td>${req.time}</td>
+        <td>
+          ${req.status === "PENDING" ? `
+            <button onclick="approve('${req.requestId}')">Approve</button>
+            <button onclick="reject('${req.requestId}')">Reject</button>
+          ` : "-"}
+        </td>
+      </tr>
+    `;
+
+    table.innerHTML += row;
+  });
+}
+
+// ===================== APPROVE =====================
+function approve(id) {
+  approveWithdraw(id);
+  loadRequests();
+}
+
+// ===================== REJECT =====================
+function reject(id) {
+  rejectWithdraw(id);
+  loadRequests();
+}
+
+// ===================== INIT =====================
+loadRequests();
+
+</script>
+
+</body>
+</html>
