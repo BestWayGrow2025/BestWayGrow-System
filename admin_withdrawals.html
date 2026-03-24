@@ -13,7 +13,6 @@
 <body>
 
 <h1>ADMIN WITHDRAW PANEL</h1>
-
 <button onclick="loadRequests()">Refresh</button>
 
 <table>
@@ -22,11 +21,14 @@
       <th>Request ID</th>
       <th>User ID</th>
       <th>Amount</th>
+      <th>Charge</th>
+      <th>Final Amount</th>
       <th>Status</th>
       <th>Time</th>
       <th>Action</th>
     </tr>
   </thead>
+
   <tbody id="withdrawTable"></tbody>
 </table>
 
@@ -37,6 +39,7 @@
 
 // ===================== LOAD REQUESTS =====================
 function loadRequests() {
+
   let requests = JSON.parse(localStorage.getItem("withdrawals") || "[]");
   let table = document.getElementById("withdrawTable");
 
@@ -48,7 +51,9 @@ function loadRequests() {
       <tr>
         <td>${req.requestId}</td>
         <td>${req.userId}</td>
-        <td>₹${req.amount}</td>
+        <td>₹ ${req.amount}</td>
+        <td>₹ ${req.charge || 0}</td>
+        <td>₹ ${req.finalAmount || req.amount}</td>
         <td>${req.status}</td>
         <td>${req.time}</td>
         <td>
