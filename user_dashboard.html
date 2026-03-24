@@ -12,7 +12,6 @@
 <body>
 
 <h1>USER DASHBOARD</h1>
-
 <p id="welcome"></p>
 <button onclick="logout()">Logout</button>
 
@@ -58,11 +57,14 @@
 <script src="active_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="pin_system.js"></script>
+<script src="security_system.js"></script>
 
 <script>
 
+// =====================
+// AUTH CHECK
+// =====================
 let user = JSON.parse(localStorage.getItem("loggedInUser"));
-
 if (!user) {
   alert("Access denied");
   window.location.href = "user_login.html";
@@ -105,7 +107,6 @@ document.getElementById("profile").innerHTML = `
 function loadWallet() {
   let users = JSON.parse(localStorage.getItem("users") || "[]");
   let u = users.find(x => x.userId === user.userId);
-
   document.getElementById("wallet").innerHTML =
     "Balance: ₹ " + (u?.wallet || 0);
 }
@@ -115,11 +116,9 @@ function loadWallet() {
 // =====================
 function loadTransactions() {
   let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-
   let userTxns = txns.filter(t => t.userId === user.userId);
 
   let html = "<ul>";
-
   userTxns.reverse().forEach(t => {
     html += `<li>
       ${t.type} ₹${t.amount} - ${t.reason} <br>
@@ -128,7 +127,6 @@ function loadTransactions() {
   });
 
   html += "</ul>";
-
   document.getElementById("transactions").innerHTML = html;
 }
 
@@ -152,21 +150,16 @@ document.getElementById("links").innerHTML = `
 // PIN ACTIONS
 // =====================
 function upgrade() {
-
   let pinId = prompt("Enter Upgrade Pin:");
   if (!pinId) return;
 
   usePin(pinId.trim(), user.userId, "upgrade");
-
-  // OPTIONAL: trigger commission (if not already inside pin_system)
-  // payUGLIIncome(user.userId, 2100);
 
   loadWallet();
   loadTransactions();
 }
 
 function repurchase() {
-
   let pinId = prompt("Enter Repurchase Pin:");
   if (!pinId) return;
 
@@ -180,7 +173,6 @@ function repurchase() {
 // TREE FUNCTION
 // =====================
 function buildTree(parentId) {
-
   let children = users.filter(u => u.sponsorId === parentId);
 
   if (children.length === 0) return "";
@@ -197,7 +189,6 @@ function buildTree(parentId) {
   });
 
   html += "</ul>";
-
   return html;
 }
 
