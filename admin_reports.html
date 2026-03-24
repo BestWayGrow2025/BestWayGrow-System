@@ -40,6 +40,10 @@
 <div class="box">
   <h2>CTOR Pool</h2>
   <p id="ctor"></p>
+
+  <br>
+  <!-- 🔥 CTOR BUTTON -->
+  <button onclick="distributeCTOR()">Run CTOR Distribution</button>
 </div>
 
 <!-- TRANSACTIONS -->
@@ -53,6 +57,10 @@
   <h2>Pin Usage Logs</h2>
   <div id="pinLogs"></div>
 </div>
+
+<!-- ✅ SCRIPTS -->
+<script src="wallet_system.js"></script>
+<script src="ctor_engine.js"></script>
 
 <script>
 
@@ -160,7 +168,7 @@ function loadPinLogs() {
   document.getElementById("pinLogs").innerHTML = html;
 }
 
-// ===================== 🔐 ROLE RESTRICTION =====================
+// ===================== ROLE RESTRICTION =====================
 function applyRestrictions() {
 
   if (admin && admin.type === "department") {
@@ -176,7 +184,6 @@ function applyRestrictions() {
     }
 
   }
-
 }
 
 // ===================== INIT =====================
@@ -187,7 +194,6 @@ loadHold();
 loadCTOR();
 loadTransactions();
 loadPinLogs();
-
 applyRestrictions();
 
 </script>
