@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Franchise Pin Requests</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+    button { padding: 6px 10px; margin: 5px; cursor: pointer; }
+    input { padding: 6px; margin: 5px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+  </style>
+</head>
+<body>
+
+<h2>📌 PIN REQUEST SYSTEM</h2>
+
+<button onclick="goBack()">⬅ Back to Dashboard</button>
+
+<div class="box">
+  <h3>Create PIN Request</h3>
+  <input id="quantity" type="number" placeholder="Enter quantity">
+  <button onclick="submitRequest()">Submit Request</button>
+</div>
+
+<div class="box">
+  <h3>My Requests</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Request ID</th>
+        <th>Quantity</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody id="requestTable"></tbody>
+  </table>
+</div>
+
+<script>
+
+// ================= AUTH =================
+let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!sessionUser) {
+  alert("Please login");
+  window.location.href = "login.html";
+}
+
+// ================= STORAGE =================
+function getRequests() {
+  return JSON.parse(localStorage.getItem("pinRequests") || "[]");
+}
+
+function saveRequests(data) {
+  localStorage.setItem("pinRequests", JSON.stringify(data));
+}
+
+// ================= SUBMIT REQUEST =================
+function submitRequest() {
+
+  let qty = document.getElementById("quantity").value;
+
+  if (!qty || qty <= 0) {
+    alert("Enter valid quantity");
+    return;
+  }
+
+  let requests = getRequests();
+
+  let newRequest = {
+    requestId: "REQ" + (requests.length + 1).toString().padStart(4, "0"),
+    userId: sessionUser.userId,
+    quantity: parseInt(qty),
+    status: "PENDING",
+    createdAt: new Date().toISOString()
+  };
+
+  requests.push(newRequest);
+  saveRequests(requests);
+
+  alert("PIN Request Submitted");
+
+  document.getElementById("quantity").value = "";
+
+  loadRequests();
+}
+
+// ================= LOAD MY REQUESTS =================
+function loadRequests() {
+
+  let requests = getRequests();
+  let table = document.getElementById("requestTable");
+  table.innerHTML = "";
+
+  let myRequests = requests.filter(r => r.userId === sessionUser.userId);
+
+  myRequests.forEach(r => {
+
+    let row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${r.requestId}</td>
+      <td>${r.quantity}</td>
+      <td>${r.status}</td>
+      <td>${r.createdAt}</td>
+    `;
+
+    table.appendChild(row);
+  });
+}
+
+// ================= NAV =================
+function goBack() {
+  window.location.href = "franchise_dashboard.html";
+}
+
+// ================= INIT =================
+loadRequests();
+
+</script>
+
+</body>
+</html>
