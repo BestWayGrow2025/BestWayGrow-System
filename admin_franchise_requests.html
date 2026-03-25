@@ -44,6 +44,14 @@ function saveRequests(data) {
   localStorage.setItem("franchiseRequests", JSON.stringify(data));
 }
 
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+
+function saveUsers(users) {
+  localStorage.setItem("users", JSON.stringify(users));
+}
+
 // ================= LOAD REQUESTS =================
 function loadRequests() {
 
@@ -68,7 +76,7 @@ function loadRequests() {
         <b>Status:</b> ${req.status} <br><br>
 
         ${req.status === "PENDING" ? `
-          <button onclick="approve('${req.requestId}')">Approve</button>
+          <button onclick="approve('${req.requestId}', '${req.userId}')">Approve</button>
           <button onclick="reject('${req.requestId}')">Reject</button>
         ` : "✔ Processed"}
 
@@ -82,30 +90,40 @@ function loadRequests() {
   container.innerHTML = html;
 }
 
-// ================= APPROVE =================
-function approve(id) {
+// ================= APPROVE + ROLE UPGRADE =================
+function approve(requestId, userId) {
 
   let requests = getRequests();
+  let users = getUsers();
 
-  let req = requests.find(r => r.requestId === id);
+  let req = requests.find(r => r.requestId === requestId);
+  let user = users.find(u => u.userId === userId);
 
   if (!req) return alert("Request not found");
+  if (!user) return alert("User not found");
 
+  // Update request
   req.status = "APPROVED";
 
-  saveRequests(requests);
+  // Upgrade user role
+  user.role = "franchise";
+  user.status = "active";
+  user.isActive = true;
 
-  alert("Request Approved");
+  saveRequests(requests);
+  saveUsers(users);
+
+  alert("Approved & User upgraded to Franchise");
 
   loadRequests();
 }
 
 // ================= REJECT =================
-function reject(id) {
+function reject(requestId) {
 
   let requests = getRequests();
 
-  let req = requests.find(r => r.requestId === id);
+  let req = requests.find(r => r.requestId === requestId);
 
   if (!req) return alert("Request not found");
 
