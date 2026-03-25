@@ -38,22 +38,60 @@ function requestPin(franchiseId, pinId, quantity) {
 function approvePinRequest(requestId) {
 
   let requests = getPinRequests();
+  let pins = JSON.parse(localStorage.getItem("pins") || "[]");
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+
   let req = requests.find(r => r.requestId === requestId);
 
-  if (!req) return alert("Request not found");
-
-  if (req.status !== "PENDING") {
-    return alert("Already processed");
+  if (!req) {
+    alert("Request not found");
+    return;
   }
 
-  // ADD STOCK
-  addPinStock(req.pinId, req.quantity);
+  if (req.status !== "PENDING") {
+    alert("Already processed");
+    return;
+  }
 
+  // =====================
+  // ADD STOCK (optional system logic)
+  // =====================
+  if (typeof addPinStock === "function") {
+    addPinStock(req.pinId, req.quantity);
+  }
+
+  // =====================
+  // ASSIGN PIN
+  // =====================
+  let availablePin = pins.find(p => p.status === "AVAILABLE");
+
+  if (!availablePin) {
+    alert("No available PINs");
+    return;
+  }
+
+  // Update PIN
+  availablePin.status = "ASSIGNED";
+  availablePin.assignedTo = req.franchiseId;
+
+  // Update request
   req.status = "APPROVED";
+  req.assignedPin = availablePin.pinCode;
 
+  // Assign to user
+  let user = users.find(u => u.userId === req.franchiseId);
+
+  if (user) {
+    if (!user.pins) user.pins = [];
+    user.pins.push(availablePin.pinCode);
+  }
+
+  // Save everything
+  localStorage.setItem("pins", JSON.stringify(pins));
+  localStorage.setItem("users", JSON.stringify(users));
   savePinRequests(requests);
 
-  alert("Request approved & stock added");
+  alert("Request approved & PIN assigned: " + availablePin.pinCode);
 }
 
 // =====================
@@ -62,9 +100,18 @@ function approvePinRequest(requestId) {
 function rejectPinRequest(requestId) {
 
   let requests = getPinRequests();
+
   let req = requests.find(r => r.requestId === requestId);
 
-  if (!req) return alert("Request not found");
+  if (!req) {
+    alert("Request not found");
+    return;
+  }
+
+  if (req.status !== "PENDING") {
+    alert("Already processed");
+    return;
+  }
 
   req.status = "REJECTED";
 
