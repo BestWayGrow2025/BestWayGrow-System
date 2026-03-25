@@ -6,13 +6,22 @@
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 6px; }
     button { padding: 6px 10px; margin: 5px; cursor: pointer; }
+    .nav { margin-bottom: 15px; }
   </style>
 </head>
 <body>
 
 <h1>FRANCHISE DASHBOARD</h1>
-<p id="welcome"></p>
 
+<!-- ================= NAVIGATION ================= -->
+<div class="nav">
+  <button onclick="goTo('franchise_pin_requests.html')">📌 Pin Requests</button>
+  <button onclick="goTo('franchise_upgrade.html')">⬆ Upgrade</button>
+  <button onclick="goTo('franchise_wallet.html')">💰 Wallet</button>
+  <button onclick="goTo('login.html')">🔐 Switch Login</button>
+</div>
+
+<p id="welcome"></p>
 <button onclick="logout()">Logout</button>
 
 <!-- PROFILE -->
@@ -41,24 +50,32 @@
 
 <script>
 
-// ===================== AUTH =====================
+// ================= SAFE AUTH =================
 let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
 let users = JSON.parse(localStorage.getItem("users") || "[]");
 
-// Get latest user data
-let user = users.find(u => u.userId === sessionUser?.userId);
+if (!sessionUser) {
+  alert("Please login");
+  window.location.href = "login.html";
+}
 
-// Access control
+let user = users.find(u => u.userId === sessionUser.userId);
+
 if (!user || user.role !== "franchise") {
   alert("Access denied");
   window.location.href = "login.html";
 }
 
-// ===================== WELCOME =====================
+// ================= NAVIGATION =================
+function goTo(page) {
+  window.location.href = page;
+}
+
+// ================= WELCOME =================
 document.getElementById("welcome").innerText =
   "Welcome " + user.username + " (" + user.userId + ")";
 
-// ===================== PROFILE =====================
+// ================= PROFILE =================
 document.getElementById("profile").innerHTML = `
   User ID: ${user.userId} <br>
   Name: ${user.username} <br>
@@ -67,22 +84,19 @@ document.getElementById("profile").innerHTML = `
   Joined: ${user.createdAt || "-"}
 `;
 
-// ===================== INCOME (placeholder for now) =====================
-document.getElementById("income").innerText = "₹ " + (user.franchiseIncome || 0);
+// ================= INCOME =================
+document.getElementById("income").innerText =
+  "₹ " + (user.franchiseIncome || 0);
 
-// ===================== TEAM =====================
+// ================= TEAM =================
 function buildTeam(parentId) {
-
   let children = users.filter(u => u.introducerId === parentId);
-
   if (children.length === 0) return "No team members";
 
   let html = "<ul>";
-
   children.forEach(c => {
     html += `<li>${c.username} (${c.userId})</li>`;
   });
-
   html += "</ul>";
 
   return html;
@@ -90,12 +104,12 @@ function buildTeam(parentId) {
 
 document.getElementById("team").innerHTML = buildTeam(user.userId);
 
-// ===================== VIEW REQUESTS =====================
+// ================= REQUESTS =================
 function viewRequests() {
   window.location.href = "franchise_approval.html";
 }
 
-// ===================== LOGOUT =====================
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInUser");
   window.location.href = "login.html";
