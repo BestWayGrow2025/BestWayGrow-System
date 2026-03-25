@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Franchise Requests</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    input, button, select { padding: 8px; margin: 5px 0; }
+    button { cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h2>FRANCHISE REQUEST PANEL</h2>
+
+<button onclick="goBack()">⬅ Back to Dashboard</button>
+
+<!-- ================= CREATE REQUEST ================= -->
+<div class="box">
+  <h3>Create Request</h3>
+
+  <label>Request Type</label><br>
+  <select id="requestType">
+    <option value="pin">Pin Request</option>
+    <option value="upgrade">Upgrade Request</option>
+  </select>
+
+  <br><br>
+
+  <input id="details" placeholder="Enter details">
+  <br>
+
+  <button onclick="createRequest()">Submit Request</button>
+
+  <p id="msg"></p>
+</div>
+
+<!-- ================= REQUEST LIST ================= -->
+<div class="box">
+  <h3>My Requests</h3>
+  <div id="requestList"></div>
+</div>
+
+<script>
+
+// ================= AUTH =================
+let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!sessionUser) {
+  alert("Please login");
+  window.location.href = "login.html";
+}
+
+// ================= BACK =================
+function goBack() {
+  window.location.href = "franchise_dashboard.html";
+}
+
+// ================= STORAGE =================
+function getRequests() {
+  return JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
+}
+
+function saveRequests(data) {
+  localStorage.setItem("franchiseRequests", JSON.stringify(data));
+}
+
+// ================= CREATE REQUEST =================
+function createRequest() {
+
+  let type = document.getElementById("requestType").value;
+  let details = document.getElementById("details").value.trim();
+
+  if (!details) {
+    showMsg("❌ Enter details");
+    return;
+  }
+
+  let requests = getRequests();
+
+  let newRequest = {
+    requestId: "REQ" + Date.now(),
+    userId: sessionUser.userId,
+    type: type,
+    details: details,
+    status: "PENDING",
+    createdAt: new Date().toISOString()
+  };
+
+  requests.push(newRequest);
+  saveRequests(requests);
+
+  showMsg("✅ Request submitted");
+
+  document.getElementById("details").value = "";
+
+  loadRequests();
+}
+
+// ================= LOAD REQUESTS =================
+function loadRequests() {
+
+  let requests = getRequests();
+  let myRequests = requests.filter(r => r.userId === sessionUser.userId);
+
+  let html = "";
+
+  if (myRequests.length === 0) {
+    html = "No requests found";
+  } else {
+    html = "<ul>";
+    myRequests.slice().reverse().forEach(r => {
+      html += `
+        <li>
+          ${r.requestId} | ${r.type} | ${r.status}
+          <br>
+          Details: ${r.details}
+        </li><br>
+      `;
+    });
+    html += "</ul>";
+  }
+
+  document.getElementById("requestList").innerHTML = html;
+}
+
+// ================= MESSAGE =================
+function showMsg(msg) {
+  document.getElementById("msg").innerText = msg;
+}
+
+// ================= INIT =================
+loadRequests();
+
+</script>
+
+</body>
+</html>
