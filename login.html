@@ -1,63 +1,104 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
+  <title>Franchise Dashboard</title>
   <style>
     body { font-family: Arial; padding: 20px; }
-    input, button { display: block; margin: 10px 0; padding: 8px; width: 250px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 6px; }
+    button { padding: 6px 10px; margin: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h2>LOGIN</h2>
+<h1>FRANCHISE DASHBOARD</h1>
+<p id="welcome"></p>
 
-<input type="text" id="userId" placeholder="User ID (BWG000001)">
-<input type="password" id="password" placeholder="Password">
+<button onclick="logout()">Logout</button>
 
-<button onclick="login()">Login</button>
+<!-- PROFILE -->
+<div class="box">
+  <h3>Profile</h3>
+  <p id="profile"></p>
+</div>
+
+<!-- INCOME -->
+<div class="box">
+  <h3>Income</h3>
+  <p id="income">₹ 0</p>
+</div>
+
+<!-- TEAM -->
+<div class="box">
+  <h3>My Team</h3>
+  <div id="team"></div>
+</div>
+
+<!-- ACTIONS -->
+<div class="box">
+  <h3>Actions</h3>
+  <button onclick="viewRequests()">View Franchise Requests</button>
+</div>
 
 <script>
 
-function login() {
+// ===================== AUTH =====================
+let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
+let users = JSON.parse(localStorage.getItem("users") || "[]");
 
-  let userId = document.getElementById("userId").value.trim();
-  let password = document.getElementById("password").value.trim();
+// Get latest user data
+let user = users.find(u => u.userId === sessionUser?.userId);
 
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
+// Access control
+if (!user || user.role !== "franchise") {
+  alert("Access denied");
+  window.location.href = "login.html";
+}
 
-  let user = users.find(u =>
-    String(u.userId).trim() === userId &&
-    String(u.password).trim() === password
-  );
+// ===================== WELCOME =====================
+document.getElementById("welcome").innerText =
+  "Welcome " + user.username + " (" + user.userId + ")";
 
-  if (!user) {
-    alert("❌ Invalid login");
-    return;
-  }
+// ===================== PROFILE =====================
+document.getElementById("profile").innerHTML = `
+  User ID: ${user.userId} <br>
+  Name: ${user.username} <br>
+  Mobile: ${user.mobile || "-"} <br>
+  Role: ${user.role} <br>
+  Joined: ${user.createdAt || "-"}
+`;
 
-  // Save session
-  localStorage.setItem("loggedInUser", JSON.stringify(user));
+// ===================== INCOME (placeholder for now) =====================
+document.getElementById("income").innerText = "₹ " + (user.franchiseIncome || 0);
 
-  alert("✅ Login Success: " + user.userId);
+// ===================== TEAM =====================
+function buildTeam(parentId) {
 
-  // ================= ROLE BASED REDIRECT =================
+  let children = users.filter(u => u.introducerId === parentId);
 
-  if (user.role === "superadmin") {
-    window.location.href = "superadmin_dashboard.html";
-  }
+  if (children.length === 0) return "No team members";
 
-  else if (user.role === "admin") {
-    window.location.href = "system_admin_dashboard.html";
-  }
+  let html = "<ul>";
 
-  else if (user.role === "franchise") {
-    window.location.href = "franchise_dashboard.html";
-  }
+  children.forEach(c => {
+    html += `<li>${c.username} (${c.userId})</li>`;
+  });
 
-  else {
-    window.location.href = "user_dashboard.html";
-  }
+  html += "</ul>";
 
+  return html;
+}
+
+document.getElementById("team").innerHTML = buildTeam(user.userId);
+
+// ===================== VIEW REQUESTS =====================
+function viewRequests() {
+  window.location.href = "franchise_approval.html";
+}
+
+// ===================== LOGOUT =====================
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
 }
 
 </script>
