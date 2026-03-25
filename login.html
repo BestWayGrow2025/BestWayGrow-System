@@ -26,22 +26,34 @@ function login() {
   let users = JSON.parse(localStorage.getItem("users") || "[]");
 
   let user = users.find(u =>
-    u.userId === userId && u.password === password
+    String(u.userId).trim() === userId &&
+    String(u.password).trim() === password
   );
 
   if (!user) {
-    alert("Invalid login");
+    alert("❌ Invalid login");
     return;
   }
 
+  // Save session
   localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+  alert("✅ Login Success: " + user.userId);
+
+  // ================= ROLE BASED REDIRECT =================
 
   if (user.role === "superadmin") {
     window.location.href = "superadmin_dashboard.html";
   }
+
   else if (user.role === "admin") {
     window.location.href = "system_admin_dashboard.html";
   }
+
+  else if (user.role === "franchise") {
+    window.location.href = "franchise_dashboard.html";
+  }
+
   else {
     window.location.href = "user_dashboard.html";
   }
@@ -52,4 +64,3 @@ function login() {
 
 </body>
 </html>
-
