@@ -53,6 +53,9 @@
   <button onclick="repurchase()">Repurchase</button>
   <button onclick="withdraw()">Withdraw</button>
   <button onclick="resendWithdraw()">Resend Withdrawal</button>
+
+  <!-- ✅ NEW -->
+  <button onclick="applyFranchise()">Apply for Franchise</button>
 </div>
 
 <!-- TREE -->
@@ -73,6 +76,7 @@
 
 // ===================== AUTH CHECK =====================
 let user = JSON.parse(localStorage.getItem("loggedInUser"));
+
 if (!user) {
   alert("Access denied");
   window.location.href = "user_login.html";
@@ -131,6 +135,7 @@ function loadTransactions() {
   });
 
   html += "</ul>";
+
   document.getElementById("transactions").innerHTML = html;
 }
 
@@ -138,6 +143,7 @@ function loadTransactions() {
 function loadWithdrawHistory() {
 
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+
   let userWithdraws = withdrawals.filter(w => w.userId === user.userId);
 
   if (userWithdraws.length === 0) {
@@ -199,9 +205,7 @@ function withdraw() {
     alert("Invalid amount");
     return;
   }
-
   requestWithdraw(user.userId, parseFloat(amount));
-
   loadWallet();
   loadTransactions();
   loadWithdrawHistory();
@@ -236,6 +240,39 @@ function resendWithdraw() {
   loadWallet();
   loadTransactions();
   loadWithdrawHistory();
+}
+
+// ===================== ✅ APPLY FRANCHISE =====================
+function applyFranchise() {
+
+  let requests = JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
+
+  // ❌ Already franchise
+  if (user.role === "franchise") {
+    alert("You are already a franchise");
+    return;
+  }
+
+  // ❌ Duplicate request
+  let already = requests.find(r => r.userId === user.userId);
+
+  if (already) {
+    alert("You already applied");
+    return;
+  }
+
+  let newRequest = {
+    requestId: "FR" + Date.now(),
+    userId: user.userId,
+    status: "PENDING",
+    time: new Date().toISOString()
+  };
+
+  requests.push(newRequest);
+
+  localStorage.setItem("franchiseRequests", JSON.stringify(requests));
+
+  alert("Franchise request submitted");
 }
 
 // ===================== TREE =====================
