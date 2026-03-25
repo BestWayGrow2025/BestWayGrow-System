@@ -2,14 +2,20 @@
 <html>
 <head>
   <title>PIN CONTROL PANEL</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
+    button { padding: 5px 10px; margin: 3px; cursor: pointer; }
+  </style>
 </head>
 <body>
 
 <h2>PIN SYSTEM CONTROL</h2>
 
-<!-- SYSTEM TOGGLES -->
-<div>
+<!-- ================= SYSTEM TOGGLES ================= -->
+<div class="box">
   <h3>System Controls</h3>
+
   <label>Upgrade:</label>
   <select id="upgradeToggle">
     <option value="true">ON</option>
@@ -25,20 +31,30 @@
   <button onclick="saveSystem()">Save System</button>
 </div>
 
-<hr>
-
-<!-- CREATE PIN TYPE -->
-<div>
+<!-- ================= CREATE PIN TYPE ================= -->
+<div class="box">
   <h3>Create Pin Type</h3>
-  <input id="pinName" placeholder="Pin Name"><br>
-  <input id="amount" placeholder="Amount"><br>
-  <input id="bv" placeholder="BV"><br>
+
+  <input id="pinName" placeholder="Pin Name"><br><br>
+  <input id="amount" placeholder="Amount"><br><br>
+  <input id="bv" placeholder="BV"><br><br>
+
   <button onclick="createPin()">Create Pin</button>
 </div>
 
+<!-- ================= PIN REQUEST APPROVAL ================= -->
+<div class="box">
+  <h3>Franchise PIN Requests</h3>
+  <div id="requests"></div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
 <script src="pin_system.js"></script>
+<script src="pin_request_system.js"></script>
 
 <script>
+
+// ================= SYSTEM SAVE =================
 function saveSystem() {
   let settings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
 
@@ -46,19 +62,75 @@ function saveSystem() {
   settings.repurchase = document.getElementById("repurchaseToggle").value === "true";
 
   localStorage.setItem("systemSettings", JSON.stringify(settings));
-
   alert("System Updated");
 }
 
+// ================= CREATE PIN TYPE =================
 function createPin() {
-  let name = document.getElementById("pinName").value;
+  let name = document.getElementById("pinName").value.trim();
   let amount = parseInt(document.getElementById("amount").value);
   let bv = parseInt(document.getElementById("bv").value);
 
-  createPinType(name, amount, bv);
+  if (!name || !amount || !bv) {
+    alert("Fill all fields");
+    return;
+  }
 
+  createPinType(name, amount, bv);
   alert("Pin Created");
 }
+
+// ================= LOAD PIN REQUESTS =================
+function loadRequests() {
+  let requests = JSON.parse(localStorage.getItem("pinRequests") || "[]");
+  let container = document.getElementById("requests");
+
+  if (requests.length === 0) {
+    container.innerHTML = "No requests found";
+    return;
+  }
+
+  let html = "<ul>";
+
+  requests.slice().reverse().forEach(r => {
+    html += `
+      <li>
+        <b>${r.requestId}</b> |
+        User: ${r.userId} |
+        Pin: ${r.pinId} |
+        Qty: ${r.quantity} |
+        Status: ${r.status}
+
+        <br>
+
+        ${r.status === "PENDING" ? `
+          <button onclick="approve('${r.requestId}')">Approve</button>
+          <button onclick="reject('${r.requestId}')">Reject</button>
+        ` : ""}
+      </li>
+      <br>
+    `;
+  });
+
+  html += "</ul>";
+  container.innerHTML = html;
+}
+
+// ================= APPROVE =================
+function approve(id) {
+  approvePinRequest(id);
+  loadRequests();
+}
+
+// ================= REJECT =================
+function reject(id) {
+  rejectPinRequest(id);
+  loadRequests();
+}
+
+// ================= INIT =================
+loadRequests();
+
 </script>
 
 </body>
