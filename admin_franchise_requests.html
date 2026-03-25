@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin - Franchise Requests</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    button { padding: 6px 10px; margin: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h2>ADMIN → FRANCHISE REQUESTS</h2>
+
+<button onclick="goBack()">⬅ Back to Dashboard</button>
+<button onclick="loadRequests()">🔄 Refresh</button>
+
+<div class="box">
+  <h3>All Franchise Requests</h3>
+  <div id="requestList"></div>
+</div>
+
+<script>
+
+// ================= AUTH =================
+let admin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
+
+if (!admin) {
+  alert("Access denied");
+  window.location.href = "system_admin_login.html";
+}
+
+// ================= NAV =================
+function goBack() {
+  window.location.href = "system_admin_dashboard.html";
+}
+
+// ================= STORAGE =================
+function getRequests() {
+  return JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
+}
+
+function saveRequests(data) {
+  localStorage.setItem("franchiseRequests", JSON.stringify(data));
+}
+
+// ================= LOAD REQUESTS =================
+function loadRequests() {
+
+  let requests = getRequests();
+  let container = document.getElementById("requestList");
+
+  if (requests.length === 0) {
+    container.innerHTML = "No requests found";
+    return;
+  }
+
+  let html = "<ul>";
+
+  requests.slice().reverse().forEach(req => {
+
+    html += `
+      <li>
+        <b>ID:</b> ${req.requestId} <br>
+        <b>User:</b> ${req.userId} <br>
+        <b>Type:</b> ${req.type} <br>
+        <b>Details:</b> ${req.details} <br>
+        <b>Status:</b> ${req.status} <br><br>
+
+        ${req.status === "PENDING" ? `
+          <button onclick="approve('${req.requestId}')">Approve</button>
+          <button onclick="reject('${req.requestId}')">Reject</button>
+        ` : "✔ Processed"}
+
+        <hr>
+      </li>
+    `;
+  });
+
+  html += "</ul>";
+
+  container.innerHTML = html;
+}
+
+// ================= APPROVE =================
+function approve(id) {
+
+  let requests = getRequests();
+
+  let req = requests.find(r => r.requestId === id);
+
+  if (!req) return alert("Request not found");
+
+  req.status = "APPROVED";
+
+  saveRequests(requests);
+
+  alert("Request Approved");
+
+  loadRequests();
+}
+
+// ================= REJECT =================
+function reject(id) {
+
+  let requests = getRequests();
+
+  let req = requests.find(r => r.requestId === id);
+
+  if (!req) return alert("Request not found");
+
+  req.status = "REJECTED";
+
+  saveRequests(requests);
+
+  alert("Request Rejected");
+
+  loadRequests();
+}
+
+// ================= INIT =================
+loadRequests();
+
+</script>
+
+</body>
+</html>
