@@ -28,7 +28,9 @@
 // URL PARAMS
 // =====================
 let params = new URLSearchParams(window.location.search);
-let introducerId = params.get("ref") || "BWG000000";
+
+// ✅ SYSTEM ADMIN AS DEFAULT ROOT
+let introducerId = params.get("ref") || "BWG00001";
 
 // =====================
 // SYSTEM SETTINGS
@@ -58,6 +60,10 @@ function saveUsers(users) {
 // =====================
 function isValidIntroducer(id) {
   let users = getUsers();
+
+  // ❌ BLOCK SUPER ADMIN
+  if (id === "BWG000000") return false;
+
   return users.some(u => u.userId === id);
 }
 
@@ -114,6 +120,7 @@ function registerUser(username, mobile, password, introducerId, position) {
 function placeInTree(newUser) {
 
   let users = getUsers();
+
   let introducer = users.find(u => u.userId === newUser.introducerId);
 
   if (!introducer) return;
@@ -123,6 +130,7 @@ function placeInTree(newUser) {
   while (queue.length > 0) {
 
     let current = queue.shift();
+
     let children = users.filter(u => u.sponsorId === current.userId);
 
     let left = children.find(c => c.position === "LEFT");
@@ -145,6 +153,7 @@ function placeInTree(newUser) {
         queue.push(right);
       }
     }
+
   }
 
   saveUsers(users);
@@ -176,7 +185,7 @@ function handleRegister() {
     return alert("Registration is closed");
   }
 
-  // 🔥 VALIDATE INTRODUCER
+  // 🔥 INTRODUCER VALIDATION
   if (!isValidIntroducer(introducerId)) {
     alert("Invalid Introducer ID");
     return;
