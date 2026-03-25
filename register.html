@@ -15,8 +15,8 @@
   <label>Select Position:</label><br>
   <input type="radio" name="position" value="LEFT"> LEFT
   <input type="radio" name="position" value="RIGHT"> RIGHT
-  <br><br>
 
+  <br><br>
   <button onclick="handleRegister()">Register</button>
 </div>
 
@@ -24,24 +24,23 @@
 
 <script>
 
-// =====================
-// URL PARAMS
-// =====================
+// ===================== URL PARAMS =====================
 let params = new URLSearchParams(window.location.search);
 
-// ✅ SYSTEM ADMIN ROOT
-let introducerId = params.get("ref") || "BWG00001";
+// Root introducer fallback (safe)
+let introducerId = params.get("ref");
 
-// =====================
-// SYSTEM SETTINGS
-// =====================
+// If no ref provided, system root acts as default
+if (!introducerId) {
+  introducerId = "BWG000000";
+}
+
+// ===================== SYSTEM SETTINGS =====================
 function getSystemSettings() {
   return JSON.parse(localStorage.getItem("systemSettings") || "{}");
 }
 
-// =====================
-// STORAGE HELPERS
-// =====================
+// ===================== STORAGE HELPERS =====================
 function getUsers() {
   try {
     return JSON.parse(localStorage.getItem("users") || "[]");
@@ -55,34 +54,26 @@ function saveUsers(users) {
   localStorage.setItem("users", JSON.stringify(users));
 }
 
-// =====================
-// INTRODUCER VALIDATION
-// =====================
+// ===================== INTRODUCER VALIDATION =====================
 function isValidIntroducer(id) {
-
   let users = getUsers();
 
-  // ❌ BLOCK SUPER ADMIN
+  // ❌ Block system root as introducer
   if (id === "BWG000000") return false;
 
   return users.some(u => u.userId === id);
 }
 
-// =====================
-// RANDOM USER ID (FINAL SAFE)
-// =====================
+// ===================== RANDOM USER ID =====================
 function generateUserId() {
-
   let users = getUsers();
   let id;
 
   do {
-
     let randomNum = Math.floor(1 + Math.random() * 999999);
-
     id = "BWG" + String(randomNum).padStart(6, "0");
 
-    // ❌ BLOCK RESERVED IDS
+    // ❌ Block reserved IDs
     if (id === "BWG000000" || id === "BWG00001") {
       id = null;
     }
@@ -92,9 +83,7 @@ function generateUserId() {
   return id;
 }
 
-// =====================
-// REGISTER USER
-// =====================
+// ===================== REGISTER USER =====================
 function registerUser(username, mobile, password, introducerId, position) {
 
   let users = getUsers();
@@ -104,7 +93,7 @@ function registerUser(username, mobile, password, introducerId, position) {
     username: username,
     mobile: mobile,
     password: password,
-    role: "user",
+    role: "user", // default role
     introducerId: introducerId,
     sponsorId: null,
     position: position,
@@ -124,13 +113,10 @@ function registerUser(username, mobile, password, introducerId, position) {
   return newUser;
 }
 
-// =====================
-// TREE PLACEMENT
-// =====================
+// ===================== TREE PLACEMENT =====================
 function placeInTree(newUser) {
 
   let users = getUsers();
-
   let introducer = users.find(u => u.userId === newUser.introducerId);
 
   if (!introducer) return;
@@ -140,7 +126,6 @@ function placeInTree(newUser) {
   while (queue.length > 0) {
 
     let current = queue.shift();
-
     let children = users.filter(u => u.sponsorId === current.userId);
 
     let left = children.find(c => c.position === "LEFT");
@@ -163,24 +148,19 @@ function placeInTree(newUser) {
         queue.push(right);
       }
     }
-
   }
 
   saveUsers(users);
 }
 
-// =====================
-// UI INIT
-// =====================
+// ===================== UI INIT =====================
 let introLabel = document.getElementById("introLabel");
 
 if (introLabel) {
   introLabel.innerText = "Introducer: " + introducerId;
 }
 
-// =====================
-// FORM SUBMIT
-// =====================
+// ===================== FORM SUBMIT =====================
 function handleRegister() {
 
   let system = getSystemSettings();
@@ -220,8 +200,10 @@ function handleRegister() {
 
   alert("Registered! ID: " + user.userId);
 
+  // Auto login
   localStorage.setItem("loggedInUser", JSON.stringify(user));
 
+  // Redirect to user dashboard
   window.location.href = "user_dashboard.html";
 }
 
