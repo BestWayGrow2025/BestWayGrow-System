@@ -27,7 +27,12 @@
 <div class="box">
   <h3>Admin Controls</h3>
   <button onclick="openFranchise()">Franchise Requests</button>
+  <button onclick="openWithdraw()">Withdraw Panel</button>
+  <button onclick="openReports()">Reports</button>
 </div>
+
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
 
 <script>
 
@@ -39,15 +44,14 @@ if (!adminSession) {
   window.location.href = "admin_login.html";
 }
 
-// ================= GET ADMIN FROM USERS =================
-function getUsers() {
-  return JSON.parse(localStorage.getItem("users") || "[]");
-}
-
+// ================= USERS =================
 let users = getUsers();
 
-// 🔥 FIX: ADMIN COMES FROM users (NOT admins)
-let admin = users.find(u => u.userId === adminSession.adminId && u.role === "admin");
+// ✅ FIX: support both adminId & userId
+let admin = users.find(u =>
+  (u.userId === adminSession.adminId || u.userId === adminSession.userId)
+  && u.role === "admin"
+);
 
 if (!admin) {
   alert("Admin not found");
@@ -64,7 +68,7 @@ document.getElementById("profile").innerHTML = `
   ID: ${admin.userId} <br>
   Name: ${admin.username} <br>
   Role: ${admin.role} <br>
-  Status: ${admin.status}
+  Status: ${admin.status || "active"}
 `;
 
 // ================= SYSTEM =================
@@ -78,6 +82,14 @@ document.getElementById("system").innerHTML = `
 // ================= NAV =================
 function openFranchise() {
   window.location.href = "admin_franchise_requests.html";
+}
+
+function openWithdraw() {
+  window.location.href = "admin_withdraw_panel.html";
+}
+
+function openReports() {
+  window.location.href = "admin_reports.html";
 }
 
 // ================= LOGOUT =================
