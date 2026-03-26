@@ -1,6 +1,6 @@
-// ===============================
-// CORE SYSTEM (MASTER FILE)
-// ===============================
+/* ===============================
+   CORE SYSTEM (MASTER FILE)
+=============================== */
 
 
 // ===================================
@@ -33,8 +33,7 @@ function getSystemSettings() {
 // 🔹 COMMON HELPERS
 // ===================================
 function getUserById(id) {
-  let users = getUsers();
-  return users.find(u => u.userId === id);
+  return getUsers().find(u => u.userId === id);
 }
 
 
@@ -42,7 +41,7 @@ function getUserById(id) {
 // 🔹 USER SYSTEM
 // ===================================
 
-// ===== RANDOM USER ID =====
+// ===== GENERATE USER ID =====
 function generateUserId() {
   let users = getUsers();
   let existingIds = users.map(u => u.userId);
@@ -53,8 +52,7 @@ function generateUserId() {
     newId = "BWG" + String(randomNum).padStart(6, "0");
   } while (
     existingIds.includes(newId) ||
-    newId === "BWG000000" ||
-    newId === "BWG000001"
+    newId === "BWG000000"
   );
 
   return newId;
@@ -65,10 +63,7 @@ function isValidIntroducer(id) {
   if (!id) return false;
 
   let user = getUserById(id);
-  if (!user) return false;
-
-  // only ACTIVE users allowed as introducer
-  return user.isActive === true;
+  return user && user.isActive === true;
 }
 
 // ===== REGISTER USER =====
@@ -89,15 +84,11 @@ function registerUser(username, password, introducerId, role = "user") {
   let newUser = {
     userId: generateUserId(),
     username: username.trim(),
-
-    // 🔒 Basic protection (not plain text)
-    password: btoa(password.trim()),
-
+    password: btoa(password.trim()), // encoded
     role: role,
     introducerId: introducerId,
     createdAt: new Date().toISOString(),
 
-    // SYSTEM FIELDS
     status: "inactive",
     isActive: false,
     wallet: 0,
@@ -114,10 +105,9 @@ function registerUser(username, password, introducerId, role = "user") {
 
 
 // ===================================
-// 🔹 USER ACTIVE SYSTEM
+// 🔹 ACTIVE SYSTEM
 // ===================================
 
-// CHECK ACTIVE
 function isUserActive(userId) {
   let user = getUserById(userId);
   if (!user) return false;
@@ -128,7 +118,6 @@ function isUserActive(userId) {
   return activeTill > now;
 }
 
-// ACTIVATE USER
 function activateUser(userId) {
   let users = getUsers();
   let user = users.find(u => u.userId === userId);
@@ -140,10 +129,9 @@ function activateUser(userId) {
 
   user.activeTill = nextMonth.toISOString();
   user.isActive = true;
+  user.status = "active"; // ✅ FIX
 
   saveUsers(users);
-
-  console.log("User Activated:", userId);
 }
 
 
@@ -154,9 +142,9 @@ function holdIncome(userId, amount, reason) {
   let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
 
   holds.push({
-    userId: userId,
-    amount: amount,
-    reason: reason,
+    userId,
+    amount,
+    reason,
     time: new Date().toISOString(),
     status: "HOLD"
   });
@@ -164,10 +152,8 @@ function holdIncome(userId, amount, reason) {
   localStorage.setItem("holdIncome", JSON.stringify(holds));
 }
 
-// RELEASE HOLD
 function releaseHoldIncome(userId) {
   let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
-  let updated = [];
 
   holds.forEach(h => {
     if (h.userId === userId && h.status === "HOLD") {
@@ -179,10 +165,9 @@ function releaseHoldIncome(userId) {
         h.status = "RELEASED";
       }
     }
-    updated.push(h);
   });
 
-  localStorage.setItem("holdIncome", JSON.stringify(updated));
+  localStorage.setItem("holdIncome", JSON.stringify(holds));
 }
 
 
@@ -195,10 +180,8 @@ function monthlyProcess() {
 
   users.forEach(u => {
 
-    // RELEASE HOLD
     releaseHoldIncome(u.userId);
 
-    // EXPIRE HOLD
     let now = new Date();
     let activeTill = new Date(u.activeTill || 0);
 
@@ -222,8 +205,6 @@ function monthlyProcess() {
 // ===================================
 // 🔹 SECURITY SYSTEM
 // ===================================
-
-// COPY PROTECTION
 function enableCopyProtection() {
   document.addEventListener("contextmenu", e => e.preventDefault());
 
@@ -238,10 +219,8 @@ function enableCopyProtection() {
   });
 }
 
-// SYSTEM LOCK
 function isSystemLocked() {
-  let settings = getSystemSettings();
-  return settings.lockMode === true;
+  return getSystemSettings().lockMode === true;
 }
 
 function checkSystemLock() {
@@ -255,16 +234,14 @@ function checkSystemLock() {
 // 🔹 BACKUP SYSTEM
 // ===================================
 function exportData() {
+
   let data = {
     users: localStorage.getItem("users"),
     pins: localStorage.getItem("pins"),
     transactions: localStorage.getItem("transactions"),
-    pinTransactions: localStorage.getItem("pinTransactions"),
     holdIncome: localStorage.getItem("holdIncome"),
     ctorPool: localStorage.getItem("ctorPool"),
-    systemSettings: localStorage.getItem("systemSettings"),
-    admins: localStorage.getItem("admins"),
-    pinRequests: localStorage.getItem("pinRequests")
+    systemSettings: localStorage.getItem("systemSettings")
   };
 
   let blob = new Blob([JSON.stringify(data)], { type: "application/json" });
@@ -275,12 +252,8 @@ function exportData() {
   a.click();
 }
 
-// IMPORT BACKUP
 function importData(file) {
-  if (!file) {
-    alert("Select file");
-    return;
-  }
+  if (!file) return alert("Select file");
 
   let reader = new FileReader();
 
@@ -311,4 +284,3 @@ function initCoreSystem() {
   enableCopyProtection();
   checkSystemLock();
 }
-
