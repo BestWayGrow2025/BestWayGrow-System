@@ -46,14 +46,16 @@
   <button onclick="upgrade()">Upgrade</button>
   <button onclick="repurchase()">Repurchase</button>
   <button onclick="withdraw()">Withdraw</button>
-  <button onclick="resendWithdraw()">Resend Withdrawal</button>
   <button onclick="applyFranchise()">Apply for Franchise</button>
 </div>
 
 <div class="box">
-  <h3>My Team Tree (Introducer)</h3>
+  <h3>My Team</h3>
   <div id="tree"></div>
 </div>
+
+<!-- ✅ CORE MUST BE FIRST -->
+<script src="CORE_system.js"></script>
 
 <script src="wallet_system.js"></script>
 <script src="active_system.js"></script>
@@ -68,11 +70,17 @@
 let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
 if (!sessionUser) {
   alert("Access denied");
-  window.location.href = "login.html";
+  window.location.href = "user_login.html";
 }
 
-let users = JSON.parse(localStorage.getItem("users") || "[]");
+let users = getUsers();
 let user = users.find(u => u.userId === sessionUser.userId);
+
+if (!user) {
+  alert("User not found");
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "user_login.html";
+}
 
 // ================= WELCOME =================
 document.getElementById("welcome").innerText =
@@ -91,14 +99,13 @@ document.getElementById("profile").innerHTML = `
   Sponsor: ${getSponsor(user)}<br>
   Introducer: ${user.introducerId || "-"}<br>
   Join Time: ${user.createdAt || "-"}<br>
-  Status: ${user.status}<br>
-  KYC: ${user.kyc}<br>
-  Upgrade Status: ${user.upgrade}
+  Status: ${user.status || "inactive"}<br>
+  Active: ${isUserActive(user.userId) ? "YES" : "NO"}
 `;
 
 // ================= WALLET =================
 function loadWallet() {
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  let users = getUsers();
   let u = users.find(x => x.userId === user.userId);
   document.getElementById("wallet").innerHTML =
     "Balance: ₹ " + (u?.wallet || 0);
@@ -107,15 +114,15 @@ function loadWallet() {
 // ================= TRANSACTIONS =================
 function loadTransactions() {
   let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-  let userTxns = txns.filter(t => t.userId === user.userId);
+  let list = txns.filter(t => t.userId === user.userId);
 
-  if (userTxns.length === 0) {
-    document.getElementById("transactions").innerHTML = "No transactions found";
+  if (list.length === 0) {
+    document.getElementById("transactions").innerHTML = "No transactions";
     return;
   }
 
   let html = "<ul>";
-  userTxns.reverse().forEach(t => {
+  list.reverse().forEach(t => {
     html += `<li>${t.type} ₹${t.amount} - ${t.reason}<br><small>${t.time}</small></li>`;
   });
   html += "</ul>";
@@ -135,24 +142,23 @@ function loadWithdrawHistory() {
 
   let html = "<ul>";
   list.reverse().forEach(w => {
-    html += `<li>
-      ${w.requestId} - ₹${w.amount} (${w.status})<br>
-      <small>${w.time}</small>
-    </li>`;
+    html += `<li>${w.requestId} - ₹${w.amount} (${w.status})<br><small>${w.time}</small></li>`;
   });
   html += "</ul>";
 
   document.getElementById("withdrawHistory").innerHTML = html;
 }
 
-// ================= LINKS (FIXED) =================
+// ================= LINKS =================
 let base = "https://bestwaygrow2025.github.io/BestWayGrow-System/";
 
 document.getElementById("links").innerHTML = `
-  FR Link:<br>
+  Register Link:<br>
   ${base}register.html?ref=${user.userId}<br><br>
+
   Upgrade Link:<br>
   ${base}upgrade.html?user=${user.userId}<br><br>
+
   Repurchase Link:<br>
   ${base}repurchase.html?user=${user.userId}
 `;
@@ -175,6 +181,7 @@ function repurchase() {
 function withdraw() {
   let amt = prompt("Enter amount:");
   if (!amt || amt <= 0) return alert("Invalid amount");
+
   requestWithdraw(user.userId, parseFloat(amt));
   loadWallet(); loadTransactions(); loadWithdrawHistory();
 }
@@ -200,9 +207,10 @@ function applyFranchise() {
   alert("Request submitted");
 }
 
-// ================= TREE =================
+// ================= TEAM =================
 function buildTree(id) {
   let children = users.filter(u => u.sponsorId === id);
+
   if (!children.length) return "No team";
 
   let html = "<ul>";
@@ -224,10 +232,11 @@ loadWithdrawHistory();
 // ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
+  window.location.href = "user_login.html";
 }
 
 </script>
+
 </body>
 </html>
 
