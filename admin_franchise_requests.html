@@ -23,22 +23,25 @@
   <div id="requestList"></div>
 </div>
 
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
 <script>
 
 // ================= AUTH =================
-let admin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
+let admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
 if (!admin) {
   alert("Access denied");
-  window.location.href = "system_admin_login.html";
+  window.location.href = "admin_login.html";
 }
 
 // ================= NAV =================
 function goBack() {
-  window.location.href = "system_admin_dashboard.html";
+  window.location.href = "dashboard_admin.html";
 }
 
-// ================= STORAGE =================
+// ================= REQUEST STORAGE =================
 function getRequests() {
   return JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
 }
@@ -47,36 +50,27 @@ function saveRequests(data) {
   localStorage.setItem("franchiseRequests", JSON.stringify(data));
 }
 
-function getUsers() {
-  return JSON.parse(localStorage.getItem("users") || "[]");
-}
-
-function saveUsers(users) {
-  localStorage.setItem("users", JSON.stringify(users));
-}
-
-// ================= ✅ RESET PASSWORD =================
+// ================= PASSWORD RESET =================
 function resetUserPassword() {
-
   let userId = prompt("Enter User ID:");
   if (!userId) return;
 
   let newPass = prompt("Enter New Password:");
   if (!newPass) return;
 
-  let users = getUsers();
+  let users = getUsers(); // ✅ from CORE
   let user = users.find(u => u.userId === userId);
 
   if (!user) {
-    alert("❌ User not found");
+    alert("User not found");
     return;
   }
 
   user.password = newPass;
 
-  saveUsers(users);
+  saveUsers(users); // ✅ from CORE
 
-  alert("✅ Password reset successful for " + userId);
+  alert("Password reset successful for " + userId);
 }
 
 // ================= LOAD REQUESTS =================
@@ -136,7 +130,7 @@ function approve(requestId, userId) {
   saveRequests(requests);
   saveUsers(users);
 
-  alert("✅ Approved & User upgraded to Franchise");
+  alert("Approved & User upgraded to Franchise");
 
   loadRequests();
 }
@@ -145,6 +139,7 @@ function approve(requestId, userId) {
 function reject(requestId) {
 
   let requests = getRequests();
+
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) return alert("Request not found");
@@ -153,7 +148,7 @@ function reject(requestId) {
 
   saveRequests(requests);
 
-  alert("❌ Request Rejected");
+  alert("Request Rejected");
 
   loadRequests();
 }
