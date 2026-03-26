@@ -16,10 +16,12 @@
 
 <script>
 
+// ================= GET USERS =================
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
 
+// ================= LOGIN =================
 function login() {
 
   let id = document.getElementById("adminId").value.trim();
@@ -27,22 +29,24 @@ function login() {
 
   let users = getUsers();
 
-  let admin = users.find(u => {
-    if (u.userId !== id || u.role !== "admin") return false;
-
-    // ✅ decode stored password
-    let decoded = atob(u.password); // base64 decode
-
-    return decoded === pass;
-  });
+  // 🔥 FIX: CHECK INSIDE USERS
+  let admin = users.find(u =>
+    u.userId === id &&
+    u.role === "admin" &&
+    (u.password === pass || atob(u.password) === pass) // support encoded + normal
+  );
 
   if (!admin) {
-    document.getElementById("msg").innerText = "❌ Invalid Admin Login";
+    document.getElementById("msg").innerText = "❌ Invalid login";
     return;
   }
 
-  localStorage.setItem("loggedInAdmin", JSON.stringify(admin));
+  // SAVE SESSION
+  localStorage.setItem("loggedInAdmin", JSON.stringify({
+    adminId: admin.userId
+  }));
 
+  // REDIRECT
   window.location.href = "dashboard_admin.html";
 }
 
