@@ -2,6 +2,11 @@
 <html>
 <head>
   <title>Admin Login</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { padding: 6px; width: 200px; }
+    button { padding: 6px 10px; cursor: pointer; }
+  </style>
 </head>
 <body>
 
@@ -14,12 +19,10 @@
 
 <p id="msg"></p>
 
-<script>
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
 
-// ================= GET USERS =================
-function getUsers() {
-  return JSON.parse(localStorage.getItem("users") || "[]");
-}
+<script>
 
 // ================= LOGIN =================
 function login() {
@@ -27,13 +30,18 @@ function login() {
   let id = document.getElementById("adminId").value.trim();
   let pass = document.getElementById("password").value.trim();
 
+  if (!id || !pass) {
+    document.getElementById("msg").innerText = "⚠ Enter ID & Password";
+    return;
+  }
+
   let users = getUsers();
 
-  // 🔥 FIX: CHECK INSIDE USERS
+  // ✅ CHECK ADMIN FROM USERS
   let admin = users.find(u =>
     u.userId === id &&
     u.role === "admin" &&
-    (u.password === pass || atob(u.password) === pass) // support encoded + normal
+    (u.password === pass || atob(u.password) === pass)
   );
 
   if (!admin) {
@@ -41,9 +49,10 @@ function login() {
     return;
   }
 
-  // SAVE SESSION
+  // ✅ SAVE SESSION (better format)
   localStorage.setItem("loggedInAdmin", JSON.stringify({
-    adminId: admin.userId
+    userId: admin.userId,
+    role: admin.role
   }));
 
   // REDIRECT
