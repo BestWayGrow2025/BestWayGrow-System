@@ -16,8 +16,9 @@
 
 <script>
 
-function getAdmins() {
-  return JSON.parse(localStorage.getItem("admins") || "[]");
+// ✅ USE SAME USERS STORAGE
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
 }
 
 function login() {
@@ -25,17 +26,24 @@ function login() {
   let id = document.getElementById("adminId").value.trim();
   let pass = document.getElementById("password").value.trim();
 
-  let admins = getAdmins();
+  let users = getUsers();
 
-  let admin = admins.find(a => a.adminId === id && a.password === pass);
+  // ✅ LOGIN ONLY ADMIN ROLE
+  let admin = users.find(u => 
+    u.userId === id && 
+    u.password === pass && 
+    u.role === "admin"
+  );
 
   if (!admin) {
-    document.getElementById("msg").innerText = "❌ Invalid login";
+    document.getElementById("msg").innerText = "❌ Invalid Admin Login";
     return;
   }
 
+  // ✅ SAVE SESSION
   localStorage.setItem("loggedInAdmin", JSON.stringify(admin));
 
+  // ✅ REDIRECT
   window.location.href = "dashboard_admin.html";
 }
 
@@ -43,3 +51,4 @@ function login() {
 
 </body>
 </html>
+
