@@ -5,6 +5,7 @@
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; }
+    button { padding: 8px 12px; margin: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -13,24 +14,29 @@
 
 <button onclick="logout()">Logout</button>
 
-<div class="box" id="profileBox">
+<div class="box">
   <h3>My Profile</h3>
   <p id="profile"></p>
 </div>
 
 <div class="box">
-  <h3>System Status</h3>
-  <p id="system"></p>
+  <h3>Admin Controls</h3>
+
+  <!-- 🔗 CONNECTED FILE -->
+  <button onclick="openFranchise()">Franchise Requests</button>
+
+  <!-- Future buttons -->
+  <button onclick="comingSoon()">Withdraw Panel</button>
+  <button onclick="comingSoon()">User Control</button>
+
 </div>
 
-<div class="box">
-  <h3>Departments Access</h3>
-  <div id="departments"></div>
-</div>
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
 
 <script>
 
-// AUTH
+// ================= AUTH =================
 let admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
 if (!admin) {
@@ -38,58 +44,37 @@ if (!admin) {
   window.location.href = "admin_login.html";
 }
 
-// WELCOME
-document.getElementById("welcome").innerText =
-  "Welcome ADMIN (" + admin.adminId + ")";
+// ================= GET REAL DATA =================
+let users = getUsers();
+let realAdmin = users.find(u => u.userId === admin.userId);
 
-// PROFILE
-document.getElementById("profile").innerHTML = `
-  User ID: ${admin.adminId} <br>
-  Name: ${admin.name} <br>
-  Type: ${admin.type} <br>
-  Departments: ${admin.departments.join(", ")}
-`;
-
-// SYSTEM STATUS
-let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-
-document.getElementById("system").innerHTML = `
-  Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
-  Franchisee Access: ${s.franchiseeAccess ? "ON" : "OFF"} <br>
-  Registration: ${s.registrationOpen ? "OPEN" : "CLOSED"} <br>
-  Upgrades: ${s.upgradesOpen ? "OPEN" : "CLOSED"} <br>
-  Repurchase: ${s.repurchaseOpen ? "OPEN" : "CLOSED"}
-`;
-
-// DEPARTMENT UI CONTROL
-let deptBox = document.getElementById("departments");
-
-function renderDepartments() {
-
-  deptBox.innerHTML = "";
-
-  let access = admin.departments;
-
-  if (access.includes("finance")) {
-    deptBox.innerHTML += "<p>✅ Finance Panel Access</p>";
-  }
-
-  if (access.includes("franchisee")) {
-    deptBox.innerHTML += "<p>✅ Franchisee Panel Access</p>";
-  }
-
-  if (access.includes("kyc")) {
-    deptBox.innerHTML += "<p>✅ KYC Panel Access</p>";
-  }
-
-  if (access.length === 0) {
-    deptBox.innerHTML = "<p>❌ No department access</p>";
-  }
+if (!realAdmin) {
+  alert("Admin not found");
+  localStorage.removeItem("loggedInAdmin");
+  window.location.href = "admin_login.html";
 }
 
-renderDepartments();
+// ================= WELCOME =================
+document.getElementById("welcome").innerText =
+  "Welcome " + realAdmin.username + " (" + realAdmin.userId + ")";
 
-// LOGOUT
+// ================= PROFILE =================
+document.getElementById("profile").innerHTML = `
+  User ID: ${realAdmin.userId} <br>
+  Name: ${realAdmin.username} <br>
+  Role: ${realAdmin.role}
+`;
+
+// ================= NAVIGATION =================
+function openFranchise() {
+  window.location.href = "admin_franchise_requests.html";
+}
+
+function comingSoon() {
+  alert("Coming soon...");
+}
+
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
@@ -98,4 +83,5 @@ function logout() {
 </script>
 
 </body>
-</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
