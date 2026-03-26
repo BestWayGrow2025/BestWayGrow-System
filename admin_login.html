@@ -23,6 +23,10 @@
 <script src="CORE_system.js"></script>
 
 <script>
+  initCoreSystem(); // ✅ MUST ADD
+</script>
+
+<script>
 
 // ================= LOGIN =================
 function login() {
@@ -49,10 +53,9 @@ function login() {
     return;
   }
 
-  // ✅ SAVE SESSION (better format)
+  // ✅ SAVE SESSION (STANDARD FORMAT)
   localStorage.setItem("loggedInAdmin", JSON.stringify({
-    userId: admin.userId,
-    role: admin.role
+    adminId: admin.userId   // 🔥 IMPORTANT FIX
   }));
 
   // REDIRECT
