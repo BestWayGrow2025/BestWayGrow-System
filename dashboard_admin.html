@@ -5,7 +5,7 @@
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; }
-    button { padding: 8px 12px; margin: 5px; cursor: pointer; }
+    button { padding: 6px 10px; margin: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -15,40 +15,41 @@
 <button onclick="logout()">Logout</button>
 
 <div class="box">
-  <h3>My Profile</h3>
+  <h3>Admin Profile</h3>
   <p id="profile"></p>
 </div>
 
 <div class="box">
-  <h3>Admin Controls</h3>
-
-  <!-- 🔗 CONNECTED FILE -->
-  <button onclick="openFranchise()">Franchise Requests</button>
-
-  <!-- Future buttons -->
-  <button onclick="comingSoon()">Withdraw Panel</button>
-  <button onclick="comingSoon()">User Control</button>
-
+  <h3>System Status</h3>
+  <p id="system"></p>
 </div>
 
-<!-- ✅ CORE FIRST -->
-<script src="CORE_system.js"></script>
+<div class="box">
+  <h3>Admin Controls</h3>
+  <button onclick="openFranchise()">Franchise Requests</button>
+</div>
 
 <script>
 
 // ================= AUTH =================
-let admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
+let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
-if (!admin) {
+if (!adminSession) {
   alert("Access denied");
   window.location.href = "admin_login.html";
 }
 
-// ================= GET REAL DATA =================
-let users = getUsers();
-let realAdmin = users.find(u => u.userId === admin.userId);
+// ================= GET ADMIN FROM USERS =================
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
 
-if (!realAdmin) {
+let users = getUsers();
+
+// 🔥 FIX: ADMIN COMES FROM users (NOT admins)
+let admin = users.find(u => u.userId === adminSession.adminId && u.role === "admin");
+
+if (!admin) {
   alert("Admin not found");
   localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
@@ -56,22 +57,27 @@ if (!realAdmin) {
 
 // ================= WELCOME =================
 document.getElementById("welcome").innerText =
-  "Welcome " + realAdmin.username + " (" + realAdmin.userId + ")";
+  "Welcome ADMIN (" + admin.userId + ")";
 
 // ================= PROFILE =================
 document.getElementById("profile").innerHTML = `
-  User ID: ${realAdmin.userId} <br>
-  Name: ${realAdmin.username} <br>
-  Role: ${realAdmin.role}
+  ID: ${admin.userId} <br>
+  Name: ${admin.username} <br>
+  Role: ${admin.role} <br>
+  Status: ${admin.status}
 `;
 
-// ================= NAVIGATION =================
+// ================= SYSTEM =================
+let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+
+document.getElementById("system").innerHTML = `
+  Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
+  Lock Mode: ${s.lockMode ? "ON" : "OFF"}
+`;
+
+// ================= NAV =================
 function openFranchise() {
   window.location.href = "admin_franchise_requests.html";
-}
-
-function comingSoon() {
-  alert("Coming soon...");
 }
 
 // ================= LOGOUT =================
