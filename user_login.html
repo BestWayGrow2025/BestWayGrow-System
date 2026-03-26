@@ -15,32 +15,30 @@
 
 <p id="msg"></p>
 
-<script>
+<script src="CORE_system.js"></script>
 
+<script>
 function loginUser(e) {
   e.preventDefault();
 
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value;
 
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  let users = getUsers();
 
-  let user = users.find(u => u.userId === userId && u.password === password);
+  let user = users.find(u => 
+    u.userId === userId && atob(u.password) === password
+  );
 
   if (!user) {
     document.getElementById("msg").innerText = "❌ Invalid login";
     return;
   }
 
-  // SAVE SESSION
   localStorage.setItem("loggedInUser", JSON.stringify(user));
-
-  // REDIRECT
   window.location.href = "user_dashboard.html";
 }
-
 </script>
 
 </body>
 </html>
-
