@@ -15,9 +15,16 @@
 
 <p id="msg"></p>
 
+<!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
 
 <script>
+  initCoreSystem(); // ✅ MUST ADD
+</script>
+
+<script>
+
+// ================= LOGIN =================
 function loginUser(e) {
   e.preventDefault();
 
@@ -27,7 +34,8 @@ function loginUser(e) {
   let users = getUsers();
 
   let user = users.find(u => 
-    u.userId === userId && atob(u.password) === password
+    u.userId === userId &&
+    (u.password === password || atob(u.password) === password) // ✅ support both
   );
 
   if (!user) {
@@ -38,6 +46,7 @@ function loginUser(e) {
   localStorage.setItem("loggedInUser", JSON.stringify(user));
   window.location.href = "user_dashboard.html";
 }
+
 </script>
 
 </body>
