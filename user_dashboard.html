@@ -54,20 +54,24 @@
   <div id="tree"></div>
 </div>
 
-<!-- ✅ CORE MUST BE FIRST -->
+<!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
 
+<script>
+  initCoreSystem(); // ✅ MUST
+</script>
+
+<!-- ✅ OTHER SYSTEMS -->
 <script src="wallet_system.js"></script>
-<script src="active_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="pin_system.js"></script>
 <script src="withdrawal_system.js"></script>
-<script src="security_system.js"></script>
 
 <script>
 
 // ================= AUTH =================
 let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
 if (!sessionUser) {
   alert("Access denied");
   window.location.href = "user_login.html";
@@ -105,8 +109,7 @@ document.getElementById("profile").innerHTML = `
 
 // ================= WALLET =================
 function loadWallet() {
-  let users = getUsers();
-  let u = users.find(x => x.userId === user.userId);
+  let u = getUserById(user.userId);
   document.getElementById("wallet").innerHTML =
     "Balance: ₹ " + (u?.wallet || 0);
 }
@@ -122,7 +125,7 @@ function loadTransactions() {
   }
 
   let html = "<ul>";
-  list.reverse().forEach(t => {
+  list.slice().reverse().forEach(t => {
     html += `<li>${t.type} ₹${t.amount} - ${t.reason}<br><small>${t.time}</small></li>`;
   });
   html += "</ul>";
@@ -141,7 +144,7 @@ function loadWithdrawHistory() {
   }
 
   let html = "<ul>";
-  list.reverse().forEach(w => {
+  list.slice().reverse().forEach(w => {
     html += `<li>${w.requestId} - ₹${w.amount} (${w.status})<br><small>${w.time}</small></li>`;
   });
   html += "</ul>";
@@ -209,6 +212,7 @@ function applyFranchise() {
 
 // ================= TEAM =================
 function buildTree(id) {
+  let users = getUsers();
   let children = users.filter(u => u.sponsorId === id);
 
   if (!children.length) return "No team";
