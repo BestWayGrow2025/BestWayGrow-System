@@ -14,7 +14,8 @@
 
 <h1>ADMIN WITHDRAW PANEL</h1>
 
-<button onclick="loadRequests()">Refresh</button>
+<button onclick="goBack()">⬅ Back</button>
+<button onclick="loadRequests()">🔄 Refresh</button>
 
 <table>
   <thead>
@@ -32,12 +33,28 @@
   <tbody id="withdrawTable"></tbody>
 </table>
 
-<!-- SCRIPTS -->
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<!-- SYSTEM -->
 <script src="withdrawal_system.js"></script>
 
 <script>
 
-// ===================== LOAD REQUESTS =====================
+// ================= AUTH =================
+let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
+
+if (!adminSession) {
+  alert("Access denied");
+  window.location.href = "admin_login.html";
+}
+
+// ================= NAV =================
+function goBack() {
+  window.location.href = "dashboard_admin.html";
+}
+
+// ================= LOAD REQUESTS =================
 function loadRequests() {
 
   let requests = JSON.parse(localStorage.getItem("withdrawals") || "[]");
@@ -45,7 +62,7 @@ function loadRequests() {
 
   table.innerHTML = "";
 
-  // ✅ EMPTY STATE
+  // EMPTY STATE
   if (requests.length === 0) {
     table.innerHTML = "<tr><td colspan='8'>No withdrawal requests found</td></tr>";
     return;
@@ -66,7 +83,7 @@ function loadRequests() {
           ${req.status === "PENDING" ? `
             <button onclick="approve('${req.requestId}')">Approve</button>
             <button onclick="reject('${req.requestId}')">Reject</button>
-          ` : "-"}
+          ` : "✔ Done"}
         </td>
       </tr>
     `;
@@ -76,19 +93,21 @@ function loadRequests() {
   });
 }
 
-// ===================== APPROVE =====================
+// ================= APPROVE =================
 function approve(id) {
-  approveWithdraw(id);
+  approveWithdraw(id); // from withdrawal_system.js
+  alert("✅ Approved");
   loadRequests();
 }
 
-// ===================== REJECT =====================
+// ================= REJECT =================
 function reject(id) {
-  rejectWithdraw(id);
+  rejectWithdraw(id); // from withdrawal_system.js
+  alert("❌ Rejected");
   loadRequests();
 }
 
-// ===================== INIT =====================
+// ================= INIT =================
 loadRequests();
 
 </script>
