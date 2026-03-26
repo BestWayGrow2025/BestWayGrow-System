@@ -15,6 +15,9 @@
 <button onclick="goBack()">⬅ Back to Dashboard</button>
 <button onclick="loadRequests()">🔄 Refresh</button>
 
+<!-- ✅ PASSWORD RESET BUTTON -->
+<button onclick="resetUserPassword()">🔑 Reset User Password</button>
+
 <div class="box">
   <h3>All Franchise Requests</h3>
   <div id="requestList"></div>
@@ -52,6 +55,30 @@ function saveUsers(users) {
   localStorage.setItem("users", JSON.stringify(users));
 }
 
+// ================= ✅ RESET PASSWORD =================
+function resetUserPassword() {
+
+  let userId = prompt("Enter User ID:");
+  if (!userId) return;
+
+  let newPass = prompt("Enter New Password:");
+  if (!newPass) return;
+
+  let users = getUsers();
+  let user = users.find(u => u.userId === userId);
+
+  if (!user) {
+    alert("❌ User not found");
+    return;
+  }
+
+  user.password = newPass;
+
+  saveUsers(users);
+
+  alert("✅ Password reset successful for " + userId);
+}
+
 // ================= LOAD REQUESTS =================
 function loadRequests() {
 
@@ -71,8 +98,6 @@ function loadRequests() {
       <li>
         <b>ID:</b> ${req.requestId} <br>
         <b>User:</b> ${req.userId} <br>
-        <b>Type:</b> ${req.type} <br>
-        <b>Details:</b> ${req.details} <br>
         <b>Status:</b> ${req.status} <br><br>
 
         ${req.status === "PENDING" ? `
@@ -90,7 +115,7 @@ function loadRequests() {
   container.innerHTML = html;
 }
 
-// ================= APPROVE + ROLE UPGRADE =================
+// ================= APPROVE =================
 function approve(requestId, userId) {
 
   let requests = getRequests();
@@ -102,10 +127,8 @@ function approve(requestId, userId) {
   if (!req) return alert("Request not found");
   if (!user) return alert("User not found");
 
-  // Update request
   req.status = "APPROVED";
 
-  // Upgrade user role
   user.role = "franchise";
   user.status = "active";
   user.isActive = true;
@@ -113,7 +136,7 @@ function approve(requestId, userId) {
   saveRequests(requests);
   saveUsers(users);
 
-  alert("Approved & User upgraded to Franchise");
+  alert("✅ Approved & User upgraded to Franchise");
 
   loadRequests();
 }
@@ -122,7 +145,6 @@ function approve(requestId, userId) {
 function reject(requestId) {
 
   let requests = getRequests();
-
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) return alert("Request not found");
@@ -131,7 +153,7 @@ function reject(requestId) {
 
   saveRequests(requests);
 
-  alert("Request Rejected");
+  alert("❌ Request Rejected");
 
   loadRequests();
 }
