@@ -66,9 +66,6 @@
 
 <script>
 
-// ✅ INIT CORE SYSTEM
-initCoreSystem();
-
 // ================= AUTH =================
 let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
 if (!sessionUser) {
@@ -76,13 +73,8 @@ if (!sessionUser) {
   window.location.href = "user_login.html";
 }
 
-// ALWAYS GET FRESH USERS
-function getCurrentUser() {
-  let users = getUsers();
-  return users.find(u => u.userId === sessionUser.userId);
-}
-
-let user = getCurrentUser();
+let users = getUsers();
+let user = users.find(u => u.userId === sessionUser.userId);
 
 if (!user) {
   alert("User not found");
@@ -96,38 +88,32 @@ document.getElementById("welcome").innerText =
 
 // ================= PROFILE =================
 function getSponsor(u) {
-  let users = getUsers();
   let s = users.find(x => x.userId === u.sponsorId);
   return s ? s.username + " (" + s.userId + ")" : "SYSTEM";
 }
 
-function loadProfile() {
-  let user = getCurrentUser();
-
-  document.getElementById("profile").innerHTML = `
-    User ID: ${user.userId}<br>
-    Name: ${user.username}<br>
-    Mobile: ${user.mobile || "-"}<br>
-    Sponsor: ${getSponsor(user)}<br>
-    Introducer: ${user.introducerId || "-"}<br>
-    Join Time: ${user.createdAt || "-"}<br>
-    Status: ${user.status || "inactive"}<br>
-    Active: ${isUserActive(user.userId) ? "YES" : "NO"}
-  `;
-}
+document.getElementById("profile").innerHTML = `
+  User ID: ${user.userId}<br>
+  Name: ${user.username}<br>
+  Mobile: ${user.mobile || "-"}<br>
+  Sponsor: ${getSponsor(user)}<br>
+  Introducer: ${user.introducerId || "-"}<br>
+  Join Time: ${user.createdAt || "-"}<br>
+  Status: ${user.status || "inactive"}<br>
+  Active: ${isUserActive(user.userId) ? "YES" : "NO"}
+`;
 
 // ================= WALLET =================
 function loadWallet() {
-  let user = getCurrentUser();
+  let users = getUsers();
+  let u = users.find(x => x.userId === user.userId);
   document.getElementById("wallet").innerHTML =
-    "Balance: ₹ " + (user?.wallet || 0);
+    "Balance: ₹ " + (u?.wallet || 0);
 }
 
 // ================= TRANSACTIONS =================
 function loadTransactions() {
-  let user = getCurrentUser();
   let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-
   let list = txns.filter(t => t.userId === user.userId);
 
   if (list.length === 0) {
@@ -146,9 +132,7 @@ function loadTransactions() {
 
 // ================= WITHDRAW =================
 function loadWithdrawHistory() {
-  let user = getCurrentUser();
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
-
   let list = withdrawals.filter(w => w.userId === user.userId);
 
   if (list.length === 0) {
@@ -184,14 +168,14 @@ function upgrade() {
   let pin = prompt("Enter Upgrade Pin:");
   if (!pin) return;
   usePin(pin, user.userId, "upgrade");
-  refreshAll();
+  loadWallet(); loadTransactions();
 }
 
 function repurchase() {
   let pin = prompt("Enter Repurchase Pin:");
   if (!pin) return;
   usePin(pin, user.userId, "repurchase");
-  refreshAll();
+  loadWallet(); loadTransactions();
 }
 
 function withdraw() {
@@ -199,7 +183,7 @@ function withdraw() {
   if (!amt || amt <= 0) return alert("Invalid amount");
 
   requestWithdraw(user.userId, parseFloat(amt));
-  refreshAll();
+  loadWallet(); loadTransactions(); loadWithdrawHistory();
 }
 
 // ================= APPLY FRANCHISE =================
@@ -225,7 +209,6 @@ function applyFranchise() {
 
 // ================= TEAM =================
 function buildTree(id) {
-  let users = getUsers();
   let children = users.filter(u => u.sponsorId === id);
 
   if (!children.length) return "No team";
@@ -239,17 +222,12 @@ function buildTree(id) {
   return html;
 }
 
-// ================= REFRESH =================
-function refreshAll() {
-  loadProfile();
-  loadWallet();
-  loadTransactions();
-  loadWithdrawHistory();
-  document.getElementById("tree").innerHTML = buildTree(user.userId);
-}
+document.getElementById("tree").innerHTML = buildTree(user.userId);
 
 // ================= INIT =================
-refreshAll();
+loadWallet();
+loadTransactions();
+loadWithdrawHistory();
 
 // ================= LOGOUT =================
 function logout() {
@@ -261,4 +239,3 @@ function logout() {
 
 </body>
 </html>
-
