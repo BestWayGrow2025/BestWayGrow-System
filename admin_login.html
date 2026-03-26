@@ -16,7 +16,6 @@
 
 <script>
 
-// ✅ USE SAME USERS STORAGE
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
@@ -28,22 +27,22 @@ function login() {
 
   let users = getUsers();
 
-  // ✅ LOGIN ONLY ADMIN ROLE
-  let admin = users.find(u => 
-    u.userId === id && 
-    u.password === pass && 
-    u.role === "admin"
-  );
+  let admin = users.find(u => {
+    if (u.userId !== id || u.role !== "admin") return false;
+
+    // ✅ decode stored password
+    let decoded = atob(u.password); // base64 decode
+
+    return decoded === pass;
+  });
 
   if (!admin) {
     document.getElementById("msg").innerText = "❌ Invalid Admin Login";
     return;
   }
 
-  // ✅ SAVE SESSION
   localStorage.setItem("loggedInAdmin", JSON.stringify(admin));
 
-  // ✅ REDIRECT
   window.location.href = "dashboard_admin.html";
 }
 
