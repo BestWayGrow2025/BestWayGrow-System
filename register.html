@@ -22,15 +22,23 @@
 
 <p id="msg"></p>
 
+<!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
 
 <script>
+  initCoreSystem(); // ✅ MUST ADD
+</script>
+
+<script>
+
+// ================= PARAM =================
 let params = new URLSearchParams(window.location.search);
 let introducerId = params.get("ref") || "BWG000001";
 
 document.getElementById("introLabel").innerText =
   "Introducer: " + introducerId;
 
+// ================= REGISTER =================
 function handleRegister() {
   let username = document.getElementById("username").value.trim();
   let mobile = document.getElementById("mobile").value.trim();
@@ -50,15 +58,27 @@ function handleRegister() {
 
   let position = positionElement.value;
 
-  let user = registerUser(username, password, introducerId, position);
+  // 🔥 FIX: position should NOT be passed as role
+  let user = registerUser(username, password, introducerId);
 
   if (!user) return;
+
+  // ✅ SAVE EXTRA FIELDS
+  let users = getUsers();
+  let u = users.find(x => x.userId === user.userId);
+
+  if (u) {
+    u.mobile = mobile;
+    u.position = position;
+    saveUsers(users);
+  }
 
   alert("Registered! ID: " + user.userId);
 
   localStorage.setItem("loggedInUser", JSON.stringify(user));
   window.location.href = "user_dashboard.html";
 }
+
 </script>
 
 </body>
