@@ -29,9 +29,9 @@
 <script>
 
 // ================= AUTH =================
-let admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
+let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
-if (!admin) {
+if (!adminSession) {
   alert("Access denied");
   window.location.href = "admin_login.html";
 }
@@ -58,7 +58,7 @@ function resetUserPassword() {
   let newPass = prompt("Enter New Password:");
   if (!newPass) return;
 
-  let users = getUsers(); // ✅ from CORE
+  let users = getUsers(); // from CORE
   let user = users.find(u => u.userId === userId);
 
   if (!user) {
@@ -68,9 +68,9 @@ function resetUserPassword() {
 
   user.password = newPass;
 
-  saveUsers(users); // ✅ from CORE
+  saveUsers(users); // from CORE
 
-  alert("Password reset successful for " + userId);
+  alert("✅ Password reset successful for " + userId);
 }
 
 // ================= LOAD REQUESTS =================
@@ -130,7 +130,7 @@ function approve(requestId, userId) {
   saveRequests(requests);
   saveUsers(users);
 
-  alert("Approved & User upgraded to Franchise");
+  alert("✅ Approved & User upgraded to Franchise");
 
   loadRequests();
 }
@@ -148,7 +148,7 @@ function reject(requestId) {
 
   saveRequests(requests);
 
-  alert("Request Rejected");
+  alert("❌ Request Rejected");
 
   loadRequests();
 }
