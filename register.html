@@ -22,151 +22,16 @@
 
 <p id="msg"></p>
 
+<script src="CORE_system.js"></script>
+
 <script>
-// ===================== URL PARAMS =====================
 let params = new URLSearchParams(window.location.search);
-let introducerId = params.get("ref");
+let introducerId = params.get("ref") || "BWG000001";
 
-// ===================== STORAGE HELPERS =====================
-function getUsers() {
-  try {
-    return JSON.parse(localStorage.getItem("users") || "[]");
-  } catch {
-    localStorage.setItem("users", "[]");
-    return [];
-  }
-}
+document.getElementById("introLabel").innerText =
+  "Introducer: " + introducerId;
 
-function saveUsers(users) {
-  localStorage.setItem("users", JSON.stringify(users));
-}
-
-// ===================== VALIDATE INTRODUCER =====================
-function isValidIntroducer(id) {
-  let users = getUsers();
-  return users.some(u => u.userId === id);
-}
-
-// ===================== DEFAULT ROOT FIX =====================
-if (!introducerId || !isValidIntroducer(introducerId)) {
-  introducerId = "BWG000001"; // ✅ SYSTEM ROOT
-}
-
-// ===================== SYSTEM SETTINGS =====================
-function getSystemSettings() {
-  return JSON.parse(localStorage.getItem("systemSettings") || "{}");
-}
-
-// ===================== RANDOM USER ID =====================
-function generateUserId() {
-  let users = getUsers();
-  let id;
-
-  do {
-    let randomNum = Math.floor(1 + Math.random() * 999999);
-    id = "BWG" + String(randomNum).padStart(6, "0");
-
-    // ❌ block reserved IDs
-    if (id === "BWG000000" || id === "BWG000001") {
-      id = null;
-    }
-
-  } while (!id || users.find(u => u.userId === id));
-
-  return id;
-}
-
-// ===================== REGISTER USER =====================
-function registerUser(username, mobile, password, introducerId, position) {
-  let users = getUsers();
-
-  let newUser = {
-    userId: generateUserId(),
-    username: username,
-    mobile: mobile,
-    password: password,
-    role: "user",
-    introducerId: introducerId,
-    sponsorId: null,
-    position: position,
-    createdAt: new Date().toISOString(),
-    wallet: 0,
-    status: "inactive",
-    isActive: false,
-    kyc: "PENDING",
-    upgrade: "NOT DONE"
-  };
-
-  users.push(newUser);
-  saveUsers(users);
-
-  placeInTree(newUser);
-
-  return newUser;
-}
-
-// ===================== TREE PLACEMENT =====================
-function placeInTree(newUser) {
-  let users = getUsers();
-  let introducer = users.find(u => u.userId === newUser.introducerId);
-
-  if (!introducer) return;
-
-  let queue = [introducer];
-
-  while (queue.length > 0) {
-    let current = queue.shift();
-
-    let children = users.filter(u => u.sponsorId === current.userId);
-
-    let left = children.find(c => c.position === "LEFT");
-    let right = children.find(c => c.position === "RIGHT");
-
-    if (newUser.position === "LEFT") {
-      if (!left) {
-        newUser.sponsorId = current.userId;
-        break;
-      } else {
-        queue.push(left);
-      }
-    }
-
-    if (newUser.position === "RIGHT") {
-      if (!right) {
-        newUser.sponsorId = current.userId;
-        break;
-      } else {
-        queue.push(right);
-      }
-    }
-  }
-
-  saveUsers(users);
-}
-
-// ===================== UI INIT =====================
-let introLabel = document.getElementById("introLabel");
-if (introLabel) {
-  introLabel.innerText = "Introducer: " + introducerId;
-}
-
-// ===================== FORM SUBMIT =====================
 function handleRegister() {
-  let system = getSystemSettings();
-
-  if (system.lockMode) {
-    return alert("System is temporarily locked");
-  }
-
-  if (system.registrationOpen === false) {
-    return alert("Registration is closed");
-  }
-
-  if (!isValidIntroducer(introducerId)) {
-    alert("Invalid Introducer ID");
-    return;
-  }
-
   let username = document.getElementById("username").value.trim();
   let mobile = document.getElementById("mobile").value.trim();
   let password = document.getElementById("password").value;
@@ -185,18 +50,16 @@ function handleRegister() {
 
   let position = positionElement.value;
 
-  let user = registerUser(username, mobile, password, introducerId, position);
+  let user = registerUser(username, password, introducerId, position);
+
+  if (!user) return;
 
   alert("Registered! ID: " + user.userId);
 
-  // AUTO LOGIN
   localStorage.setItem("loggedInUser", JSON.stringify(user));
-
-  // REDIRECT
   window.location.href = "user_dashboard.html";
 }
 </script>
 
 </body>
 </html>
-
