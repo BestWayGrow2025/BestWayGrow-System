@@ -30,6 +30,15 @@ function getSystemSettings() {
 
 
 // ===================================
+// 🔹 COMMON HELPERS
+// ===================================
+function getUserById(id) {
+  let users = getUsers();
+  return users.find(u => u.userId === id);
+}
+
+
+// ===================================
 // 🔹 USER SYSTEM
 // ===================================
 
@@ -42,7 +51,11 @@ function generateUserId() {
   do {
     let randomNum = Math.floor(1 + Math.random() * 999999);
     newId = "BWG" + String(randomNum).padStart(6, "0");
-  } while (existingIds.includes(newId));
+  } while (
+    existingIds.includes(newId) ||
+    newId === "BWG000000" ||
+    newId === "BWG000001"
+  );
 
   return newId;
 }
@@ -50,12 +63,16 @@ function generateUserId() {
 // ===== INTRODUCER VALIDATION =====
 function isValidIntroducer(id) {
   if (!id) return false;
-  let users = getUsers();
-  return users.some(u => u.userId === id);
+
+  let user = getUserById(id);
+  if (!user) return false;
+
+  // only ACTIVE users allowed as introducer
+  return user.isActive === true;
 }
 
 // ===== REGISTER USER =====
-function registerUser(username, password, introducerId) {
+function registerUser(username, password, introducerId, role = "user") {
 
   let users = getUsers();
 
@@ -72,8 +89,11 @@ function registerUser(username, password, introducerId) {
   let newUser = {
     userId: generateUserId(),
     username: username.trim(),
-    password: password.trim(),
-    role: "user",
+
+    // 🔒 Basic protection (not plain text)
+    password: btoa(password.trim()),
+
+    role: role,
     introducerId: introducerId,
     createdAt: new Date().toISOString(),
 
@@ -99,8 +119,7 @@ function registerUser(username, password, introducerId) {
 
 // CHECK ACTIVE
 function isUserActive(userId) {
-  let users = getUsers();
-  let user = users.find(u => u.userId === userId);
+  let user = getUserById(userId);
   if (!user) return false;
 
   let now = new Date();
@@ -131,7 +150,6 @@ function activateUser(userId) {
 // ===================================
 // 🔹 HOLD INCOME SYSTEM
 // ===================================
-
 function holdIncome(userId, amount, reason) {
   let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
 
@@ -177,10 +195,10 @@ function monthlyProcess() {
 
   users.forEach(u => {
 
-    // RELEASE
+    // RELEASE HOLD
     releaseHoldIncome(u.userId);
 
-    // EXPIRE
+    // EXPIRE HOLD
     let now = new Date();
     let activeTill = new Date(u.activeTill || 0);
 
@@ -232,7 +250,10 @@ function checkSystemLock() {
   }
 }
 
-// EXPORT BACKUP
+
+// ===================================
+// 🔹 BACKUP SYSTEM
+// ===================================
 function exportData() {
   let data = {
     users: localStorage.getItem("users"),
@@ -290,5 +311,4 @@ function initCoreSystem() {
   enableCopyProtection();
   checkSystemLock();
 }
-
 
