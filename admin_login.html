@@ -23,10 +23,9 @@
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem(); // ✅ MUST ADD
-</script>
 
-<script>
+// ✅ INIT CORE
+initCoreSystem();
 
 // ================= LOGIN =================
 function login() {
@@ -41,7 +40,6 @@ function login() {
 
   let users = getUsers();
 
-  // ✅ CHECK ADMIN FROM USERS
   let admin = users.find(u =>
     u.userId === id &&
     u.role === "admin" &&
@@ -53,13 +51,14 @@ function login() {
     return;
   }
 
-  // ✅ SAVE SESSION (STANDARD FORMAT)
+  // ✅ FINAL SESSION FORMAT
   localStorage.setItem("loggedInAdmin", JSON.stringify({
-    adminId: admin.userId   // 🔥 IMPORTANT FIX
+    userId: admin.userId,
+    role: admin.role
   }));
 
-  // REDIRECT
-  window.location.href = "dashboard_admin.html";
+  // ✅ FINAL REDIRECT
+  window.location.href = "admin_dashboard.html";
 }
 
 </script>
