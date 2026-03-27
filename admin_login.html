@@ -43,7 +43,8 @@ function login() {
   let admin = users.find(u =>
     u.userId === id &&
     u.role === "admin" &&
-    (u.password === pass || atob(u.password) === pass)
+    u.status !== "blocked" && // ✅ SAFETY
+    atob(u.password) === pass // ✅ FINAL CLEAN CHECK
   );
 
   if (!admin) {
@@ -53,11 +54,10 @@ function login() {
 
   // ✅ FINAL SESSION FORMAT
   localStorage.setItem("loggedInAdmin", JSON.stringify({
-    userId: admin.userId,
-    role: admin.role
+    userId: admin.userId
   }));
 
-  // ✅ FINAL REDIRECT
+  // ✅ REDIRECT
   window.location.href = "admin_dashboard.html";
 }
 
