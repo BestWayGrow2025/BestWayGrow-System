@@ -2,6 +2,10 @@
 <html>
 <head>
   <title>Admin Login</title>
+
+  <!-- ✅ FIX: remove favicon 404 -->
+  <link rel="icon" href="data:,">
+
   <style>
     body { font-family: Arial; padding: 20px; }
     input { padding: 6px; width: 200px; }
@@ -27,6 +31,15 @@
 // ✅ INIT CORE
 initCoreSystem();
 
+// ================= SAFE DECODE =================
+function safeDecode(p) {
+  try {
+    return atob(p);
+  } catch (e) {
+    return p;
+  }
+}
+
 // ================= LOGIN =================
 function login() {
 
@@ -41,10 +54,10 @@ function login() {
   let users = getUsers();
 
   let admin = users.find(u =>
-    u.userId === id &&
+    u.userId.toLowerCase() === id.toLowerCase() &&   // ✅ case-insensitive
     u.role === "admin" &&
-    u.status !== "blocked" && // ✅ SAFETY
-    atob(u.password) === pass // ✅ FINAL CLEAN CHECK
+    u.status !== "blocked" &&
+    (u.password === pass || safeDecode(u.password) === pass) // ✅ safe check
   );
 
   if (!admin) {
@@ -52,7 +65,7 @@ function login() {
     return;
   }
 
-  // ✅ FINAL SESSION FORMAT
+  // ✅ SAVE SESSION
   localStorage.setItem("loggedInAdmin", JSON.stringify({
     userId: admin.userId
   }));
