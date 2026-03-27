@@ -7,33 +7,71 @@
   <link rel="icon" href="data:,">
 
   <style>
-    body { font-family: Arial; padding: 20px; }
-    input { margin-bottom: 10px; padding: 6px; width: 220px; }
-    button { padding: 6px 10px; cursor: pointer; }
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f4f7f6;
+    }
+
+    .box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      margin: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    input {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+    }
+
+    button {
+      padding: 8px 12px;
+      cursor: pointer;
+      width: 100%;
+      background: #0077b5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background: #005f8a;
+    }
+
+    #msg {
+      margin-top: 10px;
+      text-align: center;
+    }
   </style>
 </head>
+
 <body>
 
-<h2>SUPER ADMIN → CREATE SYSTEM ADMIN</h2>
+<h2 style="text-align:center;">CREATE SYSTEM ADMIN</h2>
 
-<input id="sysId" placeholder="System Admin ID"><br>
-<input id="sysName" placeholder="Name"><br>
-<input id="sysPass" type="password" placeholder="Password"><br>
+<div class="box">
 
-<button onclick="createSystemAdmin()">Create System Admin</button>
+  <input id="sysId" placeholder="System Admin ID">
+  <input id="sysName" placeholder="Name">
+  <input id="sysPass" type="password" placeholder="Password">
 
-<p id="msg"></p>
+  <button onclick="createSystemAdmin()">Create</button>
+
+  <p id="msg"></p>
+
+</div>
 
 <!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
 <script>
 initCoreSystem();
-</script>
 
-<script>
-
-// ================= AUTH CHECK =================
+// ================= AUTH =================
 let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
 
 if (!session) {
@@ -41,12 +79,9 @@ if (!session) {
   window.location.href = "super_admin_login.html";
 }
 
-let currentUser = getUserById(session.userId);
-
-if (!currentUser || currentUser.role !== "super_admin") {
-  alert("Invalid session");
-  localStorage.removeItem("loggedInSuperAdmin");
-  window.location.href = "super_admin_login.html";
+// ================= SAFE MESSAGE =================
+function showMsg(text) {
+  document.getElementById("msg").innerText = text;
 }
 
 // ================= CREATE SYSTEM ADMIN =================
@@ -63,20 +98,18 @@ function createSystemAdmin() {
 
   let users = getUsers();
 
-  // ✅ DUPLICATE CHECK (SAFE)
+  // ✅ CASE SAFE DUPLICATE CHECK
   if (users.find(u => u.userId.toLowerCase() === id.toLowerCase())) {
     showMsg("⚠️ ID already exists");
     return;
   }
 
-  // ✅ FINAL OBJECT
+  // ✅ FINAL OBJECT (STANDARD FORMAT)
   let newAdmin = {
     userId: id,
     username: name,
-    password: btoa(pass), // 🔥 ENCODE
+    password: btoa(pass),
     role: "system_admin",
-    type: "all",
-    departments: ["finance", "franchisee", "kyc"],
     status: "active",
     createdAt: new Date().toISOString()
   };
@@ -84,19 +117,14 @@ function createSystemAdmin() {
   users.push(newAdmin);
   saveUsers(users);
 
-  showMsg("✅ System Admin created successfully");
+  showMsg("✅ System Admin Created");
 
-  console.log("System Admin Created:", newAdmin);
+  console.log("Created:", newAdmin);
 
-  // ✅ OPTIONAL CLEAR FORM
+  // ✅ AUTO CLEAR FORM
   document.getElementById("sysId").value = "";
   document.getElementById("sysName").value = "";
   document.getElementById("sysPass").value = "";
-}
-
-// ================= MESSAGE =================
-function showMsg(text) {
-  document.getElementById("msg").innerText = text;
 }
 
 </script>
