@@ -19,19 +19,33 @@
 
 <p id="msg"></p>
 
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<script>
+  initCoreSystem();
+</script>
+
 <script>
 
+// ================= LOGIN =================
 function login() {
 
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value.trim();
 
-  let admins = JSON.parse(localStorage.getItem("admins") || "[]");
+  if (!userId || !password) {
+    showMsg("⚠️ Enter ID & Password");
+    return;
+  }
 
-  let user = admins.find(a =>
-    a.userId === userId &&
-    a.password === password &&
-    a.role === "system_admin"
+  let users = getUsers();
+
+  // ✅ CHECK FROM CORE USERS
+  let user = users.find(u =>
+    u.userId === userId &&
+    u.role === "system_admin" &&
+    (u.password === password || atob(u.password) === password)
   );
 
   if (!user) {
@@ -39,15 +53,19 @@ function login() {
     return;
   }
 
-  localStorage.setItem("loggedInSystemAdmin", JSON.stringify(user));
+  // ✅ SAVE SESSION (CLEAN FORMAT)
+  localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
+    userId: user.userId
+  }));
 
   showMsg("✅ Login successful");
 
   setTimeout(() => {
     window.location.href = "system_admin_dashboard.html";
-  }, 1000);
+  }, 800);
 }
 
+// ================= MESSAGE =================
 function showMsg(text) {
   document.getElementById("msg").innerText = text;
 }
