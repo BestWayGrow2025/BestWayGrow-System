@@ -35,9 +35,10 @@
 <script src="CORE_system.js"></script>
 
 <script>
+  initCoreSystem();
+</script>
 
-// ================= INIT CORE =================
-initCoreSystem();
+<script>
 
 // ================= AUTH =================
 let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
@@ -47,8 +48,8 @@ if (!adminSession) {
   window.location.href = "admin_login.html";
 }
 
-// ✅ FINAL: ONLY userId (NO adminId confusion)
-let admin = getUserById(adminSession.userId);
+// ✅ FIXED: correct session key
+let admin = getUserById(adminSession.adminId);
 
 if (!admin || admin.role !== "admin") {
   alert("Admin not found");
@@ -98,4 +99,4 @@ function logout() {
 </script>
 
 </body>
-</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+</html>
