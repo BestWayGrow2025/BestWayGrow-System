@@ -19,7 +19,7 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORE -->
+<!-- ✅ CORE SYSTEM -->
 <script src="CORE_system.js"></script>
 
 <script>
@@ -41,9 +41,9 @@ function login() {
 
   let users = getUsers();
 
-  // ✅ FINAL CORRECT CHECK
+  // ✅ FINAL FIXED LOGIN (CASE-INSENSITIVE + PASSWORD SAFE)
   let user = users.find(u =>
-    u.userId === userId &&
+    u.userId.toLowerCase() === userId.toLowerCase() &&
     u.role === "super_admin" &&
     (u.password === password || atob(u.password) === password)
   );
@@ -53,7 +53,7 @@ function login() {
     return;
   }
 
-  // ✅ SESSION
+  // ✅ SAVE SESSION
   localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
     userId: user.userId
   }));
@@ -73,4 +73,4 @@ function showMsg(text) {
 </script>
 
 </body>
-</html>
+</html>xa
