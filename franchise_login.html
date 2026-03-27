@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Franchise Login</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { padding: 6px; width: 220px; }
+    button { padding: 6px 12px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h2>FRANCHISE LOGIN</h2>
+
+<input id="userId" placeholder="Franchise ID"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
+
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<script>
+initCoreSystem();
+</script>
+
+<script>
+
+// ================= LOGIN =================
+function login() {
+
+  let id = document.getElementById("userId").value.trim();
+  let pass = document.getElementById("password").value.trim();
+
+  if (!id || !pass) {
+    document.getElementById("msg").innerText = "⚠ Enter ID & Password";
+    return;
+  }
+
+  let users = getUsers();
+
+  let user = users.find(u =>
+    u.userId === id &&
+    u.role === "franchise" &&
+    (u.password === pass || atob(u.password) === pass)
+  );
+
+  if (!user) {
+    document.getElementById("msg").innerText = "❌ Invalid Franchise Login";
+    return;
+  }
+
+  // ✅ SAVE SESSION
+  localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+  // ✅ REDIRECT
+  window.location.href = "franchise_dashboard.html";
+}
+
+</script>
+
+</body>
+</html>
