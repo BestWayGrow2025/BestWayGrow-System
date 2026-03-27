@@ -67,6 +67,10 @@
 <!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
 
+<script>
+  initCoreSystem(); // ✅ MUST ADD
+</script>
+
 <script src="wallet_system.js"></script>
 <script src="ctor_engine.js"></script>
 <script src="withdrawal_system.js"></script>
@@ -147,7 +151,7 @@ function loadCTOR() {
 }
 
 function runCTOR() {
-  runCTORDistribution(); // from ctor_engine.js
+  runCTORDistribution();
   alert("✅ CTOR Distributed");
   loadCTOR();
   loadTransactions();
@@ -228,16 +232,25 @@ function loadWithdrawals() {
   document.getElementById("withdrawals").innerHTML = html;
 }
 
+// 🔥 SAFETY: check function exists
 function approve(id) {
-  approveWithdraw(id);
-  alert("✅ Approved");
-  loadWithdrawals();
+  if (typeof approveWithdraw === "function") {
+    approveWithdraw(id);
+    alert("✅ Approved");
+    loadWithdrawals();
+  } else {
+    alert("Withdraw system not loaded");
+  }
 }
 
 function reject(id) {
-  rejectWithdraw(id);
-  alert("❌ Rejected");
-  loadWithdrawals();
+  if (typeof rejectWithdraw === "function") {
+    rejectWithdraw(id);
+    alert("❌ Rejected");
+    loadWithdrawals();
+  } else {
+    alert("Withdraw system not loaded");
+  }
 }
 
 // ================= INIT =================
