@@ -19,10 +19,9 @@
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem(); // ✅ MUST ADD
-</script>
 
-<script>
+// ================= INIT CORE =================
+initCoreSystem();
 
 // ================= LOGIN =================
 function loginUser(e) {
@@ -35,7 +34,7 @@ function loginUser(e) {
 
   let user = users.find(u => 
     u.userId === userId &&
-    (u.password === password || atob(u.password) === password) // ✅ support both
+    (u.password === password || atob(u.password) === password)
   );
 
   if (!user) {
