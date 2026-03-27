@@ -11,26 +11,21 @@
 
 <button onclick="upgrade()">Upgrade (₹2100)</button>
 
+<!-- ✅ CORE MUST -->
+<script src="CORE_system.js"></script>
+<script>
+  initCoreSystem();
+</script>
+
 <script>
 
 // =====================
-// GET USER FROM URL
+// GET USER FROM URL (FIXED)
 // =====================
 let params = new URLSearchParams(window.location.search);
-let userId = params.get("id");
+let userId = params.get("user"); // ✅ FIXED
 
-document.getElementById("userId").innerText = userId;
-
-// =====================
-// USERS STORAGE
-// =====================
-function getUsers() {
-  return JSON.parse(localStorage.getItem("users") || "[]");
-}
-
-function saveUsers(users) {
-  localStorage.setItem("users", JSON.stringify(users));
-}
+document.getElementById("userId").innerText = userId || "Not Found";
 
 // =====================
 // WALLET INIT
@@ -40,7 +35,7 @@ function initWallet(user) {
 }
 
 // =====================
-// 🔥 UGLI INCOME (FINAL LOGIC)
+// 🔥 UGLI INCOME
 // =====================
 function payUGLIIncome(buyerId) {
 
@@ -79,12 +74,12 @@ function upgrade() {
     return;
   }
 
-  // 💥 CALL INCOME DISTRIBUTION
   payUGLIIncome(userId);
 
   alert("Upgrade Successful! Income Distributed ✅");
 
-  window.location.href = "dashboard.html";
+  // ✅ FIXED REDIRECT
+  window.location.href = "user_dashboard.html";
 }
 
 </script>
