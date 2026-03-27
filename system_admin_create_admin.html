@@ -2,10 +2,14 @@
 <html>
 <head>
   <title>Create Admin</title>
+
+  <!-- ✅ remove favicon error -->
+  <link rel="icon" href="data:,">
+
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; }
-    button { padding: 8px; margin-top: 10px; }
+    button { padding: 8px; margin-top: 10px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -42,27 +46,34 @@
 
 <!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
+
 <script>
 initCoreSystem();
-</script>
 
-<script>
+// ================= AUTH =================
+let session = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
 
-// AUTH
-let sysAdmin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
-if (!sysAdmin) {
+if (!session) {
   alert("Access denied");
   window.location.href = "system_admin_login.html";
 }
 
-// TOGGLE
+let user = getUserById(session.userId);
+
+if (!user || user.role !== "system_admin") {
+  alert("Invalid session");
+  localStorage.removeItem("loggedInSystemAdmin");
+  window.location.href = "system_admin_login.html";
+}
+
+// ================= TOGGLE =================
 function toggleDepartments() {
   let type = document.getElementById("type").value;
   document.getElementById("deptBox").style.display =
     (type === "B") ? "block" : "none";
 }
 
-// CREATE ADMIN
+// ================= CREATE ADMIN =================
 function createAdmin() {
 
   let adminId = document.getElementById("adminId").value.trim();
@@ -77,7 +88,7 @@ function createAdmin() {
 
   let users = getUsers();
 
-  // DUPLICATE CHECK
+  // ✅ DUPLICATE CHECK
   if (users.find(u => u.userId === adminId)) {
     showMsg("⚠️ Admin already exists");
     return;
@@ -99,11 +110,11 @@ function createAdmin() {
     departments = ["finance", "franchisee", "kyc"];
   }
 
-  // ✅ SAVE IN USERS (CORE)
+  // ✅ FINAL OBJECT (CORE FORMAT)
   let newAdmin = {
     userId: adminId,
     username: name,
-    password: btoa(password), // 🔥 ENCODE
+    password: btoa(password), // ✅ ENCODED
     role: "admin",
     type: type,
     departments: departments,
@@ -119,11 +130,10 @@ function createAdmin() {
   console.log("Admin Created:", newAdmin);
 }
 
-// MESSAGE
+// ================= MESSAGE =================
 function showMsg(msg) {
   document.getElementById("msg").innerText = msg;
 }
-
 </script>
 
 </body>
