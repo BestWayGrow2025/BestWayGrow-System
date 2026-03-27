@@ -15,7 +15,7 @@
 <button onclick="goBack()">⬅ Back to Dashboard</button>
 <button onclick="loadRequests()">🔄 Refresh</button>
 
-<!-- ✅ PASSWORD RESET BUTTON -->
+<!-- ✅ PASSWORD RESET -->
 <button onclick="resetUserPassword()">🔑 Reset User Password</button>
 
 <div class="box">
@@ -27,10 +27,9 @@
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem(); // ✅ MUST ADD
-</script>
 
-<script>
+// ================= INIT CORE =================
+initCoreSystem();
 
 // ================= AUTH =================
 let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
@@ -42,7 +41,7 @@ if (!adminSession) {
 
 // ================= NAV =================
 function goBack() {
-  window.location.href = "dashboard_admin.html";
+  window.location.href = "admin_dashboard.html";
 }
 
 // ================= REQUEST STORAGE =================
@@ -70,7 +69,7 @@ function resetUserPassword() {
     return;
   }
 
-  // 🔥 FIX: encode password (same as register system)
+  // ✅ ENCODE PASSWORD
   user.password = btoa(newPass);
 
   saveUsers(users);
