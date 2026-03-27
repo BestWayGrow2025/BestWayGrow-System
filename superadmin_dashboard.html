@@ -28,47 +28,63 @@
   <button onclick="goCreateSystemAdmin()">Create System Admin</button>
 </div>
 
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<script>
+  initCoreSystem();
+</script>
+
 <script>
 
-// AUTH CHECK
-let admin = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+// ================= AUTH =================
+let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
 
-if (!admin) {
+if (!session) {
   alert("Access denied");
   window.location.href = "superadmin_login.html";
 }
 
-// ✅ FIXED WELCOME
-document.getElementById("welcome").innerText =
-  "Welcome " + (admin.name || "SUPER ADMIN") + " (" + admin.userId + ")";
+let user = getUserById(session.userId);
 
-// SYSTEM STATUS
+if (!user || user.role !== "superadmin") {
+  alert("Invalid session");
+  localStorage.removeItem("loggedInSuperAdmin");
+  window.location.href = "superadmin_login.html";
+}
+
+// ================= WELCOME =================
+document.getElementById("welcome").innerText =
+  "Welcome SUPER ADMIN (" + user.userId + ")";
+
+// ================= SYSTEM STATUS =================
 function loadSystem() {
-  let s = JSON.parse(localStorage.getItem("systemSettings") || {});
+
+  let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
 
   document.getElementById("systemStatus").innerHTML = `
     Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
-    Franchisee Access: ${s.franchiseeAccess ? "ON" : "OFF"} <br>
-    Registration: ${s.registrationOpen ? "OPEN" : "CLOSED"} <br>
-    Upgrades: ${s.upgradesOpen ? "OPEN" : "CLOSED"} <br>
+    Franchise Access: ${s.franchiseAccess ? "ON" : "OFF"} <br>
+    Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
+    Upgrades: ${s.upgradesOpen !== false ? "OPEN" : "CLOSED"} <br>
     Finance Dept: ${s.finance ? "ON" : "OFF"} <br>
-    Franchisee Dept: ${s.franchiseeDept ? "ON" : "OFF"} <br>
+    Franchise Dept: ${s.franchise ? "ON" : "OFF"} <br>
     KYC Dept: ${s.kyc ? "ON" : "OFF"}
   `;
 }
 
-// NAVIGATION
+// ================= NAV =================
 function goCreateSystemAdmin() {
   window.location.href = "superadmin_create_system_admin.html";
 }
 
-// LOGOUT
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "superadmin_login.html";
 }
 
-// INIT
+// ================= INIT =================
 loadSystem();
 
 </script>
