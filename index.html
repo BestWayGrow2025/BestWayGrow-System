@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BestWayGrow System</title>
 
+<!-- ✅ FIX: REMOVE FAVICON ERROR -->
+<link rel="icon" href="data:,">
+
 <style>
 
 body {
@@ -134,20 +137,31 @@ footer {
 // 🔥 INIT CORE SYSTEM
 initCoreSystem();
 
-// ================= LOGIN CHECK =================
-var loggedIn = localStorage.getItem("loggedIn");
-var loginArea = document.getElementById("loginArea");
+// ================= LOGIN CHECK (CORE BASED) =================
+let loginArea = document.getElementById("loginArea");
 
-if (loggedIn === "true") {
-    var username = localStorage.getItem("username") || "User";
+// check any active session
+let userSession =
+  JSON.parse(localStorage.getItem("loggedInUser")) ||
+  JSON.parse(localStorage.getItem("loggedInAdmin")) ||
+  JSON.parse(localStorage.getItem("loggedInSystemAdmin")) ||
+  JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+
+if (userSession) {
+
+    let user = getUserById(userSession.userId);
 
     loginArea.innerHTML = `
-        <span style="margin-right:10px;">Welcome ${username}</span>
+        <span style="margin-right:10px;">
+            Welcome ${user ? user.username || user.userId : "User"}
+        </span>
         <button onclick="logout()">Logout</button>
     `;
+
 } else {
+
     loginArea.innerHTML = `
-        <a href="login.html">
+        <a href="user_login.html">
             <button>Login</button>
         </a>
     `;
@@ -155,8 +169,12 @@ if (loggedIn === "true") {
 
 // ================= LOGOUT =================
 function logout() {
-    localStorage.clear();
-    window.location.href = "login.html";
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("loggedInAdmin");
+    localStorage.removeItem("loggedInSystemAdmin");
+    localStorage.removeItem("loggedInSuperAdmin");
+
+    window.location.reload();
 }
 
 </script>
