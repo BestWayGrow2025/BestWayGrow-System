@@ -2,6 +2,10 @@
 <html>
 <head>
   <title>System Admin Login</title>
+
+  <!-- ✅ FIX: remove favicon 404 -->
+  <link rel="icon" href="data:,">
+
   <style>
     body { font-family: Arial; padding: 20px; }
     input { margin-bottom: 10px; padding: 5px; }
@@ -10,7 +14,7 @@
 </head>
 <body>
 
-<h2>System Admin Login</h2>
+<h2>SYSTEM ADMIN LOGIN</h2>
 
 <input id="userId" placeholder="System Admin ID"><br>
 <input id="password" type="password" placeholder="Password"><br>
@@ -28,6 +32,15 @@ initCoreSystem();
 
 <script>
 
+// ================= SAFE DECODE =================
+function safeDecode(p) {
+  try {
+    return atob(p);
+  } catch (e) {
+    return p;
+  }
+}
+
 // ================= LOGIN =================
 function login() {
 
@@ -41,11 +54,11 @@ function login() {
 
   let users = getUsers();
 
-  // ✅ FINAL CHECK (CORE BASED)
+  // ✅ FINAL LOGIN (SAFE + CASE-INSENSITIVE)
   let user = users.find(u =>
-    u.userId === userId &&
+    u.userId.toLowerCase() === userId.toLowerCase() &&
     u.role === "system_admin" &&
-    (u.password === password || atob(u.password) === password)
+    (u.password === password || safeDecode(u.password) === password)
   );
 
   if (!user) {
@@ -53,10 +66,9 @@ function login() {
     return;
   }
 
-  // ✅ SAVE CLEAN SESSION
+  // ✅ SAVE SESSION
   localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
-    userId: user.userId,
-    role: user.role
+    userId: user.userId
   }));
 
   showMsg("✅ Login successful");
