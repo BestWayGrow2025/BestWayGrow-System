@@ -5,25 +5,25 @@
   <style>
     body { font-family: Arial; padding: 20px; }
     input { margin-bottom: 10px; padding: 6px; width: 220px; }
-    button { padding: 6px 10px; cursor: pointer; }
+    button { padding: 6px 10px; }
   </style>
 </head>
 <body>
 
 <h2>SUPER ADMIN LOGIN</h2>
 
-<input id="userId" placeholder="Super Admin ID"><br>
+<input id="userId" placeholder="User ID"><br>
 <input id="password" type="password" placeholder="Password"><br>
 
 <button onclick="login()">Login</button>
 
 <p id="msg"></p>
 
-<!-- ✅ CORE FIRST -->
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem();
+initCoreSystem();
 </script>
 
 <script>
@@ -41,10 +41,11 @@ function login() {
 
   let users = getUsers();
 
+  // ✅ FINAL CORRECT CHECK
   let user = users.find(u =>
     u.userId === userId &&
     u.role === "super_admin" &&
-    atob(u.password) === password
+    (u.password === password || atob(u.password) === password)
   );
 
   if (!user) {
@@ -52,10 +53,9 @@ function login() {
     return;
   }
 
-  // ✅ SESSION SAVE
+  // ✅ SESSION
   localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
-    userId: user.userId,
-    role: user.role
+    userId: user.userId
   }));
 
   showMsg("✅ Login successful");
