@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Repurchase</title>
+</head>
+<body>
+
+<h2>Repurchase Page</h2>
+
+<p>User ID: <span id="userId"></span></p>
+
+<button onclick="repurchase()">Repurchase</button>
+
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<script>
+
+// ===================== INIT CORE =====================
+initCoreSystem();
+
+// ===================== GET USER FROM URL =====================
+let params = new URLSearchParams(window.location.search);
+let userId = params.get("user");
+
+document.getElementById("userId").innerText = userId || "N/A";
+
+// ===================== HELPERS =====================
+function getUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+
+function saveUsers(users) {
+  localStorage.setItem("users", JSON.stringify(users));
+}
+
+function initWallet(user) {
+  user.wallet = user.wallet || 0;
+}
+
+// ===================== 🔥 REPURCHASE INCOME =====================
+function payRepurchaseIncome(buyerId) {
+
+  let users = getUsers();
+  let buyer = users.find(u => u.userId === buyerId);
+  if (!buyer) return;
+
+  let current = buyer;
+  let level = 1;
+
+  while (current && current.introducerId && level <= 20) {
+
+    let parent = users.find(u => u.userId === current.introducerId);
+    if (!parent) break;
+
+    initWallet(parent);
+
+    // 💰 Repurchase income logic
+    let income = 20; // flat income per level
+
+    parent.wallet += income;
+
+    current = parent;
+    level++;
+  }
+
+  saveUsers(users);
+}
+
+// ===================== ACTION =====================
+function repurchase() {
+
+  if (!userId) {
+    alert("Invalid user");
+    return;
+  }
+
+  // 💥 DISTRIBUTE INCOME
+  payRepurchaseIncome(userId);
+
+  alert("Repurchase Successful! Income Distributed ✅");
+
+  window.location.href = "user_dashboard.html";
+}
+
+</script>
+
+</body>
+</html>
