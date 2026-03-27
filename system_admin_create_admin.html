@@ -40,29 +40,26 @@
 
 <p id="msg"></p>
 
+<!-- ✅ CORE -->
+<script src="CORE_system.js"></script>
+<script>
+initCoreSystem();
+</script>
+
 <script>
 
-// AUTH CHECK
+// AUTH
 let sysAdmin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
 if (!sysAdmin) {
   alert("Access denied");
   window.location.href = "system_admin_login.html";
 }
 
-// SHOW/HIDE DEPARTMENTS
+// TOGGLE
 function toggleDepartments() {
   let type = document.getElementById("type").value;
-  document.getElementById("deptBox").style.display = (type === "B") ? "block" : "none";
-}
-
-// GET ADMINS
-function getAdmins() {
-  return JSON.parse(localStorage.getItem("admins") || "[]");
-}
-
-// SAVE ADMINS
-function saveAdmins(data) {
-  localStorage.setItem("admins", JSON.stringify(data));
+  document.getElementById("deptBox").style.display =
+    (type === "B") ? "block" : "none";
 }
 
 // CREATE ADMIN
@@ -78,37 +75,47 @@ function createAdmin() {
     return;
   }
 
+  let users = getUsers();
+
+  // DUPLICATE CHECK
+  if (users.find(u => u.userId === adminId)) {
+    showMsg("⚠️ Admin already exists");
+    return;
+  }
+
   let departments = [];
 
   if (type === "B") {
     document.querySelectorAll("#deptBox input:checked").forEach(cb => {
       departments.push(cb.value);
     });
+
+    if (departments.length === 0) {
+      showMsg("⚠️ Select at least one department");
+      return;
+    }
+
   } else {
     departments = ["finance", "franchisee", "kyc"];
   }
 
-  let admins = getAdmins();
-
-  // DUPLICATE CHECK
-  if (admins.find(a => a.adminId === adminId)) {
-    showMsg("⚠️ Admin already exists");
-    return;
-  }
-
+  // ✅ SAVE IN USERS (CORE)
   let newAdmin = {
-    adminId,
-    name,
-    password,
-    type,
-    departments,
-    role: "admin"
+    userId: adminId,
+    username: name,
+    password: btoa(password), // 🔥 ENCODE
+    role: "admin",
+    type: type,
+    departments: departments,
+    status: "active",
+    createdAt: new Date().toISOString()
   };
 
-  admins.push(newAdmin);
-  saveAdmins(admins);
+  users.push(newAdmin);
+  saveUsers(users);
 
   showMsg("✅ Admin created successfully");
+
   console.log("Admin Created:", newAdmin);
 }
 
