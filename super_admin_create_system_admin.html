@@ -14,32 +14,30 @@
 
 <input id="sysId" placeholder="System Admin ID"><br>
 <input id="sysName" placeholder="Name"><br>
-<input id="sysPass" placeholder="Password"><br>
+<input id="sysPass" type="password" placeholder="Password"><br>
 
 <button onclick="createSystemAdmin()">Create System Admin</button>
 
 <p id="msg"></p>
 
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<script>
+  initCoreSystem();
+</script>
+
 <script>
 
-// AUTH
+// ================= AUTH =================
 let superAdmin = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
 
 if (!superAdmin) {
   alert("Access denied");
-  window.location.href = "superadmin_login.html";
+  window.location.href = "super_admin_login.html";
 }
 
-// STORAGE
-function getAdmins() {
-  return JSON.parse(localStorage.getItem("admins") || "[]");
-}
-
-function saveAdmins(data) {
-  localStorage.setItem("admins", JSON.stringify(data));
-}
-
-// CREATE SYSTEM ADMIN
+// ================= CREATE SYSTEM ADMIN =================
 function createSystemAdmin() {
 
   let id = document.getElementById("sysId").value.trim();
@@ -51,32 +49,40 @@ function createSystemAdmin() {
     return;
   }
 
-  let admins = getAdmins();
+  let users = getUsers();
 
-  if (admins.find(a => a.userId === id)) {
+  // ✅ DUPLICATE CHECK
+  if (users.find(u => u.userId === id)) {
     showMsg("⚠️ ID already exists");
     return;
   }
 
+  // ✅ ENCODE PASSWORD (MATCH LOGIN SYSTEM)
+  let encodedPass = btoa(pass);
+
   let newAdmin = {
     userId: id,
-    name: name,
-    password: pass,
+    username: name,
+    password: encodedPass,
     role: "system_admin",
-    type: "all",
-    departments: ["finance", "franchisee", "kyc"],
-    status: "active"
+    status: "active",
+    createdAt: new Date().toISOString()
   };
 
-  admins.push(newAdmin);
-  saveAdmins(admins);
+  users.push(newAdmin);
+  localStorage.setItem("users", JSON.stringify(users));
 
   showMsg("✅ System Admin created successfully");
+
+  // CLEAR
+  document.getElementById("sysId").value = "";
+  document.getElementById("sysName").value = "";
+  document.getElementById("sysPass").value = "";
 
   console.log("System Admin:", newAdmin);
 }
 
-// MESSAGE
+// ================= MESSAGE =================
 function showMsg(text) {
   document.getElementById("msg").innerText = text;
 }
