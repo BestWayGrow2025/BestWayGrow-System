@@ -13,16 +13,18 @@
 </head>
 <body>
 
-<h2>📌 PIN REQUEST SYSTEM</h2>
+<h2>📌 FRANCHISE PIN REQUEST SYSTEM</h2>
 
 <button onclick="goBack()">⬅ Back to Dashboard</button>
 
+<!-- ================= CREATE REQUEST ================= -->
 <div class="box">
   <h3>Create PIN Request</h3>
   <input id="quantity" type="number" placeholder="Enter quantity">
   <button onclick="submitRequest()">Submit Request</button>
 </div>
 
+<!-- ================= REQUEST LIST ================= -->
 <div class="box">
   <h3>My Requests</h3>
   <table>
@@ -38,6 +40,13 @@
   </table>
 </div>
 
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<script>
+initCoreSystem();
+</script>
+
 <script>
 
 // ================= AUTH =================
@@ -45,7 +54,7 @@ let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!sessionUser) {
   alert("Please login");
-  window.location.href = "login.html";
+  window.location.href = "franchise_login.html";
 }
 
 // ================= STORAGE =================
@@ -60,7 +69,7 @@ function saveRequests(data) {
 // ================= SUBMIT REQUEST =================
 function submitRequest() {
 
-  let qty = document.getElementById("quantity").value;
+  let qty = parseInt(document.getElementById("quantity").value);
 
   if (!qty || qty <= 0) {
     alert("Enter valid quantity");
@@ -70,9 +79,9 @@ function submitRequest() {
   let requests = getRequests();
 
   let newRequest = {
-    requestId: "REQ" + (requests.length + 1).toString().padStart(4, "0"),
+    requestId: "REQ" + Date.now(),
     userId: sessionUser.userId,
-    quantity: parseInt(qty),
+    quantity: qty,
     status: "PENDING",
     createdAt: new Date().toISOString()
   };
@@ -80,34 +89,40 @@ function submitRequest() {
   requests.push(newRequest);
   saveRequests(requests);
 
-  alert("PIN Request Submitted");
+  alert("✅ PIN Request Submitted");
 
   document.getElementById("quantity").value = "";
 
   loadRequests();
 }
 
-// ================= LOAD MY REQUESTS =================
+// ================= LOAD REQUESTS =================
 function loadRequests() {
 
   let requests = getRequests();
   let table = document.getElementById("requestTable");
+
   table.innerHTML = "";
 
   let myRequests = requests.filter(r => r.userId === sessionUser.userId);
 
-  myRequests.forEach(r => {
+  if (myRequests.length === 0) {
+    table.innerHTML = "<tr><td colspan='4'>No requests</td></tr>";
+    return;
+  }
 
-    let row = document.createElement("tr");
+  myRequests.slice().reverse().forEach(r => {
 
-    row.innerHTML = `
-      <td>${r.requestId}</td>
-      <td>${r.quantity}</td>
-      <td>${r.status}</td>
-      <td>${r.createdAt}</td>
+    let row = `
+      <tr>
+        <td>${r.requestId}</td>
+        <td>${r.quantity}</td>
+        <td>${r.status}</td>
+        <td>${r.createdAt}</td>
+      </tr>
     `;
 
-    table.appendChild(row);
+    table.innerHTML += row;
   });
 }
 
