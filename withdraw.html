@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Withdraw</title>
+</head>
+<body>
+
+<h2>Withdraw Request</h2>
+
+<p>User ID: <span id="userId"></span></p>
+
+<input type="number" id="amount" placeholder="Enter amount"><br><br>
+
+<button onclick="submitWithdraw()">Submit Withdraw</button>
+
+<p id="msg"></p>
+
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<!-- SYSTEM -->
+<script src="withdrawal_system.js"></script>
+
+<script>
+initCoreSystem();
+
+// ================= GET USER =================
+let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!sessionUser) {
+  alert("Login required");
+  window.location.href = "user_login.html";
+}
+
+let userId = sessionUser.userId;
+document.getElementById("userId").innerText = userId;
+
+// ================= SUBMIT =================
+function submitWithdraw() {
+
+  let amount = parseFloat(document.getElementById("amount").value);
+
+  if (!amount || amount <= 0) {
+    document.getElementById("msg").innerText = "❌ Invalid amount";
+    return;
+  }
+
+  // ✅ CALL SYSTEM FUNCTION
+  requestWithdraw(userId, amount);
+
+  document.getElementById("msg").innerText = "✅ Withdraw request submitted";
+
+  document.getElementById("amount").value = "";
+}
+
+</script>
+
+</body>
+</html>
