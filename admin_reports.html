@@ -68,14 +68,9 @@
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem(); // ✅ MUST ADD
-</script>
 
-<script src="wallet_system.js"></script>
-<script src="ctor_engine.js"></script>
-<script src="withdrawal_system.js"></script>
-
-<script>
+// ================= INIT CORE =================
+initCoreSystem();
 
 // ================= AUTH =================
 let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
@@ -87,7 +82,7 @@ if (!adminSession) {
 
 // ================= NAV =================
 function goBack() {
-  window.location.href = "dashboard_admin.html";
+  window.location.href = "admin_dashboard.html";
 }
 
 // ================= USERS =================
@@ -232,7 +227,7 @@ function loadWithdrawals() {
   document.getElementById("withdrawals").innerHTML = html;
 }
 
-// 🔥 SAFETY: check function exists
+// ================= ACTION SAFETY =================
 function approve(id) {
   if (typeof approveWithdraw === "function") {
     approveWithdraw(id);
@@ -264,6 +259,11 @@ loadPinLogs();
 loadWithdrawals();
 
 </script>
+
+<!-- ✅ SYSTEM -->
+<script src="wallet_system.js"></script>
+<script src="ctor_engine.js"></script>
+<script src="withdrawal_system.js"></script>
 
 </body>
 </html>
