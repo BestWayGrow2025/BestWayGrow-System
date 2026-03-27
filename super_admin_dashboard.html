@@ -2,58 +2,130 @@
 <html>
 <head>
   <title>Super Admin Dashboard</title>
+
+  <!-- ✅ FIX favicon -->
+  <link rel="icon" href="data:,">
+
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-    button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
+    body {
+      font-family: 'Segoe UI', Arial;
+      margin: 0;
+      background: linear-gradient(135deg, #e6f2ef, #f8fbfa);
+      text-align: center;
+    }
+
+    header {
+      background: linear-gradient(90deg, #006633, #00994d);
+      color: white;
+      padding: 25px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .card {
+      background: white;
+      width: 300px;
+      margin: 15px;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: linear-gradient(90deg, #0077b5, #00aaff);
+      color: white;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #005f8a, #008ecc);
+    }
+
+    footer {
+      margin-top: 30px;
+      background: #00331a;
+      color: white;
+      padding: 15px;
+    }
   </style>
 </head>
+
 <body>
 
-<h1>SUPER ADMIN DASHBOARD</h1>
+<header>
+  <h1>BestWayGrow</h1>
+  <p id="welcome"></p>
+  <button onclick="logout()">Logout</button>
+</header>
 
-<p id="welcome"></p>
+<div class="container">
 
-<button onclick="logout()">Logout</button>
+  <!-- SYSTEM STATUS -->
+  <div class="card">
+    <h3>System Status</h3>
+    <p id="systemStatus"></p>
+  </div>
 
-<!-- SYSTEM STATUS -->
-<div class="box">
-  <h3>System Status</h3>
-  <p id="systemStatus"></p>
+  <!-- CREATE SYSTEM ADMIN -->
+  <div class="card">
+    <h3>Create System Admin</h3>
+    <p>Manage system-level admins</p>
+    <button onclick="goCreateSystemAdmin()">Open</button>
+  </div>
+
 </div>
 
-<!-- ACTIONS -->
-<div class="box">
-  <h3>Actions</h3>
-  <button onclick="goCreateSystemAdmin()">Create System Admin</button>
-</div>
+<footer>
+  ⬅ <a href="index.html" style="color:white;">Back to Home</a><br>
+  © 2026 BestWayGrow
+</footer>
 
-<!-- ✅ CORE FIRST -->
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem();
-</script>
+initCoreSystem();
 
-<script>
+// ================= GLOBAL LOGOUT =================
+function logoutAll() {
+  localStorage.removeItem("loggedInSuperAdmin");
+  localStorage.removeItem("loggedInSystemAdmin");
+  localStorage.removeItem("loggedInAdmin");
+  localStorage.removeItem("loggedInFranchise");
+  localStorage.removeItem("loggedInUser");
+}
 
 // ================= AUTH =================
 let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
 
 if (!session) {
   alert("Access denied");
-  window.location.href = "super_admin_login.html"; // ✅ FIXED
+  window.location.href = "super_admin_login.html";
 }
 
 let user = getUserById(session.userId);
 
-if (!user || user.role !== "superadmin") {
+if (!user || user.role !== "super_admin") { // ✅ FIXED ROLE
   alert("Invalid session");
   localStorage.removeItem("loggedInSuperAdmin");
-  window.location.href = "super_admin_login.html"; // ✅ FIXED
+  window.location.href = "super_admin_login.html";
 }
 
-// ================= WELCOME =================
+// ================= UI =================
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
@@ -75,13 +147,13 @@ function loadSystem() {
 
 // ================= NAV =================
 function goCreateSystemAdmin() {
-  window.location.href = "super_admin_create_system_admin.html"; // ✅ CONSISTENT
+  window.location.href = "super_admin_create_system_admin.html";
 }
 
 // ================= LOGOUT =================
 function logout() {
-  localStorage.removeItem("loggedInSuperAdmin");
-  window.location.href = "super_admin_login.html"; // ✅ FIXED
+  logoutAll(); // ✅ IMPORTANT
+  window.location.href = "super_admin_login.html";
 }
 
 // ================= INIT =================
