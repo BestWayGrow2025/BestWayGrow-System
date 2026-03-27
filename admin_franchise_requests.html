@@ -27,6 +27,10 @@
 <script src="CORE_system.js"></script>
 
 <script>
+  initCoreSystem(); // ✅ MUST ADD
+</script>
+
+<script>
 
 // ================= AUTH =================
 let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
@@ -58,7 +62,7 @@ function resetUserPassword() {
   let newPass = prompt("Enter New Password:");
   if (!newPass) return;
 
-  let users = getUsers(); // from CORE
+  let users = getUsers();
   let user = users.find(u => u.userId === userId);
 
   if (!user) {
@@ -66,9 +70,10 @@ function resetUserPassword() {
     return;
   }
 
-  user.password = newPass;
+  // 🔥 FIX: encode password (same as register system)
+  user.password = btoa(newPass);
 
-  saveUsers(users); // from CORE
+  saveUsers(users);
 
   alert("✅ Password reset successful for " + userId);
 }
