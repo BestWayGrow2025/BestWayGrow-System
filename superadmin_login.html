@@ -19,19 +19,33 @@
 
 <p id="msg"></p>
 
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<script>
+  initCoreSystem();
+</script>
+
 <script>
 
+// ================= LOGIN =================
 function login() {
 
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value.trim();
 
-  let officeUsers = JSON.parse(localStorage.getItem("officeUsers") || "[]");
+  if (!userId || !password) {
+    showMsg("⚠️ Enter ID & Password");
+    return;
+  }
 
-  let user = officeUsers.find(u =>
+  let users = getUsers();
+
+  // ✅ CHECK FROM CORE USERS
+  let user = users.find(u =>
     u.userId === userId &&
-    u.password === password &&
-    u.role === "super_admin"
+    u.role === "superadmin" &&
+    (u.password === password || atob(u.password) === password)
   );
 
   if (!user) {
@@ -39,15 +53,19 @@ function login() {
     return;
   }
 
-  localStorage.setItem("loggedInSuperAdmin", JSON.stringify(user));
+  // ✅ SAVE SESSION (CLEAN FORMAT)
+  localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
+    userId: user.userId
+  }));
 
   showMsg("✅ Login successful");
 
   setTimeout(() => {
     window.location.href = "superadmin_dashboard.html";
-  }, 1000);
+  }, 800);
 }
 
+// ================= MESSAGE =================
 function showMsg(text) {
   document.getElementById("msg").innerText = text;
 }
