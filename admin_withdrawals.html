@@ -37,13 +37,9 @@
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem(); // ✅ MUST ADD
-</script>
 
-<!-- SYSTEM -->
-<script src="withdrawal_system.js"></script>
-
-<script>
+// ================= INIT CORE =================
+initCoreSystem();
 
 // ================= AUTH =================
 let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
@@ -55,7 +51,7 @@ if (!adminSession) {
 
 // ================= NAV =================
 function goBack() {
-  window.location.href = "dashboard_admin.html";
+  window.location.href = "admin_dashboard.html";
 }
 
 // ================= LOAD REQUESTS =================
@@ -96,14 +92,13 @@ function loadRequests() {
   });
 }
 
-// ================= APPROVE =================
+// ================= ACTIONS =================
 function approve(id) {
   approveWithdraw(id);
   alert("✅ Approved");
   loadRequests();
 }
 
-// ================= REJECT =================
 function reject(id) {
   rejectWithdraw(id);
   alert("❌ Rejected");
@@ -114,6 +109,9 @@ function reject(id) {
 loadRequests();
 
 </script>
+
+<!-- ✅ SYSTEM -->
+<script src="withdrawal_system.js"></script>
 
 </body>
 </html>
