@@ -91,13 +91,11 @@ footer {
 
 <header>
 
-    <!-- ✅ LOGO FIXED -->
     <img src="./design/logo.png" alt="BestWayGrow Logo">
 
     <h1>BestWayGrow</h1>
     <p>Select Your Digital Product Plan</p>
 
-    <!-- Login Area -->
     <div id="loginArea"></div>
 
 </header>
@@ -128,9 +126,15 @@ footer {
     © 2026 BestWayGrow
 </footer>
 
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
 <script>
 
-// Check login
+// 🔥 INIT CORE SYSTEM
+initCoreSystem();
+
+// ================= LOGIN CHECK =================
 var loggedIn = localStorage.getItem("loggedIn");
 var loginArea = document.getElementById("loginArea");
 
@@ -149,7 +153,7 @@ if (loggedIn === "true") {
     `;
 }
 
-// Logout
+// ================= LOGOUT =================
 function logout() {
     localStorage.clear();
     window.location.href = "login.html";
@@ -159,4 +163,5 @@ function logout() {
 
 </body>
 </html>
+
 
