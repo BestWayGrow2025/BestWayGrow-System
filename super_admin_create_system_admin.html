@@ -4,13 +4,13 @@
   <title>Create System Admin</title>
   <style>
     body { font-family: Arial; padding: 20px; }
-    input { margin-bottom: 10px; padding: 5px; }
+    input { margin-bottom: 10px; padding: 5px; width: 220px; }
     button { padding: 6px 10px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h2>CREATE SYSTEM ADMIN</h2>
+<h2>SUPER ADMIN → CREATE SYSTEM ADMIN</h2>
 
 <input id="sysId" placeholder="System Admin ID"><br>
 <input id="sysName" placeholder="Name"><br>
@@ -51,13 +51,13 @@ function createSystemAdmin() {
 
   let users = getUsers();
 
-  // ✅ DUPLICATE CHECK
+  // ✅ DUPLICATE CHECK (FIXED)
   if (users.find(u => u.userId === id)) {
     showMsg("⚠️ ID already exists");
     return;
   }
 
-  // ✅ ENCODE PASSWORD (MATCH LOGIN SYSTEM)
+  // ✅ OPTIONAL: ENCODE PASSWORD (SAFE)
   let encodedPass = btoa(pass);
 
   let newAdmin = {
@@ -70,16 +70,16 @@ function createSystemAdmin() {
   };
 
   users.push(newAdmin);
-  localStorage.setItem("users", JSON.stringify(users));
+  saveUsers(users);
 
   showMsg("✅ System Admin created successfully");
 
-  // CLEAR
+  // CLEAR FORM
   document.getElementById("sysId").value = "";
   document.getElementById("sysName").value = "";
   document.getElementById("sysPass").value = "";
 
-  console.log("System Admin:", newAdmin);
+  console.log("System Admin Created:", newAdmin);
 }
 
 // ================= MESSAGE =================
