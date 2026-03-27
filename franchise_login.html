@@ -2,6 +2,10 @@
 <html>
 <head>
   <title>Franchise Login</title>
+
+  <!-- ✅ FIX: remove favicon 404 -->
+  <link rel="icon" href="data:,">
+
   <style>
     body { font-family: Arial; padding: 20px; }
     input { padding: 6px; width: 220px; }
@@ -28,6 +32,15 @@ initCoreSystem();
 
 <script>
 
+// ================= SAFE DECODE =================
+function safeDecode(p) {
+  try {
+    return atob(p);
+  } catch (e) {
+    return p;
+  }
+}
+
 // ================= LOGIN =================
 function login() {
 
@@ -42,9 +55,9 @@ function login() {
   let users = getUsers();
 
   let user = users.find(u =>
-    u.userId === id &&
+    u.userId.toLowerCase() === id.toLowerCase() &&
     u.role === "franchise" &&
-    (u.password === pass || atob(u.password) === pass)
+    (u.password === pass || safeDecode(u.password) === pass)
   );
 
   if (!user) {
@@ -52,8 +65,10 @@ function login() {
     return;
   }
 
-  // ✅ SAVE SESSION
-  localStorage.setItem("loggedInUser", JSON.stringify(user));
+  // ✅ CORRECT SESSION KEY
+  localStorage.setItem("loggedInFranchise", JSON.stringify({
+    userId: user.userId
+  }));
 
   // ✅ REDIRECT
   window.location.href = "franchise_dashboard.html";
