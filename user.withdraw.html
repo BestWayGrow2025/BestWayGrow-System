@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Withdraw</title>
+  <title>User Withdraw</title>
 </head>
 <body>
 
@@ -22,9 +22,11 @@
 <script src="withdrawal_system.js"></script>
 
 <script>
+
+// ================= INIT CORE =================
 initCoreSystem();
 
-// ================= GET USER =================
+// ================= AUTH =================
 let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!sessionUser) {
@@ -32,6 +34,7 @@ if (!sessionUser) {
   window.location.href = "user_login.html";
 }
 
+// ✅ GET USER
 let userId = sessionUser.userId;
 document.getElementById("userId").innerText = userId;
 
@@ -51,6 +54,11 @@ function submitWithdraw() {
   document.getElementById("msg").innerText = "✅ Withdraw request submitted";
 
   document.getElementById("amount").value = "";
+
+  // ✅ REDIRECT AFTER 1.5s (BETTER UX)
+  setTimeout(() => {
+    window.location.href = "user_dashboard.html";
+  }, 1500);
 }
 
 </script>
