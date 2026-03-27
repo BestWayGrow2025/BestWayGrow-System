@@ -18,7 +18,7 @@
   <button onclick="goTo('franchise_pin_requests.html')">📌 Pin Requests</button>
   <button onclick="goTo('franchise_upgrade.html')">⬆ Upgrade</button>
   <button onclick="goTo('franchise_wallet.html')">💰 Wallet</button>
-  <button onclick="goTo('login.html')">🔐 Switch Login</button>
+  <button onclick="goTo('franchisee_login.html')">🔐 Switch Login</button>
 </div>
 
 <p id="welcome"></p>
@@ -48,22 +48,29 @@
   <button onclick="viewRequests()">View Franchise Requests</button>
 </div>
 
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<script>
+  initCoreSystem();
+</script>
+
 <script>
 
-// ================= SAFE AUTH =================
+// ================= AUTH =================
 let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
-let users = JSON.parse(localStorage.getItem("users") || "[]");
 
 if (!sessionUser) {
   alert("Please login");
-  window.location.href = "login.html";
+  window.location.href = "franchisee_login.html";
 }
 
+let users = getUsers();
 let user = users.find(u => u.userId === sessionUser.userId);
 
 if (!user || user.role !== "franchise") {
   alert("Access denied");
-  window.location.href = "login.html";
+  window.location.href = "franchisee_login.html";
 }
 
 // ================= NAVIGATION =================
@@ -91,6 +98,7 @@ document.getElementById("income").innerText =
 // ================= TEAM =================
 function buildTeam(parentId) {
   let children = users.filter(u => u.introducerId === parentId);
+
   if (children.length === 0) return "No team members";
 
   let html = "<ul>";
@@ -112,7 +120,7 @@ function viewRequests() {
 // ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
+  window.location.href = "franchisee_login.html";
 }
 
 </script>
