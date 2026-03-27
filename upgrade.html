@@ -11,32 +11,21 @@
 
 <button onclick="upgrade()">Upgrade (₹2100)</button>
 
-<!-- ✅ CORE MUST -->
+<!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
-<script>
-  initCoreSystem();
-</script>
 
 <script>
 
-// =====================
-// GET USER FROM URL (FIXED)
-// =====================
+// ================= INIT CORE =================
+initCoreSystem();
+
+// ================= GET USER FROM URL =================
 let params = new URLSearchParams(window.location.search);
-let userId = params.get("user"); // ✅ FIXED
+let userId = params.get("user"); // ✅ FIXED (your dashboard uses ?user=)
 
-document.getElementById("userId").innerText = userId || "Not Found";
+document.getElementById("userId").innerText = userId;
 
-// =====================
-// WALLET INIT
-// =====================
-function initWallet(user) {
-  user.wallet = user.wallet || 0;
-}
-
-// =====================
-// 🔥 UGLI INCOME
-// =====================
+// ================= UGLI INCOME =================
 function payUGLIIncome(buyerId) {
 
   let users = getUsers();
@@ -51,10 +40,9 @@ function payUGLIIncome(buyerId) {
     let parent = users.find(u => u.userId === current.introducerId);
     if (!parent) break;
 
-    initWallet(parent);
+    parent.wallet = parent.wallet || 0;
 
     let income = (level === 1) ? 500 : 25;
-
     parent.wallet += income;
 
     current = parent;
@@ -64,9 +52,7 @@ function payUGLIIncome(buyerId) {
   saveUsers(users);
 }
 
-// =====================
-// UPGRADE ACTION
-// =====================
+// ================= UPGRADE =================
 function upgrade() {
 
   if (!userId) {
@@ -76,7 +62,7 @@ function upgrade() {
 
   payUGLIIncome(userId);
 
-  alert("Upgrade Successful! Income Distributed ✅");
+  alert("✅ Upgrade Successful! Income Distributed");
 
   // ✅ FIXED REDIRECT
   window.location.href = "user_dashboard.html";
