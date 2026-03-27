@@ -57,10 +57,6 @@
 <!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
 
-<script>
-  initCoreSystem(); // ✅ MUST
-</script>
-
 <!-- ✅ OTHER SYSTEMS -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
@@ -68,6 +64,9 @@
 <script src="withdrawal_system.js"></script>
 
 <script>
+
+// ================= INIT CORE =================
+initCoreSystem();
 
 // ================= AUTH =================
 let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -77,8 +76,7 @@ if (!sessionUser) {
   window.location.href = "user_login.html";
 }
 
-let users = getUsers();
-let user = users.find(u => u.userId === sessionUser.userId);
+let user = getUserById(sessionUser.userId);
 
 if (!user) {
   alert("User not found");
@@ -92,7 +90,7 @@ document.getElementById("welcome").innerText =
 
 // ================= PROFILE =================
 function getSponsor(u) {
-  let s = users.find(x => x.userId === u.sponsorId);
+  let s = getUserById(u.sponsorId);
   return s ? s.username + " (" + s.userId + ")" : "SYSTEM";
 }
 
@@ -152,41 +150,31 @@ function loadWithdrawHistory() {
   document.getElementById("withdrawHistory").innerHTML = html;
 }
 
-// ================= LINKS =================
+// ================= LINKS (UPDATED) =================
 let base = "https://bestwaygrow2025.github.io/BestWayGrow-System/";
 
 document.getElementById("links").innerHTML = `
   Register Link:<br>
-  ${base}register.html?ref=${user.userId}<br><br>
+  ${base}user.register.html?ref=${user.userId}<br><br>
 
   Upgrade Link:<br>
-  ${base}upgrade.html?user=${user.userId}<br><br>
+  ${base}user.upgrade.html?user=${user.userId}<br><br>
 
   Repurchase Link:<br>
-  ${base}repurchase.html?user=${user.userId}
+  ${base}user.repurchase.html?user=${user.userId}
 `;
 
 // ================= ACTIONS =================
 function upgrade() {
-  let pin = prompt("Enter Upgrade Pin:");
-  if (!pin) return;
-  usePin(pin, user.userId, "upgrade");
-  loadWallet(); loadTransactions();
+  window.location.href = "user.upgrade.html?user=" + user.userId;
 }
 
 function repurchase() {
-  let pin = prompt("Enter Repurchase Pin:");
-  if (!pin) return;
-  usePin(pin, user.userId, "repurchase");
-  loadWallet(); loadTransactions();
+  window.location.href = "user.repurchase.html?user=" + user.userId;
 }
 
 function withdraw() {
-  let amt = prompt("Enter amount:");
-  if (!amt || amt <= 0) return alert("Invalid amount");
-
-  requestWithdraw(user.userId, parseFloat(amt));
-  loadWallet(); loadTransactions(); loadWithdrawHistory();
+  window.location.href = "user.withdraw.html?user=" + user.userId;
 }
 
 // ================= APPLY FRANCHISE =================
