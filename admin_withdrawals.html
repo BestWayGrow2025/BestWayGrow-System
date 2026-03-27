@@ -36,6 +36,10 @@
 <!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
 
+<script>
+  initCoreSystem(); // ✅ MUST ADD
+</script>
+
 <!-- SYSTEM -->
 <script src="withdrawal_system.js"></script>
 
@@ -62,7 +66,6 @@ function loadRequests() {
 
   table.innerHTML = "";
 
-  // EMPTY STATE
   if (requests.length === 0) {
     table.innerHTML = "<tr><td colspan='8'>No withdrawal requests found</td></tr>";
     return;
@@ -95,14 +98,14 @@ function loadRequests() {
 
 // ================= APPROVE =================
 function approve(id) {
-  approveWithdraw(id); // from withdrawal_system.js
+  approveWithdraw(id);
   alert("✅ Approved");
   loadRequests();
 }
 
 // ================= REJECT =================
 function reject(id) {
-  rejectWithdraw(id); // from withdrawal_system.js
+  rejectWithdraw(id);
   alert("❌ Rejected");
   loadRequests();
 }
