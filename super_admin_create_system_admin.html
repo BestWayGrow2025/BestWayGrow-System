@@ -1,70 +1,125 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Create System Admin</title>
+  <title>Create Admin</title>
+
+  <!-- ✅ FIX favicon -->
+  <link rel="icon" href="data:,">
+
   <style>
     body { font-family: Arial; padding: 20px; }
-    input { margin-bottom: 10px; padding: 5px; width: 220px; }
-    button { padding: 6px 10px; cursor: pointer; }
+    .box { border: 1px solid #ccc; padding: 15px; }
+    button { padding: 8px; margin-top: 10px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h2>SUPER ADMIN → CREATE SYSTEM ADMIN</h2>
+<h2>SYSTEM ADMIN → CREATE ADMIN</h2>
 
-<input id="sysId" placeholder="System Admin ID"><br>
-<input id="sysName" placeholder="Name"><br>
-<input id="sysPass" type="password" placeholder="Password"><br>
+<div class="box">
+  <label>Admin ID:</label><br>
+  <input id="adminId"><br><br>
 
-<button onclick="createSystemAdmin()">Create System Admin</button>
+  <label>Name:</label><br>
+  <input id="name"><br><br>
+
+  <label>Password:</label><br>
+  <input id="password" type="password"><br><br>
+
+  <label>Type:</label><br>
+  <select id="type" onchange="toggleDepartments()">
+    <option value="A">All-in-One (Type A)</option>
+    <option value="B">Department (Type B)</option>
+  </select><br><br>
+
+  <div id="deptBox" style="display:none;">
+    <label>Select Departments:</label><br>
+    <input type="checkbox" value="finance"> Finance<br>
+    <input type="checkbox" value="franchisee"> Franchisee<br>
+    <input type="checkbox" value="kyc"> KYC<br>
+  </div>
+
+  <button onclick="createAdmin()">Create Admin</button>
+</div>
 
 <p id="msg"></p>
 
-<!-- ✅ CORE FIRST -->
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
-
 <script>
-  initCoreSystem();
+initCoreSystem();
 </script>
 
 <script>
 
 // ================= AUTH =================
-let superAdmin = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+let session = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
 
-if (!superAdmin) {
+if (!session) {
   alert("Access denied");
-  window.location.href = "super_admin_login.html";
+  window.location.href = "system_admin_login.html";
 }
 
-// ================= CREATE SYSTEM ADMIN =================
-function createSystemAdmin() {
+let currentUser = getUserById(session.userId);
 
-  let id = document.getElementById("sysId").value.trim();
-  let name = document.getElementById("sysName").value.trim();
-  let pass = document.getElementById("sysPass").value.trim();
+if (!currentUser || currentUser.role !== "system_admin") {
+  alert("Invalid session");
+  localStorage.removeItem("loggedInSystemAdmin");
+  window.location.href = "system_admin_login.html";
+}
 
-  if (!id || !name || !pass) {
+// ================= TOGGLE =================
+function toggleDepartments() {
+  let type = document.getElementById("type").value;
+  document.getElementById("deptBox").style.display =
+    (type === "B") ? "block" : "none";
+}
+
+// ================= CREATE ADMIN =================
+function createAdmin() {
+
+  let adminId = document.getElementById("adminId").value.trim();
+  let name = document.getElementById("name").value.trim();
+  let password = document.getElementById("password").value.trim();
+  let type = document.getElementById("type").value;
+
+  if (!adminId || !name || !password) {
     showMsg("❌ Fill all fields");
     return;
   }
 
   let users = getUsers();
 
-  // ✅ DUPLICATE CHECK (FIXED)
-  if (users.find(u => u.userId === id)) {
-    showMsg("⚠️ ID already exists");
+  // ✅ DUPLICATE CHECK (CASE SAFE)
+  if (users.find(u => u.userId.toLowerCase() === adminId.toLowerCase())) {
+    showMsg("⚠️ Admin already exists");
     return;
   }
 
-  // ✅ OPTIONAL: ENCODE PASSWORD (SAFE)
-  let encodedPass = btoa(pass);
+  let departments = [];
 
+  if (type === "B") {
+    document.querySelectorAll("#deptBox input:checked").forEach(cb => {
+      departments.push(cb.value);
+    });
+
+    if (departments.length === 0) {
+      showMsg("⚠️ Select at least one department");
+      return;
+    }
+
+  } else {
+    departments = ["finance", "franchisee", "kyc"];
+  }
+
+  // ✅ FINAL OBJECT (CORE FORMAT)
   let newAdmin = {
-    userId: id,
+    userId: adminId,
     username: name,
-    password: encodedPass,
-    role: "system_admin",
+    password: btoa(password), // 🔥 IMPORTANT
+    role: "admin",
+    type: type,
+    departments: departments,
     status: "active",
     createdAt: new Date().toISOString()
   };
@@ -72,19 +127,14 @@ function createSystemAdmin() {
   users.push(newAdmin);
   saveUsers(users);
 
-  showMsg("✅ System Admin created successfully");
+  showMsg("✅ Admin created successfully");
 
-  // CLEAR FORM
-  document.getElementById("sysId").value = "";
-  document.getElementById("sysName").value = "";
-  document.getElementById("sysPass").value = "";
-
-  console.log("System Admin Created:", newAdmin);
+  console.log("Admin Created:", newAdmin);
 }
 
 // ================= MESSAGE =================
-function showMsg(text) {
-  document.getElementById("msg").innerText = text;
+function showMsg(msg) {
+  document.getElementById("msg").innerText = msg;
 }
 
 </script>
