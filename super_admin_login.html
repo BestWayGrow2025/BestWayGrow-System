@@ -32,6 +32,15 @@ initCoreSystem();
 
 <script>
 
+// ================= GLOBAL LOGOUT =================
+function logoutAll() {
+  localStorage.removeItem("loggedInSuperAdmin");
+  localStorage.removeItem("loggedInSystemAdmin");
+  localStorage.removeItem("loggedInAdmin");
+  localStorage.removeItem("loggedInFranchise");
+  localStorage.removeItem("loggedInUser");
+}
+
 // ================= SAFE DECODE =================
 function safeDecode(p) {
   try {
@@ -54,7 +63,6 @@ function login() {
 
   let users = getUsers();
 
-  // ✅ FINAL LOGIN
   let user = users.find(u =>
     u.userId.toLowerCase() === userId.toLowerCase() &&
     u.role === "super_admin" &&
@@ -65,6 +73,9 @@ function login() {
     showMsg("❌ Invalid login");
     return;
   }
+
+  // ✅ IMPORTANT: clear all previous sessions
+  logoutAll();
 
   // ✅ SAVE SESSION
   localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
