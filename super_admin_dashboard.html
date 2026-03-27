@@ -42,7 +42,7 @@ let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
 
 if (!session) {
   alert("Access denied");
-  window.location.href = "superadmin_login.html";
+  window.location.href = "super_admin_login.html"; // ✅ FIXED
 }
 
 let user = getUserById(session.userId);
@@ -50,7 +50,7 @@ let user = getUserById(session.userId);
 if (!user || user.role !== "superadmin") {
   alert("Invalid session");
   localStorage.removeItem("loggedInSuperAdmin");
-  window.location.href = "superadmin_login.html";
+  window.location.href = "super_admin_login.html"; // ✅ FIXED
 }
 
 // ================= WELCOME =================
@@ -75,13 +75,13 @@ function loadSystem() {
 
 // ================= NAV =================
 function goCreateSystemAdmin() {
-  window.location.href = "superadmin_create_system_admin.html";
+  window.location.href = "super_admin_create_system_admin.html"; // ✅ CONSISTENT
 }
 
 // ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInSuperAdmin");
-  window.location.href = "superadmin_login.html";
+  window.location.href = "super_admin_login.html"; // ✅ FIXED
 }
 
 // ================= INIT =================
