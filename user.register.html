@@ -26,10 +26,9 @@
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem(); // ✅ MUST ADD
-</script>
 
-<script>
+// ================= INIT CORE =================
+initCoreSystem();
 
 // ================= PARAM =================
 let params = new URLSearchParams(window.location.search);
@@ -58,12 +57,12 @@ function handleRegister() {
 
   let position = positionElement.value;
 
-  // 🔥 FIX: position should NOT be passed as role
+  // ✅ REGISTER (CORE)
   let user = registerUser(username, password, introducerId);
 
   if (!user) return;
 
-  // ✅ SAVE EXTRA FIELDS
+  // ✅ SAVE EXTRA DATA
   let users = getUsers();
   let u = users.find(x => x.userId === user.userId);
 
