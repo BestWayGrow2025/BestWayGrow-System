@@ -84,7 +84,7 @@ function registerUser(username, password, introducerId, role = "user") {
   let newUser = {
     userId: generateUserId(),
     username: username.trim(),
-    password: btoa(password.trim()), // encoded
+    password: btoa(password.trim()),
     role: role,
     introducerId: introducerId,
     createdAt: new Date().toISOString(),
@@ -107,7 +107,6 @@ function registerUser(username, password, introducerId, role = "user") {
 // ===================================
 // 🔹 ACTIVE SYSTEM
 // ===================================
-
 function isUserActive(userId) {
   let user = getUserById(userId);
   if (!user) return false;
@@ -129,7 +128,7 @@ function activateUser(userId) {
 
   user.activeTill = nextMonth.toISOString();
   user.isActive = true;
-  user.status = "active"; // ✅ FIX
+  user.status = "active";
 
   saveUsers(users);
 }
@@ -278,9 +277,31 @@ function importData(file) {
 
 
 // ===================================
-// 🔹 INIT SYSTEM
+// 🔹 INIT SYSTEM (FINAL FIXED)
 // ===================================
 function initCoreSystem() {
+
   enableCopyProtection();
   checkSystemLock();
+
+  let users = getUsers();
+
+  // ✅ CREATE DEFAULT SUPER ADMIN (ONLY ONCE)
+  let exists = users.find(u => u.role === "super_admin");
+
+  if (!exists) {
+    let superAdmin = {
+      userId: "BWG000000",
+      username: "Super Admin",
+      password: btoa("123"),
+      role: "super_admin",
+      status: "active",
+      createdAt: new Date().toISOString()
+    };
+
+    users.push(superAdmin);
+    saveUsers(users);
+
+    console.log("✅ Default Super Admin Created");
+  }
 }
