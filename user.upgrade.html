@@ -16,16 +16,13 @@
 
 <script>
 
-// ================= INIT CORE =================
-initCoreSystem();
-
-// ================= GET USER FROM URL =================
+// GET USER FROM URL
 let params = new URLSearchParams(window.location.search);
-let userId = params.get("user"); // ✅ FIXED (your dashboard uses ?user=)
+let userId = params.get("user");
 
 document.getElementById("userId").innerText = userId;
 
-// ================= UGLI INCOME =================
+// 🔥 UGLI INCOME (CLEAN)
 function payUGLIIncome(buyerId) {
 
   let users = getUsers();
@@ -43,6 +40,7 @@ function payUGLIIncome(buyerId) {
     parent.wallet = parent.wallet || 0;
 
     let income = (level === 1) ? 500 : 25;
+
     parent.wallet += income;
 
     current = parent;
@@ -52,7 +50,7 @@ function payUGLIIncome(buyerId) {
   saveUsers(users);
 }
 
-// ================= UPGRADE =================
+// UPGRADE ACTION
 function upgrade() {
 
   if (!userId) {
@@ -62,12 +60,15 @@ function upgrade() {
 
   payUGLIIncome(userId);
 
-  alert("✅ Upgrade Successful! Income Distributed");
+  alert("Upgrade Successful ✅");
 
-  // ✅ FIXED REDIRECT
   window.location.href = "user_dashboard.html";
 }
 
+</script>
+
+<script>
+  initCoreSystem();
 </script>
 
 </body>
