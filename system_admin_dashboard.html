@@ -17,10 +17,10 @@
 
 <!-- ================= NAVIGATION ================= -->
 <div class="nav">
-  <button onclick="goTo('admin_approval_panel.html')">📋 Approval Panel</button>
+  <button onclick="goTo('admin_franchise_requests.html')">📋 Approval Panel</button>
   <button onclick="goTo('admin_reports.html')">📊 Reports</button>
   <button onclick="goTo('admin_withdrawals.html')">💰 Withdrawals</button>
-  <button onclick="goTo('franchisee_login.html')">🏢 Franchise</button>
+  <button onclick="goTo('franchise_login.html')">🏢 Franchise</button>
 </div>
 
 <hr>
@@ -48,59 +48,55 @@
 <button onclick="createAdmin()">Create Admin</button>
 <p id="msg"></p>
 
-<!-- ================= 🔥 PIN REQUEST APPROVAL ================= -->
+<!-- ================= PIN REQUEST ================= -->
 <div class="box">
   <h3>Pin Requests (Franchise)</h3>
   <div id="requests"></div>
 </div>
 
-<!-- ================= 🔐 SYSTEM CONTROL ================= -->
+<!-- ================= SYSTEM CONTROL ================= -->
 <div class="box">
   <h3>System Control</h3>
   <button onclick="lockSystem()">🔒 Lock System</button>
   <button onclick="unlockSystem()">🔓 Unlock System</button>
-  <br><br>
-  <button onclick="exportData()">💾 Export Backup</button>
-  <br><br>
-  <input type="file" onchange="importData(this.files[0])">
 </div>
 
-<!-- ================= SCRIPTS ================= -->
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<script>
+  initCoreSystem();
+</script>
+
+<!-- SYSTEM -->
 <script src="pin_system.js"></script>
 <script src="pin_request_system.js"></script>
-<script src="security_system.js"></script>
 
 <script>
 
 // ================= AUTH =================
 let sysAdmin = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
+
 if (!sysAdmin) {
   alert("Access denied");
   window.location.href = "system_admin_login.html";
 }
 
-// ================= NAVIGATION =================
+// ================= NAV =================
 function goTo(page) {
   window.location.href = page;
 }
 
-// ================= SHOW/HIDE DEPARTMENTS =================
+// ================= TOGGLE =================
 function toggleDepartments() {
   let type = document.getElementById("type").value;
   document.getElementById("departmentsBox").style.display =
     type === "department" ? "block" : "none";
 }
 
-// ================= STORAGE =================
-function getAdmins() {
-  return JSON.parse(localStorage.getItem("admins") || "[]");
-}
-function saveAdmins(data) {
-  localStorage.setItem("admins", JSON.stringify(data));
-}
-
 // ================= CREATE ADMIN =================
 function createAdmin() {
+
   let adminId = document.getElementById("adminId").value.trim();
   let name = document.getElementById("name").value.trim();
   let password = document.getElementById("password").value.trim();
@@ -111,9 +107,9 @@ function createAdmin() {
     return;
   }
 
-  let admins = getAdmins();
+  let users = getUsers();
 
-  if (admins.find(a => a.userId === adminId)) {
+  if (users.find(u => u.userId === adminId)) {
     showMsg("⚠️ Admin already exists");
     return;
   }
@@ -134,8 +130,8 @@ function createAdmin() {
 
   let newAdmin = {
     userId: adminId,
-    name: name,
-    password: password,
+    username: name,
+    password: btoa(password), // ✅ encoded
     role: "admin",
     type: type,
     departments: departments,
@@ -143,16 +139,14 @@ function createAdmin() {
     status: "active"
   };
 
-  admins.push(newAdmin);
-  saveAdmins(admins);
+  users.push(newAdmin);
+  saveUsers(users);
 
-  showMsg("✅ Admin created successfully");
+  showMsg("✅ Admin created");
 
   document.getElementById("adminId").value = "";
   document.getElementById("name").value = "";
   document.getElementById("password").value = "";
-
-  console.log("Admin Created:", newAdmin);
 }
 
 // ================= MESSAGE =================
@@ -160,12 +154,13 @@ function showMsg(text) {
   document.getElementById("msg").innerText = text;
 }
 
-// ================= LOAD PIN REQUESTS =================
+// ================= PIN REQUEST =================
 function loadRequests() {
+
   let requests = JSON.parse(localStorage.getItem("pinRequests") || "[]");
 
   if (requests.length === 0) {
-    document.getElementById("requests").innerHTML = "No requests found";
+    document.getElementById("requests").innerHTML = "No requests";
     return;
   }
 
@@ -173,7 +168,7 @@ function loadRequests() {
 
   requests.slice().reverse().forEach(r => {
     html += `<li>
-      ${r.requestId} | Pin: ${r.pinId} | Qty: ${r.quantity} | Status: ${r.status}
+      ${r.requestId} | Qty: ${r.quantity} | ${r.status}
       <br>
       ${r.status === "PENDING" ? `
         <button onclick="approve('${r.requestId}')">Approve</button>
@@ -187,13 +182,11 @@ function loadRequests() {
   document.getElementById("requests").innerHTML = html;
 }
 
-// ================= APPROVE =================
 function approve(id) {
   approvePinRequest(id);
   loadRequests();
 }
 
-// ================= REJECT =================
 function reject(id) {
   rejectPinRequest(id);
   loadRequests();
@@ -201,16 +194,16 @@ function reject(id) {
 
 // ================= SYSTEM CONTROL =================
 function lockSystem() {
-  let settings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-  settings.lockMode = true;
-  localStorage.setItem("systemSettings", JSON.stringify(settings));
+  let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+  s.lockMode = true;
+  localStorage.setItem("systemSettings", JSON.stringify(s));
   alert("System Locked");
 }
 
 function unlockSystem() {
-  let settings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-  settings.lockMode = false;
-  localStorage.setItem("systemSettings", JSON.stringify(settings));
+  let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+  s.lockMode = false;
+  localStorage.setItem("systemSettings", JSON.stringify(s));
   alert("System Unlocked");
 }
 
