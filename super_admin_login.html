@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Super Admin Login</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { margin-bottom: 10px; padding: 6px; width: 220px; }
+    button { padding: 6px 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h2>SUPER ADMIN LOGIN</h2>
+
+<input id="userId" placeholder="Super Admin ID"><br>
+<input id="password" type="password" placeholder="Password"><br>
+
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+
+<!-- ✅ CORE FIRST -->
+<script src="CORE_system.js"></script>
+
+<script>
+  initCoreSystem();
+</script>
+
+<script>
+
+// ================= LOGIN =================
+function login() {
+
+  let userId = document.getElementById("userId").value.trim();
+  let password = document.getElementById("password").value.trim();
+
+  if (!userId || !password) {
+    showMsg("⚠️ Enter ID & Password");
+    return;
+  }
+
+  let users = getUsers();
+
+  let user = users.find(u =>
+    u.userId === userId &&
+    u.role === "super_admin" &&
+    atob(u.password) === password
+  );
+
+  if (!user) {
+    showMsg("❌ Invalid login");
+    return;
+  }
+
+  // ✅ SESSION SAVE
+  localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
+    userId: user.userId,
+    role: user.role
+  }));
+
+  showMsg("✅ Login successful");
+
+  setTimeout(() => {
+    window.location.href = "super_admin_dashboard.html";
+  }, 800);
+}
+
+// ================= MESSAGE =================
+function showMsg(text) {
+  document.getElementById("msg").innerText = text;
+}
+
+</script>
+
+</body>
+</html>
