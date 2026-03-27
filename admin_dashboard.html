@@ -35,10 +35,9 @@
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem(); // ✅ MUST ADD
-</script>
 
-<script>
+// ================= INIT CORE =================
+initCoreSystem();
 
 // ================= AUTH =================
 let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
@@ -48,16 +47,10 @@ if (!adminSession) {
   window.location.href = "admin_login.html";
 }
 
-// ================= USERS =================
-let users = getUsers();
+// ✅ FINAL: ONLY userId (NO adminId confusion)
+let admin = getUserById(adminSession.userId);
 
-// ✅ FIX: support both adminId & userId
-let admin = users.find(u =>
-  (u.userId === adminSession.adminId || u.userId === adminSession.userId)
-  && u.role === "admin"
-);
-
-if (!admin) {
+if (!admin || admin.role !== "admin") {
   alert("Admin not found");
   localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
@@ -89,7 +82,7 @@ function openFranchise() {
 }
 
 function openWithdraw() {
-  window.location.href = "admin_withdraw_panel.html";
+  window.location.href = "admin_withdrawals.html";
 }
 
 function openReports() {
@@ -105,4 +98,4 @@ function logout() {
 </script>
 
 </body>
-</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
