@@ -23,7 +23,7 @@
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem();
+initCoreSystem();
 </script>
 
 <script>
@@ -41,7 +41,7 @@ function login() {
 
   let users = getUsers();
 
-  // ✅ CHECK FROM CORE USERS
+  // ✅ FINAL CHECK (CORE BASED)
   let user = users.find(u =>
     u.userId === userId &&
     u.role === "system_admin" &&
@@ -53,9 +53,10 @@ function login() {
     return;
   }
 
-  // ✅ SAVE SESSION (CLEAN FORMAT)
+  // ✅ SAVE CLEAN SESSION
   localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
-    userId: user.userId
+    userId: user.userId,
+    role: user.role
   }));
 
   showMsg("✅ Login successful");
