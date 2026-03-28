@@ -108,42 +108,17 @@
 <script src="CORE_system.js"></script>
 
 <script>
+
+// ================= INIT =================
 initCoreSystem();
 
-// ================= AUTH =================
-let session = JSON.parse(localStorage.getItem("loggedInAdmin"));
+// 🔥 GLOBAL SECURITY (REPLACES ALL OLD AUTH)
+let admin = protectPage({
+  role: "admin"
+});
 
-if (!session) {
-  alert("Access denied");
-  window.location.href = "admin_login.html";
-}
-
-let admin = getUserById(session.userId);
-
-if (!admin || admin.role !== "admin") {
-  alert("Invalid session");
-  localStorage.removeItem("loggedInAdmin");
-  window.location.href = "admin_login.html";
-}
-
-// 🔥 STATUS CHECK (IMPORTANT)
-if (admin.status !== "active") {
-  alert("Account inactive by System Admin");
-  logout();
-}
-
-// 🔥 SYSTEM ACCESS CHECK
+// ================= SYSTEM SETTINGS =================
 let s = getSystemSettings();
-
-if (s.adminAccess === false) {
-  alert("Admin access OFF by Super Admin");
-  logout();
-}
-
-if (s.lockMode === true) {
-  alert("System locked by Super Admin");
-  logout();
-}
 
 // ================= WELCOME =================
 document.getElementById("welcome").innerText =
@@ -170,7 +145,6 @@ if (admin.type === "B") {
 
   let depts = admin.departments || [];
 
-  // ✅ MATCH FIXED HERE
   if (!depts.includes("finance")) {
     document.getElementById("financeCard").style.display = "none";
   }
