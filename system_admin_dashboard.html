@@ -2,74 +2,22 @@
 <html>
 <head>
   <title>System Admin Dashboard</title>
-
   <link rel="icon" href="data:,">
 
   <style>
-    body {
-      font-family: 'Segoe UI', Arial;
-      margin: 0;
-      background: #f4f7f9;
-      text-align: center;
-    }
-
-    header {
-      background: #004d66;
-      color: white;
-      padding: 20px;
-    }
-
-    .container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .card {
-      background: white;
-      width: 320px;
-      margin: 15px;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    input, select {
-      width: 90%;
-      padding: 6px;
-      margin: 5px 0;
-    }
-
-    button {
-      padding: 8px 15px;
-      margin-top: 8px;
-      border: none;
-      background: #0077b5;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #005f8a;
-    }
-
-    footer {
-      background: #003344;
-      color: white;
-      padding: 15px;
-      margin-top: 20px;
-    }
+    body { font-family: Arial; text-align:center; }
+    .card { background:#fff; padding:20px; margin:15px; border-radius:10px; box-shadow:0 4px 10px #ccc;}
+    .container { display:flex; flex-wrap:wrap; justify-content:center; }
+    table { width:100%; margin-top:10px; border-collapse: collapse; }
+    th,td { border:1px solid #ddd; padding:8px; }
+    button { padding:6px 10px; cursor:pointer; }
   </style>
 </head>
 
 <body>
 
-<header>
-  <h2>SYSTEM ADMIN DASHBOARD</h2>
-  <button onclick="logout()">Logout</button>
-</header>
+<h2>SYSTEM ADMIN DASHBOARD</h2>
+<button onclick="logout()">Logout</button>
 
 <div class="container">
 
@@ -77,37 +25,27 @@
   <div class="card">
     <h3>Create Admin</h3>
 
-    <input id="adminId" placeholder="Admin ID">
-    <input id="name" placeholder="Name">
-    <input id="password" type="password" placeholder="Password">
-
-    <select id="type" onchange="toggleDepartments()">
-      <option value="A">All-in-One</option>
-      <option value="B">Department</option>
-    </select>
-
-    <div id="deptBox" style="display:none;">
-      <label><input type="checkbox" value="finance"> Finance</label><br>
-      <label><input type="checkbox" value="franchisee"> Franchise</label><br>
-      <label><input type="checkbox" value="kyc"> KYC</label>
-    </div>
+    <input id="adminId" placeholder="Admin ID"><br>
+    <input id="name" placeholder="Name"><br>
+    <input id="password" type="password" placeholder="Password"><br>
 
     <button onclick="createAdmin()">Create</button>
     <p id="msg"></p>
   </div>
 
-  <!-- SYSTEM INFO (READ ONLY ✅) -->
+  <!-- ADMIN LIST (🔥 MAIN FIX) -->
   <div class="card">
-    <h3>System Status (View Only)</h3>
+    <h3>Admin List</h3>
+    <div id="adminList"></div>
+  </div>
+
+  <!-- SYSTEM STATUS -->
+  <div class="card">
+    <h3>System Status</h3>
     <p id="systemStatus"></p>
   </div>
 
 </div>
-
-<footer>
-  ⬅ Back to Home <br>
-  © 2026 BestWayGrow
-</footer>
 
 <script src="CORE_system.js"></script>
 <script>
@@ -129,27 +67,14 @@ if (!currentUser || currentUser.role !== "system_admin") {
   window.location.href = "system_admin_login.html";
 }
 
-// ================= SYSTEM STATUS VIEW =================
+// ================= SYSTEM STATUS =================
 function loadSystem() {
-
   let s = getSystemSettings();
 
   document.getElementById("systemStatus").innerHTML = `
     Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
-    Franchise Access: ${s.franchiseAccess ? "ON" : "OFF"} <br>
-    Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
-    Upgrades: ${s.upgradesOpen !== false ? "OPEN" : "CLOSED"} <br>
-    Finance Dept: ${s.finance ? "ON" : "OFF"} <br>
-    Franchise Dept: ${s.franchise ? "ON" : "OFF"} <br>
-    KYC Dept: ${s.kyc ? "ON" : "OFF"}
+    Lock Mode: ${s.lockMode ? "LOCKED" : "UNLOCKED"}
   `;
-}
-
-// ================= TOGGLE =================
-function toggleDepartments() {
-  let type = document.getElementById("type").value;
-  document.getElementById("deptBox").style.display =
-    (type === "B") ? "block" : "none";
 }
 
 // ================= CREATE ADMIN =================
@@ -158,7 +83,6 @@ function createAdmin() {
   let adminId = document.getElementById("adminId").value.trim();
   let name = document.getElementById("name").value.trim();
   let password = document.getElementById("password").value.trim();
-  let type = document.getElementById("type").value;
 
   if (!adminId || !name || !password) {
     showMsg("❌ Fill all fields");
@@ -168,46 +92,85 @@ function createAdmin() {
   let users = getUsers();
 
   if (users.find(u => u.userId.toLowerCase() === adminId.toLowerCase())) {
-    showMsg("⚠️ Admin already exists");
+    showMsg("⚠️ Admin exists");
     return;
   }
 
-  let departments = [];
-
-  if (type === "B") {
-    document.querySelectorAll("#deptBox input:checked").forEach(cb => {
-      departments.push(cb.value);
-    });
-
-    if (departments.length === 0) {
-      showMsg("⚠️ Select at least one department");
-      return;
-    }
-
-  } else {
-    departments = ["finance", "franchisee", "kyc"];
-  }
-
-  let newAdmin = {
+  users.push({
     userId: adminId,
     username: name,
     password: btoa(password),
     role: "admin",
-    type,
-    departments,
-    createdBy: currentUser.userId,
     status: "active",
-    createdAt: new Date().toISOString()
-  };
+    createdBy: currentUser.userId
+  });
 
-  users.push(newAdmin);
   saveUsers(users);
 
-  showMsg("✅ Admin created successfully");
+  showMsg("✅ Created");
 
-  document.getElementById("adminId").value = "";
-  document.getElementById("name").value = "";
-  document.getElementById("password").value = "";
+  loadAdmins(); // 🔥 refresh list
+}
+
+// ================= ADMIN LIST =================
+function loadAdmins() {
+
+  let users = getUsers();
+  let s = getSystemSettings();
+
+  let admins = users.filter(u => u.role === "admin");
+
+  if (admins.length === 0) {
+    document.getElementById("adminList").innerHTML = "No Admin";
+    return;
+  }
+
+  let html = `
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+  `;
+
+  admins.forEach(a => {
+
+    let isActive = a.status === "active";
+
+    html += `
+      <tr>
+        <td>${a.userId}</td>
+        <td>${a.username}</td>
+        <td>${isActive ? "ACTIVE" : "INACTIVE"}</td>
+        <td>
+          <button onclick="toggleAdmin('${a.userId}')">
+            ${isActive ? "Deactivate" : "Activate"}
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("adminList").innerHTML = html;
+}
+
+// ================= TOGGLE ADMIN =================
+function toggleAdmin(id) {
+
+  let users = getUsers();
+  let admin = users.find(u => u.userId === id);
+
+  if (!admin) return;
+
+  admin.status = (admin.status === "active") ? "inactive" : "active";
+
+  saveUsers(users);
+
+  loadAdmins();
 }
 
 // ================= LOGOUT =================
@@ -223,6 +186,7 @@ function showMsg(msg) {
 
 // ================= INIT =================
 loadSystem();
+loadAdmins();
 
 </script>
 
