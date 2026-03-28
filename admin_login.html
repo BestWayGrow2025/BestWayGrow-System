@@ -3,7 +3,6 @@
 <head>
   <title>Admin Login</title>
 
-  <!-- ✅ FIX: remove favicon 404 -->
   <link rel="icon" href="data:,">
 
   <style>
@@ -23,7 +22,6 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
 
 <script>
@@ -47,21 +45,39 @@ function login() {
   let pass = document.getElementById("password").value.trim();
 
   if (!id || !pass) {
-    document.getElementById("msg").innerText = "⚠ Enter ID & Password";
+    showMsg("⚠ Enter ID & Password");
     return;
   }
 
   let users = getUsers();
 
   let admin = users.find(u =>
-    u.userId.toLowerCase() === id.toLowerCase() &&   // ✅ case-insensitive
+    u.userId.toLowerCase() === id.toLowerCase() &&
     u.role === "admin" &&
-    u.status !== "blocked" &&
-    (u.password === pass || safeDecode(u.password) === pass) // ✅ safe check
+    (u.password === pass || safeDecode(u.password) === pass)
   );
 
   if (!admin) {
-    document.getElementById("msg").innerText = "❌ Invalid login";
+    showMsg("❌ Invalid login");
+    return;
+  }
+
+  // 🔥 STATUS CONTROL (VERY IMPORTANT)
+  if (admin.status !== "active") {
+    showMsg("🚫 Account inactive by System Admin");
+    return;
+  }
+
+  // 🔥 SYSTEM ACCESS CONTROL (FROM SUPER ADMIN)
+  let settings = getSystemSettings();
+  if (settings.adminAccess === false) {
+    showMsg("🚫 Admin access OFF by Super Admin");
+    return;
+  }
+
+  // 🔥 SYSTEM LOCK (BLOCK LOWER ROLES)
+  if (settings.lockMode === true) {
+    showMsg("🚫 System locked by Super Admin");
     return;
   }
 
@@ -70,8 +86,17 @@ function login() {
     userId: admin.userId
   }));
 
+  showMsg("✅ Login successful");
+
   // ✅ REDIRECT
-  window.location.href = "admin_dashboard.html";
+  setTimeout(() => {
+    window.location.href = "admin_dashboard.html";
+  }, 800);
+}
+
+// ================= MESSAGE =================
+function showMsg(text) {
+  document.getElementById("msg").innerText = text;
 }
 
 </script>
