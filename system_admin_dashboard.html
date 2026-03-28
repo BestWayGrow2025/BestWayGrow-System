@@ -30,13 +30,11 @@
     <input id="name" placeholder="Name"><br>
     <input id="password" type="password" placeholder="Password"><br>
 
-    <!-- ✅ TYPE SYSTEM ADDED -->
     <select id="type" onchange="toggleDepartments()">
       <option value="A">TYPE A - All in One</option>
       <option value="B">TYPE B - Department Wise</option>
     </select>
 
-    <!-- ✅ DEPARTMENT BOX -->
     <div id="deptBox" style="display:none; text-align:left;">
       <label><input type="checkbox" value="finance"> Finance</label><br>
       <label><input type="checkbox" value="franchise"> Franchise</label><br>
@@ -62,24 +60,16 @@
 </div>
 
 <script src="CORE_system.js"></script>
+
 <script>
+
+// ================= INIT =================
 initCoreSystem();
 
-// ================= AUTH =================
-let session = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
-
-if (!session) {
-  alert("Access denied");
-  window.location.href = "system_admin_login.html";
-}
-
-let currentUser = getUserById(session.userId);
-
-if (!currentUser || currentUser.role !== "system_admin") {
-  alert("Invalid session");
-  localStorage.removeItem("loggedInSystemAdmin");
-  window.location.href = "system_admin_login.html";
-}
+// 🔥 GLOBAL SECURITY
+let currentUser = protectPage({
+  role: "system_admin"
+});
 
 // ================= TYPE SWITCH =================
 function toggleDepartments() {
@@ -130,7 +120,8 @@ function createAdmin() {
       return;
     }
   } else {
-    departments = ["finance","franchise","kyc"];
+    // ✅ FIX: FULL ACCESS FOR TYPE A
+    departments = ["finance","franchise","kyc","report"];
   }
 
   users.push({
