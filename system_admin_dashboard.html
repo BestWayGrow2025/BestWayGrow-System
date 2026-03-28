@@ -9,8 +9,9 @@
     .card { background:#fff; padding:20px; margin:15px; border-radius:10px; box-shadow:0 4px 10px #ccc;}
     .container { display:flex; flex-wrap:wrap; justify-content:center; }
     table { width:100%; margin-top:10px; border-collapse: collapse; }
-    th,td { border:1px solid #ddd; padding:8px; }
+    th,td { border:1px solid #ddd; padding:8px; font-size:13px; }
     button { padding:6px 10px; cursor:pointer; }
+    select, input { padding:6px; margin:5px; width:85%; }
   </style>
 </head>
 
@@ -29,11 +30,24 @@
     <input id="name" placeholder="Name"><br>
     <input id="password" type="password" placeholder="Password"><br>
 
+    <!-- ✅ TYPE SYSTEM ADDED -->
+    <select id="type" onchange="toggleDepartments()">
+      <option value="A">TYPE A - All in One</option>
+      <option value="B">TYPE B - Department Wise</option>
+    </select>
+
+    <!-- ✅ DEPARTMENT BOX -->
+    <div id="deptBox" style="display:none; text-align:left;">
+      <label><input type="checkbox" value="finance"> Finance</label><br>
+      <label><input type="checkbox" value="franchise"> Franchise</label><br>
+      <label><input type="checkbox" value="kyc"> KYC</label>
+    </div>
+
     <button onclick="createAdmin()">Create</button>
     <p id="msg"></p>
   </div>
 
-  <!-- ADMIN LIST (🔥 MAIN FIX) -->
+  <!-- ADMIN LIST -->
   <div class="card">
     <h3>Admin List</h3>
     <div id="adminList"></div>
@@ -67,6 +81,13 @@ if (!currentUser || currentUser.role !== "system_admin") {
   window.location.href = "system_admin_login.html";
 }
 
+// ================= TYPE SWITCH =================
+function toggleDepartments() {
+  let type = document.getElementById("type").value;
+  document.getElementById("deptBox").style.display =
+    (type === "B") ? "block" : "none";
+}
+
 // ================= SYSTEM STATUS =================
 function loadSystem() {
   let s = getSystemSettings();
@@ -83,6 +104,7 @@ function createAdmin() {
   let adminId = document.getElementById("adminId").value.trim();
   let name = document.getElementById("name").value.trim();
   let password = document.getElementById("password").value.trim();
+  let type = document.getElementById("type").value;
 
   if (!adminId || !name || !password) {
     showMsg("❌ Fill all fields");
@@ -96,11 +118,28 @@ function createAdmin() {
     return;
   }
 
+  let departments = [];
+
+  if (type === "B") {
+    document.querySelectorAll("#deptBox input:checked").forEach(cb => {
+      departments.push(cb.value);
+    });
+
+    if (departments.length === 0) {
+      showMsg("⚠️ Select at least one department");
+      return;
+    }
+  } else {
+    departments = ["finance","franchise","kyc"];
+  }
+
   users.push({
     userId: adminId,
     username: name,
     password: btoa(password),
     role: "admin",
+    type: type,
+    departments: departments,
     status: "active",
     createdBy: currentUser.userId
   });
@@ -109,15 +148,17 @@ function createAdmin() {
 
   showMsg("✅ Created");
 
-  loadAdmins(); // 🔥 refresh list
+  document.getElementById("adminId").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("password").value = "";
+
+  loadAdmins();
 }
 
 // ================= ADMIN LIST =================
 function loadAdmins() {
 
   let users = getUsers();
-  let s = getSystemSettings();
-
   let admins = users.filter(u => u.role === "admin");
 
   if (admins.length === 0) {
@@ -130,6 +171,8 @@ function loadAdmins() {
       <tr>
         <th>ID</th>
         <th>Name</th>
+        <th>Type</th>
+        <th>Departments</th>
         <th>Status</th>
         <th>Action</th>
       </tr>
@@ -143,6 +186,8 @@ function loadAdmins() {
       <tr>
         <td>${a.userId}</td>
         <td>${a.username}</td>
+        <td>${a.type}</td>
+        <td>${(a.departments || []).join(", ")}</td>
         <td>${isActive ? "ACTIVE" : "INACTIVE"}</td>
         <td>
           <button onclick="toggleAdmin('${a.userId}')">
