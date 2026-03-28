@@ -129,11 +129,7 @@ initCoreSystem();
 
 // ================= SAFE DECODE =================
 function safeDecode(p) {
-  try {
-    return atob(p);
-  } catch {
-    return p;
-  }
+  try { return atob(p); } catch { return p; }
 }
 
 // ================= AUTH =================
@@ -172,7 +168,7 @@ function loadSystem() {
   `;
 }
 
-// ================= TOGGLE =================
+// ================= TOGGLE SYSTEM =================
 function toggle(key) {
 
   let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
@@ -184,7 +180,7 @@ function toggle(key) {
   loadSystem();
 }
 
-// ================= SYSTEM ADMIN LIST =================
+// ================= LOAD SYSTEM ADMINS =================
 function loadAdmins() {
 
   let users = getUsers();
@@ -203,6 +199,7 @@ function loadAdmins() {
         <th>Name</th>
         <th>Password</th>
         <th>Status</th>
+        <th>Action</th>
       </tr>
   `;
 
@@ -213,6 +210,11 @@ function loadAdmins() {
         <td>${a.username}</td>
         <td>${safeDecode(a.password)}</td>
         <td>${a.status || "active"}</td>
+        <td>
+          <button onclick="toggleUser('${a.userId}')">
+            ${a.status === "inactive" ? "Activate" : "Deactivate"}
+          </button>
+        </td>
       </tr>
     `;
   });
@@ -222,6 +224,22 @@ function loadAdmins() {
   document.getElementById("adminList").innerHTML = html;
 }
 
+// ================= TOGGLE USER =================
+function toggleUser(userId) {
+
+  let users = getUsers();
+
+  let u = users.find(x => x.userId === userId);
+
+  if (!u) return;
+
+  u.status = (u.status === "inactive") ? "active" : "inactive";
+
+  saveUsers(users);
+
+  loadAdmins();
+}
+
 // ================= NAV =================
 function goCreateSystemAdmin() {
   window.location.href = "super_admin_create_system_admin.html";
@@ -229,7 +247,7 @@ function goCreateSystemAdmin() {
 
 // ================= LOGOUT =================
 function logout() {
-  localStorage.removeItem("loggedInSuperAdmin"); // ✅ SAFE
+  localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
 }
 
