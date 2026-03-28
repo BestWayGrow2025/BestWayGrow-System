@@ -33,32 +33,6 @@
       padding: 25px;
       border-radius: 15px;
       box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-      transition: 0.3s;
-    }
-
-    .card:hover {
-      transform: translateY(-6px);
-    }
-
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background: linear-gradient(90deg, #0077b5, #00aaff);
-      color: white;
-    }
-
-    button:hover {
-      background: linear-gradient(90deg, #005f8a, #008ecc);
-    }
-
-    footer {
-      margin-top: 30px;
-      background: #00331a;
-      color: white;
-      padding: 15px;
     }
 
     table {
@@ -75,6 +49,12 @@
 
     th {
       background: #f0f0f0;
+    }
+
+    button {
+      padding: 8px;
+      margin-top: 5px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -94,40 +74,30 @@
     <h3>System Status</h3>
     <p id="systemStatus"></p>
 
-    <button onclick="toggle('adminAccess')">Toggle Admin Access</button>
-    <button onclick="toggle('franchiseAccess')">Toggle Franchise</button>
-    <button onclick="toggle('registrationOpen')">Toggle Registration</button>
-    <button onclick="toggle('upgradesOpen')">Toggle Upgrades</button>
-    <button onclick="toggle('finance')">Finance Dept</button>
-    <button onclick="toggle('franchise')">Franchise Dept</button>
-    <button onclick="toggle('kyc')">KYC Dept</button>
-  </div>
-
-  <!-- CREATE SYSTEM ADMIN -->
-  <div class="card">
-    <h3>Create System Admin</h3>
-    <p>Manage system-level admins</p>
-    <button onclick="goCreateSystemAdmin()">Open</button>
+    <button onclick="toggle('adminAccess')">Admin Access</button>
+    <button onclick="toggle('franchiseAccess')">Franchise Access</button>
+    <button onclick="toggle('registrationOpen')">Registration</button>
+    <button onclick="toggle('upgradesOpen')">Upgrades</button>
   </div>
 
   <!-- SYSTEM ADMIN LIST -->
   <div class="card">
     <h3>System Admins</h3>
+    <div id="sysAdminList"></div>
+  </div>
+
+  <!-- 🔥 NEW ADMIN CONTROL -->
+  <div class="card">
+    <h3>Admins Control</h3>
     <div id="adminList"></div>
   </div>
 
 </div>
 
-<footer>
-  ⬅ <a href="index.html" style="color:white;">Back to Home</a><br>
-  © 2026 BestWayGrow
-</footer>
-
 <script src="CORE_system.js"></script>
 <script>
 initCoreSystem();
 
-// ================= SAFE DECODE =================
 function safeDecode(p) {
   try { return atob(p); } catch { return p; }
 }
@@ -148,75 +118,85 @@ if (!user || user.role !== "super_admin") {
   window.location.href = "super_admin_login.html";
 }
 
-// ================= WELCOME =================
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// ================= SYSTEM STATUS =================
+// ================= SYSTEM =================
 function loadSystem() {
-
-  let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+  let s = getSystemSettings();
 
   document.getElementById("systemStatus").innerHTML = `
     Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
-    Franchise Access: ${s.franchiseAccess ? "ON" : "OFF"} <br>
-    Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
-    Upgrades: ${s.upgradesOpen !== false ? "OPEN" : "CLOSED"} <br>
-    Finance Dept: ${s.finance ? "ON" : "OFF"} <br>
-    Franchise Dept: ${s.franchise ? "ON" : "OFF"} <br>
-    KYC Dept: ${s.kyc ? "ON" : "OFF"}
+    Franchise Access: ${s.franchiseAccess ? "ON" : "OFF"}
   `;
 }
 
-// ================= TOGGLE SYSTEM =================
 function toggle(key) {
-
-  let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-
+  let s = getSystemSettings();
   s[key] = !s[key];
-
   localStorage.setItem("systemSettings", JSON.stringify(s));
-
   loadSystem();
 }
 
-// ================= LOAD SYSTEM ADMINS =================
-function loadAdmins() {
+// ================= SYSTEM ADMIN =================
+function loadSystemAdmins() {
 
   let users = getUsers();
-
   let sysAdmins = users.filter(u => u.role === "system_admin");
 
-  if (sysAdmins.length === 0) {
-    document.getElementById("adminList").innerHTML = "No System Admin";
-    return;
-  }
-
-  let html = `
-    <table>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Password</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-  `;
+  let html = `<table>
+  <tr><th>ID</th><th>Name</th><th>Status</th><th>Action</th></tr>`;
 
   sysAdmins.forEach(a => {
     html += `
-      <tr>
-        <td>${a.userId}</td>
-        <td>${a.username}</td>
-        <td>${safeDecode(a.password)}</td>
-        <td>${a.status || "active"}</td>
-        <td>
-          <button onclick="toggleUser('${a.userId}')">
-            ${a.status === "inactive" ? "Activate" : "Deactivate"}
-          </button>
-        </td>
-      </tr>
-    `;
+    <tr>
+      <td>${a.userId}</td>
+      <td>${a.username}</td>
+      <td>${a.status || "active"}</td>
+      <td>
+        <button onclick="toggleUser('${a.userId}')">
+          ${a.status === "inactive" ? "Activate" : "Deactivate"}
+        </button>
+      </td>
+    </tr>`;
+  });
+
+  html += "</table>";
+
+  document.getElementById("sysAdminList").innerHTML = html;
+}
+
+// ================= ADMIN CONTROL (🔥 MAIN ADD) =================
+function loadAdmins() {
+
+  let users = getUsers();
+  let s = getSystemSettings();
+
+  let admins = users.filter(u => u.role === "admin");
+
+  if (admins.length === 0) {
+    document.getElementById("adminList").innerHTML = "No Admin";
+    return;
+  }
+
+  let html = `<table>
+  <tr><th>ID</th><th>Name</th><th>Status</th><th>Action</th></tr>`;
+
+  admins.forEach(a => {
+
+    let isActive = a.status === "active";
+
+    html += `
+    <tr>
+      <td>${a.userId}</td>
+      <td>${a.username}</td>
+      <td>${isActive ? "ACTIVE" : "INACTIVE"}</td>
+      <td>
+        <button onclick="toggleAdmin('${a.userId}')">
+          ${isActive ? "Deactivate" : "Activate"}
+        </button>
+      </td>
+    </tr>`;
   });
 
   html += "</table>";
@@ -224,25 +204,30 @@ function loadAdmins() {
   document.getElementById("adminList").innerHTML = html;
 }
 
-// ================= TOGGLE USER =================
-function toggleUser(userId) {
+function toggleAdmin(id) {
 
   let users = getUsers();
+  let admin = users.find(u => u.userId === id);
 
-  let u = users.find(x => x.userId === userId);
+  if (!admin) return;
 
-  if (!u) return;
-
-  u.status = (u.status === "inactive") ? "active" : "inactive";
+  admin.status = (admin.status === "active") ? "inactive" : "active";
 
   saveUsers(users);
 
   loadAdmins();
 }
 
-// ================= NAV =================
-function goCreateSystemAdmin() {
-  window.location.href = "super_admin_create_system_admin.html";
+// ================= COMMON TOGGLE =================
+function toggleUser(id) {
+  let users = getUsers();
+  let u = users.find(x => x.userId === id);
+  if (!u) return;
+
+  u.status = (u.status === "inactive") ? "active" : "inactive";
+  saveUsers(users);
+
+  loadSystemAdmins();
 }
 
 // ================= LOGOUT =================
@@ -253,6 +238,7 @@ function logout() {
 
 // ================= INIT =================
 loadSystem();
+loadSystemAdmins();
 loadAdmins();
 
 </script>
