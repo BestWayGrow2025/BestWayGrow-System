@@ -2,57 +2,128 @@
 <html>
 <head>
   <title>Admin Dashboard</title>
+
+  <link rel="icon" href="data:,">
+
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; }
-    button { padding: 6px 10px; margin: 5px; cursor: pointer; }
+    body {
+      font-family: 'Segoe UI', Arial;
+      margin: 0;
+      background: #f4f7f9;
+      text-align: center;
+    }
+
+    header {
+      background: #333;
+      color: white;
+      padding: 20px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      width: 300px;
+      margin: 15px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    button {
+      padding: 8px 15px;
+      margin-top: 10px;
+      border: none;
+      background: #0077b5;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #005f8a;
+    }
+
+    footer {
+      background: #222;
+      color: white;
+      padding: 15px;
+      margin-top: 20px;
+    }
   </style>
 </head>
+
 <body>
 
-<h2 id="welcome"></h2>
+<header>
+  <h2>ADMIN DASHBOARD</h2>
+  <p id="welcome"></p>
+  <button onclick="logout()">Logout</button>
+</header>
 
-<button onclick="logout()">Logout</button>
+<div class="container">
 
-<div class="box">
-  <h3>Admin Profile</h3>
-  <p id="profile"></p>
+  <!-- PROFILE -->
+  <div class="card">
+    <h3>Admin Profile</h3>
+    <p id="profile"></p>
+  </div>
+
+  <!-- SYSTEM STATUS -->
+  <div class="card">
+    <h3>System Status</h3>
+    <p id="system"></p>
+  </div>
+
+  <!-- FINANCE -->
+  <div class="card" id="financeCard">
+    <h3>Finance Panel</h3>
+    <button onclick="goTo('admin_withdrawals.html')">Withdrawals</button>
+  </div>
+
+  <!-- FRANCHISE -->
+  <div class="card" id="franchiseCard">
+    <h3>Franchise Panel</h3>
+    <button onclick="goTo('admin_franchise_requests.html')">Requests</button>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="card" id="reportCard">
+    <h3>Reports</h3>
+    <button onclick="goTo('admin_reports.html')">Open Reports</button>
+  </div>
+
 </div>
 
-<div class="box">
-  <h3>System Status</h3>
-  <p id="system"></p>
-</div>
+<footer>
+  ⬅ Back to Home <br>
+  © 2026 BestWayGrow
+</footer>
 
-<div class="box">
-  <h3>Admin Controls</h3>
-  <button onclick="openFranchise()">Franchise Requests</button>
-  <button onclick="openWithdraw()">Withdraw Panel</button>
-  <button onclick="openReports()">Reports</button>
-</div>
-
-<!-- ✅ CORE FIRST -->
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
 <script>
-  initCoreSystem();
-</script>
-
-<script>
+initCoreSystem();
 
 // ================= AUTH =================
-let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
+let session = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
-if (!adminSession) {
+if (!session) {
   alert("Access denied");
   window.location.href = "admin_login.html";
 }
 
-// ✅ FIXED: correct session key
-let admin = getUserById(adminSession.adminId);
+// ✅ FIXED (IMPORTANT)
+let admin = getUserById(session.userId);
 
 if (!admin || admin.role !== "admin") {
-  alert("Admin not found");
+  alert("Invalid session");
   localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
 }
@@ -65,7 +136,7 @@ document.getElementById("welcome").innerText =
 document.getElementById("profile").innerHTML = `
   ID: ${admin.userId} <br>
   Name: ${admin.username} <br>
-  Role: ${admin.role} <br>
+  Type: ${admin.type || "A"} <br>
   Status: ${admin.status || "active"}
 `;
 
@@ -77,17 +148,29 @@ document.getElementById("system").innerHTML = `
   Lock Mode: ${s.lockMode ? "ON" : "OFF"}
 `;
 
+// ================= ROLE LOGIC =================
+
+// TYPE B → hide based on departments
+if (admin.type === "B") {
+
+  let depts = admin.departments || [];
+
+  if (!depts.includes("finance")) {
+    document.getElementById("financeCard").style.display = "none";
+  }
+
+  if (!depts.includes("franchisee")) {
+    document.getElementById("franchiseCard").style.display = "none";
+  }
+
+  if (!depts.includes("report")) {
+    document.getElementById("reportCard").style.display = "none";
+  }
+}
+
 // ================= NAV =================
-function openFranchise() {
-  window.location.href = "admin_franchise_requests.html";
-}
-
-function openWithdraw() {
-  window.location.href = "admin_withdrawals.html";
-}
-
-function openReports() {
-  window.location.href = "admin_reports.html";
+function goTo(page) {
+  window.location.href = page;
 }
 
 // ================= LOGOUT =================
