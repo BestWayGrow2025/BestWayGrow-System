@@ -224,19 +224,93 @@ function checkSystemLock() {
 
   let settings = getSystemSettings();
 
-  // 🔓 If not locked → allow all
   if (!settings.lockMode) return;
 
-  // ✅ SUPER ADMIN ALWAYS ALLOWED
   let superSession = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
   if (superSession) return;
 
-  // ✅ SYSTEM ADMIN ALSO ALLOWED
   let sysSession = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
   if (sysSession) return;
 
-  // ❌ BLOCK OTHERS
   document.body.innerHTML = "<h2>🚫 System Locked by Super Admin</h2>";
+}
+
+
+// ===================================
+// 🔐 GLOBAL PAGE SECURITY (MASTER)
+// ===================================
+function protectPage(config) {
+
+  let sessionKey = {
+    super_admin: "loggedInSuperAdmin",
+    system_admin: "loggedInSystemAdmin",
+    admin: "loggedInAdmin",
+    franchise: "loggedInFranchise",
+    user: "loggedInUser"
+  };
+
+  let key = sessionKey[config.role];
+
+  if (!key) {
+    alert("🚫 Invalid role config");
+    return;
+  }
+
+  let session = JSON.parse(localStorage.getItem(key));
+
+  if (!session) {
+    alert("🚫 Login required");
+    window.location.href = config.role + "_login.html";
+    return;
+  }
+
+  let user = getUserById(session.userId);
+
+  if (!user || user.role !== config.role) {
+    alert("🚫 Invalid session");
+    localStorage.removeItem(key);
+    window.location.href = config.role + "_login.html";
+    return;
+  }
+
+  if (config.role !== "super_admin") {
+    if (user.status !== "active") {
+      alert("🚫 Account inactive");
+      localStorage.removeItem(key);
+      window.location.href = config.role + "_login.html";
+      return;
+    }
+  }
+
+  let s = getSystemSettings();
+
+  if (config.role === "admin" && s.adminAccess === false) {
+    alert("🚫 Admin access OFF by Super Admin");
+    localStorage.removeItem(key);
+    window.location.href = "admin_login.html";
+    return;
+  }
+
+  if (config.role !== "super_admin" && s.lockMode === true) {
+    alert("🚫 System locked by Super Admin");
+    localStorage.removeItem(key);
+    window.location.href = config.role + "_login.html";
+    return;
+  }
+
+  if (config.role === "admin" && config.department) {
+    if (user.type === "B") {
+      let depts = user.departments || [];
+
+      if (!depts.includes(config.department)) {
+        alert("🚫 No permission for this page");
+        window.location.href = "admin_dashboard.html";
+        return;
+      }
+    }
+  }
+
+  return user;
 }
 
 
@@ -293,7 +367,6 @@ function initCoreSystem() {
 
   let users = getUsers();
 
-  // ✅ DEFAULT SETTINGS
   let settings = getSystemSettings();
 
   if (Object.keys(settings).length === 0) {
@@ -317,7 +390,6 @@ function initCoreSystem() {
     console.log("✅ Default System Settings Created");
   }
 
-  // ✅ DEFAULT SUPER ADMIN
   let exists = users.find(u => u.role === "super_admin");
 
   if (!exists) {
