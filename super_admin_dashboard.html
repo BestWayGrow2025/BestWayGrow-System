@@ -3,7 +3,6 @@
 <head>
   <title>Super Admin Dashboard</title>
 
-  <!-- ✅ FIX favicon -->
   <link rel="icon" href="data:,">
 
   <style>
@@ -29,7 +28,7 @@
 
     .card {
       background: white;
-      width: 300px;
+      width: 320px;
       margin: 15px;
       padding: 25px;
       border-radius: 15px;
@@ -61,6 +60,22 @@
       color: white;
       padding: 15px;
     }
+
+    table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
   </style>
 </head>
 
@@ -78,6 +93,14 @@
   <div class="card">
     <h3>System Status</h3>
     <p id="systemStatus"></p>
+
+    <button onclick="toggle('adminAccess')">Toggle Admin Access</button>
+    <button onclick="toggle('franchiseAccess')">Toggle Franchise</button>
+    <button onclick="toggle('registrationOpen')">Toggle Registration</button>
+    <button onclick="toggle('upgradesOpen')">Toggle Upgrades</button>
+    <button onclick="toggle('finance')">Finance Dept</button>
+    <button onclick="toggle('franchise')">Franchise Dept</button>
+    <button onclick="toggle('kyc')">KYC Dept</button>
   </div>
 
   <!-- CREATE SYSTEM ADMIN -->
@@ -87,6 +110,12 @@
     <button onclick="goCreateSystemAdmin()">Open</button>
   </div>
 
+  <!-- SYSTEM ADMIN LIST -->
+  <div class="card">
+    <h3>System Admins</h3>
+    <div id="adminList"></div>
+  </div>
+
 </div>
 
 <footer>
@@ -94,20 +123,9 @@
   © 2026 BestWayGrow
 </footer>
 
-<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
-
 <script>
 initCoreSystem();
-
-// ================= GLOBAL LOGOUT =================
-function logoutAll() {
-  localStorage.removeItem("loggedInSuperAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInFranchise");
-  localStorage.removeItem("loggedInUser");
-}
 
 // ================= AUTH =================
 let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
@@ -119,13 +137,13 @@ if (!session) {
 
 let user = getUserById(session.userId);
 
-if (!user || user.role !== "super_admin") { // ✅ FIXED ROLE
+if (!user || user.role !== "super_admin") {
   alert("Invalid session");
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
 }
 
-// ================= UI =================
+// ================= WELCOME =================
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
@@ -145,6 +163,56 @@ function loadSystem() {
   `;
 }
 
+// ================= TOGGLE =================
+function toggle(key) {
+
+  let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+
+  s[key] = !s[key];
+
+  localStorage.setItem("systemSettings", JSON.stringify(s));
+
+  loadSystem();
+}
+
+// ================= SYSTEM ADMIN LIST =================
+function loadAdmins() {
+
+  let users = getUsers();
+
+  let sysAdmins = users.filter(u => u.role === "system_admin");
+
+  if (sysAdmins.length === 0) {
+    document.getElementById("adminList").innerHTML = "No System Admin";
+    return;
+  }
+
+  let html = `
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Password</th>
+        <th>Status</th>
+      </tr>
+  `;
+
+  sysAdmins.forEach(a => {
+    html += `
+      <tr>
+        <td>${a.userId}</td>
+        <td>${a.username}</td>
+        <td>${atob(a.password)}</td>
+        <td>${a.status || "active"}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("adminList").innerHTML = html;
+}
+
 // ================= NAV =================
 function goCreateSystemAdmin() {
   window.location.href = "super_admin_create_system_admin.html";
@@ -152,12 +220,13 @@ function goCreateSystemAdmin() {
 
 // ================= LOGOUT =================
 function logout() {
-  logoutAll(); // ✅ IMPORTANT
+  localStorage.clear();
   window.location.href = "super_admin_login.html";
 }
 
 // ================= INIT =================
 loadSystem();
+loadAdmins();
 
 </script>
 
