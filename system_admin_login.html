@@ -3,7 +3,6 @@
 <head>
   <title>System Admin Login</title>
 
-  <!-- ✅ remove favicon error -->
   <link rel="icon" href="data:,">
 
   <style>
@@ -23,7 +22,6 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
 <script>
@@ -32,7 +30,7 @@ initCoreSystem();
 
 <script>
 
-// ================= GLOBAL LOGOUT (IMPORTANT) =================
+// ================= GLOBAL LOGOUT =================
 function logoutAll() {
   localStorage.removeItem("loggedInSuperAdmin");
   localStorage.removeItem("loggedInSystemAdmin");
@@ -63,7 +61,6 @@ function login() {
 
   let users = getUsers();
 
-  // ✅ FINAL LOGIN (CASE SAFE + ENCODE SAFE)
   let user = users.find(u =>
     u.userId.toLowerCase() === userId.toLowerCase() &&
     u.role === "system_admin" &&
@@ -75,7 +72,13 @@ function login() {
     return;
   }
 
-  // ✅ CLEAR OLD SESSIONS (VERY IMPORTANT)
+  // 🔥🔥🔥 FINAL FIX (REAL CONTROL)
+  if (user.status !== "active") {
+    showMsg("🚫 Account inactive by Super Admin");
+    return;
+  }
+
+  // ✅ CLEAR OLD SESSIONS
   logoutAll();
 
   // ✅ SAVE SESSION
