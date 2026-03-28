@@ -1,5 +1,5 @@
 /* ===============================
-   CORE SYSTEM (MASTER FILE)
+   CORE SYSTEM (MASTER FINAL)
 =============================== */
 
 
@@ -38,7 +38,7 @@ function getUserById(id) {
 
 
 // ===================================
-// 🔹 USER SYSTEM
+// 🔹 USER SYSTEM (UNCHANGED)
 // ===================================
 function generateUserId() {
   let users = getUsers();
@@ -99,7 +99,7 @@ function registerUser(username, password, introducerId, role = "user") {
 
 
 // ===================================
-// 🔹 ACTIVE SYSTEM
+// 🔹 ACTIVE SYSTEM (UNCHANGED)
 // ===================================
 function isUserActive(userId) {
   let user = getUserById(userId);
@@ -129,7 +129,7 @@ function activateUser(userId) {
 
 
 // ===================================
-// 🔹 HOLD INCOME SYSTEM
+// 🔹 HOLD INCOME SYSTEM (UNCHANGED)
 // ===================================
 function holdIncome(userId, amount, reason) {
   let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
@@ -165,7 +165,7 @@ function releaseHoldIncome(userId) {
 
 
 // ===================================
-// 🔹 MONTHLY PROCESS
+// 🔹 MONTHLY PROCESS (UNCHANGED)
 // ===================================
 function monthlyProcess() {
 
@@ -196,7 +196,7 @@ function monthlyProcess() {
 
 
 // ===================================
-// 🔹 SECURITY SYSTEM
+// 🔹 BASIC SECURITY
 // ===================================
 function enableCopyProtection() {
   document.addEventListener("contextmenu", e => e.preventDefault());
@@ -212,36 +212,13 @@ function enableCopyProtection() {
   });
 }
 
-function isSystemLocked() {
-  return getSystemSettings().lockMode === true;
-}
-
 
 // ===================================
-// 🔹 FINAL LOCK SYSTEM (ROLE BASED)
-// ===================================
-function checkSystemLock() {
-
-  let settings = getSystemSettings();
-
-  if (!settings.lockMode) return;
-
-  let superSession = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
-  if (superSession) return;
-
-  let sysSession = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
-  if (sysSession) return;
-
-  document.body.innerHTML = "<h2>🚫 System Locked by Super Admin</h2>";
-}
-
-
-// ===================================
-// 🔐 GLOBAL PAGE SECURITY (MASTER)
+// 🔐 GLOBAL PAGE SECURITY (FINAL)
 // ===================================
 function protectPage(config) {
 
-  let sessionKey = {
+  const sessionKey = {
     super_admin: "loggedInSuperAdmin",
     system_admin: "loggedInSystemAdmin",
     admin: "loggedInAdmin",
@@ -273,6 +250,7 @@ function protectPage(config) {
     return;
   }
 
+  // 🔥 STATUS
   if (config.role !== "super_admin") {
     if (user.status !== "active") {
       alert("🚫 Account inactive");
@@ -284,26 +262,29 @@ function protectPage(config) {
 
   let s = getSystemSettings();
 
+  // 🔥 ACCESS CONTROL
   if (config.role === "admin" && s.adminAccess === false) {
-    alert("🚫 Admin access OFF by Super Admin");
+    alert("🚫 Admin access OFF");
     localStorage.removeItem(key);
     window.location.href = "admin_login.html";
     return;
   }
 
+  // 🔥 GLOBAL LOCK
   if (config.role !== "super_admin" && s.lockMode === true) {
-    alert("🚫 System locked by Super Admin");
+    alert("🚫 System locked");
     localStorage.removeItem(key);
     window.location.href = config.role + "_login.html";
     return;
   }
 
+  // 🔥 DEPARTMENT SECURITY
   if (config.role === "admin" && config.department) {
     if (user.type === "B") {
       let depts = user.departments || [];
 
       if (!depts.includes(config.department)) {
-        alert("🚫 No permission for this page");
+        alert("🚫 No permission");
         window.location.href = "admin_dashboard.html";
         return;
       }
@@ -315,7 +296,7 @@ function protectPage(config) {
 
 
 // ===================================
-// 🔹 BACKUP SYSTEM
+// 🔹 BACKUP SYSTEM (UNCHANGED)
 // ===================================
 function exportData() {
 
@@ -358,38 +339,32 @@ function importData(file) {
 
 
 // ===================================
-// 🔹 INIT SYSTEM (MASTER FINAL)
+// 🔹 INIT SYSTEM (FINAL SAFE)
 // ===================================
 function initCoreSystem() {
 
   enableCopyProtection();
-  checkSystemLock();
 
   let users = getUsers();
-
   let settings = getSystemSettings();
 
   if (Object.keys(settings).length === 0) {
 
     settings = {
       lockMode: false,
-
       adminAccess: true,
       franchiseAccess: true,
-
       registrationOpen: true,
       upgradesOpen: true,
-
       finance: false,
       franchise: false,
       kyc: false
     };
 
     localStorage.setItem("systemSettings", JSON.stringify(settings));
-
-    console.log("✅ Default System Settings Created");
   }
 
+  // ✅ SUPER ADMIN AUTO CREATE
   let exists = users.find(u => u.role === "super_admin");
 
   if (!exists) {
@@ -404,7 +379,5 @@ function initCoreSystem() {
 
     users.push(superAdmin);
     saveUsers(users);
-
-    console.log("✅ Default Super Admin Created");
   }
 }
