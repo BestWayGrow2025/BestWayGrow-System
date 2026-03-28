@@ -41,7 +41,6 @@ function getUserById(id) {
 // 🔹 USER SYSTEM
 // ===================================
 
-// ===== GENERATE USER ID =====
 function generateUserId() {
   let users = getUsers();
   let existingIds = users.map(u => u.userId);
@@ -58,15 +57,12 @@ function generateUserId() {
   return newId;
 }
 
-// ===== INTRODUCER VALIDATION =====
 function isValidIntroducer(id) {
   if (!id) return false;
-
   let user = getUserById(id);
   return user && user.isActive === true;
 }
 
-// ===== REGISTER USER =====
 function registerUser(username, password, introducerId, role = "user") {
 
   let users = getUsers();
@@ -99,7 +95,6 @@ function registerUser(username, password, introducerId, role = "user") {
   saveUsers(users);
 
   alert("User Created: " + newUser.userId);
-
   return newUser;
 }
 
@@ -222,8 +217,10 @@ function isSystemLocked() {
   return getSystemSettings().lockMode === true;
 }
 
-// ✅ FINAL LOCK LOGIC (SAFE)
+// ✅ FINAL LOCK LOGIC (SUPER ADMIN SAFE)
 function checkSystemLock() {
+
+  let settings = getSystemSettings();
 
   // ✅ SUPER ADMIN NEVER LOCKED
   let superSession = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
@@ -233,8 +230,8 @@ function checkSystemLock() {
   let isSuperAdminPage = window.location.href.includes("super_admin");
   if (isSuperAdminPage) return;
 
-  if (isSystemLocked()) {
-    document.body.innerHTML = "<h2>System Locked by Admin</h2>";
+  if (settings.lockMode === true) {
+    document.body.innerHTML = "<h2>🚫 System Locked by Super Admin</h2>";
   }
 }
 
@@ -246,10 +243,6 @@ function exportData() {
 
   let data = {
     users: localStorage.getItem("users"),
-    pins: localStorage.getItem("pins"),
-    transactions: localStorage.getItem("transactions"),
-    holdIncome: localStorage.getItem("holdIncome"),
-    ctorPool: localStorage.getItem("ctorPool"),
     systemSettings: localStorage.getItem("systemSettings")
   };
 
@@ -287,7 +280,7 @@ function importData(file) {
 
 
 // ===================================
-// 🔹 INIT SYSTEM (FINAL)
+// 🔹 INIT SYSTEM (MASTER FINAL)
 // ===================================
 function initCoreSystem() {
 
@@ -296,7 +289,31 @@ function initCoreSystem() {
 
   let users = getUsers();
 
-  // ✅ CREATE DEFAULT SUPER ADMIN (ONLY ONCE)
+  // ✅ DEFAULT SYSTEM SETTINGS (VERY IMPORTANT)
+  let settings = getSystemSettings();
+
+  if (Object.keys(settings).length === 0) {
+
+    settings = {
+      lockMode: false,
+
+      adminAccess: true,
+      franchiseAccess: true,
+
+      registrationOpen: true,
+      upgradesOpen: true,
+
+      finance: false,
+      franchise: false,
+      kyc: false
+    };
+
+    localStorage.setItem("systemSettings", JSON.stringify(settings));
+
+    console.log("✅ Default System Settings Created");
+  }
+
+  // ✅ DEFAULT SUPER ADMIN
   let exists = users.find(u => u.role === "super_admin");
 
   if (!exists) {
