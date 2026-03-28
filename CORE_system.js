@@ -222,7 +222,17 @@ function isSystemLocked() {
   return getSystemSettings().lockMode === true;
 }
 
+// ✅ FINAL LOCK LOGIC (SAFE)
 function checkSystemLock() {
+
+  // ✅ SUPER ADMIN NEVER LOCKED
+  let superSession = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+  if (superSession) return;
+
+  // ✅ SUPER ADMIN PAGES NEVER LOCKED
+  let isSuperAdminPage = window.location.href.includes("super_admin");
+  if (isSuperAdminPage) return;
+
   if (isSystemLocked()) {
     document.body.innerHTML = "<h2>System Locked by Admin</h2>";
   }
@@ -277,7 +287,7 @@ function importData(file) {
 
 
 // ===================================
-// 🔹 INIT SYSTEM (FINAL FIXED)
+// 🔹 INIT SYSTEM (FINAL)
 // ===================================
 function initCoreSystem() {
 
