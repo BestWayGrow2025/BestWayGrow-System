@@ -41,10 +41,10 @@
     }
 
     button {
-      margin-top: 10px;
-      padding: 10px 20px;
+      margin-top: 8px;
+      padding: 8px 15px;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
       background: linear-gradient(90deg, #0077b5, #00aaff);
       color: white;
@@ -94,10 +94,10 @@
     <h3>System Status</h3>
     <p id="systemStatus"></p>
 
-    <button onclick="toggle('adminAccess')">Toggle Admin Access</button>
-    <button onclick="toggle('franchiseAccess')">Toggle Franchise</button>
-    <button onclick="toggle('registrationOpen')">Toggle Registration</button>
-    <button onclick="toggle('upgradesOpen')">Toggle Upgrades</button>
+    <button onclick="toggle('adminAccess')">Admin Access</button>
+    <button onclick="toggle('franchiseAccess')">Franchise</button>
+    <button onclick="toggle('registrationOpen')">Registration</button>
+    <button onclick="toggle('upgradesOpen')">Upgrades</button>
     <button onclick="toggle('finance')">Finance Dept</button>
     <button onclick="toggle('franchise')">Franchise Dept</button>
     <button onclick="toggle('kyc')">KYC Dept</button>
@@ -161,11 +161,22 @@ function loadSystem() {
 
   let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
 
+  // ✅ DEFAULT SAFETY (IMPORTANT FIX)
+  s.adminAccess = s.adminAccess ?? false;
+  s.franchiseAccess = s.franchiseAccess ?? false;
+  s.registrationOpen = s.registrationOpen ?? true;
+  s.upgradesOpen = s.upgradesOpen ?? true;
+  s.finance = s.finance ?? false;
+  s.franchise = s.franchise ?? false;
+  s.kyc = s.kyc ?? false;
+
+  localStorage.setItem("systemSettings", JSON.stringify(s));
+
   document.getElementById("systemStatus").innerHTML = `
     Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
     Franchise Access: ${s.franchiseAccess ? "ON" : "OFF"} <br>
-    Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
-    Upgrades: ${s.upgradesOpen !== false ? "OPEN" : "CLOSED"} <br>
+    Registration: ${s.registrationOpen ? "OPEN" : "CLOSED"} <br>
+    Upgrades: ${s.upgradesOpen ? "OPEN" : "CLOSED"} <br>
     Finance Dept: ${s.finance ? "ON" : "OFF"} <br>
     Franchise Dept: ${s.franchise ? "ON" : "OFF"} <br>
     KYC Dept: ${s.kyc ? "ON" : "OFF"}
@@ -229,7 +240,7 @@ function goCreateSystemAdmin() {
 
 // ================= LOGOUT =================
 function logout() {
-  localStorage.removeItem("loggedInSuperAdmin"); // ✅ SAFE
+  localStorage.removeItem("loggedInSuperAdmin"); // ✅ SAFE LOGOUT
   window.location.href = "super_admin_login.html";
 }
 
@@ -241,3 +252,4 @@ loadAdmins();
 
 </body>
 </html>
+
