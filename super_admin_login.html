@@ -73,7 +73,14 @@ function login() {
     return;
   }
 
-  // ✅ CLEAR OLD SESSIONS (IMPORTANT)
+  // ✅ CHECK SYSTEM LOCK (BUT ALLOW SUPER ADMIN)
+  let settings = getSystemSettings();
+  if (settings.lockMode === true && user.role !== "super_admin") {
+    showMsg("🚫 System locked by admin");
+    return;
+  }
+
+  // ✅ CLEAR OLD SESSIONS
   logoutAll();
 
   // ✅ SAVE SESSION
