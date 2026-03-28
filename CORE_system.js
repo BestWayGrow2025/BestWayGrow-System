@@ -40,7 +40,6 @@ function getUserById(id) {
 // ===================================
 // 🔹 USER SYSTEM
 // ===================================
-
 function generateUserId() {
   let users = getUsers();
   let existingIds = users.map(u => u.userId);
@@ -217,22 +216,27 @@ function isSystemLocked() {
   return getSystemSettings().lockMode === true;
 }
 
-// ✅ FINAL LOCK LOGIC (SUPER ADMIN SAFE)
+
+// ===================================
+// 🔹 FINAL LOCK SYSTEM (ROLE BASED)
+// ===================================
 function checkSystemLock() {
 
   let settings = getSystemSettings();
 
-  // ✅ SUPER ADMIN NEVER LOCKED
+  // 🔓 If not locked → allow all
+  if (!settings.lockMode) return;
+
+  // ✅ SUPER ADMIN ALWAYS ALLOWED
   let superSession = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
   if (superSession) return;
 
-  // ✅ SUPER ADMIN PAGES NEVER LOCKED
-  let isSuperAdminPage = window.location.href.includes("super_admin");
-  if (isSuperAdminPage) return;
+  // ✅ SYSTEM ADMIN ALSO ALLOWED
+  let sysSession = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
+  if (sysSession) return;
 
-  if (settings.lockMode === true) {
-    document.body.innerHTML = "<h2>🚫 System Locked by Super Admin</h2>";
-  }
+  // ❌ BLOCK OTHERS
+  document.body.innerHTML = "<h2>🚫 System Locked by Super Admin</h2>";
 }
 
 
@@ -289,7 +293,7 @@ function initCoreSystem() {
 
   let users = getUsers();
 
-  // ✅ DEFAULT SYSTEM SETTINGS (VERY IMPORTANT)
+  // ✅ DEFAULT SETTINGS
   let settings = getSystemSettings();
 
   if (Object.keys(settings).length === 0) {
