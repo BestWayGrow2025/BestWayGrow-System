@@ -46,11 +46,16 @@
 // ================= INIT CORE =================
 initCoreSystem();
 
-// 🔥 FINAL GLOBAL SECURITY (REPLACES ALL OLD LOGIC)
+// 🔥 GLOBAL SECURITY
 let admin = protectPage({
   role: "admin",
   department: "finance"
 });
+
+// ❗ STOP EXECUTION IF BLOCKED
+if (!admin) {
+  throw new Error("Access Blocked");
+}
 
 // ================= NAV =================
 function goBack() {
