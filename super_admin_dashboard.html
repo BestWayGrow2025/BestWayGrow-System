@@ -28,7 +28,7 @@
 
     .card {
       background: white;
-      width: 320px;
+      width: 340px;
       margin: 15px;
       padding: 25px;
       border-radius: 15px;
@@ -44,7 +44,7 @@
     th, td {
       padding: 8px;
       border: 1px solid #ddd;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     th {
@@ -52,7 +52,7 @@
     }
 
     button {
-      padding: 8px;
+      padding: 6px 10px;
       margin-top: 5px;
       cursor: pointer;
     }
@@ -71,9 +71,10 @@
 
   <!-- SYSTEM STATUS -->
   <div class="card">
-    <h3>System Status</h3>
+    <h3>System Control</h3>
     <p id="systemStatus"></p>
 
+    <button onclick="toggle('lockMode')">🔒 System Lock</button>
     <button onclick="toggle('adminAccess')">Admin Access</button>
     <button onclick="toggle('franchiseAccess')">Franchise Access</button>
     <button onclick="toggle('registrationOpen')">Registration</button>
@@ -86,7 +87,7 @@
     <div id="sysAdminList"></div>
   </div>
 
-  <!-- 🔥 NEW ADMIN CONTROL -->
+  <!-- ADMIN CONTROL -->
   <div class="card">
     <h3>Admins Control</h3>
     <div id="adminList"></div>
@@ -97,10 +98,6 @@
 <script src="CORE_system.js"></script>
 <script>
 initCoreSystem();
-
-function safeDecode(p) {
-  try { return atob(p); } catch { return p; }
-}
 
 // ================= AUTH =================
 let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
@@ -126,8 +123,11 @@ function loadSystem() {
   let s = getSystemSettings();
 
   document.getElementById("systemStatus").innerHTML = `
+    Lock Mode: ${s.lockMode ? "LOCKED 🔴" : "UNLOCKED 🟢"} <br>
     Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
-    Franchise Access: ${s.franchiseAccess ? "ON" : "OFF"}
+    Franchise Access: ${s.franchiseAccess ? "ON" : "OFF"} <br>
+    Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
+    Upgrades: ${s.upgradesOpen !== false ? "OPEN" : "CLOSED"}
   `;
 }
 
@@ -166,12 +166,10 @@ function loadSystemAdmins() {
   document.getElementById("sysAdminList").innerHTML = html;
 }
 
-// ================= ADMIN CONTROL (🔥 MAIN ADD) =================
+// ================= ADMIN CONTROL =================
 function loadAdmins() {
 
   let users = getUsers();
-  let s = getSystemSettings();
-
   let admins = users.filter(u => u.role === "admin");
 
   if (admins.length === 0) {
@@ -218,7 +216,7 @@ function toggleAdmin(id) {
   loadAdmins();
 }
 
-// ================= COMMON TOGGLE =================
+// ================= COMMON =================
 function toggleUser(id) {
   let users = getUsers();
   let u = users.find(x => x.userId === id);
