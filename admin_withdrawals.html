@@ -2,6 +2,9 @@
 <html>
 <head>
   <title>Admin Withdraw Panel</title>
+
+  <link rel="icon" href="data:,">
+
   <style>
     body { font-family: Arial; padding: 20px; }
     table { border-collapse: collapse; width: 100%; }
@@ -33,7 +36,7 @@
   <tbody id="withdrawTable"></tbody>
 </table>
 
-<!-- ✅ CORE FIRST -->
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
 <script>
@@ -41,17 +44,59 @@
 // ================= INIT CORE =================
 initCoreSystem();
 
-// ================= AUTH =================
-let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
+// ================= AUTH + SECURITY =================
+let session = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
-if (!adminSession) {
-  alert("Access denied");
+if (!session) {
+  alert("🚫 Access denied");
   window.location.href = "admin_login.html";
+}
+
+let admin = getUserById(session.userId);
+
+if (!admin || admin.role !== "admin") {
+  alert("🚫 Invalid session");
+  localStorage.removeItem("loggedInAdmin");
+  window.location.href = "admin_login.html";
+}
+
+// 🔥 STATUS CHECK
+if (admin.status !== "active") {
+  alert("🚫 Account inactive");
+  logout();
+}
+
+// 🔥 SYSTEM CONTROL
+let s = getSystemSettings();
+
+if (s.adminAccess === false) {
+  alert("🚫 Admin access OFF by Super Admin");
+  logout();
+}
+
+if (s.lockMode === true) {
+  alert("🚫 System locked by Super Admin");
+  logout();
+}
+
+// 🔥 DEPARTMENT SECURITY (VERY IMPORTANT)
+if (admin.type === "B") {
+  let depts = admin.departments || [];
+
+  if (!depts.includes("finance")) {
+    alert("🚫 No permission for Finance Panel");
+    window.location.href = "admin_dashboard.html";
+  }
 }
 
 // ================= NAV =================
 function goBack() {
   window.location.href = "admin_dashboard.html";
+}
+
+function logout() {
+  localStorage.removeItem("loggedInAdmin");
+  window.location.href = "admin_login.html";
 }
 
 // ================= LOAD REQUESTS =================
@@ -110,7 +155,7 @@ loadRequests();
 
 </script>
 
-<!-- ✅ SYSTEM -->
+<!-- ✅ WITHDRAW SYSTEM -->
 <script src="withdrawal_system.js"></script>
 
 </body>
