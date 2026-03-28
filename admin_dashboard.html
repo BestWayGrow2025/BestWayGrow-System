@@ -92,7 +92,7 @@
     <button onclick="goTo('admin_franchise_requests.html')">Requests</button>
   </div>
 
-  <!-- REPORTS -->
+  <!-- REPORT -->
   <div class="card" id="reportCard">
     <h3>Reports</h3>
     <button onclick="goTo('admin_reports.html')">Open Reports</button>
@@ -105,7 +105,6 @@
   © 2026 BestWayGrow
 </footer>
 
-<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
 <script>
@@ -119,13 +118,31 @@ if (!session) {
   window.location.href = "admin_login.html";
 }
 
-// ✅ FIXED (IMPORTANT)
 let admin = getUserById(session.userId);
 
 if (!admin || admin.role !== "admin") {
   alert("Invalid session");
   localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
+}
+
+// 🔥 STATUS CHECK (IMPORTANT)
+if (admin.status !== "active") {
+  alert("Account inactive by System Admin");
+  logout();
+}
+
+// 🔥 SYSTEM ACCESS CHECK
+let s = getSystemSettings();
+
+if (s.adminAccess === false) {
+  alert("Admin access OFF by Super Admin");
+  logout();
+}
+
+if (s.lockMode === true) {
+  alert("System locked by Super Admin");
+  logout();
 }
 
 // ================= WELCOME =================
@@ -137,29 +154,28 @@ document.getElementById("profile").innerHTML = `
   ID: ${admin.userId} <br>
   Name: ${admin.username} <br>
   Type: ${admin.type || "A"} <br>
-  Status: ${admin.status || "active"}
+  Status: ${admin.status}
 `;
 
 // ================= SYSTEM =================
-let s = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-
 document.getElementById("system").innerHTML = `
   Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
   Lock Mode: ${s.lockMode ? "ON" : "OFF"}
 `;
 
-// ================= ROLE LOGIC =================
+// ================= ROLE CONTROL =================
 
-// TYPE B → hide based on departments
+// TYPE B → department control
 if (admin.type === "B") {
 
   let depts = admin.departments || [];
 
+  // ✅ MATCH FIXED HERE
   if (!depts.includes("finance")) {
     document.getElementById("financeCard").style.display = "none";
   }
 
-  if (!depts.includes("franchisee")) {
+  if (!depts.includes("franchise")) {
     document.getElementById("franchiseCard").style.display = "none";
   }
 
