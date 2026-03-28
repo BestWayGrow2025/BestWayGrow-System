@@ -127,6 +127,15 @@
 <script>
 initCoreSystem();
 
+// ================= SAFE DECODE =================
+function safeDecode(p) {
+  try {
+    return atob(p);
+  } catch {
+    return p;
+  }
+}
+
 // ================= AUTH =================
 let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
 
@@ -202,7 +211,7 @@ function loadAdmins() {
       <tr>
         <td>${a.userId}</td>
         <td>${a.username}</td>
-        <td>${atob(a.password)}</td>
+        <td>${safeDecode(a.password)}</td>
         <td>${a.status || "active"}</td>
       </tr>
     `;
@@ -220,7 +229,7 @@ function goCreateSystemAdmin() {
 
 // ================= LOGOUT =================
 function logout() {
-  localStorage.clear();
+  localStorage.removeItem("loggedInSuperAdmin"); // ✅ SAFE
   window.location.href = "super_admin_login.html";
 }
 
