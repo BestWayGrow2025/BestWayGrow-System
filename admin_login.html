@@ -31,11 +31,7 @@ initCoreSystem();
 
 // ================= SAFE DECODE =================
 function safeDecode(p) {
-  try {
-    return atob(p);
-  } catch (e) {
-    return p;
-  }
+  try { return atob(p); } catch { return p; }
 }
 
 // ================= LOGIN =================
@@ -62,24 +58,30 @@ function login() {
     return;
   }
 
-  // 🔥 STATUS CONTROL (VERY IMPORTANT)
+  // ✅ STATUS CONTROL (SYSTEM ADMIN)
   if (admin.status !== "active") {
     showMsg("🚫 Account inactive by System Admin");
     return;
   }
 
-  // 🔥 SYSTEM ACCESS CONTROL (FROM SUPER ADMIN)
   let settings = getSystemSettings();
+
+  // ✅ SUPER ADMIN CONTROL
   if (settings.adminAccess === false) {
     showMsg("🚫 Admin access OFF by Super Admin");
     return;
   }
 
-  // 🔥 SYSTEM LOCK (BLOCK LOWER ROLES)
+  // ✅ SYSTEM LOCK CONTROL
   if (settings.lockMode === true) {
     showMsg("🚫 System locked by Super Admin");
     return;
   }
+
+  // ✅ CLEAR OLD SESSIONS (IMPORTANT)
+  localStorage.removeItem("loggedInSuperAdmin");
+  localStorage.removeItem("loggedInSystemAdmin");
+  localStorage.removeItem("loggedInAdmin");
 
   // ✅ SAVE SESSION
   localStorage.setItem("loggedInAdmin", JSON.stringify({
@@ -88,7 +90,6 @@ function login() {
 
   showMsg("✅ Login successful");
 
-  // ✅ REDIRECT
   setTimeout(() => {
     window.location.href = "admin_dashboard.html";
   }, 800);
