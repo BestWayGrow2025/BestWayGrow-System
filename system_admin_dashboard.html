@@ -96,12 +96,10 @@
     <p id="msg"></p>
   </div>
 
-  <!-- SYSTEM CONTROL -->
+  <!-- SYSTEM INFO (READ ONLY ✅) -->
   <div class="card">
-    <h3>System Control</h3>
-
-    <button onclick="lockSystem()">🔒 Lock</button>
-    <button onclick="unlockSystem()">🔓 Unlock</button>
+    <h3>System Status (View Only)</h3>
+    <p id="systemStatus"></p>
   </div>
 
 </div>
@@ -131,6 +129,22 @@ if (!currentUser || currentUser.role !== "system_admin") {
   window.location.href = "system_admin_login.html";
 }
 
+// ================= SYSTEM STATUS VIEW =================
+function loadSystem() {
+
+  let s = getSystemSettings();
+
+  document.getElementById("systemStatus").innerHTML = `
+    Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
+    Franchise Access: ${s.franchiseAccess ? "ON" : "OFF"} <br>
+    Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
+    Upgrades: ${s.upgradesOpen !== false ? "OPEN" : "CLOSED"} <br>
+    Finance Dept: ${s.finance ? "ON" : "OFF"} <br>
+    Franchise Dept: ${s.franchise ? "ON" : "OFF"} <br>
+    KYC Dept: ${s.kyc ? "ON" : "OFF"}
+  `;
+}
+
 // ================= TOGGLE =================
 function toggleDepartments() {
   let type = document.getElementById("type").value;
@@ -153,7 +167,6 @@ function createAdmin() {
 
   let users = getUsers();
 
-  // ✅ CASE SAFE DUPLICATE CHECK
   if (users.find(u => u.userId.toLowerCase() === adminId.toLowerCase())) {
     showMsg("⚠️ Admin already exists");
     return;
@@ -182,7 +195,7 @@ function createAdmin() {
     role: "admin",
     type,
     departments,
-    createdBy: currentUser.userId, // ✅ added
+    createdBy: currentUser.userId,
     status: "active",
     createdAt: new Date().toISOString()
   };
@@ -192,25 +205,9 @@ function createAdmin() {
 
   showMsg("✅ Admin created successfully");
 
-  // ✅ CLEAR FORM
   document.getElementById("adminId").value = "";
   document.getElementById("name").value = "";
   document.getElementById("password").value = "";
-}
-
-// ================= SYSTEM CONTROL =================
-function lockSystem() {
-  let s = getSystemSettings();
-  s.lockMode = true;
-  localStorage.setItem("systemSettings", JSON.stringify(s));
-  alert("System Locked");
-}
-
-function unlockSystem() {
-  let s = getSystemSettings();
-  s.lockMode = false;
-  localStorage.setItem("systemSettings", JSON.stringify(s));
-  alert("System Unlocked");
 }
 
 // ================= LOGOUT =================
@@ -223,6 +220,9 @@ function logout() {
 function showMsg(msg) {
   document.getElementById("msg").innerText = msg;
 }
+
+// ================= INIT =================
+loadSystem();
 
 </script>
 
