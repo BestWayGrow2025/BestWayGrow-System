@@ -65,7 +65,7 @@ function login() {
   let user = users.find(u =>
     u.userId.toLowerCase() === userId.toLowerCase() &&
     u.role === "super_admin" &&
-    (u.password === password || safeDecode(u.password) === password)
+    safeDecode(u.password) === password
   );
 
   if (!user) {
@@ -73,12 +73,8 @@ function login() {
     return;
   }
 
-  // ✅ CHECK SYSTEM LOCK (BUT ALLOW SUPER ADMIN)
-  let settings = getSystemSettings();
-  if (settings.lockMode === true && user.role !== "super_admin") {
-    showMsg("🚫 System locked by admin");
-    return;
-  }
+  // ✅ ALWAYS ALLOW SUPER ADMIN LOGIN (NO LOCK CHECK HERE)
+  // 🔥 Super Admin = top control → NEVER blocked
 
   // ✅ CLEAR OLD SESSIONS
   logoutAll();
