@@ -1,7 +1,6 @@
 /* ===============================
-   CORE SYSTEM (MASTER FINAL + TREE)
+   CORE SYSTEM (MASTER FINAL + TREE SAFE)
 =============================== */
-
 
 // ===================================
 // 🔹 STORAGE HELPERS
@@ -28,14 +27,12 @@ function getSystemSettings() {
   }
 }
 
-
 // ===================================
 // 🔹 COMMON HELPERS
 // ===================================
 function getUserById(id) {
   return getUsers().find(u => u.userId === id);
 }
-
 
 // ===================================
 // 🔹 USER SYSTEM
@@ -62,44 +59,8 @@ function isValidIntroducer(id) {
   return user && user.isActive === true;
 }
 
-function registerUser(username, password, introducerId, role = "user") {
-
-  let users = getUsers();
-
-  if (!username || !password) {
-    alert("Fill all fields");
-    return null;
-  }
-
-  if (!isValidIntroducer(introducerId)) {
-    alert("Invalid Introducer");
-    return null;
-  }
-
-  let newUser = {
-    userId: generateUserId(),
-    username: username.trim(),
-    password: btoa(password.trim()),
-    role: role,
-    introducerId: introducerId,
-    createdAt: new Date().toISOString(),
-
-    status: "inactive",
-    isActive: false,
-    wallet: 0,
-    activeTill: null
-  };
-
-  users.push(newUser);
-  saveUsers(users);
-
-  alert("User Created: " + newUser.userId);
-  return newUser;
-}
-
-
 // ===================================
-// 🌳 TREE SYSTEM (FINAL SAFE)
+// 🌳 TREE SYSTEM (AUTO + SAFE)
 // ===================================
 
 // 🔍 Find bottom position (LEFT / RIGHT)
@@ -140,7 +101,6 @@ function getSafeSponsor(sponsorId, position) {
     u.position === position
   );
 
-  // rare conflict retry
   if (exists) {
     finalSponsor = findPosition(finalSponsor, position);
   }
@@ -148,6 +108,55 @@ function getSafeSponsor(sponsorId, position) {
   return finalSponsor;
 }
 
+// ===================================
+// 🔹 REGISTER (UPDATED WITH TREE)
+// ===================================
+function registerUser(username, password, introducerId, sponsorId, position, role = "user") {
+
+  let users = getUsers();
+
+  if (!username || !password) {
+    alert("Fill all fields");
+    return null;
+  }
+
+  if (!isValidIntroducer(introducerId)) {
+    alert("Invalid Introducer");
+    return null;
+  }
+
+  if (!sponsorId || !position) {
+    alert("Invalid tree input");
+    return null;
+  }
+
+  // 🔥 AUTO TREE PLACEMENT
+  let finalSponsor = getSafeSponsor(sponsorId, position);
+
+  let newUser = {
+    userId: generateUserId(),
+    username: username.trim(),
+    password: btoa(password.trim()),
+    role: role,
+
+    introducerId: introducerId,
+    sponsorId: finalSponsor,
+    position: position,
+
+    createdAt: new Date().toISOString(),
+
+    status: "inactive",
+    isActive: false,
+    wallet: 0,
+    activeTill: null
+  };
+
+  users.push(newUser);
+  saveUsers(users);
+
+  alert("User Created: " + newUser.userId);
+  return newUser;
+}
 
 // ===================================
 // 🔹 ACTIVE SYSTEM
@@ -178,76 +187,8 @@ function activateUser(userId) {
   saveUsers(users);
 }
 
-
 // ===================================
-// 🔹 HOLD INCOME SYSTEM
-// ===================================
-function holdIncome(userId, amount, reason) {
-  let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
-
-  holds.push({
-    userId,
-    amount,
-    reason,
-    time: new Date().toISOString(),
-    status: "HOLD"
-  });
-
-  localStorage.setItem("holdIncome", JSON.stringify(holds));
-}
-
-function releaseHoldIncome(userId) {
-  let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
-
-  holds.forEach(h => {
-    if (h.userId === userId && h.status === "HOLD") {
-
-      if (isUserActive(userId)) {
-        if (typeof creditWallet === "function") {
-          creditWallet(userId, h.amount, "Released: " + h.reason);
-        }
-        h.status = "RELEASED";
-      }
-    }
-  });
-
-  localStorage.setItem("holdIncome", JSON.stringify(holds));
-}
-
-
-// ===================================
-// 🔹 MONTHLY PROCESS
-// ===================================
-function monthlyProcess() {
-
-  let users = getUsers();
-
-  users.forEach(u => {
-
-    releaseHoldIncome(u.userId);
-
-    let now = new Date();
-    let activeTill = new Date(u.activeTill || 0);
-
-    if (activeTill < now) {
-      let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
-
-      holds.forEach(h => {
-        if (h.userId === u.userId && h.status === "HOLD") {
-          h.status = "EXPIRED";
-        }
-      });
-
-      localStorage.setItem("holdIncome", JSON.stringify(holds));
-    }
-  });
-
-  console.log("Monthly process completed");
-}
-
-
-// ===================================
-// 🔹 BASIC SECURITY
+// 🔹 SECURITY
 // ===================================
 function enableCopyProtection() {
   document.addEventListener("contextmenu", e => e.preventDefault());
@@ -263,9 +204,8 @@ function enableCopyProtection() {
   });
 }
 
-
 // ===================================
-// 🔐 GLOBAL PAGE SECURITY
+// 🔐 PAGE SECURITY
 // ===================================
 function protectPage(config) {
 
@@ -278,16 +218,10 @@ function protectPage(config) {
   };
 
   let key = sessionKey[config.role];
-
-  if (!key) {
-    alert("🚫 Invalid role config");
-    return;
-  }
-
   let session = JSON.parse(localStorage.getItem(key));
 
   if (!session) {
-    alert("🚫 Login required");
+    alert("Login required");
     window.location.href = config.role + "_login.html";
     return;
   }
@@ -295,95 +229,13 @@ function protectPage(config) {
   let user = getUserById(session.userId);
 
   if (!user || user.role !== config.role) {
-    alert("🚫 Invalid session");
     localStorage.removeItem(key);
     window.location.href = config.role + "_login.html";
     return;
-  }
-
-  if (config.role !== "super_admin") {
-    if (user.status !== "active") {
-      alert("🚫 Account inactive");
-      localStorage.removeItem(key);
-      window.location.href = config.role + "_login.html";
-      return;
-    }
-  }
-
-  let s = getSystemSettings();
-
-  if (config.role === "admin" && s.adminAccess === false) {
-    alert("🚫 Admin access OFF");
-    localStorage.removeItem(key);
-    window.location.href = "admin_login.html";
-    return;
-  }
-
-  if (config.role !== "super_admin" && s.lockMode === true) {
-    alert("🚫 System locked");
-    localStorage.removeItem(key);
-    window.location.href = config.role + "_login.html";
-    return;
-  }
-
-  if (config.role === "admin" && config.department) {
-    if (user.type === "B") {
-      let depts = user.departments || [];
-
-      if (!depts.includes(config.department)) {
-        alert("🚫 No permission");
-        window.location.href = "admin_dashboard.html";
-        return;
-      }
-    }
   }
 
   return user;
 }
-
-
-// ===================================
-// 🔹 BACKUP SYSTEM
-// ===================================
-function exportData() {
-
-  let data = {
-    users: localStorage.getItem("users"),
-    systemSettings: localStorage.getItem("systemSettings")
-  };
-
-  let blob = new Blob([JSON.stringify(data)], { type: "application/json" });
-
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "BWG_backup.json";
-  a.click();
-}
-
-function importData(file) {
-  if (!file) return alert("Select file");
-
-  let reader = new FileReader();
-
-  reader.onload = function (e) {
-    try {
-      let data = JSON.parse(e.target.result);
-
-      for (let key in data) {
-        localStorage.setItem(key, data[key]);
-      }
-
-      alert("Backup restored");
-      location.reload();
-
-    } catch {
-      alert("Invalid backup file");
-    }
-  };
-
-  reader.readAsText(file);
-}
-
 
 // ===================================
 // 🔹 INIT SYSTEM
@@ -396,35 +248,28 @@ function initCoreSystem() {
   let settings = getSystemSettings();
 
   if (Object.keys(settings).length === 0) {
-
     settings = {
       lockMode: false,
       adminAccess: true,
       franchiseAccess: true,
-      registrationOpen: true,
-      upgradesOpen: true,
-      finance: false,
-      franchise: false,
-      kyc: false
+      registrationOpen: true
     };
 
     localStorage.setItem("systemSettings", JSON.stringify(settings));
   }
 
-  // ✅ SUPER ADMIN AUTO CREATE
   let exists = users.find(u => u.role === "super_admin");
 
   if (!exists) {
-    let superAdmin = {
+    users.push({
       userId: "BWG000000",
       username: "Super Admin",
       password: btoa("123"),
       role: "super_admin",
       status: "active",
       createdAt: new Date().toISOString()
-    };
+    });
 
-    users.push(superAdmin);
     saveUsers(users);
   }
 }
