@@ -2,6 +2,9 @@
 <html>
 <head>
   <title>Admin - Franchise Requests</title>
+
+  <link rel="icon" href="data:,">
+
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
@@ -15,7 +18,7 @@
 <button onclick="goBack()">⬅ Back to Dashboard</button>
 <button onclick="loadRequests()">🔄 Refresh</button>
 
-<!-- ✅ PASSWORD RESET -->
+<!-- PASSWORD RESET -->
 <button onclick="resetUserPassword()">🔑 Reset User Password</button>
 
 <div class="box">
@@ -23,25 +26,28 @@
   <div id="requestList"></div>
 </div>
 
-<!-- ✅ CORE FIRST -->
+<!-- CORE -->
 <script src="CORE_system.js"></script>
 
 <script>
 
-// ================= INIT CORE =================
+// ================= INIT =================
 initCoreSystem();
 
-// ================= AUTH =================
-let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
-
-if (!adminSession) {
-  alert("Access denied");
-  window.location.href = "admin_login.html";
-}
+// 🔥 GLOBAL SECURITY (REPLACES OLD AUTH)
+let admin = protectPage({
+  role: "admin",
+  department: "franchise"
+});
 
 // ================= NAV =================
 function goBack() {
   window.location.href = "admin_dashboard.html";
+}
+
+function logout() {
+  localStorage.removeItem("loggedInAdmin");
+  window.location.href = "admin_login.html";
 }
 
 // ================= REQUEST STORAGE =================
@@ -69,7 +75,6 @@ function resetUserPassword() {
     return;
   }
 
-  // ✅ ENCODE PASSWORD
   user.password = btoa(newPass);
 
   saveUsers(users);
