@@ -25,12 +25,11 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
 
 <script>
 
-// ================= INIT CORE =================
+// ================= INIT =================
 initCoreSystem();
 
 // ================= PARAM =================
@@ -40,8 +39,28 @@ let introducerId = params.get("ref") || "BWG000001";
 document.getElementById("introLabel").innerText =
   "Introducer: " + introducerId;
 
+// ================= FIND DEEP POSITION =================
+function findDeepPosition(sponsorId, position) {
+  let users = getUsers();
+
+  let current = sponsorId;
+
+  while (true) {
+    let next = users.find(u =>
+      u.sponsorId === current && u.position === position
+    );
+
+    if (!next) {
+      return current; // free spot found
+    }
+
+    current = next.userId; // go deeper
+  }
+}
+
 // ================= REGISTER =================
 function handleRegister() {
+
   let username = document.getElementById("username").value.trim();
   let mobile = document.getElementById("mobile").value.trim();
   let password = document.getElementById("password").value;
@@ -74,12 +93,16 @@ function handleRegister() {
     sponsorId = "ROOT";
   }
 
+  // 🔥 AUTO DEEP TREE PLACEMENT
+  if (sponsorId !== "ROOT") {
+    sponsorId = findDeepPosition(sponsorId, position);
+  }
+
   // ✅ REGISTER (CORE)
   let user = registerUser(username, password, introducerId);
-
   if (!user) return;
 
-  // ✅ SAVE EXTRA DATA (MERGED)
+  // ✅ SAVE EXTRA DATA
   let updatedUsers = getUsers();
   let u = updatedUsers.find(x => x.userId === user.userId);
 
@@ -87,11 +110,9 @@ function handleRegister() {
     u.mobile = mobile;
     u.position = position;
 
-    // 🔥 TREE LOGIC
-    u.sponsorId = sponsorId;
+    u.sponsorId = sponsorId;       // 🔥 final placement
     u.introducerId = introducerId;
 
-    // optional future tree
     u.leftChild = null;
     u.rightChild = null;
 
