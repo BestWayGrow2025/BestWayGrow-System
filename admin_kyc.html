@@ -26,6 +26,9 @@
 <!-- ✅ CORE SYSTEM -->
 <script src="CORE_system.js"></script>
 
+<!-- ✅ NEW: ACTIVITY LOG -->
+<script src="activity_log.js"></script>
+
 <script>
 
 // ================= INIT =================
@@ -113,6 +116,9 @@ function approve(requestId, userId) {
   saveKYC(data);
   saveUsers(users);
 
+  // ✅ ACTIVITY LOG
+  logActivity(admin.userId, "admin", "KYC approved: " + userId);
+
   alert("✅ KYC Approved");
 
   loadKYC();
@@ -130,6 +136,9 @@ function reject(requestId) {
   req.status = "REJECTED";
 
   saveKYC(data);
+
+  // ✅ ACTIVITY LOG
+  logActivity(admin.userId, "admin", "KYC rejected: " + requestId);
 
   alert("❌ KYC Rejected");
 
