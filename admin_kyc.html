@@ -23,7 +23,7 @@
   <div id="kycList"></div>
 </div>
 
-<!-- CORE -->
+<!-- ✅ CORE SYSTEM -->
 <script src="CORE_system.js"></script>
 
 <script>
@@ -31,7 +31,7 @@
 // ================= INIT =================
 initCoreSystem();
 
-// 🔥 GLOBAL SECURITY
+// 🔥 FINAL SECURITY (VERY IMPORTANT)
 let admin = protectPage({
   role: "admin",
   department: "kyc"
@@ -40,6 +40,11 @@ let admin = protectPage({
 // ================= NAV =================
 function goBack() {
   window.location.href = "admin_dashboard.html";
+}
+
+function logout() {
+  localStorage.removeItem("loggedInAdmin");
+  window.location.href = "admin_login.html";
 }
 
 // ================= STORAGE =================
@@ -101,7 +106,9 @@ function approve(requestId, userId) {
 
   req.status = "APPROVED";
 
+  // ✅ FINAL FIX
   user.kycStatus = "VERIFIED";
+  user.kycApprovedTime = new Date().toISOString();
 
   saveKYC(data);
   saveUsers(users);
