@@ -1,5 +1,5 @@
 /* ===============================
-   CORE SYSTEM (MASTER FINAL)
+   CORE SYSTEM (MASTER FINAL + TREE)
 =============================== */
 
 
@@ -38,7 +38,7 @@ function getUserById(id) {
 
 
 // ===================================
-// 🔹 USER SYSTEM (UNCHANGED)
+// 🔹 USER SYSTEM
 // ===================================
 function generateUserId() {
   let users = getUsers();
@@ -99,7 +99,58 @@ function registerUser(username, password, introducerId, role = "user") {
 
 
 // ===================================
-// 🔹 ACTIVE SYSTEM (UNCHANGED)
+// 🌳 TREE SYSTEM (FINAL SAFE)
+// ===================================
+
+// 🔍 Find bottom position (LEFT / RIGHT)
+function findPosition(sponsorId, position) {
+
+  let users = getUsers();
+
+  function findSlot(parentId) {
+
+    let children = users.filter(u => u.sponsorId === parentId);
+
+    let left = children.find(c => c.position === "LEFT");
+    let right = children.find(c => c.position === "RIGHT");
+
+    if (position === "LEFT") {
+      if (!left) return parentId;
+      return findSlot(left.userId);
+    }
+
+    if (position === "RIGHT") {
+      if (!right) return parentId;
+      return findSlot(right.userId);
+    }
+  }
+
+  return findSlot(sponsorId);
+}
+
+// 🔐 Safe placement (ANTI-CONFLICT)
+function getSafeSponsor(sponsorId, position) {
+
+  let finalSponsor = findPosition(sponsorId, position);
+
+  let users = getUsers();
+
+  let exists = users.find(u =>
+    u.sponsorId === finalSponsor &&
+    u.position === position
+  );
+
+  // rare conflict retry
+  if (exists) {
+    finalSponsor = findPosition(finalSponsor, position);
+  }
+
+  return finalSponsor;
+}
+
+
+// ===================================
+// 🔹 ACTIVE SYSTEM
 // ===================================
 function isUserActive(userId) {
   let user = getUserById(userId);
@@ -129,7 +180,7 @@ function activateUser(userId) {
 
 
 // ===================================
-// 🔹 HOLD INCOME SYSTEM (UNCHANGED)
+// 🔹 HOLD INCOME SYSTEM
 // ===================================
 function holdIncome(userId, amount, reason) {
   let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
@@ -165,7 +216,7 @@ function releaseHoldIncome(userId) {
 
 
 // ===================================
-// 🔹 MONTHLY PROCESS (UNCHANGED)
+// 🔹 MONTHLY PROCESS
 // ===================================
 function monthlyProcess() {
 
@@ -214,7 +265,7 @@ function enableCopyProtection() {
 
 
 // ===================================
-// 🔐 GLOBAL PAGE SECURITY (FINAL)
+// 🔐 GLOBAL PAGE SECURITY
 // ===================================
 function protectPage(config) {
 
@@ -250,7 +301,6 @@ function protectPage(config) {
     return;
   }
 
-  // 🔥 STATUS
   if (config.role !== "super_admin") {
     if (user.status !== "active") {
       alert("🚫 Account inactive");
@@ -262,7 +312,6 @@ function protectPage(config) {
 
   let s = getSystemSettings();
 
-  // 🔥 ACCESS CONTROL
   if (config.role === "admin" && s.adminAccess === false) {
     alert("🚫 Admin access OFF");
     localStorage.removeItem(key);
@@ -270,7 +319,6 @@ function protectPage(config) {
     return;
   }
 
-  // 🔥 GLOBAL LOCK
   if (config.role !== "super_admin" && s.lockMode === true) {
     alert("🚫 System locked");
     localStorage.removeItem(key);
@@ -278,7 +326,6 @@ function protectPage(config) {
     return;
   }
 
-  // 🔥 DEPARTMENT SECURITY
   if (config.role === "admin" && config.department) {
     if (user.type === "B") {
       let depts = user.departments || [];
@@ -296,7 +343,7 @@ function protectPage(config) {
 
 
 // ===================================
-// 🔹 BACKUP SYSTEM (UNCHANGED)
+// 🔹 BACKUP SYSTEM
 // ===================================
 function exportData() {
 
@@ -339,7 +386,7 @@ function importData(file) {
 
 
 // ===================================
-// 🔹 INIT SYSTEM (FINAL SAFE)
+// 🔹 INIT SYSTEM
 // ===================================
 function initCoreSystem() {
 
