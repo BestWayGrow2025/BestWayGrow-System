@@ -51,6 +51,7 @@ function handleRegister() {
 
   let positionElement = document.querySelector('input[name="position"]:checked');
 
+  // ✅ BASIC VALIDATION
   if (!username || !mobile || !password) {
     alert("Fill all fields");
     return;
@@ -65,47 +66,59 @@ function handleRegister() {
 
   let users = getUsers();
 
+  // ✅ VALIDATE INTRODUCER
+  if (!isValidIntroducer(introducerId)) {
+    alert("Invalid Introducer");
+    return;
+  }
+
   // ✅ VALIDATE SPONSOR
-  if (sponsorId) {
-    let sponsorExists = users.find(u => u.userId === sponsorId);
-    if (!sponsorExists) {
-      alert("Invalid Sponsor ID");
-      return;
-    }
-  } else {
-    sponsorId = "ROOT";
+  if (!sponsorId) {
+    alert("Sponsor required");
+    return;
   }
 
-  // 🔥 CORE TREE LOGIC (SAFE + NO CONFLICT)
-  if (sponsorId !== "ROOT") {
-    sponsorId = getSafeSponsor(sponsorId, position);
+  let sponsorExists = users.find(u => u.userId === sponsorId);
+  if (!sponsorExists) {
+    alert("Invalid Sponsor ID");
+    return;
   }
 
-  // ✅ REGISTER (CORE)
-  let user = registerUser(username, password, introducerId);
+  // 🔥 FINAL SAFE TREE PLACEMENT (CORE CONTROL)
+  let finalSponsor = getSafeSponsor(sponsorId, position);
+
+  // ✅ REGISTER (MATCH CORE)
+  let user = registerUser(
+    username,
+    password,
+    introducerId,
+    finalSponsor,
+    position
+  );
+
   if (!user) return;
 
-  // ✅ SAVE EXTRA DATA
+  // ✅ EXTRA DATA UPDATE (SAFE)
   let updatedUsers = getUsers();
   let u = updatedUsers.find(x => x.userId === user.userId);
 
   if (u) {
     u.mobile = mobile;
-    u.position = position;
 
-    u.sponsorId = sponsorId;   // ✅ FINAL PLACEMENT
-    u.introducerId = introducerId;
-
-    // future safe
+    // future-proof
     u.leftChild = null;
     u.rightChild = null;
 
     saveUsers(updatedUsers);
   }
 
-  alert("Registered! ID: " + user.userId);
+  // ✅ SUCCESS FLOW (FAST ACTION)
+  alert("Registered Successfully!\nUser ID: " + user.userId);
 
+  // 🔥 AUTO LOGIN
   localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+  // 🔥 DIRECT DASHBOARD
   window.location.href = "user_dashboard.html";
 }
 
