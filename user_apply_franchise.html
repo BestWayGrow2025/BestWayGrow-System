@@ -8,8 +8,8 @@
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; max-width: 400px; }
-    input, select { width: 100%; padding: 8px; margin: 8px 0; }
-    button { padding: 8px 15px; }
+    input { width: 100%; padding: 8px; margin: 8px 0; }
+    button { padding: 8px 15px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -31,23 +31,27 @@
 
 </div>
 
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
 <script>
 
-// INIT
+// ================= INIT =================
 initCoreSystem();
 
-// USER CHECK
+// ================= USER SECURITY =================
 let user = protectPage({ role: "user" });
 if (!user) return;
 
-// APPLY FUNCTION
+// ================= AUTO FILL =================
+document.getElementById("name").value = user.username || "";
+
+// ================= APPLY FUNCTION =================
 function apply() {
 
-  let name = document.getElementById("name").value;
-  let city = document.getElementById("city").value;
-  let amount = document.getElementById("amount").value;
+  let name = document.getElementById("name").value.trim();
+  let city = document.getElementById("city").value.trim();
+  let amount = Number(document.getElementById("amount").value);
 
   if (!name || !city || !amount) {
     alert("Fill all fields");
@@ -56,20 +60,34 @@ function apply() {
 
   let data = JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
 
-  data.push({
+  // ❗ PREVENT DUPLICATE REQUEST
+  let already = data.find(d => d.userId === user.userId && d.status === "PENDING");
+
+  if (already) {
+    alert("Already applied (Pending)");
+    return;
+  }
+
+  // ✅ CREATE REQUEST
+  let request = {
     requestId: "FR-" + Date.now(),
     userId: user.userId,
-    name,
-    city,
-    amount: Number(amount),
+    name: name,
+    city: city,
+    amount: amount,
     status: "PENDING",
     time: new Date().toLocaleString()
-  });
+  };
+
+  data.push(request);
 
   localStorage.setItem("franchiseRequests", JSON.stringify(data));
 
   alert("✅ Request Submitted");
 
+  // OPTIONAL RESET
+  document.getElementById("city").value = "";
+  document.getElementById("amount").value = "";
 }
 
 </script>
