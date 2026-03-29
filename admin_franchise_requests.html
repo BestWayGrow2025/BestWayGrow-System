@@ -34,11 +34,16 @@
 // ================= INIT =================
 initCoreSystem();
 
-// 🔥 GLOBAL SECURITY (REPLACES OLD AUTH)
+// 🔥 GLOBAL SECURITY
 let admin = protectPage({
   role: "admin",
   department: "franchise"
 });
+
+// ✅ HARD FAIL SAFETY
+if (!admin) {
+  throw new Error("Unauthorized access");
+}
 
 // ================= NAV =================
 function goBack() {
@@ -61,6 +66,13 @@ function saveRequests(data) {
 
 // ================= PASSWORD RESET =================
 function resetUserPassword() {
+
+  // 🔒 DEPARTMENT SECURITY
+  if (admin.type === "B" && !(admin.departments || []).includes("franchise")) {
+    alert("🚫 No permission");
+    return;
+  }
+
   let userId = prompt("Enter User ID:");
   if (!userId) return;
 
