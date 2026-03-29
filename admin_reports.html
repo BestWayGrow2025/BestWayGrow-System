@@ -17,31 +17,26 @@
 
 <button onclick="goBack()">⬅ Back</button>
 
-<!-- USERS -->
 <div class="box">
   <h2>Total Users</h2>
   <p id="users"></p>
 </div>
 
-<!-- PIN STATUS -->
 <div class="box">
   <h2>Pin Status</h2>
   <p id="pins"></p>
 </div>
 
-<!-- INCOME -->
 <div class="box">
   <h2>Income Summary</h2>
   <p id="income"></p>
 </div>
 
-<!-- HOLD -->
 <div class="box">
   <h2>Hold Income</h2>
   <p id="hold"></p>
 </div>
 
-<!-- CTOR -->
 <div class="box">
   <h2>CTOR Pool</h2>
   <p id="ctor"></p>
@@ -49,28 +44,22 @@
   <button onclick="runCTOR()">Run CTOR Distribution</button>
 </div>
 
-<!-- TRANSACTIONS -->
 <div class="box">
   <h2>All Transactions</h2>
   <div id="transactions"></div>
 </div>
 
-<!-- PIN LOG -->
 <div class="box">
   <h2>Pin Usage Logs</h2>
   <div id="pinLogs"></div>
 </div>
 
-<!-- WITHDRAW -->
 <div class="box">
   <h2>Withdraw Requests</h2>
   <div id="withdrawals"></div>
 </div>
 
-<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
-
-<!-- ✅ SYSTEM FILES -->
 <script src="wallet_system.js"></script>
 <script src="ctor_engine.js"></script>
 <script src="withdrawal_system.js"></script>
@@ -80,16 +69,11 @@
 // ================= INIT =================
 initCoreSystem();
 
-// 🔥 FINAL SECURITY (LOCKED BY DEPARTMENT)
+// 🔥 FINAL SECURITY (LOCKED PAGE)
 let admin = protectPage({
   role: "admin",
   department: "report"
 });
-
-// ❗ SAFETY CHECK (IMPORTANT)
-if (!admin) {
-  throw new Error("Unauthorized access");
-}
 
 // ================= NAV =================
 function goBack() {
@@ -103,7 +87,7 @@ function loadUsers() {
     "Total Users: " + users.length;
 }
 
-// ================= PIN STATUS =================
+// ================= PIN =================
 function loadPins() {
   let pins = JSON.parse(localStorage.getItem("pins") || "[]");
 
@@ -115,10 +99,8 @@ function loadPins() {
     totalUsed += p.used || 0;
   });
 
-  document.getElementById("pins").innerHTML = `
-    Total Stock: ${totalStock} <br>
-    Total Used: ${totalUsed}
-  `;
+  document.getElementById("pins").innerHTML =
+    "Total Stock: " + totalStock + "<br>Total Used: " + totalUsed;
 }
 
 // ================= INCOME =================
@@ -126,10 +108,7 @@ function loadIncome() {
   let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
 
   let total = 0;
-
-  txns.forEach(t => {
-    total += t.amount || 0;
-  });
+  txns.forEach(t => total += t.amount || 0);
 
   document.getElementById("income").innerText =
     "Total Distributed: ₹ " + total;
@@ -140,7 +119,6 @@ function loadHold() {
   let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
 
   let total = 0;
-
   holds.forEach(h => {
     if (h.status === "HOLD") total += h.amount || 0;
   });
@@ -163,8 +141,6 @@ function runCTOR() {
     alert("✅ CTOR Distributed");
     loadCTOR();
     loadTransactions();
-  } else {
-    alert("CTOR engine not loaded");
   }
 }
 
@@ -178,90 +154,12 @@ function loadTransactions() {
   }
 
   let html = "<ul>";
-
   txns.slice().reverse().forEach(t => {
-    html += `<li>
-      ${t.userId} → ₹${t.amount} (${t.reason}) <br>
-      <small>${t.time}</small>
-    </li><br>`;
+    html += "<li>" + t.userId + " → ₹" + t.amount + " (" + t.reason + ")</li><br>";
   });
-
   html += "</ul>";
 
   document.getElementById("transactions").innerHTML = html;
-}
-
-// ================= PIN LOG =================
-function loadPinLogs() {
-  let logs = JSON.parse(localStorage.getItem("pinTransactions") || "[]");
-
-  if (logs.length === 0) {
-    document.getElementById("pinLogs").innerHTML = "No logs";
-    return;
-  }
-
-  let html = "<ul>";
-
-  logs.slice().reverse().forEach(l => {
-    html += `<li>
-      ${l.userId} used ${l.pinId} (${l.type}) <br>
-      BV: ${l.bv} | ₹${l.amount} <br>
-      <small>${l.time}</small>
-    </li><br>`;
-  });
-
-  html += "</ul>";
-
-  document.getElementById("pinLogs").innerHTML = html;
-}
-
-// ================= WITHDRAW =================
-function loadWithdrawals() {
-
-  let data = JSON.parse(localStorage.getItem("withdrawals") || "[]");
-
-  if (data.length === 0) {
-    document.getElementById("withdrawals").innerHTML = "No requests";
-    return;
-  }
-
-  let html = "<ul>";
-
-  data.slice().reverse().forEach(w => {
-    html += `<li>
-      ${w.requestId} | ${w.userId} | ₹${w.amount} | ${w.status}
-      <br>
-      ${w.status === "PENDING" ? `
-        <button onclick="approve('${w.requestId}')">Approve</button>
-        <button onclick="reject('${w.requestId}')">Reject</button>
-      ` : "✔ Done"}
-    </li><br>`;
-  });
-
-  html += "</ul>";
-
-  document.getElementById("withdrawals").innerHTML = html;
-}
-
-// ================= ACTION SAFETY =================
-function approve(id) {
-  if (typeof approveWithdraw === "function") {
-    approveWithdraw(id);
-    alert("✅ Approved");
-    loadWithdrawals();
-  } else {
-    alert("Withdraw system not loaded");
-  }
-}
-
-function reject(id) {
-  if (typeof rejectWithdraw === "function") {
-    rejectWithdraw(id);
-    alert("❌ Rejected");
-    loadWithdrawals();
-  } else {
-    alert("Withdraw system not loaded");
-  }
 }
 
 // ================= INIT LOAD =================
@@ -271,8 +169,6 @@ loadIncome();
 loadHold();
 loadCTOR();
 loadTransactions();
-loadPinLogs();
-loadWithdrawals();
 
 </script>
 
