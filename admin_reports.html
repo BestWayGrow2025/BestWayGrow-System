@@ -2,6 +2,9 @@
 <html>
 <head>
   <title>Admin Reports</title>
+
+  <link rel="icon" href="data:,">
+
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
@@ -64,21 +67,23 @@
   <div id="withdrawals"></div>
 </div>
 
-<!-- ✅ CORE FIRST -->
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
+
+<!-- ✅ SYSTEM FILES -->
+<script src="wallet_system.js"></script>
+<script src="ctor_engine.js"></script>
+<script src="withdrawal_system.js"></script>
 
 <script>
 
-// ================= INIT CORE =================
+// ================= INIT =================
 initCoreSystem();
 
-// ================= AUTH =================
-let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
-
-if (!adminSession) {
-  alert("Access denied");
-  window.location.href = "admin_login.html";
-}
+// 🔥 GLOBAL SECURITY (FINAL)
+let admin = protectPage({
+  role: "admin"
+});
 
 // ================= NAV =================
 function goBack() {
@@ -88,7 +93,8 @@ function goBack() {
 // ================= USERS =================
 function loadUsers() {
   let users = getUsers();
-  document.getElementById("users").innerText = "Total Users: " + users.length;
+  document.getElementById("users").innerText =
+    "Total Users: " + users.length;
 }
 
 // ================= PIN STATUS =================
@@ -146,10 +152,14 @@ function loadCTOR() {
 }
 
 function runCTOR() {
-  runCTORDistribution();
-  alert("✅ CTOR Distributed");
-  loadCTOR();
-  loadTransactions();
+  if (typeof runCTORDistribution === "function") {
+    runCTORDistribution();
+    alert("✅ CTOR Distributed");
+    loadCTOR();
+    loadTransactions();
+  } else {
+    alert("CTOR engine not loaded");
+  }
 }
 
 // ================= TRANSACTIONS =================
@@ -248,7 +258,7 @@ function reject(id) {
   }
 }
 
-// ================= INIT =================
+// ================= INIT LOAD =================
 loadUsers();
 loadPins();
 loadIncome();
@@ -259,11 +269,6 @@ loadPinLogs();
 loadWithdrawals();
 
 </script>
-
-<!-- ✅ SYSTEM -->
-<script src="wallet_system.js"></script>
-<script src="ctor_engine.js"></script>
-<script src="withdrawal_system.js"></script>
 
 </body>
 </html>
