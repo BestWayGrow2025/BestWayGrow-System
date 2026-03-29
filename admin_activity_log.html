@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin - Activity Logs</title>
+
+  <link rel="icon" href="data:,">
+
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; }
+  </style>
+</head>
+<body>
+
+<h2>📜 ADMIN ACTIVITY LOGS</h2>
+
+<button onclick="goBack()">⬅ Back</button>
+<button onclick="loadLogs()">🔄 Refresh</button>
+
+<div class="box">
+  <div id="logs"></div>
+</div>
+
+<!-- CORE -->
+<script src="CORE_system.js"></script>
+
+<!-- LOG SYSTEM -->
+<script src="activity_log.js"></script>
+
+<script>
+
+// ================= INIT =================
+initCoreSystem();
+
+// 🔐 SECURITY
+let admin = protectPage({
+  role: "admin",
+  department: "report"
+});
+
+// ================= NAV =================
+function goBack() {
+  window.location.href = "admin_dashboard.html";
+}
+
+// ================= LOAD LOGS =================
+function loadLogs() {
+
+  let logs = JSON.parse(localStorage.getItem("activityLogs") || "[]");
+
+  let container = document.getElementById("logs");
+
+  if (logs.length === 0) {
+    container.innerHTML = "No activity logs found";
+    return;
+  }
+
+  let html = "<ul>";
+
+  logs.slice().reverse().forEach(l => {
+    html += `
+      <li>
+        <b>${l.role}</b> (${l.userId}) → ${l.action} <br>
+        <small>${l.time}</small>
+      </li><br>
+    `;
+  });
+
+  html += "</ul>";
+
+  container.innerHTML = html;
+}
+
+// ================= INIT =================
+loadLogs();
+
+</script>
+
+</body>
+</html>
