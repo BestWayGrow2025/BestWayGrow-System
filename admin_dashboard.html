@@ -104,6 +104,12 @@
     <button onclick="goTo('admin_kyc.html')">Open KYC</button>
   </div>
 
+  <!-- ✅ NEW: ACTIVITY LOGS -->
+  <div class="card" id="logsCard">
+    <h3>Activity Logs</h3>
+    <button onclick="goTo('admin_activity_logs.html')">View Logs</button>
+  </div>
+
 </div>
 
 <footer>
@@ -165,6 +171,7 @@ if (admin.type === "B") {
 
   if (!depts.includes("report")) {
     document.getElementById("reportCard").style.display = "none";
+    document.getElementById("logsCard").style.display = "none"; // ✅ LINKED
   }
 
   if (!depts.includes("kyc")) {
