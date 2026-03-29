@@ -49,7 +49,7 @@
   <button onclick="goFranchise()">Apply for Franchise</button>
 </div>
 
-<!-- ✅ TREE CONTROL (HIDDEN FOR USER) -->
+<!-- ✅ TREE (CONTROLLED VIEW) -->
 <div class="box">
   <h3>My Team</h3>
   <button onclick="toggleTree()">View Team</button>
@@ -70,23 +70,11 @@
 // ================= INIT =================
 initCoreSystem();
 
-// ================= AUTH =================
-let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
+// ================= SECURE AUTH =================
+let user = protectPage({ role: "user" });
+if (!user) return;
 
-if (!sessionUser) {
-  alert("Access denied");
-  window.location.href = "user_login.html";
-}
-
-let user = getUserById(sessionUser.userId);
-
-if (!user) {
-  alert("User not found");
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "user_login.html";
-}
-
-// ================= WELCOME =================
+// ================= UI LOAD =================
 document.getElementById("welcome").innerText =
   "Welcome " + user.username + " (" + user.userId + ")";
 
@@ -96,16 +84,18 @@ function getSponsor(u) {
   return s ? s.username + " (" + s.userId + ")" : "SYSTEM";
 }
 
-document.getElementById("profile").innerHTML = `
-  User ID: ${user.userId}<br>
-  Name: ${user.username}<br>
-  Mobile: ${user.mobile || "-"}<br>
-  Sponsor: ${getSponsor(user)}<br>
-  Introducer: ${user.introducerId || "-"}<br>
-  Join Time: ${user.createdAt || "-"}<br>
-  Status: ${user.status || "inactive"}<br>
-  Active: ${isUserActive(user.userId) ? "YES" : "NO"}
-`;
+function loadProfile() {
+  document.getElementById("profile").innerHTML = `
+    User ID: ${user.userId}<br>
+    Name: ${user.username}<br>
+    Mobile: ${user.mobile || "-"}<br>
+    Sponsor: ${getSponsor(user)}<br>
+    Introducer: ${user.introducerId || "-"}<br>
+    Join Time: ${user.createdAt || "-"}<br>
+    Status: ${user.status || "inactive"}<br>
+    Active: ${isUserActive(user.userId) ? "YES" : "NO"}
+  `;
+}
 
 // ================= WALLET =================
 function loadWallet() {
@@ -119,7 +109,7 @@ function loadTransactions() {
   let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
   let list = txns.filter(t => t.userId === user.userId);
 
-  if (list.length === 0) {
+  if (!list.length) {
     document.getElementById("transactions").innerHTML = "No transactions";
     return;
   }
@@ -138,7 +128,7 @@ function loadWithdrawHistory() {
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
   let list = withdrawals.filter(w => w.userId === user.userId);
 
-  if (list.length === 0) {
+  if (!list.length) {
     document.getElementById("withdrawHistory").innerHTML = "No withdrawal history";
     return;
   }
@@ -153,18 +143,20 @@ function loadWithdrawHistory() {
 }
 
 // ================= LINKS =================
-let base = "https://bestwaygrow2025.github.io/BestWayGrow-System/";
+function loadLinks() {
+  let base = "https://bestwaygrow2025.github.io/BestWayGrow-System/";
 
-document.getElementById("links").innerHTML = `
-  Register Link:<br>
-  ${base}user.register.html?ref=${user.userId}<br><br>
+  document.getElementById("links").innerHTML = `
+    Register Link:<br>
+    ${base}user.register.html?ref=${user.userId}<br><br>
 
-  Upgrade Link:<br>
-  ${base}user.upgrade.html?user=${user.userId}<br><br>
+    Upgrade Link:<br>
+    ${base}user.upgrade.html?user=${user.userId}<br><br>
 
-  Repurchase Link:<br>
-  ${base}user.repurchase.html?user=${user.userId}
-`;
+    Repurchase Link:<br>
+    ${base}user.repurchase.html?user=${user.userId}
+  `;
+}
 
 // ================= ACTIONS =================
 function upgrade() {
@@ -179,40 +171,34 @@ function withdraw() {
   window.location.href = "user.withdraw.html?user=" + user.userId;
 }
 
-// ✅ FIXED → separate franchise page
 function goFranchise() {
   window.location.href = "user_apply_franchise.html";
 }
 
-// ================= TREE =================
-function buildTree(userId) {
+// ================= TREE (OPTIMIZED) =================
+function buildTree(userId, depth = 0) {
+
+  if (depth > 10) return ""; // 🔐 prevent deep recursion attack
+
   let users = getUsers();
-  if (!users || users.length === 0) return "No data";
+  let children = users.filter(u => u.sponsorId === userId);
 
-  function getChildren(parentId) {
-    return users.filter(u => u.sponsorId === parentId);
-  }
+  if (!children.length) return "";
 
-  function createNode(id) {
-    let children = getChildren(id);
-    let html = `<li>${id}`;
+  let html = "<ul>";
 
-    if (children.length > 0) {
-      html += "<ul>";
-      children.forEach(c => {
-        html += createNode(c.userId);
-      });
-      html += "</ul>";
-    }
-
+  children.forEach(c => {
+    html += `<li>${c.userId}`;
+    html += buildTree(c.userId, depth + 1);
     html += "</li>";
-    return html;
-  }
+  });
 
-  return "<ul>" + createNode(userId) + "</ul>";
+  html += "</ul>";
+
+  return html;
 }
 
-// ✅ USER CONTROL (hidden by default)
+// ================= TOGGLE TREE =================
 let treeLoaded = false;
 
 function toggleTree() {
@@ -231,10 +217,12 @@ function toggleTree() {
   }
 }
 
-// ================= INIT =================
+// ================= INIT LOAD =================
+loadProfile();
 loadWallet();
 loadTransactions();
 loadWithdrawHistory();
+loadLinks();
 
 // ================= LOGOUT =================
 function logout() {
