@@ -98,7 +98,7 @@
     <button onclick="goTo('admin_reports.html')">Open Reports</button>
   </div>
 
-  <!-- ✅ NEW: KYC -->
+  <!-- KYC -->
   <div class="card" id="kycCard">
     <h3>KYC Panel</h3>
     <button onclick="goTo('admin_kyc.html')">Open KYC</button>
@@ -123,6 +123,11 @@ initCoreSystem();
 let admin = protectPage({
   role: "admin"
 });
+
+// ❗ SAFETY CHECK
+if (!admin) {
+  window.location.href = "admin_login.html";
+}
 
 // ================= SYSTEM SETTINGS =================
 let s = getSystemSettings();
