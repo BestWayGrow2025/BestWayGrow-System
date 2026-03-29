@@ -80,11 +80,16 @@
 // ================= INIT =================
 initCoreSystem();
 
-// 🔥 FINAL SECURITY (FIXED ✅)
+// 🔥 FINAL SECURITY (LOCKED BY DEPARTMENT)
 let admin = protectPage({
   role: "admin",
   department: "report"
 });
+
+// ❗ SAFETY CHECK (IMPORTANT)
+if (!admin) {
+  throw new Error("Unauthorized access");
+}
 
 // ================= NAV =================
 function goBack() {
