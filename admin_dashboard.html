@@ -98,6 +98,12 @@
     <button onclick="goTo('admin_reports.html')">Open Reports</button>
   </div>
 
+  <!-- ✅ NEW: KYC -->
+  <div class="card" id="kycCard">
+    <h3>KYC Panel</h3>
+    <button onclick="goTo('admin_kyc.html')">Open KYC</button>
+  </div>
+
 </div>
 
 <footer>
@@ -113,7 +119,7 @@
 // ================= INIT =================
 initCoreSystem();
 
-// 🔥 GLOBAL SECURITY (MASTER CONTROL)
+// 🔥 GLOBAL SECURITY
 let admin = protectPage({
   role: "admin"
 });
@@ -154,6 +160,10 @@ if (admin.type === "B") {
 
   if (!depts.includes("report")) {
     document.getElementById("reportCard").style.display = "none";
+  }
+
+  if (!depts.includes("kyc")) {
+    document.getElementById("kycCard").style.display = "none";
   }
 }
 
