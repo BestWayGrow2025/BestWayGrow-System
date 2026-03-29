@@ -9,7 +9,6 @@
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
     h2 { margin-top: 0; }
-    button { padding: 6px 10px; margin-top: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -73,16 +72,14 @@
 // ================= INIT =================
 initCoreSystem();
 
-// 🔥 SECURITY
+// 🔥 FINAL SECURITY
 let admin = protectPage({
   role: "admin",
   department: "report"
 });
 
-// ❗ SAFETY FIX (VERY IMPORTANT)
-if (!admin) {
-  window.location.href = "admin_login.html";
-}
+// ❗ SAFETY
+if (!admin) return;
 
 // ================= NAV =================
 function goBack() {
@@ -91,7 +88,7 @@ function goBack() {
 
 // ================= USERS =================
 function loadUsers() {
-  let users = getUsers() || [];
+  let users = getUsers();
   document.getElementById("users").innerText =
     "Total Users: " + users.length;
 }
@@ -151,7 +148,7 @@ function runCTOR() {
     loadCTOR();
     loadTransactions();
   } else {
-    alert("❌ CTOR engine not loaded");
+    alert("CTOR engine not loaded");
   }
 }
 
@@ -170,7 +167,7 @@ function loadTransactions() {
     html += `
       <li>
         ${t.userId} → ₹${t.amount} (${t.reason}) <br>
-        <small>${t.time || ""}</small>
+        <small>${t.time}</small>
       </li><br>
     `;
   });
@@ -196,7 +193,7 @@ function loadPinLogs() {
       <li>
         ${l.userId} used ${l.pinId} (${l.type}) <br>
         BV: ${l.bv} | ₹${l.amount} <br>
-        <small>${l.time || ""}</small>
+        <small>${l.time}</small>
       </li><br>
     `;
   });
@@ -208,6 +205,7 @@ function loadPinLogs() {
 
 // ================= WITHDRAW =================
 function loadWithdrawals() {
+
   let data = JSON.parse(localStorage.getItem("withdrawals") || "[]");
 
   if (data.length === 0) {
@@ -230,7 +228,7 @@ function loadWithdrawals() {
   document.getElementById("withdrawals").innerHTML = html;
 }
 
-// ================= LOAD ALL =================
+// ================= INIT LOAD =================
 loadUsers();
 loadPins();
 loadIncome();
