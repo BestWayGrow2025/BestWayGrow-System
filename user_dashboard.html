@@ -46,13 +46,13 @@
   <button onclick="upgrade()">Upgrade</button>
   <button onclick="repurchase()">Repurchase</button>
   <button onclick="withdraw()">Withdraw</button>
-  <button onclick="applyFranchise()">Apply for Franchise</button>
+  <button onclick="goFranchise()">Apply for Franchise</button>
 </div>
 
-<!-- ✅ TREE CONTROL -->
+<!-- ✅ TREE CONTROL (HIDDEN FOR USER) -->
 <div class="box">
   <h3>My Team</h3>
-  <button onclick="toggleTree()">View Team Tree</button>
+  <button onclick="toggleTree()">View Team</button>
   <div id="tree" style="display:none; margin-top:10px;"></div>
 </div>
 
@@ -179,30 +179,15 @@ function withdraw() {
   window.location.href = "user.withdraw.html?user=" + user.userId;
 }
 
-// ================= FRANCHISE =================
-function applyFranchise() {
-  let requests = JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
-
-  if (user.role === "franchise") return alert("Already franchise");
-
-  if (requests.find(r => r.userId === user.userId)) {
-    return alert("Already applied");
-  }
-
-  requests.push({
-    requestId: "FR" + Date.now(),
-    userId: user.userId,
-    status: "PENDING",
-    time: new Date().toISOString()
-  });
-
-  localStorage.setItem("franchiseRequests", JSON.stringify(requests));
-  alert("Request submitted");
+// ✅ FIXED → separate franchise page
+function goFranchise() {
+  window.location.href = "user_apply_franchise.html";
 }
 
-// ================= TREE (DEEP STRUCTURE) =================
+// ================= TREE =================
 function buildTree(userId) {
   let users = getUsers();
+  if (!users || users.length === 0) return "No data";
 
   function getChildren(parentId) {
     return users.filter(u => u.sponsorId === parentId);
@@ -210,7 +195,6 @@ function buildTree(userId) {
 
   function createNode(id) {
     let children = getChildren(id);
-
     let html = `<li>${id}`;
 
     if (children.length > 0) {
@@ -228,7 +212,7 @@ function buildTree(userId) {
   return "<ul>" + createNode(userId) + "</ul>";
 }
 
-// ================= TOGGLE TREE =================
+// ✅ USER CONTROL (hidden by default)
 let treeLoaded = false;
 
 function toggleTree() {
