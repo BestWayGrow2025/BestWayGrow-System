@@ -71,6 +71,11 @@ let currentUser = protectPage({
   role: "system_admin"
 });
 
+// ✅ EXTRA SAFETY (OPTIONAL BUT BEST PRACTICE)
+if (!currentUser) {
+  throw new Error("Security check failed");
+}
+
 // ================= TYPE SWITCH =================
 function toggleDepartments() {
   let type = document.getElementById("type").value;
@@ -120,7 +125,7 @@ function createAdmin() {
       return;
     }
   } else {
-    // ✅ FIX: FULL ACCESS FOR TYPE A
+    // ✅ FULL ACCESS
     departments = ["finance","franchise","kyc","report"];
   }
 
