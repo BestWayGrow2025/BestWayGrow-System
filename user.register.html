@@ -12,6 +12,9 @@
   <input type="text" id="mobile" placeholder="Mobile"><br><br>
   <input type="password" id="password" placeholder="Password"><br><br>
 
+  <label>Sponsor ID:</label><br>
+  <input type="text" id="sponsorId" placeholder="Enter Sponsor ID"><br><br>
+
   <label>Select Position:</label><br>
   <input type="radio" name="position" value="LEFT"> LEFT
   <input type="radio" name="position" value="RIGHT"> RIGHT
@@ -42,6 +45,7 @@ function handleRegister() {
   let username = document.getElementById("username").value.trim();
   let mobile = document.getElementById("mobile").value.trim();
   let password = document.getElementById("password").value;
+  let sponsorId = document.getElementById("sponsorId").value.trim();
 
   let positionElement = document.querySelector('input[name="position"]:checked');
 
@@ -57,19 +61,41 @@ function handleRegister() {
 
   let position = positionElement.value;
 
+  let users = getUsers();
+
+  // ✅ VALIDATE SPONSOR
+  if (sponsorId) {
+    let sponsorExists = users.find(u => u.userId === sponsorId);
+    if (!sponsorExists) {
+      alert("Invalid Sponsor ID");
+      return;
+    }
+  } else {
+    sponsorId = "ROOT";
+  }
+
   // ✅ REGISTER (CORE)
   let user = registerUser(username, password, introducerId);
 
   if (!user) return;
 
-  // ✅ SAVE EXTRA DATA
-  let users = getUsers();
-  let u = users.find(x => x.userId === user.userId);
+  // ✅ SAVE EXTRA DATA (MERGED)
+  let updatedUsers = getUsers();
+  let u = updatedUsers.find(x => x.userId === user.userId);
 
   if (u) {
     u.mobile = mobile;
     u.position = position;
-    saveUsers(users);
+
+    // 🔥 TREE LOGIC
+    u.sponsorId = sponsorId;
+    u.introducerId = introducerId;
+
+    // optional future tree
+    u.leftChild = null;
+    u.rightChild = null;
+
+    saveUsers(updatedUsers);
   }
 
   alert("Registered! ID: " + user.userId);
@@ -82,3 +108,4 @@ function handleRegister() {
 
 </body>
 </html>
+
