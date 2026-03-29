@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin - KYC Panel</title>
+
+  <link rel="icon" href="data:,">
+
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    button { padding: 6px 10px; margin: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h2>ADMIN → KYC MANAGEMENT</h2>
+
+<button onclick="goBack()">⬅ Back to Dashboard</button>
+<button onclick="loadKYC()">🔄 Refresh</button>
+
+<div class="box">
+  <h3>KYC Requests</h3>
+  <div id="kycList"></div>
+</div>
+
+<!-- CORE -->
+<script src="CORE_system.js"></script>
+
+<script>
+
+// ================= INIT =================
+initCoreSystem();
+
+// 🔥 GLOBAL SECURITY
+let admin = protectPage({
+  role: "admin",
+  department: "kyc"
+});
+
+// ================= NAV =================
+function goBack() {
+  window.location.href = "admin_dashboard.html";
+}
+
+// ================= STORAGE =================
+function getKYC() {
+  return JSON.parse(localStorage.getItem("kycRequests") || "[]");
+}
+
+function saveKYC(data) {
+  localStorage.setItem("kycRequests", JSON.stringify(data));
+}
+
+// ================= LOAD =================
+function loadKYC() {
+
+  let data = getKYC();
+  let container = document.getElementById("kycList");
+
+  if (data.length === 0) {
+    container.innerHTML = "No KYC requests found";
+    return;
+  }
+
+  let html = "<ul>";
+
+  data.slice().reverse().forEach(k => {
+
+    html += `
+      <li>
+        <b>User:</b> ${k.userId} <br>
+        <b>Status:</b> ${k.status} <br>
+        <b>Submitted:</b> ${k.time} <br><br>
+
+        ${k.status === "PENDING" ? `
+          <button onclick="approve('${k.requestId}', '${k.userId}')">Approve</button>
+          <button onclick="reject('${k.requestId}')">Reject</button>
+        ` : "✔ Processed"}
+
+        <hr>
+      </li>
+    `;
+  });
+
+  html += "</ul>";
+
+  container.innerHTML = html;
+}
+
+// ================= APPROVE =================
+function approve(requestId, userId) {
+
+  let data = getKYC();
+  let users = getUsers();
+
+  let req = data.find(k => k.requestId === requestId);
+  let user = users.find(u => u.userId === userId);
+
+  if (!req) return alert("Request not found");
+  if (!user) return alert("User not found");
+
+  req.status = "APPROVED";
+
+  user.kycStatus = "VERIFIED";
+
+  saveKYC(data);
+  saveUsers(users);
+
+  alert("✅ KYC Approved");
+
+  loadKYC();
+}
+
+// ================= REJECT =================
+function reject(requestId) {
+
+  let data = getKYC();
+
+  let req = data.find(k => k.requestId === requestId);
+
+  if (!req) return alert("Request not found");
+
+  req.status = "REJECTED";
+
+  saveKYC(data);
+
+  alert("❌ KYC Rejected");
+
+  loadKYC();
+}
+
+// ================= INIT =================
+loadKYC();
+
+</script>
+
+</body>
+</html>
