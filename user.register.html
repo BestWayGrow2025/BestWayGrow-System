@@ -25,6 +25,7 @@
 
 <p id="msg"></p>
 
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
 <script>
@@ -39,24 +40,6 @@ let introducerId = params.get("ref") || "BWG000001";
 document.getElementById("introLabel").innerText =
   "Introducer: " + introducerId;
 
-// ================= FIND DEEP POSITION =================
-function findDeepPosition(sponsorId, position) {
-  let users = getUsers();
-
-  let current = sponsorId;
-
-  while (true) {
-    let next = users.find(u =>
-      u.sponsorId === current && u.position === position
-    );
-
-    if (!next) {
-      return current; // free spot found
-    }
-
-    current = next.userId; // go deeper
-  }
-}
 
 // ================= REGISTER =================
 function handleRegister() {
@@ -93,9 +76,9 @@ function handleRegister() {
     sponsorId = "ROOT";
   }
 
-  // 🔥 AUTO DEEP TREE PLACEMENT
+  // 🔥 CORE TREE LOGIC (SAFE + NO CONFLICT)
   if (sponsorId !== "ROOT") {
-    sponsorId = findDeepPosition(sponsorId, position);
+    sponsorId = getSafeSponsor(sponsorId, position);
   }
 
   // ✅ REGISTER (CORE)
@@ -110,9 +93,10 @@ function handleRegister() {
     u.mobile = mobile;
     u.position = position;
 
-    u.sponsorId = sponsorId;       // 🔥 final placement
+    u.sponsorId = sponsorId;   // ✅ FINAL PLACEMENT
     u.introducerId = introducerId;
 
+    // future safe
     u.leftChild = null;
     u.rightChild = null;
 
