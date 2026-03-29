@@ -59,7 +59,10 @@
   <div id="withdrawals"></div>
 </div>
 
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
+
+<!-- ✅ SYSTEM FILES -->
 <script src="wallet_system.js"></script>
 <script src="ctor_engine.js"></script>
 <script src="withdrawal_system.js"></script>
@@ -69,11 +72,14 @@
 // ================= INIT =================
 initCoreSystem();
 
-// 🔥 FINAL SECURITY (LOCKED PAGE)
+// 🔥 FINAL SECURITY
 let admin = protectPage({
   role: "admin",
   department: "report"
 });
+
+// ❗ SAFETY
+if (!admin) return;
 
 // ================= NAV =================
 function goBack() {
@@ -141,6 +147,8 @@ function runCTOR() {
     alert("✅ CTOR Distributed");
     loadCTOR();
     loadTransactions();
+  } else {
+    alert("CTOR engine not loaded");
   }
 }
 
@@ -154,12 +162,70 @@ function loadTransactions() {
   }
 
   let html = "<ul>";
+
   txns.slice().reverse().forEach(t => {
-    html += "<li>" + t.userId + " → ₹" + t.amount + " (" + t.reason + ")</li><br>";
+    html += `
+      <li>
+        ${t.userId} → ₹${t.amount} (${t.reason}) <br>
+        <small>${t.time}</small>
+      </li><br>
+    `;
   });
+
   html += "</ul>";
 
   document.getElementById("transactions").innerHTML = html;
+}
+
+// ================= PIN LOG =================
+function loadPinLogs() {
+  let logs = JSON.parse(localStorage.getItem("pinTransactions") || "[]");
+
+  if (logs.length === 0) {
+    document.getElementById("pinLogs").innerHTML = "No logs";
+    return;
+  }
+
+  let html = "<ul>";
+
+  logs.slice().reverse().forEach(l => {
+    html += `
+      <li>
+        ${l.userId} used ${l.pinId} (${l.type}) <br>
+        BV: ${l.bv} | ₹${l.amount} <br>
+        <small>${l.time}</small>
+      </li><br>
+    `;
+  });
+
+  html += "</ul>";
+
+  document.getElementById("pinLogs").innerHTML = html;
+}
+
+// ================= WITHDRAW =================
+function loadWithdrawals() {
+
+  let data = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+
+  if (data.length === 0) {
+    document.getElementById("withdrawals").innerHTML = "No requests";
+    return;
+  }
+
+  let html = "<ul>";
+
+  data.slice().reverse().forEach(w => {
+    html += `
+      <li>
+        ${w.requestId} | ${w.userId} | ₹${w.amount} | ${w.status}
+      </li><br>
+    `;
+  });
+
+  html += "</ul>";
+
+  document.getElementById("withdrawals").innerHTML = html;
 }
 
 // ================= INIT LOAD =================
@@ -169,6 +235,8 @@ loadIncome();
 loadHold();
 loadCTOR();
 loadTransactions();
+loadPinLogs();
+loadWithdrawals();
 
 </script>
 
