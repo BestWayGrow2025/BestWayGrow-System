@@ -1,5 +1,5 @@
 /* ===============================
-   CORE SYSTEM (MASTER FINAL + TREE SAFE)
+   CORE SYSTEM (MASTER FINAL PRO)
 =============================== */
 
 // ===================================
@@ -35,7 +35,7 @@ function getUserById(id) {
 }
 
 // ===================================
-// 🔹 USER SYSTEM
+// 🔹 USER ID GENERATOR (SAFE)
 // ===================================
 function generateUserId() {
   let users = getUsers();
@@ -53,6 +53,9 @@ function generateUserId() {
   return newId;
 }
 
+// ===================================
+// 🔹 INTRODUCER VALIDATION
+// ===================================
 function isValidIntroducer(id) {
   if (!id) return false;
   let user = getUserById(id);
@@ -60,39 +63,40 @@ function isValidIntroducer(id) {
 }
 
 // ===================================
-// 🌳 TREE SYSTEM (AUTO + SAFE)
+// 🌳 TREE SYSTEM (HIGH LOAD SAFE)
 // ===================================
 
-// 🔍 Find bottom position (LEFT / RIGHT)
-function findPosition(sponsorId, position) {
+// 🔹 Queue lock (IMPORTANT for 100+ clicks)
+let placementLock = false;
 
+// 🔍 Find bottom position (BFS = BEST)
+function findPositionBFS(sponsorId, position) {
   let users = getUsers();
 
-  function findSlot(parentId) {
+  let queue = [sponsorId];
 
-    let children = users.filter(u => u.sponsorId === parentId);
+  while (queue.length > 0) {
+    let current = queue.shift();
+
+    let children = users.filter(u => u.sponsorId === current);
 
     let left = children.find(c => c.position === "LEFT");
     let right = children.find(c => c.position === "RIGHT");
 
-    if (position === "LEFT") {
-      if (!left) return parentId;
-      return findSlot(left.userId);
-    }
+    if (position === "LEFT" && !left) return current;
+    if (position === "RIGHT" && !right) return current;
 
-    if (position === "RIGHT") {
-      if (!right) return parentId;
-      return findSlot(right.userId);
-    }
+    if (left) queue.push(left.userId);
+    if (right) queue.push(right.userId);
   }
 
-  return findSlot(sponsorId);
+  return sponsorId;
 }
 
-// 🔐 Safe placement (ANTI-CONFLICT)
+// 🔐 FINAL SAFE SPONSOR (ANTI-CONFLICT)
 function getSafeSponsor(sponsorId, position) {
 
-  let finalSponsor = findPosition(sponsorId, position);
+  let finalSponsor = findPositionBFS(sponsorId, position);
 
   let users = getUsers();
 
@@ -102,16 +106,25 @@ function getSafeSponsor(sponsorId, position) {
   );
 
   if (exists) {
-    finalSponsor = findPosition(finalSponsor, position);
+    // retry once more
+    finalSponsor = findPositionBFS(finalSponsor, position);
   }
 
   return finalSponsor;
 }
 
 // ===================================
-// 🔹 REGISTER (UPDATED WITH TREE)
+// 🔹 REGISTER (FINAL SAFE VERSION)
 // ===================================
-function registerUser(username, password, introducerId, sponsorId, position, role = "user") {
+function registerUser(
+  username,
+  password,
+  introducerId,
+  sponsorId,
+  position,
+  mobile = "",
+  role = "user"
+) {
 
   let users = getUsers();
 
@@ -130,32 +143,47 @@ function registerUser(username, password, introducerId, sponsorId, position, rol
     return null;
   }
 
-  // 🔥 AUTO TREE PLACEMENT
-  let finalSponsor = getSafeSponsor(sponsorId, position);
+  // 🔒 LOCK SYSTEM (avoid same-time conflict)
+  if (placementLock) {
+    alert("System busy, try again...");
+    return null;
+  }
 
-  let newUser = {
-    userId: generateUserId(),
-    username: username.trim(),
-    password: btoa(password.trim()),
-    role: role,
+  placementLock = true;
 
-    introducerId: introducerId,
-    sponsorId: finalSponsor,
-    position: position,
+  try {
 
-    createdAt: new Date().toISOString(),
+    // 🔥 FINAL TREE PLACEMENT
+    let finalSponsor = getSafeSponsor(sponsorId, position);
 
-    status: "inactive",
-    isActive: false,
-    wallet: 0,
-    activeTill: null
-  };
+    let newUser = {
+      userId: generateUserId(),
+      username: username.trim(),
+      password: btoa(password.trim()),
+      role: role,
 
-  users.push(newUser);
-  saveUsers(users);
+      mobile: mobile,
 
-  alert("User Created: " + newUser.userId);
-  return newUser;
+      introducerId: introducerId,
+      sponsorId: finalSponsor,
+      position: position,
+
+      createdAt: new Date().toISOString(),
+
+      status: "inactive",
+      isActive: false,
+      wallet: 0,
+      activeTill: null
+    };
+
+    users.push(newUser);
+    saveUsers(users);
+
+    return newUser;
+
+  } finally {
+    placementLock = false;
+  }
 }
 
 // ===================================
@@ -188,7 +216,7 @@ function activateUser(userId) {
 }
 
 // ===================================
-// 🔹 SECURITY
+// 🔹 BASIC SECURITY
 // ===================================
 function enableCopyProtection() {
   document.addEventListener("contextmenu", e => e.preventDefault());
