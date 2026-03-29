@@ -5,8 +5,8 @@
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 6px; }
-    ul { list-style-type: none; padding-left: 0; }
-    li { margin-bottom: 10px; }
+    ul { list-style-type: none; padding-left: 20px; }
+    li { margin-bottom: 5px; }
     button { padding: 6px 10px; margin: 5px; cursor: pointer; }
   </style>
 </head>
@@ -49,15 +49,17 @@
   <button onclick="applyFranchise()">Apply for Franchise</button>
 </div>
 
+<!-- ✅ TREE CONTROL -->
 <div class="box">
   <h3>My Team</h3>
-  <div id="tree"></div>
+  <button onclick="toggleTree()">View Team Tree</button>
+  <div id="tree" style="display:none; margin-top:10px;"></div>
 </div>
 
-<!-- ✅ CORE FIRST -->
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
-<!-- ✅ OTHER SYSTEMS -->
+<!-- ✅ SYSTEM FILES -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="pin_system.js"></script>
@@ -65,7 +67,7 @@
 
 <script>
 
-// ================= INIT CORE =================
+// ================= INIT =================
 initCoreSystem();
 
 // ================= AUTH =================
@@ -150,7 +152,7 @@ function loadWithdrawHistory() {
   document.getElementById("withdrawHistory").innerHTML = html;
 }
 
-// ================= LINKS (UPDATED) =================
+// ================= LINKS =================
 let base = "https://bestwaygrow2025.github.io/BestWayGrow-System/";
 
 document.getElementById("links").innerHTML = `
@@ -177,7 +179,7 @@ function withdraw() {
   window.location.href = "user.withdraw.html?user=" + user.userId;
 }
 
-// ================= APPLY FRANCHISE =================
+// ================= FRANCHISE =================
 function applyFranchise() {
   let requests = JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
 
@@ -198,23 +200,52 @@ function applyFranchise() {
   alert("Request submitted");
 }
 
-// ================= TEAM =================
-function buildTree(id) {
+// ================= TREE (DEEP STRUCTURE) =================
+function buildTree(userId) {
   let users = getUsers();
-  let children = users.filter(u => u.sponsorId === id);
 
-  if (!children.length) return "No team";
+  function getChildren(parentId) {
+    return users.filter(u => u.sponsorId === parentId);
+  }
 
-  let html = "<ul>";
-  children.forEach(c => {
-    html += `<li>${c.username} (${c.userId})</li>`;
-  });
-  html += "</ul>";
+  function createNode(id) {
+    let children = getChildren(id);
 
-  return html;
+    let html = `<li>${id}`;
+
+    if (children.length > 0) {
+      html += "<ul>";
+      children.forEach(c => {
+        html += createNode(c.userId);
+      });
+      html += "</ul>";
+    }
+
+    html += "</li>";
+    return html;
+  }
+
+  return "<ul>" + createNode(userId) + "</ul>";
 }
 
-document.getElementById("tree").innerHTML = buildTree(user.userId);
+// ================= TOGGLE TREE =================
+let treeLoaded = false;
+
+function toggleTree() {
+  let div = document.getElementById("tree");
+
+  if (div.style.display === "none") {
+    div.style.display = "block";
+
+    if (!treeLoaded) {
+      div.innerHTML = buildTree(user.userId);
+      treeLoaded = true;
+    }
+
+  } else {
+    div.style.display = "none";
+  }
+}
 
 // ================= INIT =================
 loadWallet();
