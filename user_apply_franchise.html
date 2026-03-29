@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Apply Franchise</title>
+
+  <link rel="icon" href="data:,">
+
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; max-width: 400px; }
+    input, select { width: 100%; padding: 8px; margin: 8px 0; }
+    button { padding: 8px 15px; }
+  </style>
+</head>
+<body>
+
+<h2>Apply for Franchise</h2>
+
+<div class="box">
+
+  <label>Name</label>
+  <input type="text" id="name">
+
+  <label>City</label>
+  <input type="text" id="city">
+
+  <label>Amount</label>
+  <input type="number" id="amount">
+
+  <button onclick="apply()">Submit Request</button>
+
+</div>
+
+<script src="CORE_system.js"></script>
+
+<script>
+
+// INIT
+initCoreSystem();
+
+// USER CHECK
+let user = protectPage({ role: "user" });
+if (!user) return;
+
+// APPLY FUNCTION
+function apply() {
+
+  let name = document.getElementById("name").value;
+  let city = document.getElementById("city").value;
+  let amount = document.getElementById("amount").value;
+
+  if (!name || !city || !amount) {
+    alert("Fill all fields");
+    return;
+  }
+
+  let data = JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
+
+  data.push({
+    requestId: "FR-" + Date.now(),
+    userId: user.userId,
+    name,
+    city,
+    amount: Number(amount),
+    status: "PENDING",
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem("franchiseRequests", JSON.stringify(data));
+
+  alert("✅ Request Submitted");
+
+}
+
+</script>
+
+</body>
+</html>
