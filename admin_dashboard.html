@@ -105,6 +105,7 @@
   © 2026 BestWayGrow
 </footer>
 
+<!-- ✅ CORE SYSTEM -->
 <script src="CORE_system.js"></script>
 
 <script>
@@ -112,7 +113,7 @@
 // ================= INIT =================
 initCoreSystem();
 
-// 🔥 GLOBAL SECURITY (REPLACES ALL OLD AUTH)
+// 🔥 GLOBAL SECURITY (MASTER CONTROL)
 let admin = protectPage({
   role: "admin"
 });
@@ -139,8 +140,6 @@ document.getElementById("system").innerHTML = `
 `;
 
 // ================= ROLE CONTROL =================
-
-// TYPE B → department control
 if (admin.type === "B") {
 
   let depts = admin.departments || [];
