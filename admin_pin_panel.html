@@ -67,21 +67,39 @@ function refreshStatus() {
   let re = settings.repurchase;
 
   document.getElementById("upgradeStatus").innerText =
-    up.active ? "🟢 ACTIVE" : "🔴 OFF";
+    up.active
+      ? `🟢 ACTIVE | BV: ${up.bv} | ₹${up.amount}`
+      : "🔴 OFF";
 
   document.getElementById("repurchaseStatus").innerText =
-    re.active ? "🟢 ACTIVE" : "🔴 OFF";
+    re.active
+      ? `🟢 ACTIVE | BV: ${re.bv} | ₹${re.amount}`
+      : "🔴 OFF";
+}
+
+// ================= VALIDATION =================
+function validateInput(bv, amount) {
+  if (!bv || !amount) {
+    alert("BV and Amount required");
+    return false;
+  }
+  return true;
 }
 
 // ================= START UPGRADE =================
 function startUpgrade() {
 
+  let bv = Number(document.getElementById("up_bv").value);
+  let amount = Number(document.getElementById("up_amount").value);
+
+  if (!validateInput(bv, amount)) return;
+
   enablePin("upgrade", {
-    bv: Number(document.getElementById("up_bv").value),
-    amount: Number(document.getElementById("up_amount").value),
+    bv: bv,
+    amount: amount,
     gst: Number(document.getElementById("up_gst").value),
-    startDate: document.getElementById("up_start").value,
-    endDate: document.getElementById("up_end").value
+    startDate: document.getElementById("up_start").value || new Date().toISOString(),
+    endDate: document.getElementById("up_end").value || null
   });
 
   refreshStatus();
@@ -98,12 +116,17 @@ function stopUpgrade() {
 // ================= START REPURCHASE =================
 function startRepurchase() {
 
+  let bv = Number(document.getElementById("re_bv").value);
+  let amount = Number(document.getElementById("re_amount").value);
+
+  if (!validateInput(bv, amount)) return;
+
   enablePin("repurchase", {
-    bv: Number(document.getElementById("re_bv").value),
-    amount: Number(document.getElementById("re_amount").value),
+    bv: bv,
+    amount: amount,
     gst: Number(document.getElementById("re_gst").value),
-    startDate: document.getElementById("re_start").value,
-    endDate: document.getElementById("re_end").value
+    startDate: document.getElementById("re_start").value || new Date().toISOString(),
+    endDate: document.getElementById("re_end").value || null
   });
 
   refreshStatus();
