@@ -11,15 +11,15 @@
 
 <button onclick="upgradeNow()">Upgrade Now</button>
 
-<!-- ✅ CORE -->
+<!-- CORE -->
 <script src="CORE_system.js"></script>
 
-<!-- ✅ SYSTEM -->
+<!-- SYSTEM -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="income_control_system.js"></script>
 
-<!-- ✅ PIN CONTROL -->
+<!-- PIN -->
 <script src="pin_config_system.js"></script>
 
 <script>
@@ -60,9 +60,24 @@ function upgradeNow() {
 
   if (!u) return;
 
+  // ❌ Already active
   if (isAlreadyUpgraded(u)) {
     alert("Your ID is already active");
     return;
+  }
+
+  // 🔒 PIN SAFETY (NEW 🔥)
+  if (!isPinSystemSafe("upgrade")) {
+    alert("Upgrade not available or invalid");
+    return;
+  }
+
+  // 🔒 INCOME SYSTEM SAFETY (NEW 🔥)
+  if (typeof isIncomeSystemSafe === "function") {
+    if (!isIncomeSystemSafe()) {
+      alert("System temporarily unavailable");
+      return;
+    }
   }
 
   let pin = getActivePin("upgrade");
@@ -75,24 +90,30 @@ function upgradeNow() {
   let bv = Number(pin.bv || 0);
   let amount = Number(pin.amount || 0);
 
+  // 🔒 EXTRA SAFETY
   if (bv <= 0 || amount <= 0) {
     alert("Invalid PIN configuration");
     return;
   }
 
+  // 💰 WALLET CHECK
   if ((u.wallet || 0) < amount) {
     alert("Insufficient wallet balance");
     return;
   }
 
+  // 💸 DEBIT
   debitWallet(u.userId, amount, "Upgrade");
 
+  // ✅ ACTIVATE
   activateUser(u.userId);
 
+  // 💰 INCOME
   if (isUGLIEnabled() && isUserActive(u.userId)) {
     processIncome("upgrade", u.userId, bv);
   }
 
+  // 💾 SAVE
   saveUsers(users);
 
   alert("✅ Upgrade Successful");
