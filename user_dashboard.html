@@ -22,6 +22,12 @@
 <!-- ✅ STATUS ALERT -->
 <div id="statusBox" class="box"></div>
 
+<!-- ✅ SYSTEM STATUS -->
+<div class="box">
+  <h3>System Status</h3>
+  <p id="systemStatus"></p>
+</div>
+
 <div class="box">
   <h3>My Profile</h3>
   <p id="profile"></p>
@@ -67,8 +73,11 @@
 <!-- SYSTEM FILES -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
-<script src="pin_system.js"></script>
 <script src="withdrawal_system.js"></script>
+
+<!-- ✅ NEW SYSTEM -->
+<script src="pin_config_system.js"></script>
+<script src="income_control_system.js"></script>
 
 <script>
 
@@ -79,32 +88,37 @@ initCoreSystem();
 let user = protectPage({ role: "user" });
 if (!user) return;
 
-// ================= STATUS CHECK =================
+// ================= STATUS =================
 function loadStatus() {
 
   let box = document.getElementById("statusBox");
 
   if (user.status !== "active") {
-
-    box.innerHTML = `
-      <span class="inactive">⚠ Account Inactive</span><br>
-      Please activate your account to unlock earnings.
-    `;
-
-  } else if (!isUserActive(user.userId)) {
-
-    box.innerHTML = `
-      <span class="pending">⏳ Plan Expired</span><br>
-      Please repurchase to continue benefits.
-    `;
-
-  } else {
-
-    box.innerHTML = `
-      <span class="active">✅ Active Account</span><br>
-      All systems running normally.
-    `;
+    box.innerHTML = `<span class="inactive">⚠ Account Inactive</span>`;
+  } 
+  else if (!isUserActive(user.userId)) {
+    box.innerHTML = `<span class="pending">⏳ Plan Expired</span>`;
+  } 
+  else {
+    box.innerHTML = `<span class="active">✅ Active Account</span>`;
   }
+}
+
+// ================= SYSTEM STATUS =================
+function loadSystemStatus() {
+
+  let upgrade = getActivePin("upgrade") ? "🟢 ON" : "🔴 OFF";
+  let repurchase = getActivePin("repurchase") ? "🟢 ON" : "🔴 OFF";
+
+  let ugli = isUGLIEnabled() ? "🟢 ON" : "🔴 OFF";
+  let rli = isRLIEnabled() ? "🟢 ON" : "🔴 OFF";
+
+  document.getElementById("systemStatus").innerHTML = `
+    Upgrade: ${upgrade}<br>
+    Repurchase: ${repurchase}<br>
+    UGLI Income: ${ugli}<br>
+    RLI Income: ${rli}
+  `;
 }
 
 // ================= UI =================
@@ -112,19 +126,10 @@ document.getElementById("welcome").innerText =
   "Welcome " + user.username + " (" + user.userId + ")";
 
 // ================= PROFILE =================
-function getSponsor(u) {
-  let s = getUserById(u.sponsorId);
-  return s ? s.username + " (" + s.userId + ")" : "SYSTEM";
-}
-
 function loadProfile() {
   document.getElementById("profile").innerHTML = `
     User ID: ${user.userId}<br>
     Name: ${user.username}<br>
-    Mobile: ${user.mobile || "-"}<br>
-    Sponsor: ${getSponsor(user)}<br>
-    Introducer: ${user.introducerId || "-"}<br>
-    Join Time: ${user.createdAt || "-"}<br>
     Status: ${user.status}<br>
     Active: ${isUserActive(user.userId) ? "YES" : "NO"}
   `;
@@ -149,7 +154,7 @@ function loadTransactions() {
 
   let html = "<ul>";
   list.slice().reverse().forEach(t => {
-    html += `<li>${t.type} ₹${t.amount} - ${t.reason}<br><small>${t.time}</small></li>`;
+    html += `<li>${t.type} ₹${t.amount} - ${t.reason}</li>`;
   });
   html += "</ul>";
 
@@ -168,7 +173,7 @@ function loadWithdrawHistory() {
 
   let html = "<ul>";
   list.slice().reverse().forEach(w => {
-    html += `<li>${w.requestId} - ₹${w.amount} (${w.status})<br><small>${w.time}</small></li>`;
+    html += `<li>${w.requestId} - ₹${w.amount} (${w.status})</li>`;
   });
   html += "</ul>";
 
@@ -180,89 +185,42 @@ function loadLinks() {
   let base = "https://bestwaygrow2025.github.io/BestWayGrow-System/";
 
   document.getElementById("links").innerHTML = `
-    Register Link:<br>
-    ${base}user.register.html?ref=${user.userId}<br><br>
-
-    Upgrade Link:<br>
-    ${base}user.upgrade.html?user=${user.userId}<br><br>
-
-    Repurchase Link:<br>
-    ${base}user.repurchase.html?user=${user.userId}
+    ${base}user.register.html?ref=${user.userId}
   `;
 }
 
 // ================= ACTIONS =================
 function upgrade() {
-  window.location.href = "user.upgrade.html?user=" + user.userId;
+  window.location.href = "user.upgrade.html";
 }
 
 function repurchase() {
-  window.location.href = "user.repurchase.html?user=" + user.userId;
+  window.location.href = "user.repurchase.html";
 }
 
 function withdraw() {
-  window.location.href = "user.withdraw.html?user=" + user.userId;
+  window.location.href = "user.withdraw.html";
 }
 
 function goFranchise() {
   window.location.href = "user_apply_franchise.html";
 }
 
-// ================= TREE =================
-function buildTree(userId, depth = 0) {
-
-  if (depth > 10) return "";
-
-  let users = getUsers();
-  let children = users.filter(u => u.sponsorId === userId);
-
-  if (!children.length) return "";
-
-  let html = "<ul>";
-
-  children.forEach(c => {
-    html += `<li>${c.userId}`;
-    html += buildTree(c.userId, depth + 1);
-    html += "</li>";
-  });
-
-  html += "</ul>";
-
-  return html;
-}
-
-let treeLoaded = false;
-
-function toggleTree() {
-  let div = document.getElementById("tree");
-
-  if (div.style.display === "none") {
-    div.style.display = "block";
-
-    if (!treeLoaded) {
-      div.innerHTML = buildTree(user.userId);
-      treeLoaded = true;
-    }
-
-  } else {
-    div.style.display = "none";
-  }
-}
-
-// ================= AUTO REFRESH (PRO) =================
-setInterval(() => {
-  loadWallet();
-  loadTransactions();
-  loadWithdrawHistory();
-}, 5000);
-
 // ================= INIT LOAD =================
 loadStatus();
+loadSystemStatus();
 loadProfile();
 loadWallet();
 loadTransactions();
 loadWithdrawHistory();
 loadLinks();
+
+setInterval(() => {
+  loadWallet();
+  loadTransactions();
+  loadWithdrawHistory();
+  loadSystemStatus();
+}, 5000);
 
 // ================= LOGOUT =================
 function logout() {
