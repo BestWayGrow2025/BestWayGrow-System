@@ -20,7 +20,7 @@
   <input type="radio" name="position" value="RIGHT"> RIGHT
   <br><br>
 
-  <button onclick="handleRegister()">Register</button>
+  <button id="regBtn" onclick="handleRegister()">Register</button>
 </div>
 
 <p id="msg"></p>
@@ -28,7 +28,7 @@
 <!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
-<!-- ✅ QUEUE SYSTEM (VERY IMPORTANT 🔒) -->
+<!-- ✅ QUEUE SYSTEM -->
 <script src="queue_system.js"></script>
 
 <script>
@@ -47,6 +47,9 @@ document.getElementById("introLabel").innerText =
 // ================= REGISTER =================
 function handleRegister() {
 
+  let btn = document.getElementById("regBtn");
+  btn.disabled = true; // 🔒 prevent double click
+
   let username = document.getElementById("username").value.trim();
   let mobile = document.getElementById("mobile").value.trim();
   let password = document.getElementById("password").value;
@@ -54,14 +57,22 @@ function handleRegister() {
 
   let positionElement = document.querySelector('input[name="position"]:checked');
 
-  // ✅ BASIC VALIDATION
+  // ✅ VALIDATION
   if (!username || !mobile || !password) {
     alert("Fill all fields");
+    btn.disabled = false;
+    return;
+  }
+
+  if (!/^[0-9]{10}$/.test(mobile)) {
+    alert("Invalid mobile number");
+    btn.disabled = false;
     return;
   }
 
   if (!positionElement) {
     alert("Select LEFT or RIGHT");
+    btn.disabled = false;
     return;
   }
 
@@ -72,41 +83,57 @@ function handleRegister() {
   // ✅ INTRODUCER CHECK
   if (!isValidIntroducer(introducerId)) {
     alert("Invalid Introducer");
+    btn.disabled = false;
     return;
   }
 
   // ✅ SPONSOR CHECK
   if (!sponsorId) {
     alert("Sponsor required");
+    btn.disabled = false;
     return;
   }
 
   let sponsorExists = users.find(u => u.userId === sponsorId);
   if (!sponsorExists) {
     alert("Invalid Sponsor ID");
+    btn.disabled = false;
     return;
   }
 
-  // 🔥 ADD TO QUEUE (NO DIRECT REGISTER)
+  // ✅ DUPLICATE MOBILE CHECK (IMPORTANT 🔥)
+  let duplicate = users.find(u => u.mobile === mobile);
+  if (duplicate) {
+    alert("Mobile already registered");
+    btn.disabled = false;
+    return;
+  }
+
+  // 🔥 ADD TO QUEUE
   addToQueue({
-    username: username,
-    password: password,
-    mobile: mobile,
-    introducerId: introducerId,
-    sponsorId: sponsorId,
-    position: position,
-    time: new Date().toISOString()
+    username,
+    password,
+    mobile,
+    introducerId,
+    sponsorId,
+    position
   });
 
-  // 🔥 PROCESS QUEUE (LOCK SAFE)
+  // 🔥 PROCESS QUEUE (SAFE)
   processQueue();
 
-  // ✅ USER FEEDBACK
-  alert("✅ Registration submitted!\nProcessing...");
+  // ✅ SUCCESS MESSAGE
+  document.getElementById("msg").innerText =
+    "✅ Registration submitted. Processing...";
 
+  // 🔓 enable again after delay
+  setTimeout(() => {
+    btn.disabled = false;
+  }, 2000);
 }
 
 </script>
 
 </body>
 </html>
+
