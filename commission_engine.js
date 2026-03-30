@@ -10,7 +10,7 @@ const COMMISSION_CONFIG = {
 
   // ✅ UGLI (UPGRADE - INTRODUCER BASED)
   ugliLevels: [
-    16.67, // L1
+    16.67,
     0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,
     0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,
     0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83
@@ -28,7 +28,7 @@ function getAllUsers() {
 }
 
 // =====================
-// 🔹 HOLD INCOME (SEPARATE SYSTEM READY)
+// 🔹 HOLD INCOME
 // =====================
 function holdIncome(userId, amount, reason) {
 
@@ -46,7 +46,7 @@ function holdIncome(userId, amount, reason) {
 }
 
 // =====================
-// 🔥 UGLI (UPGRADE INCOME)
+// 🔥 UGLI (UPGRADE)
 // =====================
 function payUGLIIncome(userId, bvAmount) {
 
@@ -80,7 +80,7 @@ function payUGLIIncome(userId, bvAmount) {
 }
 
 // =====================
-// 🔥 RLI (REPURCHASE INCOME)
+// 🔥 RLI (REPURCHASE)
 // =====================
 function payRLIIncome(userId, totalBV) {
 
@@ -90,9 +90,9 @@ function payRLIIncome(userId, totalBV) {
   if (!current) return;
 
   let levels = 30;
+  let perLevel = totalBV / levels;
 
-  // ✅ SAFE: avoid division issue
-  let perLevel = levels > 0 ? (totalBV / levels) : 0;
+  if (perLevel <= 0) return; // ✅ safety
 
   for (let i = 1; i <= levels; i++) {
 
@@ -101,14 +101,10 @@ function payRLIIncome(userId, totalBV) {
     let parent = users.find(u => u.userId === current.introducerId);
     if (!parent) break;
 
-    if (perLevel > 0) {
-
-      if (isUserActive(parent.userId)) {
-        creditWallet(parent.userId, perLevel, `RLI L${i}`);
-      } else {
-        holdIncome(parent.userId, perLevel, `RLI L${i}`);
-      }
-
+    if (isUserActive(parent.userId)) {
+      creditWallet(parent.userId, perLevel, `RLI L${i}`);
+    } else {
+      holdIncome(parent.userId, perLevel, `RLI L${i}`);
     }
 
     current = parent;
@@ -130,20 +126,20 @@ function addToCTORPool(bvAmount) {
 }
 
 // =====================
-// 🔥 MASTER CONTROLLER (FUTURE SAFE)
+// 🔥 MASTER CONTROLLER
 // =====================
-// 👉 Upgrade → UGLI
-// 👉 Repurchase → RLI
 function processIncome(type, userId, bvAmount) {
 
   if (!userId || !bvAmount) return;
 
   if (type === "upgrade") {
+
     payUGLIIncome(userId, bvAmount);
     addToCTORPool(bvAmount);
-  }
 
-  if (type === "repurchase") {
+  } 
+  else if (type === "repurchase") {
+
     let usableBV = bvAmount * 0.5;
 
     let rliBV = usableBV * 0.4;
@@ -151,6 +147,7 @@ function processIncome(type, userId, bvAmount) {
 
     payRLIIncome(userId, rliBV);
     addToCTORPool(ctorBV);
+
   }
 
   console.log("✅ Income processed:", type);
