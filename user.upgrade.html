@@ -90,11 +90,8 @@ function upgradeNow() {
   // ================= ACTIVATE =================
   activateUser(u.userId);
 
-  // ================= INCOME =================
-  payUGLIIncome(u.userId, bv);
-
-  // ================= CTOR =================
-  addToCTORPool(bv);
+  // ================= ✅ MASTER INCOME =================
+  processIncome("upgrade", u.userId, bv);
 
   // ================= SAVE =================
   saveUsers(users);
@@ -108,3 +105,4 @@ function upgradeNow() {
 
 </body>
 </html>
+
