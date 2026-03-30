@@ -12,7 +12,7 @@ function saveIncomeSettings(data) {
 }
 
 // =====================
-// 🔹 INIT DEFAULT
+// 🔹 INIT DEFAULT (SAFE)
 // =====================
 function initIncomeControl() {
 
@@ -24,7 +24,8 @@ function initIncomeControl() {
       ugli: true,
       rli: true,
       binary: false, // future ready
-      initialized: true
+      initialized: true,
+      updatedAt: new Date().toISOString()
     };
 
     saveIncomeSettings(settings);
@@ -32,7 +33,7 @@ function initIncomeControl() {
 }
 
 // =====================
-// 🔹 CHECK SYSTEM
+// 🔹 CHECK SYSTEM (SAFE)
 // =====================
 function isUGLIEnabled() {
   return getIncomeSettings().ugli === true;
@@ -52,18 +53,21 @@ function isBinaryEnabled() {
 function toggleUGLI() {
   let s = getIncomeSettings();
   s.ugli = !s.ugli;
+  s.updatedAt = new Date().toISOString();
   saveIncomeSettings(s);
 }
 
 function toggleRLI() {
   let s = getIncomeSettings();
   s.rli = !s.rli;
+  s.updatedAt = new Date().toISOString();
   saveIncomeSettings(s);
 }
 
 function toggleBinary() {
   let s = getIncomeSettings();
   s.binary = !s.binary;
+  s.updatedAt = new Date().toISOString();
   saveIncomeSettings(s);
 }
 
