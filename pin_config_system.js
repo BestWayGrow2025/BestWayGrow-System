@@ -20,7 +20,6 @@ function getPinSettings() {
 
   let data = JSON.parse(localStorage.getItem("pinSettings") || "{}");
 
-  // ✅ FORCE STRUCTURE (VERY IMPORTANT)
   if (!data.upgrade) data.upgrade = getDefaultPin();
   if (!data.repurchase) data.repurchase = getDefaultPin();
 
@@ -35,13 +34,22 @@ function savePinSettings(data) {
 }
 
 // =====================
+// 🔹 SAFE LOG (REUSE)
+// =====================
+function safeActivityLog(msg) {
+  if (typeof logActivity === "function") {
+    logActivity("ADMIN", "PIN", msg);
+  }
+}
+
+// =====================
 // 🔹 ENABLE PIN (SAFE)
 // =====================
 function enablePin(type, config) {
 
   if (!type || !config) return;
 
-  // ✅ STRONG VALIDATION
+  // 🔒 VALIDATION
   if (isNaN(config.bv) || isNaN(config.amount)) {
     alert("Invalid BV or Amount");
     return;
@@ -54,15 +62,15 @@ function enablePin(type, config) {
     bv: Number(config.bv),
     amount: Number(config.amount),
     gst: Number(config.gst || 0),
-
-    // ✅ AUTO DATE SAFE
     startDate: config.startDate || new Date().toISOString(),
     endDate: config.endDate || null,
-
     updatedAt: new Date().toISOString()
   };
 
   savePinSettings(settings);
+
+  // 📜 LOG
+  safeActivityLog(`${type.toUpperCase()} PIN ENABLED (BV: ${config.bv}, ₹${config.amount})`);
 
   console.log("✅ PIN ENABLED:", type);
 }
@@ -81,6 +89,9 @@ function disablePin(type) {
 
   savePinSettings(settings);
 
+  // 📜 LOG
+  safeActivityLog(`${type.toUpperCase()} PIN DISABLED`);
+
   console.log("⛔ PIN DISABLED:", type);
 }
 
@@ -98,17 +109,14 @@ function isPinActive(type) {
   let start = new Date(pin.startDate || 0);
   let end = pin.endDate ? new Date(pin.endDate) : null;
 
-  // ✅ START CHECK
   if (now < start) return false;
-
-  // ✅ END CHECK
   if (end && now > end) return false;
 
   return true;
 }
 
 // =====================
-// 🔹 GET ACTIVE PIN DATA (FINAL SAFE)
+// 🔹 GET ACTIVE PIN DATA
 // =====================
 function getActivePin(type) {
 
@@ -117,8 +125,21 @@ function getActivePin(type) {
 
   if (!pin) return null;
 
-  // ✅ SINGLE SOURCE OF TRUTH
   if (!isPinActive(type)) return null;
 
   return pin;
+}
+
+// =====================
+// 🔒 SYSTEM SAFETY CHECK (NEW 🔥)
+// =====================
+function isPinSystemSafe(type) {
+
+  let pin = getActivePin(type);
+
+  if (!pin) return false;
+
+  if (pin.bv <= 0 || pin.amount <= 0) return false;
+
+  return true;
 }
