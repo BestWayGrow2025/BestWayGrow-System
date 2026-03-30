@@ -5,31 +5,36 @@
 <script>
 
 // =====================
-// COMMISSION CONFIG (FINAL SAFE)
+// COMMISSION CONFIG
 // =====================
 const COMMISSION_CONFIG = {
-
-  // ✅ UGLI (UPGRADE - INTRODUCER BASED)
   ugliLevels: [
     16.67,
     0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,
     0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,
     0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83
   ],
-
-  // ✅ CTOR %
   ctorPercent: 25
 };
 
 // =====================
-// 🔹 SAFE USERS
+// GET USERS
 // =====================
 function getAllUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
 }
 
 // =====================
-// 🔹 HOLD INCOME
+// SAFE LOG FUNCTION
+// =====================
+function safeLog(data) {
+  if (typeof addIncomeLog === "function") {
+    addIncomeLog(data);
+  }
+}
+
+// =====================
+// HOLD INCOME
 // =====================
 function holdIncome(userId, amount, reason) {
 
@@ -46,22 +51,21 @@ function holdIncome(userId, amount, reason) {
   localStorage.setItem("holdIncome", JSON.stringify(holds));
 
   // ✅ LOG
-  addIncomeLog({
-    userId: userId,
+  safeLog({
+    userId,
     type: "hold",
-    amount: amount,
+    amount,
     note: reason
   });
 }
 
 // =====================
-// 🔥 UGLI (UPGRADE)
+// UGLI
 // =====================
 function payUGLIIncome(userId, bvAmount) {
 
   let users = getAllUsers();
   let current = users.find(u => u.userId === userId);
-
   if (!current) return;
 
   for (let i = 0; i < COMMISSION_CONFIG.ugliLevels.length; i++) {
@@ -80,8 +84,7 @@ function payUGLIIncome(userId, bvAmount) {
 
         creditWallet(parent.userId, income, `UGLI L${i + 1} (${percent}%)`);
 
-        // ✅ LOG
-        addIncomeLog({
+        safeLog({
           userId: parent.userId,
           type: "upgrade",
           amount: income,
@@ -90,9 +93,7 @@ function payUGLIIncome(userId, bvAmount) {
         });
 
       } else {
-
-        holdIncome(parent.userId, income, `UGLI L${i + 1} (${percent}%)`);
-
+        holdIncome(parent.userId, income, `UGLI L${i + 1}`);
       }
     }
 
@@ -101,13 +102,12 @@ function payUGLIIncome(userId, bvAmount) {
 }
 
 // =====================
-// 🔥 RLI (REPURCHASE)
+// RLI
 // =====================
 function payRLIIncome(userId, totalBV) {
 
   let users = getAllUsers();
   let current = users.find(u => u.userId === userId);
-
   if (!current) return;
 
   let levels = 30;
@@ -126,8 +126,7 @@ function payRLIIncome(userId, totalBV) {
 
       creditWallet(parent.userId, perLevel, `RLI L${i}`);
 
-      // ✅ LOG
-      addIncomeLog({
+      safeLog({
         userId: parent.userId,
         type: "repurchase",
         amount: perLevel,
@@ -136,9 +135,7 @@ function payRLIIncome(userId, totalBV) {
       });
 
     } else {
-
       holdIncome(parent.userId, perLevel, `RLI L${i}`);
-
     }
 
     current = parent;
@@ -146,7 +143,7 @@ function payRLIIncome(userId, totalBV) {
 }
 
 // =====================
-// 🔥 CTOR POOL
+// CTOR POOL
 // =====================
 function addToCTORPool(bvAmount) {
 
@@ -157,10 +154,18 @@ function addToCTORPool(bvAmount) {
   pool += amount;
 
   localStorage.setItem("ctorPool", JSON.stringify(pool));
+
+  // ✅ LOG CTOR
+  safeLog({
+    userId: "SYSTEM",
+    type: "ctor",
+    amount: amount,
+    note: "CTOR Pool Added"
+  });
 }
 
 // =====================
-// 🔥 MASTER CONTROLLER
+// MASTER
 // =====================
 function processIncome(type, userId, bvAmount) {
 
@@ -187,5 +192,4 @@ function processIncome(type, userId, bvAmount) {
 }
 
 </script>
-
 
