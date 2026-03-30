@@ -1,6 +1,6 @@
 <script src="wallet_system.js"></script>
 <script src="active_system.js"></script>
-<script src="income_log_system.js"></script> <!-- ✅ ADDED -->
+<script src="income_log_system.js"></script>
 
 <script>
 
@@ -50,7 +50,6 @@ function holdIncome(userId, amount, reason) {
 
   localStorage.setItem("holdIncome", JSON.stringify(holds));
 
-  // ✅ LOG
   safeLog({
     userId,
     type: "hold",
@@ -155,7 +154,6 @@ function addToCTORPool(bvAmount) {
 
   localStorage.setItem("ctorPool", JSON.stringify(pool));
 
-  // ✅ LOG CTOR
   safeLog({
     userId: "SYSTEM",
     type: "ctor",
@@ -165,9 +163,14 @@ function addToCTORPool(bvAmount) {
 }
 
 // =====================
-// MASTER
+// MASTER (🔥 UPDATED)
 // =====================
 function processIncome(type, userId, bvAmount) {
+
+  // 🔒 SYSTEM SAFETY (VERY IMPORTANT)
+  if (typeof isIncomeSystemSafe === "function") {
+    if (!isIncomeSystemSafe()) return;
+  }
 
   if (!userId || !bvAmount || bvAmount <= 0) return;
 
@@ -192,4 +195,3 @@ function processIncome(type, userId, bvAmount) {
 }
 
 </script>
-
