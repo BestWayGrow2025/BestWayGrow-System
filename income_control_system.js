@@ -106,14 +106,17 @@ function toggleBinary(adminId = "ADMIN") {
 }
 
 // =====================
-// 🔒 HARD SAFETY (NEW 🔥)
+// 🔒 HARD SAFETY (FINAL BEST)
 // =====================
 function isIncomeSystemSafe() {
 
   let s = getIncomeSettings();
 
-  // if corrupted or missing
-  if (!s || !s.initialized) {
+  // ❌ invalid or corrupted
+  if (!s || typeof s !== "object") return false;
+
+  // ❌ not initialized
+  if (!s.initialized) {
     console.warn("⚠ Income system not initialized");
     return false;
   }
