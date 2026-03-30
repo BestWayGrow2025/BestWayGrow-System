@@ -5,7 +5,7 @@
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
-    input { padding: 6px; margin: 5px; }
+    input, select { padding: 6px; margin: 5px; }
     button { padding: 6px 12px; margin: 5px; cursor: pointer; }
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
@@ -21,6 +21,7 @@
   <h3>Filter</h3>
 
   <input id="filterUser" placeholder="User ID">
+  
   <select id="filterType">
     <option value="">All Types</option>
     <option value="upgrade">Upgrade</option>
@@ -52,15 +53,27 @@
   </table>
 </div>
 
-<!-- ================= SCRIPT ================= -->
+<!-- CORE -->
+<script src="CORE_system.js"></script>
+
+<!-- SYSTEM -->
 <script src="income_log_system.js"></script>
+<script src="activity_log.js"></script>
 
 <script>
+
+// ================= INIT =================
+initCoreSystem();
+
+// ================= SECURITY =================
+let admin = protectPage({ role: "admin" });
+if (!admin) return;
 
 // ================= LOAD LOGS =================
 function loadLogs() {
 
-  let logs = getIncomeLogs().slice().reverse();
+  let logs = getIncomeLogs() || [];
+  logs = logs.slice().reverse();
 
   let userFilter = document.getElementById("filterUser").value.trim();
   let typeFilter = document.getElementById("filterType").value;
@@ -82,21 +95,26 @@ function loadLogs() {
 
   let html = "";
 
-  logs.forEach(l => {
+  logs.forEach((l, i) => {
     html += `
       <tr>
-        <td>${l.logId}</td>
-        <td>${l.userId}</td>
-        <td>${l.type}</td>
-        <td>₹ ${l.amount}</td>
+        <td>${l.logId || i + 1}</td>
+        <td>${l.userId || "-"}</td>
+        <td>${l.type || "-"}</td>
+        <td>₹ ${l.amount || 0}</td>
         <td>${l.sourceUser || "-"}</td>
-        <td>${l.note}</td>
-        <td>${new Date(l.time).toLocaleString()}</td>
+        <td>${l.note || "-"}</td>
+        <td>${l.time ? new Date(l.time).toLocaleString() : "-"}</td>
       </tr>
     `;
   });
 
   table.innerHTML = html;
+
+  // 📜 LOG VIEW ACTION
+  if (typeof logActivity === "function") {
+    logActivity(admin.userId, "ADMIN", "Viewed income logs");
+  }
 }
 
 // ================= CLEAR LOGS =================
@@ -108,6 +126,11 @@ function clearLogs() {
   loadLogs();
 
   alert("All logs cleared");
+
+  // 📜 LOG CLEAR ACTION
+  if (typeof logActivity === "function") {
+    logActivity(admin.userId, "ADMIN", "Cleared all income logs");
+  }
 }
 
 // ================= INIT =================
