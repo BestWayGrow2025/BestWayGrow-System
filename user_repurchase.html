@@ -17,7 +17,7 @@
 <!-- ✅ SYSTEM -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
-<script src="income_control_system.js"></script> <!-- ✅ ADDED -->
+<script src="income_control_system.js"></script>
 
 <!-- ✅ PIN CONTROL -->
 <script src="pin_config_system.js"></script>
@@ -63,8 +63,14 @@ function repurchase() {
     return;
   }
 
-  let bv = pin.bv;
-  let amount = pin.amount;
+  let bv = Number(pin.bv || 0);
+  let amount = Number(pin.amount || 0);
+
+  // ✅ CONFIG SAFETY
+  if (bv <= 0 || amount <= 0) {
+    alert("Invalid PIN configuration");
+    return;
+  }
 
   // ================= WALLET =================
   if ((u.wallet || 0) < amount) {
@@ -75,8 +81,8 @@ function repurchase() {
   // ================= DEBIT =================
   debitWallet(u.userId, amount, "Repurchase");
 
-  // ================= ✅ INCOME CONTROL CHECK =================
-  if (isRLIEnabled()) {
+  // ================= ✅ INCOME CONTROL =================
+  if (isRLIEnabled() && isUserActive(u.userId)) {
     processIncome("repurchase", u.userId, bv);
   }
 
