@@ -58,29 +58,38 @@
 
 <script>
 
+// ================= SAFE GET =================
+function getSafeSettings() {
+  let s = getPinSettings() || {};
+  return {
+    upgrade: s.upgrade || {},
+    repurchase: s.repurchase || {}
+  };
+}
+
 // ================= STATUS =================
 function refreshStatus() {
 
-  let settings = getPinSettings();
+  let settings = getSafeSettings();
 
   let up = settings.upgrade;
   let re = settings.repurchase;
 
   document.getElementById("upgradeStatus").innerText =
     up.active
-      ? `🟢 ACTIVE | BV: ${up.bv} | ₹${up.amount}`
+      ? `🟢 ACTIVE | BV: ${up.bv || 0} | ₹${up.amount || 0}`
       : "🔴 OFF";
 
   document.getElementById("repurchaseStatus").innerText =
     re.active
-      ? `🟢 ACTIVE | BV: ${re.bv} | ₹${re.amount}`
+      ? `🟢 ACTIVE | BV: ${re.bv || 0} | ₹${re.amount || 0}`
       : "🔴 OFF";
 }
 
 // ================= VALIDATION =================
 function validateInput(bv, amount) {
-  if (!bv || !amount) {
-    alert("BV and Amount required");
+  if (bv <= 0 || amount <= 0) {
+    alert("BV and Amount must be greater than 0");
     return false;
   }
   return true;
@@ -97,7 +106,7 @@ function startUpgrade() {
   enablePin("upgrade", {
     bv: bv,
     amount: amount,
-    gst: Number(document.getElementById("up_gst").value),
+    gst: Number(document.getElementById("up_gst").value || 0),
     startDate: document.getElementById("up_start").value || new Date().toISOString(),
     endDate: document.getElementById("up_end").value || null
   });
@@ -124,7 +133,7 @@ function startRepurchase() {
   enablePin("repurchase", {
     bv: bv,
     amount: amount,
-    gst: Number(document.getElementById("re_gst").value),
+    gst: Number(document.getElementById("re_gst").value || 0),
     startDate: document.getElementById("re_start").value || new Date().toISOString(),
     endDate: document.getElementById("re_end").value || null
   });
