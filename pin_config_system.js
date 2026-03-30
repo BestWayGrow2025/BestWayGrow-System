@@ -1,8 +1,30 @@
 // =====================
+// 🔹 DEFAULT STRUCTURE
+// =====================
+function getDefaultPin() {
+  return {
+    active: false,
+    bv: 0,
+    amount: 0,
+    gst: 0,
+    startDate: null,
+    endDate: null,
+    updatedAt: null
+  };
+}
+
+// =====================
 // 🔹 GET PIN SETTINGS
 // =====================
 function getPinSettings() {
-  return JSON.parse(localStorage.getItem("pinSettings") || "{}");
+
+  let data = JSON.parse(localStorage.getItem("pinSettings") || "{}");
+
+  // ensure structure exists
+  if (!data.upgrade) data.upgrade = getDefaultPin();
+  if (!data.repurchase) data.repurchase = getDefaultPin();
+
+  return data;
 }
 
 // =====================
@@ -13,21 +35,33 @@ function savePinSettings(data) {
 }
 
 // =====================
-// 🔹 ENABLE PIN
+// 🔹 ENABLE PIN (SAFE)
 // =====================
 function enablePin(type, config) {
+
+  if (!type || !config) return;
+
+  // ✅ VALIDATION
+  if (!config.bv || !config.amount) {
+    alert("Invalid BV or Amount");
+    return;
+  }
 
   let settings = getPinSettings();
 
   settings[type] = {
     active: true,
-    bv: config.bv,
-    amount: config.amount,
-    gst: config.gst,
-    startDate: config.startDate
+    bv: Number(config.bv),
+    amount: Number(config.amount),
+    gst: Number(config.gst || 0),
+    startDate: config.startDate || new Date().toISOString(),
+    endDate: config.endDate || null,
+    updatedAt: new Date().toISOString()
   };
 
   savePinSettings(settings);
+
+  console.log("✅ PIN ENABLED:", type);
 }
 
 // =====================
@@ -37,11 +71,14 @@ function disablePin(type) {
 
   let settings = getPinSettings();
 
-  if (settings[type]) {
-    settings[type].active = false;
-  }
+  if (!settings[type]) return;
+
+  settings[type].active = false;
+  settings[type].updatedAt = new Date().toISOString();
 
   savePinSettings(settings);
+
+  console.log("⛔ PIN DISABLED:", type);
 }
 
 // =====================
@@ -50,11 +87,30 @@ function disablePin(type) {
 function isPinActive(type) {
 
   let settings = getPinSettings();
+  let pin = settings[type];
 
-  if (!settings[type]) return false;
+  if (!pin || !pin.active) return false;
 
-  let start = new Date(settings[type].startDate || 0);
   let now = new Date();
+  let start = new Date(pin.startDate || 0);
+  let end = pin.endDate ? new Date(pin.endDate) : null;
 
-  return settings[type].active === true && now >= start;
+  // ✅ START CHECK
+  if (now < start) return false;
+
+  // ✅ END CHECK
+  if (end && now > end) return false;
+
+  return true;
+}
+
+// =====================
+// 🔹 GET ACTIVE PIN DATA
+// =====================
+function getActivePin(type) {
+
+  if (!isPinActive(type)) return null;
+
+  let settings = getPinSettings();
+  return settings[type];
 }
