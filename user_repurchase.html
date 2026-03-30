@@ -13,15 +13,20 @@
 
 <!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
+
+<!-- ✅ SYSTEM -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
+
+<!-- ✅ PIN CONTROL -->
+<script src="pin_config_system.js"></script>
 
 <script>
 
 // ================= INIT =================
 initCoreSystem();
 
-// ================= AUTH (SECURE) =================
+// ================= AUTH =================
 let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!session) {
@@ -41,20 +46,6 @@ if (!user) {
 document.getElementById("userId").innerText = user.userId;
 
 
-// ================= DUPLICATE PROTECTION =================
-function isRepurchaseAllowed(u) {
-
-  // Example: allow every time OR add cooldown
-  // simple version: always true
-  return true;
-
-  // Advanced (optional):
-  // let last = new Date(u.lastRepurchase || 0);
-  // let now = new Date();
-  // return (now - last) > (24 * 60 * 60 * 1000); // 1 day
-}
-
-
 // ================= REPURCHASE =================
 function repurchase() {
 
@@ -63,24 +54,48 @@ function repurchase() {
 
   if (!u) return;
 
-  if (!isRepurchaseAllowed(u)) {
-    alert("Repurchase not allowed now");
+  // 🔐 PIN CHECK
+  if (!isPinActive("repurchase")) {
+    alert("Repurchase is OFF");
     return;
   }
 
-  // 💰 BV AMOUNT (CONFIG)
-  let bvAmount = 500;
+  // ================= PIN DATA =================
+  let pin = getPinSettings().repurchase;
 
-  // ================= COMMISSION =================
-  // 🔥 USE SAME ENGINE (IMPORTANT)
-  processCommission(u.userId, bvAmount);
+  if (!pin) {
+    alert("Repurchase plan not set");
+    return;
+  }
 
-  // ================= SAVE LAST REPURCHASE =================
-  u.lastRepurchase = new Date().toISOString();
+  let bv = pin.bv;
+  let amount = pin.amount;
 
+  // ================= WALLET CHECK =================
+  if ((u.wallet || 0) < amount) {
+    alert("Insufficient wallet");
+    return;
+  }
+
+  // ================= DEBIT =================
+  debitWallet(u.userId, amount, "Repurchase");
+
+  // ================= BV SPLIT =================
+  let usableBV = bv * 0.5;
+
+  let rliBV = usableBV * 0.4;   // 20% total
+  let ctorBV = usableBV * 0.6;  // 30% total
+
+  // ================= RLI INCOME =================
+  payRLIIncome(u.userId, rliBV);
+
+  // ================= CTOR =================
+  addToCTORPool(ctorBV);
+
+  // ================= SAVE =================
   saveUsers(users);
 
-  alert("✅ Repurchase Successful!");
+  alert("✅ Repurchase Successful");
 
   window.location.href = "user_dashboard.html";
 }
