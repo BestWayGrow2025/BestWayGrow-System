@@ -1,7 +1,9 @@
-<script>
+// ===============================
+// 💰 INCOME CONTROL SYSTEM (FINAL)
+// ===============================
 
 // =====================
-// 🔹 GET SETTINGS
+// 🔹 GET / SAVE SETTINGS
 // =====================
 function getIncomeSettings() {
   return JSON.parse(localStorage.getItem("incomeSettings") || "{}");
@@ -18,7 +20,7 @@ function initIncomeControl() {
 
   let settings = getIncomeSettings();
 
-  if (!settings.initialized) {
+  if (!settings || !settings.initialized) {
 
     settings = {
       ugli: true,
@@ -29,6 +31,11 @@ function initIncomeControl() {
     };
 
     saveIncomeSettings(settings);
+
+    // 📜 LOG
+    if (typeof logActivity === "function") {
+      logActivity("SYSTEM", "SYSTEM", "Income control initialized");
+    }
   }
 }
 
@@ -50,30 +57,49 @@ function isBinaryEnabled() {
 // =====================
 // 🔘 ADMIN CONTROL
 // =====================
-function toggleUGLI() {
+function toggleUGLI(adminId = "ADMIN") {
+
   let s = getIncomeSettings();
   s.ugli = !s.ugli;
   s.updatedAt = new Date().toISOString();
+
   saveIncomeSettings(s);
+
+  // 📜 LOG
+  if (typeof logActivity === "function") {
+    logActivity(adminId, "ADMIN", "UGLI toggled → " + (s.ugli ? "ON" : "OFF"));
+  }
 }
 
-function toggleRLI() {
+function toggleRLI(adminId = "ADMIN") {
+
   let s = getIncomeSettings();
   s.rli = !s.rli;
   s.updatedAt = new Date().toISOString();
+
   saveIncomeSettings(s);
+
+  // 📜 LOG
+  if (typeof logActivity === "function") {
+    logActivity(adminId, "ADMIN", "RLI toggled → " + (s.rli ? "ON" : "OFF"));
+  }
 }
 
-function toggleBinary() {
+function toggleBinary(adminId = "ADMIN") {
+
   let s = getIncomeSettings();
   s.binary = !s.binary;
   s.updatedAt = new Date().toISOString();
+
   saveIncomeSettings(s);
+
+  // 📜 LOG
+  if (typeof logActivity === "function") {
+    logActivity(adminId, "ADMIN", "Binary toggled → " + (s.binary ? "ON" : "OFF"));
+  }
 }
 
 // =====================
 // 🚀 INIT
 // =====================
 initIncomeControl();
-
-</script>
