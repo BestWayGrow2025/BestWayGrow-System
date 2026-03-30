@@ -54,17 +54,11 @@ function repurchase() {
 
   if (!u) return;
 
-  // 🔐 PIN CHECK
-  if (!isPinActive("repurchase")) {
-    alert("Repurchase is OFF");
-    return;
-  }
-
-  // ================= PIN DATA =================
-  let pin = getPinSettings().repurchase;
+  // ================= PIN (FINAL SAFE) =================
+  let pin = getActivePin("repurchase");
 
   if (!pin) {
-    alert("Repurchase plan not set");
+    alert("Repurchase not available");
     return;
   }
 
@@ -73,7 +67,7 @@ function repurchase() {
 
   // ================= WALLET CHECK =================
   if ((u.wallet || 0) < amount) {
-    alert("Insufficient wallet");
+    alert("Insufficient wallet balance");
     return;
   }
 
@@ -83,8 +77,8 @@ function repurchase() {
   // ================= BV SPLIT =================
   let usableBV = bv * 0.5;
 
-  let rliBV = usableBV * 0.4;   // 20% total
-  let ctorBV = usableBV * 0.6;  // 30% total
+  let rliBV = usableBV * 0.4;   // 20% total BV
+  let ctorBV = usableBV * 0.6;  // 30% total BV
 
   // ================= RLI INCOME =================
   payRLIIncome(u.userId, rliBV);
