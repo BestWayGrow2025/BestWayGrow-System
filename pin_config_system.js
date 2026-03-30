@@ -20,7 +20,7 @@ function getPinSettings() {
 
   let data = JSON.parse(localStorage.getItem("pinSettings") || "{}");
 
-  // ensure structure exists
+  // ✅ FORCE STRUCTURE (VERY IMPORTANT)
   if (!data.upgrade) data.upgrade = getDefaultPin();
   if (!data.repurchase) data.repurchase = getDefaultPin();
 
@@ -41,8 +41,8 @@ function enablePin(type, config) {
 
   if (!type || !config) return;
 
-  // ✅ VALIDATION
-  if (!config.bv || !config.amount) {
+  // ✅ STRONG VALIDATION
+  if (isNaN(config.bv) || isNaN(config.amount)) {
     alert("Invalid BV or Amount");
     return;
   }
@@ -54,8 +54,11 @@ function enablePin(type, config) {
     bv: Number(config.bv),
     amount: Number(config.amount),
     gst: Number(config.gst || 0),
+
+    // ✅ AUTO DATE SAFE
     startDate: config.startDate || new Date().toISOString(),
     endDate: config.endDate || null,
+
     updatedAt: new Date().toISOString()
   };
 
@@ -105,12 +108,17 @@ function isPinActive(type) {
 }
 
 // =====================
-// 🔹 GET ACTIVE PIN DATA
+// 🔹 GET ACTIVE PIN DATA (FINAL SAFE)
 // =====================
 function getActivePin(type) {
 
+  let settings = getPinSettings();
+  let pin = settings[type];
+
+  if (!pin) return null;
+
+  // ✅ SINGLE SOURCE OF TRUTH
   if (!isPinActive(type)) return null;
 
-  let settings = getPinSettings();
-  return settings[type];
+  return pin;
 }
