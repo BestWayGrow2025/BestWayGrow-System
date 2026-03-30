@@ -5,6 +5,9 @@
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 6px; }
+    .pending { color: orange; font-weight: bold; }
+    .inactive { color: red; font-weight: bold; }
+    .active { color: green; font-weight: bold; }
     ul { list-style-type: none; padding-left: 20px; }
     li { margin-bottom: 5px; }
     button { padding: 6px 10px; margin: 5px; cursor: pointer; }
@@ -15,6 +18,9 @@
 <h1>USER DASHBOARD</h1>
 <p id="welcome"></p>
 <button onclick="logout()">Logout</button>
+
+<!-- ✅ STATUS ALERT -->
+<div id="statusBox" class="box"></div>
 
 <div class="box">
   <h3>My Profile</h3>
@@ -49,17 +55,16 @@
   <button onclick="goFranchise()">Apply for Franchise</button>
 </div>
 
-<!-- ✅ TREE (CONTROLLED VIEW) -->
 <div class="box">
   <h3>My Team</h3>
   <button onclick="toggleTree()">View Team</button>
   <div id="tree" style="display:none; margin-top:10px;"></div>
 </div>
 
-<!-- ✅ CORE -->
+<!-- CORE -->
 <script src="CORE_system.js"></script>
 
-<!-- ✅ SYSTEM FILES -->
+<!-- SYSTEM FILES -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="pin_system.js"></script>
@@ -70,11 +75,39 @@
 // ================= INIT =================
 initCoreSystem();
 
-// ================= SECURE AUTH =================
+// ================= AUTH =================
 let user = protectPage({ role: "user" });
 if (!user) return;
 
-// ================= UI LOAD =================
+// ================= STATUS CHECK =================
+function loadStatus() {
+
+  let box = document.getElementById("statusBox");
+
+  if (user.status !== "active") {
+
+    box.innerHTML = `
+      <span class="inactive">⚠ Account Inactive</span><br>
+      Please activate your account to unlock earnings.
+    `;
+
+  } else if (!isUserActive(user.userId)) {
+
+    box.innerHTML = `
+      <span class="pending">⏳ Plan Expired</span><br>
+      Please repurchase to continue benefits.
+    `;
+
+  } else {
+
+    box.innerHTML = `
+      <span class="active">✅ Active Account</span><br>
+      All systems running normally.
+    `;
+  }
+}
+
+// ================= UI =================
 document.getElementById("welcome").innerText =
   "Welcome " + user.username + " (" + user.userId + ")";
 
@@ -92,7 +125,7 @@ function loadProfile() {
     Sponsor: ${getSponsor(user)}<br>
     Introducer: ${user.introducerId || "-"}<br>
     Join Time: ${user.createdAt || "-"}<br>
-    Status: ${user.status || "inactive"}<br>
+    Status: ${user.status}<br>
     Active: ${isUserActive(user.userId) ? "YES" : "NO"}
   `;
 }
@@ -175,10 +208,10 @@ function goFranchise() {
   window.location.href = "user_apply_franchise.html";
 }
 
-// ================= TREE (OPTIMIZED) =================
+// ================= TREE =================
 function buildTree(userId, depth = 0) {
 
-  if (depth > 10) return ""; // 🔐 prevent deep recursion attack
+  if (depth > 10) return "";
 
   let users = getUsers();
   let children = users.filter(u => u.sponsorId === userId);
@@ -198,7 +231,6 @@ function buildTree(userId, depth = 0) {
   return html;
 }
 
-// ================= TOGGLE TREE =================
 let treeLoaded = false;
 
 function toggleTree() {
@@ -217,7 +249,15 @@ function toggleTree() {
   }
 }
 
+// ================= AUTO REFRESH (PRO) =================
+setInterval(() => {
+  loadWallet();
+  loadTransactions();
+  loadWithdrawHistory();
+}, 5000);
+
 // ================= INIT LOAD =================
+loadStatus();
 loadProfile();
 loadWallet();
 loadTransactions();
