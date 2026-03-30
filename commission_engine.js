@@ -25,7 +25,7 @@ function getAllUsers() {
 }
 
 // =====================
-// SAFE LOG FUNCTION
+// SAFE LOG
 // =====================
 function safeLog(data) {
   if (typeof addIncomeLog === "function") {
@@ -163,25 +163,31 @@ function addToCTORPool(bvAmount) {
 }
 
 // =====================
-// MASTER (FINAL 🔥)
+// 🔥 MASTER CONTROLLER (FINAL SAFE)
 // =====================
 function processIncome(type, userId, bvAmount) {
 
   // 🔐 GLOBAL SAFETY
-  if (!isIncomeSystemSafe()) {
-    console.warn("⚠ Income system disabled");
-    return;
+  if (typeof isIncomeSystemSafe === "function") {
+    if (!isIncomeSystemSafe()) {
+      console.warn("⚠ Income system disabled");
+      return;
+    }
   }
 
   if (!userId || !bvAmount || bvAmount <= 0) return;
 
   if (type === "upgrade") {
 
+    if (typeof isUGLIEnabled === "function" && !isUGLIEnabled()) return;
+
     payUGLIIncome(userId, bvAmount);
     addToCTORPool(bvAmount);
 
   } 
   else if (type === "repurchase") {
+
+    if (typeof isRLIEnabled === "function" && !isRLIEnabled()) return;
 
     let usableBV = bvAmount * 0.5;
 
