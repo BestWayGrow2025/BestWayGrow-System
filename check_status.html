@@ -2,15 +2,22 @@
 <html>
 <head>
   <title>Check Status</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border:1px solid #ccc; padding:15px; border-radius:8px; max-width:400px; }
+  </style>
 </head>
 <body>
 
-<h2>Check Registration Status</h2>
+<div class="box">
+  <h2>Check Registration Status</h2>
 
-<input type="text" id="mobile" placeholder="Enter Mobile"><br><br>
-<button onclick="checkStatus()">Check Status</button>
+  <input type="text" id="mobile" placeholder="Enter Mobile"><br><br>
+  <button onclick="checkStatus()">Check Status</button>
 
-<p id="result"></p>
+  <hr>
+  <p id="result"></p>
+</div>
 
 <!-- CORE -->
 <script src="CORE_system.js"></script>
@@ -19,6 +26,11 @@
 
 // ================= INIT =================
 initCoreSystem();
+
+// ================= GET QUEUE =================
+function getQueue() {
+  return JSON.parse(localStorage.getItem("regQueue") || "[]");
+}
 
 // ================= CHECK STATUS =================
 function checkStatus() {
@@ -31,31 +43,46 @@ function checkStatus() {
   }
 
   let users = getUsers();
+  let queue = getQueue();
 
-  // ✅ CHECK REGISTERED USERS
+  // ================= ✅ REGISTERED =================
   let user = users.find(u => u.mobile === mobile);
 
   if (user) {
-    document.getElementById("result").innerHTML =
-      "✅ Registered<br>User ID: " + user.userId +
-      "<br>Status: " + user.status;
+    document.getElementById("result").innerHTML = `
+      ✅ <b>Registered</b><br><br>
+      User ID: ${user.userId}<br>
+      Name: ${user.username}<br>
+      Status: ${user.status}<br>
+      Active: ${isUserActive(user.userId) ? "YES" : "NO"}
+    `;
     return;
   }
 
-  // ✅ CHECK QUEUE
-  let queue = JSON.parse(localStorage.getItem("registrationQueue") || "[]");
+  // ================= ⏳ PENDING =================
+  let pendingList = queue
+    .filter(q => q.status === "PENDING")
+    .sort((a, b) => new Date(a.queueTime) - new Date(b.queueTime));
 
-  let pending = queue.find(q => q.mobile === mobile);
+  let index = pendingList.findIndex(q => q.mobile === mobile);
 
-  if (pending) {
-    document.getElementById("result").innerHTML =
-      "⏳ Pending... Please wait";
+  if (index !== -1) {
+
+    let position = index + 1;
+    let total = pendingList.length;
+
+    document.getElementById("result").innerHTML = `
+      ⏳ <b>Pending</b><br><br>
+      Queue Position: ${position} / ${total}<br>
+      Status: Waiting for processing...
+    `;
     return;
   }
 
-  // ❌ NOT FOUND
-  document.getElementById("result").innerHTML =
-    "❌ No record found";
+  // ================= ❌ NOT FOUND =================
+  document.getElementById("result").innerHTML = `
+    ❌ No record found
+  `;
 }
 
 </script>
