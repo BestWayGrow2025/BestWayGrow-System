@@ -28,6 +28,9 @@
 <!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
 
+<!-- ✅ QUEUE SYSTEM (VERY IMPORTANT 🔒) -->
+<script src="queue_system.js"></script>
+
 <script>
 
 // ================= INIT =================
@@ -66,13 +69,13 @@ function handleRegister() {
 
   let users = getUsers();
 
-  // ✅ VALIDATE INTRODUCER
+  // ✅ INTRODUCER CHECK
   if (!isValidIntroducer(introducerId)) {
     alert("Invalid Introducer");
     return;
   }
 
-  // ✅ VALIDATE SPONSOR
+  // ✅ SPONSOR CHECK
   if (!sponsorId) {
     alert("Sponsor required");
     return;
@@ -84,46 +87,26 @@ function handleRegister() {
     return;
   }
 
-  // 🔥 FINAL SAFE TREE PLACEMENT (CORE CONTROL)
-  let finalSponsor = getSafeSponsor(sponsorId, position);
+  // 🔥 ADD TO QUEUE (NO DIRECT REGISTER)
+  addToQueue({
+    username: username,
+    password: password,
+    mobile: mobile,
+    introducerId: introducerId,
+    sponsorId: sponsorId,
+    position: position,
+    time: new Date().toISOString()
+  });
 
-  // ✅ REGISTER (MATCH CORE)
-  let user = registerUser(
-    username,
-    password,
-    introducerId,
-    finalSponsor,
-    position
-  );
+  // 🔥 PROCESS QUEUE (LOCK SAFE)
+  processQueue();
 
-  if (!user) return;
+  // ✅ USER FEEDBACK
+  alert("✅ Registration submitted!\nProcessing...");
 
-  // ✅ EXTRA DATA UPDATE (SAFE)
-  let updatedUsers = getUsers();
-  let u = updatedUsers.find(x => x.userId === user.userId);
-
-  if (u) {
-    u.mobile = mobile;
-
-    // future-proof
-    u.leftChild = null;
-    u.rightChild = null;
-
-    saveUsers(updatedUsers);
-  }
-
-  // ✅ SUCCESS FLOW (FAST ACTION)
-  alert("Registered Successfully!\nUser ID: " + user.userId);
-
-  // 🔥 AUTO LOGIN
-  localStorage.setItem("loggedInUser", JSON.stringify(user));
-
-  // 🔥 DIRECT DASHBOARD
-  window.location.href = "user_dashboard.html";
 }
 
 </script>
 
 </body>
 </html>
-
