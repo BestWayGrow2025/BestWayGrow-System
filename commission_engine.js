@@ -1,5 +1,6 @@
 <script src="wallet_system.js"></script>
 <script src="active_system.js"></script>
+<script src="income_log_system.js"></script> <!-- ✅ ADDED -->
 
 <script>
 
@@ -43,6 +44,14 @@ function holdIncome(userId, amount, reason) {
   });
 
   localStorage.setItem("holdIncome", JSON.stringify(holds));
+
+  // ✅ LOG
+  addIncomeLog({
+    userId: userId,
+    type: "hold",
+    amount: amount,
+    note: reason
+  });
 }
 
 // =====================
@@ -68,11 +77,23 @@ function payUGLIIncome(userId, bvAmount) {
     if (income > 0) {
 
       if (isUserActive(parent.userId)) {
-        creditWallet(parent.userId, income, `UGLI L${i + 1} (${percent}%)`);
-      } else {
-        holdIncome(parent.userId, income, `UGLI L${i + 1} (${percent}%)`);
-      }
 
+        creditWallet(parent.userId, income, `UGLI L${i + 1} (${percent}%)`);
+
+        // ✅ LOG
+        addIncomeLog({
+          userId: parent.userId,
+          type: "upgrade",
+          amount: income,
+          sourceUser: userId,
+          note: `UGLI L${i + 1}`
+        });
+
+      } else {
+
+        holdIncome(parent.userId, income, `UGLI L${i + 1} (${percent}%)`);
+
+      }
     }
 
     current = parent;
@@ -92,7 +113,7 @@ function payRLIIncome(userId, totalBV) {
   let levels = 30;
   let perLevel = totalBV / levels;
 
-  if (perLevel <= 0) return; // ✅ safety
+  if (perLevel <= 0) return;
 
   for (let i = 1; i <= levels; i++) {
 
@@ -102,9 +123,22 @@ function payRLIIncome(userId, totalBV) {
     if (!parent) break;
 
     if (isUserActive(parent.userId)) {
+
       creditWallet(parent.userId, perLevel, `RLI L${i}`);
+
+      // ✅ LOG
+      addIncomeLog({
+        userId: parent.userId,
+        type: "repurchase",
+        amount: perLevel,
+        sourceUser: userId,
+        note: `RLI L${i}`
+      });
+
     } else {
+
       holdIncome(parent.userId, perLevel, `RLI L${i}`);
+
     }
 
     current = parent;
@@ -130,7 +164,7 @@ function addToCTORPool(bvAmount) {
 // =====================
 function processIncome(type, userId, bvAmount) {
 
-  if (!userId || !bvAmount) return;
+  if (!userId || !bvAmount || bvAmount <= 0) return;
 
   if (type === "upgrade") {
 
@@ -147,11 +181,11 @@ function processIncome(type, userId, bvAmount) {
 
     payRLIIncome(userId, rliBV);
     addToCTORPool(ctorBV);
-
   }
 
   console.log("✅ Income processed:", type);
 }
 
 </script>
+
 
