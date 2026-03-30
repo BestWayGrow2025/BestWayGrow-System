@@ -1,74 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Upgrade</title>
+  <title>User Upgrade</title>
 </head>
 <body>
 
-<h2>Upgrade Page</h2>
+<h2>User Upgrade</h2>
 
-<p>User ID: <span id="userId"></span></p>
+<p id="info"></p>
 
-<button onclick="upgrade()">Upgrade (₹2100)</button>
+<button onclick="upgradeNow()">Upgrade Now</button>
 
-<!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
+<script src="wallet_system.js"></script>
+<script src="commission_engine.js"></script>
 
 <script>
 
-// GET USER FROM URL
-let params = new URLSearchParams(window.location.search);
-let userId = params.get("user");
+// ================= INIT =================
+initCoreSystem();
 
-document.getElementById("userId").innerText = userId;
+// ================= AUTH =================
+let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
-// 🔥 UGLI INCOME (CLEAN)
-function payUGLIIncome(buyerId) {
-
-  let users = getUsers();
-  let buyer = users.find(u => u.userId === buyerId);
-  if (!buyer) return;
-
-  let current = buyer;
-  let level = 1;
-
-  while (current && current.introducerId && level <= 30) {
-
-    let parent = users.find(u => u.userId === current.introducerId);
-    if (!parent) break;
-
-    parent.wallet = parent.wallet || 0;
-
-    let income = (level === 1) ? 500 : 25;
-
-    parent.wallet += income;
-
-    current = parent;
-    level++;
-  }
-
-  saveUsers(users);
+if (!session) {
+  alert("Login required");
+  window.location.href = "user_login.html";
 }
 
-// UPGRADE ACTION
-function upgrade() {
+let user = getUserById(session.userId);
 
-  if (!userId) {
-    alert("Invalid user");
+if (!user) {
+  alert("User not found");
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "user_login.html";
+}
+
+// ================= INFO =================
+document.getElementById("info").innerText =
+  "User: " + user.username + " (" + user.userId + ")";
+
+
+// ================= DUPLICATE PROTECTION =================
+function isAlreadyUpgraded(u) {
+  return u.isActive === true;
+}
+
+
+// ================= UPGRADE =================
+function upgradeNow() {
+
+  let users = getUsers();
+  let u = users.find(x => x.userId === user.userId);
+
+  if (!u) return;
+
+  // ❌ prevent duplicate upgrade
+  if (isAlreadyUpgraded(u)) {
+    alert("Already upgraded");
     return;
   }
 
-  payUGLIIncome(userId);
+  // 💰 BV AMOUNT (CONFIG)
+  let bvAmount = 1000;
 
-  alert("Upgrade Successful ✅");
+  // ================= ACTIVATE USER =================
+  activateUser(u.userId);
 
+  // ================= COMMISSION =================
+  // 🔥 SAFE TRIGGER (IMPORTANT)
+  processCommission(u.userId, bvAmount);
+
+  // ================= SAVE =================
+  saveUsers(users);
+
+  alert("✅ Upgrade Successful!");
+
+  // ================= REDIRECT =================
   window.location.href = "user_dashboard.html";
 }
 
-</script>
-
-<script>
-  initCoreSystem();
 </script>
 
 </body>
