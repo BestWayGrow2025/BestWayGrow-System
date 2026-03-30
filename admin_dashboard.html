@@ -80,25 +80,38 @@
     <p id="system"></p>
   </div>
 
-  <!-- FINANCE -->
+  <!-- 💰 FINANCE -->
   <div class="card" id="financeCard">
     <h3>Finance Panel</h3>
     <button onclick="goTo('admin_withdrawals.html')">Withdrawals</button>
   </div>
 
-  <!-- FRANCHISE -->
+  <!-- 🎟️ PIN CONTROL -->
+  <div class="card" id="pinCard">
+    <h3>PIN Management</h3>
+    <button onclick="goTo('admin_pin_panel.html')">Open PIN Panel</button>
+  </div>
+
+  <!-- 📊 INCOME -->
+  <div class="card" id="incomeCard">
+    <h3>Income Management</h3>
+    <button onclick="goTo('admin_income_control.html')">Income Control</button>
+    <button onclick="goTo('admin_income_logs.html')">View Income Logs</button>
+  </div>
+
+  <!-- 🏢 FRANCHISE -->
   <div class="card" id="franchiseCard">
     <h3>Franchise Panel</h3>
     <button onclick="goTo('admin_franchise_requests.html')">Requests</button>
   </div>
 
-  <!-- REPORT -->
+  <!-- 📈 REPORT -->
   <div class="card" id="reportCard">
     <h3>Reports</h3>
     <button onclick="goTo('admin_reports.html')">Open Reports</button>
   </div>
 
-  <!-- KYC -->
+  <!-- 🧾 KYC -->
   <div class="card" id="kycCard">
     <h3>KYC Panel</h3>
     <button onclick="goTo('admin_kyc.html')">Open KYC</button>
@@ -116,22 +129,22 @@
 
 <script>
 
-// INIT
+// ================= INIT =================
 initCoreSystem();
 
-// SECURITY (MAIN)
+// ================= SECURITY =================
 let admin = protectPage({
   role: "admin"
 });
 
-// SETTINGS
+// ================= SETTINGS =================
 let s = getSystemSettings();
 
-// WELCOME
+// ================= WELCOME =================
 document.getElementById("welcome").innerText =
   "Welcome ADMIN (" + admin.userId + ")";
 
-// PROFILE
+// ================= PROFILE =================
 document.getElementById("profile").innerHTML = `
   ID: ${admin.userId} <br>
   Name: ${admin.username} <br>
@@ -139,40 +152,54 @@ document.getElementById("profile").innerHTML = `
   Status: ${admin.status}
 `;
 
-// SYSTEM
+// ================= SYSTEM =================
 document.getElementById("system").innerHTML = `
   Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
   Lock Mode: ${s.lockMode ? "ON" : "OFF"}
 `;
 
-// ROLE CONTROL
+// ================= ROLE CONTROL =================
 if (admin.type === "B") {
 
   let depts = admin.departments || [];
 
+  // FINANCE
   if (!depts.includes("finance")) {
     document.getElementById("financeCard").style.display = "none";
   }
 
+  // PIN
+  if (!depts.includes("pin")) {
+    document.getElementById("pinCard").style.display = "none";
+  }
+
+  // INCOME
+  if (!depts.includes("income")) {
+    document.getElementById("incomeCard").style.display = "none";
+  }
+
+  // FRANCHISE
   if (!depts.includes("franchise")) {
     document.getElementById("franchiseCard").style.display = "none";
   }
 
+  // REPORT
   if (!depts.includes("report")) {
     document.getElementById("reportCard").style.display = "none";
   }
 
+  // KYC
   if (!depts.includes("kyc")) {
     document.getElementById("kycCard").style.display = "none";
   }
 }
 
-// NAV
+// ================= NAV =================
 function goTo(page) {
   window.location.href = page;
 }
 
-// LOGOUT
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
