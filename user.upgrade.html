@@ -47,9 +47,9 @@ document.getElementById("info").innerText =
   "User: " + user.username + " (" + user.userId + ")";
 
 
-// ================= DUPLICATE FIX (FINAL) =================
+// ================= DUPLICATE CHECK =================
 function isAlreadyUpgraded(u) {
-  return isUserActive(u.userId); // ✅ TIME BASED (FIXED)
+  return isUserActive(u.userId);
 }
 
 
@@ -61,23 +61,17 @@ function upgradeNow() {
 
   if (!u) return;
 
-  // ❌ BLOCK ONLY IF STILL ACTIVE
+  // ❌ Already active
   if (isAlreadyUpgraded(u)) {
     alert("Your ID is already active");
     return;
   }
 
-  // 🔐 PIN CONTROL
-  if (!isPinActive("upgrade")) {
-    alert("Upgrade is OFF");
-    return;
-  }
-
-  // ================= PIN DATA =================
-  let pin = getPinSettings().upgrade;
+  // ================= PIN (FINAL SAFE) =================
+  let pin = getActivePin("upgrade");
 
   if (!pin) {
-    alert("Upgrade plan not set");
+    alert("Upgrade not available");
     return;
   }
 
@@ -96,7 +90,7 @@ function upgradeNow() {
   // ================= ACTIVATE =================
   activateUser(u.userId);
 
-  // ================= INCOME (UGLI) =================
+  // ================= INCOME =================
   payUGLIIncome(u.userId, bv);
 
   // ================= CTOR =================
