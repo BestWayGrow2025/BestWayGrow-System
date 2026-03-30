@@ -4,11 +4,11 @@
 <script>
 
 // =====================
-// COMMISSION CONFIG (FINAL)
+// COMMISSION CONFIG (FINAL SAFE)
 // =====================
 const COMMISSION_CONFIG = {
 
-  // ✅ UGLI (UPGRADE)
+  // ✅ UGLI (UPGRADE - INTRODUCER BASED)
   ugliLevels: [
     16.67, // L1
     0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,
@@ -16,7 +16,7 @@ const COMMISSION_CONFIG = {
     0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83,0.83
   ],
 
-  // ✅ CTOR
+  // ✅ CTOR %
   ctorPercent: 25
 };
 
@@ -28,7 +28,7 @@ function getAllUsers() {
 }
 
 // =====================
-// 🔹 HOLD INCOME
+// 🔹 HOLD INCOME (SEPARATE SYSTEM READY)
 // =====================
 function holdIncome(userId, amount, reason) {
 
@@ -68,9 +68,9 @@ function payUGLIIncome(userId, bvAmount) {
     if (income > 0) {
 
       if (isUserActive(parent.userId)) {
-        creditWallet(parent.userId, income, `UGLI L${i+1}`);
+        creditWallet(parent.userId, income, `UGLI L${i + 1} (${percent}%)`);
       } else {
-        holdIncome(parent.userId, income, `UGLI L${i+1}`);
+        holdIncome(parent.userId, income, `UGLI L${i + 1} (${percent}%)`);
       }
 
     }
@@ -90,7 +90,9 @@ function payRLIIncome(userId, totalBV) {
   if (!current) return;
 
   let levels = 30;
-  let perLevel = totalBV / levels;
+
+  // ✅ SAFE: avoid division issue
+  let perLevel = levels > 0 ? (totalBV / levels) : 0;
 
   for (let i = 1; i <= levels; i++) {
 
@@ -99,10 +101,14 @@ function payRLIIncome(userId, totalBV) {
     let parent = users.find(u => u.userId === current.introducerId);
     if (!parent) break;
 
-    if (isUserActive(parent.userId)) {
-      creditWallet(parent.userId, perLevel, `RLI L${i}`);
-    } else {
-      holdIncome(parent.userId, perLevel, `RLI L${i}`);
+    if (perLevel > 0) {
+
+      if (isUserActive(parent.userId)) {
+        creditWallet(parent.userId, perLevel, `RLI L${i}`);
+      } else {
+        holdIncome(parent.userId, perLevel, `RLI L${i}`);
+      }
+
     }
 
     current = parent;
@@ -121,6 +127,33 @@ function addToCTORPool(bvAmount) {
   pool += amount;
 
   localStorage.setItem("ctorPool", JSON.stringify(pool));
+}
+
+// =====================
+// 🔥 MASTER CONTROLLER (FUTURE SAFE)
+// =====================
+// 👉 Upgrade → UGLI
+// 👉 Repurchase → RLI
+function processIncome(type, userId, bvAmount) {
+
+  if (!userId || !bvAmount) return;
+
+  if (type === "upgrade") {
+    payUGLIIncome(userId, bvAmount);
+    addToCTORPool(bvAmount);
+  }
+
+  if (type === "repurchase") {
+    let usableBV = bvAmount * 0.5;
+
+    let rliBV = usableBV * 0.4;
+    let ctorBV = usableBV * 0.6;
+
+    payRLIIncome(userId, rliBV);
+    addToCTORPool(ctorBV);
+  }
+
+  console.log("✅ Income processed:", type);
 }
 
 </script>
