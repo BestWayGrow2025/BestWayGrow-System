@@ -1,10 +1,15 @@
 <script>
 
 // =====================
-// 🔹 GET QUEUE
+// 🔹 GET / SAVE QUEUE
 // =====================
 function getQueue() {
-  return JSON.parse(localStorage.getItem("regQueue") || "[]");
+  try {
+    return JSON.parse(localStorage.getItem("regQueue") || "[]");
+  } catch {
+    localStorage.setItem("regQueue", "[]");
+    return [];
+  }
 }
 
 function saveQueue(q) {
@@ -19,9 +24,11 @@ function addToQueue(userData) {
   let queue = getQueue();
 
   queue.push({
+    id: "Q" + Date.now(), // unique id 🔥
     ...userData,
     queueTime: new Date().toISOString(),
-    status: "PENDING"
+    status: "PENDING",
+    retry: 0
   });
 
   saveQueue(queue);
@@ -29,7 +36,7 @@ function addToQueue(userData) {
 
 
 // =====================
-// 🔐 LOCK SYSTEM
+// 🔐 LOCK SYSTEM (SAFE)
 // =====================
 function isLocked() {
   return localStorage.getItem("treeLock") === "true";
@@ -41,54 +48,101 @@ function setLock(value) {
 
 
 // =====================
-// ⚙️ PROCESS QUEUE (ONE BY ONE)
+// 🧹 CLEANUP QUEUE
+// =====================
+function cleanQueue() {
+  let queue = getQueue();
+
+  // remove DONE older than 1 day
+  let now = Date.now();
+
+  queue = queue.filter(q => {
+    if (q.status !== "DONE") return true;
+
+    let time = new Date(q.queueTime).getTime();
+    return (now - time) < (24 * 60 * 60 * 1000);
+  });
+
+  saveQueue(queue);
+}
+
+
+// =====================
+// ⚙️ PROCESS QUEUE (SAFE + RETRY)
 // =====================
 function processQueue() {
 
   if (isLocked()) {
-    console.warn("System busy...");
     return;
   }
 
   let queue = getQueue();
 
-  if (queue.length === 0) return;
+  if (!queue.length) return;
 
   // 🔒 LOCK START
   setLock(true);
 
-  // 📌 SORT BY TIME
-  queue.sort((a, b) =>
-    new Date(a.queueTime) - new Date(b.queueTime)
-  );
+  try {
 
-  let nextUser = queue.find(u => u.status === "PENDING");
+    // 📌 SORT BY TIME
+    queue.sort((a, b) =>
+      new Date(a.queueTime) - new Date(b.queueTime)
+    );
 
-  if (!nextUser) {
-    setLock(false);
-    return;
+    let nextUser = queue.find(u => u.status === "PENDING");
+
+    if (!nextUser) {
+      setLock(false);
+      return;
+    }
+
+    // 🔥 CREATE USER
+    let user = registerUser(
+      nextUser.username,
+      nextUser.password,
+      nextUser.introducerId,
+      nextUser.sponsorId,
+      nextUser.position
+    );
+
+    if (user) {
+      nextUser.status = "DONE";
+    } else {
+      nextUser.retry++;
+
+      // ❌ FAIL SAFE
+      if (nextUser.retry >= 3) {
+        nextUser.status = "FAILED";
+      }
+    }
+
+    saveQueue(queue);
+
+  } catch (err) {
+    console.error("Queue Error:", err);
   }
 
-  // 🔥 CREATE USER (FINAL STEP)
-  let user = registerUser(
-    nextUser.username,
-    nextUser.password,
-    nextUser.introducerId,
-    nextUser.sponsorId,
-    nextUser.position
-  );
-
-  if (user) {
-    nextUser.status = "DONE";
-  }
-
-  saveQueue(queue);
-
-  // 🔓 UNLOCK
+  // 🔓 UNLOCK ALWAYS
   setLock(false);
 
-  console.log("✅ One user processed");
-
 }
+
+
+// =====================
+// 🔄 AUTO PROCESSOR (IMPORTANT 🔥)
+// =====================
+function startQueueProcessor() {
+  setInterval(() => {
+    processQueue();
+    cleanQueue();
+  }, 2000); // every 2 sec
+}
+
+
+// =====================
+// 🚀 AUTO START
+// =====================
+startQueueProcessor();
 
 </script>
