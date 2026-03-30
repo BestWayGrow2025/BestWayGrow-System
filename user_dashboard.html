@@ -19,10 +19,10 @@
 <p id="welcome"></p>
 <button onclick="logout()">Logout</button>
 
-<!-- ✅ STATUS ALERT -->
+<!-- STATUS -->
 <div id="statusBox" class="box"></div>
 
-<!-- ✅ SYSTEM STATUS -->
+<!-- SYSTEM STATUS -->
 <div class="box">
   <h3>System Status</h3>
   <p id="systemStatus"></p>
@@ -61,21 +61,15 @@
   <button onclick="goFranchise()">Apply for Franchise</button>
 </div>
 
-<div class="box">
-  <h3>My Team</h3>
-  <button onclick="toggleTree()">View Team</button>
-  <div id="tree" style="display:none; margin-top:10px;"></div>
-</div>
-
 <!-- CORE -->
 <script src="CORE_system.js"></script>
 
-<!-- SYSTEM FILES -->
+<!-- SYSTEM -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="withdrawal_system.js"></script>
 
-<!-- ✅ NEW SYSTEM -->
+<!-- NEW SYSTEM -->
 <script src="pin_config_system.js"></script>
 <script src="income_control_system.js"></script>
 
@@ -107,15 +101,18 @@ function loadStatus() {
 // ================= SYSTEM STATUS =================
 function loadSystemStatus() {
 
-  let upgrade = getActivePin("upgrade") ? "🟢 ON" : "🔴 OFF";
-  let repurchase = getActivePin("repurchase") ? "🟢 ON" : "🔴 OFF";
+  let upgradePin = getActivePin("upgrade");
+  let repurchasePin = getActivePin("repurchase");
+
+  let upgrade = upgradePin ? "🟢 ON" : "🔴 OFF";
+  let repurchase = repurchasePin ? "🟢 ON" : "🔴 OFF";
 
   let ugli = isUGLIEnabled() ? "🟢 ON" : "🔴 OFF";
   let rli = isRLIEnabled() ? "🟢 ON" : "🔴 OFF";
 
   document.getElementById("systemStatus").innerHTML = `
-    Upgrade: ${upgrade}<br>
-    Repurchase: ${repurchase}<br>
+    Upgrade PIN: ${upgrade}<br>
+    Repurchase PIN: ${repurchase}<br>
     UGLI Income: ${ugli}<br>
     RLI Income: ${rli}
   `;
@@ -144,6 +141,7 @@ function loadWallet() {
 
 // ================= TRANSACTIONS =================
 function loadTransactions() {
+
   let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
   let list = txns.filter(t => t.userId === user.userId);
 
@@ -154,7 +152,7 @@ function loadTransactions() {
 
   let html = "<ul>";
   list.slice().reverse().forEach(t => {
-    html += `<li>${t.type} ₹${t.amount} - ${t.reason}</li>`;
+    html += `<li>${t.type} ₹${t.amount} - ${t.reason}<br><small>${t.time || ""}</small></li>`;
   });
   html += "</ul>";
 
@@ -163,6 +161,7 @@ function loadTransactions() {
 
 // ================= WITHDRAW =================
 function loadWithdrawHistory() {
+
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
   let list = withdrawals.filter(w => w.userId === user.userId);
 
@@ -173,7 +172,7 @@ function loadWithdrawHistory() {
 
   let html = "<ul>";
   list.slice().reverse().forEach(w => {
-    html += `<li>${w.requestId} - ₹${w.amount} (${w.status})</li>`;
+    html += `<li>${w.requestId} - ₹${w.amount} (${w.status})<br><small>${w.time || ""}</small></li>`;
   });
   html += "</ul>";
 
@@ -182,10 +181,11 @@ function loadWithdrawHistory() {
 
 // ================= LINKS =================
 function loadLinks() {
+
   let base = "https://bestwaygrow2025.github.io/BestWayGrow-System/";
 
   document.getElementById("links").innerHTML = `
-    ${base}user.register.html?ref=${user.userId}
+    Register:<br>${base}user.register.html?ref=${user.userId}
   `;
 }
 
@@ -206,7 +206,15 @@ function goFranchise() {
   window.location.href = "user_apply_franchise.html";
 }
 
-// ================= INIT LOAD =================
+// ================= AUTO REFRESH =================
+setInterval(() => {
+  loadWallet();
+  loadTransactions();
+  loadWithdrawHistory();
+  loadSystemStatus();
+}, 5000);
+
+// ================= INIT =================
 loadStatus();
 loadSystemStatus();
 loadProfile();
@@ -214,13 +222,6 @@ loadWallet();
 loadTransactions();
 loadWithdrawHistory();
 loadLinks();
-
-setInterval(() => {
-  loadWallet();
-  loadTransactions();
-  loadWithdrawHistory();
-  loadSystemStatus();
-}, 5000);
 
 // ================= LOGOUT =================
 function logout() {
