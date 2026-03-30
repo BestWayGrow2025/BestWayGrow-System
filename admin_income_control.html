@@ -16,7 +16,8 @@
 <div class="box">
   <h3>UGLI (Upgrade Income)</h3>
 
-  <button onclick="toggleUGLIControl()">Toggle UGLI</button>
+  <button onclick="setUGLI(true)">ON</button>
+  <button onclick="setUGLI(false)">OFF</button>
 
   <p id="ugliStatus"></p>
 </div>
@@ -25,7 +26,8 @@
 <div class="box">
   <h3>RLI (Repurchase Income)</h3>
 
-  <button onclick="toggleRLIControl()">Toggle RLI</button>
+  <button onclick="setRLI(true)">ON</button>
+  <button onclick="setRLI(false)">OFF</button>
 
   <p id="rliStatus"></p>
 </div>
@@ -34,7 +36,8 @@
 <div class="box">
   <h3>Binary Income (Future)</h3>
 
-  <button onclick="toggleBinaryControl()">Toggle Binary</button>
+  <button onclick="setBinary(true)">ON</button>
+  <button onclick="setBinary(false)">OFF</button>
 
   <p id="binaryStatus"></p>
 </div>
@@ -44,36 +47,54 @@
 
 <script>
 
+// ================= SAFE INIT =================
+initIncomeControl();
+
+// ================= SAFE GET =================
+function safeStatus(fn) {
+  try {
+    return fn();
+  } catch {
+    return false;
+  }
+}
+
 // ================= REFRESH =================
 function refreshStatus() {
 
   document.getElementById("ugliStatus").innerText =
-    isUGLIEnabled() ? "🟢 ACTIVE" : "🔴 OFF";
+    safeStatus(isUGLIEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
 
   document.getElementById("rliStatus").innerText =
-    isRLIEnabled() ? "🟢 ACTIVE" : "🔴 OFF";
+    safeStatus(isRLIEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
 
   document.getElementById("binaryStatus").innerText =
-    isBinaryEnabled() ? "🟢 ACTIVE" : "🔴 OFF";
+    safeStatus(isBinaryEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
 }
 
-// ================= TOGGLES =================
-function toggleUGLIControl() {
-  toggleUGLI();
+// ================= SETTERS =================
+function setUGLI(state) {
+  let s = getIncomeSettings();
+  s.ugli = state;
+  saveIncomeSettings(s);
   refreshStatus();
-  alert("UGLI toggled");
+  alert("UGLI " + (state ? "ENABLED" : "DISABLED"));
 }
 
-function toggleRLIControl() {
-  toggleRLI();
+function setRLI(state) {
+  let s = getIncomeSettings();
+  s.rli = state;
+  saveIncomeSettings(s);
   refreshStatus();
-  alert("RLI toggled");
+  alert("RLI " + (state ? "ENABLED" : "DISABLED"));
 }
 
-function toggleBinaryControl() {
-  toggleBinary();
+function setBinary(state) {
+  let s = getIncomeSettings();
+  s.binary = state;
+  saveIncomeSettings(s);
   refreshStatus();
-  alert("Binary toggled");
+  alert("Binary " + (state ? "ENABLED" : "DISABLED"));
 }
 
 // ================= INIT =================
