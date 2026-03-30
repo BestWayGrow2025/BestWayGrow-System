@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ADMIN INCOME CONTROL</title>                                       
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
+    button { padding: 6px 12px; margin: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h2>INCOME CONTROL PANEL</h2>
+
+<!-- ================= UGLI ================= -->
+<div class="box">
+  <h3>UGLI (Upgrade Income)</h3>
+
+  <button onclick="toggleUGLIControl()">Toggle UGLI</button>
+
+  <p id="ugliStatus"></p>
+</div>
+
+<!-- ================= RLI ================= -->
+<div class="box">
+  <h3>RLI (Repurchase Income)</h3>
+
+  <button onclick="toggleRLIControl()">Toggle RLI</button>
+
+  <p id="rliStatus"></p>
+</div>
+
+<!-- ================= BINARY ================= -->
+<div class="box">
+  <h3>Binary Income (Future)</h3>
+
+  <button onclick="toggleBinaryControl()">Toggle Binary</button>
+
+  <p id="binaryStatus"></p>
+</div>
+
+<!-- ================= SCRIPT ================= -->
+<script src="income_control_system.js"></script>
+
+<script>
+
+// ================= REFRESH =================
+function refreshStatus() {
+
+  document.getElementById("ugliStatus").innerText =
+    isUGLIEnabled() ? "🟢 ACTIVE" : "🔴 OFF";
+
+  document.getElementById("rliStatus").innerText =
+    isRLIEnabled() ? "🟢 ACTIVE" : "🔴 OFF";
+
+  document.getElementById("binaryStatus").innerText =
+    isBinaryEnabled() ? "🟢 ACTIVE" : "🔴 OFF";
+}
+
+// ================= TOGGLES =================
+function toggleUGLIControl() {
+  toggleUGLI();
+  refreshStatus();
+  alert("UGLI toggled");
+}
+
+function toggleRLIControl() {
+  toggleRLI();
+  refreshStatus();
+  alert("RLI toggled");
+}
+
+function toggleBinaryControl() {
+  toggleBinary();
+  refreshStatus();
+  alert("Binary toggled");
+}
+
+// ================= INIT =================
+refreshStatus();
+
+</script>
+
+</body>
+</html>
