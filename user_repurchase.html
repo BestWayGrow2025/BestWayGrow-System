@@ -74,17 +74,8 @@ function repurchase() {
   // ================= DEBIT =================
   debitWallet(u.userId, amount, "Repurchase");
 
-  // ================= BV SPLIT =================
-  let usableBV = bv * 0.5;
-
-  let rliBV = usableBV * 0.4;   // 20% total BV
-  let ctorBV = usableBV * 0.6;  // 30% total BV
-
-  // ================= RLI INCOME =================
-  payRLIIncome(u.userId, rliBV);
-
-  // ================= CTOR =================
-  addToCTORPool(ctorBV);
+  // ================= ✅ MASTER INCOME =================
+  processIncome("repurchase", u.userId, bv);
 
   // ================= SAVE =================
   saveUsers(users);
