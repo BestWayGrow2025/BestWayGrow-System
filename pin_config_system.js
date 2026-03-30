@@ -34,7 +34,7 @@ function savePinSettings(data) {
 }
 
 // =====================
-// 🔹 SAFE LOG (REUSE)
+// 🔹 SAFE ACTIVITY LOG
 // =====================
 function safeActivityLog(msg) {
   if (typeof logActivity === "function") {
@@ -49,7 +49,6 @@ function enablePin(type, config) {
 
   if (!type || !config) return;
 
-  // 🔒 VALIDATION
   if (isNaN(config.bv) || isNaN(config.amount)) {
     alert("Invalid BV or Amount");
     return;
@@ -69,7 +68,6 @@ function enablePin(type, config) {
 
   savePinSettings(settings);
 
-  // 📜 LOG
   safeActivityLog(`${type.toUpperCase()} PIN ENABLED (BV: ${config.bv}, ₹${config.amount})`);
 
   console.log("✅ PIN ENABLED:", type);
@@ -89,7 +87,6 @@ function disablePin(type) {
 
   savePinSettings(settings);
 
-  // 📜 LOG
   safeActivityLog(`${type.toUpperCase()} PIN DISABLED`);
 
   console.log("⛔ PIN DISABLED:", type);
@@ -131,7 +128,7 @@ function getActivePin(type) {
 }
 
 // =====================
-// 🔒 SYSTEM SAFETY CHECK (NEW 🔥)
+// 🔒 PIN SYSTEM SAFETY (FINAL 🔥)
 // =====================
 function isPinSystemSafe(type) {
 
@@ -139,7 +136,8 @@ function isPinSystemSafe(type) {
 
   if (!pin) return false;
 
-  if (pin.bv <= 0 || pin.amount <= 0) return false;
+  if (isNaN(pin.bv) || pin.bv <= 0) return false;
+  if (isNaN(pin.amount) || pin.amount <= 0) return false;
 
   return true;
 }
