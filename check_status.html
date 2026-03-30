@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Check Status</title>
+</head>
+<body>
+
+<h2>Check Registration Status</h2>
+
+<input type="text" id="mobile" placeholder="Enter Mobile"><br><br>
+<button onclick="checkStatus()">Check Status</button>
+
+<p id="result"></p>
+
+<!-- CORE -->
+<script src="CORE_system.js"></script>
+
+<script>
+
+// ================= INIT =================
+initCoreSystem();
+
+// ================= CHECK STATUS =================
+function checkStatus() {
+
+  let mobile = document.getElementById("mobile").value.trim();
+
+  if (!mobile) {
+    alert("Enter mobile number");
+    return;
+  }
+
+  let users = getUsers();
+
+  // ✅ CHECK REGISTERED USERS
+  let user = users.find(u => u.mobile === mobile);
+
+  if (user) {
+    document.getElementById("result").innerHTML =
+      "✅ Registered<br>User ID: " + user.userId +
+      "<br>Status: " + user.status;
+    return;
+  }
+
+  // ✅ CHECK QUEUE
+  let queue = JSON.parse(localStorage.getItem("registrationQueue") || "[]");
+
+  let pending = queue.find(q => q.mobile === mobile);
+
+  if (pending) {
+    document.getElementById("result").innerHTML =
+      "⏳ Pending... Please wait";
+    return;
+  }
+
+  // ❌ NOT FOUND
+  document.getElementById("result").innerHTML =
+    "❌ No record found";
+}
+
+</script>
+
+</body>
+</html>
