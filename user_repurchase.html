@@ -11,59 +11,76 @@
 
 <button onclick="repurchase()">Repurchase</button>
 
-<!-- ✅ CORE FIRST -->
+<!-- ✅ CORE -->
 <script src="CORE_system.js"></script>
+<script src="wallet_system.js"></script>
+<script src="commission_engine.js"></script>
 
 <script>
 
-// ================= INIT CORE =================
+// ================= INIT =================
 initCoreSystem();
 
-// ================= GET USER FROM URL =================
-let params = new URLSearchParams(window.location.search);
-let userId = params.get("user");
+// ================= AUTH (SECURE) =================
+let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
-document.getElementById("userId").innerText = userId || "N/A";
-
-// ================= 🔥 REPURCHASE INCOME =================
-function payRepurchaseIncome(buyerId) {
-
-  let users = getUsers();
-  let buyer = getUserById(buyerId);
-
-  if (!buyer) return;
-
-  let current = buyer;
-  let level = 1;
-
-  while (current && current.introducerId && level <= 20) {
-
-    let parent = getUserById(current.introducerId);
-    if (!parent) break;
-
-    // 💰 Flat income
-    let income = 20;
-
-    parent.wallet = (parent.wallet || 0) + income;
-
-    current = parent;
-    level++;
-  }
-
-  saveUsers(users);
+if (!session) {
+  alert("Login required");
+  window.location.href = "user_login.html";
 }
 
-// ================= ACTION =================
+let user = getUserById(session.userId);
+
+if (!user) {
+  alert("User not found");
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "user_login.html";
+}
+
+// ================= UI =================
+document.getElementById("userId").innerText = user.userId;
+
+
+// ================= DUPLICATE PROTECTION =================
+function isRepurchaseAllowed(u) {
+
+  // Example: allow every time OR add cooldown
+  // simple version: always true
+  return true;
+
+  // Advanced (optional):
+  // let last = new Date(u.lastRepurchase || 0);
+  // let now = new Date();
+  // return (now - last) > (24 * 60 * 60 * 1000); // 1 day
+}
+
+
+// ================= REPURCHASE =================
 function repurchase() {
 
-  if (!userId) {
-    alert("Invalid user");
+  let users = getUsers();
+  let u = users.find(x => x.userId === user.userId);
+
+  if (!u) return;
+
+  if (!isRepurchaseAllowed(u)) {
+    alert("Repurchase not allowed now");
     return;
   }
 
-  payRepurchaseIncome(userId);
+  // 💰 BV AMOUNT (CONFIG)
+  let bvAmount = 500;
 
-  alert("Repurchase Successful! Income Distributed ✅");
+  // ================= COMMISSION =================
+  // 🔥 USE SAME ENGINE (IMPORTANT)
+  processCommission(u.userId, bvAmount);
+
+  // ================= SAVE LAST REPURCHASE =================
+  u.lastRepurchase = new Date().toISOString();
+
+  saveUsers(users);
+
+  alert("✅ Repurchase Successful!");
 
   window.location.href = "user_dashboard.html";
 }
