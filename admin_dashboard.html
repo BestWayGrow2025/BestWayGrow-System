@@ -80,6 +80,12 @@
     <p id="system"></p>
   </div>
 
+  <!-- 🔥 INCOME STATUS (NEW) -->
+  <div class="card">
+    <h3>Income System</h3>
+    <p id="incomeStatus"></p>
+  </div>
+
   <!-- 💰 FINANCE -->
   <div class="card" id="financeCard">
     <h3>Finance Panel</h3>
@@ -127,15 +133,19 @@
 <!-- CORE -->
 <script src="CORE_system.js"></script>
 
+<!-- NEW SYSTEM -->
+<script src="income_control_system.js"></script>
+<script src="activity_log.js"></script>
+
 <script>
 
 // ================= INIT =================
 initCoreSystem();
+initIncomeControl();
 
 // ================= SECURITY =================
-let admin = protectPage({
-  role: "admin"
-});
+let admin = protectPage({ role: "admin" });
+if (!admin) return;
 
 // ================= SETTINGS =================
 let s = getSystemSettings();
@@ -158,52 +168,57 @@ document.getElementById("system").innerHTML = `
   Lock Mode: ${s.lockMode ? "ON" : "OFF"}
 `;
 
+// ================= 💰 INCOME STATUS =================
+function loadIncomeStatus() {
+
+  let ugli = isUGLIEnabled() ? "🟢 ON" : "🔴 OFF";
+  let rli = isRLIEnabled() ? "🟢 ON" : "🔴 OFF";
+  let binary = isBinaryEnabled() ? "🟢 ON" : "🔴 OFF";
+
+  document.getElementById("incomeStatus").innerHTML = `
+    UGLI: ${ugli} <br>
+    RLI: ${rli} <br>
+    Binary: ${binary}
+  `;
+}
+
 // ================= ROLE CONTROL =================
 if (admin.type === "B") {
 
   let depts = admin.departments || [];
 
-  // FINANCE
-  if (!depts.includes("finance")) {
-    document.getElementById("financeCard").style.display = "none";
-  }
-
-  // PIN
-  if (!depts.includes("pin")) {
-    document.getElementById("pinCard").style.display = "none";
-  }
-
-  // INCOME
-  if (!depts.includes("income")) {
-    document.getElementById("incomeCard").style.display = "none";
-  }
-
-  // FRANCHISE
-  if (!depts.includes("franchise")) {
-    document.getElementById("franchiseCard").style.display = "none";
-  }
-
-  // REPORT
-  if (!depts.includes("report")) {
-    document.getElementById("reportCard").style.display = "none";
-  }
-
-  // KYC
-  if (!depts.includes("kyc")) {
-    document.getElementById("kycCard").style.display = "none";
-  }
+  if (!depts.includes("finance")) document.getElementById("financeCard").style.display = "none";
+  if (!depts.includes("pin")) document.getElementById("pinCard").style.display = "none";
+  if (!depts.includes("income")) document.getElementById("incomeCard").style.display = "none";
+  if (!depts.includes("franchise")) document.getElementById("franchiseCard").style.display = "none";
+  if (!depts.includes("report")) document.getElementById("reportCard").style.display = "none";
+  if (!depts.includes("kyc")) document.getElementById("kycCard").style.display = "none";
 }
 
 // ================= NAV =================
 function goTo(page) {
+
+  // 📜 LOG NAVIGATION
+  if (typeof logActivity === "function") {
+    logActivity(admin.userId, "ADMIN", "Opened " + page);
+  }
+
   window.location.href = page;
 }
 
 // ================= LOGOUT =================
 function logout() {
+
+  if (typeof logActivity === "function") {
+    logActivity(admin.userId, "ADMIN", "Logout");
+  }
+
   localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
 }
+
+// ================= INIT LOAD =================
+loadIncomeStatus();
 
 </script>
 
