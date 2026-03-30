@@ -1,135 +1,124 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>PIN CONTROL PANEL</title>
+  <title>ADMIN PIN CONTROL</title>
   <style>
     body { font-family: Arial; padding: 20px; }
+    input { padding: 6px; margin: 5px 0; width: 220px; }
+    button { padding: 6px 12px; margin: 5px; cursor: pointer; }
     .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
-    button { padding: 5px 10px; margin: 3px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h2>PIN SYSTEM CONTROL</h2>
+<h2>PIN CONTROL PANEL</h2>
 
-<!-- ================= SYSTEM TOGGLES ================= -->
+<!-- ================= UPGRADE ================= -->
 <div class="box">
-  <h3>System Controls</h3>
+  <h3>Upgrade PIN</h3>
 
-  <label>Upgrade:</label>
-  <select id="upgradeToggle">
-    <option value="true">ON</option>
-    <option value="false">OFF</option>
-  </select>
+  <input type="number" id="up_bv" placeholder="BV"><br>
+  <input type="number" id="up_amount" placeholder="Amount"><br>
+  <input type="number" id="up_gst" placeholder="GST"><br>
 
-  <label>Repurchase:</label>
-  <select id="repurchaseToggle">
-    <option value="true">ON</option>
-    <option value="false">OFF</option>
-  </select>
+  <label>Start Date:</label><br>
+  <input type="datetime-local" id="up_start"><br>
 
-  <button onclick="saveSystem()">Save System</button>
+  <label>End Date (Optional):</label><br>
+  <input type="datetime-local" id="up_end"><br>
+
+  <button onclick="startUpgrade()">START</button>
+  <button onclick="stopUpgrade()">STOP</button>
+
+  <p id="upgradeStatus"></p>
 </div>
 
-<!-- ================= CREATE PIN TYPE ================= -->
+<!-- ================= REPURCHASE ================= -->
 <div class="box">
-  <h3>Create Pin Type</h3>
+  <h3>Repurchase PIN</h3>
 
-  <input id="pinName" placeholder="Pin Name"><br><br>
-  <input id="amount" placeholder="Amount"><br><br>
-  <input id="bv" placeholder="BV"><br><br>
+  <input type="number" id="re_bv" placeholder="BV"><br>
+  <input type="number" id="re_amount" placeholder="Amount"><br>
+  <input type="number" id="re_gst" placeholder="GST"><br>
 
-  <button onclick="createPin()">Create Pin</button>
+  <label>Start Date:</label><br>
+  <input type="datetime-local" id="re_start"><br>
+
+  <label>End Date (Optional):</label><br>
+  <input type="datetime-local" id="re_end"><br>
+
+  <button onclick="startRepurchase()">START</button>
+  <button onclick="stopRepurchase()">STOP</button>
+
+  <p id="repurchaseStatus"></p>
 </div>
 
-<!-- ================= PIN REQUEST APPROVAL ================= -->
-<div class="box">
-  <h3>Franchise PIN Requests</h3>
-  <div id="requests"></div>
-</div>
-
-<!-- ================= SCRIPTS ================= -->
-<script src="pin_system.js"></script>
-<script src="pin_request_system.js"></script>
+<!-- ================= SCRIPT ================= -->
+<script src="pin_config_system.js"></script>
 
 <script>
 
-// ================= SYSTEM SAVE =================
-function saveSystem() {
-  let settings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+// ================= STATUS =================
+function refreshStatus() {
 
-  settings.upgrade = document.getElementById("upgradeToggle").value === "true";
-  settings.repurchase = document.getElementById("repurchaseToggle").value === "true";
+  let settings = getPinSettings();
 
-  localStorage.setItem("systemSettings", JSON.stringify(settings));
-  alert("System Updated");
+  let up = settings.upgrade;
+  let re = settings.repurchase;
+
+  document.getElementById("upgradeStatus").innerText =
+    up.active ? "🟢 ACTIVE" : "🔴 OFF";
+
+  document.getElementById("repurchaseStatus").innerText =
+    re.active ? "🟢 ACTIVE" : "🔴 OFF";
 }
 
-// ================= CREATE PIN TYPE =================
-function createPin() {
-  let name = document.getElementById("pinName").value.trim();
-  let amount = parseInt(document.getElementById("amount").value);
-  let bv = parseInt(document.getElementById("bv").value);
+// ================= START UPGRADE =================
+function startUpgrade() {
 
-  if (!name || !amount || !bv) {
-    alert("Fill all fields");
-    return;
-  }
-
-  createPinType(name, amount, bv);
-  alert("Pin Created");
-}
-
-// ================= LOAD PIN REQUESTS =================
-function loadRequests() {
-  let requests = JSON.parse(localStorage.getItem("pinRequests") || "[]");
-  let container = document.getElementById("requests");
-
-  if (requests.length === 0) {
-    container.innerHTML = "No requests found";
-    return;
-  }
-
-  let html = "<ul>";
-
-  requests.slice().reverse().forEach(r => {
-    html += `
-      <li>
-        <b>${r.requestId}</b> |
-        User: ${r.userId} |
-        Pin: ${r.pinId} |
-        Qty: ${r.quantity} |
-        Status: ${r.status}
-
-        <br>
-
-        ${r.status === "PENDING" ? `
-          <button onclick="approve('${r.requestId}')">Approve</button>
-          <button onclick="reject('${r.requestId}')">Reject</button>
-        ` : ""}
-      </li>
-      <br>
-    `;
+  enablePin("upgrade", {
+    bv: Number(document.getElementById("up_bv").value),
+    amount: Number(document.getElementById("up_amount").value),
+    gst: Number(document.getElementById("up_gst").value),
+    startDate: document.getElementById("up_start").value,
+    endDate: document.getElementById("up_end").value
   });
 
-  html += "</ul>";
-  container.innerHTML = html;
+  refreshStatus();
+  alert("✅ Upgrade Started");
 }
 
-// ================= APPROVE =================
-function approve(id) {
-  approvePinRequest(id);
-  loadRequests();
+// ================= STOP UPGRADE =================
+function stopUpgrade() {
+  disablePin("upgrade");
+  refreshStatus();
+  alert("⛔ Upgrade Stopped");
 }
 
-// ================= REJECT =================
-function reject(id) {
-  rejectPinRequest(id);
-  loadRequests();
+// ================= START REPURCHASE =================
+function startRepurchase() {
+
+  enablePin("repurchase", {
+    bv: Number(document.getElementById("re_bv").value),
+    amount: Number(document.getElementById("re_amount").value),
+    gst: Number(document.getElementById("re_gst").value),
+    startDate: document.getElementById("re_start").value,
+    endDate: document.getElementById("re_end").value
+  });
+
+  refreshStatus();
+  alert("✅ Repurchase Started");
+}
+
+// ================= STOP REPURCHASE =================
+function stopRepurchase() {
+  disablePin("repurchase");
+  refreshStatus();
+  alert("⛔ Repurchase Stopped");
 }
 
 // ================= INIT =================
-loadRequests();
+refreshStatus();
 
 </script>
 
