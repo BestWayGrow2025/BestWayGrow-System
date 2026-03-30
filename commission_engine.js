@@ -4,34 +4,58 @@
 <script>
 
 // =====================
-// COMMISSION CONFIG (MASTER CONTROL)
+// COMMISSION CONFIG
 // =====================
 const COMMISSION_CONFIG = {
 
-  // UGLI LEVEL % (TOTAL SAFE DISTRIBUTION)
   ugliLevels: [
-    10, // L1
-    2,2,2,2,2,2,2,2,2, // L2–10
-    1,1,1,1,1,1,1,1,1,1, // L11–20
-    0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5 // L21–30
+    10,
+    2,2,2,2,2,2,2,2,2,
+    1,1,1,1,1,1,1,1,1,1,
+    0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5
   ],
 
-  // CTOR %
   ctorPercent: 25
 };
 
 // =====================
-// PAY UGLI INCOME (DYNAMIC + ACTIVE SAFE)
+// 🔹 SAFE GET USERS
+// =====================
+function getAllUsers() {
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+
+// =====================
+// 🔹 HOLD INCOME SYSTEM
+// =====================
+function holdIncome(userId, amount, reason) {
+
+  let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
+
+  holds.push({
+    userId,
+    amount,
+    reason,
+    time: new Date().toISOString(),
+    status: "HOLD"
+  });
+
+  localStorage.setItem("holdIncome", JSON.stringify(holds));
+}
+
+// =====================
+// 🔥 UGLI INCOME (INTRODUCER TREE ONLY)
 // =====================
 function payUGLIIncome(userId, bvAmount) {
 
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  let users = getAllUsers();
 
   let current = users.find(u => u.userId === userId);
   if (!current) return;
 
   for (let i = 0; i < COMMISSION_CONFIG.ugliLevels.length; i++) {
 
+    // 👉 ONLY INTRODUCER TREE
     if (!current.introducerId) break;
 
     let parent = users.find(u => u.userId === current.introducerId);
@@ -42,13 +66,12 @@ function payUGLIIncome(userId, bvAmount) {
 
     if (income > 0) {
 
-      // ✅ ACTIVE CHECK
       if (isUserActive(parent.userId)) {
 
         creditWallet(
           parent.userId,
           income,
-          "UGLI L" + (i + 1) + " (" + percent + "%)"
+          `UGLI L${i + 1} (${percent}%)`
         );
 
       } else {
@@ -56,7 +79,7 @@ function payUGLIIncome(userId, bvAmount) {
         holdIncome(
           parent.userId,
           income,
-          "UGLI L" + (i + 1) + " (" + percent + "%)"
+          `UGLI L${i + 1} (${percent}%)`
         );
 
       }
@@ -68,7 +91,7 @@ function payUGLIIncome(userId, bvAmount) {
 }
 
 // =====================
-// CTOR POOL ADD
+// 🔥 CTOR POOL SYSTEM
 // =====================
 function addToCTORPool(bvAmount) {
 
@@ -79,6 +102,22 @@ function addToCTORPool(bvAmount) {
   pool += amount;
 
   localStorage.setItem("ctorPool", JSON.stringify(pool));
+}
+
+// =====================
+// 🔥 MASTER INCOME TRIGGER
+// =====================
+function processIncome(userId, bvAmount) {
+
+  if (!userId || !bvAmount) return;
+
+  // 1️⃣ UGLI (Introducer based)
+  payUGLIIncome(userId, bvAmount);
+
+  // 2️⃣ CTOR Pool
+  addToCTORPool(bvAmount);
+
+  console.log("✅ Income Distributed Successfully");
 }
 
 </script>
