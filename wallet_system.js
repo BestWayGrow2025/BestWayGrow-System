@@ -1,46 +1,83 @@
 <script>
 
 // =====================
-// GET USERS
+// 🔹 GET USERS
 // =====================
 function getUsers() {
-  return JSON.parse(localStorage.getItem("users") || "[]");
+  try {
+    return JSON.parse(localStorage.getItem("users") || "[]");
+  } catch {
+    localStorage.setItem("users", "[]");
+    return [];
+  }
 }
 
 function saveUsers(users) {
   localStorage.setItem("users", JSON.stringify(users));
 }
 
+
 // =====================
-// GET TRANSACTIONS
+// 🔹 GET TRANSACTIONS
 // =====================
 function getTransactions() {
-  return JSON.parse(localStorage.getItem("transactions") || "[]");
+  try {
+    return JSON.parse(localStorage.getItem("transactions") || "[]");
+  } catch {
+    localStorage.setItem("transactions", "[]");
+    return [];
+  }
 }
 
 function saveTransactions(txns) {
   localStorage.setItem("transactions", JSON.stringify(txns));
 }
 
+
 // =====================
-// INIT WALLET
+// 🔹 INIT WALLET
 // =====================
 function initWallet(user) {
-  if (user.wallet === undefined) {
+  if (user.wallet === undefined || isNaN(user.wallet)) {
     user.wallet = 0;
   }
 }
 
+
 // =====================
-// CREDIT WALLET
+// 🔐 DUPLICATE PROTECTION (IMPORTANT)
+// =====================
+function isDuplicateTxn(userId, amount, reason) {
+  let txns = getTransactions();
+
+  return txns.some(t =>
+    t.userId === userId &&
+    t.amount === amount &&
+    t.reason === reason &&
+    (new Date() - new Date(t.time)) < 5000 // 5 sec protection
+  );
+}
+
+
+// =====================
+// 💰 CREDIT WALLET (SAFE)
 // =====================
 function creditWallet(userId, amount, reason) {
+
+  if (!userId || amount <= 0) return;
+
   let users = getUsers();
   let user = users.find(u => u.userId === userId);
 
   if (!user) return;
 
   initWallet(user);
+
+  // 🔒 prevent duplicate credit
+  if (isDuplicateTxn(userId, amount, reason)) {
+    console.warn("Duplicate credit blocked");
+    return;
+  }
 
   user.wallet += amount;
 
@@ -49,31 +86,46 @@ function creditWallet(userId, amount, reason) {
   logTransaction(userId, amount, "CREDIT", reason);
 }
 
+
 // =====================
-// DEBIT WALLET
+// 💸 DEBIT WALLET (SAFE)
 // =====================
 function debitWallet(userId, amount, reason) {
+
+  if (!userId || amount <= 0) return false;
+
   let users = getUsers();
   let user = users.find(u => u.userId === userId);
 
-  if (!user) return;
+  if (!user) return false;
 
   initWallet(user);
+
+  // ❌ prevent negative wallet
+  if (user.wallet < amount) {
+    alert("Insufficient balance");
+    return false;
+  }
 
   user.wallet -= amount;
 
   saveUsers(users);
 
   logTransaction(userId, amount, "DEBIT", reason);
+
+  return true;
 }
 
+
 // =====================
-// LOG TRANSACTION
+// 🧾 LOG TRANSACTION (ENHANCED)
 // =====================
 function logTransaction(userId, amount, type, reason) {
+
   let txns = getTransactions();
 
   txns.push({
+    txnId: "TXN" + Date.now(), // unique id
     userId: userId,
     amount: amount,
     type: type,
@@ -82,6 +134,15 @@ function logTransaction(userId, amount, type, reason) {
   });
 
   saveTransactions(txns);
+}
+
+
+// =====================
+// 📊 GET USER BALANCE (HELPER)
+// =====================
+function getWalletBalance(userId) {
+  let user = getUsers().find(u => u.userId === userId);
+  return user?.wallet || 0;
 }
 
 </script>
