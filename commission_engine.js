@@ -163,13 +163,14 @@ function addToCTORPool(bvAmount) {
 }
 
 // =====================
-// MASTER (🔥 UPDATED)
+// MASTER (FINAL 🔥)
 // =====================
 function processIncome(type, userId, bvAmount) {
 
-  // 🔒 SYSTEM SAFETY (VERY IMPORTANT)
-  if (typeof isIncomeSystemSafe === "function") {
-    if (!isIncomeSystemSafe()) return;
+  // 🔐 GLOBAL SAFETY
+  if (!isIncomeSystemSafe()) {
+    console.warn("⚠ Income system disabled");
+    return;
   }
 
   if (!userId || !bvAmount || bvAmount <= 0) return;
