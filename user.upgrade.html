@@ -17,6 +17,7 @@
 <!-- ✅ SYSTEM -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
+<script src="income_control_system.js"></script> <!-- ✅ ADDED -->
 
 <!-- ✅ PIN CONTROL -->
 <script src="pin_config_system.js"></script>
@@ -67,7 +68,7 @@ function upgradeNow() {
     return;
   }
 
-  // ================= PIN (FINAL SAFE) =================
+  // ================= PIN =================
   let pin = getActivePin("upgrade");
 
   if (!pin) {
@@ -78,7 +79,7 @@ function upgradeNow() {
   let bv = pin.bv;
   let amount = pin.amount;
 
-  // ================= WALLET CHECK =================
+  // ================= WALLET =================
   if ((u.wallet || 0) < amount) {
     alert("Insufficient wallet balance");
     return;
@@ -90,8 +91,10 @@ function upgradeNow() {
   // ================= ACTIVATE =================
   activateUser(u.userId);
 
-  // ================= ✅ MASTER INCOME =================
-  processIncome("upgrade", u.userId, bv);
+  // ================= ✅ INCOME CONTROL =================
+  if (isUGLIEnabled()) {
+    processIncome("upgrade", u.userId, bv);
+  }
 
   // ================= SAVE =================
   saveUsers(users);
