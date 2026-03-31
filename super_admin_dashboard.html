@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Super Admin Dashboard</title>
-
   <link rel="icon" href="data:,">
 
   <style>
@@ -35,6 +34,12 @@
       box-shadow: 0 6px 15px rgba(0,0,0,0.1);
     }
 
+    .stat {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
     table {
       width: 100%;
       margin-top: 10px;
@@ -45,10 +50,6 @@
       padding: 8px;
       border: 1px solid #ddd;
       font-size: 13px;
-    }
-
-    th {
-      background: #f0f0f0;
     }
 
     button {
@@ -79,33 +80,40 @@
     <button onclick="toggle('franchiseAccess')">Franchise Access</button>
     <button onclick="toggle('registrationOpen')">Registration</button>
     <button onclick="toggle('upgradesOpen')">Upgrades</button>
-
-    <button onclick="toggle('queueStop')">Queue ON/OFF</button>
-    <button onclick="toggle('withdrawStop')">Withdraw ON/OFF</button>
+    <button onclick="toggle('queueStop')">Queue</button>
+    <button onclick="toggle('withdrawStop')">Withdraw</button>
   </div>
 
-  <!-- SYSTEM ADMIN -->
+  <!-- 📊 COUNTS -->
+  <div class="card">
+    <h3>System Overview</h3>
+
+    <div>System Admins <div class="stat" id="sysCount">0</div></div>
+    <div>Admins <div class="stat" id="adminCount">0</div></div>
+    <div>Franchise <div class="stat" id="franchiseCount">0</div></div>
+    <div>Users <div class="stat" id="userCount">0</div></div>
+  </div>
+
+  <!-- VIEW PANELS -->
+  <div class="card">
+    <h3>Quick Access</h3>
+
+    <button onclick="goTo('system_admin_dashboard.html')">System Admins</button>
+    <button onclick="goTo('admin_dashboard.html')">Admins</button>
+    <button onclick="goTo('franchise_dashboard.html')">Franchise</button>
+    <button onclick="goTo('user_panel.html')">Users</button>
+  </div>
+
+  <!-- SYSTEM ADMIN LIST -->
   <div class="card">
     <h3>System Admins</h3>
     <div id="sysAdminList"></div>
   </div>
 
-  <!-- ADMIN -->
+  <!-- ADMIN LIST -->
   <div class="card">
     <h3>Admins</h3>
     <div id="adminList"></div>
-  </div>
-
-  <!-- 🔥 FRANCHISE -->
-  <div class="card">
-    <h3>Franchise</h3>
-    <div id="franchiseList"></div>
-  </div>
-
-  <!-- 🔥 USERS -->
-  <div class="card">
-    <h3>Users</h3>
-    <div id="userList"></div>
   </div>
 
 </div>
@@ -120,215 +128,111 @@ initCoreSystem();
 
 // AUTH
 let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
-
 if (!session) {
   alert("Access denied");
   window.location.href = "super_admin_login.html";
 }
 
 let user = getUserById(session.userId);
-
 if (!user || user.role !== "super_admin") {
-  alert("Invalid session");
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
-}
-
-// LOG
-if (typeof logActivity === "function") {
-  logActivity(user.userId, "SUPER_ADMIN", "Opened dashboard");
 }
 
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-
 // ================= SYSTEM =================
 function loadSystem() {
-
   let s = getSystemSettings() || {};
 
   document.getElementById("systemStatus").innerHTML = `
-    Lock Mode: ${s.lockMode ? "LOCKED 🔴" : "UNLOCKED 🟢"} <br>
-    Admin Access: ${s.adminAccess !== false ? "ON 🟢" : "OFF 🔴"} <br>
-    Franchise Access: ${s.franchiseAccess !== false ? "ON 🟢" : "OFF 🔴"} <br>
-    Registration: ${s.registrationOpen !== false ? "OPEN 🟢" : "CLOSED 🔴"} <br>
-    Upgrades: ${s.upgradesOpen !== false ? "OPEN 🟢" : "CLOSED 🔴"} <br>
-    Queue: ${s.queueStop ? "STOPPED 🔴" : "RUNNING 🟢"} <br>
-    Withdraw: ${s.withdrawStop ? "STOPPED 🔴" : "RUNNING 🟢"}
+    Lock: ${s.lockMode ? "🔴" : "🟢"} |
+    Admin: ${s.adminAccess !== false ? "🟢" : "🔴"} |
+    Franchise: ${s.franchiseAccess !== false ? "🟢" : "🔴"} <br>
+    Register: ${s.registrationOpen !== false ? "🟢" : "🔴"} |
+    Upgrade: ${s.upgradesOpen !== false ? "🟢" : "🔴"} <br>
+    Queue: ${s.queueStop ? "🔴" : "🟢"} |
+    Withdraw: ${s.withdrawStop ? "🔴" : "🟢"}
   `;
 }
 
-function toggle(key) {
+// ================= COUNTS =================
+function loadCounts() {
+  let users = getUsers();
 
-  let s = getSystemSettings() || {};
+  document.getElementById("sysCount").innerText =
+    users.filter(u => u.role === "system_admin").length;
 
-  s[key] = !s[key];
-  s.updatedAt = new Date().toISOString();
+  document.getElementById("adminCount").innerText =
+    users.filter(u => u.role === "admin").length;
 
-  localStorage.setItem("systemSettings", JSON.stringify(s));
+  document.getElementById("franchiseCount").innerText =
+    users.filter(u => u.role === "franchise").length;
 
-  loadSystem();
-
-  if (typeof logActivity === "function") {
-    logActivity(user.userId, "SUPER_ADMIN", "Toggled " + key);
-  }
+  document.getElementById("userCount").innerText =
+    users.filter(u => u.role === "user").length;
 }
 
-
-// ================= SYSTEM ADMINS =================
+// ================= LISTS =================
 function loadSystemAdmins() {
+  let users = getUsers().filter(u => u.role === "system_admin");
 
-  let users = getUsers();
-  let list = users.filter(u => u.role === "system_admin");
+  let html = "No Data";
 
-  if (!list.length) {
-    document.getElementById("sysAdminList").innerHTML = "No System Admin";
-    return;
+  if (users.length) {
+    html = `<table>
+      <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+
+    users.forEach(u => {
+      html += `<tr>
+        <td>${u.userId}</td>
+        <td>${u.username}</td>
+        <td>${u.status || "active"}</td>
+      </tr>`;
+    });
+
+    html += "</table>";
   }
-
-  let html = `<table>
-  <tr><th>ID</th><th>Name</th><th>Status</th><th>Action</th></tr>`;
-
-  list.forEach(u => {
-
-    let isActive = u.status !== "inactive";
-
-    html += `
-    <tr>
-      <td>${u.userId}</td>
-      <td>${u.username}</td>
-      <td>${isActive ? "ACTIVE" : "INACTIVE"}</td>
-      <td>
-        <button onclick="toggleUser('${u.userId}')">
-          ${isActive ? "Deactivate" : "Activate"}
-        </button>
-      </td>
-    </tr>`;
-  });
-
-  html += "</table>";
 
   document.getElementById("sysAdminList").innerHTML = html;
 }
 
-
-// ================= ADMINS =================
 function loadAdmins() {
+  let users = getUsers().filter(u => u.role === "admin");
 
-  let users = getUsers();
-  let list = users.filter(u => u.role === "admin");
+  let html = "No Data";
 
-  if (!list.length) {
-    document.getElementById("adminList").innerHTML = "No Admin";
-    return;
+  if (users.length) {
+    html = `<table>
+      <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+
+    users.forEach(u => {
+      html += `<tr>
+        <td>${u.userId}</td>
+        <td>${u.username}</td>
+        <td>${u.status || "active"}</td>
+      </tr>`;
+    });
+
+    html += "</table>";
   }
-
-  let html = `<table>
-  <tr><th>ID</th><th>Name</th><th>Status</th><th>Action</th></tr>`;
-
-  list.forEach(u => {
-
-    let isActive = u.status !== "inactive";
-
-    html += `
-    <tr>
-      <td>${u.userId}</td>
-      <td>${u.username}</td>
-      <td>${isActive ? "ACTIVE" : "INACTIVE"}</td>
-      <td>
-        <button onclick="toggleAdmin('${u.userId}')">
-          ${isActive ? "Deactivate" : "Activate"}
-        </button>
-      </td>
-    </tr>`;
-  });
-
-  html += "</table>";
 
   document.getElementById("adminList").innerHTML = html;
 }
 
-
-// ================= FRANCHISE =================
-function loadFranchise() {
-
-  let users = getUsers();
-  let list = users.filter(u => u.role === "franchise");
-
-  if (!list.length) {
-    document.getElementById("franchiseList").innerHTML = "No Franchise";
-    return;
-  }
-
-  let html = `<table>
-  <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
-
-  list.forEach(u => {
-    html += `
-    <tr>
-      <td>${u.userId}</td>
-      <td>${u.username}</td>
-      <td>${u.status}</td>
-    </tr>`;
-  });
-
-  html += "</table>";
-
-  document.getElementById("franchiseList").innerHTML = html;
+// ================= TOGGLE =================
+function toggle(key) {
+  let s = getSystemSettings() || {};
+  s[key] = !s[key];
+  localStorage.setItem("systemSettings", JSON.stringify(s));
+  loadSystem();
 }
 
-
-// ================= USERS =================
-function loadUsersList() {
-
-  let users = getUsers();
-  let list = users.filter(u => u.role === "user");
-
-  if (!list.length) {
-    document.getElementById("userList").innerHTML = "No Users";
-    return;
-  }
-
-  let html = `<table>
-  <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
-
-  list.forEach(u => {
-    html += `
-    <tr>
-      <td>${u.userId}</td>
-      <td>${u.username}</td>
-      <td>${u.status}</td>
-    </tr>`;
-  });
-
-  html += "</table>";
-
-  document.getElementById("userList").innerHTML = html;
+// ================= NAV =================
+function goTo(page) {
+  window.location.href = page;
 }
-
-
-// ================= TOGGLES =================
-function toggleAdmin(id) {
-  let users = getUsers();
-  let u = users.find(x => x.userId === id);
-  if (!u) return;
-
-  u.status = (u.status === "inactive") ? "active" : "inactive";
-  saveUsers(users);
-  loadAdmins();
-}
-
-function toggleUser(id) {
-  let users = getUsers();
-  let u = users.find(x => x.userId === id);
-  if (!u) return;
-
-  u.status = (u.status === "inactive") ? "active" : "inactive";
-  saveUsers(users);
-  loadSystemAdmins();
-}
-
 
 // ================= LOGOUT =================
 function logout() {
@@ -336,19 +240,17 @@ function logout() {
   window.location.href = "super_admin_login.html";
 }
 
-
-// ================= AUTO REFRESH =================
+// AUTO REFRESH
 setInterval(() => {
   loadSystem();
+  loadCounts();
 }, 3000);
 
-
-// ================= INIT =================
+// INIT
 loadSystem();
+loadCounts();
 loadSystemAdmins();
 loadAdmins();
-loadFranchise();
-loadUsersList();
 
 </script>
 
