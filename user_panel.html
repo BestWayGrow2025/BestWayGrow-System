@@ -81,6 +81,12 @@
   <p id="system"></p>
 </div>
 
+<!-- 🔥 BACKEND TEST -->
+<div class="card">
+  <h3>Backend Test</h3>
+  <button onclick="testBackend()">Test Backend</button>
+</div>
+
 <script src="CORE_system.js"></script>
 <script src="activity_log.js"></script>
 
@@ -108,6 +114,18 @@ let settings = getSystemSettings();
 if (settings.lockMode === true) {
   alert("🚫 System Locked");
   throw new Error("System Locked");
+}
+
+// 🔥 BACKEND TEST FUNCTION
+function testBackend() {
+  fetch("http://localhost:3000/api/test")
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+    })
+    .catch(err => {
+      alert("❌ Backend not connected");
+    });
 }
 
 // PROFILE
@@ -144,9 +162,8 @@ function loadSystem() {
   `;
 }
 
-// 🔥 REPURCHASE
+// REPURCHASE
 function repurchase() {
-
   let users = getUsers();
   let u = users.find(x => x.userId === user.userId);
 
@@ -176,7 +193,7 @@ function repurchase() {
   refreshUser();
 }
 
-// 🔥 WITHDRAW REQUEST
+// WITHDRAW
 function requestWithdraw() {
 
   let s = getSystemSettings();
@@ -228,7 +245,7 @@ function requestWithdraw() {
   loadWithdrawHistory();
 }
 
-// 📜 WITHDRAW HISTORY
+// HISTORY
 function loadWithdrawHistory() {
 
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
@@ -303,3 +320,9 @@ loadWithdrawHistory();
 
 </body>
 </html>
+
+
+
+
+
+
