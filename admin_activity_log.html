@@ -7,7 +7,28 @@
 
   <style>
     body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; }
+
+    .box { border: 1px solid #ccc; padding: 15px; margin-top: 15px; }
+
+    input, select {
+      padding: 6px;
+      margin: 5px;
+    }
+
+    button {
+      padding: 6px 12px;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    .log {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .admin { color: green; }
+    .system { color: blue; }
+    .error { color: red; }
   </style>
 </head>
 <body>
@@ -17,6 +38,26 @@
 <button onclick="goBack()">⬅ Back</button>
 <button onclick="loadLogs()">🔄 Refresh</button>
 
+<!-- 🔍 FILTER -->
+<div class="box">
+  <h3>Filter</h3>
+
+  <input id="filterUser" placeholder="User ID">
+
+  <select id="filterRole">
+    <option value="">All Roles</option>
+    <option value="ADMIN">Admin</option>
+    <option value="SYSTEM">System</option>
+    <option value="USER">User</option>
+  </select>
+
+  <input id="filterKeyword" placeholder="Search action">
+
+  <button onclick="applyFilter()">Apply</button>
+  <button onclick="clearLogs()">Clear Logs</button>
+</div>
+
+<!-- 📜 LOGS -->
 <div class="box">
   <div id="logs"></div>
 </div>
@@ -24,7 +65,7 @@
 <!-- CORE -->
 <script src="CORE_system.js"></script>
 
-<!-- LOG SYSTEM -->
+<!-- SYSTEM -->
 <script src="activity_log.js"></script>
 
 <script>
@@ -38,38 +79,87 @@ let admin = protectPage({
   department: "report"
 });
 
+if (!admin) {
+  throw new Error("Access Blocked");
+}
+
+
 // ================= NAV =================
 function goBack() {
   window.location.href = "admin_dashboard.html";
 }
 
-// ================= LOAD LOGS =================
-function loadLogs() {
 
-  let logs = JSON.parse(localStorage.getItem("activityLogs") || "[]");
+// ================= COLOR =================
+function getRoleClass(role) {
+  if (role === "ADMIN") return "admin";
+  if (role === "SYSTEM") return "system";
+  return "";
+}
 
+
+// ================= LOAD =================
+function loadLogs(customLogs = null) {
+
+  let logs = customLogs || getActivityLogs();
   let container = document.getElementById("logs");
 
-  if (logs.length === 0) {
+  if (!logs.length) {
     container.innerHTML = "No activity logs found";
     return;
   }
 
-  let html = "<ul>";
+  let html = "";
 
   logs.slice().reverse().forEach(l => {
+
+    let roleClass = getRoleClass(l.role);
+
     html += `
-      <li>
+      <div class="log ${roleClass}">
         <b>${l.role}</b> (${l.userId}) → ${l.action} <br>
-        <small>${l.time}</small>
-      </li><br>
+        <small>${l.time ? new Date(l.time).toLocaleString() : "-"}</small>
+      </div>
     `;
   });
 
-  html += "</ul>";
-
   container.innerHTML = html;
+
+  // 📜 VIEW LOG
+  if (typeof logActivity === "function") {
+    logActivity(admin.userId, "ADMIN", "Viewed activity logs");
+  }
 }
+
+
+// ================= FILTER =================
+function applyFilter() {
+
+  let userId = document.getElementById("filterUser").value.trim();
+  let role = document.getElementById("filterRole").value;
+  let keyword = document.getElementById("filterKeyword").value.trim();
+
+  let logs = filterLogsAdvanced({
+    userId,
+    role,
+    keyword
+  });
+
+  loadLogs(logs);
+}
+
+
+// ================= CLEAR =================
+function clearLogs() {
+
+  if (!confirm("Delete all activity logs?")) return;
+
+  clearActivityLogs();
+  loadLogs();
+
+  alert("Logs cleared");
+}
+
 
 // ================= INIT =================
 loadLogs();
