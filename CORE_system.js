@@ -65,14 +65,10 @@ function isValidIntroducer(id) {
 // ===================================
 // 🌳 TREE SYSTEM (HIGH LOAD SAFE)
 // ===================================
-
-// 🔹 Queue lock (IMPORTANT for 100+ clicks)
 let placementLock = false;
 
-// 🔍 Find bottom position (BFS = BEST)
 function findPositionBFS(sponsorId, position) {
   let users = getUsers();
-
   let queue = [sponsorId];
 
   while (queue.length > 0) {
@@ -93,7 +89,6 @@ function findPositionBFS(sponsorId, position) {
   return sponsorId;
 }
 
-// 🔐 FINAL SAFE SPONSOR (ANTI-CONFLICT)
 function getSafeSponsor(sponsorId, position) {
 
   let finalSponsor = findPositionBFS(sponsorId, position);
@@ -106,7 +101,6 @@ function getSafeSponsor(sponsorId, position) {
   );
 
   if (exists) {
-    // retry once more
     finalSponsor = findPositionBFS(finalSponsor, position);
   }
 
@@ -143,7 +137,6 @@ function registerUser(
     return null;
   }
 
-  // 🔒 LOCK SYSTEM (avoid same-time conflict)
   if (placementLock) {
     alert("System busy, try again...");
     return null;
@@ -153,7 +146,6 @@ function registerUser(
 
   try {
 
-    // 🔥 FINAL TREE PLACEMENT
     let finalSponsor = getSafeSponsor(sponsorId, position);
 
     let newUser = {
@@ -161,15 +153,11 @@ function registerUser(
       username: username.trim(),
       password: btoa(password.trim()),
       role: role,
-
       mobile: mobile,
-
       introducerId: introducerId,
       sponsorId: finalSponsor,
       position: position,
-
       createdAt: new Date().toISOString(),
-
       status: "inactive",
       isActive: false,
       wallet: 0,
@@ -266,9 +254,17 @@ function protectPage(config) {
 }
 
 // ===================================
-// 🔹 INIT SYSTEM
+// 🔹 INIT SYSTEM (FINAL 🔥)
 // ===================================
 function initCoreSystem() {
+
+  // 🔒 GLOBAL SYSTEM LOCK
+  let settingsCheck = getSystemSettings ? getSystemSettings() : {};
+
+  if (settingsCheck.lockMode === true) {
+    alert("🚫 System is locked by Super Admin");
+    throw new Error("System Locked");
+  }
 
   enableCopyProtection();
 
