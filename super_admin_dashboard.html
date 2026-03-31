@@ -79,6 +79,11 @@
     <button onclick="toggle('franchiseAccess')">Franchise Access</button>
     <button onclick="toggle('registrationOpen')">Registration</button>
     <button onclick="toggle('upgradesOpen')">Upgrades</button>
+
+    <!-- 🔥 NEW BUTTONS (FIX) -->
+    <button onclick="toggle('queueStop')">Queue ON/OFF</button>
+    <button onclick="toggle('withdrawStop')">Withdraw ON/OFF</button>
+
   </div>
 
   <!-- SYSTEM ADMIN LIST -->
@@ -95,18 +100,15 @@
 
 </div>
 
-<!-- CORE -->
 <script src="CORE_system.js"></script>
-
-<!-- LOG -->
 <script src="activity_log.js"></script>
 
 <script>
 
-// ================= INIT =================
+// INIT
 initCoreSystem();
 
-// ================= AUTH =================
+// AUTH
 let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
 
 if (!session) {
@@ -122,7 +124,7 @@ if (!user || user.role !== "super_admin") {
   window.location.href = "super_admin_login.html";
 }
 
-// LOG LOGIN
+// LOG
 if (typeof logActivity === "function") {
   logActivity(user.userId, "SUPER_ADMIN", "Opened dashboard");
 }
@@ -130,7 +132,7 @@ if (typeof logActivity === "function") {
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// ================= SYSTEM (UPGRADE 🔥) =================
+// LOAD SYSTEM
 function loadSystem() {
 
   let s = getSystemSettings() || {};
@@ -146,7 +148,7 @@ function loadSystem() {
   `;
 }
 
-// ================= TOGGLE =================
+// TOGGLE
 function toggle(key) {
 
   let s = getSystemSettings() || {};
@@ -158,13 +160,12 @@ function toggle(key) {
 
   loadSystem();
 
-  // LOG
   if (typeof logActivity === "function") {
     logActivity(user.userId, "SUPER_ADMIN", "Toggled " + key);
   }
 }
 
-// ================= SYSTEM ADMIN =================
+// SYSTEM ADMINS
 function loadSystemAdmins() {
 
   let users = getUsers();
@@ -195,7 +196,7 @@ function loadSystemAdmins() {
   document.getElementById("sysAdminList").innerHTML = html;
 }
 
-// ================= ADMIN CONTROL =================
+// ADMINS
 function loadAdmins() {
 
   let users = getUsers();
@@ -231,57 +232,37 @@ function loadAdmins() {
   document.getElementById("adminList").innerHTML = html;
 }
 
+// TOGGLES
 function toggleAdmin(id) {
-
-  let users = getUsers();
-  let adminUser = users.find(u => u.userId === id);
-
-  if (!adminUser) return;
-
-  adminUser.status = (adminUser.status === "inactive") ? "active" : "inactive";
-
-  saveUsers(users);
-  loadAdmins();
-
-  if (typeof logActivity === "function") {
-    logActivity(user.userId, "SUPER_ADMIN", "Toggled admin " + id);
-  }
-}
-
-// ================= COMMON =================
-function toggleUser(id) {
-
   let users = getUsers();
   let u = users.find(x => x.userId === id);
   if (!u) return;
 
   u.status = (u.status === "inactive") ? "active" : "inactive";
-
   saveUsers(users);
-  loadSystemAdmins();
-
-  if (typeof logActivity === "function") {
-    logActivity(user.userId, "SUPER_ADMIN", "Toggled system admin " + id);
-  }
+  loadAdmins();
 }
 
-// ================= LOGOUT =================
+function toggleUser(id) {
+  let users = getUsers();
+  let u = users.find(x => x.userId === id);
+  if (!u) return;
+
+  u.status = (u.status === "inactive") ? "active" : "inactive";
+  saveUsers(users);
+  loadSystemAdmins();
+}
+
+// LOGOUT
 function logout() {
-
-  if (typeof logActivity === "function") {
-    logActivity(user.userId, "SUPER_ADMIN", "Logout");
-  }
-
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
 }
 
-// ================= AUTO REFRESH (🔥 FIX) =================
-setInterval(() => {
-  loadSystem();
-}, 3000);
+// AUTO REFRESH
+setInterval(loadSystem, 3000);
 
-// ================= INIT =================
+// INIT
 loadSystem();
 loadSystemAdmins();
 loadAdmins();
