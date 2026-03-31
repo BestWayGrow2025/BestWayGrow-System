@@ -35,6 +35,12 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
+    .stat {
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
     button {
       padding: 8px 15px;
       margin-top: 10px;
@@ -80,10 +86,19 @@
     <p id="system"></p>
   </div>
 
-  <!-- 🔥 INCOME STATUS (NEW) -->
+  <!-- 🔥 INCOME STATUS -->
   <div class="card">
     <h3>Income System</h3>
     <p id="incomeStatus"></p>
+  </div>
+
+  <!-- 📊 LIVE STATS (NEW 🔥🔥🔥) -->
+  <div class="card">
+    <h3>📊 Live Stats</h3>
+    <div>Total Users <div class="stat" id="totalUsers">0</div></div>
+    <div>Active Users <div class="stat" id="activeUsers">0</div></div>
+    <div>Total Withdraw <div class="stat" id="totalWithdraw">₹0</div></div>
+    <div>Pending Withdraw <div class="stat" id="pendingWithdraw">0</div></div>
   </div>
 
   <!-- 💰 FINANCE -->
@@ -92,7 +107,7 @@
     <button onclick="goTo('admin_withdrawals.html')">Withdrawals</button>
   </div>
 
-  <!-- 🎟️ PIN CONTROL -->
+  <!-- 🎟️ PIN -->
   <div class="card" id="pinCard">
     <h3>PIN Management</h3>
     <button onclick="goTo('admin_pin_panel.html')">Open PIN Panel</button>
@@ -100,40 +115,27 @@
 
   <!-- 📊 INCOME -->
   <div class="card" id="incomeCard">
-    <h3>Income Management</h3>
-    <button onclick="goTo('admin_income_control.html')">Income Control</button>
-    <button onclick="goTo('admin_income_logs.html')">View Income Logs</button>
+    <h3>Income</h3>
+    <button onclick="goTo('admin_income_control.html')">Control</button>
+    <button onclick="goTo('admin_income_logs.html')">Logs</button>
   </div>
 
-  <!-- 🏢 FRANCHISE -->
-  <div class="card" id="franchiseCard">
-    <h3>Franchise Panel</h3>
-    <button onclick="goTo('admin_franchise_requests.html')">Requests</button>
-  </div>
-
-  <!-- 📈 REPORT -->
-  <div class="card" id="reportCard">
-    <h3>Reports</h3>
-    <button onclick="goTo('admin_reports.html')">Open Reports</button>
-  </div>
-
-  <!-- 🧾 KYC -->
-  <div class="card" id="kycCard">
-    <h3>KYC Panel</h3>
-    <button onclick="goTo('admin_kyc.html')">Open KYC</button>
+  <!-- 📜 ACTIVITY LOG (NEW 🔥) -->
+  <div class="card">
+    <h3>Activity Logs</h3>
+    <button onclick="goTo('admin_activity_log.html')">View Logs</button>
   </div>
 
 </div>
 
 <footer>
-  ⬅ Back to Home <br>
   © 2026 BestWayGrow
 </footer>
 
 <!-- CORE -->
 <script src="CORE_system.js"></script>
 
-<!-- NEW SYSTEM -->
+<!-- SYSTEM -->
 <script src="income_control_system.js"></script>
 <script src="activity_log.js"></script>
 
@@ -168,43 +170,60 @@ document.getElementById("system").innerHTML = `
   Lock Mode: ${s.lockMode ? "ON" : "OFF"}
 `;
 
-// ================= 💰 INCOME STATUS =================
+// ================= INCOME STATUS =================
 function loadIncomeStatus() {
 
-  let ugli = isUGLIEnabled() ? "🟢 ON" : "🔴 OFF";
-  let rli = isRLIEnabled() ? "🟢 ON" : "🔴 OFF";
-  let binary = isBinaryEnabled() ? "🟢 ON" : "🔴 OFF";
-
   document.getElementById("incomeStatus").innerHTML = `
-    UGLI: ${ugli} <br>
-    RLI: ${rli} <br>
-    Binary: ${binary}
+    UGLI: ${isUGLIEnabled() ? "🟢 ON" : "🔴 OFF"} <br>
+    RLI: ${isRLIEnabled() ? "🟢 ON" : "🔴 OFF"} <br>
+    Binary: ${isBinaryEnabled() ? "🟢 ON" : "🔴 OFF"}
   `;
 }
+
+// ================= 📊 STATS SYSTEM (NEW 🔥) =================
+function loadStats() {
+
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+
+  let totalUsers = users.length;
+  let activeUsers = users.filter(u => u.active).length;
+
+  let totalWithdraw = withdrawals
+    .filter(w => w.status === "APPROVED")
+    .reduce((sum, w) => sum + (w.finalAmount || 0), 0);
+
+  let pendingWithdraw = withdrawals
+    .filter(w => w.status === "PENDING").length;
+
+  document.getElementById("totalUsers").innerText = totalUsers;
+  document.getElementById("activeUsers").innerText = activeUsers;
+  document.getElementById("totalWithdraw").innerText = "₹ " + totalWithdraw;
+  document.getElementById("pendingWithdraw").innerText = pendingWithdraw;
+}
+
 
 // ================= ROLE CONTROL =================
 if (admin.type === "B") {
 
-  let depts = admin.departments || [];
+  let d = admin.departments || [];
 
-  if (!depts.includes("finance")) document.getElementById("financeCard").style.display = "none";
-  if (!depts.includes("pin")) document.getElementById("pinCard").style.display = "none";
-  if (!depts.includes("income")) document.getElementById("incomeCard").style.display = "none";
-  if (!depts.includes("franchise")) document.getElementById("franchiseCard").style.display = "none";
-  if (!depts.includes("report")) document.getElementById("reportCard").style.display = "none";
-  if (!depts.includes("kyc")) document.getElementById("kycCard").style.display = "none";
+  if (!d.includes("finance")) document.getElementById("financeCard").style.display = "none";
+  if (!d.includes("pin")) document.getElementById("pinCard").style.display = "none";
+  if (!d.includes("income")) document.getElementById("incomeCard").style.display = "none";
 }
+
 
 // ================= NAV =================
 function goTo(page) {
 
-  // 📜 LOG NAVIGATION
   if (typeof logActivity === "function") {
     logActivity(admin.userId, "ADMIN", "Opened " + page);
   }
 
   window.location.href = page;
 }
+
 
 // ================= LOGOUT =================
 function logout() {
@@ -217,10 +236,19 @@ function logout() {
   window.location.href = "admin_login.html";
 }
 
-// ================= INIT LOAD =================
+
+// ================= AUTO REFRESH (NEW 🔥) =================
+setInterval(() => {
+  loadStats();
+}, 5000); // every 5 sec
+
+
+// ================= INIT =================
 loadIncomeStatus();
+loadStats();
 
 </script>
 
 </body>
 </html>
+
