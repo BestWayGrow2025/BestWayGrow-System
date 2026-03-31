@@ -52,6 +52,7 @@
   <p id="wallet"></p>
 
   <button onclick="repurchase()">Repurchase</button>
+  <button onclick="requestWithdraw()">Withdraw</button>
 </div>
 
 <!-- ⚙ SYSTEM -->
@@ -123,7 +124,7 @@ function loadSystem() {
   `;
 }
 
-// 🔥 REPURCHASE SYSTEM
+// 🔥 REPURCHASE
 function repurchase() {
 
   let users = getUsers();
@@ -136,10 +137,8 @@ function repurchase() {
     return;
   }
 
-  // deduct
   u.wallet -= 100;
 
-  // activate again
   let now = new Date();
   let nextMonth = new Date(now);
   nextMonth.setMonth(nextMonth.getMonth() + 1);
@@ -150,7 +149,6 @@ function repurchase() {
 
   saveUsers(users);
 
-  // LOG
   if (typeof logActivity === "function") {
     logActivity(u.userId, "USER", "Repurchase Activated");
   }
@@ -158,6 +156,50 @@ function repurchase() {
   alert("✅ Repurchase Successful");
 
   refreshUser();
+}
+
+// 🔥 WITHDRAW REQUEST (MERGE ADD)
+function requestWithdraw() {
+
+  let amount = prompt("Enter withdraw amount");
+
+  if (!amount || isNaN(amount)) {
+    alert("Invalid amount");
+    return;
+  }
+
+  amount = Number(amount);
+
+  if (amount < 100) {
+    alert("Minimum ₹100 required");
+    return;
+  }
+
+  let users = getUsers();
+  let u = users.find(x => x.userId === user.userId);
+
+  if (!u || u.wallet < amount) {
+    alert("Insufficient balance");
+    return;
+  }
+
+  let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+
+  withdrawals.push({
+    id: "W" + Date.now(),
+    userId: u.userId,
+    amount: amount,
+    status: "PENDING",
+    createdAt: new Date().toISOString()
+  });
+
+  localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
+
+  if (typeof logActivity === "function") {
+    logActivity(u.userId, "USER", "Withdraw Request ₹" + amount);
+  }
+
+  alert("✅ Withdraw Request Sent");
 }
 
 // REFRESH USER
