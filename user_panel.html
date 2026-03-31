@@ -28,6 +28,20 @@
     button:hover {
       background:#005f8a;
     }
+
+    table {
+      width:100%;
+      border-collapse: collapse;
+      margin-top:10px;
+    }
+
+    th, td {
+      border:1px solid #ddd;
+      padding:8px;
+      font-size:13px;
+    }
+
+    th { background:#eee; }
   </style>
 </head>
 
@@ -53,6 +67,12 @@
 
   <button onclick="repurchase()">Repurchase</button>
   <button onclick="requestWithdraw()">Withdraw</button>
+</div>
+
+<!-- 📜 WITHDRAW HISTORY -->
+<div class="card">
+  <h3>Withdraw History</h3>
+  <div id="withdrawHistory"></div>
 </div>
 
 <!-- ⚙ SYSTEM -->
@@ -139,8 +159,7 @@ function repurchase() {
 
   u.wallet -= 100;
 
-  let now = new Date();
-  let nextMonth = new Date(now);
+  let nextMonth = new Date();
   nextMonth.setMonth(nextMonth.getMonth() + 1);
 
   u.activeTill = nextMonth.toISOString();
@@ -154,12 +173,18 @@ function repurchase() {
   }
 
   alert("✅ Repurchase Successful");
-
   refreshUser();
 }
 
-// 🔥 WITHDRAW REQUEST (MERGE ADD)
+// 🔥 WITHDRAW REQUEST
 function requestWithdraw() {
+
+  let s = getSystemSettings();
+
+  if (s.withdrawStop) {
+    alert("🚫 Withdraw system OFF");
+    return;
+  }
 
   let amount = prompt("Enter withdraw amount");
 
@@ -186,11 +211,11 @@ function requestWithdraw() {
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
 
   withdrawals.push({
-    id: "W" + Date.now(),
+    requestId: "W" + Date.now(),
     userId: u.userId,
     amount: amount,
     status: "PENDING",
-    createdAt: new Date().toISOString()
+    time: new Date().toISOString()
   });
 
   localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
@@ -200,9 +225,53 @@ function requestWithdraw() {
   }
 
   alert("✅ Withdraw Request Sent");
+  loadWithdrawHistory();
 }
 
-// REFRESH USER
+// 📜 WITHDRAW HISTORY
+function loadWithdrawHistory() {
+
+  let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+
+  let userWithdraws = withdrawals.filter(w => w.userId === user.userId);
+
+  if (!userWithdraws.length) {
+    document.getElementById("withdrawHistory").innerHTML = "No History";
+    return;
+  }
+
+  let html = `
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Time</th>
+      </tr>
+  `;
+
+  userWithdraws.slice().reverse().forEach(w => {
+
+    let color =
+      w.status === "APPROVED" ? "green" :
+      w.status === "REJECTED" ? "red" : "orange";
+
+    html += `
+      <tr>
+        <td>${w.requestId}</td>
+        <td>₹ ${w.amount}</td>
+        <td style="color:${color}">${w.status}</td>
+        <td>${new Date(w.time).toLocaleString()}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("withdrawHistory").innerHTML = html;
+}
+
+// REFRESH
 function refreshUser() {
   user = getUserById(user.userId);
   loadProfile();
@@ -220,6 +289,7 @@ function logout() {
 setInterval(() => {
   refreshUser();
   loadSystem();
+  loadWithdrawHistory();
 }, 4000);
 
 // INIT
@@ -227,6 +297,7 @@ loadProfile();
 loadStatus();
 loadWallet();
 loadSystem();
+loadWithdrawHistory();
 
 </script>
 
