@@ -28,6 +28,7 @@
     <option value="repurchase">Repurchase</option>
     <option value="hold">Hold</option>
     <option value="binary">Binary</option>
+    <option value="ctor">CTOR</option> <!-- 🔥 ADDED -->
   </select>
 
   <button onclick="loadLogs()">Apply Filter</button>
@@ -69,10 +70,29 @@ initCoreSystem();
 let admin = protectPage({ role: "admin" });
 if (!admin) return;
 
+
+// ================= COLOR FUNCTION (NEW 🔥)
+// =================
+function getColor(type) {
+  if (type === "hold") return "red";
+  if (type === "upgrade" || type === "repurchase") return "green";
+  if (type === "ctor") return "blue";
+  return "black";
+}
+
+
 // ================= LOAD LOGS =================
 function loadLogs() {
 
-  let logs = getIncomeLogs() || [];
+  let logs = [];
+
+  // 🔒 SAFE FETCH
+  try {
+    logs = getIncomeLogs() || [];
+  } catch {
+    logs = [];
+  }
+
   logs = logs.slice().reverse();
 
   let userFilter = document.getElementById("filterUser").value.trim();
@@ -96,12 +116,15 @@ function loadLogs() {
   let html = "";
 
   logs.forEach((l, i) => {
+
+    let color = getColor(l.type);
+
     html += `
       <tr>
         <td>${l.logId || i + 1}</td>
         <td>${l.userId || "-"}</td>
-        <td>${l.type || "-"}</td>
-        <td>₹ ${l.amount || 0}</td>
+        <td style="color:${color}">${l.type || "-"}</td>
+        <td style="color:${color}">₹ ${l.amount || 0}</td>
         <td>${l.sourceUser || "-"}</td>
         <td>${l.note || "-"}</td>
         <td>${l.time ? new Date(l.time).toLocaleString() : "-"}</td>
@@ -111,27 +134,35 @@ function loadLogs() {
 
   table.innerHTML = html;
 
-  // 📜 LOG VIEW ACTION
+  // 📜 LOG VIEW
   if (typeof logActivity === "function") {
     logActivity(admin.userId, "ADMIN", "Viewed income logs");
   }
 }
+
 
 // ================= CLEAR LOGS =================
 function clearLogs() {
 
   if (!confirm("Are you sure to delete all logs?")) return;
 
-  clearIncomeLogs();
+  try {
+    clearIncomeLogs();
+  } catch {
+    alert("Error clearing logs");
+    return;
+  }
+
   loadLogs();
 
   alert("All logs cleared");
 
-  // 📜 LOG CLEAR ACTION
+  // 📜 LOG CLEAR
   if (typeof logActivity === "function") {
     logActivity(admin.userId, "ADMIN", "Cleared all income logs");
   }
 }
+
 
 // ================= INIT =================
 loadLogs();
@@ -140,3 +171,4 @@ loadLogs();
 
 </body>
 </html>
+
