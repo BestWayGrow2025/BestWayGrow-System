@@ -1,23 +1,31 @@
 // ===============================
-// ACTIVITY LOG SYSTEM (FINAL SAFE)
+// 📜 ACTIVITY LOG SYSTEM (FINAL PRO SAFE)
 // ===============================
 
 // 🔒 CONFIG
-const ACTIVITY_LOG_LIMIT = 5000; // prevent overload
+const ACTIVITY_LOG_LIMIT = 5000;
+
 
 // ===============================
 // ✅ ADD LOG
 // ===============================
 function logActivity(userId, role, action) {
 
-  if (!userId || !role || !action) return; // safety
+  if (!userId || !role || !action) return;
 
-  let logs = JSON.parse(localStorage.getItem("activityLogs") || "[]");
+  let logs;
+
+  try {
+    logs = JSON.parse(localStorage.getItem("activityLogs") || "[]");
+  } catch {
+    logs = [];
+  }
 
   logs.push({
-    userId: userId,
-    role: role,
-    action: action,
+    logId: "LOG" + Date.now(), // 🔥 UNIQUE ID
+    userId,
+    role,
+    action,
     time: new Date().toISOString()
   });
 
@@ -29,44 +37,101 @@ function logActivity(userId, role, action) {
   localStorage.setItem("activityLogs", JSON.stringify(logs));
 }
 
+
 // ===============================
-// 📄 GET ALL LOGS
+// 📄 GET LOGS
 // ===============================
 function getActivityLogs() {
-  return JSON.parse(localStorage.getItem("activityLogs") || "[]");
+
+  try {
+    return JSON.parse(localStorage.getItem("activityLogs") || "[]");
+  } catch {
+    return [];
+  }
 }
 
+
 // ===============================
-// 🧹 CLEAR LOGS (ADMIN CONTROL)
+// 🧹 CLEAR LOGS
 // ===============================
 function clearActivityLogs() {
+
   localStorage.removeItem("activityLogs");
+
+  if (typeof logActivity === "function") {
+    logActivity("ADMIN", "SYSTEM", "Activity logs cleared");
+  }
 }
 
+
 // ===============================
-// 🔍 FILTER LOGS
+// 🔍 FILTER
 // ===============================
 function filterLogsByUser(userId) {
-  let logs = getActivityLogs();
-  return logs.filter(l => l.userId === userId);
+  return getActivityLogs().filter(l => l.userId === userId);
 }
 
 function filterLogsByRole(role) {
-  let logs = getActivityLogs();
-  return logs.filter(l => l.role === role);
+  return getActivityLogs().filter(l => l.role === role);
 }
 
+
 // ===============================
-// ⚠️ CRITICAL EVENT LOG
+// 🔍 ADVANCED FILTER (NEW 🔥)
+// ===============================
+function filterLogsAdvanced({ userId, role, keyword }) {
+
+  let logs = getActivityLogs();
+
+  if (userId) {
+    logs = logs.filter(l => l.userId === userId);
+  }
+
+  if (role) {
+    logs = logs.filter(l => l.role === role);
+  }
+
+  if (keyword) {
+    logs = logs.filter(l =>
+      (l.action || "").toLowerCase().includes(keyword.toLowerCase())
+    );
+  }
+
+  return logs;
+}
+
+
+// ===============================
+// ⚠️ CRITICAL LOG
 // ===============================
 function logCritical(message) {
 
-  let logs = JSON.parse(localStorage.getItem("criticalLogs") || "[]");
+  let logs;
+
+  try {
+    logs = JSON.parse(localStorage.getItem("criticalLogs") || "[]");
+  } catch {
+    logs = [];
+  }
 
   logs.push({
-    message: message,
+    id: "CRIT" + Date.now(),
+    message,
     time: new Date().toISOString()
   });
 
   localStorage.setItem("criticalLogs", JSON.stringify(logs));
+}
+
+
+// ===============================
+// 📄 GET CRITICAL LOGS
+// ===============================
+function getCriticalLogs() {
+
+  try {
+    return JSON.parse(localStorage.getItem("criticalLogs") || "[]");
+  } catch {
+    return [];
+  }
 }
