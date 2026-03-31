@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<h2>ADMIN LOGIN</h2>
+<h2>ADMIN / SUPER ADMIN LOGIN</h2>
 
 <input id="adminId" placeholder="Admin ID"><br><br>
 <input id="password" type="password" placeholder="Password"><br><br>
@@ -23,6 +23,7 @@
 <p id="msg"></p>
 
 <script src="CORE_system.js"></script>
+<script src="activity_log.js"></script>
 
 <script>
 
@@ -47,48 +48,76 @@ function login() {
 
   let users = getUsers();
 
-  let admin = users.find(u =>
+  let user = users.find(u =>
     u.userId.toLowerCase() === id.toLowerCase() &&
-    u.role === "admin" &&
+    (u.role === "admin" || u.role === "super_admin") &&
     (u.password === pass || safeDecode(u.password) === pass)
   );
 
-  if (!admin) {
+  if (!user) {
     showMsg("❌ Invalid login");
     return;
   }
 
-  // ✅ STATUS CONTROL (SYSTEM ADMIN)
-  if (admin.status !== "active") {
+  // ✅ STATUS CONTROL
+  if (user.status !== "active") {
     showMsg("🚫 Account inactive by System Admin");
     return;
   }
 
   let settings = getSystemSettings();
 
-  // ✅ SUPER ADMIN CONTROL
+  // ================= 🔐 SUPER ADMIN LOGIN =================
+  if (user.role === "super_admin") {
+
+    localStorage.removeItem("loggedInAdmin");
+
+    localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
+      userId: user.userId
+    }));
+
+    // 📜 LOG
+    if (typeof logActivity === "function") {
+      logActivity(user.userId, "SUPER_ADMIN", "Login");
+    }
+
+    showMsg("👑 Super Admin Login Successful");
+
+    setTimeout(() => {
+      window.location.href = "super_admin_dashboard.html";
+    }, 800);
+
+    return;
+  }
+
+  // ================= 🔐 ADMIN LOGIN =================
+
+  // ❗ SUPER ADMIN CONTROL
   if (settings.adminAccess === false) {
     showMsg("🚫 Admin access OFF by Super Admin");
     return;
   }
 
-  // ✅ SYSTEM LOCK CONTROL
+  // ❗ SYSTEM LOCK
   if (settings.lockMode === true) {
     showMsg("🚫 System locked by Super Admin");
     return;
   }
 
-  // ✅ CLEAR OLD SESSIONS (IMPORTANT)
+  // ✅ CLEAR OLD SESSIONS
   localStorage.removeItem("loggedInSuperAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
   localStorage.removeItem("loggedInAdmin");
 
-  // ✅ SAVE SESSION
   localStorage.setItem("loggedInAdmin", JSON.stringify({
-    userId: admin.userId
+    userId: user.userId
   }));
 
-  showMsg("✅ Login successful");
+  // 📜 LOG
+  if (typeof logActivity === "function") {
+    logActivity(user.userId, "ADMIN", "Login");
+  }
+
+  showMsg("✅ Admin Login Successful");
 
   setTimeout(() => {
     window.location.href = "admin_dashboard.html";
