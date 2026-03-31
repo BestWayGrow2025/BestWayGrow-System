@@ -11,15 +11,15 @@
 
 <button onclick="repurchase()">Repurchase</button>
 
-<!-- ✅ CORE -->
+<!-- CORE -->
 <script src="CORE_system.js"></script>
 
-<!-- ✅ SYSTEM -->
+<!-- SYSTEM -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="income_control_system.js"></script>
 
-<!-- ✅ PIN CONTROL -->
+<!-- PIN -->
 <script src="pin_config_system.js"></script>
 
 <script>
@@ -55,6 +55,18 @@ function repurchase() {
 
   if (!u) return;
 
+  // 🔒 PIN SAFETY (NEW 🔥)
+  if (!isPinSystemSafe("repurchase")) {
+    alert("Repurchase not available or invalid");
+    return;
+  }
+
+  // 🔒 INCOME SYSTEM SAFETY (NEW 🔥)
+  if (typeof isIncomeSystemSafe === "function" && !isIncomeSystemSafe()) {
+    alert("System temporarily unavailable");
+    return;
+  }
+
   // ================= PIN =================
   let pin = getActivePin("repurchase");
 
@@ -66,28 +78,28 @@ function repurchase() {
   let bv = Number(pin.bv || 0);
   let amount = Number(pin.amount || 0);
 
-  // ✅ CONFIG SAFETY
+  // 🔒 EXTRA SAFETY
   if (bv <= 0 || amount <= 0) {
     alert("Invalid PIN configuration");
     return;
   }
 
-  // ================= WALLET =================
+  // 💰 WALLET CHECK
   if ((u.wallet || 0) < amount) {
     alert("Insufficient wallet balance");
     return;
   }
 
-  // ================= DEBIT =================
+  // 💸 DEBIT
   debitWallet(u.userId, amount, "Repurchase");
 
-  // ================= ✅ INCOME CONTROL =================
+  // 💰 INCOME (FINAL SAFE)
   if (isRLIEnabled() && isUserActive(u.userId)) {
     processIncome("repurchase", u.userId, bv);
   }
 
-  // ================= SAVE =================
-  saveUsers(users);
+  // 💾 SAVE (IMPORTANT FIX 🔥)
+  localStorage.setItem("users", JSON.stringify(users));
 
   alert("✅ Repurchase Successful");
 
