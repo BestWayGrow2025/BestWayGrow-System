@@ -86,13 +86,13 @@
     <p id="system"></p>
   </div>
 
-  <!-- 🔥 INCOME STATUS -->
+  <!-- INCOME -->
   <div class="card">
     <h3>Income System</h3>
     <p id="incomeStatus"></p>
   </div>
 
-  <!-- 📊 LIVE STATS (NEW 🔥🔥🔥) -->
+  <!-- 📊 STATS -->
   <div class="card">
     <h3>📊 Live Stats</h3>
     <div>Total Users <div class="stat" id="totalUsers">0</div></div>
@@ -101,26 +101,26 @@
     <div>Pending Withdraw <div class="stat" id="pendingWithdraw">0</div></div>
   </div>
 
-  <!-- 💰 FINANCE -->
+  <!-- FINANCE -->
   <div class="card" id="financeCard">
     <h3>Finance Panel</h3>
     <button onclick="goTo('admin_withdrawals.html')">Withdrawals</button>
   </div>
 
-  <!-- 🎟️ PIN -->
+  <!-- PIN -->
   <div class="card" id="pinCard">
     <h3>PIN Management</h3>
     <button onclick="goTo('admin_pin_panel.html')">Open PIN Panel</button>
   </div>
 
-  <!-- 📊 INCOME -->
+  <!-- INCOME -->
   <div class="card" id="incomeCard">
     <h3>Income</h3>
     <button onclick="goTo('admin_income_control.html')">Control</button>
     <button onclick="goTo('admin_income_logs.html')">Logs</button>
   </div>
 
-  <!-- 📜 ACTIVITY LOG (NEW 🔥) -->
+  <!-- ACTIVITY -->
   <div class="card">
     <h3>Activity Logs</h3>
     <button onclick="goTo('admin_activity_log.html')">View Logs</button>
@@ -164,15 +164,16 @@ document.getElementById("profile").innerHTML = `
   Status: ${admin.status}
 `;
 
-// ================= SYSTEM =================
+// ================= SYSTEM (UPGRADE 🔥) =================
 document.getElementById("system").innerHTML = `
-  Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
-  Lock Mode: ${s.lockMode ? "ON" : "OFF"}
+  Registration: ${s.registrationOpen !== false ? "OPEN 🟢" : "CLOSED 🔴"} <br>
+  Lock Mode: ${s.lockMode ? "LOCKED 🔴" : "UNLOCKED 🟢"} <br>
+  Withdraw: ${s.withdrawStop ? "STOPPED 🔴" : "RUNNING 🟢"} <br>
+  Queue: ${s.queueStop ? "STOPPED 🔴" : "RUNNING 🟢"}
 `;
 
 // ================= INCOME STATUS =================
 function loadIncomeStatus() {
-
   document.getElementById("incomeStatus").innerHTML = `
     UGLI: ${isUGLIEnabled() ? "🟢 ON" : "🔴 OFF"} <br>
     RLI: ${isRLIEnabled() ? "🟢 ON" : "🔴 OFF"} <br>
@@ -180,14 +181,16 @@ function loadIncomeStatus() {
   `;
 }
 
-// ================= 📊 STATS SYSTEM (NEW 🔥) =================
+// ================= STATS (FIXED BUG 🔥) =================
 function loadStats() {
 
   let users = JSON.parse(localStorage.getItem("users") || "[]");
   let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
 
   let totalUsers = users.length;
-  let activeUsers = users.filter(u => u.active).length;
+
+  // 🔥 FIX: correct active check
+  let activeUsers = users.filter(u => u.isActive === true).length;
 
   let totalWithdraw = withdrawals
     .filter(w => w.status === "APPROVED")
@@ -202,7 +205,6 @@ function loadStats() {
   document.getElementById("pendingWithdraw").innerText = pendingWithdraw;
 }
 
-
 // ================= ROLE CONTROL =================
 if (admin.type === "B") {
 
@@ -213,7 +215,6 @@ if (admin.type === "B") {
   if (!d.includes("income")) document.getElementById("incomeCard").style.display = "none";
 }
 
-
 // ================= NAV =================
 function goTo(page) {
 
@@ -223,7 +224,6 @@ function goTo(page) {
 
   window.location.href = page;
 }
-
 
 // ================= LOGOUT =================
 function logout() {
@@ -236,12 +236,10 @@ function logout() {
   window.location.href = "admin_login.html";
 }
 
-
-// ================= AUTO REFRESH (NEW 🔥) =================
+// ================= AUTO REFRESH =================
 setInterval(() => {
   loadStats();
-}, 5000); // every 5 sec
-
+}, 5000);
 
 // ================= INIT =================
 loadIncomeStatus();
