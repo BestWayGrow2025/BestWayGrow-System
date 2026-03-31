@@ -63,7 +63,6 @@ function isQueueSystemSafe() {
 
   let system = JSON.parse(localStorage.getItem("systemSettings") || "{}");
 
-  // if admin paused system
   if (system.queueStop === true) {
     console.warn("⛔ Queue system stopped by admin");
     return false;
@@ -95,7 +94,7 @@ function cleanQueue() {
 
 
 // =====================
-// ⚙️ PROCESS QUEUE (SAFE + CONTROL)
+// ⚙️ PROCESS QUEUE (FINAL SAFE 🔥)
 // =====================
 function processQueue() {
 
@@ -119,6 +118,13 @@ function processQueue() {
     let nextUser = queue.find(u => u.status === "PENDING");
 
     if (!nextUser) {
+      setLock(false);
+      return;
+    }
+
+    // 🔐 SAFETY CHECK (NEW 🔥)
+    if (typeof registerUser !== "function") {
+      console.error("registerUser not found");
       setLock(false);
       return;
     }
@@ -172,16 +178,14 @@ function processQueue() {
 
 
 // =====================
-// 🔄 AUTO PROCESSOR (SMART CONTROL 🔥)
+// 🔄 AUTO PROCESSOR
 // =====================
 function startQueueProcessor() {
 
   setInterval(() => {
-
     processQueue();
     cleanQueue();
-
-  }, 2000); // 2 sec (can adjust)
+  }, 2000);
 
 }
 
