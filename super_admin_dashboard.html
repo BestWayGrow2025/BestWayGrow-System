@@ -98,7 +98,7 @@
 <!-- CORE -->
 <script src="CORE_system.js"></script>
 
-<!-- 🔥 LOG SYSTEM -->
+<!-- LOG -->
 <script src="activity_log.js"></script>
 
 <script>
@@ -122,7 +122,7 @@ if (!user || user.role !== "super_admin") {
   window.location.href = "super_admin_login.html";
 }
 
-// 📜 LOG LOGIN VIEW
+// LOG LOGIN
 if (typeof logActivity === "function") {
   logActivity(user.userId, "SUPER_ADMIN", "Opened dashboard");
 }
@@ -130,20 +130,23 @@ if (typeof logActivity === "function") {
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// ================= SYSTEM =================
+// ================= SYSTEM (UPGRADE 🔥) =================
 function loadSystem() {
 
   let s = getSystemSettings() || {};
 
   document.getElementById("systemStatus").innerHTML = `
     Lock Mode: ${s.lockMode ? "LOCKED 🔴" : "UNLOCKED 🟢"} <br>
-    Admin Access: ${s.adminAccess !== false ? "ON" : "OFF"} <br>
-    Franchise Access: ${s.franchiseAccess !== false ? "ON" : "OFF"} <br>
-    Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
-    Upgrades: ${s.upgradesOpen !== false ? "OPEN" : "CLOSED"}
+    Admin Access: ${s.adminAccess !== false ? "ON 🟢" : "OFF 🔴"} <br>
+    Franchise Access: ${s.franchiseAccess !== false ? "ON 🟢" : "OFF 🔴"} <br>
+    Registration: ${s.registrationOpen !== false ? "OPEN 🟢" : "CLOSED 🔴"} <br>
+    Upgrades: ${s.upgradesOpen !== false ? "OPEN 🟢" : "CLOSED 🔴"} <br>
+    Queue: ${s.queueStop ? "STOPPED 🔴" : "RUNNING 🟢"} <br>
+    Withdraw: ${s.withdrawStop ? "STOPPED 🔴" : "RUNNING 🟢"}
   `;
 }
 
+// ================= TOGGLE =================
 function toggle(key) {
 
   let s = getSystemSettings() || {};
@@ -155,9 +158,9 @@ function toggle(key) {
 
   loadSystem();
 
-  // 📜 LOG
+  // LOG
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "SUPER_ADMIN", "Toggled " + key + " → " + (s[key] ? "ON" : "OFF"));
+    logActivity(user.userId, "SUPER_ADMIN", "Toggled " + key);
   }
 }
 
@@ -240,7 +243,6 @@ function toggleAdmin(id) {
   saveUsers(users);
   loadAdmins();
 
-  // 📜 LOG
   if (typeof logActivity === "function") {
     logActivity(user.userId, "SUPER_ADMIN", "Toggled admin " + id);
   }
@@ -258,7 +260,6 @@ function toggleUser(id) {
   saveUsers(users);
   loadSystemAdmins();
 
-  // 📜 LOG
   if (typeof logActivity === "function") {
     logActivity(user.userId, "SUPER_ADMIN", "Toggled system admin " + id);
   }
@@ -274,6 +275,11 @@ function logout() {
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
 }
+
+// ================= AUTO REFRESH (🔥 FIX) =================
+setInterval(() => {
+  loadSystem();
+}, 3000);
 
 // ================= INIT =================
 loadSystem();
