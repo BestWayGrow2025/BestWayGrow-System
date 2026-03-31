@@ -66,18 +66,16 @@ function upgradeNow() {
     return;
   }
 
-  // 🔒 PIN SAFETY (NEW 🔥)
+  // 🔒 PIN SAFETY
   if (!isPinSystemSafe("upgrade")) {
     alert("Upgrade not available or invalid");
     return;
   }
 
-  // 🔒 INCOME SYSTEM SAFETY (NEW 🔥)
-  if (typeof isIncomeSystemSafe === "function") {
-    if (!isIncomeSystemSafe()) {
-      alert("System temporarily unavailable");
-      return;
-    }
+  // 🔒 INCOME SYSTEM SAFETY
+  if (typeof isIncomeSystemSafe === "function" && !isIncomeSystemSafe()) {
+    alert("System temporarily unavailable");
+    return;
   }
 
   let pin = getActivePin("upgrade");
@@ -108,13 +106,13 @@ function upgradeNow() {
   // ✅ ACTIVATE
   activateUser(u.userId);
 
-  // 💰 INCOME
+  // 💰 INCOME (FINAL SAFE)
   if (isUGLIEnabled() && isUserActive(u.userId)) {
     processIncome("upgrade", u.userId, bv);
   }
 
-  // 💾 SAVE
-  saveUsers(users);
+  // 💾 SAVE (IMPORTANT FIX 🔥)
+  localStorage.setItem("users", JSON.stringify(users));
 
   alert("✅ Upgrade Successful");
 
