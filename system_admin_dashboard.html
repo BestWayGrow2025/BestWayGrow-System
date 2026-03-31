@@ -38,7 +38,8 @@
     <div id="deptBox" style="display:none; text-align:left;">
       <label><input type="checkbox" value="finance"> Finance</label><br>
       <label><input type="checkbox" value="franchise"> Franchise</label><br>
-      <label><input type="checkbox" value="kyc"> KYC</label>
+      <label><input type="checkbox" value="kyc"> KYC</label><br>
+      <label><input type="checkbox" value="report"> Report</label>
     </div>
 
     <button onclick="createAdmin()">Create</button>
@@ -51,7 +52,7 @@
     <div id="adminList"></div>
   </div>
 
-  <!-- SYSTEM STATUS -->
+  <!-- SYSTEM STATUS (UPGRADED) -->
   <div class="card">
     <h3>System Status</h3>
     <p id="systemStatus"></p>
@@ -60,18 +61,17 @@
 </div>
 
 <script src="CORE_system.js"></script>
+<script src="activity_log.js"></script>
 
 <script>
 
 // ================= INIT =================
 initCoreSystem();
 
-// 🔥 GLOBAL SECURITY
 let currentUser = protectPage({
   role: "system_admin"
 });
 
-// ✅ EXTRA SAFETY (OPTIONAL BUT BEST PRACTICE)
 if (!currentUser) {
   throw new Error("Security check failed");
 }
@@ -83,13 +83,15 @@ function toggleDepartments() {
     (type === "B") ? "block" : "none";
 }
 
-// ================= SYSTEM STATUS =================
+// ================= SYSTEM STATUS (UPGRADE 🔥) =================
 function loadSystem() {
   let s = getSystemSettings();
 
   document.getElementById("systemStatus").innerHTML = `
-    Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
-    Lock Mode: ${s.lockMode ? "LOCKED" : "UNLOCKED"}
+    Admin Access: ${s.adminAccess ? "ON 🟢" : "OFF 🔴"} <br>
+    Lock Mode: ${s.lockMode ? "LOCKED 🔴" : "UNLOCKED 🟢"} <br>
+    Queue: ${s.queueStop ? "STOPPED 🔴" : "RUNNING 🟢"} <br>
+    Withdraw: ${s.withdrawStop ? "STOPPED 🔴" : "RUNNING 🟢"}
   `;
 }
 
@@ -125,7 +127,6 @@ function createAdmin() {
       return;
     }
   } else {
-    // ✅ FULL ACCESS
     departments = ["finance","franchise","kyc","report"];
   }
 
@@ -141,6 +142,11 @@ function createAdmin() {
   });
 
   saveUsers(users);
+
+  // 📜 LOG
+  if (typeof logActivity === "function") {
+    logActivity(currentUser.userId, "SYSTEM_ADMIN", "Created admin " + adminId);
+  }
 
   showMsg("✅ Created");
 
@@ -210,6 +216,11 @@ function toggleAdmin(id) {
   admin.status = (admin.status === "active") ? "inactive" : "active";
 
   saveUsers(users);
+
+  // 📜 LOG
+  if (typeof logActivity === "function") {
+    logActivity(currentUser.userId, "SYSTEM_ADMIN", "Toggled admin " + id);
+  }
 
   loadAdmins();
 }
