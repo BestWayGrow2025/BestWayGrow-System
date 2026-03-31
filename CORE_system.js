@@ -34,6 +34,16 @@ function getUserById(id) {
   return getUsers().find(u => u.userId === id);
 }
 
+// 🔥 NEW
+function getDirectUsers(userId) {
+  return getUsers().filter(u => u.introducerId === userId);
+}
+
+// 🔥 NEW (TREE CHILDREN)
+function getChildren(userId) {
+  return getUsers().filter(u => u.sponsorId === userId);
+}
+
 // ===================================
 // 🔹 USER ID GENERATOR (SAFE)
 // ===================================
@@ -105,6 +115,27 @@ function getSafeSponsor(sponsorId, position) {
   }
 
   return finalSponsor;
+}
+
+// ===================================
+// 🔥 FULL DOWNLINE (LEVEL 3 CORE)
+// ===================================
+function getDownline(userId) {
+
+  let users = getUsers();
+  let result = [];
+
+  function find(id) {
+    let children = users.filter(u => u.sponsorId === id);
+
+    children.forEach(child => {
+      result.push(child);
+      find(child.userId);
+    });
+  }
+
+  find(userId);
+  return result;
 }
 
 // ===================================
@@ -258,7 +289,6 @@ function protectPage(config) {
 // ===================================
 function initCoreSystem() {
 
-  // 🔒 GLOBAL SYSTEM LOCK
   let settingsCheck = getSystemSettings ? getSystemSettings() : {};
 
   if (settingsCheck.lockMode === true) {
