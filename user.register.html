@@ -12,12 +12,9 @@
   <input type="text" id="mobile" placeholder="Mobile"><br><br>
   <input type="password" id="password" placeholder="Password"><br><br>
 
-  <label>Sponsor ID:</label><br>
-  <input type="text" id="sponsorId" placeholder="Enter Sponsor ID"><br><br>
-
   <label>Select Position:</label><br>
-  <input type="radio" name="position" value="LEFT"> LEFT
-  <input type="radio" name="position" value="RIGHT"> RIGHT
+  <input type="radio" name="position" value="L"> LEFT
+  <input type="radio" name="position" value="R"> RIGHT
   <br><br>
 
   <button id="regBtn" onclick="handleRegister()">Register</button>
@@ -53,7 +50,6 @@ function handleRegister() {
   let username = document.getElementById("username").value.trim();
   let mobile = document.getElementById("mobile").value.trim();
   let password = document.getElementById("password").value;
-  let sponsorId = document.getElementById("sponsorId").value.trim();
 
   let positionElement = document.querySelector('input[name="position"]:checked');
 
@@ -87,21 +83,10 @@ function handleRegister() {
     return;
   }
 
-  // ✅ SPONSOR CHECK
-  if (!sponsorId) {
-    alert("Sponsor required");
-    btn.disabled = false;
-    return;
-  }
+  // 🔥 AUTO SPONSOR (FIXED)
+  let sponsorId = introducerId;
 
-  let sponsorExists = users.find(u => u.userId === sponsorId);
-  if (!sponsorExists) {
-    alert("Invalid Sponsor ID");
-    btn.disabled = false;
-    return;
-  }
-
-  // ✅ DUPLICATE MOBILE CHECK (IMPORTANT 🔥)
+  // ✅ DUPLICATE MOBILE CHECK
   let duplicate = users.find(u => u.mobile === mobile);
   if (duplicate) {
     alert("Mobile already registered");
@@ -119,17 +104,25 @@ function handleRegister() {
     position
   });
 
-  // 🔥 PROCESS QUEUE (SAFE)
+  // ✅ PROCESS
   processQueue();
 
-  // ✅ SUCCESS MESSAGE
-  document.getElementById("msg").innerText =
-    "✅ Registration submitted. Processing...";
-
-  // 🔓 enable again after delay
+  // ⏳ SHOW RESULT AFTER PROCESS
   setTimeout(() => {
+
+    let users = getUsers();
+    let lastUser = users[users.length - 1];
+
+    document.getElementById("msg").innerHTML = `
+      ✅ Registration Successful <br>
+      Your ID: <b>${lastUser.userId}</b>
+      <br><br>
+      🔗 <a href="user_login.html">Go to Login</a>
+    `;
+
     btn.disabled = false;
-  }, 2000);
+
+  }, 1500);
 }
 
 </script>
