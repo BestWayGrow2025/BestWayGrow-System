@@ -2,8 +2,6 @@
 <html>
 <head>
   <title>User Login</title>
-
-  <!-- ✅ FIX: remove favicon 404 -->
   <link rel="icon" href="data:,">
 </head>
 <body>
@@ -18,15 +16,14 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORE FIRST -->
 <script src="CORE_system.js"></script>
 
 <script>
 
-// ================= INIT CORE =================
+// INIT
 initCoreSystem();
 
-// ================= SAFE DECODE =================
+// SAFE DECODE (OLD SYSTEM SUPPORT)
 function safeDecode(p) {
   try {
     return atob(p);
@@ -42,26 +39,59 @@ function loginUser(e) {
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value;
 
-  let users = getUsers();
+  // 🔥 FIRST TRY BACKEND LOGIN
+  fetch("http://localhost:3000/api/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ userId, password })
+  })
+  .then(res => res.json())
+  .then(data => {
 
-  let user = users.find(u => 
-    u.userId.toLowerCase() === userId.toLowerCase() &&   // ✅ case-insensitive
-    u.status !== "blocked" &&                            // ✅ safety
-    (u.password === password || safeDecode(u.password) === password)
-  );
+    if (data.success) {
+      // ✅ BACKEND LOGIN SUCCESS
+      localStorage.setItem("loggedInUser", JSON.stringify({
+        userId: data.user.userId
+      }));
 
-  if (!user) {
-    document.getElementById("msg").innerText = "❌ Invalid login";
-    return;
-  }
+      document.getElementById("msg").innerText = "✅ Login Success (Server)";
+      setTimeout(() => {
+        window.location.href = "user_dashboard.html";
+      }, 800);
 
-  // ✅ SAVE SESSION (clean format)
-  localStorage.setItem("loggedInUser", JSON.stringify({
-    userId: user.userId
-  }));
+    } else {
+      // 🔄 FALLBACK → OLD LOCAL SYSTEM
 
-  // ✅ REDIRECT
-  window.location.href = "user_dashboard.html";
+      let users = getUsers();
+
+      let user = users.find(u => 
+        u.userId.toLowerCase() === userId.toLowerCase() &&
+        u.status !== "blocked" &&
+        (u.password === password || safeDecode(u.password) === password)
+      );
+
+      if (!user) {
+        document.getElementById("msg").innerText = "❌ Invalid login";
+        return;
+      }
+
+      localStorage.setItem("loggedInUser", JSON.stringify({
+        userId: user.userId
+      }));
+
+      document.getElementById("msg").innerText = "⚠️ Login via Local System";
+
+      setTimeout(() => {
+        window.location.href = "user_dashboard.html";
+      }, 800);
+    }
+
+  })
+  .catch(err => {
+    document.getElementById("msg").innerText = "❌ Server error";
+  });
 }
 
 </script>
