@@ -15,7 +15,7 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORE FIRST -->
+<!-- CORE -->
 <script src="CORE_system.js"></script>
 
 <!-- SYSTEM -->
@@ -23,7 +23,7 @@
 
 <script>
 
-// ================= INIT CORE =================
+// ================= INIT =================
 initCoreSystem();
 
 // ================= AUTH =================
@@ -34,31 +34,51 @@ if (!sessionUser) {
   window.location.href = "user_login.html";
 }
 
-// ✅ GET USER
 let userId = sessionUser.userId;
 document.getElementById("userId").innerText = userId;
+
 
 // ================= SUBMIT =================
 function submitWithdraw() {
 
+  let msgBox = document.getElementById("msg");
   let amount = parseFloat(document.getElementById("amount").value);
 
+  msgBox.innerText = "";
+
+  // 🔒 INPUT VALIDATION
   if (!amount || amount <= 0) {
-    document.getElementById("msg").innerText = "❌ Invalid amount";
+    msgBox.innerText = "❌ Invalid amount";
     return;
   }
 
-  // ✅ CALL SYSTEM FUNCTION
-  requestWithdraw(userId, amount);
+  // 🔒 SYSTEM SAFETY (NEW 🔥)
+  if (typeof isWithdrawSystemSafe === "function") {
+    if (!isWithdrawSystemSafe()) {
+      msgBox.innerText = "⛔ Withdraw system disabled";
+      return;
+    }
+  }
 
-  document.getElementById("msg").innerText = "✅ Withdraw request submitted";
+  try {
 
-  document.getElementById("amount").value = "";
+    // ✅ CALL SYSTEM
+    requestWithdraw(userId, amount);
 
-  // ✅ REDIRECT AFTER 1.5s (BETTER UX)
-  setTimeout(() => {
-    window.location.href = "user_dashboard.html";
-  }, 1500);
+    msgBox.innerText = "✅ Withdraw request submitted";
+
+    document.getElementById("amount").value = "";
+
+    // ⏳ REDIRECT
+    setTimeout(() => {
+      window.location.href = "user_dashboard.html";
+    }, 1500);
+
+  } catch (err) {
+
+    console.error(err);
+    msgBox.innerText = "❌ Error processing request";
+  }
 }
 
 </script>
