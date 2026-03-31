@@ -49,7 +49,6 @@
   <p id="profile"></p>
 </div>
 
-<!-- 🔥 NEW -->
 <div class="card">
   <h3>System Status</h3>
   <p id="system"></p>
@@ -84,7 +83,15 @@ if (!user || user.role !== "franchise") {
   window.location.href = "franchise_login.html";
 }
 
-// LOG
+// ================= SYSTEM CHECK (🔥 IMPORTANT) =================
+let settings = getSystemSettings();
+
+if (settings.franchiseAccess === false) {
+  alert("🚫 Franchise access OFF by Super Admin");
+  throw new Error("Access Blocked");
+}
+
+// ================= LOG =================
 if (typeof logActivity === "function") {
   logActivity(user.userId, "FRANCHISE", "Opened dashboard");
 }
@@ -96,7 +103,7 @@ document.getElementById("profile").innerHTML = `
   Status: ${user.status || "N/A"}
 `;
 
-// ================= SYSTEM STATUS (NEW) =================
+// ================= SYSTEM STATUS =================
 function loadSystem() {
 
   let s = getSystemSettings() || {};
@@ -104,11 +111,13 @@ function loadSystem() {
   document.getElementById("system").innerHTML = `
     Registration: ${s.registrationOpen !== false ? "OPEN 🟢" : "CLOSED 🔴"} <br>
     Franchise Access: ${s.franchiseAccess !== false ? "ON 🟢" : "OFF 🔴"} <br>
-    Lock Mode: ${s.lockMode ? "LOCKED 🔴" : "UNLOCKED 🟢"}
+    Lock Mode: ${s.lockMode ? "LOCKED 🔴" : "UNLOCKED 🟢"} <br>
+    Queue: ${s.queueStop ? "STOPPED 🔴" : "RUNNING 🟢"} <br>
+    Withdraw: ${s.withdrawStop ? "STOPPED 🔴" : "RUNNING 🟢"}
   `;
 }
 
-// ================= USERS (UPGRADE TABLE) =================
+// ================= USERS =================
 function loadUsers() {
 
   let users = getUsers().filter(u => u.introducerId === user.userId);
@@ -160,7 +169,7 @@ function logout() {
 setInterval(() => {
   loadUsers();
   loadSystem();
-}, 5000);
+}, 4000);
 
 // ================= INIT =================
 loadUsers();
