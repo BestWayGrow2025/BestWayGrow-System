@@ -91,7 +91,6 @@
     <button onclick="softReset()">🟢 Soft</button>
     <button onclick="mediumReset()">🟡 Medium</button>
     <button onclick="fullReset()">🔴 Full</button>
-
   </div>
 
   <!-- COUNTS -->
@@ -214,7 +213,7 @@ function toggle(key) {
   loadSystem();
 }
 
-// ================= RESET PRO =================
+// ================= RESET SYSTEM =================
 function softReset() {
   if (!confirm("Clear logs only?")) return;
   localStorage.removeItem("activityLogs");
