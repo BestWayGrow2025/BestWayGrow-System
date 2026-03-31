@@ -37,15 +37,17 @@ function addToQueue(userData) {
 
   saveQueue(queue);
 
+  // 🔥 INSTANT PROCESS
+  processQueue();
+
   // 📜 LOG
   if (typeof logActivity === "function") {
     logActivity("SYSTEM", "QUEUE", "User added to queue");
   }
 }
 
-
 // =====================
-// 🔐 LOCK SYSTEM (SAFE)
+// 🔐 LOCK SYSTEM
 // =====================
 function isLocked() {
   return localStorage.getItem("treeLock") === "true";
@@ -55,25 +57,23 @@ function setLock(value) {
   localStorage.setItem("treeLock", value ? "true" : "false");
 }
 
-
 // =====================
-// 🔒 GLOBAL SYSTEM CHECK (NEW 🔥)
+// 🔒 GLOBAL SYSTEM CHECK
 // =====================
 function isQueueSystemSafe() {
 
   let system = JSON.parse(localStorage.getItem("systemSettings") || "{}");
 
   if (system.queueStop === true) {
-    console.warn("⛔ Queue system stopped by admin");
+    console.warn("⛔ Queue stopped by admin");
     return false;
   }
 
   return true;
 }
 
-
 // =====================
-// 🧹 CLEANUP QUEUE
+// 🧹 CLEAN QUEUE
 // =====================
 function cleanQueue() {
 
@@ -92,21 +92,33 @@ function cleanQueue() {
   saveQueue(queue);
 }
 
+// =====================
+// ⚙️ PROCESS QUEUE
+// =====================
+let isProcessing = false;
 
-// =====================
-// ⚙️ PROCESS QUEUE (FINAL SAFE 🔥)
-// =====================
 function processQueue() {
 
-  // 🔒 GLOBAL CONTROL
-  if (!isQueueSystemSafe()) return;
+  if (isProcessing) return;
+  isProcessing = true;
 
-  if (isLocked()) return;
+  // 🔒 SYSTEM CHECK
+  if (!isQueueSystemSafe()) {
+    isProcessing = false;
+    return;
+  }
+
+  if (isLocked()) {
+    isProcessing = false;
+    return;
+  }
 
   let queue = getQueue();
-  if (!queue.length) return;
+  if (!queue.length) {
+    isProcessing = false;
+    return;
+  }
 
-  // 🔒 LOCK START
   setLock(true);
 
   try {
@@ -119,20 +131,22 @@ function processQueue() {
 
     if (!nextUser) {
       setLock(false);
+      isProcessing = false;
       return;
     }
 
-    // 🔐 SAFETY CHECK (NEW 🔥)
     if (typeof registerUser !== "function") {
       console.error("registerUser not found");
       setLock(false);
+      isProcessing = false;
       return;
     }
 
-    // 🔥 REGISTER USER
+    // 🔥 REGISTER USER (WITH MOBILE FIX)
     let user = registerUser(
       nextUser.username,
       nextUser.password,
+      nextUser.mobile,
       nextUser.introducerId,
       nextUser.sponsorId,
       nextUser.position
@@ -142,7 +156,6 @@ function processQueue() {
 
       nextUser.status = "DONE";
 
-      // 📜 LOG
       if (typeof logActivity === "function") {
         logActivity(user.userId, "SYSTEM", "Registered via queue");
       }
@@ -154,7 +167,6 @@ function processQueue() {
       if (nextUser.retry >= 3) {
         nextUser.status = "FAILED";
 
-        // 📜 LOG
         if (typeof logActivity === "function") {
           logActivity("SYSTEM", "QUEUE", "Queue FAILED after retries");
         }
@@ -172,10 +184,9 @@ function processQueue() {
     }
   }
 
-  // 🔓 UNLOCK ALWAYS
   setLock(false);
+  isProcessing = false;
 }
-
 
 // =====================
 // 🔄 AUTO PROCESSOR
@@ -189,13 +200,11 @@ function startQueueProcessor() {
 
 }
 
-
 // =====================
 // 🚀 AUTO START
 // =====================
 startQueueProcessor();
 
 </script>
-
 
 
