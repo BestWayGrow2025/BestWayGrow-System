@@ -34,18 +34,16 @@ function getUserById(id) {
   return getUsers().find(u => u.userId === id);
 }
 
-// 🔥 NEW
 function getDirectUsers(userId) {
   return getUsers().filter(u => u.introducerId === userId);
 }
 
-// 🔥 NEW (TREE CHILDREN)
 function getChildren(userId) {
   return getUsers().filter(u => u.sponsorId === userId);
 }
 
 // ===================================
-// 🔹 USER ID GENERATOR (SAFE)
+// 🔹 USER ID GENERATOR (SAFE RANDOM)
 // ===================================
 function generateUserId() {
   let users = getUsers();
@@ -53,8 +51,8 @@ function generateUserId() {
 
   let newId;
   do {
-    let randomNum = Math.floor(1 + Math.random() * 999999);
-    newId = "BWG" + String(randomNum).padStart(6, "0");
+    let randomNum = Math.floor(100000 + Math.random() * 900000);
+    newId = "BWG" + randomNum;
   } while (
     existingIds.includes(newId) ||
     newId === "BWG000000"
@@ -73,7 +71,7 @@ function isValidIntroducer(id) {
 }
 
 // ===================================
-// 🌳 TREE SYSTEM (HIGH LOAD SAFE)
+// 🌳 TREE SYSTEM
 // ===================================
 let placementLock = false;
 
@@ -118,7 +116,7 @@ function getSafeSponsor(sponsorId, position) {
 }
 
 // ===================================
-// 🔥 FULL DOWNLINE (LEVEL 3 CORE)
+// 🔥 FULL DOWNLINE
 // ===================================
 function getDownline(userId) {
 
@@ -139,22 +137,27 @@ function getDownline(userId) {
 }
 
 // ===================================
-// 🔹 REGISTER (FINAL SAFE VERSION)
+// 🔹 REGISTER (FINAL FIXED)
 // ===================================
 function registerUser(
   username,
   password,
+  mobile,
   introducerId,
   sponsorId,
   position,
-  mobile = "",
   role = "user"
 ) {
 
   let users = getUsers();
 
-  if (!username || !password) {
+  if (!username || !password || !mobile) {
     alert("Fill all fields");
+    return null;
+  }
+
+  if (!/^[0-9]{10}$/.test(mobile)) {
+    alert("Invalid mobile");
     return null;
   }
 
@@ -168,6 +171,13 @@ function registerUser(
     return null;
   }
 
+  // 🔒 Duplicate mobile check
+  let duplicate = users.find(u => u.mobile === mobile);
+  if (duplicate) {
+    alert("Mobile already exists");
+    return null;
+  }
+
   if (placementLock) {
     alert("System busy, try again...");
     return null;
@@ -177,7 +187,10 @@ function registerUser(
 
   try {
 
-    let finalSponsor = getSafeSponsor(sponsorId, position);
+    // 🔥 Convert L/R → LEFT/RIGHT
+    let pos = position === "L" ? "LEFT" : "RIGHT";
+
+    let finalSponsor = getSafeSponsor(sponsorId, pos);
 
     let newUser = {
       userId: generateUserId(),
@@ -187,7 +200,7 @@ function registerUser(
       mobile: mobile,
       introducerId: introducerId,
       sponsorId: finalSponsor,
-      position: position,
+      position: pos,
       createdAt: new Date().toISOString(),
       status: "inactive",
       isActive: false,
@@ -285,11 +298,11 @@ function protectPage(config) {
 }
 
 // ===================================
-// 🔹 INIT SYSTEM (FINAL 🔥)
+// 🔹 INIT SYSTEM
 // ===================================
 function initCoreSystem() {
 
-  let settingsCheck = getSystemSettings ? getSystemSettings() : {};
+  let settingsCheck = getSystemSettings();
 
   if (settingsCheck.lockMode === true) {
     alert("🚫 System is locked by Super Admin");
@@ -321,6 +334,7 @@ function initCoreSystem() {
       password: btoa("123"),
       role: "super_admin",
       status: "active",
+      isActive: true,
       createdAt: new Date().toISOString()
     });
 
