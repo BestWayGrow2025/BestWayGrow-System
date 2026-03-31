@@ -54,7 +54,7 @@
 
     button {
       padding: 6px 10px;
-      margin-top: 5px;
+      margin: 5px;
       cursor: pointer;
     }
   </style>
@@ -75,16 +75,20 @@
     <h3>System Control</h3>
     <p id="systemStatus"></p>
 
-    <button onclick="toggle('lockMode')">🔒 System Lock</button>
-    <button onclick="toggle('adminAccess')">Admin Access</button>
-    <button onclick="toggle('franchiseAccess')">Franchise Access</button>
-    <button onclick="toggle('registrationOpen')">Registration</button>
-    <button onclick="toggle('upgradesOpen')">Upgrades</button>
+    <button onclick="toggle('lockMode')">🔒 Lock</button>
+    <button onclick="toggle('adminAccess')">Admin</button>
+    <button onclick="toggle('franchiseAccess')">Franchise</button>
+    <button onclick="toggle('registrationOpen')">Register</button>
+    <button onclick="toggle('upgradesOpen')">Upgrade</button>
+
+    <!-- 🔥 NEW -->
+    <button onclick="toggle('repurchaseOpen')">Repurchase</button>
+
     <button onclick="toggle('queueStop')">Queue</button>
     <button onclick="toggle('withdrawStop')">Withdraw</button>
   </div>
 
-  <!-- 📊 COUNTS -->
+  <!-- COUNTS -->
   <div class="card">
     <h3>System Overview</h3>
 
@@ -94,32 +98,25 @@
     <div>Users <div class="stat" id="userCount">0</div></div>
   </div>
 
-  <!-- VIEW PANELS -->
+  <!-- 🔥 CLICK VIEW -->
   <div class="card">
-    <h3>Quick Access</h3>
+    <h3>Quick View</h3>
 
-    <button onclick="goTo('system_admin_dashboard.html')">System Admins</button>
-    <button onclick="goTo('admin_dashboard.html')">Admins</button>
-    <button onclick="goTo('franchise_dashboard.html')">Franchise</button>
-    <button onclick="goTo('user_panel.html')">Users</button>
+    <button onclick="showData('system_admin')">System Admins</button>
+    <button onclick="showData('admin')">Admins</button>
+    <button onclick="showData('franchise')">Franchise</button>
+    <button onclick="showData('user')">Users</button>
   </div>
 
-  <!-- SYSTEM ADMIN LIST -->
+  <!-- 🔥 DATA PANEL -->
   <div class="card">
-    <h3>System Admins</h3>
-    <div id="sysAdminList"></div>
-  </div>
-
-  <!-- ADMIN LIST -->
-  <div class="card">
-    <h3>Admins</h3>
-    <div id="adminList"></div>
+    <h3>Details</h3>
+    <div id="dataPanel">Click above button to view</div>
   </div>
 
 </div>
 
 <script src="CORE_system.js"></script>
-<script src="activity_log.js"></script>
 
 <script>
 
@@ -142,7 +139,7 @@ if (!user || user.role !== "super_admin") {
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// ================= SYSTEM =================
+// SYSTEM
 function loadSystem() {
   let s = getSystemSettings() || {};
 
@@ -151,13 +148,14 @@ function loadSystem() {
     Admin: ${s.adminAccess !== false ? "🟢" : "🔴"} |
     Franchise: ${s.franchiseAccess !== false ? "🟢" : "🔴"} <br>
     Register: ${s.registrationOpen !== false ? "🟢" : "🔴"} |
-    Upgrade: ${s.upgradesOpen !== false ? "🟢" : "🔴"} <br>
+    Upgrade: ${s.upgradesOpen !== false ? "🟢" : "🔴"} |
+    Repurchase: ${s.repurchaseOpen !== false ? "🟢" : "🔴"} <br>
     Queue: ${s.queueStop ? "🔴" : "🟢"} |
     Withdraw: ${s.withdrawStop ? "🔴" : "🟢"}
   `;
 }
 
-// ================= COUNTS =================
+// COUNTS
 function loadCounts() {
   let users = getUsers();
 
@@ -174,54 +172,34 @@ function loadCounts() {
     users.filter(u => u.role === "user").length;
 }
 
-// ================= LISTS =================
-function loadSystemAdmins() {
-  let users = getUsers().filter(u => u.role === "system_admin");
+// 🔥 SHOW DATA
+function showData(role) {
 
-  let html = "No Data";
+  let users = getUsers().filter(u => u.role === role);
 
-  if (users.length) {
-    html = `<table>
-      <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+  if (!users.length) {
+    document.getElementById("dataPanel").innerHTML = "No Data";
+    return;
+  }
 
-    users.forEach(u => {
-      html += `<tr>
+  let html = `<table>
+    <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+
+  users.forEach(u => {
+    html += `
+      <tr>
         <td>${u.userId}</td>
         <td>${u.username}</td>
         <td>${u.status || "active"}</td>
       </tr>`;
-    });
+  });
 
-    html += "</table>";
-  }
+  html += "</table>";
 
-  document.getElementById("sysAdminList").innerHTML = html;
+  document.getElementById("dataPanel").innerHTML = html;
 }
 
-function loadAdmins() {
-  let users = getUsers().filter(u => u.role === "admin");
-
-  let html = "No Data";
-
-  if (users.length) {
-    html = `<table>
-      <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
-
-    users.forEach(u => {
-      html += `<tr>
-        <td>${u.userId}</td>
-        <td>${u.username}</td>
-        <td>${u.status || "active"}</td>
-      </tr>`;
-    });
-
-    html += "</table>";
-  }
-
-  document.getElementById("adminList").innerHTML = html;
-}
-
-// ================= TOGGLE =================
+// TOGGLE
 function toggle(key) {
   let s = getSystemSettings() || {};
   s[key] = !s[key];
@@ -229,12 +207,7 @@ function toggle(key) {
   loadSystem();
 }
 
-// ================= NAV =================
-function goTo(page) {
-  window.location.href = page;
-}
-
-// ================= LOGOUT =================
+// LOGOUT
 function logout() {
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
@@ -249,8 +222,6 @@ setInterval(() => {
 // INIT
 loadSystem();
 loadCounts();
-loadSystemAdmins();
-loadAdmins();
 
 </script>
 
