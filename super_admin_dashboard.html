@@ -69,7 +69,7 @@
 
 <div class="container">
 
-  <!-- SYSTEM STATUS -->
+  <!-- SYSTEM CONTROL -->
   <div class="card">
     <h3>System Control</h3>
     <p id="systemStatus"></p>
@@ -95,8 +95,15 @@
 
 </div>
 
+<!-- CORE -->
 <script src="CORE_system.js"></script>
+
+<!-- 🔥 LOG SYSTEM -->
+<script src="activity_log.js"></script>
+
 <script>
+
+// ================= INIT =================
 initCoreSystem();
 
 // ================= AUTH =================
@@ -115,27 +122,43 @@ if (!user || user.role !== "super_admin") {
   window.location.href = "super_admin_login.html";
 }
 
+// 📜 LOG LOGIN VIEW
+if (typeof logActivity === "function") {
+  logActivity(user.userId, "SUPER_ADMIN", "Opened dashboard");
+}
+
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
 // ================= SYSTEM =================
 function loadSystem() {
-  let s = getSystemSettings();
+
+  let s = getSystemSettings() || {};
 
   document.getElementById("systemStatus").innerHTML = `
     Lock Mode: ${s.lockMode ? "LOCKED 🔴" : "UNLOCKED 🟢"} <br>
-    Admin Access: ${s.adminAccess ? "ON" : "OFF"} <br>
-    Franchise Access: ${s.franchiseAccess ? "ON" : "OFF"} <br>
+    Admin Access: ${s.adminAccess !== false ? "ON" : "OFF"} <br>
+    Franchise Access: ${s.franchiseAccess !== false ? "ON" : "OFF"} <br>
     Registration: ${s.registrationOpen !== false ? "OPEN" : "CLOSED"} <br>
     Upgrades: ${s.upgradesOpen !== false ? "OPEN" : "CLOSED"}
   `;
 }
 
 function toggle(key) {
-  let s = getSystemSettings();
+
+  let s = getSystemSettings() || {};
+
   s[key] = !s[key];
+  s.updatedAt = new Date().toISOString();
+
   localStorage.setItem("systemSettings", JSON.stringify(s));
+
   loadSystem();
+
+  // 📜 LOG
+  if (typeof logActivity === "function") {
+    logActivity(user.userId, "SUPER_ADMIN", "Toggled " + key + " → " + (s[key] ? "ON" : "OFF"));
+  }
 }
 
 // ================= SYSTEM ADMIN =================
@@ -148,14 +171,17 @@ function loadSystemAdmins() {
   <tr><th>ID</th><th>Name</th><th>Status</th><th>Action</th></tr>`;
 
   sysAdmins.forEach(a => {
+
+    let isActive = a.status !== "inactive";
+
     html += `
     <tr>
       <td>${a.userId}</td>
       <td>${a.username}</td>
-      <td>${a.status || "active"}</td>
+      <td>${isActive ? "ACTIVE" : "INACTIVE"}</td>
       <td>
         <button onclick="toggleUser('${a.userId}')">
-          ${a.status === "inactive" ? "Activate" : "Deactivate"}
+          ${isActive ? "Deactivate" : "Activate"}
         </button>
       </td>
     </tr>`;
@@ -172,7 +198,7 @@ function loadAdmins() {
   let users = getUsers();
   let admins = users.filter(u => u.role === "admin");
 
-  if (admins.length === 0) {
+  if (!admins.length) {
     document.getElementById("adminList").innerHTML = "No Admin";
     return;
   }
@@ -182,7 +208,7 @@ function loadAdmins() {
 
   admins.forEach(a => {
 
-    let isActive = a.status === "active";
+    let isActive = a.status !== "inactive";
 
     html += `
     <tr>
@@ -205,31 +231,46 @@ function loadAdmins() {
 function toggleAdmin(id) {
 
   let users = getUsers();
-  let admin = users.find(u => u.userId === id);
+  let adminUser = users.find(u => u.userId === id);
 
-  if (!admin) return;
+  if (!adminUser) return;
 
-  admin.status = (admin.status === "active") ? "inactive" : "active";
+  adminUser.status = (adminUser.status === "inactive") ? "active" : "inactive";
 
   saveUsers(users);
-
   loadAdmins();
+
+  // 📜 LOG
+  if (typeof logActivity === "function") {
+    logActivity(user.userId, "SUPER_ADMIN", "Toggled admin " + id);
+  }
 }
 
 // ================= COMMON =================
 function toggleUser(id) {
+
   let users = getUsers();
   let u = users.find(x => x.userId === id);
   if (!u) return;
 
   u.status = (u.status === "inactive") ? "active" : "inactive";
-  saveUsers(users);
 
+  saveUsers(users);
   loadSystemAdmins();
+
+  // 📜 LOG
+  if (typeof logActivity === "function") {
+    logActivity(user.userId, "SUPER_ADMIN", "Toggled system admin " + id);
+  }
 }
 
 // ================= LOGOUT =================
 function logout() {
+
+  if (typeof logActivity === "function") {
+    logActivity(user.userId, "SUPER_ADMIN", "Logout");
+  }
+
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
 }
