@@ -5,8 +5,29 @@
   <link rel="icon" href="data:,">
 
   <style>
-    body { font-family: Arial; text-align:center; background:#f9f9f9; }
-    .card { background:#fff; padding:20px; margin:15px; border-radius:10px; }
+    body { font-family: Arial; text-align:center; background:#f4f7f9; }
+
+    .card { 
+      background:#fff; 
+      padding:20px; 
+      margin:15px; 
+      border-radius:10px; 
+      box-shadow:0 4px 10px #ccc;
+    }
+
+    button {
+      padding:8px 12px;
+      margin:5px;
+      cursor:pointer;
+      border:none;
+      border-radius:6px;
+      background:#0077b5;
+      color:#fff;
+    }
+
+    button:hover {
+      background:#005f8a;
+    }
   </style>
 </head>
 
@@ -25,10 +46,26 @@
   <p id="status"></p>
 </div>
 
+<!-- 💰 WALLET -->
+<div class="card">
+  <h3>Wallet</h3>
+  <p id="wallet"></p>
+
+  <button onclick="repurchase()">Repurchase</button>
+</div>
+
+<!-- ⚙ SYSTEM -->
+<div class="card">
+  <h3>System Status</h3>
+  <p id="system"></p>
+</div>
+
 <script src="CORE_system.js"></script>
+<script src="activity_log.js"></script>
 
 <script>
 
+// INIT
 initCoreSystem();
 
 // AUTH
@@ -39,23 +76,115 @@ if (!session) {
 }
 
 let user = getUserById(session.userId);
+if (!user || user.role !== "user") {
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "user_login.html";
+}
+
+// SYSTEM CHECK
+let settings = getSystemSettings();
+
+if (settings.lockMode === true) {
+  alert("🚫 System Locked");
+  throw new Error("System Locked");
+}
 
 // PROFILE
-document.getElementById("profile").innerHTML = `
-  ID: ${user.userId} <br>
-  Name: ${user.username}
-`;
+function loadProfile() {
+  document.getElementById("profile").innerHTML = `
+    ID: ${user.userId} <br>
+    Name: ${user.username}
+  `;
+}
 
 // STATUS
-document.getElementById("status").innerHTML = `
-  Active: ${user.isActive ? "YES 🟢" : "NO 🔴"} <br>
-  Wallet: ₹ ${user.wallet || 0}
-`;
+function loadStatus() {
+  document.getElementById("status").innerHTML = `
+    Active: ${user.isActive ? "YES 🟢" : "NO 🔴"} <br>
+    Active Till: ${user.activeTill ? new Date(user.activeTill).toLocaleDateString() : "N/A"}
+  `;
+}
 
+// WALLET
+function loadWallet() {
+  document.getElementById("wallet").innerHTML =
+    `Balance: ₹ ${user.wallet || 0}`;
+}
+
+// SYSTEM STATUS
+function loadSystem() {
+  let s = getSystemSettings() || {};
+
+  document.getElementById("system").innerHTML = `
+    Registration: ${s.registrationOpen !== false ? "OPEN 🟢" : "CLOSED 🔴"} <br>
+    Upgrade: ${s.upgradesOpen !== false ? "OPEN 🟢" : "CLOSED 🔴"} <br>
+    Queue: ${s.queueStop ? "STOPPED 🔴" : "RUNNING 🟢"} <br>
+    Withdraw: ${s.withdrawStop ? "STOPPED 🔴" : "RUNNING 🟢"}
+  `;
+}
+
+// 🔥 REPURCHASE SYSTEM
+function repurchase() {
+
+  let users = getUsers();
+  let u = users.find(x => x.userId === user.userId);
+
+  if (!u) return;
+
+  if (u.wallet < 100) {
+    alert("❌ Not enough balance (Min ₹100)");
+    return;
+  }
+
+  // deduct
+  u.wallet -= 100;
+
+  // activate again
+  let now = new Date();
+  let nextMonth = new Date(now);
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+  u.activeTill = nextMonth.toISOString();
+  u.isActive = true;
+  u.status = "active";
+
+  saveUsers(users);
+
+  // LOG
+  if (typeof logActivity === "function") {
+    logActivity(u.userId, "USER", "Repurchase Activated");
+  }
+
+  alert("✅ Repurchase Successful");
+
+  refreshUser();
+}
+
+// REFRESH USER
+function refreshUser() {
+  user = getUserById(user.userId);
+  loadProfile();
+  loadStatus();
+  loadWallet();
+}
+
+// LOGOUT
 function logout() {
   localStorage.removeItem("loggedInUser");
   window.location.href = "user_login.html";
 }
+
+// AUTO REFRESH
+setInterval(() => {
+  refreshUser();
+  loadSystem();
+}, 4000);
+
+// INIT
+loadProfile();
+loadStatus();
+loadWallet();
+loadSystem();
 
 </script>
 
