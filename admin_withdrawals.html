@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Admin Withdrawals</title>
-
   <link rel="icon" href="data:,">
 
   <style>
@@ -13,12 +12,15 @@
     button { padding: 5px 10px; margin: 2px; cursor: pointer; }
   </style>
 </head>
+
 <body>
 
 <h1>ADMIN WITHDRAWALS</h1>
 
 <button onclick="goBack()">⬅ Back</button>
 <button onclick="loadRequests()">🔄 Refresh</button>
+
+<p id="systemStatus"></p>
 
 <table>
   <thead>
@@ -27,26 +29,23 @@
       <th>User ID</th>
       <th>Amount</th>
       <th>Charge</th>
-      <th>Final Amount</th>
+      <th>Final</th>
       <th>Status</th>
       <th>Time</th>
-      <th>Processed</th> <!-- 🔥 NEW -->
+      <th>Processed</th>
       <th>Action</th>
     </tr>
   </thead>
   <tbody id="withdrawTable"></tbody>
 </table>
 
-<!-- CORE -->
 <script src="CORE_system.js"></script>
-
-<!-- SYSTEM -->
 <script src="withdrawal_system.js"></script>
-<script src="activity_log.js"></script> <!-- 🔥 ADDED -->
+<script src="activity_log.js"></script>
 
 <script>
 
-// ================= INIT =================
+// INIT
 initCoreSystem();
 
 // 🔒 SECURITY
@@ -55,18 +54,23 @@ let admin = protectPage({
   department: "finance"
 });
 
-if (!admin) {
-  throw new Error("Access Blocked");
-}
+if (!admin) throw new Error("Access Blocked");
 
+// ================= SYSTEM CHECK =================
+function loadSystemStatus() {
+  let s = getSystemSettings() || {};
+
+  document.getElementById("systemStatus").innerHTML = `
+    Withdraw System: ${s.withdrawStop ? "STOPPED 🔴" : "RUNNING 🟢"}
+  `;
+}
 
 // ================= NAV =================
 function goBack() {
   window.location.href = "admin_dashboard.html";
 }
 
-
-// ================= COLOR STATUS (NEW 🔥)
+// ================= COLOR =================
 function getStatusColor(status) {
   if (status === "PENDING") return "orange";
   if (status === "APPROVED") return "green";
@@ -74,29 +78,19 @@ function getStatusColor(status) {
   return "black";
 }
 
-
 // ================= LOAD =================
 function loadRequests() {
 
-  let requests = [];
-
-  try {
-    requests = getWithdrawals() || [];
-  } catch {
-    requests = [];
-  }
-
+  let requests = getWithdrawals() || [];
   let table = document.getElementById("withdrawTable");
   table.innerHTML = "";
 
   if (!requests.length) {
-    table.innerHTML = "<tr><td colspan='9'>No withdrawal requests found</td></tr>";
+    table.innerHTML = "<tr><td colspan='9'>No requests</td></tr>";
     return;
   }
 
   requests.slice().reverse().forEach(req => {
-
-    let color = getStatusColor(req.status);
 
     let row = `
       <tr>
@@ -105,7 +99,7 @@ function loadRequests() {
         <td>₹ ${req.amount}</td>
         <td>₹ ${req.charge || 0}</td>
         <td>₹ ${req.finalAmount || req.amount}</td>
-        <td style="color:${color}">${req.status}</td>
+        <td style="color:${getStatusColor(req.status)}">${req.status}</td>
         <td>${req.time ? new Date(req.time).toLocaleString() : "-"}</td>
         <td>${req.processedAt ? new Date(req.processedAt).toLocaleString() : "-"}</td>
         <td>
@@ -118,20 +112,29 @@ function loadRequests() {
     `;
 
     table.innerHTML += row;
-
   });
 
-  // 📜 VIEW LOG
+  // LOG
   if (typeof logActivity === "function") {
     logActivity(admin.userId, "ADMIN", "Viewed withdrawals");
   }
 }
 
-
-// ================= ACTIONS =================
+// ================= ACTION =================
 function approve(id) {
 
-  approveWithdraw(id, admin.userId); // 🔥 PASS ADMIN ID
+  let s = getSystemSettings();
+
+  if (s.withdrawStop) {
+    alert("🚫 Withdraw system OFF");
+    return;
+  }
+
+  approveWithdraw(id, admin.userId);
+
+  if (typeof logActivity === "function") {
+    logActivity(admin.userId, "ADMIN", "Approved withdrawal " + id);
+  }
 
   alert("✅ Approved");
   loadRequests();
@@ -139,17 +142,35 @@ function approve(id) {
 
 function reject(id) {
 
-  rejectWithdraw(id, admin.userId); // 🔥 PASS ADMIN ID
+  let s = getSystemSettings();
+
+  if (s.withdrawStop) {
+    alert("🚫 Withdraw system OFF");
+    return;
+  }
+
+  rejectWithdraw(id, admin.userId);
+
+  if (typeof logActivity === "function") {
+    logActivity(admin.userId, "ADMIN", "Rejected withdrawal " + id);
+  }
 
   alert("❌ Rejected");
   loadRequests();
 }
 
+// ================= AUTO REFRESH =================
+setInterval(() => {
+  loadRequests();
+  loadSystemStatus();
+}, 5000);
 
-// ================= INIT =================
+// INIT
 loadRequests();
+loadSystemStatus();
 
 </script>
 
 </body>
 </html>
+
