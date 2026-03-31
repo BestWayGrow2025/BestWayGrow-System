@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Super Admin Controls</title>
+
+  <link rel="icon" href="data:,">
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h2 { text-align: center; }
+
+    .box {
+      background: white;
+      padding: 20px;
+      margin: 15px auto;
+      max-width: 500px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .on { background: #28a745; color: white; }
+    .off { background: #dc3545; color: white; }
+  </style>
+</head>
+<body>
+
+<h2>⚡ SUPER ADMIN CONTROL PANEL</h2>
+
+<div class="box">
+  <h3>System Toggles</h3>
+
+  <p id="status"></p>
+
+  <button onclick="toggle('lockMode')">🔒 System Lock</button>
+  <button onclick="toggle('queueStop')">📦 Queue Stop</button>
+  <button onclick="toggle('withdrawStop')">💸 Withdraw Stop</button>
+  <button onclick="toggle('adminAccess')">👨‍💼 Admin Access</button>
+  <button onclick="toggle('registrationOpen')">🧾 Registration</button>
+</div>
+
+<div class="box">
+  <h3>Danger Zone ⚠️</h3>
+
+  <button class="off" onclick="resetSystem()">🔥 Reset System</button>
+  <button class="off" onclick="clearLogs()">🧹 Clear All Logs</button>
+</div>
+
+<script src="CORE_system.js"></script>
+<script src="activity_log.js"></script>
+
+<script>
+
+// ================= INIT =================
+initCoreSystem();
+
+// ================= AUTH =================
+let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+
+if (!session) {
+  alert("Access denied");
+  window.location.href = "super_admin_login.html";
+}
+
+let user = getUserById(session.userId);
+
+if (!user || user.role !== "super_admin") {
+  alert("Invalid session");
+  localStorage.removeItem("loggedInSuperAdmin");
+  window.location.href = "super_admin_login.html";
+}
+
+// ================= LOAD STATUS =================
+function loadStatus() {
+
+  let s = getSystemSettings();
+
+  document.getElementById("status").innerHTML = `
+    Lock Mode: ${s.lockMode ? "🔴 ON" : "🟢 OFF"} <br>
+    Queue Stop: ${s.queueStop ? "🔴 ON" : "🟢 OFF"} <br>
+    Withdraw Stop: ${s.withdrawStop ? "🔴 ON" : "🟢 OFF"} <br>
+    Admin Access: ${s.adminAccess ? "🟢 ON" : "🔴 OFF"} <br>
+    Registration: ${s.registrationOpen ? "🟢 OPEN" : "🔴 CLOSED"}
+  `;
+}
+
+// ================= TOGGLE =================
+function toggle(key) {
+
+  let s = getSystemSettings();
+
+  s[key] = !s[key];
+
+  localStorage.setItem("systemSettings", JSON.stringify(s));
+
+  // 📜 LOG
+  if (typeof logActivity === "function") {
+    logActivity(user.userId, "SUPER_ADMIN", "Toggled " + key);
+  }
+
+  loadStatus();
+}
+
+// ================= RESET SYSTEM =================
+function resetSystem() {
+
+  if (!confirm("⚠️ FULL RESET?")) return;
+
+  localStorage.clear();
+
+  alert("🔥 System Reset Complete");
+
+  location.reload();
+}
+
+// ================= CLEAR LOGS =================
+function clearLogs() {
+
+  if (!confirm("Clear all logs?")) return;
+
+  localStorage.removeItem("activityLogs");
+  localStorage.removeItem("incomeLogs");
+
+  alert("Logs cleared");
+}
+
+// ================= INIT =================
+loadStatus();
+
+</script>
+
+</body>
+</html>
