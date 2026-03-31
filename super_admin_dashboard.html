@@ -80,22 +80,32 @@
     <button onclick="toggle('registrationOpen')">Registration</button>
     <button onclick="toggle('upgradesOpen')">Upgrades</button>
 
-    <!-- 🔥 NEW BUTTONS (FIX) -->
     <button onclick="toggle('queueStop')">Queue ON/OFF</button>
     <button onclick="toggle('withdrawStop')">Withdraw ON/OFF</button>
-
   </div>
 
-  <!-- SYSTEM ADMIN LIST -->
+  <!-- SYSTEM ADMIN -->
   <div class="card">
     <h3>System Admins</h3>
     <div id="sysAdminList"></div>
   </div>
 
-  <!-- ADMIN CONTROL -->
+  <!-- ADMIN -->
   <div class="card">
-    <h3>Admins Control</h3>
+    <h3>Admins</h3>
     <div id="adminList"></div>
+  </div>
+
+  <!-- 🔥 FRANCHISE -->
+  <div class="card">
+    <h3>Franchise</h3>
+    <div id="franchiseList"></div>
+  </div>
+
+  <!-- 🔥 USERS -->
+  <div class="card">
+    <h3>Users</h3>
+    <div id="userList"></div>
   </div>
 
 </div>
@@ -132,7 +142,8 @@ if (typeof logActivity === "function") {
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// LOAD SYSTEM
+
+// ================= SYSTEM =================
 function loadSystem() {
 
   let s = getSystemSettings() || {};
@@ -148,7 +159,6 @@ function loadSystem() {
   `;
 }
 
-// TOGGLE
 function toggle(key) {
 
   let s = getSystemSettings() || {};
@@ -165,26 +175,32 @@ function toggle(key) {
   }
 }
 
-// SYSTEM ADMINS
+
+// ================= SYSTEM ADMINS =================
 function loadSystemAdmins() {
 
   let users = getUsers();
-  let sysAdmins = users.filter(u => u.role === "system_admin");
+  let list = users.filter(u => u.role === "system_admin");
+
+  if (!list.length) {
+    document.getElementById("sysAdminList").innerHTML = "No System Admin";
+    return;
+  }
 
   let html = `<table>
   <tr><th>ID</th><th>Name</th><th>Status</th><th>Action</th></tr>`;
 
-  sysAdmins.forEach(a => {
+  list.forEach(u => {
 
-    let isActive = a.status !== "inactive";
+    let isActive = u.status !== "inactive";
 
     html += `
     <tr>
-      <td>${a.userId}</td>
-      <td>${a.username}</td>
+      <td>${u.userId}</td>
+      <td>${u.username}</td>
       <td>${isActive ? "ACTIVE" : "INACTIVE"}</td>
       <td>
-        <button onclick="toggleUser('${a.userId}')">
+        <button onclick="toggleUser('${u.userId}')">
           ${isActive ? "Deactivate" : "Activate"}
         </button>
       </td>
@@ -196,13 +212,14 @@ function loadSystemAdmins() {
   document.getElementById("sysAdminList").innerHTML = html;
 }
 
-// ADMINS
+
+// ================= ADMINS =================
 function loadAdmins() {
 
   let users = getUsers();
-  let admins = users.filter(u => u.role === "admin");
+  let list = users.filter(u => u.role === "admin");
 
-  if (!admins.length) {
+  if (!list.length) {
     document.getElementById("adminList").innerHTML = "No Admin";
     return;
   }
@@ -210,17 +227,17 @@ function loadAdmins() {
   let html = `<table>
   <tr><th>ID</th><th>Name</th><th>Status</th><th>Action</th></tr>`;
 
-  admins.forEach(a => {
+  list.forEach(u => {
 
-    let isActive = a.status !== "inactive";
+    let isActive = u.status !== "inactive";
 
     html += `
     <tr>
-      <td>${a.userId}</td>
-      <td>${a.username}</td>
+      <td>${u.userId}</td>
+      <td>${u.username}</td>
       <td>${isActive ? "ACTIVE" : "INACTIVE"}</td>
       <td>
-        <button onclick="toggleAdmin('${a.userId}')">
+        <button onclick="toggleAdmin('${u.userId}')">
           ${isActive ? "Deactivate" : "Activate"}
         </button>
       </td>
@@ -232,7 +249,66 @@ function loadAdmins() {
   document.getElementById("adminList").innerHTML = html;
 }
 
-// TOGGLES
+
+// ================= FRANCHISE =================
+function loadFranchise() {
+
+  let users = getUsers();
+  let list = users.filter(u => u.role === "franchise");
+
+  if (!list.length) {
+    document.getElementById("franchiseList").innerHTML = "No Franchise";
+    return;
+  }
+
+  let html = `<table>
+  <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+
+  list.forEach(u => {
+    html += `
+    <tr>
+      <td>${u.userId}</td>
+      <td>${u.username}</td>
+      <td>${u.status}</td>
+    </tr>`;
+  });
+
+  html += "</table>";
+
+  document.getElementById("franchiseList").innerHTML = html;
+}
+
+
+// ================= USERS =================
+function loadUsersList() {
+
+  let users = getUsers();
+  let list = users.filter(u => u.role === "user");
+
+  if (!list.length) {
+    document.getElementById("userList").innerHTML = "No Users";
+    return;
+  }
+
+  let html = `<table>
+  <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+
+  list.forEach(u => {
+    html += `
+    <tr>
+      <td>${u.userId}</td>
+      <td>${u.username}</td>
+      <td>${u.status}</td>
+    </tr>`;
+  });
+
+  html += "</table>";
+
+  document.getElementById("userList").innerHTML = html;
+}
+
+
+// ================= TOGGLES =================
 function toggleAdmin(id) {
   let users = getUsers();
   let u = users.find(x => x.userId === id);
@@ -253,19 +329,26 @@ function toggleUser(id) {
   loadSystemAdmins();
 }
 
-// LOGOUT
+
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
 }
 
-// AUTO REFRESH
-setInterval(loadSystem, 3000);
 
-// INIT
+// ================= AUTO REFRESH =================
+setInterval(() => {
+  loadSystem();
+}, 3000);
+
+
+// ================= INIT =================
 loadSystem();
 loadSystemAdmins();
 loadAdmins();
+loadFranchise();
+loadUsersList();
 
 </script>
 
