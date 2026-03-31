@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Withdraw Panel</title>
+  <title>Admin Withdrawals</title>
 
   <link rel="icon" href="data:,">
 
@@ -15,7 +15,7 @@
 </head>
 <body>
 
-<h1>ADMIN WITHDRAW PANEL</h1>
+<h1>ADMIN WITHDRAWALS</h1>
 
 <button onclick="goBack()">⬅ Back</button>
 <button onclick="loadRequests()">🔄 Refresh</button>
@@ -30,57 +30,73 @@
       <th>Final Amount</th>
       <th>Status</th>
       <th>Time</th>
+      <th>Processed</th> <!-- 🔥 NEW -->
       <th>Action</th>
     </tr>
   </thead>
   <tbody id="withdrawTable"></tbody>
 </table>
 
-<!-- ✅ CORE -->
+<!-- CORE -->
 <script src="CORE_system.js"></script>
-<!-- ✅ WITHDRAW SYSTEM -->
+
+<!-- SYSTEM -->
 <script src="withdrawal_system.js"></script>
+<script src="activity_log.js"></script> <!-- 🔥 ADDED -->
 
 <script>
 
-// ================= INIT CORE =================
+// ================= INIT =================
 initCoreSystem();
 
-// 🔥 GLOBAL SECURITY
+// 🔒 SECURITY
 let admin = protectPage({
   role: "admin",
   department: "finance"
 });
 
-// ❗ STOP EXECUTION IF BLOCKED
 if (!admin) {
   throw new Error("Access Blocked");
 }
+
 
 // ================= NAV =================
 function goBack() {
   window.location.href = "admin_dashboard.html";
 }
 
-function logout() {
-  localStorage.removeItem("loggedInAdmin");
-  window.location.href = "admin_login.html";
+
+// ================= COLOR STATUS (NEW 🔥)
+function getStatusColor(status) {
+  if (status === "PENDING") return "orange";
+  if (status === "APPROVED") return "green";
+  if (status === "REJECTED") return "red";
+  return "black";
 }
 
-// ================= LOAD REQUESTS =================
+
+// ================= LOAD =================
 function loadRequests() {
 
-  let requests = JSON.parse(localStorage.getItem("withdrawals") || "[]");
-  let table = document.getElementById("withdrawTable");
+  let requests = [];
 
+  try {
+    requests = getWithdrawals() || [];
+  } catch {
+    requests = [];
+  }
+
+  let table = document.getElementById("withdrawTable");
   table.innerHTML = "";
 
-  if (requests.length === 0) {
-    table.innerHTML = "<tr><td colspan='8'>No withdrawal requests found</td></tr>";
+  if (!requests.length) {
+    table.innerHTML = "<tr><td colspan='9'>No withdrawal requests found</td></tr>";
     return;
   }
 
   requests.slice().reverse().forEach(req => {
+
+    let color = getStatusColor(req.status);
 
     let row = `
       <tr>
@@ -89,8 +105,9 @@ function loadRequests() {
         <td>₹ ${req.amount}</td>
         <td>₹ ${req.charge || 0}</td>
         <td>₹ ${req.finalAmount || req.amount}</td>
-        <td>${req.status}</td>
-        <td>${req.time}</td>
+        <td style="color:${color}">${req.status}</td>
+        <td>${req.time ? new Date(req.time).toLocaleString() : "-"}</td>
+        <td>${req.processedAt ? new Date(req.processedAt).toLocaleString() : "-"}</td>
         <td>
           ${req.status === "PENDING" ? `
             <button onclick="approve('${req.requestId}')">Approve</button>
@@ -103,20 +120,31 @@ function loadRequests() {
     table.innerHTML += row;
 
   });
+
+  // 📜 VIEW LOG
+  if (typeof logActivity === "function") {
+    logActivity(admin.userId, "ADMIN", "Viewed withdrawals");
+  }
 }
+
 
 // ================= ACTIONS =================
 function approve(id) {
-  approveWithdraw(id);
+
+  approveWithdraw(id, admin.userId); // 🔥 PASS ADMIN ID
+
   alert("✅ Approved");
   loadRequests();
 }
 
 function reject(id) {
-  rejectWithdraw(id);
+
+  rejectWithdraw(id, admin.userId); // 🔥 PASS ADMIN ID
+
   alert("❌ Rejected");
   loadRequests();
 }
+
 
 // ================= INIT =================
 loadRequests();
