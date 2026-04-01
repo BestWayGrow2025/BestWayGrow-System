@@ -18,56 +18,55 @@
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="income_control_system.js"></script>
-<script src="active_system.js"></script> <!-- 🔥 IMPORTANT -->
+<script src="active_system.js"></script>
 
 <!-- PIN -->
 <script src="pin_config_system.js"></script>
 
 <script>
 
-// ================= INIT =================
-initCoreSystem();
+document.addEventListener("DOMContentLoaded", function () {
 
-// 🔥 AUTO PIN INIT (DEV ONLY)
-if (!getActivePin("upgrade")) {
-  enablePin("upgrade", {
-    bv: 100,
-    amount: 500
-  });
-}
+  // ================= INIT =================
+  initCoreSystem();
 
-// ================= AUTH (SAFE) =================
-let session = JSON.parse(localStorage.getItem("loggedInUser"));
+  // ================= AUTH =================
+  let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
-if (!session) {
-  alert("Login required");
-  window.location.href = "user_login.html";
-  throw new Error("STOP");
-}
+  if (!session) {
+    alert("Login required");
+    window.location.href = "user_login.html";
+    throw new Error("STOP");
+  }
 
-let user = getUserById(session.userId);
+  let user = getUserById(session.userId);
 
-if (!user) {
-  alert("User not found");
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "user_login.html";
-  throw new Error("STOP");
-}
+  if (!user) {
+    alert("User not found");
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "user_login.html";
+    throw new Error("STOP");
+  }
 
-// ================= INFO =================
-document.getElementById("info").innerText =
-  "User: " + user.username + " (" + user.userId + ")";
+  // ================= UI =================
+  document.getElementById("info").innerText =
+    "User: " + user.username + " (" + user.userId + ")";
+
+});
+
 
 // ================= CHECK =================
 function isAlreadyUpgraded(u) {
+  if (typeof isUserActive !== "function") return false;
   return isUserActive(u.userId);
 }
+
 
 // ================= UPGRADE =================
 function upgradeNow() {
 
   let users = getUsers();
-  let u = users.find(x => x.userId === user.userId);
+  let u = users.find(x => x.userId === JSON.parse(localStorage.getItem("loggedInUser")).userId);
 
   if (!u) return;
 
@@ -77,13 +76,13 @@ function upgradeNow() {
     return;
   }
 
-  // 🔒 PIN SAFETY
-  if (!isPinSystemSafe("upgrade")) {
-    alert("Upgrade not available or invalid");
+  // 🔒 PIN SYSTEM CHECK (FIXED 🔥)
+  if (typeof isPinSystemSafe !== "function" || !isPinSystemSafe("upgrade")) {
+    alert("Upgrade PIN expired or not available");
     return;
   }
 
-  // 🔒 INCOME SYSTEM SAFETY
+  // 🔒 INCOME SYSTEM CHECK
   if (typeof isIncomeSystemSafe === "function" && !isIncomeSystemSafe()) {
     alert("System temporarily unavailable");
     return;
@@ -92,7 +91,7 @@ function upgradeNow() {
   let pin = getActivePin("upgrade");
 
   if (!pin) {
-    alert("Upgrade not available");
+    alert("Upgrade PIN not found");
     return;
   }
 
@@ -113,11 +112,20 @@ function upgradeNow() {
   // 💸 DEBIT
   debitWallet(u.userId, amount, "Upgrade");
 
-  // ✅ ACTIVATE
-  activateUser(u.userId);
+  // ✅ ACTIVATE USER
+  if (typeof activateUser === "function") {
+    activateUser(u.userId);
+  } else {
+    alert("Activation system missing");
+    return;
+  }
 
   // 💰 INCOME
-  if (isUGLIEnabled() && isUserActive(u.userId)) {
+  if (typeof isUGLIEnabled === "function" &&
+      typeof processIncome === "function" &&
+      isUGLIEnabled() &&
+      isUserActive(u.userId)) {
+
     processIncome("upgrade", u.userId, bv);
   }
 
@@ -130,4 +138,5 @@ function upgradeNow() {
 
 </body>
 </html>
+
 
