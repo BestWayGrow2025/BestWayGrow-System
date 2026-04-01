@@ -45,7 +45,7 @@ function initWallet(user) {
 
 
 // =====================
-// 🔐 DUPLICATE PROTECTION (IMPORTANT)
+// 🔐 DUPLICATE PROTECTION
 // =====================
 function isDuplicateTxn(userId, amount, reason) {
   let txns = getTransactions();
@@ -54,13 +54,13 @@ function isDuplicateTxn(userId, amount, reason) {
     t.userId === userId &&
     t.amount === amount &&
     t.reason === reason &&
-    (new Date() - new Date(t.time)) < 5000 // 5 sec protection
+    (new Date() - new Date(t.time)) < 5000
   );
 }
 
 
 // =====================
-// 💰 CREDIT WALLET (SAFE)
+// 💰 CREDIT WALLET (FINAL SAFE)
 // =====================
 function creditWallet(userId, amount, reason) {
 
@@ -73,13 +73,13 @@ function creditWallet(userId, amount, reason) {
 
   initWallet(user);
 
-  // 🔒 prevent duplicate credit
   if (isDuplicateTxn(userId, amount, reason)) {
     console.warn("Duplicate credit blocked");
     return;
   }
 
-  user.wallet += amount;
+  // ✅ FIXED DECIMAL
+  user.wallet = parseFloat((user.wallet + amount).toFixed(2));
 
   saveUsers(users);
 
@@ -88,7 +88,7 @@ function creditWallet(userId, amount, reason) {
 
 
 // =====================
-// 💸 DEBIT WALLET (SAFE)
+// 💸 DEBIT WALLET (FINAL SAFE)
 // =====================
 function debitWallet(userId, amount, reason) {
 
@@ -101,13 +101,13 @@ function debitWallet(userId, amount, reason) {
 
   initWallet(user);
 
-  // ❌ prevent negative wallet
   if (user.wallet < amount) {
     alert("Insufficient balance");
     return false;
   }
 
-  user.wallet -= amount;
+  // ✅ FIXED DECIMAL
+  user.wallet = parseFloat((user.wallet - amount).toFixed(2));
 
   saveUsers(users);
 
@@ -118,14 +118,14 @@ function debitWallet(userId, amount, reason) {
 
 
 // =====================
-// 🧾 LOG TRANSACTION (ENHANCED)
+// 🧾 LOG TRANSACTION
 // =====================
 function logTransaction(userId, amount, type, reason) {
 
   let txns = getTransactions();
 
   txns.push({
-    txnId: "TXN" + Date.now(), // unique id
+    txnId: "TXN" + Date.now(),
     userId: userId,
     amount: amount,
     type: type,
@@ -138,7 +138,7 @@ function logTransaction(userId, amount, type, reason) {
 
 
 // =====================
-// 📊 GET USER BALANCE (HELPER)
+// 📊 GET BALANCE
 // =====================
 function getWalletBalance(userId) {
   let user = getUsers().find(u => u.userId === userId);
