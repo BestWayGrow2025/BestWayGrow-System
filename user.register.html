@@ -13,7 +13,6 @@
   <input type="password" id="password" placeholder="Password"><br><br>
 
   <label>Select Position:</label><br>
-  <!-- ✅ FIXED: L / R -->
   <input type="radio" name="position" value="L"> LEFT
   <input type="radio" name="position" value="R"> RIGHT
   <br><br>
@@ -23,10 +22,7 @@
 
 <p id="msg"></p>
 
-<!-- CORE -->
 <script src="CORE_system.js"></script>
-
-<!-- QUEUE -->
 <script src="queue_system.js"></script>
 
 <script>
@@ -45,8 +41,6 @@ document.getElementById("introLabel").innerText =
 // ================= REGISTER =================
 function handleRegister() {
 
-  console.log("Register clicked");
-
   let btn = document.getElementById("regBtn");
   btn.disabled = true;
   btn.innerText = "Processing...";
@@ -57,7 +51,6 @@ function handleRegister() {
 
   let positionElement = document.querySelector('input[name="position"]:checked');
 
-  // ✅ VALIDATION
   if (!username || !mobile || !password) {
     alert("Fill all fields");
     resetBtn();
@@ -78,25 +71,22 @@ function handleRegister() {
 
   let position = positionElement.value;
 
-  let users = getUsers();
-
-  // ✅ INTRODUCER CHECK
   if (!isValidIntroducer(introducerId)) {
     alert("Invalid Introducer");
     resetBtn();
     return;
   }
 
-  // 🔥 AUTO SPONSOR
-  let sponsorId = introducerId;
+  let users = getUsers();
 
-  // ✅ DUPLICATE MOBILE
   let duplicate = users.find(u => u.mobile === mobile);
   if (duplicate) {
     alert("Mobile already registered");
     resetBtn();
     return;
   }
+
+  let sponsorId = introducerId;
 
   // 🔥 ADD TO QUEUE
   addToQueue({
@@ -108,10 +98,11 @@ function handleRegister() {
     position
   });
 
-  // ⏳ FEEDBACK
+  // 🔥 IMPORTANT FIX: PROCESS QUEUE
+  processQueue();
+
   document.getElementById("msg").innerText = "⏳ Processing registration...";
 
-  // 🔥 INTERVAL CHECK (FINAL SAFE)
   let attempts = 0;
 
   let checkUser = setInterval(() => {
@@ -148,8 +139,7 @@ function handleRegister() {
   }, 1000);
 }
 
-
-// ================= RESET BUTTON =================
+// ================= RESET =================
 function resetBtn() {
   let btn = document.getElementById("regBtn");
   btn.disabled = false;
