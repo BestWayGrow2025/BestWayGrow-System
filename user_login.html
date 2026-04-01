@@ -32,13 +32,13 @@ function safeDecode(p) {
   }
 }
 
-// ================= LOCAL LOGIN (FINAL FIXED) =================
+// ================= LOCAL LOGIN (FINAL PRO) =================
 function localLogin(userId, password) {
 
   let users = getUsers();
 
   let user = users.find(u => 
-    u.userId.toLowerCase() === userId.toLowerCase().trim() &&
+    u.userId.toLowerCase().trim() === userId.toLowerCase().trim() &&
     u.status !== "blocked" &&
     (u.password === password || safeDecode(u.password) === password)
   );
@@ -48,18 +48,37 @@ function localLogin(userId, password) {
     return false;
   }
 
-  // 🔥 SESSION STORE (CLEAN)
-  localStorage.setItem("loggedInUser", JSON.stringify({
-    userId: user.userId
-  }));
+  // 🔥 FORCE SESSION SAVE
+  try {
+    localStorage.setItem("loggedInUser", JSON.stringify({
+      userId: user.userId
+    }));
+  } catch (e) {
+    alert("Storage error");
+    console.error(e);
+    return false;
+  }
 
+  // 🔍 VERIFY SESSION (CRITICAL 🔥)
+  let check = localStorage.getItem("loggedInUser");
+  if (!check) {
+    alert("Session not saved");
+    return false;
+  }
+
+  // ✅ SUCCESS
   document.getElementById("msg").innerText = "✅ Login Success";
 
-  // 🔥 SMALL FIX: RESET BUTTON BEFORE REDIRECT
+  // 🔄 RESET BUTTON
   resetBtn();
 
+  // 🚀 REDIRECT SAFE
   setTimeout(() => {
-    window.location.href = "user_dashboard.html";
+    if (localStorage.getItem("loggedInUser")) {
+      window.location.href = "user_dashboard.html";
+    } else {
+      alert("Session lost");
+    }
   }, 500);
 
   return true;
@@ -82,7 +101,6 @@ function loginUser(e) {
     return;
   }
 
-  // 🔥 DIRECT LOCAL LOGIN
   if (!localLogin(userId, password)) {
     resetBtn();
   }
@@ -99,3 +117,4 @@ function resetBtn() {
 
 </body>
 </html>
+
