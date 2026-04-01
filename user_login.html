@@ -32,13 +32,13 @@ function safeDecode(p) {
   }
 }
 
-// ================= LOCAL LOGIN (FINAL FIX) =================
+// ================= LOCAL LOGIN (FINAL FIXED) =================
 function localLogin(userId, password) {
 
   let users = getUsers();
 
   let user = users.find(u => 
-    u.userId.toLowerCase() === userId.toLowerCase() &&
+    u.userId.toLowerCase() === userId.toLowerCase().trim() &&
     u.status !== "blocked" &&
     (u.password === password || safeDecode(u.password) === password)
   );
@@ -48,16 +48,19 @@ function localLogin(userId, password) {
     return false;
   }
 
-  // 🔥 STORE ONLY SESSION (BEST PRACTICE)
+  // 🔥 SESSION STORE (CLEAN)
   localStorage.setItem("loggedInUser", JSON.stringify({
     userId: user.userId
   }));
 
   document.getElementById("msg").innerText = "✅ Login Success";
 
+  // 🔥 SMALL FIX: RESET BUTTON BEFORE REDIRECT
+  resetBtn();
+
   setTimeout(() => {
     window.location.href = "user_dashboard.html";
-  }, 800);
+  }, 500);
 
   return true;
 }
