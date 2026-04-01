@@ -1,25 +1,34 @@
-// =====================
-// 💸 WITHDRAWAL SYSTEM (FINAL SAFE)
-// =====================
+/* ===============================
+   💸 WITHDRAWAL SYSTEM (FINAL PRO)
+=============================== */
 
 // =====================
-// 🔹 GET / SAVE
+// 🔹 GET / SAVE (SAFE)
 // =====================
 function getWithdrawals() {
-  return JSON.parse(localStorage.getItem("withdrawals") || "[]");
+  try {
+    return JSON.parse(localStorage.getItem("withdrawals") || "[]");
+  } catch {
+    localStorage.setItem("withdrawals", "[]");
+    return [];
+  }
 }
 
 function saveWithdrawals(data) {
   localStorage.setItem("withdrawals", JSON.stringify(data));
 }
 
-
 // =====================
-// 🔒 SYSTEM SAFETY (NEW 🔥)
+// 🔒 SYSTEM SAFETY
 // =====================
 function isWithdrawSystemSafe() {
 
-  let system = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+  let system;
+  try {
+    system = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+  } catch {
+    system = {};
+  }
 
   if (system.withdrawStop === true) {
     console.warn("⛔ Withdraw system stopped by admin");
@@ -29,92 +38,107 @@ function isWithdrawSystemSafe() {
   return true;
 }
 
-
 // =====================
-// 💰 USER REQUEST
+// 💰 USER REQUEST (FINAL SAFE)
 // =====================
 function requestWithdraw(userId, amount) {
 
-  // 🔒 GLOBAL SAFETY
-  if (!isWithdrawSystemSafe()) {
-    alert("Withdraw system temporarily disabled");
-    return;
+  // 🔒 MULTI-CLICK LOCK
+  if (window.withdrawLock) {
+    return alert("Processing... please wait");
   }
+  window.withdrawLock = true;
 
-  let MIN_WITHDRAW = 500;
-  let CHARGE_PERCENT = 10;
+  try {
 
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-  let user = users.find(u => u.userId === userId);
+    // 🔒 GLOBAL SAFETY
+    if (!isWithdrawSystemSafe()) {
+      alert("Withdraw system temporarily disabled");
+      return;
+    }
 
-  if (!user) return alert("User not found");
+    // 🔒 ACTIVE CHECK
+    if (typeof isUserActive === "function") {
+      if (!isUserActive(userId)) {
+        return alert("Activate account first");
+      }
+    }
 
-  if (!amount || amount <= 0) {
-    return alert("Invalid amount");
+    // 🔒 DUPLICATE REQUEST BLOCK
+    let pending = getWithdrawals().find(r => 
+      r.userId === userId && r.status === "PENDING"
+    );
+
+    if (pending) {
+      return alert("You already have a pending request");
+    }
+
+    let MIN_WITHDRAW = 500;
+    let CHARGE_PERCENT = 10;
+
+    let users = JSON.parse(localStorage.getItem("users") || "[]");
+    let user = users.find(u => u.userId === userId);
+
+    if (!user) return alert("User not found");
+
+    if (!amount || amount <= 0) {
+      return alert("Invalid amount");
+    }
+
+    if (amount < MIN_WITHDRAW) {
+      return alert("Minimum withdraw is ₹ " + MIN_WITHDRAW);
+    }
+
+    if ((user.wallet || 0) < amount) {
+      return alert("Insufficient balance");
+    }
+
+    // 💸 CALCULATION
+    let charge = Math.round((amount * CHARGE_PERCENT) / 100);
+    let finalAmount = amount - charge;
+
+    // 💳 SAFE WALLET DEDUCT
+    if (typeof debitWallet === "function") {
+      if (!debitWallet(userId, amount, "Withdrawal Request")) return;
+    } else {
+      user.wallet -= amount;
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    // 📜 SAFE TRANSACTION LOG
+    if (typeof logTransaction === "function") {
+      logTransaction(userId, amount, "DEBIT", "Withdrawal Request");
+      logTransaction(userId, charge, "DEBIT", "Withdrawal Charge");
+    }
+
+    // 📦 CREATE REQUEST
+    let requests = getWithdrawals();
+
+    let req = {
+      requestId: "WD" + Date.now(),
+      userId,
+      amount,
+      charge,
+      finalAmount,
+      status: "PENDING",
+      time: new Date().toISOString(),
+      processedAt: null
+    };
+
+    requests.push(req);
+    saveWithdrawals(requests);
+
+    // 📜 ACTIVITY LOG
+    if (typeof logActivity === "function") {
+      logActivity(userId, "USER", "Withdrawal requested ₹" + amount);
+    }
+
+    alert("Request submitted. You will receive ₹ " + finalAmount);
+
+  } finally {
+    window.withdrawLock = false; // 🔓 UNLOCK
   }
-
-  if (amount < MIN_WITHDRAW) {
-    return alert("Minimum withdraw is ₹ " + MIN_WITHDRAW);
-  }
-
-  if ((user.wallet || 0) < amount) {
-    return alert("Insufficient balance");
-  }
-
-  // 💸 CALCULATION
-  let charge = Math.round((amount * CHARGE_PERCENT) / 100);
-  let finalAmount = amount - charge;
-
-  // 💳 WALLET DEDUCT
-  user.wallet -= amount;
-  localStorage.setItem("users", JSON.stringify(users));
-
-  // 📜 TRANSACTION LOG
-  let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-
-  txns.push({
-    userId,
-    amount,
-    type: "DEBIT",
-    reason: "Withdrawal Request",
-    time: new Date().toISOString()
-  });
-
-  txns.push({
-    userId,
-    amount: charge,
-    type: "DEBIT",
-    reason: "Withdrawal Charge",
-    time: new Date().toISOString()
-  });
-
-  localStorage.setItem("transactions", JSON.stringify(txns));
-
-  // 📦 CREATE REQUEST
-  let requests = getWithdrawals();
-
-  let req = {
-    requestId: "WD" + Date.now(),
-    userId,
-    amount,
-    charge,
-    finalAmount,
-    status: "PENDING",
-    time: new Date().toISOString(),
-    processedAt: null
-  };
-
-  requests.push(req);
-  saveWithdrawals(requests);
-
-  // 📜 ACTIVITY LOG
-  if (typeof logActivity === "function") {
-    logActivity(userId, "USER", "Withdrawal requested ₹" + amount);
-  }
-
-  alert("Request submitted. You will receive ₹ " + finalAmount);
 }
-
 
 // =====================
 // ✅ APPROVE
@@ -131,14 +155,12 @@ function approveWithdraw(id, adminId = "ADMIN") {
 
   saveWithdrawals(requests);
 
-  // 📜 LOG
   if (typeof logActivity === "function") {
     logActivity(adminId, "ADMIN", "Approved withdrawal " + id);
   }
 
   alert("Withdrawal Approved");
 }
-
 
 // =====================
 // ❌ REJECT
@@ -153,10 +175,14 @@ function rejectWithdraw(id, adminId = "ADMIN") {
   let users = JSON.parse(localStorage.getItem("users") || "[]");
   let user = users.find(u => u.userId === req.userId);
 
-  // 🔁 REFUND
+  // 🔁 REFUND (SAFE)
   if (user) {
-    user.wallet = (user.wallet || 0) + req.amount;
-    localStorage.setItem("users", JSON.stringify(users));
+    if (typeof creditWallet === "function") {
+      creditWallet(user.userId, req.amount, "Withdrawal Refund");
+    } else {
+      user.wallet = (user.wallet || 0) + req.amount;
+      localStorage.setItem("users", JSON.stringify(users));
+    }
   }
 
   req.status = "REJECTED";
@@ -164,13 +190,11 @@ function rejectWithdraw(id, adminId = "ADMIN") {
 
   saveWithdrawals(requests);
 
-  // 📜 LOG
   if (typeof logActivity === "function") {
     logActivity(adminId, "ADMIN", "Rejected withdrawal " + id);
   }
 
   alert("Withdrawal Rejected & Refunded");
 }
-
 
 
