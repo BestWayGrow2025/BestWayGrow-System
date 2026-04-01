@@ -13,8 +13,9 @@
   <input type="password" id="password" placeholder="Password"><br><br>
 
   <label>Select Position:</label><br>
-  <input type="radio" name="position" value="LEFT"> LEFT
-  <input type="radio" name="position" value="RIGHT"> RIGHT
+  <!-- ✅ FIXED: L / R -->
+  <input type="radio" name="position" value="L"> LEFT
+  <input type="radio" name="position" value="R"> RIGHT
   <br><br>
 
   <button id="regBtn" onclick="handleRegister()">Register</button>
@@ -107,13 +108,10 @@ function handleRegister() {
     position
   });
 
-  // 🔥 PROCESS QUEUE
-  processQueue();
-
   // ⏳ FEEDBACK
   document.getElementById("msg").innerText = "⏳ Processing registration...";
 
-  // 🔥 FINAL FIX: INTERVAL CHECK (NO TIMEOUT BUG)
+  // 🔥 INTERVAL CHECK (FINAL SAFE)
   let attempts = 0;
 
   let checkUser = setInterval(() => {
