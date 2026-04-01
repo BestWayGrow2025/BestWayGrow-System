@@ -34,9 +34,25 @@ function safeLog(data) {
 }
 
 // =====================
-// HOLD INCOME
+// 🔐 HOLD DUPLICATE CHECK
+// =====================
+function isDuplicateHold(userId, amount, reason) {
+  let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
+
+  return holds.some(h =>
+    h.userId === userId &&
+    h.amount === amount &&
+    h.reason === reason &&
+    (new Date() - new Date(h.time)) < 5000
+  );
+}
+
+// =====================
+// HOLD INCOME (SAFE)
 // =====================
 function holdIncome(userId, amount, reason) {
+
+  if (isDuplicateHold(userId, amount, reason)) return;
 
   let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
 
@@ -75,7 +91,9 @@ function payUGLIIncome(userId, bvAmount) {
     if (!parent) break;
 
     let percent = COMMISSION_CONFIG.ugliLevels[i];
-    let income = (bvAmount * percent) / 100;
+
+    // ✅ FIXED DECIMAL
+    let income = parseFloat(((bvAmount * percent) / 100).toFixed(2));
 
     if (income > 0) {
 
@@ -110,7 +128,9 @@ function payRLIIncome(userId, totalBV) {
   if (!current) return;
 
   let levels = 30;
-  let perLevel = totalBV / levels;
+
+  // ✅ FIXED DECIMAL
+  let perLevel = parseFloat((totalBV / levels).toFixed(2));
 
   if (perLevel <= 0) return;
 
@@ -150,7 +170,8 @@ function addToCTORPool(bvAmount) {
 
   let amount = (bvAmount * COMMISSION_CONFIG.ctorPercent) / 100;
 
-  pool += amount;
+  // ✅ FIXED DECIMAL
+  pool = parseFloat((pool + amount).toFixed(2));
 
   localStorage.setItem("ctorPool", JSON.stringify(pool));
 
@@ -163,11 +184,10 @@ function addToCTORPool(bvAmount) {
 }
 
 // =====================
-// 🔥 MASTER CONTROLLER (FINAL SAFE)
+// 🔥 MASTER CONTROLLER (FINAL)
 // =====================
 function processIncome(type, userId, bvAmount) {
 
-  // 🔐 GLOBAL SAFETY
   if (typeof isIncomeSystemSafe === "function") {
     if (!isIncomeSystemSafe()) {
       console.warn("⚠ Income system disabled");
