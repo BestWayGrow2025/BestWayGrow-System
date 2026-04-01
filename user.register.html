@@ -13,8 +13,8 @@
   <input type="password" id="password" placeholder="Password"><br><br>
 
   <label>Select Position:</label><br>
-  <input type="radio" name="position" value="L"> LEFT
-  <input type="radio" name="position" value="R"> RIGHT
+  <input type="radio" name="position" value="LEFT"> LEFT
+  <input type="radio" name="position" value="RIGHT"> RIGHT
   <br><br>
 
   <button id="regBtn" onclick="handleRegister()">Register</button>
@@ -44,8 +44,11 @@ document.getElementById("introLabel").innerText =
 // ================= REGISTER =================
 function handleRegister() {
 
+  console.log("Register clicked");
+
   let btn = document.getElementById("regBtn");
-  btn.disabled = true; // 🔒 prevent double click
+  btn.disabled = true;
+  btn.innerText = "Processing...";
 
   let username = document.getElementById("username").value.trim();
   let mobile = document.getElementById("mobile").value.trim();
@@ -56,19 +59,19 @@ function handleRegister() {
   // ✅ VALIDATION
   if (!username || !mobile || !password) {
     alert("Fill all fields");
-    btn.disabled = false;
+    resetBtn();
     return;
   }
 
   if (!/^[0-9]{10}$/.test(mobile)) {
     alert("Invalid mobile number");
-    btn.disabled = false;
+    resetBtn();
     return;
   }
 
   if (!positionElement) {
     alert("Select LEFT or RIGHT");
-    btn.disabled = false;
+    resetBtn();
     return;
   }
 
@@ -79,18 +82,18 @@ function handleRegister() {
   // ✅ INTRODUCER CHECK
   if (!isValidIntroducer(introducerId)) {
     alert("Invalid Introducer");
-    btn.disabled = false;
+    resetBtn();
     return;
   }
 
-  // 🔥 AUTO SPONSOR (FIXED)
+  // 🔥 AUTO SPONSOR
   let sponsorId = introducerId;
 
-  // ✅ DUPLICATE MOBILE CHECK
+  // ✅ DUPLICATE MOBILE
   let duplicate = users.find(u => u.mobile === mobile);
   if (duplicate) {
     alert("Mobile already registered");
-    btn.disabled = false;
+    resetBtn();
     return;
   }
 
@@ -104,29 +107,47 @@ function handleRegister() {
     position
   });
 
-  // ✅ PROCESS
+  // 🔥 PROCESS QUEUE
   processQueue();
 
-  // ⏳ SHOW RESULT AFTER PROCESS
+  // ⏳ USER FEEDBACK
+  document.getElementById("msg").innerText = "⏳ Processing registration...";
+
+  // 🔥 WAIT + FETCH CORRECT USER
   setTimeout(() => {
 
     let users = getUsers();
-    let lastUser = users[users.length - 1];
 
-    document.getElementById("msg").innerHTML = `
-      ✅ Registration Successful <br>
-      Your ID: <b>${lastUser.userId}</b>
-      <br><br>
-      🔗 <a href="user_login.html">Go to Login</a>
-    `;
+    let newUser = users.find(u => u.mobile === mobile);
 
-    btn.disabled = false;
+    if (newUser) {
+      document.getElementById("msg").innerHTML = `
+        ✅ Registration Successful <br>
+        Your ID: <b>${newUser.userId}</b>
+        <br><br>
+        🔗 <a href="user_login.html">Go to Login</a>
+      `;
+    } else {
+      document.getElementById("msg").innerText =
+        "⚠️ Still processing... please wait or refresh";
+    }
 
-  }, 1500);
+    resetBtn();
+
+  }, 2500);
+}
+
+
+// ================= RESET BUTTON =================
+function resetBtn() {
+  let btn = document.getElementById("regBtn");
+  btn.disabled = false;
+  btn.innerText = "Register";
 }
 
 </script>
 
 </body>
 </html>
+
 
