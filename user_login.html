@@ -11,7 +11,7 @@
 <form onsubmit="loginUser(event)">
   <input type="text" id="userId" placeholder="User ID" required><br><br>
   <input type="password" id="password" placeholder="Password" required><br><br>
-  <button type="submit">Login</button>
+  <button type="submit" id="loginBtn">Login</button>
 </form>
 
 <p id="msg"></p>
@@ -20,10 +20,10 @@
 
 <script>
 
-// INIT
+// ================= INIT =================
 initCoreSystem();
 
-// SAFE DECODE (OLD SYSTEM SUPPORT)
+// ================= SAFE DECODE =================
 function safeDecode(p) {
   try {
     return atob(p);
@@ -32,14 +32,53 @@ function safeDecode(p) {
   }
 }
 
+// ================= LOCAL LOGIN FUNCTION =================
+function localLogin(userId, password) {
+
+  let users = getUsers();
+
+  let user = users.find(u => 
+    u.userId.toLowerCase() === userId.toLowerCase() &&
+    u.status !== "blocked" &&
+    (u.password === password || safeDecode(u.password) === password)
+  );
+
+  if (!user) {
+    document.getElementById("msg").innerText = "❌ Invalid ID or Password";
+    return false;
+  }
+
+  localStorage.setItem("loggedInUser", JSON.stringify({
+    userId: user.userId
+  }));
+
+  document.getElementById("msg").innerText = "⚠️ Login via Local System";
+
+  setTimeout(() => {
+    window.location.href = "user_dashboard.html";
+  }, 800);
+
+  return true;
+}
+
 // ================= LOGIN =================
 function loginUser(e) {
   e.preventDefault();
 
+  let btn = document.getElementById("loginBtn");
+  btn.disabled = true;
+  btn.innerText = "Checking...";
+
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value;
 
-  // 🔥 FIRST TRY BACKEND LOGIN
+  if (!userId || !password) {
+    alert("Enter ID and Password");
+    resetBtn();
+    return;
+  }
+
+  // 🔥 TRY BACKEND FIRST
   fetch("http://localhost:3000/api/login", {
     method: "POST",
     headers: {
@@ -51,47 +90,44 @@ function loginUser(e) {
   .then(data => {
 
     if (data.success) {
-      // ✅ BACKEND LOGIN SUCCESS
+
+      // ✅ BACKEND LOGIN
       localStorage.setItem("loggedInUser", JSON.stringify({
         userId: data.user.userId
       }));
 
       document.getElementById("msg").innerText = "✅ Login Success (Server)";
+
       setTimeout(() => {
         window.location.href = "user_dashboard.html";
       }, 800);
 
     } else {
-      // 🔄 FALLBACK → OLD LOCAL SYSTEM
-
-      let users = getUsers();
-
-      let user = users.find(u => 
-        u.userId.toLowerCase() === userId.toLowerCase() &&
-        u.status !== "blocked" &&
-        (u.password === password || safeDecode(u.password) === password)
-      );
-
-      if (!user) {
-        document.getElementById("msg").innerText = "❌ Invalid login";
-        return;
+      // 🔄 FALLBACK TO LOCAL
+      if (!localLogin(userId, password)) {
+        resetBtn();
       }
-
-      localStorage.setItem("loggedInUser", JSON.stringify({
-        userId: user.userId
-      }));
-
-      document.getElementById("msg").innerText = "⚠️ Login via Local System";
-
-      setTimeout(() => {
-        window.location.href = "user_dashboard.html";
-      }, 800);
     }
 
   })
   .catch(err => {
-    document.getElementById("msg").innerText = "❌ Server error";
+
+    console.warn("Server failed → switching to local");
+
+    // 🔄 FORCE LOCAL LOGIN
+    if (!localLogin(userId, password)) {
+      document.getElementById("msg").innerText = "❌ Server + Local both failed";
+      resetBtn();
+    }
+
   });
+}
+
+// ================= RESET BUTTON =================
+function resetBtn() {
+  let btn = document.getElementById("loginBtn");
+  btn.disabled = false;
+  btn.innerText = "Login";
 }
 
 </script>
