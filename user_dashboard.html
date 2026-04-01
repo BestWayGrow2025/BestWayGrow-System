@@ -1,91 +1,24 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>User Dashboard</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 6px; }
-    .pending { color: orange; font-weight: bold; }
-    .inactive { color: red; font-weight: bold; }
-    .active { color: green; font-weight: bold; }
-    ul { list-style-type: none; padding-left: 20px; }
-    li { margin-bottom: 5px; }
-    button { padding: 6px 10px; margin: 5px; cursor: pointer; }
-  </style>
-</head>
-<body>
-
-<h1>USER DASHBOARD</h1>
-<p id="welcome"></p>
-<button onclick="logout()">Logout</button>
-
-<div id="statusBox" class="box"></div>
-
-<div class="box">
-  <h3>System Status</h3>
-  <p id="systemStatus"></p>
-</div>
-
-<div class="box">
-  <h3>My Profile</h3>
-  <p id="profile"></p>
-</div>
-
-<div class="box">
-  <h3>My Wallet</h3>
-  <p id="wallet"></p>
-</div>
-
-<div class="box">
-  <h3>Transaction History</h3>
-  <div id="transactions"></div>
-</div>
-
-<div class="box">
-  <h3>Withdraw History</h3>
-  <div id="withdrawHistory"></div>
-</div>
-
-<div class="box">
-  <h3>My Links</h3>
-  <p id="links"></p>
-</div>
-
-<div class="box">
-  <h3>Actions</h3>
-  <button onclick="upgrade()">Upgrade</button>
-  <button onclick="repurchase()">Repurchase</button>
-  <button onclick="withdraw()">Withdraw</button>
-  <button onclick="goFranchise()">Apply for Franchise</button>
-</div>
-
-<script src="CORE_system.js"></script>
-<script src="wallet_system.js"></script>
-<script src="commission_engine.js"></script>
-<script src="withdrawal_system.js"></script>
-<script src="pin_config_system.js"></script>
-<script src="income_control_system.js"></script>
-
 <script>
 
 // ================= INIT =================
 initCoreSystem();
 
-// ================= FIXED AUTH =================
+// ================= AUTH (FINAL SAFE) =================
 let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!session) {
   alert("Login required");
   window.location.href = "user_login.html";
+  throw new Error("No session"); // 🔥 STOP EXECUTION
 }
 
-// 🔥 ALWAYS FETCH FRESH USER (IMPORTANT FIX)
 let user = getUserById(session.userId);
 
 if (!user) {
   alert("User not found");
   localStorage.removeItem("loggedInUser");
   window.location.href = "user_login.html";
+  throw new Error("Invalid user"); // 🔥 STOP EXECUTION
 }
 
 // ================= STATUS =================
@@ -182,7 +115,6 @@ function loadWithdrawHistory() {
 
 // ================= LINKS =================
 function loadLinks() {
-
   let base = "https://bestwaygrow2025.github.io/BestWayGrow-System/";
 
   document.getElementById("links").innerHTML = `
@@ -224,5 +156,3 @@ function logout() {
 
 </script>
 
-</body>
-</html>
