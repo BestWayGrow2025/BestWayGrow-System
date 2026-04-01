@@ -1,5 +1,3 @@
-<script>
-
 // ===============================
 // 📦 QUEUE SYSTEM (FINAL PRO SAFE)
 // ===============================
@@ -37,8 +35,8 @@ function addToQueue(userData) {
 
   saveQueue(queue);
 
-  // 🔥 INSTANT PROCESS
-  processQueue();
+  // 🔥 SAFE TRIGGER
+  setTimeout(() => processQueue(), 100);
 
   // 📜 LOG
   if (typeof logActivity === "function") {
@@ -100,25 +98,15 @@ let isProcessing = false;
 function processQueue() {
 
   if (isProcessing) return;
-  isProcessing = true;
 
   // 🔒 SYSTEM CHECK
-  if (!isQueueSystemSafe()) {
-    isProcessing = false;
-    return;
-  }
-
-  if (isLocked()) {
-    isProcessing = false;
-    return;
-  }
+  if (!isQueueSystemSafe()) return;
+  if (isLocked()) return;
 
   let queue = getQueue();
-  if (!queue.length) {
-    isProcessing = false;
-    return;
-  }
+  if (!queue.length) return;
 
+  isProcessing = true;
   setLock(true);
 
   try {
@@ -130,19 +118,15 @@ function processQueue() {
     let nextUser = queue.find(u => u.status === "PENDING");
 
     if (!nextUser) {
-      setLock(false);
-      isProcessing = false;
       return;
     }
 
     if (typeof registerUser !== "function") {
       console.error("registerUser not found");
-      setLock(false);
-      isProcessing = false;
       return;
     }
 
-    // 🔥 REGISTER USER (WITH MOBILE FIX)
+    // 🔥 REGISTER USER (MATCHED WITH CORE)
     let user = registerUser(
       nextUser.username,
       nextUser.password,
@@ -182,10 +166,12 @@ function processQueue() {
     if (typeof logActivity === "function") {
       logActivity("SYSTEM", "ERROR", "Queue crash detected");
     }
-  }
 
-  setLock(false);
-  isProcessing = false;
+  } finally {
+
+    setLock(false);
+    isProcessing = false;
+  }
 }
 
 // =====================
@@ -204,7 +190,5 @@ function startQueueProcessor() {
 // 🚀 AUTO START
 // =====================
 startQueueProcessor();
-
-</script>
 
 
