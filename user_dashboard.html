@@ -9,7 +9,7 @@ let session = JSON.parse(localStorage.getItem("loggedInUser"));
 if (!session) {
   alert("Login required");
   window.location.href = "user_login.html";
-  throw new Error("No session"); // 🔥 STOP EXECUTION
+  throw new Error("STOP");
 }
 
 let user = getUserById(session.userId);
@@ -18,135 +18,158 @@ if (!user) {
   alert("User not found");
   localStorage.removeItem("loggedInUser");
   window.location.href = "user_login.html";
-  throw new Error("Invalid user"); // 🔥 STOP EXECUTION
+  throw new Error("STOP");
 }
 
-// ================= STATUS =================
-function loadStatus() {
-  let box = document.getElementById("statusBox");
+// ================= DOM SAFE =================
+document.addEventListener("DOMContentLoaded", function () {
 
-  if (user.status !== "active") {
-    box.innerHTML = `<span class="inactive">⚠ Account Inactive</span>`;
-  } 
-  else if (!isUserActive(user.userId)) {
-    box.innerHTML = `<span class="pending">⏳ Plan Expired</span>`;
-  } 
-  else {
-    box.innerHTML = `<span class="active">✅ Active Account</span>`;
-  }
-}
+  // ================= STATUS =================
+  function loadStatus() {
+    let box = document.getElementById("statusBox");
+    if (!box) return;
 
-// ================= SYSTEM STATUS =================
-function loadSystemStatus() {
-
-  let upgradePin = getActivePin("upgrade");
-  let repurchasePin = getActivePin("repurchase");
-
-  let upgrade = upgradePin ? "🟢 ON" : "🔴 OFF";
-  let repurchase = repurchasePin ? "🟢 ON" : "🔴 OFF";
-
-  let ugli = isUGLIEnabled() ? "🟢 ON" : "🔴 OFF";
-  let rli = isRLIEnabled() ? "🟢 ON" : "🔴 OFF";
-
-  document.getElementById("systemStatus").innerHTML = `
-    Upgrade PIN: ${upgrade}<br>
-    Repurchase PIN: ${repurchase}<br>
-    UGLI Income: ${ugli}<br>
-    RLI Income: ${rli}
-  `;
-}
-
-// ================= PROFILE =================
-function loadProfile() {
-  document.getElementById("profile").innerHTML = `
-    User ID: ${user.userId}<br>
-    Name: ${user.username}<br>
-    Status: ${user.status}<br>
-    Active: ${isUserActive(user.userId) ? "YES" : "NO"}
-  `;
-}
-
-// ================= WALLET =================
-function loadWallet() {
-  let u = getUserById(user.userId);
-  document.getElementById("wallet").innerHTML =
-    "Balance: ₹ " + (u?.wallet || 0);
-}
-
-// ================= TRANSACTIONS =================
-function loadTransactions() {
-
-  let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-  let list = txns.filter(t => t.userId === user.userId);
-
-  if (!list.length) {
-    document.getElementById("transactions").innerHTML = "No transactions";
-    return;
+    if (user.status !== "active") {
+      box.innerHTML = `<span class="inactive">⚠ Account Inactive</span>`;
+    } 
+    else if (!isUserActive(user.userId)) {
+      box.innerHTML = `<span class="pending">⏳ Plan Expired</span>`;
+    } 
+    else {
+      box.innerHTML = `<span class="active">✅ Active Account</span>`;
+    }
   }
 
-  let html = "<ul>";
-  list.slice().reverse().forEach(t => {
-    html += `<li>${t.type} ₹${t.amount} - ${t.reason}<br><small>${t.time || ""}</small></li>`;
-  });
-  html += "</ul>";
+  // ================= SYSTEM STATUS =================
+  function loadSystemStatus() {
+    let el = document.getElementById("systemStatus");
+    if (!el) return;
 
-  document.getElementById("transactions").innerHTML = html;
-}
+    let upgradePin = getActivePin("upgrade");
+    let repurchasePin = getActivePin("repurchase");
 
-// ================= WITHDRAW =================
-function loadWithdrawHistory() {
+    let upgrade = upgradePin ? "🟢 ON" : "🔴 OFF";
+    let repurchase = repurchasePin ? "🟢 ON" : "🔴 OFF";
 
-  let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
-  let list = withdrawals.filter(w => w.userId === user.userId);
+    let ugli = isUGLIEnabled() ? "🟢 ON" : "🔴 OFF";
+    let rli = isRLIEnabled() ? "🟢 ON" : "🔴 OFF";
 
-  if (!list.length) {
-    document.getElementById("withdrawHistory").innerHTML = "No withdrawal history";
-    return;
+    el.innerHTML = `
+      Upgrade PIN: ${upgrade}<br>
+      Repurchase PIN: ${repurchase}<br>
+      UGLI Income: ${ugli}<br>
+      RLI Income: ${rli}
+    `;
   }
 
-  let html = "<ul>";
-  list.slice().reverse().forEach(w => {
-    html += `<li>${w.requestId} - ₹${w.amount} (${w.status})<br><small>${w.time || ""}</small></li>`;
-  });
-  html += "</ul>";
+  // ================= PROFILE =================
+  function loadProfile() {
+    let el = document.getElementById("profile");
+    if (!el) return;
 
-  document.getElementById("withdrawHistory").innerHTML = html;
-}
+    el.innerHTML = `
+      User ID: ${user.userId}<br>
+      Name: ${user.username}<br>
+      Status: ${user.status}<br>
+      Active: ${isUserActive(user.userId) ? "YES" : "NO"}
+    `;
+  }
 
-// ================= LINKS =================
-function loadLinks() {
-  let base = "https://bestwaygrow2025.github.io/BestWayGrow-System/";
+  // ================= WALLET =================
+  function loadWallet() {
+    let el = document.getElementById("wallet");
+    if (!el) return;
 
-  document.getElementById("links").innerHTML = `
-    Register:<br>${base}user.register.html?ref=${user.userId}
-  `;
-}
+    let u = getUserById(user.userId);
+    el.innerHTML = "Balance: ₹ " + (u?.wallet || 0);
+  }
+
+  // ================= TRANSACTIONS =================
+  function loadTransactions() {
+    let el = document.getElementById("transactions");
+    if (!el) return;
+
+    let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
+    let list = txns.filter(t => t.userId === user.userId);
+
+    if (!list.length) {
+      el.innerHTML = "No transactions";
+      return;
+    }
+
+    let html = "<ul>";
+    list.slice().reverse().forEach(t => {
+      html += `<li>${t.type} ₹${t.amount} - ${t.reason}<br><small>${t.time || ""}</small></li>`;
+    });
+    html += "</ul>";
+
+    el.innerHTML = html;
+  }
+
+  // ================= WITHDRAW =================
+  function loadWithdrawHistory() {
+    let el = document.getElementById("withdrawHistory");
+    if (!el) return;
+
+    let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+    let list = withdrawals.filter(w => w.userId === user.userId);
+
+    if (!list.length) {
+      el.innerHTML = "No withdrawal history";
+      return;
+    }
+
+    let html = "<ul>";
+    list.slice().reverse().forEach(w => {
+      html += `<li>${w.requestId} - ₹${w.amount} (${w.status})<br><small>${w.time || ""}</small></li>`;
+    });
+    html += "</ul>";
+
+    el.innerHTML = html;
+  }
+
+  // ================= LINKS =================
+  function loadLinks() {
+    let el = document.getElementById("links");
+    if (!el) return;
+
+    let base = "https://bestwaygrow2025.github.io/BestWayGrow-System/";
+
+    el.innerHTML = `
+      Register:<br>${base}user.register.html?ref=${user.userId}
+    `;
+  }
+
+  // ================= WELCOME =================
+  let welcome = document.getElementById("welcome");
+  if (welcome) {
+    welcome.innerText = "Welcome " + user.username + " (" + user.userId + ")";
+  }
+
+  // ================= INIT LOAD =================
+  loadStatus();
+  loadSystemStatus();
+  loadProfile();
+  loadWallet();
+  loadTransactions();
+  loadWithdrawHistory();
+  loadLinks();
+
+  // ================= AUTO REFRESH =================
+  setInterval(() => {
+    loadWallet();
+    loadTransactions();
+    loadWithdrawHistory();
+    loadSystemStatus();
+  }, 5000);
+
+});
 
 // ================= ACTIONS =================
 function upgrade() { window.location.href = "user.upgrade.html"; }
 function repurchase() { window.location.href = "user.repurchase.html"; }
 function withdraw() { window.location.href = "user.withdraw.html"; }
 function goFranchise() { window.location.href = "user_apply_franchise.html"; }
-
-// ================= INIT LOAD =================
-document.getElementById("welcome").innerText =
-  "Welcome " + user.username + " (" + user.userId + ")";
-
-loadStatus();
-loadSystemStatus();
-loadProfile();
-loadWallet();
-loadTransactions();
-loadWithdrawHistory();
-loadLinks();
-
-// ================= AUTO REFRESH =================
-setInterval(() => {
-  loadWallet();
-  loadTransactions();
-  loadWithdrawHistory();
-  loadSystemStatus();
-}, 5000);
 
 // ================= LOGOUT =================
 function logout() {
@@ -155,4 +178,5 @@ function logout() {
 }
 
 </script>
+
 
