@@ -22,10 +22,10 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORE -->
+<!-- CORE -->
 <script src="CORE_system.js"></script>
 
-<!-- ✅ QUEUE SYSTEM -->
+<!-- QUEUE -->
 <script src="queue_system.js"></script>
 
 <script>
@@ -110,31 +110,44 @@ function handleRegister() {
   // 🔥 PROCESS QUEUE
   processQueue();
 
-  // ⏳ USER FEEDBACK
+  // ⏳ FEEDBACK
   document.getElementById("msg").innerText = "⏳ Processing registration...";
 
-  // 🔥 WAIT + FETCH CORRECT USER
-  setTimeout(() => {
+  // 🔥 FINAL FIX: INTERVAL CHECK (NO TIMEOUT BUG)
+  let attempts = 0;
+
+  let checkUser = setInterval(() => {
 
     let users = getUsers();
-
     let newUser = users.find(u => u.mobile === mobile);
 
     if (newUser) {
+
       document.getElementById("msg").innerHTML = `
         ✅ Registration Successful <br>
         Your ID: <b>${newUser.userId}</b>
         <br><br>
         🔗 <a href="user_login.html">Go to Login</a>
       `;
+
+      clearInterval(checkUser);
+      resetBtn();
+
     } else {
-      document.getElementById("msg").innerText =
-        "⚠️ Still processing... please wait or refresh";
+
+      attempts++;
+
+      if (attempts > 6) {
+        document.getElementById("msg").innerText =
+          "⚠️ Delay detected. Please refresh page";
+
+        clearInterval(checkUser);
+        resetBtn();
+      }
+
     }
 
-    resetBtn();
-
-  }, 2500);
+  }, 1000);
 }
 
 
@@ -149,5 +162,6 @@ function resetBtn() {
 
 </body>
 </html>
+
 
 
