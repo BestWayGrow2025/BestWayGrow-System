@@ -19,10 +19,8 @@
 <p id="welcome"></p>
 <button onclick="logout()">Logout</button>
 
-<!-- STATUS -->
 <div id="statusBox" class="box"></div>
 
-<!-- SYSTEM STATUS -->
 <div class="box">
   <h3>System Status</h3>
   <p id="systemStatus"></p>
@@ -61,15 +59,10 @@
   <button onclick="goFranchise()">Apply for Franchise</button>
 </div>
 
-<!-- CORE -->
 <script src="CORE_system.js"></script>
-
-<!-- SYSTEM -->
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="withdrawal_system.js"></script>
-
-<!-- NEW SYSTEM -->
 <script src="pin_config_system.js"></script>
 <script src="income_control_system.js"></script>
 
@@ -78,13 +71,25 @@
 // ================= INIT =================
 initCoreSystem();
 
-// ================= AUTH =================
-let user = protectPage({ role: "user" });
-if (!user) return;
+// ================= FIXED AUTH =================
+let session = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!session) {
+  alert("Login required");
+  window.location.href = "user_login.html";
+}
+
+// 🔥 ALWAYS FETCH FRESH USER (IMPORTANT FIX)
+let user = getUserById(session.userId);
+
+if (!user) {
+  alert("User not found");
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "user_login.html";
+}
 
 // ================= STATUS =================
 function loadStatus() {
-
   let box = document.getElementById("statusBox");
 
   if (user.status !== "active") {
@@ -117,10 +122,6 @@ function loadSystemStatus() {
     RLI Income: ${rli}
   `;
 }
-
-// ================= UI =================
-document.getElementById("welcome").innerText =
-  "Welcome " + user.username + " (" + user.userId + ")";
 
 // ================= PROFILE =================
 function loadProfile() {
@@ -190,21 +191,22 @@ function loadLinks() {
 }
 
 // ================= ACTIONS =================
-function upgrade() {
-  window.location.href = "user.upgrade.html";
-}
+function upgrade() { window.location.href = "user.upgrade.html"; }
+function repurchase() { window.location.href = "user.repurchase.html"; }
+function withdraw() { window.location.href = "user.withdraw.html"; }
+function goFranchise() { window.location.href = "user_apply_franchise.html"; }
 
-function repurchase() {
-  window.location.href = "user.repurchase.html";
-}
+// ================= INIT LOAD =================
+document.getElementById("welcome").innerText =
+  "Welcome " + user.username + " (" + user.userId + ")";
 
-function withdraw() {
-  window.location.href = "user.withdraw.html";
-}
-
-function goFranchise() {
-  window.location.href = "user_apply_franchise.html";
-}
+loadStatus();
+loadSystemStatus();
+loadProfile();
+loadWallet();
+loadTransactions();
+loadWithdrawHistory();
+loadLinks();
 
 // ================= AUTO REFRESH =================
 setInterval(() => {
@@ -213,15 +215,6 @@ setInterval(() => {
   loadWithdrawHistory();
   loadSystemStatus();
 }, 5000);
-
-// ================= INIT =================
-loadStatus();
-loadSystemStatus();
-loadProfile();
-loadWallet();
-loadTransactions();
-loadWithdrawHistory();
-loadLinks();
 
 // ================= LOGOUT =================
 function logout() {
