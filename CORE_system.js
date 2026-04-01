@@ -1,4 +1,3 @@
-
 /* ===============================
    CORE SYSTEM (MASTER FINAL PRO)
 =============================== */
@@ -44,7 +43,7 @@ function getChildren(userId) {
 }
 
 // ===================================
-// 🔹 USER ID GENERATOR (SAFE RANDOM)
+// 🔹 USER ID GENERATOR
 // ===================================
 function generateUserId() {
   let users = getUsers();
@@ -63,12 +62,21 @@ function generateUserId() {
 }
 
 // ===================================
-// 🔹 INTRODUCER VALIDATION
+// 🔹 INTRODUCER VALIDATION (FIXED)
 // ===================================
 function isValidIntroducer(id) {
   if (!id) return false;
+
   let user = getUserById(id);
-  return user && user.isActive === true;
+
+  if (!user) return false;
+
+  // ✅ ADMIN ALWAYS VALID
+  if (user.role === "admin" || user.role === "super_admin") {
+    return true;
+  }
+
+  return user.isActive === true;
 }
 
 // ===================================
@@ -136,7 +144,7 @@ function getDownline(userId) {
 }
 
 // ===================================
-// 🔹 REGISTER (FINAL FIXED)
+// 🔹 REGISTER USER (FIXED)
 // ===================================
 function registerUser(
   username,
@@ -170,7 +178,6 @@ function registerUser(
     return null;
   }
 
-  // 🔒 Duplicate mobile check
   let duplicate = users.find(u => u.mobile === mobile);
   if (duplicate) {
     alert("Mobile already exists");
@@ -186,7 +193,6 @@ function registerUser(
 
   try {
 
-    // 🔥 Convert L/R → LEFT/RIGHT
     let pos = position === "L" ? "LEFT" : "RIGHT";
 
     let finalSponsor = getSafeSponsor(sponsorId, pos);
@@ -201,8 +207,11 @@ function registerUser(
       sponsorId: finalSponsor,
       position: pos,
       createdAt: new Date().toISOString(),
-      status: "inactive",
-      isActive: false,
+
+      // 🔥 FIXED (AUTO ACTIVE)
+      status: "active",
+      isActive: true,
+
       wallet: 0,
       activeTill: null
     };
@@ -324,7 +333,7 @@ function initCoreSystem() {
     localStorage.setItem("systemSettings", JSON.stringify(settings));
   }
 
-  // 🔥 SUPER ADMIN
+  // SUPER ADMIN
   let superAdmin = users.find(u => u.userId === "BWG000000");
 
   if (!superAdmin) {
@@ -339,7 +348,7 @@ function initCoreSystem() {
     });
   }
 
-  // 🔥 SYSTEM ADMIN (IMPORTANT FIX)
+  // SYSTEM ADMIN
   let systemAdmin = users.find(u => u.userId === "BWG000001");
 
   if (!systemAdmin) {
