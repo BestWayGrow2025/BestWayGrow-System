@@ -18,97 +18,107 @@
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="income_control_system.js"></script>
-<script src="active_system.js"></script> <!-- 🔥 REQUIRED -->
+<script src="active_system.js"></script>
 
 <!-- PIN -->
 <script src="pin_config_system.js"></script>
 
 <script>
 
-// ================= INIT =================
-initCoreSystem();
+// ================= FULL SAFE START =================
+document.addEventListener("DOMContentLoaded", function () {
 
-// 🔥 AUTO PIN INIT (VERY IMPORTANT)
-if (!getActivePin("repurchase")) {
-  enablePin("repurchase", {
-    bv: 50,
-    amount: 300
-  });
-}
+  // ================= INIT =================
+  initCoreSystem();
 
-// ================= AUTH (SAFE) =================
-let session = JSON.parse(localStorage.getItem("loggedInUser"));
-
-if (!session) {
-  alert("Login required");
-  window.location.href = "user_login.html";
-  throw new Error("STOP");
-}
-
-let user = getUserById(session.userId);
-
-if (!user) {
-  alert("User not found");
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "user_login.html";
-  throw new Error("STOP");
-}
-
-// ================= UI =================
-document.getElementById("userId").innerText = user.userId;
-
-
-// ================= REPURCHASE =================
-function repurchase() {
-
-  let u = getUsers().find(x => x.userId === user.userId);
-
-  if (!u) return;
-
-  if (!isPinSystemSafe("repurchase")) {
-    alert("Repurchase not available or invalid");
-    return;
+  // 🔥 AUTO PIN INIT (ONLY IF NOT EXIST)
+  if (typeof getActivePin === "function" && !getActivePin("repurchase")) {
+    enablePin("repurchase", {
+      bv: 50,
+      amount: 300
+    });
   }
 
-  if (typeof isIncomeSystemSafe === "function" && !isIncomeSystemSafe()) {
-    alert("System temporarily unavailable");
-    return;
+  // ================= AUTH =================
+  let session = JSON.parse(localStorage.getItem("loggedInUser"));
+
+  if (!session) {
+    alert("Login required");
+    window.location.href = "user_login.html";
+    throw new Error("STOP");
   }
 
-  let pin = getActivePin("repurchase");
+  let user = getUserById(session.userId);
 
-  if (!pin) {
-    alert("Repurchase not available");
-    return;
+  if (!user) {
+    alert("User not found");
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "user_login.html";
+    throw new Error("STOP");
   }
 
-  let bv = Number(pin.bv || 0);
-  let amount = Number(pin.amount || 0);
+  // ================= UI =================
+  let userEl = document.getElementById("userId");
+  if (userEl) userEl.innerText = user.userId;
 
-  if (bv <= 0 || amount <= 0) {
-    alert("Invalid PIN configuration");
-    return;
-  }
+  // ================= REPURCHASE =================
+  window.repurchase = function () {
 
-  if ((u.wallet || 0) < amount) {
-    alert("Insufficient wallet balance");
-    return;
-  }
+    let u = getUsers().find(x => x.userId === user.userId);
+    if (!u) return;
 
-  // 💸 DEBIT
-  debitWallet(u.userId, amount, "Repurchase");
+    // 🔒 PIN SAFETY
+    if (!isPinSystemSafe("repurchase")) {
+      alert("Repurchase not available or PIN expired");
+      return;
+    }
 
-  // 💰 INCOME
-  if (isRLIEnabled() && isUserActive(u.userId)) {
-    processIncome("repurchase", u.userId, bv);
-  }
+    // 🔒 INCOME SAFETY
+    if (typeof isIncomeSystemSafe === "function" && !isIncomeSystemSafe()) {
+      alert("System temporarily unavailable");
+      return;
+    }
 
-  alert("✅ Repurchase Successful");
+    let pin = getActivePin("repurchase");
 
-  window.location.href = "user_dashboard.html";
-}
+    if (!pin) {
+      alert("Repurchase not available");
+      return;
+    }
+
+    let bv = Number(pin.bv || 0);
+    let amount = Number(pin.amount || 0);
+
+    if (bv <= 0 || amount <= 0) {
+      alert("Invalid PIN configuration");
+      return;
+    }
+
+    // 💰 WALLET CHECK
+    if ((u.wallet || 0) < amount) {
+      alert("Insufficient wallet balance");
+      return;
+    }
+
+    // 💸 DEBIT
+    debitWallet(u.userId, amount, "Repurchase");
+
+    // 💰 INCOME
+    if (typeof isRLIEnabled === "function" && isRLIEnabled() &&
+        typeof isUserActive === "function" && isUserActive(u.userId)) {
+
+      processIncome("repurchase", u.userId, bv);
+    }
+
+    alert("✅ Repurchase Successful");
+
+    window.location.href = "user_dashboard.html";
+  };
+
+});
 
 </script>
 
 </body>
 </html>
+
