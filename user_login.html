@@ -32,7 +32,7 @@ function safeDecode(p) {
   }
 }
 
-// ================= LOCAL LOGIN FUNCTION =================
+// ================= LOCAL LOGIN FUNCTION (UPGRADED) =================
 function localLogin(userId, password) {
 
   let users = getUsers();
@@ -48,11 +48,10 @@ function localLogin(userId, password) {
     return false;
   }
 
-  localStorage.setItem("loggedInUser", JSON.stringify({
-    userId: user.userId
-  }));
+  // 🔥 FINAL FIX: STORE FULL USER OBJECT
+  localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-  document.getElementById("msg").innerText = "⚠️ Login via Local System";
+  document.getElementById("msg").innerText = "✅ Login Success";
 
   setTimeout(() => {
     window.location.href = "user_dashboard.html";
@@ -78,49 +77,10 @@ function loginUser(e) {
     return;
   }
 
-  // 🔥 TRY BACKEND FIRST
-  fetch("http://localhost:3000/api/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ userId, password })
-  })
-  .then(res => res.json())
-  .then(data => {
-
-    if (data.success) {
-
-      // ✅ BACKEND LOGIN
-      localStorage.setItem("loggedInUser", JSON.stringify({
-        userId: data.user.userId
-      }));
-
-      document.getElementById("msg").innerText = "✅ Login Success (Server)";
-
-      setTimeout(() => {
-        window.location.href = "user_dashboard.html";
-      }, 800);
-
-    } else {
-      // 🔄 FALLBACK TO LOCAL
-      if (!localLogin(userId, password)) {
-        resetBtn();
-      }
-    }
-
-  })
-  .catch(err => {
-
-    console.warn("Server failed → switching to local");
-
-    // 🔄 FORCE LOCAL LOGIN
-    if (!localLogin(userId, password)) {
-      document.getElementById("msg").innerText = "❌ Server + Local both failed";
-      resetBtn();
-    }
-
-  });
+  // 🔥 DIRECT LOCAL LOGIN (NO BACKEND)
+  if (!localLogin(userId, password)) {
+    resetBtn();
+  }
 }
 
 // ================= RESET BUTTON =================
