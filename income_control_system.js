@@ -1,12 +1,17 @@
-// ===============================
-// 💰 INCOME CONTROL SYSTEM (FINAL SAFE)
-// ===============================
+/* ===============================
+   💰 INCOME CONTROL SYSTEM (FINAL PRO)
+=============================== */
 
 // =====================
 // 🔹 GET / SAVE SETTINGS
 // =====================
 function getIncomeSettings() {
-  return JSON.parse(localStorage.getItem("incomeSettings") || "{}");
+  try {
+    return JSON.parse(localStorage.getItem("incomeSettings") || "{}");
+  } catch {
+    localStorage.setItem("incomeSettings", "{}");
+    return {};
+  }
 }
 
 function saveIncomeSettings(data) {
@@ -40,20 +45,20 @@ function initIncomeControl() {
 }
 
 // =====================
-// 🔹 SAFE GETTERS
+// 🔹 SAFE GETTERS (FIXED)
 // =====================
 function isUGLIEnabled() {
-  let s = getIncomeSettings();
+  let s = getIncomeSettings() || {};
   return s.ugli === true;
 }
 
 function isRLIEnabled() {
-  let s = getIncomeSettings();
+  let s = getIncomeSettings() || {};
   return s.rli === true;
 }
 
 function isBinaryEnabled() {
-  let s = getIncomeSettings();
+  let s = getIncomeSettings() || {};
   return s.binary === true;
 }
 
@@ -69,7 +74,6 @@ function toggleUGLI(adminId = "ADMIN") {
 
   saveIncomeSettings(s);
 
-  // 📜 LOG
   if (typeof logActivity === "function") {
     logActivity(adminId, "ADMIN", "UGLI toggled → " + (s.ugli ? "ON" : "OFF"));
   }
@@ -84,7 +88,6 @@ function toggleRLI(adminId = "ADMIN") {
 
   saveIncomeSettings(s);
 
-  // 📜 LOG
   if (typeof logActivity === "function") {
     logActivity(adminId, "ADMIN", "RLI toggled → " + (s.rli ? "ON" : "OFF"));
   }
@@ -99,21 +102,23 @@ function toggleBinary(adminId = "ADMIN") {
 
   saveIncomeSettings(s);
 
-  // 📜 LOG
   if (typeof logActivity === "function") {
     logActivity(adminId, "ADMIN", "Binary toggled → " + (s.binary ? "ON" : "OFF"));
   }
 }
 
 // =====================
-// 🔒 HARD SAFETY (FINAL BEST)
+// 🔒 HARD SAFETY (FINAL)
 // =====================
 function isIncomeSystemSafe() {
 
   let s = getIncomeSettings();
 
-  // ❌ invalid or corrupted
-  if (!s || typeof s !== "object") return false;
+  // ❌ corrupted or invalid
+  if (!s || typeof s !== "object" || !("ugli" in s)) {
+    console.warn("⚠ Invalid income settings");
+    return false;
+  }
 
   // ❌ not initialized
   if (!s.initialized) {
@@ -125,6 +130,7 @@ function isIncomeSystemSafe() {
 }
 
 // =====================
-// 🚀 INIT
+// 🚀 INIT (SAFE ORDER)
 // =====================
+// ⚠️ IMPORTANT: Call this AFTER initCoreSystem()
 initIncomeControl();
