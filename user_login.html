@@ -32,7 +32,7 @@ function safeDecode(p) {
   }
 }
 
-// ================= LOCAL LOGIN FUNCTION (UPGRADED) =================
+// ================= LOCAL LOGIN (FINAL FIX) =================
 function localLogin(userId, password) {
 
   let users = getUsers();
@@ -48,8 +48,10 @@ function localLogin(userId, password) {
     return false;
   }
 
-  // 🔥 FINAL FIX: STORE FULL USER OBJECT
-  localStorage.setItem("loggedInUser", JSON.stringify(user));
+  // 🔥 STORE ONLY SESSION (BEST PRACTICE)
+  localStorage.setItem("loggedInUser", JSON.stringify({
+    userId: user.userId
+  }));
 
   document.getElementById("msg").innerText = "✅ Login Success";
 
@@ -77,7 +79,7 @@ function loginUser(e) {
     return;
   }
 
-  // 🔥 DIRECT LOCAL LOGIN (NO BACKEND)
+  // 🔥 DIRECT LOCAL LOGIN
   if (!localLogin(userId, password)) {
     resetBtn();
   }
