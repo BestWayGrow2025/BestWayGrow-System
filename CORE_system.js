@@ -1,5 +1,5 @@
 /* ===============================
-   CORE SYSTEM (MASTER FINAL PRO)
+   CORE SYSTEM (MASTER FINAL PRO++)
 =============================== */
 
 // ===================================
@@ -43,16 +43,24 @@ function getChildren(userId) {
 }
 
 // ===================================
-// 🔹 USER ID GENERATOR
+// 🔹 USER ID GENERATOR (SAFE)
 // ===================================
 function generateUserId() {
   let users = getUsers();
   let existingIds = users.map(u => u.userId);
 
   let newId;
+  let attempts = 0;
+
   do {
     let randomNum = Math.floor(100000 + Math.random() * 900000);
     newId = "BWG" + randomNum;
+    attempts++;
+
+    if (attempts > 50) {
+      throw new Error("User ID generation failed");
+    }
+
   } while (
     existingIds.includes(newId) ||
     newId === "BWG000000"
@@ -62,13 +70,12 @@ function generateUserId() {
 }
 
 // ===================================
-// 🔹 INTRODUCER VALIDATION (FIXED)
+// 🔹 INTRODUCER VALIDATION
 // ===================================
 function isValidIntroducer(id) {
   if (!id) return false;
 
   let user = getUserById(id);
-
   if (!user) return false;
 
   // ✅ ADMIN ALWAYS VALID
@@ -80,16 +87,20 @@ function isValidIntroducer(id) {
 }
 
 // ===================================
-// 🌳 TREE SYSTEM
+// 🌳 TREE SYSTEM (SAFE)
 // ===================================
 let placementLock = false;
 
 function findPositionBFS(sponsorId, position) {
   let users = getUsers();
   let queue = [sponsorId];
+  let visited = new Set();
 
   while (queue.length > 0) {
     let current = queue.shift();
+
+    if (visited.has(current)) continue;
+    visited.add(current);
 
     let children = users.filter(u => u.sponsorId === current);
 
@@ -144,7 +155,7 @@ function getDownline(userId) {
 }
 
 // ===================================
-// 🔹 REGISTER USER (FIXED)
+// 🔹 REGISTER USER (FINAL SAFE)
 // ===================================
 function registerUser(
   username,
@@ -178,6 +189,7 @@ function registerUser(
     return null;
   }
 
+  // 🔒 STRICT UNIQUE MOBILE
   let duplicate = users.find(u => u.mobile === mobile);
   if (duplicate) {
     alert("Mobile already exists");
@@ -208,7 +220,7 @@ function registerUser(
       position: pos,
       createdAt: new Date().toISOString(),
 
-      // 🔥 FIXED (AUTO ACTIVE)
+      // 🔥 DEFAULT ACTIVE (CONTROLLED)
       status: "active",
       isActive: true,
 
@@ -221,6 +233,9 @@ function registerUser(
 
     return newUser;
 
+  } catch (err) {
+    console.error("Register error:", err);
+    return null;
   } finally {
     placementLock = false;
   }
@@ -288,7 +303,7 @@ function protectPage(config) {
   let key = sessionKey[config.role];
   let session = JSON.parse(localStorage.getItem(key));
 
-  if (!session) {
+  if (!session || !session.userId) {
     alert("Login required");
     window.location.href = config.role + "_login.html";
     return;
@@ -306,7 +321,7 @@ function protectPage(config) {
 }
 
 // ===================================
-// 🔹 INIT SYSTEM (FINAL FIXED)
+// 🔹 INIT SYSTEM
 // ===================================
 function initCoreSystem() {
 
@@ -334,9 +349,7 @@ function initCoreSystem() {
   }
 
   // SUPER ADMIN
-  let superAdmin = users.find(u => u.userId === "BWG000000");
-
-  if (!superAdmin) {
+  if (!users.find(u => u.userId === "BWG000000")) {
     users.push({
       userId: "BWG000000",
       username: "Super Admin",
@@ -349,9 +362,7 @@ function initCoreSystem() {
   }
 
   // SYSTEM ADMIN
-  let systemAdmin = users.find(u => u.userId === "BWG000001");
-
-  if (!systemAdmin) {
+  if (!users.find(u => u.userId === "BWG000001")) {
     users.push({
       userId: "BWG000001",
       username: "System Admin",
