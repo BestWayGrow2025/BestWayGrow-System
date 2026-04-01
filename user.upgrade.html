@@ -18,6 +18,7 @@
 <script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="income_control_system.js"></script>
+<script src="active_system.js"></script> <!-- 🔥 IMPORTANT -->
 
 <!-- PIN -->
 <script src="pin_config_system.js"></script>
@@ -27,12 +28,21 @@
 // ================= INIT =================
 initCoreSystem();
 
-// ================= AUTH =================
+// 🔥 AUTO PIN INIT (DEV ONLY)
+if (!getActivePin("upgrade")) {
+  enablePin("upgrade", {
+    bv: 100,
+    amount: 500
+  });
+}
+
+// ================= AUTH (SAFE) =================
 let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!session) {
   alert("Login required");
   window.location.href = "user_login.html";
+  throw new Error("STOP");
 }
 
 let user = getUserById(session.userId);
@@ -41,6 +51,7 @@ if (!user) {
   alert("User not found");
   localStorage.removeItem("loggedInUser");
   window.location.href = "user_login.html";
+  throw new Error("STOP");
 }
 
 // ================= INFO =================
@@ -88,7 +99,6 @@ function upgradeNow() {
   let bv = Number(pin.bv || 0);
   let amount = Number(pin.amount || 0);
 
-  // 🔒 EXTRA SAFETY
   if (bv <= 0 || amount <= 0) {
     alert("Invalid PIN configuration");
     return;
@@ -106,13 +116,10 @@ function upgradeNow() {
   // ✅ ACTIVATE
   activateUser(u.userId);
 
-  // 💰 INCOME (FINAL SAFE)
+  // 💰 INCOME
   if (isUGLIEnabled() && isUserActive(u.userId)) {
     processIncome("upgrade", u.userId, bv);
   }
-
-  // 💾 SAVE (IMPORTANT FIX 🔥)
-  localStorage.setItem("users", JSON.stringify(users));
 
   alert("✅ Upgrade Successful");
 
