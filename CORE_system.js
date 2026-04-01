@@ -1,3 +1,4 @@
+
 /* ===============================
    CORE SYSTEM (MASTER FINAL PRO)
 =============================== */
@@ -98,7 +99,6 @@ function findPositionBFS(sponsorId, position) {
 }
 
 function getSafeSponsor(sponsorId, position) {
-
   let finalSponsor = findPositionBFS(sponsorId, position);
 
   let users = getUsers();
@@ -119,7 +119,6 @@ function getSafeSponsor(sponsorId, position) {
 // 🔥 FULL DOWNLINE
 // ===================================
 function getDownline(userId) {
-
   let users = getUsers();
   let result = [];
 
@@ -298,7 +297,7 @@ function protectPage(config) {
 }
 
 // ===================================
-// 🔹 INIT SYSTEM
+// 🔹 INIT SYSTEM (FINAL FIXED)
 // ===================================
 function initCoreSystem() {
 
@@ -325,9 +324,10 @@ function initCoreSystem() {
     localStorage.setItem("systemSettings", JSON.stringify(settings));
   }
 
-  let exists = users.find(u => u.role === "super_admin");
+  // 🔥 SUPER ADMIN
+  let superAdmin = users.find(u => u.userId === "BWG000000");
 
-  if (!exists) {
+  if (!superAdmin) {
     users.push({
       userId: "BWG000000",
       username: "Super Admin",
@@ -337,7 +337,22 @@ function initCoreSystem() {
       isActive: true,
       createdAt: new Date().toISOString()
     });
-
-    saveUsers(users);
   }
+
+  // 🔥 SYSTEM ADMIN (IMPORTANT FIX)
+  let systemAdmin = users.find(u => u.userId === "BWG000001");
+
+  if (!systemAdmin) {
+    users.push({
+      userId: "BWG000001",
+      username: "System Admin",
+      password: btoa("1234"),
+      role: "admin",
+      status: "active",
+      isActive: true,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  saveUsers(users);
 }
