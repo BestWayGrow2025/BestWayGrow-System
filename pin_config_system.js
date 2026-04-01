@@ -1,3 +1,7 @@
+/* ===============================
+   🔐 PIN CONFIG SYSTEM (FINAL PRO)
+=============================== */
+
 // =====================
 // 🔹 DEFAULT STRUCTURE
 // =====================
@@ -14,16 +18,25 @@ function getDefaultPin() {
 }
 
 // =====================
-// 🔹 GET PIN SETTINGS
+// 🔹 GET PIN SETTINGS (SAFE)
 // =====================
 function getPinSettings() {
+  try {
+    let data = JSON.parse(localStorage.getItem("pinSettings") || "{}");
 
-  let data = JSON.parse(localStorage.getItem("pinSettings") || "{}");
+    if (!data.upgrade) data.upgrade = getDefaultPin();
+    if (!data.repurchase) data.repurchase = getDefaultPin();
 
-  if (!data.upgrade) data.upgrade = getDefaultPin();
-  if (!data.repurchase) data.repurchase = getDefaultPin();
+    return data;
 
-  return data;
+  } catch {
+    let clean = {
+      upgrade: getDefaultPin(),
+      repurchase: getDefaultPin()
+    };
+    savePinSettings(clean);
+    return clean;
+  }
 }
 
 // =====================
@@ -43,13 +56,23 @@ function safeActivityLog(msg) {
 }
 
 // =====================
-// 🔹 ENABLE PIN (SAFE)
+// 🔹 ENABLE PIN (FINAL SAFE)
 // =====================
 function enablePin(type, config) {
 
   if (!type || !config) return;
 
-  if (isNaN(config.bv) || isNaN(config.amount)) {
+  // ✅ TYPE VALIDATION
+  if (!["upgrade", "repurchase"].includes(type)) {
+    alert("Invalid PIN type");
+    return;
+  }
+
+  // ✅ VALUE VALIDATION
+  if (
+    isNaN(config.bv) || isNaN(config.amount) ||
+    config.bv <= 0 || config.amount <= 0
+  ) {
     alert("Invalid BV or Amount");
     return;
   }
@@ -60,7 +83,7 @@ function enablePin(type, config) {
     active: true,
     bv: Number(config.bv),
     amount: Number(config.amount),
-    gst: Number(config.gst || 0),
+    gst: isNaN(config.gst) ? 0 : Number(config.gst),
     startDate: config.startDate || new Date().toISOString(),
     endDate: config.endDate || null,
     updatedAt: new Date().toISOString()
@@ -77,6 +100,8 @@ function enablePin(type, config) {
 // 🔹 DISABLE PIN
 // =====================
 function disablePin(type) {
+
+  if (!["upgrade", "repurchase"].includes(type)) return;
 
   let settings = getPinSettings();
 
@@ -128,9 +153,11 @@ function getActivePin(type) {
 }
 
 // =====================
-// 🔒 PIN SYSTEM SAFETY (FINAL 🔥)
+// 🔒 PIN SYSTEM SAFETY (FINAL)
 // =====================
 function isPinSystemSafe(type) {
+
+  if (!["upgrade", "repurchase"].includes(type)) return false;
 
   let pin = getActivePin(type);
 
