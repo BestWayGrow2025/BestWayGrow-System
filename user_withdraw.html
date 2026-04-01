@@ -26,17 +26,22 @@
 // ================= INIT =================
 initCoreSystem();
 
-// ================= AUTH =================
+// ================= AUTH (SAFE) =================
 let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
 
 if (!sessionUser) {
   alert("Login required");
   window.location.href = "user_login.html";
+  throw new Error("STOP"); // 🔥 IMPORTANT FIX
 }
 
 let userId = sessionUser.userId;
-document.getElementById("userId").innerText = userId;
 
+// ✅ SAFE ELEMENT CHECK
+let userIdEl = document.getElementById("userId");
+if (userIdEl) {
+  userIdEl.innerText = userId;
+}
 
 // ================= SUBMIT =================
 function submitWithdraw() {
@@ -44,20 +49,28 @@ function submitWithdraw() {
   let msgBox = document.getElementById("msg");
   let amount = parseFloat(document.getElementById("amount").value);
 
+  if (!msgBox) return;
+
   msgBox.innerText = "";
 
   // 🔒 INPUT VALIDATION
-  if (!amount || amount <= 0) {
+  if (isNaN(amount) || amount <= 0) {
     msgBox.innerText = "❌ Invalid amount";
     return;
   }
 
-  // 🔒 SYSTEM SAFETY (NEW 🔥)
+  // 🔒 SYSTEM SAFETY
   if (typeof isWithdrawSystemSafe === "function") {
     if (!isWithdrawSystemSafe()) {
       msgBox.innerText = "⛔ Withdraw system disabled";
       return;
     }
+  }
+
+  // 🔒 FUNCTION CHECK
+  if (typeof requestWithdraw !== "function") {
+    msgBox.innerText = "❌ Withdraw system error";
+    return;
   }
 
   try {
