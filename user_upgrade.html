@@ -9,28 +9,28 @@
 
 <p id="info"></p>
 
+<input type="text" id="pinInput" placeholder="Enter PIN"><br><br>
+
 <button onclick="upgradeNow()">Upgrade Now</button>
 
 <!-- CORE -->
 <script src="CORE_system.js"></script>
 
 <!-- SYSTEM -->
-<script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="income_control_system.js"></script>
 <script src="active_system.js"></script>
 
 <!-- PIN -->
 <script src="pin_config_system.js"></script>
+<script src="pin_master_system.js"></script>
 
 <script>
 
 document.addEventListener("DOMContentLoaded", function () {
 
-  // ================= INIT =================
   initCoreSystem();
 
-  // ================= AUTH =================
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
   if (!session) {
@@ -48,12 +48,9 @@ document.addEventListener("DOMContentLoaded", function () {
     throw new Error("STOP");
   }
 
-  // ================= UI =================
   document.getElementById("info").innerText =
     "User: " + user.username + " (" + user.userId + ")";
-
 });
-
 
 // ================= CHECK =================
 function isAlreadyUpgraded(u) {
@@ -61,12 +58,12 @@ function isAlreadyUpgraded(u) {
   return isUserActive(u.userId);
 }
 
-
 // ================= UPGRADE =================
 function upgradeNow() {
 
+  let session = JSON.parse(localStorage.getItem("loggedInUser"));
   let users = getUsers();
-  let u = users.find(x => x.userId === JSON.parse(localStorage.getItem("loggedInUser")).userId);
+  let u = users.find(x => x.userId === session.userId);
 
   if (!u) return;
 
@@ -76,67 +73,56 @@ function upgradeNow() {
     return;
   }
 
-  // 🔒 PIN SYSTEM CHECK (FIXED 🔥)
-  if (typeof isPinSystemSafe !== "function" || !isPinSystemSafe("upgrade")) {
-    alert("Upgrade PIN expired or not available");
+  let pinId = document.getElementById("pinInput").value.trim();
+
+  if (!pinId) {
+    alert("Enter PIN");
     return;
   }
 
-  // 🔒 INCOME SYSTEM CHECK
-  if (typeof isIncomeSystemSafe === "function" && !isIncomeSystemSafe()) {
-    alert("System temporarily unavailable");
-    return;
+  try {
+
+    // 🔒 USE PIN (MASTER SYSTEM)
+    let pin = usePin(pinId, u.userId, "upgrade");
+
+    if (!pin) {
+      alert("Invalid PIN");
+      return;
+    }
+
+    let bv = Number(pin.bv || 0);
+
+    // ✅ ACTIVATE USER
+    if (typeof activateUser === "function") {
+      activateUser(u.userId);
+    } else {
+      alert("Activation system missing");
+      return;
+    }
+
+    // 💰 INCOME
+    if (typeof isUGLIEnabled === "function" &&
+        typeof processIncome === "function" &&
+        isUGLIEnabled() &&
+        isUserActive(u.userId)) {
+
+      processIncome("upgrade", u.userId, bv);
+    }
+
+    alert("✅ Upgrade Successful");
+
+    window.location.href = "user_dashboard.html";
+
+  } catch (err) {
+    alert(err.message || "Upgrade failed");
+    console.error(err);
   }
-
-  let pin = getActivePin("upgrade");
-
-  if (!pin) {
-    alert("Upgrade PIN not found");
-    return;
-  }
-
-  let bv = Number(pin.bv || 0);
-  let amount = Number(pin.amount || 0);
-
-  if (bv <= 0 || amount <= 0) {
-    alert("Invalid PIN configuration");
-    return;
-  }
-
-  // 💰 WALLET CHECK
-  if ((u.wallet || 0) < amount) {
-    alert("Insufficient wallet balance");
-    return;
-  }
-
-  // 💸 DEBIT
-  debitWallet(u.userId, amount, "Upgrade");
-
-  // ✅ ACTIVATE USER
-  if (typeof activateUser === "function") {
-    activateUser(u.userId);
-  } else {
-    alert("Activation system missing");
-    return;
-  }
-
-  // 💰 INCOME
-  if (typeof isUGLIEnabled === "function" &&
-      typeof processIncome === "function" &&
-      isUGLIEnabled() &&
-      isUserActive(u.userId)) {
-
-    processIncome("upgrade", u.userId, bv);
-  }
-
-  alert("✅ Upgrade Successful");
-
-  window.location.href = "user_dashboard.html";
 }
 
 </script>
 
 </body>
 </html>
+
 
 
