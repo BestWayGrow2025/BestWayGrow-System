@@ -1,7 +1,3 @@
-/* ===============================
-   🔐 PIN CONFIG SYSTEM (FINAL PRO)
-=============================== */
-
 // =====================
 // 🔹 DEFAULT STRUCTURE
 // =====================
@@ -14,6 +10,19 @@ function getDefaultPin() {
     startDate: null,
     endDate: null,
     updatedAt: null
+  };
+}
+
+// =====================
+// 🔹 DEFAULT SYSTEM CONTROLS 🔥
+// =====================
+function getDefaultControls() {
+  return {
+    pinMode: "AUTO", // AUTO / MANUAL / OFF
+    enablePinRefund: true,
+    enableFranchiseSecurity: false,
+    enableMinStockRule: false,
+    enableDirectUserPayment: true
   };
 }
 
@@ -47,6 +56,35 @@ function savePinSettings(data) {
 }
 
 // =====================
+// 🔹 SYSTEM CONTROLS (SAFE) 🔥
+// =====================
+function getSystemControls() {
+  return JSON.parse(localStorage.getItem("systemControls") || "{}");
+}
+
+function setSystemControls(data) {
+  localStorage.setItem("systemControls", JSON.stringify(data));
+}
+
+function loadSystemControls() {
+  try {
+    let data = getSystemControls();
+
+    if (!data.pinMode) {
+      data = getDefaultControls();
+      setSystemControls(data);
+    }
+
+    return data;
+
+  } catch {
+    let clean = getDefaultControls();
+    setSystemControls(clean);
+    return clean;
+  }
+}
+
+// =====================
 // 🔹 SAFE ACTIVITY LOG
 // =====================
 function safeActivityLog(msg) {
@@ -62,13 +100,11 @@ function enablePin(type, config) {
 
   if (!type || !config) return;
 
-  // ✅ TYPE VALIDATION
   if (!["upgrade", "repurchase"].includes(type)) {
     alert("Invalid PIN type");
     return;
   }
 
-  // ✅ VALUE VALIDATION
   if (
     isNaN(config.bv) || isNaN(config.amount) ||
     config.bv <= 0 || config.amount <= 0
@@ -153,7 +189,7 @@ function getActivePin(type) {
 }
 
 // =====================
-// 🔒 PIN SYSTEM SAFETY (FINAL)
+// 🔒 PIN SYSTEM SAFETY
 // =====================
 function isPinSystemSafe(type) {
 
@@ -168,3 +204,21 @@ function isPinSystemSafe(type) {
 
   return true;
 }
+
+// =====================
+// 🔥 PIN TYPE USAGE RULE
+// =====================
+function isPinAllowedForPurpose(pinType, purpose) {
+  if (pinType === "upgrade") return true;
+  if (pinType === "repurchase" && purpose === "repurchase") return true;
+  return false;
+}
+
+// =====================
+// 🔥 GST CALCULATION HELPER
+// =====================
+function calculateTotalWithGST(amount, gst) {
+  gst = Number(gst || 0);
+  return amount + (amount * gst / 100);
+}
+
