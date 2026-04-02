@@ -9,37 +9,29 @@
 
 <p>User ID: <span id="userId"></span></p>
 
+<input type="text" id="pinInput" placeholder="Enter PIN"><br><br>
+
 <button onclick="repurchase()">Repurchase</button>
 
 <!-- CORE -->
 <script src="CORE_system.js"></script>
 
 <!-- SYSTEM -->
-<script src="wallet_system.js"></script>
 <script src="commission_engine.js"></script>
 <script src="income_control_system.js"></script>
 <script src="active_system.js"></script>
 
 <!-- PIN -->
 <script src="pin_config_system.js"></script>
+<script src="pin_master_system.js"></script>
 
 <script>
 
 // ================= FULL SAFE START =================
 document.addEventListener("DOMContentLoaded", function () {
 
-  // ================= INIT =================
   initCoreSystem();
 
-  // 🔥 AUTO PIN INIT (ONLY IF NOT EXIST)
-  if (typeof getActivePin === "function" && !getActivePin("repurchase")) {
-    enablePin("repurchase", {
-      bv: 50,
-      amount: 300
-    });
-  }
-
-  // ================= AUTH =================
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
   if (!session) {
@@ -57,7 +49,6 @@ document.addEventListener("DOMContentLoaded", function () {
     throw new Error("STOP");
   }
 
-  // ================= UI =================
   let userEl = document.getElementById("userId");
   if (userEl) userEl.innerText = user.userId;
 
@@ -67,52 +58,43 @@ document.addEventListener("DOMContentLoaded", function () {
     let u = getUsers().find(x => x.userId === user.userId);
     if (!u) return;
 
-    // 🔒 PIN SAFETY
-    if (!isPinSystemSafe("repurchase")) {
-      alert("Repurchase not available or PIN expired");
+    let pinId = document.getElementById("pinInput").value.trim();
+
+    if (!pinId) {
+      alert("Enter PIN");
       return;
     }
 
-    // 🔒 INCOME SAFETY
-    if (typeof isIncomeSystemSafe === "function" && !isIncomeSystemSafe()) {
-      alert("System temporarily unavailable");
-      return;
+    try {
+
+      // 🔒 USE PIN (MASTER SYSTEM)
+      let pin = usePin(pinId, u.userId, "repurchase");
+
+      if (!pin) {
+        alert("Invalid PIN");
+        return;
+      }
+
+      let bv = Number(pin.bv || 0);
+
+      // 💰 INCOME
+      if (typeof isRLIEnabled === "function" &&
+          typeof processIncome === "function" &&
+          isRLIEnabled() &&
+          typeof isUserActive === "function" &&
+          isUserActive(u.userId)) {
+
+        processIncome("repurchase", u.userId, bv);
+      }
+
+      alert("✅ Repurchase Successful");
+
+      window.location.href = "user_dashboard.html";
+
+    } catch (err) {
+      alert(err.message || "Repurchase failed");
+      console.error(err);
     }
-
-    let pin = getActivePin("repurchase");
-
-    if (!pin) {
-      alert("Repurchase not available");
-      return;
-    }
-
-    let bv = Number(pin.bv || 0);
-    let amount = Number(pin.amount || 0);
-
-    if (bv <= 0 || amount <= 0) {
-      alert("Invalid PIN configuration");
-      return;
-    }
-
-    // 💰 WALLET CHECK
-    if ((u.wallet || 0) < amount) {
-      alert("Insufficient wallet balance");
-      return;
-    }
-
-    // 💸 DEBIT
-    debitWallet(u.userId, amount, "Repurchase");
-
-    // 💰 INCOME
-    if (typeof isRLIEnabled === "function" && isRLIEnabled() &&
-        typeof isUserActive === "function" && isUserActive(u.userId)) {
-
-      processIncome("repurchase", u.userId, bv);
-    }
-
-    alert("✅ Repurchase Successful");
-
-    window.location.href = "user_dashboard.html";
   };
 
 });
@@ -121,4 +103,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
 
