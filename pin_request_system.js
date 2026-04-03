@@ -1,14 +1,12 @@
-script>
-
-/*
 ========================================
-PIN REQUEST SYSTEM (FINAL - SYSTEM POOL)
+PIN REQUEST SYSTEM (FINAL PRO ENGINE)
 ========================================
-Flow:
-User → Request PIN → System Pool → Assign PIN → User Account
-Supports:
-- AUTO MODE (system assigns)
-- MANUAL MODE (admin assigns)
+✔ Queue based
+✔ Lock system
+✔ Status tracking
+✔ Fail-safe
+✔ Auto + Manual
+✔ Admin-level thinking system
 ========================================
 */
 
@@ -23,22 +21,20 @@ function savePinRequests(data) {
   localStorage.setItem(PIN_REQUEST_KEY, JSON.stringify(data));
 }
 
-// ================= GENERATE REQUEST ID =================
+// ================= ID =================
 function generateRequestId() {
   return "REQ_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6);
 }
 
 // ================= CREATE REQUEST =================
-function requestPin({ userId, type, quantity = 1, paymentRef = null }) {
+function createPinRequest({ userId, type, amount, paymentId }) {
 
-  if (!userId || !type) {
-    alert("Invalid request data");
-    return;
+  if (!userId || !type || !paymentId) {
+    throw new Error("Invalid request data");
   }
 
   if (!["upgrade", "repurchase"].includes(type)) {
-    alert("Invalid PIN type");
-    return;
+    throw new Error("Invalid PIN type");
   }
 
   let requests = getPinRequests();
@@ -48,86 +44,101 @@ function requestPin({ userId, type, quantity = 1, paymentRef = null }) {
 
     userId,
     type,
-    quantity,
+    amount,
+    paymentId,
 
-    paymentRef, // bank ref / txn id
-
-    status: "PENDING",
+    status: "PENDING", // PENDING | PROCESSING | COMPLETED | FAILED | REJECTED
+    lock: false,
 
     assignedPins: [],
 
+    priority: "YELLOW", // future: GREEN / YELLOW / RED
+
     createdAt: Date.now(),
-    processedAt: null
+    processedAt: null,
+
+    processedBy: null,
+    failReason: null
   };
 
   requests.push(newRequest);
   savePinRequests(requests);
 
-  alert("✅ PIN request submitted");
-
   return newRequest;
 }
 
-// ================= AUTO PROCESS (SYSTEM MODE) =================
-function processPinRequestAuto(requestId, performedBy = "system") {
+// ================= AUTO PROCESS =================
+function processPinRequestAuto(requestId) {
 
   let requests = getPinRequests();
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) throw new Error("Request not found");
 
+  // 🔒 LOCK CHECK
+  if (req.lock) throw new Error("Already processing");
+
   if (req.status !== "PENDING") {
     throw new Error("Already processed");
   }
 
+  req.lock = true;
   req.status = "PROCESSING";
+  req.processedBy = "SYSTEM";
+
+  savePinRequests(requests);
 
   try {
 
-    let assigned = [];
+    let pins = loadPins();
 
-    for (let i = 0; i < req.quantity; i++) {
+    // 🔥 FILTER AVAILABLE PINS
+    let availablePins = pins.filter(p =>
+      p.status === "active" &&
+      p.type === req.type &&
+      p.ownerType === "admin"
+    );
 
-      // 🔥 GET AVAILABLE PIN FROM MASTER
-      let pins = loadPins();
-      let available = pins.find(p =>
-        p.status === "active" &&
-        p.type === req.type &&
-        p.ownerType === "admin"
-      );
-
-      if (!available) {
-        throw new Error("Insufficient PIN stock");
-      }
-
-      // 🔥 ASSIGN USING MASTER SYSTEM
-      assignPin(available.pinId, req.userId, "user", performedBy);
-
-      assigned.push(available.pinId);
+    if (availablePins.length === 0) {
+      throw new Error("No PIN stock available");
     }
 
-    req.assignedPins = assigned;
+    // 🔥 ATOMIC PICK (only 1 or extend later)
+    let selected = availablePins[0];
+
+    assignPin(selected.pinId, req.userId, "user", "SYSTEM");
+
+    req.assignedPins = [selected.pinId];
     req.status = "COMPLETED";
     req.processedAt = Date.now();
+    req.lock = false;
 
     savePinRequests(requests);
 
     return true;
 
   } catch (err) {
-    req.status = "PENDING";
+
+    req.status = "FAILED";
+    req.failReason = err.message;
+    req.processedAt = Date.now();
+    req.lock = false;
+
     savePinRequests(requests);
+
     throw err;
   }
 }
 
-// ================= MANUAL PROCESS (ADMIN) =================
+// ================= MANUAL PROCESS =================
 function processPinRequestManual(requestId, pinIds = [], performedBy) {
 
   let requests = getPinRequests();
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) throw new Error("Request not found");
+
+  if (req.lock) throw new Error("Already processing");
 
   if (req.status !== "PENDING") {
     throw new Error("Already processed");
@@ -137,41 +148,52 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
     throw new Error("No PINs provided");
   }
 
+  req.lock = true;
   req.status = "PROCESSING";
+  req.processedBy = performedBy;
+
+  savePinRequests(requests);
 
   try {
 
     let assigned = [];
 
     pinIds.forEach(pinId => {
-
       assignPin(pinId, req.userId, "user", performedBy);
       assigned.push(pinId);
-
     });
 
     req.assignedPins = assigned;
     req.status = "COMPLETED";
     req.processedAt = Date.now();
+    req.lock = false;
 
     savePinRequests(requests);
 
     return true;
 
   } catch (err) {
-    req.status = "PENDING";
+
+    req.status = "FAILED";
+    req.failReason = err.message;
+    req.processedAt = Date.now();
+    req.lock = false;
+
     savePinRequests(requests);
+
     throw err;
   }
 }
 
-// ================= REJECT REQUEST =================
-function rejectPinRequest(requestId, performedBy = "admin") {
+// ================= REJECT =================
+function rejectPinRequest(requestId, performedBy = "ADMIN") {
 
   let requests = getPinRequests();
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) throw new Error("Request not found");
+
+  if (req.lock) throw new Error("Processing in progress");
 
   if (req.status !== "PENDING") {
     throw new Error("Already processed");
@@ -179,16 +201,15 @@ function rejectPinRequest(requestId, performedBy = "admin") {
 
   req.status = "REJECTED";
   req.processedAt = Date.now();
+  req.processedBy = performedBy;
 
   savePinRequests(requests);
 
   return true;
 }
 
-// ================= GET USER REQUESTS =================
+// ================= USER VIEW =================
 function getUserPinRequests(userId) {
-  let requests = getPinRequests();
-  return requests.filter(r => r.userId === userId);
+  return getPinRequests().filter(r => r.userId === userId);
 }
 
-</script>
