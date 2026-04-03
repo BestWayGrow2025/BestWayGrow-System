@@ -87,6 +87,7 @@
 <script src="pin_config_system.js"></script>
 <script src="pin_master_system.js"></script>
 <script src="pin_request_system.js"></script>
+<script src="pin_request_queue_engine.js"></script> <!-- ✅ FINAL FIX -->
 
 <script>
 
@@ -219,13 +220,13 @@ function loadRequests() {
 // ================= ACTION =================
 function approve(id) {
   if (!confirm("Approve this request?")) return;
-  processPinRequestAuto(id, "ADMIN_A");
+  processPinRequestAuto(id);
   loadRequests();
 }
 
 function rejectReq(id) {
   if (!confirm("Reject this request?")) return;
-  rejectPinRequest(id, "ADMIN_A");
+  rejectPinRequest(id);
   loadRequests();
 }
 
