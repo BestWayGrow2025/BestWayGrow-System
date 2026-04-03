@@ -57,6 +57,13 @@
       margin: 5px;
       cursor: pointer;
     }
+
+    .btn-main {
+      background: #00994d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+    }
   </style>
 </head>
 
@@ -91,6 +98,17 @@
     <button onclick="softReset()">🟢 Soft</button>
     <button onclick="mediumReset()">🟡 Medium</button>
     <button onclick="fullReset()">🔴 Full</button>
+  </div>
+
+  <!-- CREATE SYSTEM ADMIN (🔥 FIXED MISSING) -->
+  <div class="card">
+    <h3>Create System Admin</h3>
+
+    <p>Access system-level control creation</p>
+
+    <button class="btn-main" onclick="goCreateAdmin()">
+      ➕ CREATE SYSTEM ADMIN
+    </button>
   </div>
 
   <!-- COUNTS -->
@@ -144,6 +162,11 @@ if (!user || user.role !== "super_admin") {
 
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
+
+// ================= NAVIGATION =================
+function goCreateAdmin() {
+  window.location.href = "system_admin_create_admin.html";
+}
 
 // ================= SYSTEM =================
 function loadSystem() {
@@ -213,7 +236,7 @@ function toggle(key) {
   loadSystem();
 }
 
-// ================= RESET SYSTEM =================
+// ================= RESET =================
 function softReset() {
   if (!confirm("Clear logs only?")) return;
   localStorage.removeItem("activityLogs");
