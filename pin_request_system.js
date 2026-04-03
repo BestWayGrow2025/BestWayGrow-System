@@ -1,12 +1,13 @@
+/*
 ========================================
-PIN REQUEST SYSTEM (FINAL PRO ENGINE)
+PIN REQUEST SYSTEM (FINAL PRO ENGINE v2)
 ========================================
-✔ Queue based
+✔ Queue ready
+✔ Priority system
 ✔ Lock system
-✔ Status tracking
 ✔ Fail-safe
 ✔ Auto + Manual
-✔ Admin-level thinking system
+✔ Multi-PIN support
 ========================================
 */
 
@@ -24,6 +25,21 @@ function savePinRequests(data) {
 // ================= ID =================
 function generateRequestId() {
   return "REQ_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6);
+}
+
+// ================= PRIORITY =================
+function detectPriority(userId) {
+
+  if (typeof getUserById !== "function") return "YELLOW";
+
+  let user = getUserById(userId);
+  if (!user) return "YELLOW";
+
+  let points = user.activePoints || 0;
+
+  if (points >= 5) return "GREEN";
+  if (points >= 2) return "YELLOW";
+  return "RED";
 }
 
 // ================= CREATE REQUEST =================
@@ -47,12 +63,12 @@ function createPinRequest({ userId, type, amount, paymentId }) {
     amount,
     paymentId,
 
-    status: "PENDING", // PENDING | PROCESSING | COMPLETED | FAILED | REJECTED
+    status: "PENDING",
     lock: false,
 
     assignedPins: [],
 
-    priority: "YELLOW", // future: GREEN / YELLOW / RED
+    priority: detectPriority(userId),
 
     createdAt: Date.now(),
     processedAt: null,
@@ -74,13 +90,8 @@ function processPinRequestAuto(requestId) {
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) throw new Error("Request not found");
-
-  // 🔒 LOCK CHECK
   if (req.lock) throw new Error("Already processing");
-
-  if (req.status !== "PENDING") {
-    throw new Error("Already processed");
-  }
+  if (req.status !== "PENDING") throw new Error("Already processed");
 
   req.lock = true;
   req.status = "PROCESSING";
@@ -92,23 +103,27 @@ function processPinRequestAuto(requestId) {
 
     let pins = loadPins();
 
-    // 🔥 FILTER AVAILABLE PINS
     let availablePins = pins.filter(p =>
       p.status === "active" &&
       p.type === req.type &&
       p.ownerType === "admin"
     );
 
-    if (availablePins.length === 0) {
-      throw new Error("No PIN stock available");
+    let requiredQty = 1; // extend logic if needed
+
+    if (availablePins.length < requiredQty) {
+      throw new Error("Insufficient PIN stock");
     }
 
-    // 🔥 ATOMIC PICK (only 1 or extend later)
-    let selected = availablePins[0];
+    let assigned = [];
 
-    assignPin(selected.pinId, req.userId, "user", "SYSTEM");
+    for (let i = 0; i < requiredQty; i++) {
+      let pin = availablePins[i];
+      assignPin(pin.pinId, req.userId, "user", "SYSTEM");
+      assigned.push(pin.pinId);
+    }
 
-    req.assignedPins = [selected.pinId];
+    req.assignedPins = assigned;
     req.status = "COMPLETED";
     req.processedAt = Date.now();
     req.lock = false;
@@ -137,12 +152,8 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) throw new Error("Request not found");
-
   if (req.lock) throw new Error("Already processing");
-
-  if (req.status !== "PENDING") {
-    throw new Error("Already processed");
-  }
+  if (req.status !== "PENDING") throw new Error("Already processed");
 
   if (!pinIds.length) {
     throw new Error("No PINs provided");
@@ -192,12 +203,8 @@ function rejectPinRequest(requestId, performedBy = "ADMIN") {
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) throw new Error("Request not found");
-
   if (req.lock) throw new Error("Processing in progress");
-
-  if (req.status !== "PENDING") {
-    throw new Error("Already processed");
-  }
+  if (req.status !== "PENDING") throw new Error("Already processed");
 
   req.status = "REJECTED";
   req.processedAt = Date.now();
