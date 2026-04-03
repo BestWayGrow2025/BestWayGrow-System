@@ -1,6 +1,6 @@
 /*
 ========================================
-PIN REQUEST SYSTEM (FINAL PRO ENGINE v2)
+PIN REQUEST SYSTEM (FINAL PRO ENGINE v3)
 ========================================
 ✔ Queue ready
 ✔ Priority system
@@ -8,6 +8,7 @@ PIN REQUEST SYSTEM (FINAL PRO ENGINE v2)
 ✔ Fail-safe
 ✔ Auto + Manual
 ✔ Multi-PIN support
+✔ Queue-compatible structure
 ========================================
 */
 
@@ -43,7 +44,7 @@ function detectPriority(userId) {
 }
 
 // ================= CREATE REQUEST =================
-function createPinRequest({ userId, type, amount, paymentId }) {
+function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
   if (!userId || !type || !paymentId) {
     throw new Error("Invalid request data");
@@ -63,12 +64,16 @@ function createPinRequest({ userId, type, amount, paymentId }) {
     amount,
     paymentId,
 
+    quantity: quantity || 1, // ✅ FIX (ADMIN PANEL REQUIRED)
+
     status: "PENDING",
     lock: false,
 
     assignedPins: [],
 
     priority: detectPriority(userId),
+
+    retry: 0, // ✅ QUEUE SUPPORT
 
     createdAt: Date.now(),
     processedAt: null,
@@ -109,7 +114,7 @@ function processPinRequestAuto(requestId) {
       p.ownerType === "admin"
     );
 
-    let requiredQty = 1; // extend logic if needed
+    let requiredQty = req.quantity || 1;
 
     if (availablePins.length < requiredQty) {
       throw new Error("Insufficient PIN stock");
@@ -219,4 +224,3 @@ function rejectPinRequest(requestId, performedBy = "ADMIN") {
 function getUserPinRequests(userId) {
   return getPinRequests().filter(r => r.userId === userId);
 }
-
