@@ -1,5 +1,17 @@
+/*
+========================================
+PIN CONFIG SYSTEM (FINAL MASTER CONTROL)
+========================================
+✔ Safe defaults
+✔ No overwrite bugs
+✔ Full system sync
+✔ Mode control (AUTO / MANUAL / OFF)
+✔ Production safe
+========================================
+*/
+
 // =====================
-// 🔹 DEFAULT STRUCTURE
+// 🔹 DEFAULT PIN
 // =====================
 function getDefaultPin() {
   return {
@@ -14,7 +26,7 @@ function getDefaultPin() {
 }
 
 // =====================
-// 🔹 DEFAULT SYSTEM CONTROLS 🔥
+// 🔹 DEFAULT CONTROLS
 // =====================
 function getDefaultControls() {
   return {
@@ -27,16 +39,16 @@ function getDefaultControls() {
 }
 
 // =====================
-// 🔹 GET PIN SETTINGS (SAFE)
+// 🔹 SAFE PIN SETTINGS
 // =====================
 function getPinSettings() {
   try {
     let data = JSON.parse(localStorage.getItem("pinSettings") || "{}");
 
-    if (!data.upgrade) data.upgrade = getDefaultPin();
-    if (!data.repurchase) data.repurchase = getDefaultPin();
-
-    return data;
+    return {
+      upgrade: { ...getDefaultPin(), ...(data.upgrade || {}) },
+      repurchase: { ...getDefaultPin(), ...(data.repurchase || {}) }
+    };
 
   } catch {
     let clean = {
@@ -48,40 +60,38 @@ function getPinSettings() {
   }
 }
 
-// =====================
-// 🔹 SAVE PIN SETTINGS
-// =====================
 function savePinSettings(data) {
   localStorage.setItem("pinSettings", JSON.stringify(data));
 }
 
 // =====================
-// 🔹 SYSTEM CONTROLS (SAFE) 🔥
+// 🔹 SYSTEM CONTROLS SAFE 🔥
 // =====================
-function getSystemControls() {
-  return JSON.parse(localStorage.getItem("systemControls") || "{}");
-}
-
-function setSystemControls(data) {
-  localStorage.setItem("systemControls", JSON.stringify(data));
-}
-
 function loadSystemControls() {
   try {
-    let data = getSystemControls();
+    let stored = JSON.parse(localStorage.getItem("systemControls") || "{}");
 
-    if (!data.pinMode) {
-      data = getDefaultControls();
-      setSystemControls(data);
-    }
+    let merged = {
+      ...getDefaultControls(),
+      ...stored
+    };
 
-    return data;
+    localStorage.setItem("systemControls", JSON.stringify(merged));
+    return merged;
 
   } catch {
     let clean = getDefaultControls();
-    setSystemControls(clean);
+    localStorage.setItem("systemControls", JSON.stringify(clean));
     return clean;
   }
+}
+
+// =====================
+// 🔹 GET PIN MODE
+// =====================
+function isPinMode(mode) {
+  let ctrl = loadSystemControls();
+  return ctrl.pinMode === mode;
 }
 
 // =====================
@@ -94,11 +104,9 @@ function safeActivityLog(msg) {
 }
 
 // =====================
-// 🔹 ENABLE PIN (FINAL SAFE)
+// 🔹 ENABLE PIN
 // =====================
 function enablePin(type, config) {
-
-  if (!type || !config) return;
 
   if (!["upgrade", "repurchase"].includes(type)) {
     alert("Invalid PIN type");
@@ -128,8 +136,6 @@ function enablePin(type, config) {
   savePinSettings(settings);
 
   safeActivityLog(`${type.toUpperCase()} PIN ENABLED (BV: ${config.bv}, ₹${config.amount})`);
-
-  console.log("✅ PIN ENABLED:", type);
 }
 
 // =====================
@@ -141,25 +147,20 @@ function disablePin(type) {
 
   let settings = getPinSettings();
 
-  if (!settings[type]) return;
-
   settings[type].active = false;
   settings[type].updatedAt = new Date().toISOString();
 
   savePinSettings(settings);
 
   safeActivityLog(`${type.toUpperCase()} PIN DISABLED`);
-
-  console.log("⛔ PIN DISABLED:", type);
 }
 
 // =====================
-// 🔹 CHECK PIN ACTIVE
+// 🔹 CHECK ACTIVE
 // =====================
 function isPinActive(type) {
 
-  let settings = getPinSettings();
-  let pin = settings[type];
+  let pin = getPinSettings()[type];
 
   if (!pin || !pin.active) return false;
 
@@ -174,29 +175,29 @@ function isPinActive(type) {
 }
 
 // =====================
-// 🔹 GET ACTIVE PIN DATA
+// 🔹 GET ACTIVE PIN
 // =====================
 function getActivePin(type) {
 
-  let settings = getPinSettings();
-  let pin = settings[type];
+  let pin = getPinSettings()[type];
 
   if (!pin) return null;
-
   if (!isPinActive(type)) return null;
 
   return pin;
 }
 
 // =====================
-// 🔒 PIN SYSTEM SAFETY
+// 🔒 SYSTEM SAFETY
 // =====================
 function isPinSystemSafe(type) {
+
+  // 🔴 GLOBAL OFF MODE
+  if (isPinMode("OFF")) return false;
 
   if (!["upgrade", "repurchase"].includes(type)) return false;
 
   let pin = getActivePin(type);
-
   if (!pin) return false;
 
   if (isNaN(pin.bv) || pin.bv <= 0) return false;
@@ -206,7 +207,7 @@ function isPinSystemSafe(type) {
 }
 
 // =====================
-// 🔥 PIN TYPE USAGE RULE
+// 🔥 USAGE RULE
 // =====================
 function isPinAllowedForPurpose(pinType, purpose) {
   if (pinType === "upgrade") return true;
@@ -215,7 +216,7 @@ function isPinAllowedForPurpose(pinType, purpose) {
 }
 
 // =====================
-// 🔥 GST CALCULATION HELPER
+// 🔥 GST HELPER
 // =====================
 function calculateTotalWithGST(amount, gst) {
   gst = Number(gst || 0);
