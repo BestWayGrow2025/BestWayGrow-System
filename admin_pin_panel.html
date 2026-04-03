@@ -4,9 +4,10 @@
   <title>ADMIN PIN CONTROL</title>
   <style>
     body { font-family: Arial; padding: 20px; }
-    input { padding: 6px; margin: 5px 0; width: 220px; }
+    input, select { padding: 6px; margin: 5px 0; width: 220px; }
     button { padding: 6px 12px; margin: 5px; cursor: pointer; }
     .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
+    table { margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -53,8 +54,39 @@
   <p id="repurchaseStatus"></p>
 </div>
 
+<!-- ================= REQUEST MANAGEMENT ================= -->
+<div class="box">
+  <h3>PIN Requests</h3>
+
+  <select id="filter" onchange="loadRequests()">
+    <option value="ALL">All</option>
+    <option value="PENDING">Pending</option>
+    <option value="PROCESSING">Processing</option>
+    <option value="COMPLETED">Completed</option>
+    <option value="FAILED">Failed</option>
+    <option value="REJECTED">Rejected</option>
+  </select>
+
+  <table border="1" width="100%">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>User</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="reqTable"></tbody>
+  </table>
+</div>
+
 <!-- ================= SCRIPT ================= -->
 <script src="pin_config_system.js"></script>
+<script src="pin_master_system.js"></script>
+<script src="pin_request_system.js"></script>
 
 <script>
 
@@ -104,8 +136,8 @@ function startUpgrade() {
   if (!validateInput(bv, amount)) return;
 
   enablePin("upgrade", {
-    bv: bv,
-    amount: amount,
+    bv,
+    amount,
     gst: Number(document.getElementById("up_gst").value || 0),
     startDate: document.getElementById("up_start").value || new Date().toISOString(),
     endDate: document.getElementById("up_end").value || null
@@ -131,8 +163,8 @@ function startRepurchase() {
   if (!validateInput(bv, amount)) return;
 
   enablePin("repurchase", {
-    bv: bv,
-    amount: amount,
+    bv,
+    amount,
     gst: Number(document.getElementById("re_gst").value || 0),
     startDate: document.getElementById("re_start").value || new Date().toISOString(),
     endDate: document.getElementById("re_end").value || null
@@ -149,8 +181,72 @@ function stopRepurchase() {
   alert("⛔ Repurchase Stopped");
 }
 
+// ================= LOAD REQUESTS =================
+function loadRequests() {
+
+  let filter = document.getElementById("filter").value;
+  let data = getRequests();
+
+  let table = document.getElementById("reqTable");
+  table.innerHTML = "";
+
+  if (!data.length) {
+    table.innerHTML = "<tr><td colspan='7'>No Requests</td></tr>";
+    return;
+  }
+
+  data.forEach(req => {
+
+    if (filter !== "ALL" && req.status !== filter) return;
+
+    let color =
+      req.priority === "GREEN" ? "green" :
+      req.priority === "YELLOW" ? "orange" :
+      "red";
+
+    let action = "-";
+
+    if (req.status === "PENDING") {
+      action = `
+        <button onclick="approve('${req.requestId}')">Approve</button>
+        <button onclick="reject('${req.requestId}')">Reject</button>
+      `;
+    }
+
+    table.innerHTML += `
+      <tr>
+        <td>${req.requestId}</td>
+        <td>${req.userId}</td>
+        <td>${req.type}</td>
+        <td>₹${req.amount}</td>
+        <td style="color:${color}">${req.priority}</td>
+        <td>${req.status}</td>
+        <td>${action}</td>
+      </tr>
+    `;
+  });
+}
+
+// ================= APPROVE =================
+function approve(id) {
+  if (!confirm("Approve this request?")) return;
+
+  approveRequest(id, "ADMIN_A");
+  loadRequests();
+}
+
+// ================= REJECT =================
+function reject(id) {
+  let reason = prompt("Enter reject reason:");
+  if (!reason) return;
+
+  rejectRequest(id, reason);
+  loadRequests();
+}
+
 // ================= INIT =================
 refreshStatus();
+loadRequests();
 
 </script>
 
