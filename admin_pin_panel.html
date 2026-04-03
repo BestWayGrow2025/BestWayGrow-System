@@ -73,7 +73,7 @@
         <th>ID</th>
         <th>User</th>
         <th>Type</th>
-        <th>Amount</th>
+        <th>Qty</th>
         <th>Priority</th>
         <th>Status</th>
         <th>Action</th>
@@ -127,65 +127,52 @@ function validateInput(bv, amount) {
   return true;
 }
 
-// ================= START UPGRADE =================
+// ================= START / STOP =================
 function startUpgrade() {
-
   let bv = Number(document.getElementById("up_bv").value);
   let amount = Number(document.getElementById("up_amount").value);
-
   if (!validateInput(bv, amount)) return;
 
   enablePin("upgrade", {
-    bv,
-    amount,
+    bv, amount,
     gst: Number(document.getElementById("up_gst").value || 0),
     startDate: document.getElementById("up_start").value || new Date().toISOString(),
     endDate: document.getElementById("up_end").value || null
   });
 
   refreshStatus();
-  alert("✅ Upgrade Started");
 }
 
-// ================= STOP UPGRADE =================
 function stopUpgrade() {
   disablePin("upgrade");
   refreshStatus();
-  alert("⛔ Upgrade Stopped");
 }
 
-// ================= START REPURCHASE =================
 function startRepurchase() {
-
   let bv = Number(document.getElementById("re_bv").value);
   let amount = Number(document.getElementById("re_amount").value);
-
   if (!validateInput(bv, amount)) return;
 
   enablePin("repurchase", {
-    bv,
-    amount,
+    bv, amount,
     gst: Number(document.getElementById("re_gst").value || 0),
     startDate: document.getElementById("re_start").value || new Date().toISOString(),
     endDate: document.getElementById("re_end").value || null
   });
 
   refreshStatus();
-  alert("✅ Repurchase Started");
 }
 
-// ================= STOP REPURCHASE =================
 function stopRepurchase() {
   disablePin("repurchase");
   refreshStatus();
-  alert("⛔ Repurchase Stopped");
 }
 
 // ================= LOAD REQUESTS =================
 function loadRequests() {
 
   let filter = document.getElementById("filter").value;
-  let data = getRequests();
+  let data = getPinRequests();
 
   let table = document.getElementById("reqTable");
   table.innerHTML = "";
@@ -199,9 +186,11 @@ function loadRequests() {
 
     if (filter !== "ALL" && req.status !== filter) return;
 
+    let priority = req.priority || "YELLOW";
+
     let color =
-      req.priority === "GREEN" ? "green" :
-      req.priority === "YELLOW" ? "orange" :
+      priority === "GREEN" ? "green" :
+      priority === "YELLOW" ? "orange" :
       "red";
 
     let action = "-";
@@ -209,7 +198,7 @@ function loadRequests() {
     if (req.status === "PENDING") {
       action = `
         <button onclick="approve('${req.requestId}')">Approve</button>
-        <button onclick="reject('${req.requestId}')">Reject</button>
+        <button onclick="rejectReq('${req.requestId}')">Reject</button>
       `;
     }
 
@@ -218,8 +207,8 @@ function loadRequests() {
         <td>${req.requestId}</td>
         <td>${req.userId}</td>
         <td>${req.type}</td>
-        <td>₹${req.amount}</td>
-        <td style="color:${color}">${req.priority}</td>
+        <td>${req.quantity}</td>
+        <td style="color:${color}">${priority}</td>
         <td>${req.status}</td>
         <td>${action}</td>
       </tr>
@@ -227,20 +216,16 @@ function loadRequests() {
   });
 }
 
-// ================= APPROVE =================
+// ================= ACTION =================
 function approve(id) {
   if (!confirm("Approve this request?")) return;
-
-  approveRequest(id, "ADMIN_A");
+  processPinRequestAuto(id, "ADMIN_A");
   loadRequests();
 }
 
-// ================= REJECT =================
-function reject(id) {
-  let reason = prompt("Enter reject reason:");
-  if (!reason) return;
-
-  rejectRequest(id, reason);
+function rejectReq(id) {
+  if (!confirm("Reject this request?")) return;
+  rejectPinRequest(id, "ADMIN_A");
   loadRequests();
 }
 
