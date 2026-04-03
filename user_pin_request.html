@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Request PIN</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, select { padding: 8px; margin: 5px 0; width: 250px; }
+    button { padding: 10px 15px; margin-top: 10px; cursor: pointer; }
+    .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<h2>Request PIN</h2>
+
+<div class="box">
+  <h3>⚠️ Important Notice</h3>
+  <p>• PIN is NOT generated instantly</p>
+  <p>• PIN will be issued after payment verification</p>
+  <p>• Request processed based on system priority queue</p>
+  <p>⏳ Time: Up to 24 hours</p>
+  <p><b>Do not submit multiple requests</b></p>
+</div>
+
+<div class="box">
+  <h3>Submit Request</h3>
+
+  <select id="type">
+    <option value="upgrade">Upgrade</option>
+    <option value="repurchase">Repurchase</option>
+  </select><br>
+
+  <input type="number" id="amount" placeholder="Amount"><br>
+  <input type="text" id="paymentId" placeholder="Payment ID"><br>
+
+  <button onclick="submitRequest()">Request PIN</button>
+
+  <p id="msg"></p>
+</div>
+
+<!-- CORE -->
+<script src="CORE_system.js"></script>
+
+<!-- SYSTEM -->
+<script src="pin_request_system.js"></script>
+
+<script>
+
+// ================= INIT =================
+document.addEventListener("DOMContentLoaded", function () {
+
+  initCoreSystem();
+
+  let session = JSON.parse(localStorage.getItem("loggedInUser"));
+
+  if (!session) {
+    alert("Login required");
+    window.location.href = "user_login.html";
+    return;
+  }
+
+});
+
+// ================= SUBMIT =================
+function submitRequest() {
+
+  let session = JSON.parse(localStorage.getItem("loggedInUser"));
+  if (!session) return;
+
+  let type = document.getElementById("type").value;
+  let amount = Number(document.getElementById("amount").value);
+  let paymentId = document.getElementById("paymentId").value.trim();
+
+  if (!paymentId) {
+    alert("Enter Payment ID");
+    return;
+  }
+
+  if (amount <= 0) {
+    alert("Invalid amount");
+    return;
+  }
+
+  try {
+
+    let req = createPinRequest({
+      userId: session.userId,
+      type,
+      amount,
+      paymentId
+    });
+
+    document.getElementById("msg").innerHTML = `
+      ✅ Request Submitted<br>
+      ID: ${req.requestId}<br>
+      Time: ${new Date(req.createdAt).toLocaleString()}<br>
+      Status: ${req.status}
+    `;
+
+  } catch (err) {
+    alert(err.message || "Request failed");
+  }
+}
+
+</script>
+
+</body>
+</html>
