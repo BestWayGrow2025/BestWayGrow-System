@@ -1,10 +1,29 @@
 // ===============================
-// 📜 ACTIVITY LOG SYSTEM (FINAL PRO SAFE)
+// 📜 ACTIVITY LOG SYSTEM (FINAL ENTERPRISE)
 // ===============================
 
-// 🔒 CONFIG
 const ACTIVITY_LOG_LIMIT = 5000;
+const ACTIVITY_KEY = "activityLogs";
+const CRITICAL_KEY = "criticalLogs";
 
+// ===============================
+// 🔹 SAFE LOAD
+// ===============================
+function safeLoad(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || [];
+  } catch {
+    localStorage.setItem(key, "[]");
+    return [];
+  }
+}
+
+// ===============================
+// 🔹 SAFE SAVE
+// ===============================
+function safeSave(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
 
 // ===============================
 // ✅ ADD LOG
@@ -13,56 +32,42 @@ function logActivity(userId, role, action) {
 
   if (!userId || !role || !action) return;
 
-  let logs;
-
-  try {
-    logs = JSON.parse(localStorage.getItem("activityLogs") || "[]");
-  } catch {
-    logs = [];
-  }
+  let logs = safeLoad(ACTIVITY_KEY);
 
   logs.push({
-    logId: "LOG" + Date.now(), // 🔥 UNIQUE ID
+    logId: "LOG_" + Date.now(),
     userId,
     role,
     action,
+    type: "NORMAL",
     time: new Date().toISOString()
   });
 
-  // 🔒 LIMIT CONTROL
   if (logs.length > ACTIVITY_LOG_LIMIT) {
     logs = logs.slice(-ACTIVITY_LOG_LIMIT);
   }
 
-  localStorage.setItem("activityLogs", JSON.stringify(logs));
-}
+  safeSave(ACTIVITY_KEY, logs);
 
+  console.log("ACTIVITY:", action);
+}
 
 // ===============================
 // 📄 GET LOGS
 // ===============================
 function getActivityLogs() {
-
-  try {
-    return JSON.parse(localStorage.getItem("activityLogs") || "[]");
-  } catch {
-    return [];
-  }
+  return safeLoad(ACTIVITY_KEY);
 }
-
 
 // ===============================
 // 🧹 CLEAR LOGS
 // ===============================
-function clearActivityLogs() {
+function clearActivityLogs(performedBy = "SYSTEM") {
 
-  localStorage.removeItem("activityLogs");
+  safeSave(ACTIVITY_KEY, []);
 
-  if (typeof logActivity === "function") {
-    logActivity("ADMIN", "SYSTEM", "Activity logs cleared");
-  }
+  logActivity(performedBy, "SYSTEM", "Activity logs cleared");
 }
-
 
 // ===============================
 // 🔍 FILTER
@@ -75,9 +80,8 @@ function filterLogsByRole(role) {
   return getActivityLogs().filter(l => l.role === role);
 }
 
-
 // ===============================
-// 🔍 ADVANCED FILTER (NEW 🔥)
+// 🔍 ADVANCED FILTER
 // ===============================
 function filterLogsAdvanced({ userId, role, keyword }) {
 
@@ -100,38 +104,30 @@ function filterLogsAdvanced({ userId, role, keyword }) {
   return logs;
 }
 
-
 // ===============================
 // ⚠️ CRITICAL LOG
 // ===============================
 function logCritical(message) {
 
-  let logs;
+  if (!message) return;
 
-  try {
-    logs = JSON.parse(localStorage.getItem("criticalLogs") || "[]");
-  } catch {
-    logs = [];
-  }
+  let logs = safeLoad(CRITICAL_KEY);
 
   logs.push({
-    id: "CRIT" + Date.now(),
+    id: "CRIT_" + Date.now(),
     message,
+    type: "CRITICAL",
     time: new Date().toISOString()
   });
 
-  localStorage.setItem("criticalLogs", JSON.stringify(logs));
-}
+  safeSave(CRITICAL_KEY, logs);
 
+  console.error("CRITICAL:", message);
+}
 
 // ===============================
 // 📄 GET CRITICAL LOGS
 // ===============================
 function getCriticalLogs() {
-
-  try {
-    return JSON.parse(localStorage.getItem("criticalLogs") || "[]");
-  } catch {
-    return [];
-  }
+  return safeLoad(CRITICAL_KEY);
 }
