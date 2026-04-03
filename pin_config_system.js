@@ -1,11 +1,12 @@
 /*
 ========================================
-PIN CONFIG SYSTEM (FINAL MASTER CONTROL)
+PIN CONFIG SYSTEM (FINAL MASTER CONTROL v2)
 ========================================
 ✔ Safe defaults
 ✔ No overwrite bugs
 ✔ Full system sync
 ✔ Mode control (AUTO / MANUAL / OFF)
+✔ Global OFF protection
 ✔ Production safe
 ========================================
 */
@@ -101,12 +102,18 @@ function safeActivityLog(msg) {
   if (typeof logActivity === "function") {
     logActivity("ADMIN", "PIN", msg);
   }
+  console.log("PIN CONFIG:", msg);
 }
 
 // =====================
 // 🔹 ENABLE PIN
 // =====================
 function enablePin(type, config) {
+
+  if (!config) {
+    alert("Config missing");
+    return;
+  }
 
   if (!["upgrade", "repurchase"].includes(type)) {
     alert("Invalid PIN type");
@@ -147,6 +154,8 @@ function disablePin(type) {
 
   let settings = getPinSettings();
 
+  if (!settings[type]) return;
+
   settings[type].active = false;
   settings[type].updatedAt = new Date().toISOString();
 
@@ -179,7 +188,8 @@ function isPinActive(type) {
 // =====================
 function getActivePin(type) {
 
-  let pin = getPinSettings()[type];
+  let pin = getPinSettings()[type]
+♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️w
 
   if (!pin) return null;
   if (!isPinActive(type)) return null;
