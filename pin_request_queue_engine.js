@@ -1,13 +1,12 @@
 /*
 ========================================
-PIN REQUEST QUEUE ENGINE (FINAL)
+PIN REQUEST QUEUE ENGINE (FINAL SAFE)
 ========================================
 ✔ Priority based (GREEN > YELLOW > RED)
-✔ Batch processing (3:2:1)
-✔ Lock safe
-✔ Retry system
-✔ Fail-safe
-✔ Scalable
+✔ Batch system (3:2:1)
+✔ Lock system
+✔ Retry control
+✔ Fail-safe (never stops)
 ========================================
 */
 
@@ -22,55 +21,56 @@ function setPinQueueLock(val) {
   localStorage.setItem(PIN_QUEUE_LOCK, val ? "true" : "false");
 }
 
-// ================= PRIORITY WEIGHT =================
+// ================= PRIORITY =================
 const PRIORITY_WEIGHT = {
   GREEN: 3,
   YELLOW: 2,
   RED: 1
 };
 
-// ================= GET NEXT BATCH =================
-function getPriorityBatch(requests) {
+// ================= GET REQUESTS =================
+function getPendingRequests() {
+  let all = getPinRequests();
+  return all.filter(r => r.status === "PENDING");
+}
 
-  let groups = {
-    GREEN: [],
-    YELLOW: [],
-    RED: []
+// ================= GROUP BY PRIORITY =================
+function groupByPriority(requests) {
+  return {
+    GREEN: requests.filter(r => r.priority === "GREEN"),
+    YELLOW: requests.filter(r => r.priority === "YELLOW"),
+    RED: requests.filter(r => r.priority === "RED")
   };
+}
 
-  requests.forEach(r => {
-    if (r.status === "PENDING") {
-      let p = r.priority || "YELLOW";
-      groups[p].push(r);
-    }
-  });
+// ================= CREATE BATCH =================
+function getNextBatch() {
+
+  let pending = getPendingRequests();
+  let grouped = groupByPriority(pending);
 
   return [
-    ...groups.GREEN.slice(0, PRIORITY_WEIGHT.GREEN),
-    ...groups.YELLOW.slice(0, PRIORITY_WEIGHT.YELLOW),
-    ...groups.RED.slice(0, PRIORITY_WEIGHT.RED)
+    ...grouped.GREEN.slice(0, PRIORITY_WEIGHT.GREEN),
+    ...grouped.YELLOW.slice(0, PRIORITY_WEIGHT.YELLOW),
+    ...grouped.RED.slice(0, PRIORITY_WEIGHT.RED)
   ];
 }
 
-// ================= PROCESS QUEUE =================
-let pinQueueRunning = false;
+// ================= PROCESS =================
+let isRunning = false;
 
-function processPinRequestQueue() {
+function processPinQueue() {
 
-  if (pinQueueRunning) return;
+  if (isRunning) return;
   if (isPinQueueLocked()) return;
 
-  let requests = getPinRequests();
-  if (!requests.length) return;
+  let batch = getNextBatch();
+  if (!batch.length) return;
 
-  pinQueueRunning = true;
+  isRunning = true;
   setPinQueueLock(true);
 
   try {
-
-    let batch = getPriorityBatch(requests);
-
-    if (!batch.length) return;
 
     batch.forEach(req => {
 
@@ -80,9 +80,8 @@ function processPinRequestQueue() {
 
       } catch (err) {
 
-        console.warn("PIN Queue Error:", err.message);
+        console.warn("Queue Error:", err.message);
 
-        // retry logic
         req.retry = (req.retry || 0) + 1;
 
         if (req.retry >= 3) {
@@ -93,7 +92,9 @@ function processPinRequestQueue() {
 
     });
 
-    savePinRequests(requests);
+    // 🔥 SAVE AFTER BATCH
+    let all = getPinRequests();
+    savePinRequests(all);
 
   } catch (err) {
 
@@ -102,17 +103,13 @@ function processPinRequestQueue() {
   } finally {
 
     setPinQueueLock(false);
-    pinQueueRunning = false;
+    isRunning = false;
   }
 }
 
 // ================= AUTO RUN =================
 function startPinQueueEngine() {
-
-  setInterval(() => {
-    processPinRequestQueue();
-  }, 3000); // every 3 sec
-
+  setInterval(processPinQueue, 3000); // every 3 sec
 }
 
 // ================= START =================
