@@ -1,194 +1,172 @@
-// ===============================
-// 📦 QUEUE SYSTEM (FINAL PRO SAFE)
-// ===============================
+========================================
+QUEUE SYSTEM (FINAL PRO MAX)
+========================================
+✔ Weighted Priority (G G G → Y Y → R)
+✔ Smart fallback
+✔ No starvation
+✔ Batch control
+✔ Admin-like decision system
+========================================
+*/
 
-// =====================
-// 🔹 GET / SAVE QUEUE
-// =====================
+const QUEUE_KEY = "PIN_QUEUE_DATA";
+
+// ================= LOAD / SAVE =================
 function getQueue() {
-  try {
-    return JSON.parse(localStorage.getItem("regQueue") || "[]");
-  } catch {
-    localStorage.setItem("regQueue", "[]");
-    return [];
-  }
+  return JSON.parse(localStorage.getItem(QUEUE_KEY)) || [];
 }
 
 function saveQueue(q) {
-  localStorage.setItem("regQueue", JSON.stringify(q));
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
 }
 
-// =====================
-// ➕ ADD TO QUEUE
-// =====================
-function addToQueue(userData) {
+// ================= ADD TO QUEUE =================
+function addToQueue(data) {
 
   let queue = getQueue();
 
   queue.push({
-    id: "Q" + Date.now(),
-    ...userData,
-    queueTime: new Date().toISOString(),
+    id: "Q_" + Date.now(),
+
+    ...data,
+
+    priority: data.priority || "YELLOW",
+
     status: "PENDING",
-    retry: 0
-  });
+    retry: 0,
 
-  saveQueue(queue);
-
-  // 🔥 SAFE TRIGGER
-  setTimeout(() => processQueue(), 100);
-
-  // 📜 LOG
-  if (typeof logActivity === "function") {
-    logActivity("SYSTEM", "QUEUE", "User added to queue");
-  }
-}
-
-// =====================
-// 🔐 LOCK SYSTEM
-// =====================
-function isLocked() {
-  return localStorage.getItem("treeLock") === "true";
-}
-
-function setLock(value) {
-  localStorage.setItem("treeLock", value ? "true" : "false");
-}
-
-// =====================
-// 🔒 GLOBAL SYSTEM CHECK
-// =====================
-function isQueueSystemSafe() {
-
-  let system = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-
-  if (system.queueStop === true) {
-    console.warn("⛔ Queue stopped by admin");
-    return false;
-  }
-
-  return true;
-}
-
-// =====================
-// 🧹 CLEAN QUEUE
-// =====================
-function cleanQueue() {
-
-  let queue = getQueue();
-  let now = Date.now();
-
-  queue = queue.filter(q => {
-
-    if (q.status !== "DONE") return true;
-
-    let time = new Date(q.queueTime).getTime();
-    return (now - time) < (24 * 60 * 60 * 1000);
-
+    createdAt: Date.now(),
+    lastTried: null
   });
 
   saveQueue(queue);
 }
 
-// =====================
-// ⚙️ PROCESS QUEUE
-// =====================
+// ================= CONFIG =================
+const QUEUE_CONFIG = {
+  BATCH_SIZE: 6,
+  RETRY_LIMIT: 3
+};
+
+// 🔥 PRIORITY WEIGHT
+const PRIORITY_WEIGHT = {
+  GREEN: 3,
+  YELLOW: 2,
+  RED: 1
+};
+
+// ================= PROCESS ENGINE =================
 let isProcessing = false;
 
 function processQueue() {
 
   if (isProcessing) return;
 
-  // 🔒 SYSTEM CHECK
-  if (!isQueueSystemSafe()) return;
-  if (isLocked()) return;
-
   let queue = getQueue();
   if (!queue.length) return;
 
   isProcessing = true;
-  setLock(true);
 
   try {
 
-    queue.sort((a, b) =>
-      new Date(a.queueTime) - new Date(b.queueTime)
-    );
+    // ================= GROUP =================
+    let grouped = {
+      GREEN: [],
+      YELLOW: [],
+      RED: []
+    };
 
-    let nextUser = queue.find(u => u.status === "PENDING");
-
-    if (!nextUser) {
-      return;
-    }
-
-    if (typeof registerUser !== "function") {
-      console.error("registerUser not found");
-      return;
-    }
-
-    // 🔥 REGISTER USER (MATCHED WITH CORE)
-    let user = registerUser(
-      nextUser.username,
-      nextUser.password,
-      nextUser.mobile,
-      nextUser.introducerId,
-      nextUser.sponsorId,
-      nextUser.position
-    );
-
-    if (user) {
-
-      nextUser.status = "DONE";
-
-      if (typeof logActivity === "function") {
-        logActivity(user.userId, "SYSTEM", "Registered via queue");
+    queue.forEach(q => {
+      if (q.status === "PENDING") {
+        grouped[q.priority]?.push(q);
       }
+    });
 
-    } else {
+    let processedCount = 0;
 
-      nextUser.retry++;
+    // ================= WEIGHT LOOP =================
+    while (processedCount < QUEUE_CONFIG.BATCH_SIZE) {
 
-      if (nextUser.retry >= 3) {
-        nextUser.status = "FAILED";
+      let didProcess = false;
 
-        if (typeof logActivity === "function") {
-          logActivity("SYSTEM", "QUEUE", "Queue FAILED after retries");
+      for (let p of ["GREEN", "YELLOW", "RED"]) {
+
+        let weight = PRIORITY_WEIGHT[p];
+
+        for (let i = 0; i < weight; i++) {
+
+          if (processedCount >= QUEUE_CONFIG.BATCH_SIZE) break;
+
+          let item = grouped[p].shift();
+
+          // 🔥 FALLBACK (if empty)
+          if (!item) {
+            item = getNextAvailable(grouped);
+          }
+
+          if (!item) continue;
+
+          try {
+
+            item.status = "PROCESSING";
+            item.lastTried = Date.now();
+
+            processQueueItem(item);
+
+            item.status = "DONE";
+            processedCount++;
+            didProcess = true;
+
+          } catch (err) {
+
+            item.retry++;
+
+            if (item.retry >= QUEUE_CONFIG.RETRY_LIMIT) {
+              item.status = "FAILED";
+              item.failReason = err.message;
+            } else {
+              item.status = "PENDING";
+            }
+
+          }
         }
       }
+
+      // 🚫 STOP if nothing processed
+      if (!didProcess) break;
     }
 
     saveQueue(queue);
 
   } catch (err) {
-
-    console.error("Queue Error:", err);
-
-    if (typeof logActivity === "function") {
-      logActivity("SYSTEM", "ERROR", "Queue crash detected");
-    }
-
+    console.error("Queue Crash:", err);
   } finally {
-
-    setLock(false);
     isProcessing = false;
   }
 }
 
-// =====================
-// 🔄 AUTO PROCESSOR
-// =====================
-function startQueueProcessor() {
+// ================= FALLBACK PICK =================
+function getNextAvailable(grouped) {
 
-  setInterval(() => {
-    processQueue();
-    cleanQueue();
-  }, 2000);
+  return (
+    grouped.GREEN.shift() ||
+    grouped.YELLOW.shift() ||
+    grouped.RED.shift() ||
+    null
+  );
+}
+
+// ================= CORE PROCESS =================
+function processQueueItem(item) {
+
+  if (item.type === "PIN_REQUEST") {
+    processPinRequestAuto(item.requestId);
+  }
 
 }
 
-// =====================
-// 🚀 AUTO START
-// =====================
-startQueueProcessor();
-
+// ================= AUTO RUN =================
+setInterval(() => {
+  processQueue();
+}, 2000);
 
