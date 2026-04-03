@@ -1,6 +1,6 @@
 /*
 ========================================
-PIN REQUEST QUEUE ENGINE (FINAL PRO SAFE)
+PIN REQUEST QUEUE ENGINE (FINAL MERGED CONTROLLED)
 ========================================
 ✔ Priority based (GREEN > YELLOW > RED)
 ✔ Batch system (3:2:1)
@@ -8,6 +8,7 @@ PIN REQUEST QUEUE ENGINE (FINAL PRO SAFE)
 ✔ Retry control
 ✔ Fail-safe (never stops)
 ✔ Data-safe (no mutation loss)
+✔ System control (queueStop integrated)
 ========================================
 */
 
@@ -20,6 +21,12 @@ function isPinQueueLocked() {
 
 function setPinQueueLock(val) {
   localStorage.setItem(PIN_QUEUE_LOCK, val ? "true" : "false");
+}
+
+// ================= SYSTEM CONTROL =================
+function isQueueAllowed() {
+  let s = JSON.parse(localStorage.getItem("systemSettings")) || {};
+  return !s.queueStop; // true = allowed, false = stopped
 }
 
 // ================= PRIORITY =================
@@ -61,6 +68,9 @@ function getNextBatch() {
 let isRunning = false;
 
 function processPinQueue() {
+
+  // 🔥 SYSTEM CONTROL CHECK
+  if (!isQueueAllowed()) return;
 
   if (isRunning) return;
   if (isPinQueueLocked()) return;
@@ -128,4 +138,5 @@ function startPinQueueEngine() {
 
 // ================= START =================
 startPinQueueEngine();
+
 
