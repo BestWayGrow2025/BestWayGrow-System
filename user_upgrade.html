@@ -50,6 +50,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.getElementById("info").innerText =
     "User: " + user.username + " (" + user.userId + ")";
+
+  // ✅ AUTO PIN FILL
+  let selected = JSON.parse(localStorage.getItem("selectedPin"));
+  if (selected && selected.type === "upgrade") {
+    let pinInput = document.getElementById("pinInput");
+    if (pinInput) pinInput.value = selected.pinId;
+  }
 });
 
 // ================= CHECK =================
@@ -67,7 +74,6 @@ function upgradeNow() {
 
   if (!u) return;
 
-  // ❌ Already active
   if (isAlreadyUpgraded(u)) {
     alert("Your ID is already active");
     return;
@@ -82,7 +88,6 @@ function upgradeNow() {
 
   try {
 
-    // 🔒 USE PIN (MASTER SYSTEM)
     let pin = usePin(pinId, u.userId, "upgrade");
 
     if (!pin) {
@@ -92,7 +97,6 @@ function upgradeNow() {
 
     let bv = Number(pin.bv || 0);
 
-    // ✅ ACTIVATE USER
     if (typeof activateUser === "function") {
       activateUser(u.userId);
     } else {
@@ -100,7 +104,6 @@ function upgradeNow() {
       return;
     }
 
-    // 💰 INCOME
     if (typeof isUGLIEnabled === "function" &&
         typeof processIncome === "function" &&
         isUGLIEnabled() &&
@@ -108,6 +111,9 @@ function upgradeNow() {
 
       processIncome("upgrade", u.userId, bv);
     }
+
+    // ✅ CLEAR AUTO PIN
+    localStorage.removeItem("selectedPin");
 
     alert("✅ Upgrade Successful");
 
@@ -123,6 +129,7 @@ function upgradeNow() {
 
 </body>
 </html>
+
 
 
 
