@@ -1,12 +1,13 @@
 /*
 ========================================
-PIN MASTER SYSTEM (FINAL CORE ENGINE PRO v2)
+PIN MASTER SYSTEM (FINAL CORE ENGINE PRO v3)
 ========================================
 ✔ No duplicate code
 ✔ Lock-safe
 ✔ Queue compatible
 ✔ Status lifecycle fixed
-✔ Core system integrated
+✔ Config system integrated (FIXED)
+✔ Safe fallback added
 ========================================
 */
 
@@ -42,13 +43,22 @@ function generatePinId(prefix = "PIN") {
   return prefix + "_" + Math.random().toString(36).substring(2, 8) + Date.now();
 }
 
-// ================= PIN MODE =================
+// ================= PIN MODE (FIXED) =================
 function getPinMode() {
-  let settings = typeof getSystemSettings === "function"
-    ? getSystemSettings()
-    : {};
 
-  return settings.pinMode || "AUTO";
+  // ✅ PRIMARY: config system
+  if (typeof loadSystemControls === "function") {
+    let controls = loadSystemControls();
+    return controls.pinMode || "AUTO";
+  }
+
+  // ✅ FALLBACK: core system
+  if (typeof getSystemSettings === "function") {
+    let settings = getSystemSettings();
+    return settings.pinMode || "AUTO";
+  }
+
+  return "AUTO";
 }
 
 // ================= CREATE PIN =================
@@ -115,14 +125,12 @@ function assignPin(pinId, toId, toType, performedBy) {
 
   if (!pin) throw new Error("PIN not found");
 
-  // 🔒 LOCK CHECK
   if (pin.lock) throw new Error("PIN locked");
 
   if (pin.status !== "active") {
     throw new Error("PIN not available");
   }
 
-  // LOCK START
   pin.lock = true;
 
   try {
@@ -132,7 +140,7 @@ function assignPin(pinId, toId, toType, performedBy) {
     pin.assignedTo = toId;
     pin.assignedAt = Date.now();
 
-    // ✅ FIXED STATUS
+    // ✅ STATUS FIX
     pin.status = "assigned";
 
     pin.transferHistory.push({
@@ -281,3 +289,4 @@ function updatePinStatus(pinId, status, performedBy) {
 
   return true;
 }
+
