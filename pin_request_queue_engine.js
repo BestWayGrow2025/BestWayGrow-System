@@ -1,12 +1,13 @@
 /*
 ========================================
-PIN REQUEST QUEUE ENGINE (FINAL SAFE)
+PIN REQUEST QUEUE ENGINE (FINAL PRO SAFE)
 ========================================
 ✔ Priority based (GREEN > YELLOW > RED)
 ✔ Batch system (3:2:1)
 ✔ Lock system
 ✔ Retry control
 ✔ Fail-safe (never stops)
+✔ Data-safe (no mutation loss)
 ========================================
 */
 
@@ -34,16 +35,16 @@ function getPendingRequests() {
   return all.filter(r => r.status === "PENDING");
 }
 
-// ================= GROUP BY PRIORITY =================
+// ================= GROUP =================
 function groupByPriority(requests) {
   return {
-    GREEN: requests.filter(r => r.priority === "GREEN"),
-    YELLOW: requests.filter(r => r.priority === "YELLOW"),
-    RED: requests.filter(r => r.priority === "RED")
+    GREEN: requests.filter(r => (r.priority || "YELLOW") === "GREEN"),
+    YELLOW: requests.filter(r => (r.priority || "YELLOW") === "YELLOW"),
+    RED: requests.filter(r => (r.priority || "YELLOW") === "RED")
   };
 }
 
-// ================= CREATE BATCH =================
+// ================= BATCH =================
 function getNextBatch() {
 
   let pending = getPendingRequests();
@@ -72,29 +73,35 @@ function processPinQueue() {
 
   try {
 
+    let allRequests = getPinRequests();
+
     batch.forEach(req => {
+
+      let realReq = allRequests.find(r => r.requestId === req.requestId);
+      if (!realReq) return;
 
       try {
 
-        processPinRequestAuto(req.requestId);
+        // 🔥 PROCESS USING CORE ENGINE
+        processPinRequestAuto(realReq.requestId);
 
       } catch (err) {
 
         console.warn("Queue Error:", err.message);
 
-        req.retry = (req.retry || 0) + 1;
+        realReq.retry = (realReq.retry || 0) + 1;
 
-        if (req.retry >= 3) {
-          req.status = "FAILED";
-          req.failReason = err.message;
+        if (realReq.retry >= 3) {
+          realReq.status = "FAILED";
+          realReq.failReason = err.message;
+          realReq.processedAt = Date.now();
         }
       }
 
     });
 
-    // 🔥 SAVE AFTER BATCH
-    let all = getPinRequests();
-    savePinRequests(all);
+    // 🔥 SAVE AFTER UPDATE
+    savePinRequests(allRequests);
 
   } catch (err) {
 
@@ -109,8 +116,16 @@ function processPinQueue() {
 
 // ================= AUTO RUN =================
 function startPinQueueEngine() {
-  setInterval(processPinQueue, 3000); // every 3 sec
+
+  // 🔒 SAFETY CHECK
+  if (typeof processPinRequestAuto !== "function") {
+    console.error("processPinRequestAuto not found");
+    return;
+  }
+
+  setInterval(processPinQueue, 3000);
 }
 
 // ================= START =================
 startPinQueueEngine();
+
