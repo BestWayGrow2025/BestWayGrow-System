@@ -74,46 +74,75 @@ function loadUserPins() {
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
   if (!session) return;
 
-  let pins = loadPins().filter(p => p.ownerId === session.userId);
+  let allPins = [];
+  try {
+    allPins = loadPins();
+  } catch {
+    allPins = [];
+  }
+
+  let pins = allPins.filter(p => p.ownerId === session.userId);
 
   let table = document.getElementById("pinTable");
   table.innerHTML = "";
 
-  if (pins.length === 0) {
+  if (!pins || pins.length === 0) {
     table.innerHTML = "<tr><td colspan='5'>No PINs found</td></tr>";
     return;
   }
 
   pins.forEach(pin => {
 
+    if (!pin || !pin.pinId) return;
+
     let statusColor =
       pin.status === "active" ? "green" :
       pin.status === "used" ? "red" :
       "orange";
 
-    let actionBtn = "";
+    let row = document.createElement("tr");
+
+    let actionCell = document.createElement("td");
 
     if (pin.status === "active") {
-      actionBtn = `<button onclick="useMyPin('${pin.pinId}', '${pin.type}')">Use</button>`;
+      let btn = document.createElement("button");
+      btn.innerText = "Use";
+      btn.onclick = function () {
+        useMyPin(pin.pinId, pin.type);
+      };
+      actionCell.appendChild(btn);
     } else {
-      actionBtn = "-";
+      actionCell.innerText = "-";
     }
 
-    table.innerHTML += `
-      <tr>
-        <td>${pin.pinId}</td>
-        <td>${pin.type}</td>
-        <td>₹${pin.amount}</td>
-        <td style="color:${statusColor}">${pin.status}</td>
-        <td>${actionBtn}</td>
-      </tr>
+    row.innerHTML = `
+      <td>${pin.pinId}</td>
+      <td>${pin.type}</td>
+      <td>₹${pin.amount}</td>
+      <td style="color:${statusColor}">${pin.status}</td>
     `;
+
+    row.appendChild(actionCell);
+
+    table.appendChild(row);
   });
 }
 
 
 // ================= USE PIN =================
 function useMyPin(pinId, type) {
+
+  let session = JSON.parse(localStorage.getItem("loggedInUser"));
+  if (!session) {
+    alert("Session expired");
+    window.location.href = "user_login.html";
+    return;
+  }
+
+  if (!pinId || !type) {
+    alert("Invalid PIN");
+    return;
+  }
 
   if (!confirm("Use this PIN?")) return;
 
@@ -145,7 +174,6 @@ function goRepurchase() {
 
 </body>
 </html>
-
 
 
 
