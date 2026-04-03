@@ -1,123 +1,194 @@
-<script>
+script>
 
-// =====================
-// GET REQUESTS
-// =====================
+/*
+========================================
+PIN REQUEST SYSTEM (FINAL - SYSTEM POOL)
+========================================
+Flow:
+User → Request PIN → System Pool → Assign PIN → User Account
+Supports:
+- AUTO MODE (system assigns)
+- MANUAL MODE (admin assigns)
+========================================
+*/
+
+const PIN_REQUEST_KEY = "PIN_REQUEST_DATA";
+
+// ================= LOAD / SAVE =================
 function getPinRequests() {
-  return JSON.parse(localStorage.getItem("pinRequests") || "[]");
+  return JSON.parse(localStorage.getItem(PIN_REQUEST_KEY)) || [];
 }
 
 function savePinRequests(data) {
-  localStorage.setItem("pinRequests", JSON.stringify(data));
+  localStorage.setItem(PIN_REQUEST_KEY, JSON.stringify(data));
 }
 
-// =====================
-// CREATE REQUEST
-// =====================
-function requestPin(franchiseId, pinId, quantity) {
+// ================= GENERATE REQUEST ID =================
+function generateRequestId() {
+  return "REQ_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6);
+}
+
+// ================= CREATE REQUEST =================
+function requestPin({ userId, type, quantity = 1, paymentRef = null }) {
+
+  if (!userId || !type) {
+    alert("Invalid request data");
+    return;
+  }
+
+  if (!["upgrade", "repurchase"].includes(type)) {
+    alert("Invalid PIN type");
+    return;
+  }
 
   let requests = getPinRequests();
 
-  requests.push({
-    requestId: "REQ" + Math.floor(Math.random() * 1000000),
-    franchiseId: franchiseId,
-    pinId: pinId,
-    quantity: quantity,
+  let newRequest = {
+    requestId: generateRequestId(),
+
+    userId,
+    type,
+    quantity,
+
+    paymentRef, // bank ref / txn id
+
     status: "PENDING",
-    time: new Date().toISOString()
-  });
 
+    assignedPins: [],
+
+    createdAt: Date.now(),
+    processedAt: null
+  };
+
+  requests.push(newRequest);
   savePinRequests(requests);
 
-  alert("Pin request submitted");
+  alert("✅ PIN request submitted");
+
+  return newRequest;
 }
 
-// =====================
-// APPROVE REQUEST
-// =====================
-function approvePinRequest(requestId) {
+// ================= AUTO PROCESS (SYSTEM MODE) =================
+function processPinRequestAuto(requestId, performedBy = "system") {
 
   let requests = getPinRequests();
-  let pins = JSON.parse(localStorage.getItem("pins") || "[]");
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-
   let req = requests.find(r => r.requestId === requestId);
 
-  if (!req) {
-    alert("Request not found");
-    return;
-  }
+  if (!req) throw new Error("Request not found");
 
   if (req.status !== "PENDING") {
-    alert("Already processed");
-    return;
+    throw new Error("Already processed");
   }
 
-  // =====================
-  // ADD STOCK (optional system logic)
-  // =====================
-  if (typeof addPinStock === "function") {
-    addPinStock(req.pinId, req.quantity);
+  req.status = "PROCESSING";
+
+  try {
+
+    let assigned = [];
+
+    for (let i = 0; i < req.quantity; i++) {
+
+      // 🔥 GET AVAILABLE PIN FROM MASTER
+      let pins = loadPins();
+      let available = pins.find(p =>
+        p.status === "active" &&
+        p.type === req.type &&
+        p.ownerType === "admin"
+      );
+
+      if (!available) {
+        throw new Error("Insufficient PIN stock");
+      }
+
+      // 🔥 ASSIGN USING MASTER SYSTEM
+      assignPin(available.pinId, req.userId, "user", performedBy);
+
+      assigned.push(available.pinId);
+    }
+
+    req.assignedPins = assigned;
+    req.status = "COMPLETED";
+    req.processedAt = Date.now();
+
+    savePinRequests(requests);
+
+    return true;
+
+  } catch (err) {
+    req.status = "PENDING";
+    savePinRequests(requests);
+    throw err;
   }
-
-  // =====================
-  // ASSIGN PIN
-  // =====================
-  let availablePin = pins.find(p => p.status === "AVAILABLE");
-
-  if (!availablePin) {
-    alert("No available PINs");
-    return;
-  }
-
-  // Update PIN
-  availablePin.status = "ASSIGNED";
-  availablePin.assignedTo = req.franchiseId;
-
-  // Update request
-  req.status = "APPROVED";
-  req.assignedPin = availablePin.pinCode;
-
-  // Assign to user
-  let user = users.find(u => u.userId === req.franchiseId);
-
-  if (user) {
-    if (!user.pins) user.pins = [];
-    user.pins.push(availablePin.pinCode);
-  }
-
-  // Save everything
-  localStorage.setItem("pins", JSON.stringify(pins));
-  localStorage.setItem("users", JSON.stringify(users));
-  savePinRequests(requests);
-
-  alert("Request approved & PIN assigned: " + availablePin.pinCode);
 }
 
-// =====================
-// REJECT REQUEST
-// =====================
-function rejectPinRequest(requestId) {
+// ================= MANUAL PROCESS (ADMIN) =================
+function processPinRequestManual(requestId, pinIds = [], performedBy) {
 
   let requests = getPinRequests();
-
   let req = requests.find(r => r.requestId === requestId);
 
-  if (!req) {
-    alert("Request not found");
-    return;
-  }
+  if (!req) throw new Error("Request not found");
 
   if (req.status !== "PENDING") {
-    alert("Already processed");
-    return;
+    throw new Error("Already processed");
+  }
+
+  if (!pinIds.length) {
+    throw new Error("No PINs provided");
+  }
+
+  req.status = "PROCESSING";
+
+  try {
+
+    let assigned = [];
+
+    pinIds.forEach(pinId => {
+
+      assignPin(pinId, req.userId, "user", performedBy);
+      assigned.push(pinId);
+
+    });
+
+    req.assignedPins = assigned;
+    req.status = "COMPLETED";
+    req.processedAt = Date.now();
+
+    savePinRequests(requests);
+
+    return true;
+
+  } catch (err) {
+    req.status = "PENDING";
+    savePinRequests(requests);
+    throw err;
+  }
+}
+
+// ================= REJECT REQUEST =================
+function rejectPinRequest(requestId, performedBy = "admin") {
+
+  let requests = getPinRequests();
+  let req = requests.find(r => r.requestId === requestId);
+
+  if (!req) throw new Error("Request not found");
+
+  if (req.status !== "PENDING") {
+    throw new Error("Already processed");
   }
 
   req.status = "REJECTED";
+  req.processedAt = Date.now();
 
   savePinRequests(requests);
 
-  alert("Request rejected");
+  return true;
+}
+
+// ================= GET USER REQUESTS =================
+function getUserPinRequests(userId) {
+  let requests = getPinRequests();
+  return requests.filter(r => r.userId === userId);
 }
 
 </script>
