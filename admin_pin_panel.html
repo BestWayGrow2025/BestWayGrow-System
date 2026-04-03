@@ -85,9 +85,9 @@
 
 <!-- ================= SCRIPT ================= -->
 <script src="pin_config_system.js"></script>
-<script src="pin_master_system.js"></script>
+<script src="pin_master-system.js"></script> <!-- ✅ FIXED -->
 <script src="pin_request_system.js"></script>
-<script src="pin_request_queue_engine.js"></script> <!-- ✅ FINAL FIX -->
+<script src="pin_request_queue_engine.js"></script>
 
 <script>
 
@@ -188,6 +188,7 @@ function loadRequests() {
     if (filter !== "ALL" && req.status !== filter) return;
 
     let priority = req.priority || "YELLOW";
+    let qty = req.quantity || 1;
 
     let color =
       priority === "GREEN" ? "green" :
@@ -208,7 +209,7 @@ function loadRequests() {
         <td>${req.requestId}</td>
         <td>${req.userId}</td>
         <td>${req.type}</td>
-        <td>${req.quantity}</td>
+        <td>${qty}</td>
         <td style="color:${color}">${priority}</td>
         <td>${req.status}</td>
         <td>${action}</td>
@@ -229,6 +230,11 @@ function rejectReq(id) {
   rejectPinRequest(id);
   loadRequests();
 }
+
+// ================= AUTO REFRESH (🔥 IMPORTANT) =================
+setInterval(() => {
+  loadRequests();
+}, 3000);
 
 // ================= INIT =================
 refreshStatus();
