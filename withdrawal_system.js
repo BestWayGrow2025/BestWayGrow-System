@@ -1,9 +1,14 @@
 /* ===============================
-   💸 WITHDRAWAL SYSTEM (FINAL PRO)
+   💸 WITHDRAWAL SYSTEM (FINAL PRO v2)
 =============================== */
 
 // =====================
-// 🔹 GET / SAVE (SAFE)
+// 🔹 CONSTANTS
+// =====================
+const WITHDRAW_LIMIT = 3000;
+
+// =====================
+// 🔹 SAFE LOAD / SAVE
 // =====================
 function getWithdrawals() {
   try {
@@ -15,6 +20,11 @@ function getWithdrawals() {
 }
 
 function saveWithdrawals(data) {
+
+  if (data.length > WITHDRAW_LIMIT) {
+    data = data.slice(-WITHDRAW_LIMIT);
+  }
+
   localStorage.setItem("withdrawals", JSON.stringify(data));
 }
 
@@ -23,23 +33,19 @@ function saveWithdrawals(data) {
 // =====================
 function isWithdrawSystemSafe() {
 
-  let system;
   try {
-    system = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-  } catch {
-    system = {};
-  }
-
-  if (system.withdrawStop === true) {
-    console.warn("⛔ Withdraw system stopped by admin");
-    return false;
-  }
+    let system = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+    if (system.withdrawStop === true) {
+      console.warn("⛔ Withdraw system stopped by admin");
+      return false;
+    }
+  } catch {}
 
   return true;
 }
 
 // =====================
-// 💰 USER REQUEST (FINAL SAFE)
+// 💰 USER REQUEST
 // =====================
 function requestWithdraw(userId, amount) {
 
@@ -51,10 +57,15 @@ function requestWithdraw(userId, amount) {
 
   try {
 
+    amount = Number(amount);
+
+    if (!userId || isNaN(amount) || amount <= 0) {
+      return alert("Invalid amount");
+    }
+
     // 🔒 GLOBAL SAFETY
     if (!isWithdrawSystemSafe()) {
-      alert("Withdraw system temporarily disabled");
-      return;
+      return alert("Withdraw system temporarily disabled");
     }
 
     // 🔒 ACTIVE CHECK
@@ -65,7 +76,7 @@ function requestWithdraw(userId, amount) {
     }
 
     // 🔒 DUPLICATE REQUEST BLOCK
-    let pending = getWithdrawals().find(r => 
+    let pending = getWithdrawals().find(r =>
       r.userId === userId && r.status === "PENDING"
     );
 
@@ -73,17 +84,13 @@ function requestWithdraw(userId, amount) {
       return alert("You already have a pending request");
     }
 
-    let MIN_WITHDRAW = 500;
-    let CHARGE_PERCENT = 10;
+    const MIN_WITHDRAW = 500;
+    const CHARGE_PERCENT = 10;
 
-    let users = JSON.parse(localStorage.getItem("users") || "[]");
+    let users = getUsers(); // ✅ CORE
     let user = users.find(u => u.userId === userId);
 
     if (!user) return alert("User not found");
-
-    if (!amount || amount <= 0) {
-      return alert("Invalid amount");
-    }
 
     if (amount < MIN_WITHDRAW) {
       return alert("Minimum withdraw is ₹ " + MIN_WITHDRAW);
@@ -94,21 +101,15 @@ function requestWithdraw(userId, amount) {
     }
 
     // 💸 CALCULATION
-    let charge = Math.round((amount * CHARGE_PERCENT) / 100);
-    let finalAmount = amount - charge;
+    let charge = parseFloat(((amount * CHARGE_PERCENT) / 100).toFixed(2));
+    let finalAmount = parseFloat((amount - charge).toFixed(2));
 
-    // 💳 SAFE WALLET DEDUCT
+    // 💳 SAFE WALLET DEDUCT (NO DOUBLE LOG)
     if (typeof debitWallet === "function") {
       if (!debitWallet(userId, amount, "Withdrawal Request")) return;
     } else {
-      user.wallet -= amount;
+      user.wallet = (user.wallet || 0) - amount;
       localStorage.setItem("users", JSON.stringify(users));
-    }
-
-    // 📜 SAFE TRANSACTION LOG
-    if (typeof logTransaction === "function") {
-      logTransaction(userId, amount, "DEBIT", "Withdrawal Request");
-      logTransaction(userId, charge, "DEBIT", "Withdrawal Charge");
     }
 
     // 📦 CREATE REQUEST
@@ -136,7 +137,7 @@ function requestWithdraw(userId, amount) {
     alert("Request submitted. You will receive ₹ " + finalAmount);
 
   } finally {
-    window.withdrawLock = false; // 🔓 UNLOCK
+    window.withdrawLock = false;
   }
 }
 
@@ -172,7 +173,7 @@ function rejectWithdraw(id, adminId = "ADMIN") {
 
   if (!req || req.status !== "PENDING") return;
 
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  let users = getUsers(); // ✅ CORE
   let user = users.find(u => u.userId === req.userId);
 
   // 🔁 REFUND (SAFE)
@@ -196,5 +197,4 @@ function rejectWithdraw(id, adminId = "ADMIN") {
 
   alert("Withdrawal Rejected & Refunded");
 }
-
 
