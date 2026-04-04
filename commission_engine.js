@@ -79,9 +79,9 @@ function isDuplicateHold(userId, amount, reason) {
 }
 
 // =====================
-// 🔹 HOLD INCOME
+// 🔹 HOLD INCOME (UPDATED ✅)
 // =====================
-function holdIncome(userId, amount, reason) {
+function addHoldIncome(userId, amount, reason) {
 
   amount = Number(amount);
   if (!userId || isNaN(amount) || amount <= 0) return;
@@ -113,7 +113,7 @@ function holdIncome(userId, amount, reason) {
 // =====================
 function payUGLIIncome(userId, bvAmount) {
 
-  let users = getUsers(); // ✅ CORE
+  let users = getUsers();
   let current = users.find(u => u.userId === userId);
   if (!current) return;
 
@@ -143,7 +143,7 @@ function payUGLIIncome(userId, bvAmount) {
         });
 
       } else {
-        holdIncome(parent.userId, income, `UGLI L${i + 1}`);
+        addHoldIncome(parent.userId, income, `UGLI L${i + 1}`);
       }
     }
 
@@ -185,7 +185,7 @@ function payRLIIncome(userId, totalBV) {
       });
 
     } else {
-      holdIncome(parent.userId, perLevel, `RLI L${i}`);
+      addHoldIncome(parent.userId, perLevel, `RLI L${i}`);
     }
 
     current = parent;
