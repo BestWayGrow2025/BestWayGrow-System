@@ -17,25 +17,28 @@ function saveHoldIncome(data) {
 }
 
 // =====================
-// 🔐 DUPLICATE PROTECTION
+// 🔐 DUPLICATE PROTECTION (IMPROVED)
 // =====================
 function isDuplicateHold(userId, amount, reason) {
+
   let holds = getHoldIncome();
 
   return holds.some(h =>
     h.userId === userId &&
-    h.amount === amount &&
+    Number(h.amount) === Number(amount) &&
     h.reason === reason &&
     (new Date() - new Date(h.time)) < 5000
   );
 }
 
 // =====================
-// ➕ ADD HOLD INCOME (FIXED)
+// ➕ ADD HOLD INCOME (FINAL)
 // =====================
 function addHoldIncome(userId, amount, reason) {
 
-  if (!userId || !amount || amount <= 0) return;
+  amount = Number(amount);
+
+  if (!userId || isNaN(amount) || amount <= 0) return;
 
   if (isDuplicateHold(userId, amount, reason)) return;
 
@@ -44,7 +47,7 @@ function addHoldIncome(userId, amount, reason) {
   holds.push({
     id: "H" + Date.now(),
     userId,
-    amount: Number(amount),
+    amount,
     reason: reason || "",
     time: new Date().toISOString(),
     status: "HOLD"
@@ -110,7 +113,7 @@ function releaseAllHoldIncome() {
 }
 
 // =====================
-// ❌ EXPIRE HOLD
+// ❌ EXPIRE HOLD (FIXED TIME SAFE)
 // =====================
 function expireHoldIncome(days = 30) {
 
@@ -124,8 +127,9 @@ function expireHoldIncome(days = 30) {
 
       let holdTime = new Date(h.time).getTime();
 
-      if ((now - holdTime) > (days * 86400000)) {
+      if ((now - holdTime) > (days * 24 * 60 * 60 * 1000)) {
         h.status = "EXPIRED";
+        h.expireTime = new Date().toISOString();
         updated = true;
       }
     }
@@ -150,9 +154,9 @@ function getUserHoldSummary(userId) {
 
     if (h.userId === userId) {
 
-      if (h.status === "HOLD") totalHold += h.amount;
-      if (h.status === "RELEASED") totalReleased += h.amount;
-      if (h.status === "EXPIRED") totalExpired += h.amount;
+      if (h.status === "HOLD") totalHold += Number(h.amount);
+      if (h.status === "RELEASED") totalReleased += Number(h.amount);
+      if (h.status === "EXPIRED") totalExpired += Number(h.amount);
 
     }
 
@@ -166,15 +170,16 @@ function getUserHoldSummary(userId) {
 }
 
 // =====================
-// 🔄 AUTO PROCESSOR
+// 🔄 AUTO PROCESSOR (SAFE)
 // =====================
 function startHoldProcessor() {
 
-  setInterval(() => {
+  if (window.holdProcessorRunning) return; // prevent duplicate intervals
+  window.holdProcessorRunning = true;
 
+  setInterval(() => {
     releaseAllHoldIncome();
     expireHoldIncome(30);
-
   }, 5000);
 
 }
