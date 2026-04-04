@@ -1,6 +1,6 @@
 /*
 ========================================
-PIN MASTER SYSTEM (FINAL CORE ENGINE PRO v3)
+PIN MASTER SYSTEM (FINAL CORE ENGINE PRO v4)
 ========================================
 ✔ No duplicate code
 ✔ Lock-safe
@@ -20,22 +20,30 @@ function loadPins() {
   try {
     return JSON.parse(localStorage.getItem(PIN_STORAGE_KEY)) || [];
   } catch {
+    localStorage.setItem(PIN_STORAGE_KEY, "[]");
     return [];
   }
 }
 
 function savePins(pins) {
-  localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(pins));
+  localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(pins || []));
 }
 
 // ================= LOG SYSTEM =================
 function logPinAction(actionData) {
-  let logs = JSON.parse(localStorage.getItem(PIN_LOG_KEY)) || [];
+  let logs;
+  try {
+    logs = JSON.parse(localStorage.getItem(PIN_LOG_KEY)) || [];
+  } catch {
+    logs = [];
+  }
+
   logs.push({
     id: "LOG_" + Date.now(),
     ...actionData,
     timestamp: new Date().toISOString()
   });
+
   localStorage.setItem(PIN_LOG_KEY, JSON.stringify(logs));
 }
 
@@ -46,11 +54,14 @@ function generatePinId(prefix = "PIN") {
 
 // ================= PIN MODE =================
 function getPinMode() {
-  let settings = typeof getSystemSettings === "function"
-    ? getSystemSettings()
-    : {};
+  try {
+    if (typeof loadSystemControls === "function") {
+      let ctrl = loadSystemControls();
+      return ctrl.pinMode || "AUTO";
+    }
+  } catch {}
 
-  return settings.pinMode || "AUTO";
+  return "AUTO";
 }
 
 // ================= CREATE PIN =================
@@ -116,7 +127,6 @@ function assignPin(pinId, toId, toType, performedBy) {
   let pin = pins.find(p => p.pinId === pinId);
 
   if (!pin) throw new Error("PIN not found");
-
   if (pin.lock) throw new Error("PIN locked");
 
   if (pin.status !== "active") {
@@ -172,7 +182,6 @@ function usePin(pinId, userId, purpose) {
   let pin = pins.find(p => p.pinId === pinId);
 
   if (!pin) throw new Error("Invalid PIN");
-
   if (pin.lock) throw new Error("PIN is being processed");
 
   if (pin.status !== "assigned") {
@@ -259,7 +268,7 @@ function deletePin(pinId, performedBy) {
   return true;
 }
 
-// ================= UPDATE STATUS (FIXED FINAL) =================
+// ================= UPDATE STATUS (FINAL SAFE) =================
 function updatePinStatus(pinId, status, performedBy) {
 
   let pins = loadPins();
@@ -267,23 +276,18 @@ function updatePinStatus(pinId, status, performedBy) {
 
   if (!pin) throw new Error("PIN not found");
 
-  // 🔒 LOCK CHECK
   if (pin.lock) {
     throw new Error("PIN is locked / processing");
   }
 
-  // 🔒 VALID STATUS
   const VALID_STATUS = ["active", "assigned", "used"];
   if (!VALID_STATUS.includes(status)) {
     throw new Error("Invalid PIN status");
   }
 
-  // 🔒 SYSTEM MODE
-  if (typeof getPinMode === "function") {
-    let mode = getPinMode();
-    if (mode === "OFF") {
-      throw new Error("PIN system is disabled");
-    }
+  let mode = getPinMode();
+  if (mode === "OFF") {
+    throw new Error("PIN system is disabled");
   }
 
   let oldStatus = pin.status;
