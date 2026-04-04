@@ -9,10 +9,22 @@ PIN REQUEST QUEUE ENGINE (FINAL MERGED CONTROLLED)
 ✔ Fail-safe (never stops)
 ✔ Data-safe (no mutation loss)
 ✔ System control (queueStop integrated)
+✔ Dependency-safe (HARD STOP)
 ========================================
 */
 
+// ================= CONFIG =================
 const PIN_QUEUE_LOCK = "PIN_QUEUE_LOCK";
+const RETRY_LIMIT = 3;
+
+// ================= DEPENDENCY CHECK =================
+function isDependencyReady() {
+  return (
+    typeof processPinRequestAuto === "function" &&
+    typeof getPinRequests === "function" &&
+    typeof savePinRequests === "function"
+  );
+}
 
 // ================= LOCK =================
 function isPinQueueLocked() {
@@ -25,8 +37,13 @@ function setPinQueueLock(val) {
 
 // ================= SYSTEM CONTROL =================
 function isQueueAllowed() {
-  let s = JSON.parse(localStorage.getItem("systemSettings")) || {};
-  return !s.queueStop; // true = allowed, false = stopped
+  let s;
+  try {
+    s = JSON.parse(localStorage.getItem("systemSettings")) || {};
+  } catch {
+    s = {};
+  }
+  return !s.queueStop;
 }
 
 // ================= PRIORITY =================
@@ -53,7 +70,6 @@ function groupByPriority(requests) {
 
 // ================= BATCH =================
 function getNextBatch() {
-
   let pending = getPendingRequests();
   let grouped = groupByPriority(pending);
 
@@ -69,9 +85,13 @@ let isRunning = false;
 
 function processPinQueue() {
 
-  // 🔥 SYSTEM CONTROL CHECK
-  if (!isQueueAllowed()) return;
+  // 🔴 HARD DEPENDENCY STOP
+  if (!isDependencyReady()) {
+    console.error("❌ PIN QUEUE STOPPED: Missing dependency");
+    return;
+  }
 
+  if (!isQueueAllowed()) return;
   if (isRunning) return;
   if (isPinQueueLocked()) return;
 
@@ -92,7 +112,6 @@ function processPinQueue() {
 
       try {
 
-        // 🔥 PROCESS USING CORE ENGINE
         processPinRequestAuto(realReq.requestId);
 
       } catch (err) {
@@ -101,7 +120,7 @@ function processPinQueue() {
 
         realReq.retry = (realReq.retry || 0) + 1;
 
-        if (realReq.retry >= 3) {
+        if (realReq.retry >= RETRY_LIMIT) {
           realReq.status = "FAILED";
           realReq.failReason = err.message;
           realReq.processedAt = Date.now();
@@ -110,7 +129,6 @@ function processPinQueue() {
 
     });
 
-    // 🔥 SAVE AFTER UPDATE
     savePinRequests(allRequests);
 
   } catch (err) {
@@ -127,9 +145,9 @@ function processPinQueue() {
 // ================= AUTO RUN =================
 function startPinQueueEngine() {
 
-  // 🔒 SAFETY CHECK
-  if (typeof processPinRequestAuto !== "function") {
-    console.error("processPinRequestAuto not found");
+  // 🔴 START ONLY IF SAFE
+  if (!isDependencyReady()) {
+    console.error("❌ Queue Engine NOT started (dependency missing)");
     return;
   }
 
@@ -138,5 +156,4 @@ function startPinQueueEngine() {
 
 // ================= START =================
 startPinQueueEngine();
-
 
