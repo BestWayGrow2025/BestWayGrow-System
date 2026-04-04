@@ -1,6 +1,6 @@
 /*
 ========================================
-PIN CONFIG SYSTEM (FINAL MASTER CONTROL v2)
+PIN CONFIG SYSTEM (FINAL MASTER CONTROL v3)
 ========================================
 ✔ Safe defaults
 ✔ No overwrite bugs
@@ -62,7 +62,7 @@ function getPinSettings() {
 }
 
 function savePinSettings(data) {
-  localStorage.setItem("pinSettings", JSON.stringify(data));
+  localStorage.setItem("pinSettings", JSON.stringify(data || {}));
 }
 
 // =====================
@@ -184,12 +184,11 @@ function isPinActive(type) {
 }
 
 // =====================
-// 🔹 GET ACTIVE PIN
+// 🔹 GET ACTIVE PIN (FIXED 🔥)
 // =====================
 function getActivePin(type) {
 
-  let pin = getPinSettings()[type]
-♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️w
+  let pin = getPinSettings()[type];
 
   if (!pin) return null;
   if (!isPinActive(type)) return null;
@@ -232,4 +231,3 @@ function calculateTotalWithGST(amount, gst) {
   gst = Number(gst || 0);
   return amount + (amount * gst / 100);
 }
-
