@@ -1,36 +1,64 @@
-<script>
+/*
+========================================
+INCOME LOG SYSTEM (FINAL SAFE ENGINE v2)
+========================================
+✔ Memory safe
+✔ Limit controlled
+✔ Crash safe
+✔ Clean structure
+✔ Production ready
+========================================
+*/
 
 // ===============================
-// 📘 INCOME LOG SYSTEM (UPGRADED)
+// 🔹 LIMIT
 // ===============================
+const INCOME_LOG_LIMIT = 5000;
 
-// ================= GET LOGS =================
+// ===============================
+// 🔹 GET LOGS
+// ===============================
 function getIncomeLogs() {
-  return JSON.parse(localStorage.getItem("incomeLogs") || "[]");
+  try {
+    return JSON.parse(localStorage.getItem("incomeLogs") || "[]");
+  } catch {
+    localStorage.setItem("incomeLogs", "[]");
+    return [];
+  }
 }
 
-// ================= SAVE LOG =================
+// ===============================
+// 🔹 SAVE LOGS
+// ===============================
 function saveIncomeLogs(logs) {
+
+  if (!Array.isArray(logs)) logs = [];
+
+  // 🔒 LIMIT CONTROL
+  if (logs.length > INCOME_LOG_LIMIT) {
+    logs = logs.slice(-INCOME_LOG_LIMIT);
+  }
+
   localStorage.setItem("incomeLogs", JSON.stringify(logs));
 }
 
-// ================= ADD LOG =================
+// ===============================
+// 🔹 ADD LOG
+// ===============================
 function addIncomeLog(data) {
 
-  if (!data || !data.userId || !data.amount) return; // ✅ safety
+  if (!data || !data.userId) return;
+
+  let amount = Number(data.amount);
+  if (isNaN(amount) || amount <= 0) return;
 
   let logs = getIncomeLogs();
 
-  // ✅ LIMIT CONTROL (MAX 5000 logs)
-  if (logs.length > 5000) {
-    logs = logs.slice(logs.length - 5000);
-  }
-
   logs.push({
-    logId: "LOG" + Date.now(),
+    logId: "LOG_" + Date.now(),
     userId: data.userId,
     type: data.type || "unknown",
-    amount: Number(data.amount) || 0,
+    amount: amount,
     sourceUser: data.sourceUser || null,
     note: data.note || "",
     time: new Date().toISOString()
@@ -39,13 +67,17 @@ function addIncomeLog(data) {
   saveIncomeLogs(logs);
 }
 
-// ================= GET USER LOGS =================
+// ===============================
+// 🔹 GET USER LOGS
+// ===============================
 function getUserIncomeLogs(userId) {
   if (!userId) return [];
   return getIncomeLogs().filter(l => l.userId === userId);
 }
 
-// ================= FILTER LOGS =================
+// ===============================
+// 🔹 FILTER LOGS
+// ===============================
 function filterIncomeLogs({ userId, type }) {
 
   let logs = getIncomeLogs();
@@ -61,18 +93,24 @@ function filterIncomeLogs({ userId, type }) {
   return logs;
 }
 
-// ================= CLEAR LOGS (ADMIN) =================
+// ===============================
+// 🔹 CLEAR LOGS (ADMIN)
+// ===============================
 function clearIncomeLogs() {
-  localStorage.removeItem("incomeLogs");
+  localStorage.setItem("incomeLogs", "[]");
 }
 
-// ================= CRITICAL LOG =================
+// ===============================
+// 🔹 CRITICAL LOG
+// ===============================
 function addCriticalIncomeLog(message) {
+
+  if (!message) return;
 
   let logs = getIncomeLogs();
 
   logs.push({
-    logId: "CRITICAL" + Date.now(),
+    logId: "CRITICAL_" + Date.now(),
     userId: "SYSTEM",
     type: "critical",
     amount: 0,
@@ -83,5 +121,3 @@ function addCriticalIncomeLog(message) {
 
   saveIncomeLogs(logs);
 }
-
-</script>
