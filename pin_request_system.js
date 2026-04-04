@@ -1,6 +1,6 @@
 /*
 ========================================
-PIN REQUEST SYSTEM (FINAL PRO ENGINE v3)
+PIN REQUEST SYSTEM (FINAL PRO ENGINE v4)
 ========================================
 ✔ Queue ready
 ✔ Priority system
@@ -9,6 +9,7 @@ PIN REQUEST SYSTEM (FINAL PRO ENGINE v3)
 ✔ Auto + Manual
 ✔ Multi-PIN support
 ✔ Queue-compatible structure
+✔ Safe storage handling
 ========================================
 */
 
@@ -16,11 +17,16 @@ const PIN_REQUEST_KEY = "PIN_REQUEST_DATA";
 
 // ================= LOAD / SAVE =================
 function getPinRequests() {
-  return JSON.parse(localStorage.getItem(PIN_REQUEST_KEY)) || [];
+  try {
+    return JSON.parse(localStorage.getItem(PIN_REQUEST_KEY)) || [];
+  } catch {
+    localStorage.setItem(PIN_REQUEST_KEY, "[]");
+    return [];
+  }
 }
 
 function savePinRequests(data) {
-  localStorage.setItem(PIN_REQUEST_KEY, JSON.stringify(data));
+  localStorage.setItem(PIN_REQUEST_KEY, JSON.stringify(data || []));
 }
 
 // ================= ID =================
@@ -56,6 +62,9 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
   let requests = getPinRequests();
 
+  let safeQty = parseInt(quantity) || 1;
+  if (safeQty < 1) safeQty = 1;
+
   let newRequest = {
     requestId: generateRequestId(),
 
@@ -64,7 +73,7 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
     amount,
     paymentId,
 
-    quantity: quantity || 1, // ✅ FIX (ADMIN PANEL REQUIRED)
+    quantity: safeQty, // ✅ STRICT SAFE
 
     status: "PENDING",
     lock: false,
@@ -73,7 +82,7 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
     priority: detectPriority(userId),
 
-    retry: 0, // ✅ QUEUE SUPPORT
+    retry: 0,
 
     createdAt: Date.now(),
     processedAt: null,
@@ -105,6 +114,10 @@ function processPinRequestAuto(requestId) {
   savePinRequests(requests);
 
   try {
+
+    if (typeof loadPins !== "function" || typeof assignPin !== "function") {
+      throw new Error("PIN system not available");
+    }
 
     let pins = loadPins();
 
@@ -160,7 +173,7 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
   if (req.lock) throw new Error("Already processing");
   if (req.status !== "PENDING") throw new Error("Already processed");
 
-  if (!pinIds.length) {
+  if (!Array.isArray(pinIds) || !pinIds.length) {
     throw new Error("No PINs provided");
   }
 
