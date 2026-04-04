@@ -18,12 +18,34 @@ function saveUsers(users) {
   localStorage.setItem("users", JSON.stringify(users));
 }
 
+// 🔥 SAFE SYSTEM SETTINGS (FIXED)
 function getSystemSettings() {
   try {
-    return JSON.parse(localStorage.getItem("systemSettings") || "{}");
+    let stored = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+
+    let defaults = {
+      lockMode: false,
+      adminAccess: true,
+      franchiseAccess: true,
+      registrationOpen: true
+    };
+
+    let merged = { ...defaults, ...stored };
+
+    localStorage.setItem("systemSettings", JSON.stringify(merged));
+
+    return merged;
+
   } catch {
-    localStorage.setItem("systemSettings", "{}");
-    return {};
+    let clean = {
+      lockMode: false,
+      adminAccess: true,
+      franchiseAccess: true,
+      registrationOpen: true
+    };
+
+    localStorage.setItem("systemSettings", JSON.stringify(clean));
+    return clean;
   }
 }
 
@@ -78,7 +100,6 @@ function isValidIntroducer(id) {
   let user = getUserById(id);
   if (!user) return false;
 
-  // ✅ ADMIN ALWAYS VALID
   if (user.role === "admin" || user.role === "super_admin") {
     return true;
   }
@@ -189,7 +210,6 @@ function registerUser(
     return null;
   }
 
-  // 🔒 STRICT UNIQUE MOBILE
   let duplicate = users.find(u => u.mobile === mobile);
   if (duplicate) {
     alert("Mobile already exists");
@@ -220,7 +240,6 @@ function registerUser(
       position: pos,
       createdAt: new Date().toISOString(),
 
-      // 🔥 DEFAULT ACTIVE (CONTROLLED)
       status: "active",
       isActive: true,
 
@@ -271,24 +290,7 @@ function activateUser(userId) {
 }
 
 // ===================================
-// 🔹 BASIC SECURITY
-// ===================================
-function enableCopyProtection() {
-  document.addEventListener("contextmenu", e => e.preventDefault());
-
-  document.addEventListener("keydown", function (e) {
-    if (
-      (e.ctrlKey && e.key === "c") ||
-      (e.ctrlKey && e.key === "u") ||
-      (e.ctrlKey && e.key === "s")
-    ) {
-      e.preventDefault();
-    }
-  });
-}
-
-// ===================================
-// 🔐 PAGE SECURITY
+// 🔐 PAGE SECURITY (FIXED)
 // ===================================
 function protectPage(config) {
 
@@ -301,7 +303,9 @@ function protectPage(config) {
   };
 
   let key = sessionKey[config.role];
-  let session = JSON.parse(localStorage.getItem(key));
+
+  let raw = localStorage.getItem(key);
+  let session = raw ? JSON.parse(raw) : null;
 
   if (!session || !session.userId) {
     alert("Login required");
@@ -332,21 +336,7 @@ function initCoreSystem() {
     throw new Error("System Locked");
   }
 
-  enableCopyProtection();
-
   let users = getUsers();
-  let settings = getSystemSettings();
-
-  if (Object.keys(settings).length === 0) {
-    settings = {
-      lockMode: false,
-      adminAccess: true,
-      franchiseAccess: true,
-      registrationOpen: true
-    };
-
-    localStorage.setItem("systemSettings", JSON.stringify(settings));
-  }
 
   // SUPER ADMIN
   if (!users.find(u => u.userId === "BWG000000")) {
