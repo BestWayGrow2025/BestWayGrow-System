@@ -3,6 +3,8 @@
 // ===============================
 
 const ACTIVITY_LOG_LIMIT = 5000;
+const CRITICAL_LOG_LIMIT = 1000;
+
 const ACTIVITY_KEY = "activityLogs";
 const CRITICAL_KEY = "criticalLogs";
 
@@ -107,7 +109,7 @@ function filterLogsAdvanced({ userId, role, keyword }) {
 // ===============================
 // ⚠️ CRITICAL LOG
 // ===============================
-function logCritical(message) {
+function logCritical(message, userId = "SYSTEM") {
 
   if (!message) return;
 
@@ -115,10 +117,16 @@ function logCritical(message) {
 
   logs.push({
     id: "CRIT_" + Date.now(),
+    userId,
     message,
     type: "CRITICAL",
     time: new Date().toISOString()
   });
+
+  // 🔒 LIMIT CONTROL (ADDED)
+  if (logs.length > CRITICAL_LOG_LIMIT) {
+    logs = logs.slice(-CRITICAL_LOG_LIMIT);
+  }
 
   safeSave(CRITICAL_KEY, logs);
 
