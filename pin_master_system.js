@@ -6,8 +6,9 @@ PIN MASTER SYSTEM (FINAL CORE ENGINE PRO v3)
 ✔ Lock-safe
 ✔ Queue compatible
 ✔ Status lifecycle fixed
-✔ Config system integrated (FIXED)
-✔ Safe fallback added
+✔ Secure status update
+✔ Full audit tracking
+✔ Core system integrated
 ========================================
 */
 
@@ -43,22 +44,13 @@ function generatePinId(prefix = "PIN") {
   return prefix + "_" + Math.random().toString(36).substring(2, 8) + Date.now();
 }
 
-// ================= PIN MODE (FIXED) =================
+// ================= PIN MODE =================
 function getPinMode() {
+  let settings = typeof getSystemSettings === "function"
+    ? getSystemSettings()
+    : {};
 
-  // ✅ PRIMARY: config system
-  if (typeof loadSystemControls === "function") {
-    let controls = loadSystemControls();
-    return controls.pinMode || "AUTO";
-  }
-
-  // ✅ FALLBACK: core system
-  if (typeof getSystemSettings === "function") {
-    let settings = getSystemSettings();
-    return settings.pinMode || "AUTO";
-  }
-
-  return "AUTO";
+  return settings.pinMode || "AUTO";
 }
 
 // ================= CREATE PIN =================
@@ -140,7 +132,6 @@ function assignPin(pinId, toId, toType, performedBy) {
     pin.assignedTo = toId;
     pin.assignedAt = Date.now();
 
-    // ✅ STATUS FIX
     pin.status = "assigned";
 
     pin.transferHistory.push({
@@ -268,13 +259,34 @@ function deletePin(pinId, performedBy) {
   return true;
 }
 
-// ================= UPDATE STATUS =================
+// ================= UPDATE STATUS (FIXED FINAL) =================
 function updatePinStatus(pinId, status, performedBy) {
 
   let pins = loadPins();
   let pin = pins.find(p => p.pinId === pinId);
 
   if (!pin) throw new Error("PIN not found");
+
+  // 🔒 LOCK CHECK
+  if (pin.lock) {
+    throw new Error("PIN is locked / processing");
+  }
+
+  // 🔒 VALID STATUS
+  const VALID_STATUS = ["active", "assigned", "used"];
+  if (!VALID_STATUS.includes(status)) {
+    throw new Error("Invalid PIN status");
+  }
+
+  // 🔒 SYSTEM MODE
+  if (typeof getPinMode === "function") {
+    let mode = getPinMode();
+    if (mode === "OFF") {
+      throw new Error("PIN system is disabled");
+    }
+  }
+
+  let oldStatus = pin.status;
 
   pin.status = status;
 
@@ -284,7 +296,9 @@ function updatePinStatus(pinId, status, performedBy) {
     action: "PIN_STATUS_UPDATE",
     pinId,
     performedBy,
-    status
+    from: oldStatus,
+    to: status,
+    status: "success"
   });
 
   return true;
