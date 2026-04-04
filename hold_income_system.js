@@ -17,17 +17,35 @@ function saveHoldIncome(data) {
 }
 
 // =====================
-// ➕ ADD HOLD INCOME
+// 🔐 DUPLICATE PROTECTION
 // =====================
-function holdIncome(userId, amount, reason) {
+function isDuplicateHold(userId, amount, reason) {
+  let holds = getHoldIncome();
+
+  return holds.some(h =>
+    h.userId === userId &&
+    h.amount === amount &&
+    h.reason === reason &&
+    (new Date() - new Date(h.time)) < 5000
+  );
+}
+
+// =====================
+// ➕ ADD HOLD INCOME (FIXED)
+// =====================
+function addHoldIncome(userId, amount, reason) {
+
+  if (!userId || !amount || amount <= 0) return;
+
+  if (isDuplicateHold(userId, amount, reason)) return;
 
   let holds = getHoldIncome();
 
   holds.push({
-    id: "H" + Date.now(), // unique id 🔥
+    id: "H" + Date.now(),
     userId,
-    amount,
-    reason,
+    amount: Number(amount),
+    reason: reason || "",
     time: new Date().toISOString(),
     status: "HOLD"
   });
@@ -47,14 +65,9 @@ function releaseHoldIncome(userId) {
 
     if (h.userId === userId && h.status === "HOLD") {
 
-      // ✅ check active
-      if (isUserActive(userId)) {
+      if (typeof isUserActive === "function" && isUserActive(userId)) {
 
-        creditWallet(
-          userId,
-          h.amount,
-          "Released: " + h.reason
-        );
+        creditWallet(userId, h.amount, "Released: " + h.reason);
 
         h.status = "RELEASED";
         h.releaseTime = new Date().toISOString();
@@ -65,13 +78,11 @@ function releaseHoldIncome(userId) {
 
   });
 
-  if (updated) {
-    saveHoldIncome(holds);
-  }
+  if (updated) saveHoldIncome(holds);
 }
 
 // =====================
-// 🔄 RELEASE ALL (SYSTEM WIDE)
+// 🔄 RELEASE ALL
 // =====================
 function releaseAllHoldIncome() {
 
@@ -82,13 +93,9 @@ function releaseAllHoldIncome() {
 
     if (h.status === "HOLD") {
 
-      if (isUserActive(h.userId)) {
+      if (typeof isUserActive === "function" && isUserActive(h.userId)) {
 
-        creditWallet(
-          h.userId,
-          h.amount,
-          "Released: " + h.reason
-        );
+        creditWallet(h.userId, h.amount, "Released: " + h.reason);
 
         h.status = "RELEASED";
         h.releaseTime = new Date().toISOString();
@@ -99,13 +106,11 @@ function releaseAllHoldIncome() {
 
   });
 
-  if (updated) {
-    saveHoldIncome(holds);
-  }
+  if (updated) saveHoldIncome(holds);
 }
 
 // =====================
-// ❌ EXPIRE HOLD INCOME
+// ❌ EXPIRE HOLD
 // =====================
 function expireHoldIncome(days = 30) {
 
@@ -119,7 +124,7 @@ function expireHoldIncome(days = 30) {
 
       let holdTime = new Date(h.time).getTime();
 
-      if ((now - holdTime) > (days * 24 * 60 * 60 * 1000)) {
+      if ((now - holdTime) > (days * 86400000)) {
         h.status = "EXPIRED";
         updated = true;
       }
@@ -127,13 +132,11 @@ function expireHoldIncome(days = 30) {
 
   });
 
-  if (updated) {
-    saveHoldIncome(holds);
-  }
+  if (updated) saveHoldIncome(holds);
 }
 
 // =====================
-// 🔍 GET USER HOLD SUMMARY
+// 🔍 USER SUMMARY
 // =====================
 function getUserHoldSummary(userId) {
 
@@ -147,17 +150,10 @@ function getUserHoldSummary(userId) {
 
     if (h.userId === userId) {
 
-      if (h.status === "HOLD") {
-        totalHold += h.amount;
-      }
+      if (h.status === "HOLD") totalHold += h.amount;
+      if (h.status === "RELEASED") totalReleased += h.amount;
+      if (h.status === "EXPIRED") totalExpired += h.amount;
 
-      if (h.status === "RELEASED") {
-        totalReleased += h.amount;
-      }
-
-      if (h.status === "EXPIRED") {
-        totalExpired += h.amount;
-      }
     }
 
   });
@@ -170,21 +166,21 @@ function getUserHoldSummary(userId) {
 }
 
 // =====================
-// 🔄 AUTO PROCESSOR (VERY IMPORTANT 🔥)
+// 🔄 AUTO PROCESSOR
 // =====================
 function startHoldProcessor() {
 
   setInterval(() => {
 
-    releaseAllHoldIncome(); // release if active
-    expireHoldIncome(30);   // expire after 30 days
+    releaseAllHoldIncome();
+    expireHoldIncome(30);
 
-  }, 5000); // every 5 sec
+  }, 5000);
 
 }
 
 // =====================
-// 🚀 AUTO START
+// 🚀 START
 // =====================
 startHoldProcessor();
 
