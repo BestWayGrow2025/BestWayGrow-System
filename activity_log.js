@@ -1,5 +1,5 @@
 // ===============================
-// 📜 ACTIVITY LOG SYSTEM (FINAL ENTERPRISE)
+// 📜 ACTIVITY LOG SYSTEM (FINAL ENTERPRISE v2)
 // ===============================
 
 const ACTIVITY_LOG_LIMIT = 5000;
@@ -24,7 +24,7 @@ function safeLoad(key) {
 // 🔹 SAFE SAVE
 // ===============================
 function safeSave(key, data) {
-  localStorage.setItem(key, JSON.stringify(data));
+  localStorage.setItem(key, JSON.stringify(data || []));
 }
 
 // ===============================
@@ -45,6 +45,7 @@ function logActivity(userId, role, action) {
     time: new Date().toISOString()
   });
 
+  // 🔒 LIMIT CONTROL (SAFE)
   if (logs.length > ACTIVITY_LOG_LIMIT) {
     logs = logs.slice(-ACTIVITY_LOG_LIMIT);
   }
@@ -123,7 +124,7 @@ function logCritical(message, userId = "SYSTEM") {
     time: new Date().toISOString()
   });
 
-  // 🔒 LIMIT CONTROL (ADDED)
+  // 🔒 LIMIT CONTROL (IMPORTANT FIX)
   if (logs.length > CRITICAL_LOG_LIMIT) {
     logs = logs.slice(-CRITICAL_LOG_LIMIT);
   }
