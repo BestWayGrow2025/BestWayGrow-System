@@ -1,12 +1,14 @@
 /*
 ========================================
-INCOME LOG SYSTEM (FINAL SAFE ENGINE v3)
+INCOME LOG SYSTEM (FINAL CORE v4)
 ========================================
 ✔ Memory safe
 ✔ Limit controlled
 ✔ Crash safe
 ✔ Duplicate protected
 ✔ Critical logs separated
+✔ Wallet sync ready
+✔ Hold system compatible
 ✔ Production ready
 ========================================
 */
@@ -35,7 +37,6 @@ function saveIncomeLogs(logs) {
 
   if (!Array.isArray(logs)) logs = [];
 
-  // 🔒 LIMIT CONTROL
   if (logs.length > INCOME_LOG_LIMIT) {
     logs = logs.slice(-INCOME_LOG_LIMIT);
   }
@@ -44,7 +45,7 @@ function saveIncomeLogs(logs) {
 }
 
 // ===============================
-// 🔹 ADD LOG
+// 🔹 ADD LOG (CORE ENTRY POINT)
 // ===============================
 function addIncomeLog(data) {
 
@@ -65,7 +66,7 @@ function addIncomeLog(data) {
 
   if (exists) return;
 
-  logs.push({
+  let newLog = {
     logId: "LOG_" + Date.now(),
     userId: data.userId,
     type: data.type || "unknown",
@@ -73,9 +74,50 @@ function addIncomeLog(data) {
     sourceUser: data.sourceUser || null,
     note: data.note || "",
     time: new Date().toISOString()
-  });
+  };
 
+  logs.push(newLog);
   saveIncomeLogs(logs);
+
+  // ===============================
+  // 🔥 AUTO SYNC (SAFE)
+  // ===============================
+
+  try {
+
+    // 💰 WALLET CREDIT
+    if (typeof creditWallet === "function") {
+
+      // 👉 HOLD LOGIC CHECK
+      if (typeof isUserActive === "function" && !isUserActive(data.userId)) {
+
+        // 🔒 SEND TO HOLD
+        if (typeof addHoldIncome === "function") {
+          addHoldIncome(
+            data.userId,
+            amount,
+            data.type || "Income Hold"
+          );
+        }
+
+      } else {
+
+        // 💰 DIRECT CREDIT
+        creditWallet(
+          data.userId,
+          amount,
+          data.type || "Income Credit"
+        );
+
+      }
+    }
+
+  } catch (err) {
+
+    // 🔴 CRITICAL LOG
+    addCriticalIncomeLog("Wallet sync failed: " + err.message);
+
+  }
 }
 
 // ===============================
@@ -112,7 +154,7 @@ function clearIncomeLogs() {
 }
 
 // ===============================
-// 🔹 CRITICAL LOG (SEPARATE STORAGE)
+// 🔹 CRITICAL LOG
 // ===============================
 function addCriticalIncomeLog(message) {
 
@@ -133,11 +175,11 @@ function addCriticalIncomeLog(message) {
     time: new Date().toISOString()
   });
 
-  // 🔒 LIMIT CONTROL (CRITICAL)
   if (logs.length > 1000) {
     logs = logs.slice(-1000);
   }
 
   localStorage.setItem(key, JSON.stringify(logs));
 }
+
 
