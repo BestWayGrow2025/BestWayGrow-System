@@ -1,11 +1,11 @@
 /*
 ========================================
-TREE ENGINE (FINAL v1)
+TREE ENGINE (FINAL v2)
 ========================================
 ✔ Deep LEFT / RIGHT placement
-✔ Linked with registration queue
-✔ Parent-child structure maintained
-✔ Clean + scalable
+✔ Used by registration queue
+✔ Clean structure
+✔ Tree read + write separated
 ========================================
 */
 
@@ -13,25 +13,23 @@ TREE ENGINE (FINAL v1)
 function getChildren(userId) {
   let users = getUsers();
 
-  return users.filter(u =>
-    u.sponsorId === userId
-  );
+  return users.filter(u => u.sponsorId === userId);
 }
 
 // ================= GET LEFT CHILD =================
 function getLeftChild(userId) {
-  let users = getUsers();
-  return users.find(u => u.userId === userId)?.leftChild || null;
+  let user = getUsers().find(u => u.userId === userId);
+  return user ? user.leftChild : null;
 }
 
 // ================= GET RIGHT CHILD =================
 function getRightChild(userId) {
-  let users = getUsers();
-  return users.find(u => u.userId === userId)?.rightChild || null;
+  let user = getUsers().find(u => u.userId === userId);
+  return user ? user.rightChild : null;
 }
 
-// ================= PLACE USER (DEEP) =================
-function placeUserDeep(introducerId, position) {
+// ================= FIND PLACEMENT =================
+function findPlacement(introducerId, position) {
 
   let users = getUsers();
 
@@ -61,11 +59,46 @@ function placeUserDeep(introducerId, position) {
   }
 }
 
+// ================= CREATE USER WITH TREE =================
+function createUserWithTree(req) {
 
-🔗 ✅ NOW IMPORTANT CONNECTION (VERY CLEAR)
-1. In registration_queue.js
-👉 REMOVE this function:
-placeUserDeep()
+  let users = getUsers();
 
-👉 ADD this at top:
-<script src="tree_engine.js"></script>
+  // 🔒 duplicate safety
+  let exists = users.find(u => u.mobile === req.mobile);
+  if (exists) throw new Error("Mobile already exists");
+
+  let userId = "BWG" + Math.random().toString(36).substring(2, 8);
+
+  let placement = findPlacement(req.introducerId, req.position || "L");
+
+  let newUser = {
+    userId,
+    username: req.username,
+    password: req.password,
+    mobile: req.mobile,
+
+    introducerId: req.introducerId,
+    sponsorId: placement.parentId,
+    position: placement.side,
+
+    leftChild: null,
+    rightChild: null,
+
+    createdAt: Date.now()
+  };
+
+  // 🔗 LINK PARENT
+  let parent = users.find(u => u.userId === placement.parentId);
+
+  if (placement.side === "L") {
+    parent.leftChild = userId;
+  } else {
+    parent.rightChild = userId;
+  }
+
+  users.push(newUser);
+  localStorage.setItem("users", JSON.stringify(users));
+
+  return newUser;
+}
