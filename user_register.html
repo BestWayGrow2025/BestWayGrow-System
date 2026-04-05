@@ -22,11 +22,8 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORE -->
+<!-- ✅ ONLY CORE -->
 <script src="core_system.js"></script>
-
-<!-- ✅ CORRECT QUEUE SYSTEM -->
-<script src="pin_request_queue_engine.js"></script>
 
 <script>
 
@@ -46,7 +43,6 @@ document.getElementById("introLabel").innerText =
 // ================= REGISTER =================
 function handleRegister() {
 
-  // 🔒 GLOBAL LOCK
   if (window.registerLock) return;
   window.registerLock = true;
 
@@ -89,60 +85,30 @@ function handleRegister() {
       return;
     }
 
-    let sponsorId = introducerId;
+    // ✅ GENERATE ID
+    let userId = "BWG" + Math.random().toString(36).substring(2,8);
 
-    // ⏱ TIMESTAMP
-    let requestTime = Date.now();
-
-    // 🔥 ADD TO QUEUE
-    addToQueue({
+    let newUser = {
+      userId,
       username,
       password,
       mobile,
       introducerId,
-      sponsorId,
+      sponsorId: introducerId,
       position,
-      requestTime
-    });
+      createdAt: Date.now()
+    };
 
-    // 🔥 PROCESS QUEUE
-    processQueue();
+    users.push(newUser);
+    localStorage.setItem("users", JSON.stringify(users));
 
-    document.getElementById("msg").innerText = "⏳ Processing registration...";
-
-    let attempts = 0;
-
-    let checkUser = setInterval(() => {
-
-      let users = getUsers();
-      let newUser = users.find(u => u.mobile === mobile);
-
-      if (newUser) {
-
-        document.getElementById("msg").innerHTML = `
-          ✅ Registration Successful <br>
-          User ID: <b>${newUser.userId}</b><br>
-          Introducer: ${introducerId}<br>
-          Position: ${position === "L" ? "LEFT" : "RIGHT"}<br><br>
-          🔗 <a href="user_login.html">Go to Login</a>
-        `;
-
-        clearInterval(checkUser);
-
-      } else {
-
-        attempts++;
-
-        if (attempts > 6) {
-          document.getElementById("msg").innerText =
-            "⚠️ Delay detected. Please refresh page";
-
-          clearInterval(checkUser);
-        }
-
-      }
-
-    }, 1000);
+    document.getElementById("msg").innerHTML = `
+      ✅ Registration Successful <br>
+      User ID: <b>${userId}</b><br>
+      Introducer: ${introducerId}<br>
+      Position: ${position === "L" ? "LEFT" : "RIGHT"}<br><br>
+      🔗 <a href="user_login.html">Go to Login</a>
+    `;
 
   } finally {
     resetBtn();
@@ -161,5 +127,4 @@ function resetBtn() {
 
 </body>
 </html>
-
 
