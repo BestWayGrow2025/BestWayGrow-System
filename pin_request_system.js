@@ -1,6 +1,6 @@
 /*
 ========================================
-PIN REQUEST SYSTEM (FINAL PRO ENGINE v4)
+PIN REQUEST SYSTEM (FINAL PRO ENGINE v5)
 ========================================
 ✔ Queue ready
 ✔ Priority system
@@ -8,7 +8,8 @@ PIN REQUEST SYSTEM (FINAL PRO ENGINE v4)
 ✔ Fail-safe
 ✔ Auto + Manual
 ✔ Multi-PIN support
-✔ Queue-compatible structure
+✔ Duplicate protection
+✔ Amount validation
 ✔ Safe storage handling
 ========================================
 */
@@ -60,7 +61,24 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
     throw new Error("Invalid PIN type");
   }
 
+  amount = Number(amount);
+
+  if (isNaN(amount) || amount <= 0) {
+    throw new Error("Invalid amount");
+  }
+
   let requests = getPinRequests();
+
+  // 🔒 DUPLICATE REQUEST BLOCK
+  let pending = requests.find(r =>
+    r.userId === userId &&
+    r.type === type &&
+    r.status === "PENDING"
+  );
+
+  if (pending) {
+    throw new Error("You already have a pending request");
+  }
 
   let safeQty = parseInt(quantity) || 1;
   if (safeQty < 1) safeQty = 1;
@@ -73,7 +91,7 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
     amount,
     paymentId,
 
-    quantity: safeQty, // ✅ STRICT SAFE
+    quantity: safeQty,
 
     status: "PENDING",
     lock: false,
@@ -237,3 +255,4 @@ function rejectPinRequest(requestId, performedBy = "ADMIN") {
 function getUserPinRequests(userId) {
   return getPinRequests().filter(r => r.userId === userId);
 }
+
