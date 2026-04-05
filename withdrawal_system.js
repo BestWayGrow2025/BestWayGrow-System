@@ -1,5 +1,5 @@
 /* ===============================
-   💸 WITHDRAWAL SYSTEM (FINAL PRO v2)
+   💸 WITHDRAWAL SYSTEM (FINAL PRO v3)
 =============================== */
 
 // =====================
@@ -21,6 +21,10 @@ function getWithdrawals() {
 
 function saveWithdrawals(data) {
 
+  // 🔒 ARRAY SAFETY (CRITICAL)
+  if (!Array.isArray(data)) data = [];
+
+  // 🔒 LIMIT CONTROL
   if (data.length > WITHDRAW_LIMIT) {
     data = data.slice(-WITHDRAW_LIMIT);
   }
@@ -63,6 +67,16 @@ function requestWithdraw(userId, amount) {
       return alert("Invalid amount");
     }
 
+    // 🔒 FAST DUPLICATE BLOCK (CRITICAL)
+    let recent = getWithdrawals().find(r =>
+      r.userId === userId &&
+      (new Date() - new Date(r.time)) < 5000
+    );
+
+    if (recent) {
+      return alert("Please wait before making another request");
+    }
+
     // 🔒 GLOBAL SAFETY
     if (!isWithdrawSystemSafe()) {
       return alert("Withdraw system temporarily disabled");
@@ -75,7 +89,7 @@ function requestWithdraw(userId, amount) {
       }
     }
 
-    // 🔒 DUPLICATE REQUEST BLOCK
+    // 🔒 DUPLICATE PENDING CHECK
     let pending = getWithdrawals().find(r =>
       r.userId === userId && r.status === "PENDING"
     );
@@ -104,7 +118,7 @@ function requestWithdraw(userId, amount) {
     let charge = parseFloat(((amount * CHARGE_PERCENT) / 100).toFixed(2));
     let finalAmount = parseFloat((amount - charge).toFixed(2));
 
-    // 💳 SAFE WALLET DEDUCT (NO DOUBLE LOG)
+    // 💳 SAFE WALLET DEDUCT
     if (typeof debitWallet === "function") {
       if (!debitWallet(userId, amount, "Withdrawal Request")) return;
     } else {
