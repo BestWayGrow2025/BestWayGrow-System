@@ -1,11 +1,12 @@
 /*
 ========================================
-INCOME LOG SYSTEM (FINAL SAFE ENGINE v2)
+INCOME LOG SYSTEM (FINAL SAFE ENGINE v3)
 ========================================
 ✔ Memory safe
 ✔ Limit controlled
 ✔ Crash safe
-✔ Clean structure
+✔ Duplicate protected
+✔ Critical logs separated
 ✔ Production ready
 ========================================
 */
@@ -54,6 +55,16 @@ function addIncomeLog(data) {
 
   let logs = getIncomeLogs();
 
+  // 🔒 DUPLICATE PROTECTION
+  let exists = logs.some(l =>
+    l.userId === data.userId &&
+    Number(l.amount) === amount &&
+    l.type === data.type &&
+    (new Date() - new Date(l.time)) < 3000
+  );
+
+  if (exists) return;
+
   logs.push({
     logId: "LOG_" + Date.now(),
     userId: data.userId,
@@ -101,23 +112,32 @@ function clearIncomeLogs() {
 }
 
 // ===============================
-// 🔹 CRITICAL LOG
+// 🔹 CRITICAL LOG (SEPARATE STORAGE)
 // ===============================
 function addCriticalIncomeLog(message) {
 
   if (!message) return;
 
-  let logs = getIncomeLogs();
+  let key = "incomeCriticalLogs";
+  let logs;
+
+  try {
+    logs = JSON.parse(localStorage.getItem(key)) || [];
+  } catch {
+    logs = [];
+  }
 
   logs.push({
-    logId: "CRITICAL_" + Date.now(),
-    userId: "SYSTEM",
-    type: "critical",
-    amount: 0,
-    sourceUser: null,
-    note: message,
+    id: "CRITICAL_" + Date.now(),
+    message,
     time: new Date().toISOString()
   });
 
-  saveIncomeLogs(logs);
+  // 🔒 LIMIT CONTROL (CRITICAL)
+  if (logs.length > 1000) {
+    logs = logs.slice(-1000);
+  }
+
+  localStorage.setItem(key, JSON.stringify(logs));
 }
+
