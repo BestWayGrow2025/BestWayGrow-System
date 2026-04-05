@@ -1,6 +1,6 @@
 /*
 ========================================
-PIN REQUEST SYSTEM (FINAL PRO ENGINE v5)
+PIN REQUEST SYSTEM (FINAL PRO ENGINE v6)
 ========================================
 ✔ Queue ready
 ✔ Priority system
@@ -10,7 +10,8 @@ PIN REQUEST SYSTEM (FINAL PRO ENGINE v5)
 ✔ Multi-PIN support
 ✔ Duplicate protection
 ✔ Amount validation
-✔ Safe storage handling
+✔ Retry-safe (FIXED)
+✔ Production safe
 ========================================
 */
 
@@ -170,9 +171,17 @@ function processPinRequestAuto(requestId) {
 
   } catch (err) {
 
-    req.status = "FAILED";
-    req.failReason = err.message;
-    req.processedAt = Date.now();
+    // 🔥 RETRY SAFE FIX
+    req.retry = (req.retry || 0) + 1;
+
+    if (req.retry >= 3) {
+      req.status = "FAILED";
+      req.failReason = err.message;
+      req.processedAt = Date.now();
+    } else {
+      req.status = "PENDING"; // 🔁 retry later
+    }
+
     req.lock = false;
 
     savePinRequests(requests);
