@@ -1,5 +1,5 @@
 // ===============================
-// 📜 ACTIVITY LOG SYSTEM (FINAL ENTERPRISE v2)
+// 📜 ACTIVITY LOG SYSTEM (FINAL ENTERPRISE v3)
 // ===============================
 
 const ACTIVITY_LOG_LIMIT = 5000;
@@ -21,10 +21,20 @@ function safeLoad(key) {
 }
 
 // ===============================
-// 🔹 SAFE SAVE
+// 🔹 SAFE SAVE (UPGRADED 🔥)
 // ===============================
-function safeSave(key, data) {
-  localStorage.setItem(key, JSON.stringify(data || []));
+function safeSave(key, data, limit = null) {
+
+  if (!Array.isArray(data)) {
+    localStorage.setItem(key, JSON.stringify(data || []));
+    return;
+  }
+
+  if (limit && data.length > limit) {
+    data = data.slice(-limit);
+  }
+
+  localStorage.setItem(key, JSON.stringify(data));
 }
 
 // ===============================
@@ -45,12 +55,7 @@ function logActivity(userId, role, action) {
     time: new Date().toISOString()
   });
 
-  // 🔒 LIMIT CONTROL (SAFE)
-  if (logs.length > ACTIVITY_LOG_LIMIT) {
-    logs = logs.slice(-ACTIVITY_LOG_LIMIT);
-  }
-
-  safeSave(ACTIVITY_KEY, logs);
+  safeSave(ACTIVITY_KEY, logs, ACTIVITY_LOG_LIMIT);
 
   console.log("ACTIVITY:", action);
 }
@@ -90,13 +95,8 @@ function filterLogsAdvanced({ userId, role, keyword }) {
 
   let logs = getActivityLogs();
 
-  if (userId) {
-    logs = logs.filter(l => l.userId === userId);
-  }
-
-  if (role) {
-    logs = logs.filter(l => l.role === role);
-  }
+  if (userId) logs = logs.filter(l => l.userId === userId);
+  if (role) logs = logs.filter(l => l.role === role);
 
   if (keyword) {
     logs = logs.filter(l =>
@@ -124,12 +124,7 @@ function logCritical(message, userId = "SYSTEM") {
     time: new Date().toISOString()
   });
 
-  // 🔒 LIMIT CONTROL (IMPORTANT FIX)
-  if (logs.length > CRITICAL_LOG_LIMIT) {
-    logs = logs.slice(-CRITICAL_LOG_LIMIT);
-  }
-
-  safeSave(CRITICAL_KEY, logs);
+  safeSave(CRITICAL_KEY, logs, CRITICAL_LOG_LIMIT);
 
   console.error("CRITICAL:", message);
 }
@@ -140,3 +135,4 @@ function logCritical(message, userId = "SYSTEM") {
 function getCriticalLogs() {
   return safeLoad(CRITICAL_KEY);
 }
+
