@@ -1,15 +1,15 @@
 /*
 ========================================
-PIN REQUEST QUEUE ENGINE (FINAL MERGED CONTROLLED)
+PIN REQUEST QUEUE ENGINE (FINAL STABLE v5)
 ========================================
 ✔ Priority based (GREEN > YELLOW > RED)
 ✔ Batch system (3:2:1)
 ✔ Lock system
 ✔ Retry control
 ✔ Fail-safe (never stops)
-✔ Data-safe (no mutation loss)
-✔ System control (queueStop integrated)
-✔ Dependency-safe (HARD STOP)
+✔ Data-safe
+✔ System control
+✔ Dependency-safe (WAIT MODE)
 ========================================
 */
 
@@ -85,9 +85,9 @@ let isRunning = false;
 
 function processPinQueue() {
 
-  // 🔴 HARD DEPENDENCY STOP
+  // 🟡 WAIT MODE (NOT STOP)
   if (!isDependencyReady()) {
-    console.error("❌ PIN QUEUE STOPPED: Missing dependency");
+    console.warn("⏳ Waiting for dependencies...");
     return;
   }
 
@@ -144,16 +144,8 @@ function processPinQueue() {
 
 // ================= AUTO RUN =================
 function startPinQueueEngine() {
-
-  // 🔴 START ONLY IF SAFE
-  if (!isDependencyReady()) {
-    console.error("❌ Queue Engine NOT started (dependency missing)");
-    return;
-  }
-
   setInterval(processPinQueue, 3000);
 }
 
 // ================= START =================
 startPinQueueEngine();
-
