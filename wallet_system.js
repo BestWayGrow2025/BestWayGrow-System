@@ -149,3 +149,5 @@ function getWalletBalance(userId) {
   let user = getUsers().find(u => u.userId === userId);
   return Number(user?.wallet || 0);
 }
+
+
