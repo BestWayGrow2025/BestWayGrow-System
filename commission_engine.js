@@ -1,11 +1,13 @@
 /*
 ========================================
-COMMISSION ENGINE (FINAL SAFE v2)
+COMMISSION ENGINE (FINAL SAFE v3)
 ========================================
 ✔ Decimal safe
 ✔ Memory safe
 ✔ Duplicate protected
 ✔ CORE integrated
+✔ Hold system externalized
+✔ Pool type safe
 ✔ Production ready
 ========================================
 */
@@ -23,8 +25,6 @@ const COMMISSION_CONFIG = {
   ctorPercent: 25
 };
 
-const HOLD_LIMIT = 3000;
-
 // =====================
 // 🔹 SAFE LOAD
 // =====================
@@ -38,23 +38,6 @@ function loadSafe(key, def = []) {
 }
 
 // =====================
-// 🔹 SAFE SAVE
-// =====================
-function saveSafe(key, data, limit = null) {
-
-  if (!Array.isArray(data)) {
-    localStorage.setItem(key, JSON.stringify(data));
-    return;
-  }
-
-  if (limit && data.length > limit) {
-    data = data.slice(-limit);
-  }
-
-  localStorage.setItem(key, JSON.stringify(data));
-}
-
-// =====================
 // 🔹 SAFE LOG
 // =====================
 function safeLog(data) {
@@ -64,48 +47,15 @@ function safeLog(data) {
 }
 
 // =====================
-// 🔐 HOLD DUPLICATE CHECK
+// 🔒 CTOR POOL SAFE GET
 // =====================
-function isDuplicateHold(userId, amount, reason) {
-
-  let holds = loadSafe("holdIncome", []);
-
-  return holds.some(h =>
-    h.userId === userId &&
-    Number(h.amount) === Number(amount) &&
-    h.reason === reason &&
-    (new Date() - new Date(h.time)) < 5000
-  );
-}
-
-// =====================
-// 🔹 HOLD INCOME (UPDATED ✅)
-// =====================
-function addHoldIncome(userId, amount, reason) {
-
-  amount = Number(amount);
-  if (!userId || isNaN(amount) || amount <= 0) return;
-
-  if (isDuplicateHold(userId, amount, reason)) return;
-
-  let holds = loadSafe("holdIncome", []);
-
-  holds.push({
-    userId,
-    amount,
-    reason,
-    time: new Date().toISOString(),
-    status: "HOLD"
-  });
-
-  saveSafe("holdIncome", holds, HOLD_LIMIT);
-
-  safeLog({
-    userId,
-    type: "hold",
-    amount,
-    note: reason
-  });
+function getCTORPool() {
+  try {
+    return Number(JSON.parse(localStorage.getItem("ctorPool"))) || 0;
+  } catch {
+    localStorage.setItem("ctorPool", "0");
+    return 0;
+  }
 }
 
 // =====================
@@ -143,7 +93,9 @@ function payUGLIIncome(userId, bvAmount) {
         });
 
       } else {
-        addHoldIncome(parent.userId, income, `UGLI L${i + 1}`);
+        if (typeof addHoldIncome === "function") {
+          addHoldIncome(parent.userId, income, `UGLI L${i + 1}`);
+        }
       }
     }
 
@@ -185,7 +137,9 @@ function payRLIIncome(userId, totalBV) {
       });
 
     } else {
-      addHoldIncome(parent.userId, perLevel, `RLI L${i}`);
+      if (typeof addHoldIncome === "function") {
+        addHoldIncome(parent.userId, perLevel, `RLI L${i}`);
+      }
     }
 
     current = parent;
@@ -197,11 +151,11 @@ function payRLIIncome(userId, totalBV) {
 // =====================
 function addToCTORPool(bvAmount) {
 
-  let pool = loadSafe("ctorPool", 0);
+  let pool = getCTORPool();
 
   let amount = Number((bvAmount * COMMISSION_CONFIG.ctorPercent) / 100);
 
-  pool = parseFloat((Number(pool) + amount).toFixed(2));
+  pool = parseFloat((pool + amount).toFixed(2));
 
   localStorage.setItem("ctorPool", JSON.stringify(pool));
 
@@ -252,4 +206,6 @@ function processIncome(type, userId, bvAmount) {
 
   console.log("✅ Income processed:", type);
 }
+
+
 
