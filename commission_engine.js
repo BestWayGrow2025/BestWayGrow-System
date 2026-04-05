@@ -1,13 +1,12 @@
 /*
 ========================================
-COMMISSION ENGINE (FINAL SAFE v3)
+COMMISSION ENGINE (FINAL CLEAN v4)
 ========================================
-✔ Decimal safe
-✔ Memory safe
-✔ Duplicate protected
-✔ CORE integrated
-✔ Hold system externalized
-✔ Pool type safe
+✔ Single source of truth (income log)
+✔ No duplicate wallet entry
+✔ No hold conflict
+✔ Modular safe
+✔ Pool safe
 ✔ Production ready
 ========================================
 */
@@ -26,19 +25,7 @@ const COMMISSION_CONFIG = {
 };
 
 // =====================
-// 🔹 SAFE LOAD
-// =====================
-function loadSafe(key, def = []) {
-  try {
-    return JSON.parse(localStorage.getItem(key)) || def;
-  } catch {
-    localStorage.setItem(key, JSON.stringify(def));
-    return def;
-  }
-}
-
-// =====================
-// 🔹 SAFE LOG
+// 🔹 SAFE LOG (CORE)
 // =====================
 function safeLog(data) {
   if (typeof addIncomeLog === "function") {
@@ -47,7 +34,7 @@ function safeLog(data) {
 }
 
 // =====================
-// 🔒 CTOR POOL SAFE GET
+// 🔒 CTOR POOL
 // =====================
 function getCTORPool() {
   try {
@@ -80,23 +67,14 @@ function payUGLIIncome(userId, bvAmount) {
 
     if (income > 0) {
 
-      if (typeof isUserActive === "function" && isUserActive(parent.userId)) {
+      safeLog({
+        userId: parent.userId,
+        type: "upgrade",
+        amount: income,
+        sourceUser: userId,
+        note: `UGLI L${i + 1} (${percent}%)`
+      });
 
-        creditWallet(parent.userId, income, `UGLI L${i + 1} (${percent}%)`);
-
-        safeLog({
-          userId: parent.userId,
-          type: "upgrade",
-          amount: income,
-          sourceUser: userId,
-          note: `UGLI L${i + 1}`
-        });
-
-      } else {
-        if (typeof addHoldIncome === "function") {
-          addHoldIncome(parent.userId, income, `UGLI L${i + 1}`);
-        }
-      }
     }
 
     current = parent;
@@ -124,23 +102,13 @@ function payRLIIncome(userId, totalBV) {
     let parent = users.find(u => u.userId === current.introducerId);
     if (!parent) break;
 
-    if (typeof isUserActive === "function" && isUserActive(parent.userId)) {
-
-      creditWallet(parent.userId, perLevel, `RLI L${i}`);
-
-      safeLog({
-        userId: parent.userId,
-        type: "repurchase",
-        amount: perLevel,
-        sourceUser: userId,
-        note: `RLI L${i}`
-      });
-
-    } else {
-      if (typeof addHoldIncome === "function") {
-        addHoldIncome(parent.userId, perLevel, `RLI L${i}`);
-      }
-    }
+    safeLog({
+      userId: parent.userId,
+      type: "repurchase",
+      amount: perLevel,
+      sourceUser: userId,
+      note: `RLI L${i}`
+    });
 
     current = parent;
   }
@@ -176,24 +144,20 @@ function processIncome(type, userId, bvAmount) {
 
   if (!userId || isNaN(bvAmount) || bvAmount <= 0) return;
 
-  if (typeof isIncomeSystemSafe === "function") {
-    if (!isIncomeSystemSafe()) {
-      console.warn("⚠ Income system disabled");
+  if (typeof isIncomeAllowed === "function") {
+    if (!isIncomeAllowed(type === "upgrade" ? "ugli" : "rli")) {
+      console.warn("⚠ Income blocked by control system");
       return;
     }
   }
 
   if (type === "upgrade") {
 
-    if (typeof isUGLIEnabled === "function" && !isUGLIEnabled()) return;
-
     payUGLIIncome(userId, bvAmount);
     addToCTORPool(bvAmount);
 
   } 
   else if (type === "repurchase") {
-
-    if (typeof isRLIEnabled === "function" && !isRLIEnabled()) return;
 
     let usableBV = bvAmount * 0.5;
 
@@ -206,6 +170,5 @@ function processIncome(type, userId, bvAmount) {
 
   console.log("✅ Income processed:", type);
 }
-
 
 
