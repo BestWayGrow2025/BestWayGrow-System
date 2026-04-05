@@ -1,11 +1,12 @@
 /*
 ========================================
-💰 INCOME CONTROL SYSTEM (FINAL PRO v2)
+💰 INCOME CONTROL SYSTEM (FINAL PRO v3)
 ========================================
 ✔ Safe defaults
 ✔ Self-healing
 ✔ Toggle safe
 ✔ Activity log integrated
+✔ Corruption-proof save
 ✔ Production ready
 ========================================
 */
@@ -30,7 +31,7 @@ function getIncomeSettings() {
   try {
     let stored = JSON.parse(localStorage.getItem("incomeSettings") || "{}");
 
-    // 🔥 MERGE DEFAULTS (CRITICAL FIX)
+    // 🔥 MERGE DEFAULTS
     let merged = {
       ...getDefaultIncomeSettings(),
       ...stored
@@ -47,8 +48,15 @@ function getIncomeSettings() {
   }
 }
 
+// 🔒 SAFE SAVE (FINAL FIX)
 function saveIncomeSettings(data) {
-  localStorage.setItem("incomeSettings", JSON.stringify(data || {}));
+
+  let safe = {
+    ...getDefaultIncomeSettings(),
+    ...(data || {})
+  };
+
+  localStorage.setItem("incomeSettings", JSON.stringify(safe));
 }
 
 // =====================
