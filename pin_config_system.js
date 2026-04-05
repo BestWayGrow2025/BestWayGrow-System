@@ -231,3 +231,4 @@ function calculateTotalWithGST(amount, gst) {
   gst = Number(gst || 0);
   return amount + (amount * gst / 100);
 }
+
