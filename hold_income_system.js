@@ -1,5 +1,3 @@
-<script>
-
 /*
 ========================================
 HOLD INCOME SYSTEM (FINAL SAFE v2)
@@ -33,7 +31,7 @@ function saveHoldIncome(data) {
 
   if (!Array.isArray(data)) data = [];
 
-  // 🔒 LIMIT CONTROL (CRITICAL)
+  // 🔒 LIMIT CONTROL
   if (data.length > HOLD_LIMIT) {
     data = data.slice(-HOLD_LIMIT);
   }
@@ -212,6 +210,4 @@ function startHoldProcessor() {
 // 🚀 START
 // =====================
 startHoldProcessor();
-
-</script>
 
