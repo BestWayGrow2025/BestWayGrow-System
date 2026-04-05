@@ -22,8 +22,11 @@
 
 <p id="msg"></p>
 
-<!-- ✅ ONLY CORE -->
+<!-- ✅ CORE -->
 <script src="core_system.js"></script>
+
+<!-- ✅ NEW QUEUE ENGINE -->
+<script src="registration_queue.js"></script>
 
 <script>
 
@@ -37,7 +40,7 @@ let introducerId = params.get("ref") || "BWG000001";
 let introUser = getUserById(introducerId);
 
 document.getElementById("introLabel").innerText =
-  "Introducer: " + introducerId + 
+  "Introducer: " + introducerId +
   (introUser ? " (" + (introUser.username || "") + ")" : "");
 
 // ================= REGISTER =================
@@ -69,7 +72,6 @@ function handleRegister() {
       return;
     }
 
-    // ✅ DEFAULT LEFT
     let position = positionElement ? positionElement.value : "L";
 
     if (!isValidIntroducer(introducerId)) {
@@ -85,30 +87,52 @@ function handleRegister() {
       return;
     }
 
-    // ✅ GENERATE ID
-    let userId = "BWG" + Math.random().toString(36).substring(2,8);
-
-    let newUser = {
-      userId,
+    // 🔥 ADD TO QUEUE (FINAL SYSTEM)
+    addToRegistrationQueue({
       username,
       password,
       mobile,
       introducerId,
-      sponsorId: introducerId,
-      position,
-      createdAt: Date.now()
-    };
+      position
+    });
 
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
+    document.getElementById("msg").innerText =
+      "⏳ Registration in process... Please wait";
 
-    document.getElementById("msg").innerHTML = `
-      ✅ Registration Successful <br>
-      User ID: <b>${userId}</b><br>
-      Introducer: ${introducerId}<br>
-      Position: ${position === "L" ? "LEFT" : "RIGHT"}<br><br>
-      🔗 <a href="user_login.html">Go to Login</a>
-    `;
+    // 🔍 CHECK RESULT
+    let attempts = 0;
+
+    let checker = setInterval(() => {
+
+      let users = getUsers();
+      let newUser = users.find(u => u.mobile === mobile);
+
+      if (newUser) {
+
+        document.getElementById("msg").innerHTML = `
+          ✅ Registration Successful <br>
+          User ID: <b>${newUser.userId}</b><br>
+          Introducer: ${introducerId}<br>
+          Position: ${newUser.position === "L" ? "LEFT" : "RIGHT"}<br><br>
+          🔗 <a href="user_login.html">Go to Login</a>
+        `;
+
+        clearInterval(checker);
+
+      } else {
+
+        attempts++;
+
+        if (attempts > 8) {
+          document.getElementById("msg").innerText =
+            "⚠️ Processing delay... please wait or refresh";
+
+          clearInterval(checker);
+        }
+
+      }
+
+    }, 1000);
 
   } finally {
     resetBtn();
