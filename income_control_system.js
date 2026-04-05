@@ -1,12 +1,13 @@
 /*
 ========================================
-💰 INCOME CONTROL SYSTEM (FINAL PRO v3)
+💰 INCOME CONTROL SYSTEM (FINAL PRO v4)
 ========================================
 ✔ Safe defaults
 ✔ Self-healing
 ✔ Toggle safe
 ✔ Activity log integrated
 ✔ Corruption-proof save
+✔ Runtime protection (NEW)
 ✔ Production ready
 ========================================
 */
@@ -31,7 +32,6 @@ function getIncomeSettings() {
   try {
     let stored = JSON.parse(localStorage.getItem("incomeSettings") || "{}");
 
-    // 🔥 MERGE DEFAULTS
     let merged = {
       ...getDefaultIncomeSettings(),
       ...stored
@@ -48,7 +48,7 @@ function getIncomeSettings() {
   }
 }
 
-// 🔒 SAFE SAVE (FINAL FIX)
+// 🔒 SAFE SAVE
 function saveIncomeSettings(data) {
 
   let safe = {
@@ -60,7 +60,7 @@ function saveIncomeSettings(data) {
 }
 
 // =====================
-// 🔹 INIT DEFAULT (SAFE)
+// 🔹 INIT
 // =====================
 function initIncomeControl() {
 
@@ -93,6 +93,20 @@ function isBinaryEnabled() {
 }
 
 // =====================
+// 🔥 CORE GUARD (NEW)
+// =====================
+function isIncomeAllowed(type) {
+
+  if (!isIncomeSystemSafe()) return false;
+
+  if (type === "ugli") return isUGLIEnabled();
+  if (type === "rli") return isRLIEnabled();
+  if (type === "binary") return isBinaryEnabled();
+
+  return false;
+}
+
+// =====================
 // 🔘 ADMIN CONTROL
 // =====================
 function toggleUGLI(adminId = "ADMIN") {
@@ -105,7 +119,7 @@ function toggleUGLI(adminId = "ADMIN") {
   saveIncomeSettings(s);
 
   if (typeof logActivity === "function") {
-    logActivity(adminId, "ADMIN", "UGLI toggled → " + (s.ugli ? "ON" : "OFF"));
+    logActivity(adminId, "ADMIN", "UGLI → " + (s.ugli ? "ON" : "OFF"));
   }
 }
 
@@ -119,7 +133,7 @@ function toggleRLI(adminId = "ADMIN") {
   saveIncomeSettings(s);
 
   if (typeof logActivity === "function") {
-    logActivity(adminId, "ADMIN", "RLI toggled → " + (s.rli ? "ON" : "OFF"));
+    logActivity(adminId, "ADMIN", "RLI → " + (s.rli ? "ON" : "OFF"));
   }
 }
 
@@ -133,7 +147,7 @@ function toggleBinary(adminId = "ADMIN") {
   saveIncomeSettings(s);
 
   if (typeof logActivity === "function") {
-    logActivity(adminId, "ADMIN", "Binary toggled → " + (s.binary ? "ON" : "OFF"));
+    logActivity(adminId, "ADMIN", "Binary → " + (s.binary ? "ON" : "OFF"));
   }
 }
 
@@ -167,5 +181,5 @@ function isIncomeSystemSafe() {
 // =====================
 // 🚀 INIT
 // =====================
-// ⚠️ Call AFTER initCoreSystem()
 initIncomeControl();
+
