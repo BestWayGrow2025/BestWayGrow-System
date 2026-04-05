@@ -31,10 +31,10 @@
 <button onclick="goUpgrade()">Upgrade</button>
 <button onclick="goRepurchase()">Repurchase</button>
 
-<!-- CORE -->
-<script src="CORE_system.js"></script>
+<!-- ✅ FIXED CORE -->
+<script src="core_system.js"></script>
 
-<!-- PIN -->
+<!-- PIN SYSTEM -->
 <script src="pin_master_system.js"></script>
 
 <script>
@@ -44,11 +44,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   initCoreSystem();
 
-  let session = JSON.parse(localStorage.getItem("loggedInUser"));
+  let session;
+  try {
+    session = JSON.parse(localStorage.getItem("loggedInUser"));
+  } catch {
+    session = null;
+  }
 
   if (!session) {
     alert("Login required");
     window.location.href = "user_login.html";
+    return;
+  }
+
+  if (typeof getUserById !== "function") {
+    alert("System not loaded");
     return;
   }
 
@@ -102,6 +112,13 @@ function loadUserPins() {
 
     let row = document.createElement("tr");
 
+    row.innerHTML = `
+      <td>${pin.pinId}</td>
+      <td>${pin.type}</td>
+      <td>₹${pin.amount}</td>
+      <td style="color:${statusColor}">${pin.status}</td>
+    `;
+
     let actionCell = document.createElement("td");
 
     if (pin.status === "active") {
@@ -115,13 +132,6 @@ function loadUserPins() {
       actionCell.innerText = "-";
     }
 
-    row.innerHTML = `
-      <td>${pin.pinId}</td>
-      <td>${pin.type}</td>
-      <td>₹${pin.amount}</td>
-      <td style="color:${statusColor}">${pin.status}</td>
-    `;
-
     row.appendChild(actionCell);
 
     table.appendChild(row);
@@ -133,6 +143,7 @@ function loadUserPins() {
 function useMyPin(pinId, type) {
 
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
+
   if (!session) {
     alert("Session expired");
     window.location.href = "user_login.html";
@@ -146,13 +157,11 @@ function useMyPin(pinId, type) {
 
   if (!confirm("Use this PIN?")) return;
 
-  // ✅ STORE PIN FOR AUTO FLOW
   localStorage.setItem("selectedPin", JSON.stringify({
     pinId: pinId,
     type: type
   }));
 
-  // 🔁 REDIRECT
   if (type === "upgrade") {
     window.location.href = "user_upgrade.html";
   } else {
@@ -174,6 +183,7 @@ function goRepurchase() {
 
 </body>
 </html>
+
 
 
 
