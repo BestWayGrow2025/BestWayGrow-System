@@ -22,7 +22,8 @@
 
 <p id="msg"></p>
 
-<script src="CORE_system.js"></script>
+<!-- ✅ FIXED FILE NAME -->
+<script src="core_system.js"></script>
 <script src="queue_system.js"></script>
 
 <script>
@@ -34,109 +35,118 @@ initCoreSystem();
 let params = new URLSearchParams(window.location.search);
 let introducerId = params.get("ref") || "BWG000001";
 
-document.getElementById("introLabel").innerText =
-  "Introducer: " + introducerId;
+let introUser = getUserById(introducerId);
 
+document.getElementById("introLabel").innerText =
+  "Introducer: " + introducerId + 
+  (introUser ? " (" + (introUser.username || "") + ")" : "");
 
 // ================= REGISTER =================
 function handleRegister() {
+
+  // 🔒 GLOBAL LOCK
+  if (window.registerLock) return;
+  window.registerLock = true;
 
   let btn = document.getElementById("regBtn");
   btn.disabled = true;
   btn.innerText = "Processing...";
 
-  let username = document.getElementById("username").value.trim();
-  let mobile = document.getElementById("mobile").value.trim();
-  let password = document.getElementById("password").value;
+  try {
 
-  let positionElement = document.querySelector('input[name="position"]:checked');
+    let username = document.getElementById("username").value.trim();
+    let mobile = document.getElementById("mobile").value.trim();
+    let password = document.getElementById("password").value;
 
-  if (!username || !mobile || !password) {
-    alert("Fill all fields");
-    resetBtn();
-    return;
-  }
+    let positionElement = document.querySelector('input[name="position"]:checked');
 
-  if (!/^[0-9]{10}$/.test(mobile)) {
-    alert("Invalid mobile number");
-    resetBtn();
-    return;
-  }
-
-  if (!positionElement) {
-    alert("Select LEFT or RIGHT");
-    resetBtn();
-    return;
-  }
-
-  let position = positionElement.value;
-
-  if (!isValidIntroducer(introducerId)) {
-    alert("Invalid Introducer");
-    resetBtn();
-    return;
-  }
-
-  let users = getUsers();
-
-  let duplicate = users.find(u => u.mobile === mobile);
-  if (duplicate) {
-    alert("Mobile already registered");
-    resetBtn();
-    return;
-  }
-
-  let sponsorId = introducerId;
-
-  // 🔥 ADD TO QUEUE
-  addToQueue({
-    username,
-    password,
-    mobile,
-    introducerId,
-    sponsorId,
-    position
-  });
-
-  // 🔥 IMPORTANT FIX: PROCESS QUEUE
-  processQueue();
-
-  document.getElementById("msg").innerText = "⏳ Processing registration...";
-
-  let attempts = 0;
-
-  let checkUser = setInterval(() => {
-
-    let users = getUsers();
-    let newUser = users.find(u => u.mobile === mobile);
-
-    if (newUser) {
-
-      document.getElementById("msg").innerHTML = `
-        ✅ Registration Successful <br>
-        Your ID: <b>${newUser.userId}</b>
-        <br><br>
-        🔗 <a href="user_login.html">Go to Login</a>
-      `;
-
-      clearInterval(checkUser);
-      resetBtn();
-
-    } else {
-
-      attempts++;
-
-      if (attempts > 6) {
-        document.getElementById("msg").innerText =
-          "⚠️ Delay detected. Please refresh page";
-
-        clearInterval(checkUser);
-        resetBtn();
-      }
-
+    if (!username || !mobile || !password) {
+      alert("Fill all fields");
+      return;
     }
 
-  }, 1000);
+    // ✅ MOBILE VALIDATION (INDIA FORMAT)
+    if (!/^[6-9]\d{9}$/.test(mobile)) {
+      alert("Invalid mobile number");
+      return;
+    }
+
+    // ✅ DEFAULT LEFT IF NOT SELECTED
+    let position = positionElement ? positionElement.value : "L";
+
+    if (!isValidIntroducer(introducerId)) {
+      alert("Invalid Introducer");
+      return;
+    }
+
+    let users = getUsers();
+
+    let duplicate = users.find(u => u.mobile === mobile);
+    if (duplicate) {
+      alert("Mobile already registered");
+      return;
+    }
+
+    let sponsorId = introducerId;
+
+    // ⏱ TIMESTAMP
+    let requestTime = Date.now();
+
+    // 🔥 ADD TO QUEUE
+    addToQueue({
+      username,
+      password,
+      mobile,
+      introducerId,
+      sponsorId,
+      position,
+      requestTime
+    });
+
+    // 🔥 PROCESS QUEUE
+    processQueue();
+
+    document.getElementById("msg").innerText = "⏳ Processing registration...";
+
+    let attempts = 0;
+
+    let checkUser = setInterval(() => {
+
+      let users = getUsers();
+      let newUser = users.find(u => u.mobile === mobile);
+
+      if (newUser) {
+
+        document.getElementById("msg").innerHTML = `
+          ✅ Registration Successful <br>
+          User ID: <b>${newUser.userId}</b><br>
+          Introducer: ${introducerId}<br>
+          Position: ${position === "L" ? "LEFT" : "RIGHT"}<br><br>
+          🔗 <a href="user_login.html">Go to Login</a>
+        `;
+
+        clearInterval(checkUser);
+
+      } else {
+
+        attempts++;
+
+        if (attempts > 6) {
+          document.getElementById("msg").innerText =
+            "⚠️ Delay detected. Please refresh page";
+
+          clearInterval(checkUser);
+        }
+
+      }
+
+    }, 1000);
+
+  } finally {
+    // 🔄 RESET BUTTON + LOCK
+    resetBtn();
+    window.registerLock = false;
+  }
 }
 
 // ================= RESET =================
@@ -150,6 +160,5 @@ function resetBtn() {
 
 </body>
 </html>
-
 
 
