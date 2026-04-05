@@ -1,5 +1,22 @@
 <script>
 
+/*
+========================================
+HOLD INCOME SYSTEM (FINAL SAFE v2)
+========================================
+✔ Duplicate safe
+✔ Memory safe
+✔ Auto processor safe
+✔ Expire + release logic fixed
+✔ Production ready
+========================================
+*/
+
+// =====================
+// 🔒 LIMIT
+// =====================
+const HOLD_LIMIT = 3000;
+
 // =====================
 // 🔹 GET / SAVE HOLD DATA
 // =====================
@@ -13,11 +30,19 @@ function getHoldIncome() {
 }
 
 function saveHoldIncome(data) {
+
+  if (!Array.isArray(data)) data = [];
+
+  // 🔒 LIMIT CONTROL (CRITICAL)
+  if (data.length > HOLD_LIMIT) {
+    data = data.slice(-HOLD_LIMIT);
+  }
+
   localStorage.setItem("holdIncome", JSON.stringify(data));
 }
 
 // =====================
-// 🔐 DUPLICATE PROTECTION (IMPROVED)
+// 🔐 DUPLICATE PROTECTION
 // =====================
 function isDuplicateHold(userId, amount, reason) {
 
@@ -32,7 +57,7 @@ function isDuplicateHold(userId, amount, reason) {
 }
 
 // =====================
-// ➕ ADD HOLD INCOME (FINAL)
+// ➕ ADD HOLD INCOME
 // =====================
 function addHoldIncome(userId, amount, reason) {
 
@@ -113,7 +138,7 @@ function releaseAllHoldIncome() {
 }
 
 // =====================
-// ❌ EXPIRE HOLD (FIXED TIME SAFE)
+// ❌ EXPIRE HOLD
 // =====================
 function expireHoldIncome(days = 30) {
 
@@ -170,18 +195,17 @@ function getUserHoldSummary(userId) {
 }
 
 // =====================
-// 🔄 AUTO PROCESSOR (SAFE)
+// 🔄 AUTO PROCESSOR
 // =====================
 function startHoldProcessor() {
 
-  if (window.holdProcessorRunning) return; // prevent duplicate intervals
+  if (window.holdProcessorRunning) return;
   window.holdProcessorRunning = true;
 
   setInterval(() => {
     releaseAllHoldIncome();
     expireHoldIncome(30);
   }, 5000);
-
 }
 
 // =====================
@@ -190,3 +214,4 @@ function startHoldProcessor() {
 startHoldProcessor();
 
 </script>
+
