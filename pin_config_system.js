@@ -232,3 +232,4 @@ function calculateTotalWithGST(amount, gst) {
   return amount + (amount * gst / 100);
 }
 
+
