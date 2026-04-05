@@ -22,9 +22,11 @@
 
 <p id="msg"></p>
 
-<!-- ✅ FIXED FILE NAME -->
+<!-- ✅ CORE -->
 <script src="core_system.js"></script>
-<script src="queue_system.js"></script>
+
+<!-- ✅ CORRECT QUEUE SYSTEM -->
+<script src="pin_request_queue_engine.js"></script>
 
 <script>
 
@@ -65,13 +67,13 @@ function handleRegister() {
       return;
     }
 
-    // ✅ MOBILE VALIDATION (INDIA FORMAT)
+    // ✅ MOBILE VALIDATION (INDIA)
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       alert("Invalid mobile number");
       return;
     }
 
-    // ✅ DEFAULT LEFT IF NOT SELECTED
+    // ✅ DEFAULT LEFT
     let position = positionElement ? positionElement.value : "L";
 
     if (!isValidIntroducer(introducerId)) {
@@ -143,7 +145,6 @@ function handleRegister() {
     }, 1000);
 
   } finally {
-    // 🔄 RESET BUTTON + LOCK
     resetBtn();
     window.registerLock = false;
   }
