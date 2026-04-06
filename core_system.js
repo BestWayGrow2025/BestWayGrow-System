@@ -1,5 +1,5 @@
 /* ===============================
-   CORE SYSTEM (MASTER FINAL PRO++)
+   CORE SYSTEM (FINAL CLEAN)
 =============================== */
 
 // ===================================
@@ -18,20 +18,19 @@ function saveUsers(users) {
   localStorage.setItem("users", JSON.stringify(users));
 }
 
-// 🔥 SAFE SYSTEM SETTINGS (FIXED)
+// ===================================
+// 🔹 SYSTEM SETTINGS
+// ===================================
 function getSystemSettings() {
   try {
     let stored = JSON.parse(localStorage.getItem("systemSettings") || "{}");
 
     let defaults = {
       lockMode: false,
-      adminAccess: true,
-      franchiseAccess: true,
       registrationOpen: true
     };
 
     let merged = { ...defaults, ...stored };
-
     localStorage.setItem("systemSettings", JSON.stringify(merged));
 
     return merged;
@@ -39,8 +38,6 @@ function getSystemSettings() {
   } catch {
     let clean = {
       lockMode: false,
-      adminAccess: true,
-      franchiseAccess: true,
       registrationOpen: true
     };
 
@@ -60,6 +57,7 @@ function getDirectUsers(userId) {
   return getUsers().filter(u => u.introducerId === userId);
 }
 
+// ⚠️ IMPORTANT → used in tree UI
 function getChildren(userId) {
   return getUsers().filter(u => u.sponsorId === userId);
 }
@@ -83,10 +81,7 @@ function generateUserId() {
       throw new Error("User ID generation failed");
     }
 
-  } while (
-    existingIds.includes(newId) ||
-    newId === "BWG000000"
-  );
+  } while (existingIds.includes(newId));
 
   return newId;
 }
@@ -100,205 +95,15 @@ function isValidIntroducer(id) {
   let user = getUserById(id);
   if (!user) return false;
 
-  if (user.role === "admin" || user.role === "super_admin") {
-    return true;
-  }
-
-  return user.isActive === true;
+  return true;
 }
 
 // ===================================
-// 🌳 TREE SYSTEM (SAFE)
-// ===================================
-let placementLock = false;
-
-function findPositionBFS(sponsorId, position) {
-  let users = getUsers();
-  let queue = [sponsorId];
-  let visited = new Set();
-
-  while (queue.length > 0) {
-    let current = queue.shift();
-
-    if (visited.has(current)) continue;
-    visited.add(current);
-
-    let children = users.filter(u => u.sponsorId === current);
-
-    let left = children.find(c => c.position === "LEFT");
-    let right = children.find(c => c.position === "RIGHT");
-
-    if (position === "LEFT" && !left) return current;
-    if (position === "RIGHT" && !right) return current;
-
-    if (left) queue.push(left.userId);
-    if (right) queue.push(right.userId);
-  }
-
-  return sponsorId;
-}
-
-function getSafeSponsor(sponsorId, position) {
-  let finalSponsor = findPositionBFS(sponsorId, position);
-
-  let users = getUsers();
-
-  let exists = users.find(u =>
-    u.sponsorId === finalSponsor &&
-    u.position === position
-  );
-
-  if (exists) {
-    finalSponsor = findPositionBFS(finalSponsor, position);
-  }
-
-  return finalSponsor;
-}
-
-// ===================================
-// 🔥 FULL DOWNLINE
-// ===================================
-function getDownline(userId) {
-  let users = getUsers();
-  let result = [];
-
-  function find(id) {
-    let children = users.filter(u => u.sponsorId === id);
-
-    children.forEach(child => {
-      result.push(child);
-      find(child.userId);
-    });
-  }
-
-  find(userId);
-  return result;
-}
-
-// ===================================
-// 🔹 REGISTER USER (FINAL SAFE)
-// ===================================
-function registerUser(
-  username,
-  password,
-  mobile,
-  introducerId,
-  sponsorId,
-  position,
-  role = "user"
-) {
-
-  let users = getUsers();
-
-  if (!username || !password || !mobile) {
-    alert("Fill all fields");
-    return null;
-  }
-
-  if (!/^[0-9]{10}$/.test(mobile)) {
-    alert("Invalid mobile");
-    return null;
-  }
-
-  if (!isValidIntroducer(introducerId)) {
-    alert("Invalid Introducer");
-    return null;
-  }
-
-  if (!sponsorId || !position) {
-    alert("Invalid tree input");
-    return null;
-  }
-
-  let duplicate = users.find(u => u.mobile === mobile);
-  if (duplicate) {
-    alert("Mobile already exists");
-    return null;
-  }
-
-  if (placementLock) {
-    alert("System busy, try again...");
-    return null;
-  }
-
-  placementLock = true;
-
-  try {
-
-    let pos = position === "L" ? "LEFT" : "RIGHT";
-
-    let finalSponsor = getSafeSponsor(sponsorId, pos);
-
-    let newUser = {
-      userId: generateUserId(),
-      username: username.trim(),
-      password: btoa(password.trim()),
-      role: role,
-      mobile: mobile,
-      introducerId: introducerId,
-      sponsorId: finalSponsor,
-      position: pos,
-      createdAt: new Date().toISOString(),
-
-      status: "active",
-      isActive: true,
-
-      wallet: 0,
-      activeTill: null
-    };
-
-    users.push(newUser);
-    saveUsers(users);
-
-    return newUser;
-
-  } catch (err) {
-    console.error("Register error:", err);
-    return null;
-  } finally {
-    placementLock = false;
-  }
-}
-
-// ===================================
-// 🔹 ACTIVE SYSTEM
-// ===================================
-function isUserActive(userId) {
-  let user = getUserById(userId);
-  if (!user) return false;
-
-  let now = new Date();
-  let activeTill = new Date(user.activeTill || 0);
-
-  return activeTill > now;
-}
-
-function activateUser(userId) {
-  let users = getUsers();
-  let user = users.find(u => u.userId === userId);
-  if (!user) return;
-
-  let now = new Date();
-  let nextMonth = new Date(now);
-  nextMonth.setMonth(nextMonth.getMonth() + 1);
-
-  user.activeTill = nextMonth.toISOString();
-  user.isActive = true;
-  user.status = "active";
-
-  saveUsers(users);
-}
-
-// ===================================
-// 🔐 PAGE SECURITY (FIXED)
+// 🔐 PAGE SECURITY
 // ===================================
 function protectPage(config) {
 
   const sessionKey = {
-    super_admin: "loggedInSuperAdmin",
-    system_admin: "loggedInSystemAdmin",
-    admin: "loggedInAdmin",
-    franchise: "loggedInFranchise",
     user: "loggedInUser"
   };
 
@@ -309,15 +114,15 @@ function protectPage(config) {
 
   if (!session || !session.userId) {
     alert("Login required");
-    window.location.href = config.role + "_login.html";
+    window.location.href = "user_login.html";
     return;
   }
 
   let user = getUserById(session.userId);
 
-  if (!user || user.role !== config.role) {
+  if (!user) {
     localStorage.removeItem(key);
-    window.location.href = config.role + "_login.html";
+    window.location.href = "user_login.html";
     return;
   }
 
@@ -332,7 +137,7 @@ function initCoreSystem() {
   let settingsCheck = getSystemSettings();
 
   if (settingsCheck.lockMode === true) {
-    alert("🚫 System is locked by Super Admin");
+    alert("🚫 System Locked");
     throw new Error("System Locked");
   }
 
@@ -345,9 +150,11 @@ function initCoreSystem() {
       username: "Super Admin",
       password: btoa("123"),
       role: "super_admin",
-      status: "active",
-      isActive: true,
-      createdAt: new Date().toISOString()
+      createdAt: Date.now(),
+
+      // 🔥 IMPORTANT
+      leftChild: null,
+      rightChild: null
     });
   }
 
@@ -358,11 +165,17 @@ function initCoreSystem() {
       username: "System Admin",
       password: btoa("1234"),
       role: "admin",
-      status: "active",
-      isActive: true,
-      createdAt: new Date().toISOString()
+      introducerId: "BWG000000",
+      sponsorId: "BWG000000",
+      position: "L",
+      createdAt: Date.now(),
+
+      // 🔥 IMPORTANT
+      leftChild: null,
+      rightChild: null
     });
   }
 
   saveUsers(users);
 }
+
