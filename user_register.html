@@ -25,7 +25,10 @@
 <!-- ✅ CORE -->
 <script src="core_system.js"></script>
 
-<!-- ✅ NEW QUEUE ENGINE -->
+<!-- ✅ TREE ENGINE (REQUIRED) -->
+<script src="tree_engine.js"></script>
+
+<!-- ✅ QUEUE ENGINE -->
 <script src="registration_queue.js"></script>
 
 <script>
@@ -87,7 +90,7 @@ function handleRegister() {
       return;
     }
 
-    // 🔥 ADD TO QUEUE (FINAL SYSTEM)
+    // 🔥 ADD TO QUEUE
     addToRegistrationQueue({
       username,
       password,
@@ -113,7 +116,7 @@ function handleRegister() {
           ✅ Registration Successful <br>
           User ID: <b>${newUser.userId}</b><br>
           Introducer: ${introducerId}<br>
-          Position: ${newUser.position === "L" ? "LEFT" : "RIGHT"}<br><br>
+          Position: ${newUser.position === "LEFT" ? "LEFT" : "RIGHT"}<br><br>
           🔗 <a href="user_login.html">Go to Login</a>
         `;
 
