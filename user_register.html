@@ -22,13 +22,9 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORE -->
+<!-- ✅ ORDER MUST BE THIS -->
 <script src="core_system.js"></script>
-
-<!-- ✅ TREE ENGINE (REQUIRED) -->
 <script src="tree_engine.js"></script>
-
-<!-- ✅ QUEUE ENGINE -->
 <script src="registration_queue.js"></script>
 
 <script>
@@ -69,7 +65,7 @@ function handleRegister() {
       return;
     }
 
-    // ✅ MOBILE VALIDATION (INDIA)
+    // ✅ MOBILE VALIDATION
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       alert("Invalid mobile number");
       return;
@@ -90,7 +86,7 @@ function handleRegister() {
       return;
     }
 
-    // 🔥 ADD TO QUEUE
+    // ✅ ONLY THIS (FINAL FLOW)
     addToRegistrationQueue({
       username,
       password,
@@ -116,7 +112,7 @@ function handleRegister() {
           ✅ Registration Successful <br>
           User ID: <b>${newUser.userId}</b><br>
           Introducer: ${introducerId}<br>
-          Position: ${newUser.position === "LEFT" ? "LEFT" : "RIGHT"}<br><br>
+          Position: ${newUser.position === "L" ? "LEFT" : "RIGHT"}<br><br>
           🔗 <a href="user_login.html">Go to Login</a>
         `;
 
@@ -154,4 +150,5 @@ function resetBtn() {
 
 </body>
 </html>
+
 
