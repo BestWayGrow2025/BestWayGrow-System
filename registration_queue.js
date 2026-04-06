@@ -1,14 +1,10 @@
 /*
 ========================================
-REGISTRATION QUEUE ENGINE (FINAL v1)
+REGISTRATION QUEUE ENGINE (FINAL v2)
 ========================================
-✔ Single queue (submit आधारित)
-✔ Timestamp ordered
-✔ Lock system (no parallel run)
-✔ Deep LEFT / RIGHT placement
-✔ Duplicate protection
-✔ Crash-safe
-✔ Production ready
+✔ Queue only (NO tree logic)
+✔ Uses tree_engine.js
+✔ Safe + clean separation
 ========================================
 */
 
@@ -59,90 +55,16 @@ function addToRegistrationQueue(data) {
     retry: 0
   });
 
-  // ⏱ SORT BY TIME
   queue.sort((a, b) => a.requestTime - b.requestTime);
 
   saveRegQueue(queue);
 }
 
-// ================= USER ID =================
-function generateUserId() {
-  return "BWG" + Math.random().toString(36).substring(2, 8);
-}
-
-// ================= DEEP PLACEMENT =================
-function placeUserDeep(introducerId, position) {
-
-  let users = getUsers();
-
-  let current = users.find(u => u.userId === introducerId);
-  if (!current) throw new Error("Invalid introducer");
-
-  while (true) {
-
-    if (position === "L") {
-
-      if (!current.leftChild) {
-        return { parentId: current.userId, side: "L" };
-      }
-
-      current = users.find(u => u.userId === current.leftChild);
-
-    } else {
-
-      if (!current.rightChild) {
-        return { parentId: current.userId, side: "R" };
-      }
-
-      current = users.find(u => u.userId === current.rightChild);
-    }
-
-    if (!current) throw new Error("Tree broken");
-  }
-}
-
 // ================= PROCESS ONE =================
 function processOneRegistration(req) {
 
-  let users = getUsers();
-
-  // 🔒 DUPLICATE MOBILE CHECK (FINAL)
-  let exists = users.find(u => u.mobile === req.mobile);
-  if (exists) throw new Error("Mobile already exists");
-
-  let userId = generateUserId();
-
-  let placement = placeUserDeep(req.introducerId, req.position || "L");
-
-  let newUser = {
-    userId,
-    username: req.username,
-    password: req.password,
-    mobile: req.mobile,
-
-    introducerId: req.introducerId,
-    sponsorId: placement.parentId,
-
-    position: placement.side,
-
-    leftChild: null,
-    rightChild: null,
-
-    createdAt: Date.now()
-  };
-
-  // 🔥 LINK TO PARENT
-  let parent = users.find(u => u.userId === placement.parentId);
-
-  if (placement.side === "L") {
-    parent.leftChild = userId;
-  } else {
-    parent.rightChild = userId;
-  }
-
-  users.push(newUser);
-
-  localStorage.setItem("users", JSON.stringify(users));
+  // ✅ ONLY CALL TREE ENGINE
+  createUserWithTree(req);
 
   return true;
 }
