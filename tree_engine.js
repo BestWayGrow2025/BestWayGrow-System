@@ -4,15 +4,14 @@ TREE ENGINE (FINAL v2)
 ========================================
 ✔ Deep LEFT / RIGHT placement
 ✔ Used by registration queue
-✔ Clean structure
-✔ Tree read + write separated
+✔ No duplicate logic
+✔ Clean + scalable
 ========================================
 */
 
 // ================= GET CHILDREN =================
 function getChildren(userId) {
   let users = getUsers();
-
   return users.filter(u => u.sponsorId === userId);
 }
 
@@ -64,7 +63,7 @@ function createUserWithTree(req) {
 
   let users = getUsers();
 
-  // 🔒 duplicate safety
+  // 🔒 DUPLICATE CHECK
   let exists = users.find(u => u.mobile === req.mobile);
   if (exists) throw new Error("Mobile already exists");
 
@@ -88,7 +87,7 @@ function createUserWithTree(req) {
     createdAt: Date.now()
   };
 
-  // 🔗 LINK PARENT
+  // 🔗 LINK TO PARENT
   let parent = users.find(u => u.userId === placement.parentId);
 
   if (placement.side === "L") {
