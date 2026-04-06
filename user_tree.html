@@ -44,7 +44,11 @@
 
 <div id="tree"></div>
 
+<!-- ✅ CORE -->
 <script src="core_system.js"></script>
+
+<!-- (optional but safe if used elsewhere) -->
+<script src="tree_engine.js"></script>
 
 <script>
 
@@ -91,7 +95,7 @@ function createNode(u) {
 
   let hasChild = false;
 
-  // LEFT
+  // LEFT CHILD
   if (u.leftChild) {
     let leftUser = getUserById(u.leftChild);
     if (leftUser) {
@@ -100,7 +104,7 @@ function createNode(u) {
     }
   }
 
-  // RIGHT
+  // RIGHT CHILD
   if (u.rightChild) {
     let rightUser = getUserById(u.rightChild);
     if (rightUser) {
@@ -138,4 +142,5 @@ loadTree();
 
 </body>
 </html>
+
 
