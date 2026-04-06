@@ -1,11 +1,12 @@
 /*
 ========================================
-TREE ENGINE (ENTERPRISE v3)
+TREE ENGINE (ENTERPRISE v4)
 ========================================
 ✔ Deep LEFT / RIGHT placement
 ✔ Queue compatible
 ✔ Wallet system added
-✔ Income engine ready
+✔ Income engine connected (CORRECT)
+✔ Config based BV
 ✔ Clean + scalable structure
 ========================================
 */
@@ -87,7 +88,7 @@ function createUserWithTree(req) {
 
     createdAt: Date.now(),
 
-    // 🔥 ENTERPRISE ADD (INCOME READY)
+    // 🔥 ENTERPRISE WALLET
     wallet: {
       balance: 0,
       history: []
@@ -96,7 +97,6 @@ function createUserWithTree(req) {
 
   // 🔗 LINK TO PARENT
   let parent = users.find(u => u.userId === placement.parentId);
-
   if (!parent) throw new Error("Parent not found");
 
   if (placement.side === "L") {
@@ -108,10 +108,21 @@ function createUserWithTree(req) {
   users.push(newUser);
   localStorage.setItem("users", JSON.stringify(users));
 
-  // 🔥 INCOME TRIGGER (SAFE CHECK)
-  if (typeof processIncome === "function") {
+  // 🔥 INCOME TRIGGER (FINAL CORRECT)
+  if (
+    typeof processIncome === "function" &&
+    typeof loadSystemConfig === "function"
+  ) {
     try {
-      processIncome(newUser);
+
+      let config = loadSystemConfig();
+
+      processIncome(
+        "upgrade",                // TYPE
+        newUser.userId,           // USER
+        config.upgrade.bv         // BV (dynamic)
+      );
+
     } catch (e) {
       console.warn("Income processing failed:", e.message);
     }
