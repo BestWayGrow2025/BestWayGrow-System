@@ -2,22 +2,41 @@
 <html>
 <head>
   <title>User Tree</title>
+
   <style>
-    body { font-family: Arial; padding: 20px; }
+    body {
+      font-family: Arial;
+      text-align: center;
+    }
+
+    .tree {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
     .node {
       border: 1px solid #333;
       padding: 10px;
-      margin: 10px;
-      display: inline-block;
       border-radius: 6px;
       background: #f5f5f5;
       min-width: 120px;
       text-align: center;
+      margin: 10px;
     }
+
     .children {
-      margin-left: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .line {
+      height: 20px;
+      border-left: 2px solid #333;
+      margin: auto;
     }
   </style>
+
 </head>
 <body>
 
@@ -25,7 +44,7 @@
 
 <div id="tree"></div>
 
-<script src="CORE_system.js"></script>
+<script src="core_system.js"></script>
 
 <script>
 
@@ -49,8 +68,12 @@ if (!user) {
   throw new Error("STOP");
 }
 
-// ================= TREE RENDER =================
+// ================= CREATE NODE =================
 function createNode(u) {
+
+  if (!u) return null;
+
+  let wrapper = document.createElement("div");
 
   let div = document.createElement("div");
   div.className = "node";
@@ -58,21 +81,42 @@ function createNode(u) {
   div.innerHTML = `
     <b>${u.userId}</b><br>
     ${u.username}<br>
-    ${u.position || ""}
+    ${u.mobile || ""}
   `;
 
-  let childrenDiv = document.createElement("div");
-  childrenDiv.className = "children";
+  wrapper.appendChild(div);
 
-  let children = getChildren(u.userId);
+  let childrenContainer = document.createElement("div");
+  childrenContainer.className = "children";
 
-  children.forEach(child => {
-    childrenDiv.appendChild(createNode(child));
-  });
+  let hasChild = false;
 
-  div.appendChild(childrenDiv);
+  // LEFT
+  if (u.leftChild) {
+    let leftUser = getUserById(u.leftChild);
+    if (leftUser) {
+      childrenContainer.appendChild(createNode(leftUser));
+      hasChild = true;
+    }
+  }
 
-  return div;
+  // RIGHT
+  if (u.rightChild) {
+    let rightUser = getUserById(u.rightChild);
+    if (rightUser) {
+      childrenContainer.appendChild(createNode(rightUser));
+      hasChild = true;
+    }
+  }
+
+  if (hasChild) {
+    let line = document.createElement("div");
+    line.className = "line";
+    wrapper.appendChild(line);
+    wrapper.appendChild(childrenContainer);
+  }
+
+  return wrapper;
 }
 
 // ================= LOAD TREE =================
@@ -80,8 +124,12 @@ function loadTree() {
   let container = document.getElementById("tree");
   container.innerHTML = "";
 
-  let root = createNode(user);
-  container.appendChild(root);
+  let treeDiv = document.createElement("div");
+  treeDiv.className = "tree";
+
+  treeDiv.appendChild(createNode(user));
+
+  container.appendChild(treeDiv);
 }
 
 loadTree();
@@ -90,3 +138,4 @@ loadTree();
 
 </body>
 </html>
+
