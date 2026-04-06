@@ -4,8 +4,8 @@ TREE ENGINE (FINAL v2)
 ========================================
 ✔ Deep LEFT / RIGHT placement
 ✔ Used by registration queue
+✔ Clean structure
 ✔ No duplicate logic
-✔ Clean + scalable
 ========================================
 */
 
@@ -58,12 +58,12 @@ function findPlacement(introducerId, position) {
   }
 }
 
-// ================= CREATE USER WITH TREE =================
+// ================= CREATE USER =================
 function createUserWithTree(req) {
 
   let users = getUsers();
 
-  // 🔒 DUPLICATE CHECK
+  // 🔒 duplicate check
   let exists = users.find(u => u.mobile === req.mobile);
   if (exists) throw new Error("Mobile already exists");
 
@@ -101,3 +101,4 @@ function createUserWithTree(req) {
 
   return newUser;
 }
+
