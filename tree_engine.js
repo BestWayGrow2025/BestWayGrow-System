@@ -1,11 +1,12 @@
 /*
 ========================================
-TREE ENGINE (FINAL v2)
+TREE ENGINE (ENTERPRISE v3)
 ========================================
 ✔ Deep LEFT / RIGHT placement
-✔ Used by registration queue
-✔ Clean structure
-✔ No duplicate logic
+✔ Queue compatible
+✔ Wallet system added
+✔ Income engine ready
+✔ Clean + scalable structure
 ========================================
 */
 
@@ -63,7 +64,7 @@ function createUserWithTree(req) {
 
   let users = getUsers();
 
-  // 🔒 duplicate check
+  // 🔒 DUPLICATE CHECK
   let exists = users.find(u => u.mobile === req.mobile);
   if (exists) throw new Error("Mobile already exists");
 
@@ -84,11 +85,19 @@ function createUserWithTree(req) {
     leftChild: null,
     rightChild: null,
 
-    createdAt: Date.now()
+    createdAt: Date.now(),
+
+    // 🔥 ENTERPRISE ADD (INCOME READY)
+    wallet: {
+      balance: 0,
+      history: []
+    }
   };
 
   // 🔗 LINK TO PARENT
   let parent = users.find(u => u.userId === placement.parentId);
+
+  if (!parent) throw new Error("Parent not found");
 
   if (placement.side === "L") {
     parent.leftChild = userId;
@@ -99,6 +108,14 @@ function createUserWithTree(req) {
   users.push(newUser);
   localStorage.setItem("users", JSON.stringify(users));
 
+  // 🔥 INCOME TRIGGER (SAFE CHECK)
+  if (typeof processIncome === "function") {
+    try {
+      processIncome(newUser);
+    } catch (e) {
+      console.warn("Income processing failed:", e.message);
+    }
+  }
+
   return newUser;
 }
-
