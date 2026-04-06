@@ -23,7 +23,7 @@
 
 <hr>
 
-<h3>🎟️ My PINs</h3>
+<h3>🎟️ My PINs (ASSIGNED ONLY)</h3>
 
 <table border="1" width="100%">
   <thead>
@@ -46,7 +46,7 @@
 <!-- ✅ CORE -->
 <script src="core_system.js"></script>
 
-<!-- PIN SYSTEM -->
+<!-- 🔥 PIN MASTER -->
 <script src="pin_master_system.js"></script>
 
 <script>
@@ -69,11 +69,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  if (typeof getUserById !== "function") {
-    alert("System not loaded");
-    return;
-  }
-
   let user = getUserById(session.userId);
 
   if (!user) {
@@ -86,9 +81,8 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("userInfo").innerText =
     "User: " + user.username + " (" + user.userId + ")";
 
-  // 🔥 FIXED SHARE LINK (LIVE URL)
+  // 🔥 SHARE LINK (LIVE)
   let link = "https://bestwaygrow2025.github.io/BestWayGrow-System/user_register.html?ref=" + user.userId;
-
   document.getElementById("refLink").value = link;
 
   loadUserPins();
@@ -118,24 +112,22 @@ function loadUserPins() {
     allPins = [];
   }
 
-  let pins = allPins.filter(p => p.ownerId === session.userId);
+  // 🔥 ENTERPRISE FILTER
+  // Only pins assigned to user
+  let pins = allPins.filter(p =>
+    p.ownerId === session.userId &&
+    p.status === "assigned"
+  );
 
   let table = document.getElementById("pinTable");
   table.innerHTML = "";
 
   if (!pins || pins.length === 0) {
-    table.innerHTML = "<tr><td colspan='5'>No PINs found</td></tr>";
+    table.innerHTML = "<tr><td colspan='5'>No Assigned PINs</td></tr>";
     return;
   }
 
   pins.forEach(pin => {
-
-    if (!pin || !pin.pinId) return;
-
-    let statusColor =
-      pin.status === "active" ? "green" :
-      pin.status === "used" ? "red" :
-      "orange";
 
     let row = document.createElement("tr");
 
@@ -143,52 +135,43 @@ function loadUserPins() {
       <td>${pin.pinId}</td>
       <td>${pin.type}</td>
       <td>₹${pin.amount}</td>
-      <td style="color:${statusColor}">${pin.status}</td>
+      <td style="color:blue">ASSIGNED</td>
     `;
 
     let actionCell = document.createElement("td");
 
-    if (pin.status === "active") {
-      let btn = document.createElement("button");
-      btn.innerText = "Use";
-      btn.onclick = function () {
-        useMyPin(pin.pinId, pin.type);
-      };
-      actionCell.appendChild(btn);
-    } else {
-      actionCell.innerText = "-";
-    }
+    // 🔥 ENTERPRISE ACTION
+    let btn = document.createElement("button");
+    btn.innerText = "Use";
+    btn.onclick = function () {
+      selectPin(pin);
+    };
 
+    actionCell.appendChild(btn);
     row.appendChild(actionCell);
+
     table.appendChild(row);
   });
 }
 
 
-// ================= USE PIN =================
-function useMyPin(pinId, type) {
+// ================= SELECT PIN =================
+function selectPin(pin) {
 
-  let session = JSON.parse(localStorage.getItem("loggedInUser"));
-
-  if (!session) {
-    alert("Session expired");
-    window.location.href = "user_login.html";
-    return;
-  }
-
-  if (!pinId || !type) {
+  if (!pin || !pin.pinId) {
     alert("Invalid PIN");
     return;
   }
 
   if (!confirm("Use this PIN?")) return;
 
+  // 🔥 STORE SELECTED PIN (ENTERPRISE FLOW)
   localStorage.setItem("selectedPin", JSON.stringify({
-    pinId: pinId,
-    type: type
+    pinId: pin.pinId,
+    type: pin.type
   }));
 
-  if (type === "upgrade") {
+  if (pin.type === "upgrade") {
     window.location.href = "user_upgrade.html";
   } else {
     window.location.href = "user_repurchase.html";
