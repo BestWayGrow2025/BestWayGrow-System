@@ -12,6 +12,9 @@
   <input type="text" id="mobile" placeholder="Mobile"><br><br>
   <input type="password" id="password" placeholder="Password"><br><br>
 
+  <!-- 🔥 NEW: PIN INPUT -->
+  <input type="text" id="pin" placeholder="Enter Assigned PIN"><br><br>
+
   <label>Select Position:</label><br>
   <input type="radio" name="position" value="L"> LEFT
   <input type="radio" name="position" value="R"> RIGHT
@@ -26,6 +29,9 @@
 <script src="core_system.js"></script>
 <script src="tree_engine.js"></script>
 <script src="registration_queue.js"></script>
+
+<!-- 🔥 PIN MASTER -->
+<script src="pin_master_system.js"></script>
 
 <script>
 
@@ -42,6 +48,22 @@ document.getElementById("introLabel").innerText =
   "Introducer: " + introducerId +
   (introUser ? " (" + (introUser.username || "") + ")" : "");
 
+// ================= PIN VALIDATION =================
+function validateAssignedPin(pinInput) {
+
+  let pins = loadPins();
+
+  let pin = pins.find(p => p.pinId === pinInput);
+
+  if (!pin) return { ok: false, msg: "Invalid PIN" };
+
+  if (pin.status !== "assigned") {
+    return { ok: false, msg: "PIN not assigned" };
+  }
+
+  return { ok: true, pin };
+}
+
 // ================= REGISTER =================
 function handleRegister() {
 
@@ -57,11 +79,12 @@ function handleRegister() {
     let username = document.getElementById("username").value.trim();
     let mobile = document.getElementById("mobile").value.trim();
     let password = document.getElementById("password").value;
+    let pinInput = document.getElementById("pin").value.trim();
 
     let positionElement = document.querySelector('input[name="position"]:checked');
 
-    if (!username || !mobile || !password) {
-      alert("Fill all fields");
+    if (!username || !mobile || !password || !pinInput) {
+      alert("Fill all fields including PIN");
       return;
     }
 
@@ -86,7 +109,17 @@ function handleRegister() {
       return;
     }
 
-    // ✅ ONLY THIS (FINAL FLOW)
+    // 🔥 PIN VALIDATION (ENTERPRISE)
+    let pinCheck = validateAssignedPin(pinInput);
+
+    if (!pinCheck.ok) {
+      alert(pinCheck.msg);
+      return;
+    }
+
+    let selectedPin = pinCheck.pin;
+
+    // ✅ ADD TO QUEUE
     addToRegistrationQueue({
       username,
       password,
@@ -107,6 +140,13 @@ function handleRegister() {
       let newUser = users.find(u => u.mobile === mobile);
 
       if (newUser) {
+
+        // 🔥 USE PIN AFTER SUCCESS
+        try {
+          usePin(selectedPin.pinId, newUser.userId, "registration");
+        } catch (err) {
+          console.warn("PIN use failed:", err.message);
+        }
 
         document.getElementById("msg").innerHTML = `
           ✅ Registration Successful <br>
@@ -150,5 +190,4 @@ function resetBtn() {
 
 </body>
 </html>
-
 
