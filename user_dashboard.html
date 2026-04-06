@@ -11,7 +11,7 @@
 
 <hr>
 
-<!-- 🔥 NEW: SHARE LINK -->
+<!-- 🔥 SHARE LINK -->
 <h3>🔗 Share & Earn</h3>
 
 <input type="text" id="refLink" readonly style="width: 300px;">
@@ -86,8 +86,9 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("userInfo").innerText =
     "User: " + user.username + " (" + user.userId + ")";
 
-  // 🔥 SHARE LINK
-  let link = window.location.origin + "/user_register.html?ref=" + user.userId;
+  // 🔥 FIXED SHARE LINK (LIVE URL)
+  let link = "https://bestwaygrow2025.github.io/BestWayGrow-System/user_register.html?ref=" + user.userId;
+
   document.getElementById("refLink").value = link;
 
   loadUserPins();
