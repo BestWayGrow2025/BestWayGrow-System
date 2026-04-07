@@ -1,14 +1,4 @@
-/*
-========================================
-PIN MASTER SYSTEM (ENTERPRISE v5)
-========================================
-✔ Income trigger integrated
-✔ No duplicate logic
-✔ Fully safe + modular
-✔ Matches income_engine.js
-========================================
 */
-
 const PIN_STORAGE_KEY = "PIN_MASTER_DATA";
 const PIN_LOG_KEY = "PIN_MASTER_LOG";
 
@@ -219,14 +209,12 @@ function usePin(pinId, userId, purpose) {
       status: "success"
     });
 
-    // 🔥🔥🔥 INCOME TRIGGER (MAIN ADD)
+    // 🔥🔥🔥 INCOME TRIGGER (FINAL CORRECT)
     if (typeof processIncome === "function") {
       try {
 
-        let incomeType = purpose === "repurchase" ? "repurchase" : "upgrade";
-
         processIncome(
-          incomeType,
+          pin.type,          // ✅ FIXED (source of truth)
           userId,
           Number(pin.bv)
         );
