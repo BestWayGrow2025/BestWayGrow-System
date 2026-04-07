@@ -1,14 +1,11 @@
 /*
 ========================================
-PIN MASTER SYSTEM (FINAL CORE ENGINE PRO v4)
+PIN MASTER SYSTEM (ENTERPRISE v5)
 ========================================
-✔ No duplicate code
-✔ Lock-safe
-✔ Queue compatible
-✔ Status lifecycle fixed
-✔ Secure status update
-✔ Full audit tracking
-✔ Core system integrated
+✔ Income trigger integrated
+✔ No duplicate logic
+✔ Fully safe + modular
+✔ Matches income_engine.js
 ========================================
 */
 
@@ -60,7 +57,6 @@ function getPinMode() {
       return ctrl.pinMode || "AUTO";
     }
   } catch {}
-
   return "AUTO";
 }
 
@@ -204,6 +200,7 @@ function usePin(pinId, userId, purpose) {
 
   try {
 
+    // ✅ MARK USED
     pin.status = "used";
     pin.usedBy = userId;
     pin.usedAt = Date.now();
@@ -221,6 +218,23 @@ function usePin(pinId, userId, purpose) {
       gst: pin.gst,
       status: "success"
     });
+
+    // 🔥🔥🔥 INCOME TRIGGER (MAIN ADD)
+    if (typeof processIncome === "function") {
+      try {
+
+        let incomeType = purpose === "repurchase" ? "repurchase" : "upgrade";
+
+        processIncome(
+          incomeType,
+          userId,
+          Number(pin.bv)
+        );
+
+      } catch (e) {
+        console.warn("Income trigger failed:", e.message);
+      }
+    }
 
     return pin;
 
@@ -268,44 +282,5 @@ function deletePin(pinId, performedBy) {
   return true;
 }
 
-// ================= UPDATE STATUS (FINAL SAFE) =================
-function updatePinStatus(pinId, status, performedBy) {
-
-  let pins = loadPins();
-  let pin = pins.find(p => p.pinId === pinId);
-
-  if (!pin) throw new Error("PIN not found");
-
-  if (pin.lock) {
-    throw new Error("PIN is locked / processing");
-  }
-
-  const VALID_STATUS = ["active", "assigned", "used"];
-  if (!VALID_STATUS.includes(status)) {
-    throw new Error("Invalid PIN status");
-  }
-
-  let mode = getPinMode();
-  if (mode === "OFF") {
-    throw new Error("PIN system is disabled");
-  }
-
-  let oldStatus = pin.status;
-
-  pin.status = status;
-
-  savePins(pins);
-
-  logPinAction({
-    action: "PIN_STATUS_UPDATE",
-    pinId,
-    performedBy,
-    from: oldStatus,
-    to: status,
-    status: "success"
-  });
-
-  return true;
-}
 
 
