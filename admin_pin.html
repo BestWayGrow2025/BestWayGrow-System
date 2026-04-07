@@ -5,7 +5,7 @@
 </head>
 <body>
 
-<h2>🔐 Admin PIN Panel</h2>
+<h2>🔐 Admin PIN Panel (Enterprise)</h2>
 
 <hr>
 
@@ -17,8 +17,8 @@
   <option value="repurchase">Repurchase</option>
 </select><br><br>
 
-<input type="number" id="amount" placeholder="Amount"><br><br>
-<input type="number" id="bv" placeholder="BV"><br><br>
+<input type="number" id="amount" placeholder="Amount ₹"><br><br>
+<input type="number" id="bv" placeholder="BV (IMPORTANT)"><br><br>
 <input type="number" id="gst" placeholder="GST"><br><br>
 
 <button onclick="handleCreatePin()">Create PIN</button>
@@ -39,6 +39,17 @@
 
 <hr>
 
+<!-- 🔥 DELETE PIN (ADMIN CONTROL) -->
+<h3>Delete PIN (Only Active Admin PIN)</h3>
+
+<input type="text" id="deletePinId" placeholder="Enter PIN ID"><br><br>
+
+<button onclick="handleDeletePin()">Delete PIN</button>
+
+<p id="deleteMsg"></p>
+
+<hr>
+
 <!-- 🔥 VIEW ALL PINS -->
 <h3>All PINs</h3>
 
@@ -48,6 +59,7 @@
       <th>PIN</th>
       <th>Type</th>
       <th>Amount</th>
+      <th>BV</th>
       <th>Status</th>
       <th>Owner</th>
     </tr>
@@ -65,7 +77,6 @@
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
-
   initCoreSystem();
   loadAllPins();
 });
@@ -78,6 +89,11 @@ function handleCreatePin() {
   let amount = Number(document.getElementById("amount").value);
   let bv = Number(document.getElementById("bv").value);
   let gst = Number(document.getElementById("gst").value);
+
+  if (!bv || bv <= 0) {
+    alert("BV is required (income depends on BV)");
+    return;
+  }
 
   try {
 
@@ -126,6 +142,31 @@ function handleAssignPin() {
 }
 
 
+// ================= DELETE PIN =================
+function handleDeletePin() {
+
+  let pinId = document.getElementById("deletePinId").value.trim();
+
+  if (!pinId) {
+    alert("Enter PIN ID");
+    return;
+  }
+
+  try {
+
+    deletePin(pinId, "ADMIN");
+
+    document.getElementById("deleteMsg").innerText =
+      "🗑️ PIN Deleted";
+
+    loadAllPins();
+
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+
 // ================= LOAD ALL PINS =================
 function loadAllPins() {
 
@@ -141,7 +182,7 @@ function loadAllPins() {
   table.innerHTML = "";
 
   if (!pins.length) {
-    table.innerHTML = "<tr><td colspan='5'>No PINs</td></tr>";
+    table.innerHTML = "<tr><td colspan='6'>No PINs</td></tr>";
     return;
   }
 
@@ -158,6 +199,7 @@ function loadAllPins() {
       <td>${pin.pinId}</td>
       <td>${pin.type}</td>
       <td>₹${pin.amount}</td>
+      <td>${pin.bv}</td>
       <td style="color:${statusColor}">${pin.status}</td>
       <td>${pin.ownerId || "-"}</td>
     `;
