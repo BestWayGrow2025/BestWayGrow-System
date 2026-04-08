@@ -2,59 +2,123 @@
 <html>
 <head>
   <title>User Dashboard</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f4f7f9;
+      text-align: center;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      margin: 15px auto;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    button {
+      padding: 8px 15px;
+      margin: 5px;
+      cursor: pointer;
+      border: none;
+      background: #0077b5;
+      color: white;
+      border-radius: 6px;
+    }
+
+    button:hover {
+      background: #005f8a;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+  </style>
+
 </head>
 <body>
 
-<h2>User Dashboard</h2>
+<h2>👤 User Dashboard</h2>
 
-<p id="userInfo"></p>
+<div class="card">
+  <p id="userInfo"></p>
+</div>
 
-<hr>
+<!-- 💰 WALLET -->
+<div class="card">
+  <h3>💰 Wallet</h3>
 
-<!-- 🔥 SHARE LINK -->
-<h3>🔗 Share & Earn</h3>
+  <p>Balance: ₹<span id="walletBalance">0.00</span></p>
+  <p>Total Income: ₹<span id="totalIncome">0.00</span></p>
+</div>
 
-<input type="text" id="refLink" readonly style="width: 300px;">
-<br><br>
+<!-- 🔗 SHARE -->
+<div class="card">
+  <h3>🔗 Share & Earn</h3>
 
-<button onclick="copyLink()">Copy Link</button>
+  <input type="text" id="refLink" readonly style="width: 90%;">
+  <br><br>
 
-<p id="copyMsg"></p>
+  <button onclick="copyLink()">Copy Link</button>
+  <p id="copyMsg"></p>
+</div>
 
-<hr>
+<!-- 🎟️ PIN SECTION -->
+<div class="card">
+  <h3>🎟️ My PINs</h3>
 
-<h3>🎟️ My PINs (ASSIGNED ONLY)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>PIN</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="pinTable"></tbody>
+  </table>
+</div>
 
-<table border="1" width="100%">
-  <thead>
-    <tr>
-      <th>PIN</th>
-      <th>Type</th>
-      <th>Amount</th>
-      <th>Status</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody id="pinTable"></tbody>
-</table>
+<!-- ACTION -->
+<div class="card">
+  <h3>Actions</h3>
 
-<hr>
+  <button onclick="goUpgrade()">Upgrade</button>
+  <button onclick="goRepurchase()">Repurchase</button>
+  <button onclick="goRequest()">Request PIN</button>
+</div>
 
-<button onclick="goUpgrade()">Upgrade</button>
-<button onclick="goRepurchase()">Repurchase</button>
-
-<!-- ✅ CORE -->
+<!-- CORE -->
 <script src="core_system.js"></script>
 
-<!-- 🔥 PIN MASTER -->
+<!-- PIN -->
 <script src="pin_master_system.js"></script>
+
+<!-- WALLET + INCOME -->
+<script src="wallet_system.js"></script>
+<script src="income_log_system.js"></script>
 
 <script>
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
 
-  initCoreSystem();
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
 
   let session;
   try {
@@ -63,13 +127,15 @@ document.addEventListener("DOMContentLoaded", function () {
     session = null;
   }
 
-  if (!session) {
+  if (!session || !session.userId) {
     alert("Login required");
     window.location.href = "user_login.html";
     return;
   }
 
-  let user = getUserById(session.userId);
+  let user = typeof getUserById === "function"
+    ? getUserById(session.userId)
+    : null;
 
   if (!user) {
     alert("User not found");
@@ -81,39 +147,79 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("userInfo").innerText =
     "User: " + user.username + " (" + user.userId + ")";
 
-  // 🔥 SHARE LINK (LIVE)
-  let link = "https://bestwaygrow2025.github.io/BestWayGrow-System/user_register.html?ref=" + user.userId;
+  // 🔗 SHARE LINK
+  let link =
+    "https://bestwaygrow2025.github.io/BestWayGrow-System/user_register.html?ref=" +
+    user.userId;
+
   document.getElementById("refLink").value = link;
 
   loadUserPins();
+  loadWallet();
 });
 
-
-// ================= COPY LINK =================
+// ================= COPY =================
 function copyLink() {
+
   let input = document.getElementById("refLink");
+
   input.select();
   document.execCommand("copy");
 
   document.getElementById("copyMsg").innerText = "✅ Link copied!";
 }
 
+// ================= WALLET =================
+function loadWallet() {
 
-// ================= LOAD USER PINS =================
+  let session = JSON.parse(localStorage.getItem("loggedInUser"));
+  if (!session) return;
+
+  let balance = 0;
+  let total = 0;
+
+  try {
+
+    if (typeof getWallet === "function") {
+      let w = getWallet(session.userId);
+      balance = Number(w.balance || 0);
+    }
+
+    if (typeof getIncomeLogs === "function") {
+      let logs = getIncomeLogs();
+
+      logs
+        .filter(l => l.userId === session.userId)
+        .forEach(l => {
+          total += Number(l.amount || 0);
+        });
+    }
+
+  } catch {}
+
+  document.getElementById("walletBalance").innerText =
+    balance.toFixed(2);
+
+  document.getElementById("totalIncome").innerText =
+    total.toFixed(2);
+}
+
+// ================= LOAD PINS =================
 function loadUserPins() {
 
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
   if (!session) return;
 
   let allPins = [];
+
   try {
-    allPins = loadPins();
+    if (typeof loadPins === "function") {
+      allPins = loadPins();
+    }
   } catch {
     allPins = [];
   }
 
-  // 🔥 ENTERPRISE FILTER
-  // Only pins assigned to user
   let pins = allPins.filter(p =>
     p.ownerId === session.userId &&
     p.status === "assigned"
@@ -122,7 +228,7 @@ function loadUserPins() {
   let table = document.getElementById("pinTable");
   table.innerHTML = "";
 
-  if (!pins || pins.length === 0) {
+  if (!pins.length) {
     table.innerHTML = "<tr><td colspan='5'>No Assigned PINs</td></tr>";
     return;
   }
@@ -134,13 +240,12 @@ function loadUserPins() {
     row.innerHTML = `
       <td>${pin.pinId}</td>
       <td>${pin.type}</td>
-      <td>₹${pin.amount}</td>
+      <td>₹${Number(pin.amount).toFixed(2)}</td>
       <td style="color:blue">ASSIGNED</td>
     `;
 
     let actionCell = document.createElement("td");
 
-    // 🔥 ENTERPRISE ACTION
     let btn = document.createElement("button");
     btn.innerText = "Use";
     btn.onclick = function () {
@@ -154,7 +259,6 @@ function loadUserPins() {
   });
 }
 
-
 // ================= SELECT PIN =================
 function selectPin(pin) {
 
@@ -165,7 +269,6 @@ function selectPin(pin) {
 
   if (!confirm("Use this PIN?")) return;
 
-  // 🔥 STORE SELECTED PIN (ENTERPRISE FLOW)
   localStorage.setItem("selectedPin", JSON.stringify({
     pinId: pin.pinId,
     type: pin.type
@@ -178,14 +281,17 @@ function selectPin(pin) {
   }
 }
 
-
-// ================= NAVIGATION =================
+// ================= NAV =================
 function goUpgrade() {
   window.location.href = "user_upgrade.html";
 }
 
 function goRepurchase() {
   window.location.href = "user_repurchase.html";
+}
+
+function goRequest() {
+  window.location.href = "user_pin_request.html";
 }
 
 </script>
