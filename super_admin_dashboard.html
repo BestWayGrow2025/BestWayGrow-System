@@ -64,6 +64,12 @@
       background: #00994d;
       color: white;
     }
+
+    input {
+      padding: 6px;
+      margin: 5px;
+      width: 85%;
+    }
   </style>
 </head>
 
@@ -100,14 +106,14 @@
     <button onclick="fullReset()">🔴 Full</button>
   </div>
 
-  <!-- CREATE SYSTEM ADMIN -->
+  <!-- ✅ FIXED: CREATE SYSTEM ADMIN -->
   <div class="card">
     <h3>Create System Admin</h3>
-    <p>Direct creation (no redirect)</p>
 
-    <button class="btn-main" onclick="createSystemAdmin()">
-      ➕ CREATE SYSTEM ADMIN
-    </button>
+    <input id="sysId" placeholder="User ID"><br>
+    <input id="sysPass" type="password" placeholder="Password"><br>
+
+    <button class="btn-main" onclick="createSystemAdmin()">CREATE</button>
   </div>
 
   <!-- COUNTS -->
@@ -138,13 +144,12 @@
 
 </div>
 
-<!-- ✅ CORE FIRST (CRITICAL) -->
 <script src="core_system.js"></script>
 <script src="activity_log.js"></script>
 
 <script>
 
-// ================= SAFE INIT =================
+// INIT
 if (typeof initCoreSystem === "function") {
   initCoreSystem();
 } else {
@@ -152,21 +157,14 @@ if (typeof initCoreSystem === "function") {
   throw new Error("STOP");
 }
 
-// ================= AUTH =================
-let session;
-try {
-  session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
-} catch {
-  session = null;
-}
-
-if (!session || !session.userId) {
+// AUTH
+let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+if (!session) {
   alert("Access denied");
   window.location.href = "super_admin_login.html";
 }
 
 let user = getUserById(session.userId);
-
 if (!user || user.role !== "super_admin") {
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
@@ -175,17 +173,28 @@ if (!user || user.role !== "super_admin") {
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// ================= CREATE SYSTEM ADMIN =================
+// ✅ FIXED CREATE FUNCTION
 function createSystemAdmin() {
+
+  let id = document.getElementById("sysId").value.trim();
+  let pass = document.getElementById("sysPass").value.trim();
+
+  if (!id || !pass) {
+    alert("Enter ID & Password");
+    return;
+  }
 
   let users = getUsers() || [];
 
-  let count = users.filter(u => u.role === "system_admin").length;
+  if (users.find(u => u.userId.toLowerCase() === id.toLowerCase())) {
+    alert("User already exists");
+    return;
+  }
 
   let newUser = {
-    userId: "SYS" + Date.now(),
-    username: "sysadmin_" + (count + 1),
-    password: btoa("1234"),
+    userId: id,
+    username: id,
+    password: btoa(pass),
     role: "system_admin",
     status: "active",
     createdBy: user.userId
@@ -197,10 +206,13 @@ function createSystemAdmin() {
 
   alert("✅ System Admin Created");
 
+  document.getElementById("sysId").value = "";
+  document.getElementById("sysPass").value = "";
+
   loadCounts();
 }
 
-// ================= SYSTEM =================
+// SYSTEM
 function loadSystem() {
   let s = getSystemSettings() || {};
 
@@ -210,13 +222,11 @@ function loadSystem() {
     Franchise: ${s.franchiseAccess !== false ? "🟢" : "🔴"} <br>
     Register: ${s.registrationOpen !== false ? "🟢" : "🔴"} |
     Upgrade: ${s.upgradesOpen !== false ? "🟢" : "🔴"} |
-    Repurchase: ${s.repurchaseOpen !== false ? "🟢" : "🔴"} <br>
-    Queue: ${s.queueStop ? "🔴" : "🟢"} |
-    Withdraw: ${s.withdrawStop ? "🔴" : "🟢"}
+    Repurchase: ${s.repurchaseOpen !== false ? "🟢" : "🔴"}
   `;
 }
 
-// ================= COUNTS =================
+// COUNTS
 function loadCounts() {
   let users = getUsers() || [];
 
@@ -233,10 +243,10 @@ function loadCounts() {
     users.filter(u => u.role === "user").length;
 }
 
-// ================= SHOW DATA =================
+// ✅ FIXED QUICK VIEW
 function showData(role) {
 
-  let users = getUsers().filter(u => u.role === role);
+  let users = (getUsers() || []).filter(u => u.role === role);
 
   if (!users.length) {
     document.getElementById("dataPanel").innerHTML = "No Data";
@@ -260,7 +270,7 @@ function showData(role) {
   document.getElementById("dataPanel").innerHTML = html;
 }
 
-// ================= TOGGLE =================
+// TOGGLE
 function toggle(key) {
   let s = getSystemSettings() || {};
   s[key] = !s[key];
@@ -268,55 +278,13 @@ function toggle(key) {
   loadSystem();
 }
 
-// ================= RESET =================
-function softReset() {
-  if (!confirm("Clear logs only?")) return;
-  localStorage.removeItem("activityLogs");
-  alert("🟢 Soft Reset Done");
-  location.reload();
-}
-
-function mediumReset() {
-  if (!confirm("Clear logs + withdrawals?")) return;
-  localStorage.removeItem("activityLogs");
-  localStorage.removeItem("withdrawals");
-  alert("🟡 Medium Reset Done");
-  location.reload();
-}
-
-function fullReset() {
-
-  if (!confirm("⚠ FULL RESET?")) return;
-  if (!confirm("Delete ALL except Super Admin?")) return;
-
-  let users = getUsers().filter(u => u.role === "super_admin");
-  localStorage.setItem("users", JSON.stringify(users));
-
-  localStorage.removeItem("withdrawals");
-  localStorage.removeItem("activityLogs");
-
-  localStorage.setItem("systemSettings", JSON.stringify({
-    lockMode: false,
-    adminAccess: true,
-    franchiseAccess: true,
-    registrationOpen: true,
-    upgradesOpen: true,
-    repurchaseOpen: true,
-    queueStop: false,
-    withdrawStop: false
-  }));
-
-  alert("🔴 FULL RESET DONE");
-  location.reload();
-}
-
-// ================= LOGOUT =================
+// LOGOUT
 function logout() {
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
 }
 
-// ================= AUTO REFRESH =================
+// AUTO REFRESH
 setInterval(() => {
   loadSystem();
   loadCounts();
