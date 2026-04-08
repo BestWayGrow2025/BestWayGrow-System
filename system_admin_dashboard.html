@@ -47,7 +47,7 @@
     <p id="msg"></p>
   </div>
 
-  <!-- 📊 COUNTS -->
+  <!-- COUNTS -->
   <div class="card">
     <h3>Overview</h3>
 
@@ -56,7 +56,7 @@
     <div>Users <div class="stat" id="userCount">0</div></div>
   </div>
 
-  <!-- 🔥 QUICK VIEW -->
+  <!-- QUICK VIEW -->
   <div class="card">
     <h3>Quick View</h3>
 
@@ -65,7 +65,7 @@
     <button onclick="showData('user')">Users</button>
   </div>
 
-  <!-- 🔥 DATA PANEL -->
+  <!-- DATA PANEL -->
   <div class="card">
     <h3>Details</h3>
     <div id="dataPanel">Click button to view</div>
@@ -86,29 +86,47 @@
 </div>
 
 <script src="CORE_system.js"></script>
-<script src="activity_log.js"></script>
 
 <script>
 
-// INIT
+// ================= INIT =================
 initCoreSystem();
 
-let currentUser = protectPage({ role: "system_admin" });
-if (!currentUser) throw new Error("Security failed");
+// ================= AUTH =================
+let session;
+try {
+  session = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
+} catch {
+  session = null;
+}
 
-// TYPE SWITCH
+if (!session || !session.userId) {
+  alert("Access denied");
+  window.location.href = "system_admin_login.html";
+  throw new Error("STOP");
+}
+
+let currentUser = getUserById(session.userId);
+
+if (!currentUser || currentUser.role !== "system_admin") {
+  localStorage.removeItem("loggedInSystemAdmin");
+  window.location.href = "system_admin_login.html";
+  throw new Error("STOP");
+}
+
+// ================= TYPE SWITCH =================
 function toggleDepartments() {
   let type = document.getElementById("type").value;
   document.getElementById("deptBox").style.display =
     (type === "B") ? "block" : "none";
 }
 
-// SYSTEM STATUS (UPGRADE)
+// ================= SYSTEM STATUS =================
 function loadSystem() {
-  let s = getSystemSettings();
+  let s = getSystemSettings() || {};
 
   document.getElementById("systemStatus").innerHTML = `
-    Admin: ${s.adminAccess ? "🟢" : "🔴"} |
+    Admin: ${s.adminAccess !== false ? "🟢" : "🔴"} |
     Lock: ${s.lockMode ? "🔴" : "🟢"} <br>
     Queue: ${s.queueStop ? "🔴" : "🟢"} |
     Withdraw: ${s.withdrawStop ? "🔴" : "🟢"} <br>
@@ -116,9 +134,9 @@ function loadSystem() {
   `;
 }
 
-// COUNTS
+// ================= COUNTS =================
 function loadCounts() {
-  let users = getUsers();
+  let users = getUsers() || [];
 
   document.getElementById("adminCount").innerText =
     users.filter(u => u.role === "admin").length;
@@ -130,10 +148,10 @@ function loadCounts() {
     users.filter(u => u.role === "user").length;
 }
 
-// SHOW DATA
+// ================= SHOW DATA =================
 function showData(role) {
 
-  let users = getUsers().filter(u => u.role === role);
+  let users = (getUsers() || []).filter(u => u.role === role);
 
   if (!users.length) {
     document.getElementById("dataPanel").innerHTML = "No Data";
@@ -157,7 +175,7 @@ function showData(role) {
   document.getElementById("dataPanel").innerHTML = html;
 }
 
-// CREATE ADMIN (same as yours)
+// ================= CREATE ADMIN =================
 function createAdmin() {
 
   let adminId = document.getElementById("adminId").value.trim();
@@ -170,7 +188,7 @@ function createAdmin() {
     return;
   }
 
-  let users = getUsers();
+  let users = getUsers() || [];
 
   if (users.find(u => u.userId.toLowerCase() === adminId.toLowerCase())) {
     showMsg("⚠️ Admin exists");
@@ -184,8 +202,8 @@ function createAdmin() {
       departments.push(cb.value);
     });
 
-    if (departments.length === 0) {
-      showMsg("⚠️ Select at least one department");
+    if (!departments.length) {
+      showMsg("⚠️ Select department");
       return;
     }
   } else {
@@ -205,16 +223,16 @@ function createAdmin() {
 
   saveUsers(users);
 
-  showMsg("✅ Created");
+  showMsg("✅ Admin Created");
 
   loadAdmins();
   loadCounts();
 }
 
-// ADMIN LIST
+// ================= ADMIN LIST =================
 function loadAdmins() {
 
-  let users = getUsers().filter(u => u.role === "admin");
+  let users = (getUsers() || []).filter(u => u.role === "admin");
 
   if (!users.length) {
     document.getElementById("adminList").innerHTML = "No Admin";
@@ -238,7 +256,7 @@ function loadAdmins() {
   document.getElementById("adminList").innerHTML = html;
 }
 
-// LOGOUT
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInSystemAdmin");
   window.location.href = "system_admin_login.html";
@@ -248,13 +266,13 @@ function showMsg(msg) {
   document.getElementById("msg").innerText = msg;
 }
 
-// AUTO REFRESH
+// ================= AUTO REFRESH =================
 setInterval(() => {
   loadSystem();
   loadCounts();
 }, 3000);
 
-// INIT
+// ================= INIT LOAD =================
 loadSystem();
 loadCounts();
 loadAdmins();
