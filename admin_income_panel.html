@@ -27,6 +27,8 @@
   <option value="ctor">CTOR</option>
 </select>
 
+<button onclick="loadAllIncome()">🔄 Refresh</button>
+
 <hr>
 
 <!-- 🔹 TABLE -->
@@ -56,7 +58,11 @@
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
-  initCoreSystem();
+
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
+
   loadAllIncome();
 });
 
@@ -71,10 +77,12 @@ function loadAllIncome() {
     if (typeof getIncomeLogs === "function") {
       logs = getIncomeLogs();
     }
-  } catch {
+  } catch (err) {
+    console.error("Load error:", err);
     logs = [];
   }
 
+  // ✅ FILTER
   if (type) {
     logs = logs.filter(l => l.type === type);
   }
@@ -88,6 +96,7 @@ function loadAllIncome() {
     table.innerHTML = "<tr><td colspan='6'>No Data</td></tr>";
   }
 
+  // ✅ LATEST FIRST
   logs.slice().reverse().forEach(log => {
 
     let amount = Number(log.amount) || 0;
@@ -107,6 +116,7 @@ function loadAllIncome() {
     table.appendChild(row);
   });
 
+  // ✅ SUMMARY
   document.getElementById("totalPayout").innerText = total.toFixed(2);
   document.getElementById("totalRecords").innerText = logs.length;
 }
