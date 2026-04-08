@@ -3,28 +3,42 @@
 <head>
   <title>System Admin PIN Panel</title>
   <link rel="icon" href="data:,">
+
+  <style>
+    body { font-family: Arial; text-align:center; background:#f4f7f9; }
+    input { padding:6px; margin:5px; width:200px; }
+    button { padding:6px 10px; margin:5px; cursor:pointer; }
+    .box { background:#fff; padding:15px; margin:15px; border-radius:10px; box-shadow:0 4px 10px #ccc; }
+  </style>
 </head>
 
 <body>
 
-<h2>🔐 SYSTEM ADMIN PIN PANEL (V6++++)</h2>
+<h2>🔐 SYSTEM ADMIN PIN PANEL (V6+++++)</h2>
 
 <button onclick="logout()">Logout</button>
 
-<!-- CREATE PIN -->
-<h3>Create PIN</h3>
-<input id="amount" placeholder="Amount"><br>
-<input id="count" placeholder="Count"><br>
-<button onclick="createPins()">Generate</button>
+<div class="box">
 
-<p id="msg"></p>
+  <!-- CREATE PIN -->
+  <h3>Create PIN</h3>
+  <input id="amount" placeholder="Amount"><br>
+  <input id="count" placeholder="Count"><br>
+  <button onclick="createPins()">Generate</button>
 
-<hr>
+  <p id="msg"></p>
 
-<!-- REQUESTS -->
-<h3>Admin Requests</h3>
-<div id="requests"></div>
+</div>
 
+<div class="box">
+
+  <!-- REQUESTS -->
+  <h3>Admin Requests</h3>
+  <div id="requests">Loading...</div>
+
+</div>
+
+<!-- SCRIPTS -->
 <script src="core_system.js"></script>
 <script src="system_config.js"></script>
 <script src="pin_master_system.js"></script>
@@ -33,43 +47,63 @@
 
 <script>
 
-// INIT
-initCoreSystem();
+// ================= INIT =================
+if (typeof initCoreSystem === "function") {
+  initCoreSystem();
+} else {
+  alert("❌ Core system not loaded");
+  throw new Error("STOP");
+}
 
-// AUTH
-let user = protectPage({ role: "system_admin" });
+// ================= AUTH =================
+let user = typeof protectPage === "function"
+  ? protectPage({ role: "system_admin" })
+  : null;
+
+if (!user) {
+  alert("Access denied");
+  throw new Error("STOP");
+}
 
 // ================= CREATE PIN =================
 function createPins() {
 
-  let amount = document.getElementById("amount").value;
+  let amount = parseFloat(document.getElementById("amount").value);
   let count = parseInt(document.getElementById("count").value);
 
-  if (!amount || !count) {
-    show("❌ Invalid input");
+  if (!amount || amount <= 0 || !count || count <= 0) {
+    show("❌ Enter valid amount & count");
     return;
   }
 
-  // ✅ USE MASTER SYSTEM (NOT localStorage)
-  if (typeof generatePins === "function") {
-    generatePins(amount, count, user.userId);
-  } else {
+  if (typeof generatePins !== "function") {
     alert("PIN engine not loaded");
     return;
   }
 
-  show("✅ PINs Created");
+  try {
+    generatePins(amount, count, user.userId);
+    show("✅ PINs Created");
+
+    document.getElementById("amount").value = "";
+    document.getElementById("count").value = "";
+
+  } catch (e) {
+    show("❌ Error creating PINs");
+    return;
+  }
+
 }
 
 // ================= LOAD REQUESTS =================
 function loadRequests() {
 
   if (typeof getPinRequests !== "function") {
-    document.getElementById("requests").innerText = "No request system";
+    document.getElementById("requests").innerText = "❌ Request system not available";
     return;
   }
 
-  let reqs = getPinRequests();
+  let reqs = getPinRequests() || [];
 
   if (!reqs.length) {
     document.getElementById("requests").innerText = "No Requests";
@@ -79,12 +113,15 @@ function loadRequests() {
   let html = "";
 
   reqs.forEach((r, i) => {
+
     html += `
-      <div>
-        Admin: ${r.adminId} |
-        Amount: ${r.amount} |
-        Qty: ${r.count}
-        <button onclick="approve(${i})">Approve</button>
+      <div style="margin-bottom:10px;">
+        <b>Admin:</b> ${r.adminId} |
+        <b>Amount:</b> ${r.amount} |
+        <b>Qty:</b> ${r.count} |
+        <b>Status:</b> ${r.status || "pending"}
+        ${(!r.status || r.status === "pending") ? 
+          `<button onclick="approve(${i})">Approve</button>` : ""}
       </div>
       <hr>
     `;
@@ -96,15 +133,18 @@ function loadRequests() {
 // ================= APPROVE =================
 function approve(i) {
 
-  if (typeof approvePinRequest === "function") {
-    approvePinRequest(i, user.userId);
-  } else {
+  if (typeof approvePinRequest !== "function") {
     alert("Approval system missing");
     return;
   }
 
-  alert("✅ Approved");
-  loadRequests();
+  try {
+    approvePinRequest(i, user.userId);
+    alert("✅ Approved");
+    loadRequests();
+  } catch (e) {
+    alert("❌ Approval failed");
+  }
 }
 
 // ================= UTILS =================
@@ -116,6 +156,9 @@ function logout() {
   localStorage.removeItem("loggedInSystemAdmin");
   window.location.href = "system_admin_login.html";
 }
+
+// ================= AUTO REFRESH =================
+setInterval(loadRequests, 3000);
 
 // INIT
 loadRequests();
