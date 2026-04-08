@@ -25,12 +25,19 @@
 <div class="box">
   <h3>Submit Request</h3>
 
-  <select id="type">
+  <!-- TYPE -->
+  <select id="type" onchange="handleTypeChange()">
     <option value="upgrade">Upgrade</option>
     <option value="repurchase">Repurchase</option>
   </select><br>
 
-  <input type="number" id="amount" placeholder="Amount"><br>
+  <!-- QUANTITY -->
+  <input type="number" id="quantity" value="1" min="1" oninput="updateAmount()" placeholder="Quantity"><br>
+
+  <!-- AMOUNT AUTO -->
+  <input type="number" id="amount" placeholder="Amount" readonly><br>
+
+  <!-- PAYMENT -->
   <input type="text" id="paymentId" placeholder="Payment ID"><br>
 
   <button onclick="submitRequest()">Request PIN</button>
@@ -39,17 +46,25 @@
 </div>
 
 <!-- CORE -->
-<script src="CORE_system.js"></script>
+<script src="core_system.js"></script>
 
 <!-- SYSTEM -->
 <script src="pin_request_system.js"></script>
 
 <script>
 
+// ================= CONFIG =================
+const PIN_PRICES = {
+  upgrade: 3000,
+  repurchase: 1000
+};
+
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
 
-  initCoreSystem();
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
 
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
@@ -59,7 +74,33 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
+  handleTypeChange(); // initial load
 });
+
+// ================= TYPE CHANGE =================
+function handleTypeChange() {
+
+  let type = document.getElementById("type").value;
+  let price = PIN_PRICES[type] || 0;
+
+  document.getElementById("quantity").value = 1;
+  document.getElementById("amount").value = price;
+}
+
+// ================= AMOUNT CALC =================
+function updateAmount() {
+
+  let type = document.getElementById("type").value;
+  let qty = Number(document.getElementById("quantity").value);
+
+  let price = PIN_PRICES[type] || 0;
+
+  if (qty < 1) qty = 1;
+
+  let total = qty * price;
+
+  document.getElementById("amount").value = total;
+}
 
 // ================= SUBMIT =================
 function submitRequest() {
@@ -68,6 +109,7 @@ function submitRequest() {
   if (!session) return;
 
   let type = document.getElementById("type").value;
+  let qty = Number(document.getElementById("quantity").value);
   let amount = Number(document.getElementById("amount").value);
   let paymentId = document.getElementById("paymentId").value.trim();
 
@@ -76,8 +118,8 @@ function submitRequest() {
     return;
   }
 
-  if (amount <= 0) {
-    alert("Invalid amount");
+  if (qty < 1 || amount <= 0) {
+    alert("Invalid request");
     return;
   }
 
@@ -87,15 +129,21 @@ function submitRequest() {
       userId: session.userId,
       type,
       amount,
-      paymentId
+      paymentId,
+      quantity: qty
     });
 
     document.getElementById("msg").innerHTML = `
       ✅ Request Submitted<br>
       ID: ${req.requestId}<br>
+      Quantity: ${req.quantity}<br>
+      Amount: ₹${req.amount}<br>
       Time: ${new Date(req.createdAt).toLocaleString()}<br>
       Status: ${req.status}
     `;
+
+    // RESET
+    document.getElementById("paymentId").value = "";
 
   } catch (err) {
     alert(err.message || "Request failed");
