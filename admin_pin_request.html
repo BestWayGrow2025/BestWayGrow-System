@@ -2,10 +2,12 @@
 <html>
 <head>
   <title>Admin PIN Requests</title>
+  <link rel="icon" href="data:,">
+
   <style>
-    body { font-family: Arial; padding: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    body { font-family: Arial; padding: 20px; background:#f4f7f9; text-align:center; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; background:#fff; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; font-size:13px; }
     button { padding: 6px 10px; cursor: pointer; margin: 2px; }
     .pending { color: orange; }
     .completed { color: green; }
@@ -13,11 +15,13 @@
     .rejected { color: gray; }
   </style>
 </head>
+
 <body>
 
-<h2>Admin PIN Request Panel</h2>
+<h2>📌 ADMIN PIN REQUEST PANEL (V6+++++)</h2>
 
 <button onclick="loadRequests()">🔄 Refresh</button>
+<button onclick="logout()">Logout</button>
 
 <table>
   <thead>
@@ -44,22 +48,22 @@
 <script>
 
 // ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
+if (typeof initCoreSystem === "function") {
+  initCoreSystem();
+} else {
+  alert("❌ Core not loaded");
+  throw new Error("STOP");
+}
 
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
+// ================= AUTH =================
+let admin = typeof protectPage === "function"
+  ? protectPage({ role: "admin" })
+  : null;
 
-  let session = JSON.parse(localStorage.getItem("loggedInUser"));
-
-  if (!session) {
-    alert("Login required");
-    window.location.href = "admin_login.html";
-    return;
-  }
-
-  loadRequests();
-});
+if (!admin) {
+  alert("Access denied");
+  throw new Error("STOP");
+}
 
 // ================= LOAD =================
 function loadRequests() {
@@ -71,10 +75,9 @@ function loadRequests() {
 
   try {
     if (typeof getPinRequests === "function") {
-      requests = getPinRequests();
+      requests = getPinRequests() || [];
     }
-  } catch (err) {
-    console.error("Load error:", err);
+  } catch {
     requests = [];
   }
 
@@ -83,19 +86,20 @@ function loadRequests() {
     return;
   }
 
-  // ✅ LATEST FIRST
+  // latest first
   requests.slice().reverse().forEach(r => {
 
-    let statusClass = "";
+    let status = (r.status || "pending").toLowerCase();
 
-    if (r.status === "PENDING") statusClass = "pending";
-    if (r.status === "COMPLETED") statusClass = "completed";
-    if (r.status === "FAILED") statusClass = "failed";
-    if (r.status === "REJECTED") statusClass = "rejected";
+    let statusClass = "";
+    if (status === "pending") statusClass = "pending";
+    if (status === "completed") statusClass = "completed";
+    if (status === "failed") statusClass = "failed";
+    if (status === "rejected") statusClass = "rejected";
 
     let actions = "-";
 
-    if (r.status === "PENDING") {
+    if (status === "pending") {
       actions = `
         <button onclick="autoProcess('${r.requestId}')">AUTO</button>
         <button onclick="rejectReq('${r.requestId}')">REJECT</button>
@@ -107,10 +111,10 @@ function loadRequests() {
     row.innerHTML = `
       <td>${r.requestId}</td>
       <td>${r.userId}</td>
-      <td>${r.type}</td>
+      <td>${r.type || "-"}</td>
       <td>${r.quantity || 1}</td>
       <td>₹${Number(r.amount || 0).toFixed(2)}</td>
-      <td class="${statusClass}">${r.status}</td>
+      <td class="${statusClass}">${status.toUpperCase()}</td>
       <td>${actions}</td>
     `;
 
@@ -121,18 +125,16 @@ function loadRequests() {
 // ================= AUTO PROCESS =================
 function autoProcess(id) {
 
+  if (typeof processPinRequestAuto !== "function") {
+    alert("Processing system missing");
+    return;
+  }
+
   try {
-
     processPinRequestAuto(id);
-
     alert("✅ Auto processed");
-
     loadRequests();
-
   } catch (err) {
-
-    console.error("Auto process error:", err);
-
     alert(err.message || "Processing failed");
   }
 }
@@ -142,26 +144,35 @@ function rejectReq(id) {
 
   if (!confirm("Reject this request?")) return;
 
+  if (typeof rejectPinRequest !== "function") {
+    alert("Reject system missing");
+    return;
+  }
+
   try {
-
-    rejectPinRequest(id, "ADMIN");
-
+    rejectPinRequest(id, admin.userId);
     alert("❌ Request Rejected");
-
     loadRequests();
-
   } catch (err) {
-
-    console.error("Reject error:", err);
-
     alert(err.message || "Reject failed");
   }
 }
+
+// ================= LOGOUT =================
+function logout() {
+  localStorage.removeItem("loggedInAdmin");
+  window.location.href = "admin_login.html";
+}
+
+// ================= AUTO REFRESH =================
+setInterval(loadRequests, 3000);
+
+// INIT
+loadRequests();
 
 </script>
 
 </body>
 </html>
-
 
 
