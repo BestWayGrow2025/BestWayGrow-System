@@ -14,11 +14,9 @@
 <button onclick="upgradeNow()">Upgrade Now</button>
 
 <!-- CORE -->
-<script src="CORE_system.js"></script>
+<script src="core_system.js"></script>
 
 <!-- SYSTEM -->
-<script src="commission_engine.js"></script>
-<script src="income_control_system.js"></script>
 <script src="active_system.js"></script>
 
 <!-- PIN -->
@@ -27,9 +25,12 @@
 
 <script>
 
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
 
-  initCoreSystem();
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
 
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
@@ -88,6 +89,7 @@ function upgradeNow() {
 
   try {
 
+    // 🔥 SINGLE SOURCE OF TRUTH
     let pin = usePin(pinId, u.userId, "upgrade");
 
     if (!pin) {
@@ -95,8 +97,7 @@ function upgradeNow() {
       return;
     }
 
-    let bv = Number(pin.bv || 0);
-
+    // ✅ ACTIVATE USER
     if (typeof activateUser === "function") {
       activateUser(u.userId);
     } else {
@@ -104,13 +105,7 @@ function upgradeNow() {
       return;
     }
 
-    if (typeof isUGLIEnabled === "function" &&
-        typeof processIncome === "function" &&
-        isUGLIEnabled() &&
-        isUserActive(u.userId)) {
-
-      processIncome("upgrade", u.userId, bv);
-    }
+    // ❌ NO processIncome HERE (already inside usePin)
 
     // ✅ CLEAR AUTO PIN
     localStorage.removeItem("selectedPin");
@@ -129,6 +124,7 @@ function upgradeNow() {
 
 </body>
 </html>
+
 
 
 
