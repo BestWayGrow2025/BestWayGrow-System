@@ -58,8 +58,16 @@
       background: #d9534f;
     }
 
-    .success {
-      background: #28a745;
+    table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      font-size: 13px;
     }
   </style>
 </head>
@@ -67,7 +75,7 @@
 <body>
 
 <header>
-  <h2>🔥 ADMIN CONTROL PANEL</h2>
+  <h2>🔥 ADMIN CONTROL PANEL (V6++++)</h2>
   <p id="welcome"></p>
   <button class="danger" onclick="logout()">Logout</button>
 </header>
@@ -80,14 +88,15 @@
     <p id="profile"></p>
   </div>
 
-  <!-- SYSTEM STATUS -->
+  <!-- ✅ LIMITED SYSTEM CONTROL (CORRECT) -->
   <div class="card">
-    <h3>System Status</h3>
+    <h3>System Control</h3>
     <p id="system"></p>
 
-    <button onclick="toggleSystem('registrationOpen')">Toggle Registration</button>
-    <button onclick="toggleSystem('upgradesOpen')">Toggle Upgrade</button>
-    <button onclick="toggleSystem('repurchaseOpen')">Toggle Repurchase</button>
+    <!-- ONLY ALLOWED -->
+    <button onclick="toggleSystem('registrationOpen')">Register</button>
+    <button onclick="toggleSystem('upgradesOpen')">Upgrade</button>
+    <button onclick="toggleSystem('repurchaseOpen')">Repurchase</button>
   </div>
 
   <!-- COUNTS -->
@@ -102,45 +111,47 @@
   <div class="card">
     <h3>PIN Control</h3>
 
-    <button onclick="goTo('admin_pin_panel.html')">Create PIN</button>
-    <button onclick="goTo('admin_pin_request.html')">Approve Requests</button>
+    <!-- Admin only REQUEST / DISTRIBUTE -->
+    <button onclick="goTo('admin_pin_request.html')">Request PIN</button>
+    <button onclick="goTo('admin_pin_distribution.html')">Distribute PIN</button>
   </div>
 
-  <!-- INCOME CONTROL -->
+  <!-- USER CONTROL -->
   <div class="card">
-    <h3>Income Control</h3>
+    <h3>User Control</h3>
 
-    <button onclick="goTo('admin_income_panel.html')">View Income</button>
-    <button onclick="goTo('admin_income_logs.html')">Income Logs</button>
+    <button onclick="goTo('admin_user_panel.html')">Manage Users</button>
+    <button onclick="goTo('admin_franchise_panel.html')">Manage Franchise</button>
   </div>
 
-  <!-- QUICK DATA -->
+  <!-- QUICK VIEW -->
   <div class="card">
     <h3>Quick View</h3>
 
     <button onclick="showData('user')">Users</button>
     <button onclick="showData('franchise')">Franchise</button>
 
-    <div id="dataPanel" style="margin-top:10px;">Click to view</div>
+    <div id="dataPanel">Click to view</div>
   </div>
 
 </div>
 
 <!-- CORE -->
 <script src="core_system.js"></script>
+<script src="activity_log.js"></script>
 
 <script>
 
 // ================= INIT =================
 if (typeof initCoreSystem === "function") {
   initCoreSystem();
+} else {
+  alert("❌ core_system.js not loaded");
+  throw new Error("STOP");
 }
 
 // ================= SECURITY =================
-let admin = typeof protectPage === "function"
-  ? protectPage({ role: "admin" })
-  : null;
-
+let admin = protectPage({ role: "admin" });
 if (!admin) throw new Error("STOP");
 
 // ================= WELCOME =================
@@ -157,12 +168,10 @@ document.getElementById("profile").innerHTML = `
 // ================= SYSTEM STATUS =================
 function loadSystem() {
 
-  let s = typeof getSystemSettings === "function"
-    ? getSystemSettings()
-    : {};
+  let s = getSystemSettings() || {};
 
   document.getElementById("system").innerHTML = `
-    Registration: ${s.registrationOpen !== false ? "🟢" : "🔴"} <br>
+    Register: ${s.registrationOpen !== false ? "🟢" : "🔴"} <br>
     Upgrade: ${s.upgradesOpen !== false ? "🟢" : "🔴"} <br>
     Repurchase: ${s.repurchaseOpen !== false ? "🟢" : "🔴"}
   `;
@@ -171,17 +180,22 @@ function loadSystem() {
 // ================= TOGGLE =================
 function toggleSystem(key) {
 
-  if (typeof getSystemSettings !== "function" ||
-      typeof saveSystemSettings !== "function") {
-    alert("System control not available");
+  let s = getSystemSettings() || {};
+
+  // 🔒 HARD LIMIT (extra safety)
+  if (!["registrationOpen","upgradesOpen","repurchaseOpen"].includes(key)) {
+    alert("Not allowed");
     return;
   }
 
-  let s = getSystemSettings() || {};
-
   s[key] = !s[key];
 
-  saveSystemSettings(s);
+  localStorage.setItem("systemSettings", JSON.stringify(s));
+
+  // LOG
+  if (typeof logActivity === "function") {
+    logActivity(admin.userId, "TOGGLE_" + key);
+  }
 
   loadSystem();
 }
@@ -189,28 +203,26 @@ function toggleSystem(key) {
 // ================= COUNTS =================
 function loadCounts() {
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  let users = getUsers() || [];
 
   document.getElementById("totalUsers").innerText =
     users.filter(u => u.role === "user").length;
 
   document.getElementById("activeUsers").innerText =
-    users.filter(u => u.isActive === true).length;
+    users.filter(u => u.status === "active").length;
 }
 
-// ================= DATA VIEW =================
+// ================= QUICK VIEW =================
 function showData(role) {
 
-  let users = typeof getUsers === "function"
-    ? getUsers().filter(u => u.role === role)
-    : [];
+  let users = (getUsers() || []).filter(u => u.role === role);
 
   if (!users.length) {
     document.getElementById("dataPanel").innerHTML = "No Data";
     return;
   }
 
-  let html = `<table border="1" width="100%">
+  let html = `<table>
     <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
 
   users.forEach(u => {
@@ -234,7 +246,7 @@ function goTo(page) {
 
 // ================= LOGOUT =================
 function logout() {
-  localStorage.removeItem("loggedInUser");
+  localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
 }
 
