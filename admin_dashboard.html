@@ -13,7 +13,7 @@
     }
 
     header {
-      background: #333;
+      background: #222;
       color: white;
       padding: 20px;
     }
@@ -53,15 +53,23 @@
     button:hover {
       background: #005f8a;
     }
+
+    .danger {
+      background: #d9534f;
+    }
+
+    .success {
+      background: #28a745;
+    }
   </style>
 </head>
 
 <body>
 
 <header>
-  <h2>ADMIN DASHBOARD</h2>
+  <h2>🔥 ADMIN CONTROL PANEL</h2>
   <p id="welcome"></p>
-  <button onclick="logout()">Logout</button>
+  <button class="danger" onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
@@ -76,6 +84,10 @@
   <div class="card">
     <h3>System Status</h3>
     <p id="system"></p>
+
+    <button onclick="toggleSystem('registrationOpen')">Toggle Registration</button>
+    <button onclick="toggleSystem('upgradesOpen')">Toggle Upgrade</button>
+    <button onclick="toggleSystem('repurchaseOpen')">Toggle Repurchase</button>
   </div>
 
   <!-- COUNTS -->
@@ -86,56 +98,68 @@
     <div>Active Users <div class="stat" id="activeUsers">0</div></div>
   </div>
 
-  <!-- QUICK VIEW -->
+  <!-- PIN CONTROL -->
+  <div class="card">
+    <h3>PIN Control</h3>
+
+    <button onclick="goTo('admin_pin_panel.html')">Create PIN</button>
+    <button onclick="goTo('admin_pin_request.html')">Approve Requests</button>
+  </div>
+
+  <!-- INCOME CONTROL -->
+  <div class="card">
+    <h3>Income Control</h3>
+
+    <button onclick="goTo('admin_income_panel.html')">View Income</button>
+    <button onclick="goTo('admin_income_logs.html')">Income Logs</button>
+  </div>
+
+  <!-- QUICK DATA -->
   <div class="card">
     <h3>Quick View</h3>
 
     <button onclick="showData('user')">Users</button>
     <button onclick="showData('franchise')">Franchise</button>
-  </div>
 
-  <!-- DATA PANEL -->
-  <div class="card">
-    <h3>Details</h3>
-    <div id="dataPanel">Click button to view</div>
-  </div>
-
-  <!-- ACTIONS -->
-  <div class="card">
-    <h3>Actions</h3>
-
-    <button onclick="goTo('admin_withdrawals.html')">Withdrawals</button>
-    <button onclick="goTo('admin_pin_panel.html')">PIN Panel</button>
-    <button onclick="goTo('admin_income_control.html')">Income</button>
+    <div id="dataPanel" style="margin-top:10px;">Click to view</div>
   </div>
 
 </div>
 
-<script src="CORE_system.js"></script>
+<!-- CORE -->
+<script src="core_system.js"></script>
 
 <script>
 
-// INIT
-initCoreSystem();
+// ================= INIT =================
+if (typeof initCoreSystem === "function") {
+  initCoreSystem();
+}
 
-// SECURITY
-let admin = protectPage({ role: "admin" });
-if (!admin) return;
+// ================= SECURITY =================
+let admin = typeof protectPage === "function"
+  ? protectPage({ role: "admin" })
+  : null;
 
-// WELCOME
+if (!admin) throw new Error("STOP");
+
+// ================= WELCOME =================
 document.getElementById("welcome").innerText =
   "Welcome ADMIN (" + admin.userId + ")";
 
-// PROFILE
+// ================= PROFILE =================
 document.getElementById("profile").innerHTML = `
   ID: ${admin.userId} <br>
   Name: ${admin.username} <br>
   Status: ${admin.status}
 `;
 
-// SYSTEM STATUS
+// ================= SYSTEM STATUS =================
 function loadSystem() {
-  let s = getSystemSettings() || {};
+
+  let s = typeof getSystemSettings === "function"
+    ? getSystemSettings()
+    : {};
 
   document.getElementById("system").innerHTML = `
     Registration: ${s.registrationOpen !== false ? "🟢" : "🔴"} <br>
@@ -144,9 +168,28 @@ function loadSystem() {
   `;
 }
 
-// COUNTS
+// ================= TOGGLE =================
+function toggleSystem(key) {
+
+  if (typeof getSystemSettings !== "function" ||
+      typeof saveSystemSettings !== "function") {
+    alert("System control not available");
+    return;
+  }
+
+  let s = getSystemSettings() || {};
+
+  s[key] = !s[key];
+
+  saveSystemSettings(s);
+
+  loadSystem();
+}
+
+// ================= COUNTS =================
 function loadCounts() {
-  let users = getUsers();
+
+  let users = typeof getUsers === "function" ? getUsers() : [];
 
   document.getElementById("totalUsers").innerText =
     users.filter(u => u.role === "user").length;
@@ -155,17 +198,19 @@ function loadCounts() {
     users.filter(u => u.isActive === true).length;
 }
 
-// SHOW DATA
+// ================= DATA VIEW =================
 function showData(role) {
 
-  let users = getUsers().filter(u => u.role === role);
+  let users = typeof getUsers === "function"
+    ? getUsers().filter(u => u.role === role)
+    : [];
 
   if (!users.length) {
     document.getElementById("dataPanel").innerHTML = "No Data";
     return;
   }
 
-  let html = `<table>
+  let html = `<table border="1" width="100%">
     <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
 
   users.forEach(u => {
@@ -182,18 +227,18 @@ function showData(role) {
   document.getElementById("dataPanel").innerHTML = html;
 }
 
-// NAV
+// ================= NAV =================
 function goTo(page) {
   window.location.href = page;
 }
 
-// LOGOUT
+// ================= LOGOUT =================
 function logout() {
-  localStorage.removeItem("loggedInAdmin");
+  localStorage.removeItem("loggedInUser");
   window.location.href = "admin_login.html";
 }
 
-// AUTO REFRESH
+// ================= AUTO REFRESH =================
 setInterval(() => {
   loadSystem();
   loadCounts();
@@ -207,4 +252,3 @@ loadCounts();
 
 </body>
 </html>
-
