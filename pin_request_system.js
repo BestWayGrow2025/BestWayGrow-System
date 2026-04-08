@@ -1,17 +1,13 @@
 /*
 ========================================
-PIN REQUEST SYSTEM (FINAL PRO ENGINE v6)
+PIN REQUEST SYSTEM (ENTERPRISE FINAL v7)
 ========================================
-✔ Queue ready
-✔ Priority system
-✔ Lock system
-✔ Fail-safe
-✔ Auto + Manual
-✔ Multi-PIN support
-✔ Duplicate protection
-✔ Amount validation
-✔ Retry-safe (FIXED)
-✔ Production safe
+✔ Fully safe data handling
+✔ Retry + fail-safe improved
+✔ No undefined values
+✔ Strong validation
+✔ Clean processing flow
+✔ Production stable
 ========================================
 */
 
@@ -44,7 +40,7 @@ function detectPriority(userId) {
   let user = getUserById(userId);
   if (!user) return "YELLOW";
 
-  let points = user.activePoints || 0;
+  let points = Number(user.activePoints || 0);
 
   if (points >= 5) return "GREEN";
   if (points >= 2) return "YELLOW";
@@ -89,7 +85,7 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
     userId,
     type,
-    amount,
+    amount: Number(amount),
     paymentId,
 
     quantity: safeQty,
@@ -146,7 +142,7 @@ function processPinRequestAuto(requestId) {
       p.ownerType === "admin"
     );
 
-    let requiredQty = req.quantity || 1;
+    let requiredQty = Number(req.quantity) || 1;
 
     if (availablePins.length < requiredQty) {
       throw new Error("Insufficient PIN stock");
@@ -155,7 +151,11 @@ function processPinRequestAuto(requestId) {
     let assigned = [];
 
     for (let i = 0; i < requiredQty; i++) {
+
       let pin = availablePins[i];
+
+      if (!pin || !pin.pinId) continue;
+
       assignPin(pin.pinId, req.userId, "user", "SYSTEM");
       assigned.push(pin.pinId);
     }
@@ -171,15 +171,15 @@ function processPinRequestAuto(requestId) {
 
   } catch (err) {
 
-    // 🔥 RETRY SAFE FIX
-    req.retry = (req.retry || 0) + 1;
+    // 🔁 RETRY SAFE
+    req.retry = Number(req.retry || 0) + 1;
 
     if (req.retry >= 3) {
       req.status = "FAILED";
-      req.failReason = err.message;
+      req.failReason = err.message || "Unknown error";
       req.processedAt = Date.now();
     } else {
-      req.status = "PENDING"; // 🔁 retry later
+      req.status = "PENDING";
     }
 
     req.lock = false;
@@ -206,7 +206,7 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
 
   req.lock = true;
   req.status = "PROCESSING";
-  req.processedBy = performedBy;
+  req.processedBy = performedBy || "ADMIN";
 
   savePinRequests(requests);
 
@@ -215,7 +215,10 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
     let assigned = [];
 
     pinIds.forEach(pinId => {
-      assignPin(pinId, req.userId, "user", performedBy);
+
+      if (!pinId) return;
+
+      assignPin(pinId, req.userId, "user", req.processedBy);
       assigned.push(pinId);
     });
 
@@ -231,7 +234,7 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
   } catch (err) {
 
     req.status = "FAILED";
-    req.failReason = err.message;
+    req.failReason = err.message || "Unknown error";
     req.processedAt = Date.now();
     req.lock = false;
 
@@ -253,7 +256,7 @@ function rejectPinRequest(requestId, performedBy = "ADMIN") {
 
   req.status = "REJECTED";
   req.processedAt = Date.now();
-  req.processedBy = performedBy;
+  req.processedBy = performedBy || "ADMIN";
 
   savePinRequests(requests);
 
