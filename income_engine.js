@@ -1,15 +1,20 @@
 /*
 ========================================
-INCOME ENGINE (ENTERPRISE FINAL v2)
+INCOME ENGINE (ENTERPRISE FINAL v3)
 ========================================
-✔ BV based dynamic %
+✔ Pure BV based %
+✔ Exact business logic match
+✔ Rounding fixed (toFixed)
+✔ CTOR SYSTEM based (no fake users)
 ✔ Upgrade + Repurchase
-✔ CTOR PIN distribution
-✔ Single entry (addIncomeLog)
-✔ No duplication
-✔ Fully aligned with business plan
+✔ Safe + scalable
 ========================================
 */
+
+// ================= COMMON CALC =================
+function calc(bv, percent) {
+  return parseFloat(((bv * percent) / 100).toFixed(2));
+}
 
 // ================= SAFE LOG =================
 function safeIncome(data) {
@@ -31,32 +36,23 @@ function getIntroducer(user) {
 // ================= CTOR PIN SPLIT =================
 function distributeCTOR(userId, totalCTOR, type) {
 
-  // % inside CTOR
-  const CTOR_SPLIT = [
-    25, // PIN 1
-    15, // PIN 2
-    12, // PIN 3
-    6,6,6,6,6,6,6,6 // PIN 4–11
-  ];
+  const CTOR_SPLIT = [25, 15, 12, 6,6,6,6,6,6,6,6];
 
-  let users = getUsers();
+  totalCTOR = parseFloat(totalCTOR.toFixed(2));
 
   CTOR_SPLIT.forEach((percent, index) => {
 
-    let amount = (totalCTOR * percent) / 100;
-    amount = parseFloat(amount.toFixed(2));
+    let amount = parseFloat(((totalCTOR * percent) / 100).toFixed(2));
 
     if (amount <= 0) return;
-
-    // 🔥 NOTE: You will later map PIN → eligible users
-    // For now SYSTEM level (safe placeholder)
 
     safeIncome({
       userId: "SYSTEM",
       type: "ctor",
       amount: amount,
       sourceUser: userId,
-      note: `${type.toUpperCase()} CTOR PIN ${index + 1} (${percent}%)`
+      note: `${type.toUpperCase()} CTOR PIN ${index + 1} (${percent}%)`,
+      meta: { pin: index + 1 }
     });
 
   });
@@ -77,17 +73,15 @@ function processUpgradeIncome(userId, bv) {
 
     let income = 0;
 
-    // 🥇 L1 DIRECT (₹500 → % dynamic)
+    // L1 = 23.81%
     if (level === 1) {
-      income = (bv * (500 / bv)); // dynamic %
+      income = calc(bv, 23.81);
     }
 
-    // 🥈 L2–L30 (₹25 → % dynamic)
+    // L2–L30 = 1.19%
     else {
-      income = (bv * (25 / bv));
+      income = calc(bv, 1.19);
     }
-
-    income = parseFloat(income.toFixed(2));
 
     if (income > 0) {
       safeIncome({
@@ -103,8 +97,8 @@ function processUpgradeIncome(userId, bv) {
     level++;
   }
 
-  // 🏦 CTOR = 25% of BV
-  let totalCTOR = (bv * 25) / 100;
+  // CTOR = 25%
+  let totalCTOR = calc(bv, 25);
 
   distributeCTOR(userId, totalCTOR, "upgrade");
 }
@@ -112,17 +106,20 @@ function processUpgradeIncome(userId, bv) {
 // ================= REPURCHASE =================
 function processRepurchaseIncome(userId, bv) {
 
-  let usableBV = bv * 0.5;
-
-  let rliPool = usableBV * 0.4; // 40%
-  let ctorPool = usableBV * 0.6; // 60%
-
-  let perLevel = rliPool / 30;
-
-  perLevel = parseFloat(perLevel.toFixed(2));
-
   let current = getUser(userId);
   if (!current) return;
+
+  // 50% BV used
+  let usableBV = calc(bv, 50);
+
+  // RLI = 40% of usable BV
+  let rliPool = calc(usableBV, 40);
+
+  // CTOR = 60% of usable BV
+  let ctorPool = calc(usableBV, 60);
+
+  // Per level (30 levels)
+  let perLevel = parseFloat((rliPool / 30).toFixed(2));
 
   let level = 1;
 
@@ -145,7 +142,7 @@ function processRepurchaseIncome(userId, bv) {
     level++;
   }
 
-  // 🏦 CTOR DISTRIBUTION
+  // CTOR
   distributeCTOR(userId, ctorPool, "repurchase");
 }
 
