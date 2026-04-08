@@ -12,7 +12,7 @@
 <!-- 🔹 SUMMARY -->
 <h3>System Summary</h3>
 
-<p>Total Payout: ₹<span id="totalPayout">0</span></p>
+<p>Total Payout: ₹<span id="totalPayout">0.00</span></p>
 <p>Total Records: <span id="totalRecords">0</span></p>
 
 <hr>
@@ -56,7 +56,6 @@
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
-
   initCoreSystem();
   loadAllIncome();
 });
@@ -69,7 +68,9 @@ function loadAllIncome() {
   let logs = [];
 
   try {
-    logs = JSON.parse(localStorage.getItem("INCOME_LOG")) || [];
+    if (typeof getIncomeLogs === "function") {
+      logs = getIncomeLogs();
+    }
   } catch {
     logs = [];
   }
@@ -89,15 +90,16 @@ function loadAllIncome() {
 
   logs.slice().reverse().forEach(log => {
 
-    total += Number(log.amount);
+    let amount = Number(log.amount) || 0;
+    total += amount;
 
     let row = document.createElement("tr");
 
     row.innerHTML = `
-      <td>${new Date(log.time).toLocaleString()}</td>
-      <td>${log.userId}</td>
-      <td>${log.type}</td>
-      <td>₹${Number(log.amount).toFixed(2)}</td>
+      <td>${log.time ? new Date(log.time).toLocaleString() : "-"}</td>
+      <td>${log.userId || "-"}</td>
+      <td>${log.type || "-"}</td>
+      <td>₹${amount.toFixed(2)}</td>
       <td>${log.sourceUser || "-"}</td>
       <td>${log.note || ""}</td>
     `;
@@ -113,3 +115,4 @@ function loadAllIncome() {
 
 </body>
 </html>
+
