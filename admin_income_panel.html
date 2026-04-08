@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Income Panel</title>
+</head>
+<body>
+
+<h2>📊 Admin Income Panel</h2>
+
+<hr>
+
+<!-- 🔹 SUMMARY -->
+<h3>System Summary</h3>
+
+<p>Total Payout: ₹<span id="totalPayout">0</span></p>
+<p>Total Records: <span id="totalRecords">0</span></p>
+
+<hr>
+
+<!-- 🔹 FILTER -->
+<h3>Filter</h3>
+
+<select id="filterType" onchange="loadAllIncome()">
+  <option value="">All</option>
+  <option value="upgrade">Upgrade</option>
+  <option value="repurchase">Repurchase</option>
+  <option value="ctor">CTOR</option>
+</select>
+
+<hr>
+
+<!-- 🔹 TABLE -->
+<h3>Income Logs</h3>
+
+<table border="1" width="100%">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>User</th>
+      <th>Type</th>
+      <th>Amount</th>
+      <th>From</th>
+      <th>Note</th>
+    </tr>
+  </thead>
+  <tbody id="incomeTable"></tbody>
+</table>
+
+<!-- 🔥 CORE -->
+<script src="core_system.js"></script>
+
+<!-- 🔥 INCOME LOG -->
+<script src="income_log_system.js"></script>
+
+<script>
+
+// ================= INIT =================
+document.addEventListener("DOMContentLoaded", function () {
+
+  initCoreSystem();
+  loadAllIncome();
+});
+
+// ================= LOAD =================
+function loadAllIncome() {
+
+  let type = document.getElementById("filterType").value;
+
+  let logs = [];
+
+  try {
+    logs = JSON.parse(localStorage.getItem("INCOME_LOG")) || [];
+  } catch {
+    logs = [];
+  }
+
+  if (type) {
+    logs = logs.filter(l => l.type === type);
+  }
+
+  let table = document.getElementById("incomeTable");
+  table.innerHTML = "";
+
+  let total = 0;
+
+  if (!logs.length) {
+    table.innerHTML = "<tr><td colspan='6'>No Data</td></tr>";
+  }
+
+  logs.slice().reverse().forEach(log => {
+
+    total += Number(log.amount);
+
+    let row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${new Date(log.time).toLocaleString()}</td>
+      <td>${log.userId}</td>
+      <td>${log.type}</td>
+      <td>₹${Number(log.amount).toFixed(2)}</td>
+      <td>${log.sourceUser || "-"}</td>
+      <td>${log.note || ""}</td>
+    `;
+
+    table.appendChild(row);
+  });
+
+  document.getElementById("totalPayout").innerText = total.toFixed(2);
+  document.getElementById("totalRecords").innerText = logs.length;
+}
+
+</script>
+
+</body>
+</html>
