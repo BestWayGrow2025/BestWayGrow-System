@@ -1,14 +1,13 @@
 /*
 ========================================
-INCOME LOG SYSTEM (FINAL CORE v4)
+INCOME LOG SYSTEM (ENTERPRISE FINAL v5)
 ========================================
+✔ No undefined values
 ✔ Memory safe
-✔ Limit controlled
-✔ Crash safe
 ✔ Duplicate protected
-✔ Critical logs separated
-✔ Wallet sync ready
-✔ Hold system compatible
+✔ Wallet + Hold sync
+✔ Safe fallback values
+✔ Consistent data structure
 ✔ Production ready
 ========================================
 */
@@ -61,18 +60,23 @@ function addIncomeLog(data) {
     l.userId === data.userId &&
     Number(l.amount) === amount &&
     l.type === data.type &&
-    (new Date() - new Date(l.time)) < 3000
+    Math.abs(new Date() - new Date(l.time)) < 3000
   );
 
   if (exists) return;
 
+  // ✅ SAFE LOG (NO UNDEFINED)
   let newLog = {
     logId: "LOG_" + Date.now(),
-    userId: data.userId,
+
+    userId: data.userId || "UNKNOWN",
     type: data.type || "unknown",
-    amount: amount,
-    sourceUser: data.sourceUser || null,
+
+    amount: parseFloat(amount.toFixed(2)),
+
+    sourceUser: data.sourceUser || "-",
     note: data.note || "",
+
     time: new Date().toISOString()
   };
 
@@ -82,31 +86,27 @@ function addIncomeLog(data) {
   // ===============================
   // 🔥 AUTO SYNC (SAFE)
   // ===============================
-
   try {
 
-    // 💰 WALLET CREDIT
     if (typeof creditWallet === "function") {
 
-      // 👉 HOLD LOGIC CHECK
+      // 🔒 HOLD CHECK
       if (typeof isUserActive === "function" && !isUserActive(data.userId)) {
 
-        // 🔒 SEND TO HOLD
         if (typeof addHoldIncome === "function") {
           addHoldIncome(
-            data.userId,
-            amount,
-            data.type || "Income Hold"
+            newLog.userId,
+            newLog.amount,
+            newLog.type
           );
         }
 
       } else {
 
-        // 💰 DIRECT CREDIT
         creditWallet(
-          data.userId,
-          amount,
-          data.type || "Income Credit"
+          newLog.userId,
+          newLog.amount,
+          newLog.type
         );
 
       }
@@ -114,7 +114,6 @@ function addIncomeLog(data) {
 
   } catch (err) {
 
-    // 🔴 CRITICAL LOG
     addCriticalIncomeLog("Wallet sync failed: " + err.message);
 
   }
@@ -181,5 +180,4 @@ function addCriticalIncomeLog(message) {
 
   localStorage.setItem(key, JSON.stringify(logs));
 }
-
 
