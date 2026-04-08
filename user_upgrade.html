@@ -28,10 +28,12 @@
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
 
+  // ✅ CORE INIT SAFE
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   }
 
+  // ✅ SAFE SESSION LOAD
   let session;
   try {
     session = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -45,6 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
     throw new Error("STOP");
   }
 
+  // ✅ GET USER SAFE
   let user = typeof getUserById === "function"
     ? getUserById(session.userId)
     : null;
@@ -56,6 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
     throw new Error("STOP");
   }
 
+  // ✅ DISPLAY INFO
   document.getElementById("info").innerText =
     "User: " + user.username + " (" + user.userId + ")";
 
@@ -66,6 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("pinInput").value = selected.pinId || "";
     }
   } catch {}
+
 });
 
 // ================= CHECK =================
@@ -76,6 +81,9 @@ function isAlreadyUpgraded(u) {
 
 // ================= UPGRADE =================
 function upgradeNow() {
+
+  // 🔍 DEBUG (IMPORTANT)
+  console.log("Upgrade button clicked");
 
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
   if (!session) return;
@@ -88,6 +96,7 @@ function upgradeNow() {
     return;
   }
 
+  // ✅ ALREADY ACTIVE BLOCK
   if (isAlreadyUpgraded(u)) {
     alert("Your ID is already active");
     return;
@@ -102,7 +111,7 @@ function upgradeNow() {
 
   try {
 
-    // 🔥 SINGLE SOURCE (NO DUPLICATE FLOW)
+    // 🔥 SINGLE SOURCE OF TRUTH
     let pin = usePin(pinId, u.userId, "upgrade");
 
     if (!pin) {
@@ -117,7 +126,7 @@ function upgradeNow() {
       throw new Error("Activation system missing");
     }
 
-    // ❌ NO processIncome HERE (handled inside usePin)
+    // ❌ NO processIncome HERE (already handled inside usePin)
 
     // ✅ CLEANUP
     localStorage.removeItem("selectedPin");
@@ -138,7 +147,6 @@ function upgradeNow() {
 
 </body>
 </html>
-
 
 
 
