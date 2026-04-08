@@ -7,18 +7,16 @@
 
 <h2>Repurchase Page</h2>
 
-<p>User ID: <span id="userId"></span></p>
+<p id="info"></p>
 
 <input type="text" id="pinInput" placeholder="Enter PIN"><br><br>
 
 <button onclick="repurchase()">Repurchase</button>
 
 <!-- CORE -->
-<script src="CORE_system.js"></script>
+<script src="core_system.js"></script>
 
 <!-- SYSTEM -->
-<script src="commission_engine.js"></script>
-<script src="income_control_system.js"></script>
 <script src="active_system.js"></script>
 
 <!-- PIN -->
@@ -27,9 +25,12 @@
 
 <script>
 
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
 
-  initCoreSystem();
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
 
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
 
@@ -48,8 +49,8 @@ document.addEventListener("DOMContentLoaded", function () {
     throw new Error("STOP");
   }
 
-  let userEl = document.getElementById("userId");
-  if (userEl) userEl.innerText = user.userId;
+  document.getElementById("info").innerText =
+    "User: " + user.username + " (" + user.userId + ")";
 
   // ✅ AUTO PIN FILL
   let selected = JSON.parse(localStorage.getItem("selectedPin"));
@@ -58,53 +59,65 @@ document.addEventListener("DOMContentLoaded", function () {
     if (pinInput) pinInput.value = selected.pinId;
   }
 
-  // ================= REPURCHASE =================
-  window.repurchase = function () {
+});
 
-    let u = getUsers().find(x => x.userId === user.userId);
-    if (!u) return;
+// ================= VALIDATION =================
+function validatePinInput(pinId) {
+  if (!pinId) {
+    alert("Enter PIN");
+    return false;
+  }
+  if (pinId.length < 5) {
+    alert("Invalid PIN format");
+    return false;
+  }
+  return true;
+}
 
-    let pinId = document.getElementById("pinInput").value.trim();
+// ================= REPURCHASE =================
+function repurchase() {
 
-    if (!pinId) {
-      alert("Enter PIN");
+  let session = JSON.parse(localStorage.getItem("loggedInUser"));
+  let users = getUsers();
+  let u = users.find(x => x.userId === session.userId);
+
+  if (!u) {
+    alert("User not found");
+    return;
+  }
+
+  let pinId = document.getElementById("pinInput").value.trim();
+
+  if (!validatePinInput(pinId)) return;
+
+  try {
+
+    // 🔥 SINGLE SOURCE OF TRUTH
+    let pin = usePin(pinId, u.userId, "repurchase");
+
+    if (!pin) {
+      alert("Invalid or unusable PIN");
       return;
     }
 
-    try {
-
-      let pin = usePin(pinId, u.userId, "repurchase");
-
-      if (!pin) {
-        alert("Invalid PIN");
-        return;
-      }
-
-      let bv = Number(pin.bv || 0);
-
-      if (typeof isRLIEnabled === "function" &&
-          typeof processIncome === "function" &&
-          isRLIEnabled() &&
-          typeof isUserActive === "function" &&
-          isUserActive(u.userId)) {
-
-        processIncome("repurchase", u.userId, bv);
-      }
-
-      // ✅ CLEAR AUTO PIN
-      localStorage.removeItem("selectedPin");
-
-      alert("✅ Repurchase Successful");
-
-      window.location.href = "user_dashboard.html";
-
-    } catch (err) {
-      alert(err.message || "Repurchase failed");
-      console.error(err);
+    // ✅ EXTRA SAFETY CHECK
+    if (pin.type !== "repurchase") {
+      alert("Wrong PIN type");
+      return;
     }
-  };
 
-});
+    // ✅ CLEAR AUTO PIN
+    localStorage.removeItem("selectedPin");
+
+    alert("✅ Repurchase Successful");
+
+    window.location.href = "user_dashboard.html";
+
+  } catch (err) {
+    alert(err.message || "Repurchase failed");
+    console.error("Repurchase Error:", err);
+  }
+}
 
 </script>
 
