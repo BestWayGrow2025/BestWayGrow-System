@@ -32,15 +32,22 @@ document.addEventListener("DOMContentLoaded", function () {
     initCoreSystem();
   }
 
-  let session = JSON.parse(localStorage.getItem("loggedInUser"));
+  let session;
+  try {
+    session = JSON.parse(localStorage.getItem("loggedInUser"));
+  } catch {
+    session = null;
+  }
 
-  if (!session) {
+  if (!session || !session.userId) {
     alert("Login required");
     window.location.href = "user_login.html";
     throw new Error("STOP");
   }
 
-  let user = getUserById(session.userId);
+  let user = typeof getUserById === "function"
+    ? getUserById(session.userId)
+    : null;
 
   if (!user) {
     alert("User not found");
@@ -52,13 +59,13 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("info").innerText =
     "User: " + user.username + " (" + user.userId + ")";
 
-  // ✅ AUTO PIN FILL
-  let selected = JSON.parse(localStorage.getItem("selectedPin"));
-  if (selected && selected.type === "repurchase") {
-    let pinInput = document.getElementById("pinInput");
-    if (pinInput) pinInput.value = selected.pinId;
-  }
-
+  // ✅ AUTO PIN FILL (SAFE)
+  try {
+    let selected = JSON.parse(localStorage.getItem("selectedPin"));
+    if (selected && selected.type === "repurchase") {
+      document.getElementById("pinInput").value = selected.pinId || "";
+    }
+  } catch {}
 });
 
 // ================= VALIDATION =================
@@ -78,7 +85,9 @@ function validatePinInput(pinId) {
 function repurchase() {
 
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
-  let users = getUsers();
+  if (!session) return;
+
+  let users = typeof getUsers === "function" ? getUsers() : [];
   let u = users.find(x => x.userId === session.userId);
 
   if (!u) {
@@ -100,13 +109,14 @@ function repurchase() {
       return;
     }
 
-    // ✅ EXTRA SAFETY CHECK
+    // ✅ TYPE SAFETY
     if (pin.type !== "repurchase") {
-      alert("Wrong PIN type");
-      return;
+      throw new Error("Wrong PIN type");
     }
 
-    // ✅ CLEAR AUTO PIN
+    // ❌ NO processIncome HERE (handled inside usePin)
+
+    // ✅ CLEANUP
     localStorage.removeItem("selectedPin");
 
     alert("✅ Repurchase Successful");
@@ -114,8 +124,10 @@ function repurchase() {
     window.location.href = "user_dashboard.html";
 
   } catch (err) {
-    alert(err.message || "Repurchase failed");
+
     console.error("Repurchase Error:", err);
+
+    alert(err.message || "Repurchase failed");
   }
 }
 
