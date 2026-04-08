@@ -56,13 +56,13 @@
       padding: 6px 10px;
       margin: 5px;
       cursor: pointer;
+      border-radius: 6px;
+      border: none;
     }
 
     .btn-main {
       background: #00994d;
       color: white;
-      border: none;
-      border-radius: 6px;
     }
   </style>
 </head>
@@ -100,10 +100,10 @@
     <button onclick="fullReset()">🔴 Full</button>
   </div>
 
-  <!-- ✅ DIRECT CREATE SYSTEM ADMIN -->
+  <!-- CREATE SYSTEM ADMIN -->
   <div class="card">
     <h3>Create System Admin</h3>
-    <p>One-click creation (no redirect)</p>
+    <p>Direct creation (no redirect)</p>
 
     <button class="btn-main" onclick="createSystemAdmin()">
       ➕ CREATE SYSTEM ADMIN
@@ -138,22 +138,35 @@
 
 </div>
 
+<!-- ✅ CORE FIRST (CRITICAL) -->
 <script src="core_system.js"></script>
 <script src="activity_log.js"></script>
 
 <script>
 
-// INIT
-initCoreSystem();
+// ================= SAFE INIT =================
+if (typeof initCoreSystem === "function") {
+  initCoreSystem();
+} else {
+  alert("❌ core_system.js not loaded");
+  throw new Error("STOP");
+}
 
-// AUTH
-let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
-if (!session) {
+// ================= AUTH =================
+let session;
+try {
+  session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+} catch {
+  session = null;
+}
+
+if (!session || !session.userId) {
   alert("Access denied");
   window.location.href = "super_admin_login.html";
 }
 
 let user = getUserById(session.userId);
+
 if (!user || user.role !== "super_admin") {
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
@@ -162,19 +175,20 @@ if (!user || user.role !== "super_admin") {
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// ✅ CREATE SYSTEM ADMIN (FINAL)
+// ================= CREATE SYSTEM ADMIN =================
 function createSystemAdmin() {
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  let users = getUsers() || [];
 
   let count = users.filter(u => u.role === "system_admin").length;
 
   let newUser = {
     userId: "SYS" + Date.now(),
     username: "sysadmin_" + (count + 1),
-    password: "1234",
+    password: btoa("1234"),
     role: "system_admin",
-    status: "active"
+    status: "active",
+    createdBy: user.userId
   };
 
   users.push(newUser);
@@ -186,7 +200,7 @@ function createSystemAdmin() {
   loadCounts();
 }
 
-// SYSTEM
+// ================= SYSTEM =================
 function loadSystem() {
   let s = getSystemSettings() || {};
 
@@ -202,9 +216,9 @@ function loadSystem() {
   `;
 }
 
-// COUNTS
+// ================= COUNTS =================
 function loadCounts() {
-  let users = getUsers();
+  let users = getUsers() || [];
 
   document.getElementById("sysCount").innerText =
     users.filter(u => u.role === "system_admin").length;
@@ -219,7 +233,7 @@ function loadCounts() {
     users.filter(u => u.role === "user").length;
 }
 
-// SHOW DATA
+// ================= SHOW DATA =================
 function showData(role) {
 
   let users = getUsers().filter(u => u.role === role);
@@ -246,7 +260,7 @@ function showData(role) {
   document.getElementById("dataPanel").innerHTML = html;
 }
 
-// TOGGLE
+// ================= TOGGLE =================
 function toggle(key) {
   let s = getSystemSettings() || {};
   s[key] = !s[key];
@@ -254,7 +268,7 @@ function toggle(key) {
   loadSystem();
 }
 
-// RESET
+// ================= RESET =================
 function softReset() {
   if (!confirm("Clear logs only?")) return;
   localStorage.removeItem("activityLogs");
@@ -296,13 +310,13 @@ function fullReset() {
   location.reload();
 }
 
-// LOGOUT
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
 }
 
-// AUTO REFRESH
+// ================= AUTO REFRESH =================
 setInterval(() => {
   loadSystem();
   loadCounts();
