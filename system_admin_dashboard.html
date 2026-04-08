@@ -85,12 +85,18 @@
 
 </div>
 
-<script src="CORE_system.js"></script>
+<!-- ✅ FIXED FILE NAME -->
+<script src="core_system.js"></script>
 
 <script>
 
-// ================= INIT =================
-initCoreSystem();
+// ================= SAFE INIT =================
+if (typeof initCoreSystem === "function") {
+  initCoreSystem();
+} else {
+  alert("❌ core_system.js not loaded");
+  throw new Error("STOP");
+}
 
 // ================= AUTH =================
 let session;
@@ -165,7 +171,7 @@ function showData(role) {
     html += `
       <tr>
         <td>${u.userId}</td>
-        <td>${u.username}</td>
+        <td>${u.username || u.userId}</td>
         <td>${u.status || "active"}</td>
       </tr>`;
   });
@@ -225,6 +231,10 @@ function createAdmin() {
 
   showMsg("✅ Admin Created");
 
+  document.getElementById("adminId").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("password").value = "";
+
   loadAdmins();
   loadCounts();
 }
@@ -246,7 +256,7 @@ function loadAdmins() {
     html += `
       <tr>
         <td>${a.userId}</td>
-        <td>${a.username}</td>
+        <td>${a.username || a.userId}</td>
         <td>${a.status}</td>
       </tr>`;
   });
@@ -272,7 +282,7 @@ setInterval(() => {
   loadCounts();
 }, 3000);
 
-// ================= INIT LOAD =================
+// INIT
 loadSystem();
 loadCounts();
 loadAdmins();
