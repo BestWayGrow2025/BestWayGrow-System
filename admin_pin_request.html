@@ -1,2 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin PIN Request Panel</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    button { padding: 6px 10px; cursor: pointer; margin: 2px; }
+    .pending { color: orange; }
+    .done { color: green; }
+    .failed { color: red; }
+  </style>
+</head>
+<body>
+
+<h2>Admin PIN Request Panel</h2>
+
+<button onclick="loadRequests()">🔄 Refresh</button>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>User</th>
+      <th>Type</th>
+      <th>Qty</th>
+      <th>Amount</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="requestTable"></tbody>
+</table>
+
+<!-- CORE -->
+<script src="core_system.js"></script>
+
+<!-- PIN SYSTEM -->
+<script src="pin_request_system.js"></script>
+<script src="pin_master_system.js"></script>
+
+<script>
+
+// ================= INIT =================
+document.addEventListener("DOMContentLoaded", function () {
+
+  initCoreSystem();
+
+  let session = JSON.parse(localStorage.getItem("loggedInUser"));
+
+  if (!session) {
+    alert("Login required");
+    window.location.href = "admin_login.html";
+    return;
+  }
+
+  loadRequests();
+});
+
+// ================= LOAD =================
+function loadRequests() {
+
+  let data = getPinRequests();
+  let table = document.getElementById("requestTable");
+
+  table.innerHTML = "";
+
+  data.reverse().forEach(r => {
+
+    let statusClass = "";
+    if (r.status === "PENDING") statusClass = "pending";
+    if (r.status === "COMPLETED") statusClass = "done";
+    if (r.status === "FAILED") statusClass = "failed";
+
+    let actions = "";
+
+    if (r.status === "PENDING") {
+      actions = `
+        <button onclick="autoProcess('${r.requestId}')">AUTO</button>
+        <button onclick="rejectReq('${r.requestId}')">REJECT</button>
+      `;
+    } else {
+      actions = "-";
+    }
+
+    table.innerHTML += `
+      <tr>
+        <td>${r.requestId}</td>
+        <td>${r.userId}</td>
+        <td>${r.type}</td>
+        <td>${r.quantity}</td>
+        <td>${r.amount}</td>
+        <td class="${statusClass}">${r.status}</td>
+        <td>${actions}</td>
+      </tr>
+    `;
+  });
+}
+
+// ================= AUTO PROCESS =================
+function autoProcess(id) {
+
+  try {
+    processPinRequestAuto(id);
+    alert("✅ Auto processed");
+    loadRequests();
+  } catch (err) {
+    alert(err.message || "Error");
+  }
+}
+
+// ================= REJECT =================
+function rejectReq(id) {
+
+  if (!confirm("Reject this request?")) return;
+
+  try {
+    rejectPinRequest(id, "ADMIN");
+    alert("❌ Rejected");
+    loadRequests();
+  } catch (err) {
+    alert(err.message || "Error");
+  }
+}
+
+</script>
+
+</body>
+</html>
 
 
