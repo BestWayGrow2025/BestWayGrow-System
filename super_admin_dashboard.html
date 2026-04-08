@@ -100,12 +100,12 @@
     <button onclick="fullReset()">🔴 Full</button>
   </div>
 
-  <!-- ✅ FIXED: CREATE SYSTEM ADMIN -->
+  <!-- ✅ DIRECT CREATE SYSTEM ADMIN -->
   <div class="card">
     <h3>Create System Admin</h3>
-    <p>Access system-level control creation</p>
+    <p>One-click creation (no redirect)</p>
 
-    <button class="btn-main" onclick="goCreateAdmin()">
+    <button class="btn-main" onclick="createSystemAdmin()">
       ➕ CREATE SYSTEM ADMIN
     </button>
   </div>
@@ -138,7 +138,7 @@
 
 </div>
 
-<script src="CORE_system.js"></script>
+<script src="core_system.js"></script>
 <script src="activity_log.js"></script>
 
 <script>
@@ -162,9 +162,28 @@ if (!user || user.role !== "super_admin") {
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// NAVIGATION
-function goCreateAdmin() {
-  window.location.href = "system_admin_create_admin.html";
+// ✅ CREATE SYSTEM ADMIN (FINAL)
+function createSystemAdmin() {
+
+  let users = typeof getUsers === "function" ? getUsers() : [];
+
+  let count = users.filter(u => u.role === "system_admin").length;
+
+  let newUser = {
+    userId: "SYS" + Date.now(),
+    username: "sysadmin_" + (count + 1),
+    password: "1234",
+    role: "system_admin",
+    status: "active"
+  };
+
+  users.push(newUser);
+
+  localStorage.setItem("users", JSON.stringify(users));
+
+  alert("✅ System Admin Created");
+
+  loadCounts();
 }
 
 // SYSTEM
@@ -297,4 +316,3 @@ loadCounts();
 
 </body>
 </html>
-
