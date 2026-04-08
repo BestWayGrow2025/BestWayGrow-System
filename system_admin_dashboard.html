@@ -47,6 +47,15 @@
     <p id="msg"></p>
   </div>
 
+  <!-- PIN PANEL -->
+  <div class="card">
+    <h3>PIN CONTROL</h3>
+
+    <button onclick="goTo('system_admin_pin_panel.html')">
+      OPEN PIN PANEL
+    </button>
+  </div>
+
   <!-- COUNTS -->
   <div class="card">
     <h3>Overview</h3>
@@ -85,12 +94,11 @@
 
 </div>
 
-<!-- ✅ FIXED FILE NAME -->
 <script src="core_system.js"></script>
 
 <script>
 
-// ================= SAFE INIT =================
+// ================= INIT =================
 if (typeof initCoreSystem === "function") {
   initCoreSystem();
 } else {
@@ -118,6 +126,11 @@ if (!currentUser || currentUser.role !== "system_admin") {
   localStorage.removeItem("loggedInSystemAdmin");
   window.location.href = "system_admin_login.html";
   throw new Error("STOP");
+}
+
+// ================= NAVIGATION =================
+function goTo(page){
+  window.location.href = page;
 }
 
 // ================= TYPE SWITCH =================
@@ -171,7 +184,7 @@ function showData(role) {
     html += `
       <tr>
         <td>${u.userId}</td>
-        <td>${u.username || u.userId}</td>
+        <td>${u.username || "-"}</td>
         <td>${u.status || "active"}</td>
       </tr>`;
   });
@@ -256,7 +269,7 @@ function loadAdmins() {
     html += `
       <tr>
         <td>${a.userId}</td>
-        <td>${a.username || a.userId}</td>
+        <td>${a.username || "-"}</td>
         <td>${a.status}</td>
       </tr>`;
   });
