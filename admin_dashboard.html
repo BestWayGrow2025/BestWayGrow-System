@@ -75,7 +75,7 @@
 <body>
 
 <header>
-  <h2>🔥 ADMIN CONTROL PANEL (V6++++)</h2>
+  <h2>🔥 ADMIN CONTROL PANEL (V6++++ FINAL)</h2>
   <p id="welcome"></p>
   <button class="danger" onclick="logout()">Logout</button>
 </header>
@@ -88,12 +88,11 @@
     <p id="profile"></p>
   </div>
 
-  <!-- ✅ LIMITED SYSTEM CONTROL (CORRECT) -->
+  <!-- SYSTEM CONTROL -->
   <div class="card">
     <h3>System Control</h3>
     <p id="system"></p>
 
-    <!-- ONLY ALLOWED -->
     <button onclick="toggleSystem('registrationOpen')">Register</button>
     <button onclick="toggleSystem('upgradesOpen')">Upgrade</button>
     <button onclick="toggleSystem('repurchaseOpen')">Repurchase</button>
@@ -107,21 +106,20 @@
     <div>Active Users <div class="stat" id="activeUsers">0</div></div>
   </div>
 
-  <!-- PIN CONTROL -->
+  <!-- PIN CONTROL (FIXED LINKS) -->
   <div class="card">
     <h3>PIN Control</h3>
 
-    <!-- Admin only REQUEST / DISTRIBUTE -->
     <button onclick="goTo('admin_pin_request.html')">Request PIN</button>
-    <button onclick="goTo('admin_pin_distribution.html')">Distribute PIN</button>
+    <button onclick="goTo('admin_pin_panel.html')">Create PIN</button>
   </div>
 
-  <!-- USER CONTROL -->
+  <!-- USER CONTROL (FIXED LINKS) -->
   <div class="card">
     <h3>User Control</h3>
 
-    <button onclick="goTo('admin_user_panel.html')">Manage Users</button>
-    <button onclick="goTo('admin_franchise_panel.html')">Manage Franchise</button>
+    <button onclick="goTo('admin_franchise_requests.html')">Franchise Requests</button>
+    <button onclick="goTo('admin_kyc.html')">KYC Verification</button>
   </div>
 
   <!-- QUICK VIEW -->
@@ -142,7 +140,7 @@
 
 <script>
 
-// ================= INIT =================
+// INIT
 if (typeof initCoreSystem === "function") {
   initCoreSystem();
 } else {
@@ -150,24 +148,23 @@ if (typeof initCoreSystem === "function") {
   throw new Error("STOP");
 }
 
-// ================= SECURITY =================
+// SECURITY
 let admin = protectPage({ role: "admin" });
 if (!admin) throw new Error("STOP");
 
-// ================= WELCOME =================
+// WELCOME
 document.getElementById("welcome").innerText =
   "Welcome ADMIN (" + admin.userId + ")";
 
-// ================= PROFILE =================
+// PROFILE
 document.getElementById("profile").innerHTML = `
   ID: ${admin.userId} <br>
-  Name: ${admin.username} <br>
+  Name: ${admin.username || admin.userId} <br>
   Status: ${admin.status}
 `;
 
-// ================= SYSTEM STATUS =================
+// SYSTEM STATUS
 function loadSystem() {
-
   let s = getSystemSettings() || {};
 
   document.getElementById("system").innerHTML = `
@@ -177,22 +174,21 @@ function loadSystem() {
   `;
 }
 
-// ================= TOGGLE =================
+// TOGGLE (SECURE)
 function toggleSystem(key) {
 
-  let s = getSystemSettings() || {};
+  let allowed = ["registrationOpen","upgradesOpen","repurchaseOpen"];
 
-  // 🔒 HARD LIMIT (extra safety)
-  if (!["registrationOpen","upgradesOpen","repurchaseOpen"].includes(key)) {
+  if (!allowed.includes(key)) {
     alert("Not allowed");
     return;
   }
 
+  let s = getSystemSettings() || {};
   s[key] = !s[key];
 
   localStorage.setItem("systemSettings", JSON.stringify(s));
 
-  // LOG
   if (typeof logActivity === "function") {
     logActivity(admin.userId, "TOGGLE_" + key);
   }
@@ -200,7 +196,7 @@ function toggleSystem(key) {
   loadSystem();
 }
 
-// ================= COUNTS =================
+// COUNTS
 function loadCounts() {
 
   let users = getUsers() || [];
@@ -212,7 +208,7 @@ function loadCounts() {
     users.filter(u => u.status === "active").length;
 }
 
-// ================= QUICK VIEW =================
+// QUICK VIEW
 function showData(role) {
 
   let users = (getUsers() || []).filter(u => u.role === role);
@@ -229,7 +225,7 @@ function showData(role) {
     html += `
       <tr>
         <td>${u.userId}</td>
-        <td>${u.username}</td>
+        <td>${u.username || u.userId}</td>
         <td>${u.status || "active"}</td>
       </tr>`;
   });
@@ -239,18 +235,18 @@ function showData(role) {
   document.getElementById("dataPanel").innerHTML = html;
 }
 
-// ================= NAV =================
+// NAV
 function goTo(page) {
   window.location.href = page;
 }
 
-// ================= LOGOUT =================
+// LOGOUT
 function logout() {
   localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
 }
 
-// ================= AUTO REFRESH =================
+// AUTO REFRESH
 setInterval(() => {
   loadSystem();
   loadCounts();
