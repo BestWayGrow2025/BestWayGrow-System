@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Use PIN</title>
+  <link rel="icon" href="data:,">
+
+  <style>
+    body {
+      font-family: Arial;
+      background:#f4f7f9;
+      text-align:center;
+      padding:20px;
+    }
+
+    .card {
+      background:#fff;
+      padding:20px;
+      margin:15px auto;
+      border-radius:10px;
+      max-width:350px;
+      box-shadow:0 4px 10px #ccc;
+    }
+
+    select, input {
+      padding:8px;
+      margin:10px;
+      width:90%;
+    }
+
+    button {
+      padding:8px 15px;
+      background:#28a745;
+      color:#fff;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+    }
+
+    #msg {
+      margin-top:10px;
+      font-weight:bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>💰 Use PIN (Upgrade / Repurchase)</h2>
+
+<div class="card">
+
+  <select id="action">
+    <option value="upgrade">Upgrade</option>
+    <option value="repurchase">Repurchase</option>
+  </select>
+
+  <input id="pinInput" placeholder="Enter PIN">
+
+  <button onclick="usePin()">Submit</button>
+
+  <p id="msg"></p>
+
+</div>
+
+<script src="core_system.js"></script>
+
+<script>
+
+// INIT
+if (typeof initCoreSystem === "function") initCoreSystem();
+else { alert("core_system.js missing"); throw new Error("STOP"); }
+
+// AUTH USER
+let session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+
+if (!session || !session.userId) {
+  location.href = "user_login.html";
+  throw new Error("STOP");
+}
+
+let user = getUserById(session.userId);
+
+if (!user || user.role !== "user") {
+  localStorage.removeItem("loggedInUser");
+  location.href = "user_login.html";
+  throw new Error("STOP");
+}
+
+// STORAGE
+function getPins() {
+  return JSON.parse(localStorage.getItem("pins") || "[]");
+}
+
+function savePins(pins) {
+  localStorage.setItem("pins", JSON.stringify(pins));
+}
+
+// MAIN USE FUNCTION
+function usePin() {
+
+  let pinVal = document.getElementById("pinInput").value.trim();
+  let action = document.getElementById("action").value;
+
+  if (!pinVal) return showMsg("⚠️ Enter PIN");
+
+  let pins = getPins();
+
+  let pinObj = pins.find(p => p.pin === pinVal);
+
+  if (!pinObj) {
+    showMsg("❌ Invalid PIN");
+    return;
+  }
+
+  // ❌ MUST BE OWNED PIN
+  if (pinObj.usedBy !== user.userId) {
+    showMsg("🚫 This PIN not linked to you");
+    return;
+  }
+
+  // ❌ ALREADY USED FOR UPGRADE/REPURCHASE
+  if (pinObj.consumed) {
+    showMsg("🚫 PIN already used");
+    return;
+  }
+
+  // ✅ MARK CONSUMED
+  pinObj.consumed = true;
+  pinObj.consumedFor = action;
+  pinObj.consumedAt = Date.now();
+
+  savePins(pins);
+
+  // ✅ APPLY EFFECT
+  let users = getUsers() || [];
+  let u = users.find(x => x.userId === user.userId);
+
+  if (u) {
+
+    if (action === "upgrade") {
+      u.upgradeLevel = (u.upgradeLevel || 0) + 1;
+    }
+
+    if (action === "repurchase") {
+      u.repurchaseCount = (u.repurchaseCount || 0) + 1;
+    }
+
+  }
+
+  saveUsers(users);
+
+  showMsg("✅ " + action.toUpperCase() + " SUCCESS");
+
+  setTimeout(() => {
+    location.href = "user_dashboard.html";
+  }, 1000);
+}
+
+// MESSAGE
+function showMsg(m) {
+  document.getElementById("msg").innerText = m;
+}
+
+</script>
+
+</body>
+</html>
