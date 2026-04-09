@@ -6,16 +6,16 @@
 
   <style>
     body {
-      margin:0;
       font-family: Arial;
+      margin:0;
       background:#f4f7f9;
+      text-align:center;
     }
 
     header {
-      background: linear-gradient(90deg,#0066ff,#00cc99);
+      background:#4a00e0;
       color:#fff;
       padding:15px;
-      text-align:center;
     }
 
     .menu {
@@ -24,42 +24,30 @@
       justify-content:center;
       background:#fff;
       padding:10px;
-      box-shadow:0 2px 6px #ccc;
+      box-shadow:0 2px 5px #ccc;
     }
 
     .menu button {
       margin:5px;
-      padding:10px 15px;
+      padding:8px 12px;
       border:none;
-      border-radius:20px;
-      background:#eee;
+      border-radius:5px;
       cursor:pointer;
-      transition:0.3s;
-    }
-
-    .menu button:hover {
-      background:#00cc99;
+      background:#007bff;
       color:#fff;
     }
 
-    .active {
-      background:#0066ff !important;
-      color:#fff !important;
-    }
-
-    .content {
+    .container {
       padding:20px;
-      text-align:center;
     }
 
     .card {
       background:#fff;
       padding:20px;
-      margin:10px auto;
-      width:90%;
-      max-width:500px;
       border-radius:10px;
       box-shadow:0 4px 10px #ccc;
+      max-width:600px;
+      margin:auto;
     }
 
     table {
@@ -68,16 +56,14 @@
       margin-top:10px;
     }
 
-    th,td {
+    th, td {
       border:1px solid #ddd;
       padding:8px;
       font-size:13px;
     }
 
-    input, button {
-      padding:8px;
-      margin:5px;
-    }
+    .green { color:green; }
+    .red { color:red; }
   </style>
 </head>
 
@@ -86,28 +72,23 @@
 <header>
   <h2>🚀 USER DASHBOARD V7</h2>
   <p id="welcome"></p>
+  <button onclick="logout()">Logout</button>
 </header>
 
-<!-- MENU -->
+<!-- TOP MENU -->
 <div class="menu">
-
-  <button onclick="loadPage('home',this)">Home</button>
-  <button onclick="loadPage('user',this)">User</button>
-  <button onclick="loadPage('pin',this)">PIN</button>
-  <button onclick="loadPage('wallet',this)">Wallet</button>
-  <button onclick="loadPage('register',this)">Register</button>
-  <button onclick="loadPage('upgrade',this)">Upgrade</button>
-  <button onclick="loadPage('franchise',this)">Franchise</button>
-  <button onclick="loadPage('ticket',this)">Ticket</button>
-  <button onclick="loadPage('content',this)">Content</button>
-  <button onclick="loadPage('plan',this)">Plan</button>
-  <button onclick="loadPage('settings',this)">Settings</button>
-
+  <button onclick="loadHome()">Home</button>
+  <button onclick="loadPins()">PIN</button>
+  <button onclick="loadUpgrade()">Upgrade</button>
+  <button onclick="loadRepurchase()">Repurchase</button>
+  <button onclick="loadWallet()">Wallet</button>
+  <button onclick="loadTree()">Tree</button>
+  <button onclick="loadTickets()">Support</button>
 </div>
 
-<!-- CONTENT -->
-<div class="content" id="contentBox">
-  Loading...
+<!-- MAIN DISPLAY -->
+<div class="container">
+  <div id="mainContent" class="card">Loading...</div>
 </div>
 
 <script src="core_system.js"></script>
@@ -119,12 +100,7 @@ if (typeof initCoreSystem === "function") initCoreSystem();
 else { alert("core_system.js missing"); throw new Error("STOP"); }
 
 // AUTH
-let session;
-try {
-  session = JSON.parse(localStorage.getItem("loggedInUser"));
-} catch {
-  session = null;
-}
+let session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
 
 if (!session || !session.userId) {
   location.href = "user_login.html";
@@ -133,7 +109,7 @@ if (!session || !session.userId) {
 
 let user = getUserById(session.userId);
 
-if (!user) {
+if (!user || user.role !== "user") {
   localStorage.removeItem("loggedInUser");
   location.href = "user_login.html";
   throw new Error("STOP");
@@ -143,144 +119,116 @@ if (!user) {
 document.getElementById("welcome").innerText =
   "Welcome (" + user.userId + ")";
 
-// MENU ACTIVE
-function setActive(btn){
-  document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
+// STORAGE
+function getPins() {
+  return JSON.parse(localStorage.getItem("pins") || "[]");
 }
 
-// LOAD PAGE
-function loadPage(page,btn){
+// ================= HOME =================
+function loadHome() {
 
-  if(btn) setActive(btn);
+  document.getElementById("mainContent").innerHTML = `
+    <h3>Dashboard Overview</h3>
+    <p>Status: ${user.status || "inactive"}</p>
+    <p>Upgrade Level: ${user.upgradeLevel || 0}</p>
+    <p>Repurchase Count: ${user.repurchaseCount || 0}</p>
+  `;
+}
 
-  let html = "";
+// ================= PIN =================
+function loadPins() {
 
-  // HOME
-  if(page === "home"){
-    html = `
-    <div class="card">
-      <h3>Dashboard Overview</h3>
-      <p>User ID: ${user.userId}</p>
-      <p>Status: ${user.status || "active"}</p>
-    </div>`;
+  let pins = getPins().filter(p =>
+    p.ownerId === user.userId || p.usedBy === user.userId
+  );
+
+  let html = `<h3>PIN Section</h3>
+  <button onclick="location.href='user_pin_activation.html'">Activate PIN</button>
+  <button onclick="location.href='user_pin_use.html'">Use PIN</button>
+  <table>
+    <tr><th>PIN</th><th>Amount</th><th>Status</th></tr>`;
+
+  if (!pins.length) {
+    html += `<tr><td colspan="3">No PIN</td></tr>`;
   }
 
-  // USER TREE
-  if(page === "user"){
-    let directs = getDirectUsers(user.userId);
-    html = `<div class="card"><h3>Direct Users</h3>`;
+  pins.forEach(p => {
+    let status = p.used ? "USED" : "AVAILABLE";
+    let cls = p.used ? "red" : "green";
 
-    if(!directs.length) html += "No Users";
-    else {
-      html += `<table><tr><th>ID</th></tr>`;
-      directs.forEach(u=>{
-        html += `<tr><td>${u.userId}</td></tr>`;
-      });
-      html += "</table>";
-    }
+    html += `
+      <tr>
+        <td>${p.pin}</td>
+        <td>₹${p.amount || 0}</td>
+        <td class="${cls}">${status}</td>
+      </tr>`;
+  });
 
-    html += "</div>";
-  }
+  html += `</table>`;
 
-  // PIN
-  if(page === "pin"){
-    html = `
-    <div class="card">
-      <h3>PIN System</h3>
-      <p>Apply / View PIN here</p>
-    </div>`;
-  }
+  document.getElementById("mainContent").innerHTML = html;
+}
 
-  // WALLET
-  if(page === "wallet"){
-    html = `
-    <div class="card">
-      <h3>Wallet</h3>
-      <p>Balance: ₹0</p>
-    </div>`;
-  }
+// ================= UPGRADE =================
+function loadUpgrade() {
 
-  // REGISTER
-  if(page === "register"){
-    html = `
-    <div class="card">
-      <h3>Register New User</h3>
-      <button onclick="alert('Use registration page')">Open Register</button>
-    </div>`;
-  }
+  document.getElementById("mainContent").innerHTML = `
+    <h3>Upgrade</h3>
+    <p>Current Level: ${user.upgradeLevel || 0}</p>
+    <button onclick="location.href='user_pin_use.html'">Upgrade Now</button>
+  `;
+}
 
-  // UPGRADE
-  if(page === "upgrade"){
-    html = `
-    <div class="card">
-      <h3>Upgrade Plan</h3>
-      <p>Upgrade feature here</p>
-    </div>`;
-  }
+// ================= REPURCHASE =================
+function loadRepurchase() {
 
-  // FRANCHISE
-  if(page === "franchise"){
-    html = `
-    <div class="card">
-      <h3>Franchise</h3>
-      <p>Apply / Status</p>
-    </div>`;
-  }
+  document.getElementById("mainContent").innerHTML = `
+    <h3>Repurchase</h3>
+    <p>Total Repurchase: ${user.repurchaseCount || 0}</p>
+    <button onclick="location.href='user_pin_use.html'">Repurchase Now</button>
+  `;
+}
 
-  // TICKET
-  if(page === "ticket"){
-    html = `
-    <div class="card">
-      <h3>Support Ticket</h3>
-      <p>Create / View tickets</p>
-    </div>`;
-  }
+// ================= WALLET =================
+function loadWallet() {
 
-  // CONTENT
-  if(page === "content"){
-    html = `
-    <div class="card">
-      <h3>Content Platform</h3>
-      <p>Upload Shorts / View Feed</p>
-    </div>`;
-  }
+  document.getElementById("mainContent").innerHTML = `
+    <h3>Wallet</h3>
+    <p>Balance: ₹${user.wallet || 0}</p>
+  `;
+}
 
-  // PLAN
-  if(page === "plan"){
-    html = `
-    <div class="card">
-      <h3>Plan Overview</h3>
-      <p>All plans here</p>
-    </div>`;
-  }
+// ================= TREE =================
+function loadTree() {
 
-  // SETTINGS
-  if(page === "settings"){
-    html = `
-    <div class="card">
-      <h3>Settings</h3>
-      <button onclick="logout()">Logout</button>
-    </div>`;
-  }
+  document.getElementById("mainContent").innerHTML = `
+    <h3>User Tree</h3>
+    <p>Coming Soon 🌳</p>
+  `;
+}
 
-  document.getElementById("contentBox").innerHTML = html;
+// ================= SUPPORT =================
+function loadTickets() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <h3>Support / Tickets</h3>
+    <p>Coming Soon 🎫</p>
+  `;
 }
 
 // LOGOUT
-function logout(){
+function logout() {
   localStorage.removeItem("loggedInUser");
   location.href = "user_login.html";
 }
 
-// DEFAULT LOAD
-loadPage('home');
+// INIT
+loadHome();
 
 </script>
 
 </body>
 </html>
-
 
 
 
