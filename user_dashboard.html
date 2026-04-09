@@ -55,15 +55,12 @@
   <p id="userInfo"></p>
 </div>
 
-<!-- 💰 WALLET -->
 <div class="card">
   <h3>💰 Wallet</h3>
-
   <p>Balance: ₹<span id="walletBalance">0.00</span></p>
   <p>Total Income: ₹<span id="totalIncome">0.00</span></p>
 </div>
 
-<!-- 🔗 SHARE -->
 <div class="card">
   <h3>🔗 Share & Earn</h3>
 
@@ -74,7 +71,6 @@
   <p id="copyMsg"></p>
 </div>
 
-<!-- 🎟️ PIN SECTION -->
 <div class="card">
   <h3>🎟️ My PINs</h3>
 
@@ -92,26 +88,21 @@
   </table>
 </div>
 
-<!-- ACTION -->
 <div class="card">
   <h3>Actions</h3>
-
   <button onclick="goUpgrade()">Upgrade</button>
   <button onclick="goRepurchase()">Repurchase</button>
   <button onclick="goRequest()">Request PIN</button>
 </div>
 
-<!-- CORE -->
 <script src="core_system.js"></script>
-
-<!-- PIN -->
 <script src="pin_master_system.js"></script>
-
-<!-- WALLET + INCOME -->
 <script src="wallet_system.js"></script>
 <script src="income_log_system.js"></script>
 
 <script>
+
+let currentUser;
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
@@ -133,21 +124,20 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  let user = typeof getUserById === "function"
-    ? getUserById(session.userId)
-    : null;
+  let user = getUserById(session.userId);
 
-  if (!user) {
-    alert("User not found");
+  if (!user || user.role !== "user") {
+    alert("Invalid access");
     localStorage.removeItem("loggedInUser");
     window.location.href = "user_login.html";
     return;
   }
 
-  document.getElementById("userInfo").innerText =
-    "User: " + user.username + " (" + user.userId + ")";
+  currentUser = user;
 
-  // 🔗 SHARE LINK
+  document.getElementById("userInfo").innerText =
+    "User: " + (user.username || user.userId) + " (" + user.userId + ")";
+
   let link =
     "https://bestwaygrow2025.github.io/BestWayGrow-System/user_register.html?ref=" +
     user.userId;
@@ -158,22 +148,20 @@ document.addEventListener("DOMContentLoaded", function () {
   loadWallet();
 });
 
-// ================= COPY =================
+// ================= COPY (MODERN FIX) =================
 function copyLink() {
 
-  let input = document.getElementById("refLink");
+  let text = document.getElementById("refLink").value;
 
-  input.select();
-  document.execCommand("copy");
-
-  document.getElementById("copyMsg").innerText = "✅ Link copied!";
+  navigator.clipboard.writeText(text).then(() => {
+    document.getElementById("copyMsg").innerText = "✅ Link copied!";
+  }).catch(() => {
+    document.getElementById("copyMsg").innerText = "❌ Copy failed";
+  });
 }
 
 // ================= WALLET =================
 function loadWallet() {
-
-  let session = JSON.parse(localStorage.getItem("loggedInUser"));
-  if (!session) return;
 
   let balance = 0;
   let total = 0;
@@ -181,7 +169,7 @@ function loadWallet() {
   try {
 
     if (typeof getWallet === "function") {
-      let w = getWallet(session.userId);
+      let w = getWallet(currentUser.userId);
       balance = Number(w.balance || 0);
     }
 
@@ -189,7 +177,7 @@ function loadWallet() {
       let logs = getIncomeLogs();
 
       logs
-        .filter(l => l.userId === session.userId)
+        .filter(l => l.userId === currentUser.userId)
         .forEach(l => {
           total += Number(l.amount || 0);
         });
@@ -207,21 +195,16 @@ function loadWallet() {
 // ================= LOAD PINS =================
 function loadUserPins() {
 
-  let session = JSON.parse(localStorage.getItem("loggedInUser"));
-  if (!session) return;
-
   let allPins = [];
 
   try {
     if (typeof loadPins === "function") {
       allPins = loadPins();
     }
-  } catch {
-    allPins = [];
-  }
+  } catch {}
 
   let pins = allPins.filter(p =>
-    p.ownerId === session.userId &&
+    p.ownerId === currentUser.userId &&
     p.status === "assigned"
   );
 
@@ -262,10 +245,7 @@ function loadUserPins() {
 // ================= SELECT PIN =================
 function selectPin(pin) {
 
-  if (!pin || !pin.pinId) {
-    alert("Invalid PIN");
-    return;
-  }
+  if (!pin || !pin.pinId) return alert("Invalid PIN");
 
   if (!confirm("Use this PIN?")) return;
 
@@ -281,12 +261,19 @@ function selectPin(pin) {
   }
 }
 
-// ================= NAV =================
+// ================= SYSTEM SAFE NAV =================
+function checkSystem(key) {
+  let s = getSystemSettings() || {};
+  return s[key] !== false;
+}
+
 function goUpgrade() {
+  if (!checkSystem("upgradesOpen")) return alert("Upgrade closed");
   window.location.href = "user_upgrade.html";
 }
 
 function goRepurchase() {
+  if (!checkSystem("repurchaseOpen")) return alert("Repurchase closed");
   window.location.href = "user_repurchase.html";
 }
 
@@ -298,7 +285,6 @@ function goRequest() {
 
 </body>
 </html>
-
 
 
 
