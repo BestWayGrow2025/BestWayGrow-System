@@ -5,76 +5,104 @@
   <link rel="icon" href="data:,">
 
   <style>
-    body { font-family: Arial; margin:0; background:#f4f7f9; text-align:center; }
-    header { background:#006633; color:#fff; padding:20px; }
-    .container { display:flex; flex-wrap:wrap; justify-content:center; padding:20px; }
-    .card { background:#fff; width:320px; margin:10px; padding:20px; border-radius:10px; box-shadow:0 4px 10px #ccc; }
-    .stat { font-size:20px; font-weight:bold; }
-    table { width:100%; border-collapse: collapse; margin-top:10px; }
-    th,td { border:1px solid #ddd; padding:6px; font-size:12px; }
-    button { padding:6px 10px; margin:5px; cursor:pointer; border:none; border-radius:5px; }
-    input { padding:6px; margin:5px; width:85%; }
-    .btn-main { background:#00994d; color:#fff; }
+    body {
+      font-family: Arial;
+      margin:0;
+      background:#eef3f8;
+    }
+
+    header {
+      background:#222;
+      color:#fff;
+      padding:15px;
+      text-align:center;
+    }
+
+    .menu {
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      background:#fff;
+      padding:10px;
+      box-shadow:0 2px 5px #ccc;
+    }
+
+    .menu button {
+      margin:5px;
+      padding:10px 15px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      background:#ff6600;
+      color:#fff;
+      font-weight:bold;
+    }
+
+    .menu button:hover {
+      background:#cc5200;
+    }
+
+    .content {
+      padding:20px;
+      text-align:center;
+    }
+
+    .card {
+      background:#fff;
+      padding:20px;
+      margin:auto;
+      max-width:800px;
+      border-radius:10px;
+      box-shadow:0 4px 10px #ccc;
+    }
+
+    input {
+      padding:8px;
+      margin:5px;
+      width:90%;
+    }
+
+    table {
+      width:100%;
+      border-collapse: collapse;
+      margin-top:10px;
+    }
+
+    th, td {
+      border:1px solid #ddd;
+      padding:6px;
+      font-size:13px;
+    }
+
+    .danger {
+      background:#d9534f !important;
+    }
   </style>
 </head>
 
 <body>
 
 <header>
-  <h2>BestWayGrow</h2>
+  <h2>👑 SUPER ADMIN CONTROL PANEL</h2>
   <p id="welcome"></p>
   <button onclick="logout()">Logout</button>
 </header>
 
-<div class="container">
+<!-- MENU -->
+<div class="menu">
+  <button onclick="loadSection('home')">Home</button>
+  <button onclick="loadSection('systemAdmins')">System Admins</button>
+  <button onclick="loadSection('admins')">Admins</button>
+  <button onclick="loadSection('users')">Users</button>
+  <button onclick="loadSection('createSystemAdmin')">Create System Admin</button>
+  <button onclick="loadSection('system')">System Control</button>
+  <button onclick="loadSection('reset')">Reset</button>
+  <button onclick="loadSection('profile')">Profile</button>
+</div>
 
-  <div class="card">
-    <h3>System Control</h3>
-    <p id="systemStatus"></p>
-
-    <button onclick="toggle('lockMode')">Lock</button>
-    <button onclick="toggle('adminAccess')">Admin</button>
-    <button onclick="toggle('franchiseAccess')">Franchise</button>
-    <button onclick="toggle('registrationOpen')">Register</button>
-    <button onclick="toggle('upgradesOpen')">Upgrade</button>
-    <button onclick="toggle('repurchaseOpen')">Repurchase</button>
-    <button onclick="toggle('queueStop')">Queue</button>
-    <button onclick="toggle('withdrawStop')">Withdraw</button>
-
-    <hr>
-
-    <button onclick="fullReset()">Full Reset</button>
-  </div>
-
-  <div class="card">
-    <h3>Create System Admin</h3>
-
-    <input id="sysId" placeholder="User ID"><br>
-    <input id="sysName" placeholder="Name"><br>
-    <input id="sysPass" type="password" placeholder="Password"><br>
-
-    <button class="btn-main" onclick="createSystemAdmin()">CREATE</button>
-  </div>
-
-  <div class="card">
-    <h3>Overview</h3>
-    <div>System Admins <div class="stat" id="sysCount">0</div></div>
-    <div>Admins <div class="stat" id="adminCount">0</div></div>
-    <div>Users <div class="stat" id="userCount">0</div></div>
-  </div>
-
-  <div class="card">
-    <h3>Quick View</h3>
-    <button onclick="showData('system_admin')">System Admin</button>
-    <button onclick="showData('admin')">Admin</button>
-    <button onclick="showData('user')">User</button>
-  </div>
-
-  <div class="card">
-    <h3>Details</h3>
-    <div id="dataPanel">Click to view</div>
-  </div>
-
+<!-- CONTENT -->
+<div class="content">
+  <div id="mainBox" class="card">Loading...</div>
 </div>
 
 <script src="core_system.js"></script>
@@ -82,38 +110,200 @@
 <script>
 
 // INIT
-initCoreSystem();
+if (typeof initCoreSystem === "function") initCoreSystem();
+else { alert("core_system.js not loaded"); throw new Error("STOP"); }
 
 // AUTH
-let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
+let session;
+try {
+  session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+} catch {
+  session = null;
+}
 
 if (!session || !session.userId) {
   location.href = "super_admin_login.html";
+  throw new Error("STOP");
 }
 
-let user = getUserById(session.userId);
+let currentUser = getUserById(session.userId);
 
-if (!user || user.role !== "super_admin") {
+if (!currentUser || currentUser.role !== "super_admin") {
   localStorage.removeItem("loggedInSuperAdmin");
   location.href = "super_admin_login.html";
+  throw new Error("STOP");
 }
 
 // WELCOME
-welcome.innerText = "SUPER ADMIN (" + user.userId + ")";
+document.getElementById("welcome").innerText =
+  "Welcome SUPER ADMIN (" + currentUser.userId + ")";
 
-// ✅ CREATE SYSTEM ADMIN (FIXED)
+// SECTION SWITCH
+function loadSection(section) {
+
+  let box = document.getElementById("mainBox");
+
+  // HOME
+  if (section === "home") {
+    box.innerHTML = `
+      <h3>Dashboard</h3>
+      <p>System Status Overview</p>
+      <p>Super Admin ID: ${currentUser.userId}</p>
+    `;
+  }
+
+  // SYSTEM ADMINS
+  else if (section === "systemAdmins") {
+
+    let users = (getUsers() || []).filter(u => u.role === "system_admin");
+
+    if (!users.length) {
+      box.innerHTML = "<h3>No System Admin</h3>";
+      return;
+    }
+
+    let html = `<h3>System Admins</h3><table>
+      <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+
+    users.forEach(u => {
+      html += `
+        <tr>
+          <td>${u.userId}</td>
+          <td>${u.username || u.userId}</td>
+          <td>${u.status || "active"}</td>
+        </tr>`;
+    });
+
+    html += "</table>";
+
+    box.innerHTML = html;
+  }
+
+  // ADMINS
+  else if (section === "admins") {
+
+    let users = (getUsers() || []).filter(u => u.role === "admin");
+
+    if (!users.length) {
+      box.innerHTML = "<h3>No Admin</h3>";
+      return;
+    }
+
+    let html = `<h3>Admins</h3><table>
+      <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+
+    users.forEach(u => {
+      html += `
+        <tr>
+          <td>${u.userId}</td>
+          <td>${u.username || u.userId}</td>
+          <td>${u.status || "active"}</td>
+        </tr>`;
+    });
+
+    html += "</table>";
+
+    box.innerHTML = html;
+  }
+
+  // USERS
+  else if (section === "users") {
+
+    let users = (getUsers() || []).filter(u => u.role === "user");
+
+    if (!users.length) {
+      box.innerHTML = "<h3>No Users</h3>";
+      return;
+    }
+
+    let html = `<h3>Users</h3><table>
+      <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+
+    users.forEach(u => {
+      html += `
+        <tr>
+          <td>${u.userId}</td>
+          <td>${u.username || u.userId}</td>
+          <td>${u.status || "active"}</td>
+        </tr>`;
+    });
+
+    html += "</table>";
+
+    box.innerHTML = html;
+  }
+
+  // CREATE SYSTEM ADMIN
+  else if (section === "createSystemAdmin") {
+    box.innerHTML = `
+      <h3>Create System Admin</h3>
+
+      <input id="sysId" placeholder="User ID"><br>
+      <input id="sysName" placeholder="Name"><br>
+      <input id="sysPass" type="password" placeholder="Password"><br>
+
+      <button onclick="createSystemAdmin()">Create</button>
+      <p id="msg"></p>
+    `;
+  }
+
+  // SYSTEM CONTROL
+  else if (section === "system") {
+
+    let s = getSystemSettings() || {};
+
+    box.innerHTML = `
+      <h3>System Control</h3>
+
+      Lock: ${s.lockMode ? "🔴" : "🟢"} <br>
+      Admin Access: ${s.adminAccess !== false ? "🟢" : "🔴"} <br>
+      Registration: ${s.registrationOpen !== false ? "🟢" : "🔴"} <br><br>
+
+      <button onclick="toggle('lockMode')">Toggle Lock</button>
+      <button onclick="toggle('adminAccess')">Toggle Admin</button>
+      <button onclick="toggle('registrationOpen')">Toggle Register</button>
+    `;
+  }
+
+  // RESET
+  else if (section === "reset") {
+    box.innerHTML = `
+      <h3>System Reset</h3>
+
+      <button onclick="softReset()">Soft Reset</button><br><br>
+      <button onclick="mediumReset()">Medium Reset</button><br><br>
+      <button class="danger" onclick="fullReset()">Full Reset</button>
+    `;
+  }
+
+  // PROFILE
+  else if (section === "profile") {
+    box.innerHTML = `
+      <h3>Profile</h3>
+      <p>ID: ${currentUser.userId}</p>
+      <p>Name: ${currentUser.username || currentUser.userId}</p>
+    `;
+  }
+
+}
+
+// CREATE SYSTEM ADMIN
 function createSystemAdmin() {
 
-  let id = sysId.value.trim();
-  let name = sysName.value.trim();
-  let pass = sysPass.value.trim();
+  let id = document.getElementById("sysId").value.trim();
+  let name = document.getElementById("sysName").value.trim();
+  let pass = document.getElementById("sysPass").value.trim();
 
-  if (!id || !name || !pass) return alert("Fill all fields");
+  if (!id || !name || !pass) {
+    showMsg("❌ Fill all fields");
+    return;
+  }
 
-  let users = getUsers();
+  let users = getUsers() || [];
 
-  if (users.find(u => u.userId === id)) {
-    return alert("User exists");
+  if (users.find(u => u.userId.toLowerCase() === id.toLowerCase())) {
+    showMsg("⚠️ User exists");
+    return;
   }
 
   users.push({
@@ -122,83 +312,49 @@ function createSystemAdmin() {
     password: btoa(pass),
     role: "system_admin",
     status: "active",
-
-    // ✅ IMPORTANT LINK
-    introducerId: "BWG000000",
-    sponsorId: "BWG000000",
-    position: "L",
-
-    createdAt: Date.now(),
-    leftChild: null,
-    rightChild: null
+    createdBy: currentUser.userId
   });
 
   saveUsers(users);
 
-  alert("Created");
+  showMsg("✅ System Admin Created");
 
-  sysId.value = "";
-  sysName.value = "";
-  sysPass.value = "";
-
-  loadCounts();
+  loadSection("systemAdmins");
 }
 
-// SYSTEM STATUS
-function loadSystem() {
-  let s = getSystemSettings();
-
-  systemStatus.innerHTML = `
-    Lock: ${s.lockMode ? "🔴" : "🟢"} |
-    Register: ${s.registrationOpen !== false ? "🟢" : "🔴"}
-  `;
-}
-
-// COUNTS
-function loadCounts() {
-  let users = getUsers();
-
-  sysCount.innerText = users.filter(u => u.role === "system_admin").length;
-  adminCount.innerText = users.filter(u => u.role === "admin").length;
-  userCount.innerText = users.filter(u => u.role === "user").length;
-}
-
-// VIEW
-function showData(role) {
-  let users = getUsers().filter(u => u.role === role);
-
-  if (!users.length) return dataPanel.innerHTML = "No Data";
-
-  let html = "<table><tr><th>ID</th><th>Name</th></tr>";
-
-  users.forEach(u => {
-    html += `<tr>
-      <td>${u.userId}</td>
-      <td>${u.username || u.userId}</td>
-    </tr>`;
-  });
-
-  html += "</table>";
-
-  dataPanel.innerHTML = html;
-}
-
-// TOGGLE
+// TOGGLE SYSTEM
 function toggle(key) {
-  let s = getSystemSettings();
+  let s = getSystemSettings() || {};
   s[key] = !s[key];
   localStorage.setItem("systemSettings", JSON.stringify(s));
-  loadSystem();
+  loadSection("system");
 }
 
-// RESET (SAFE)
-function fullReset() {
-  if (!confirm("Full reset?")) return;
+// RESET FUNCTIONS
+function softReset() {
+  localStorage.removeItem("activityLogs");
+  alert("Soft Reset Done");
+}
 
-  let users = getUsers().filter(u => u.role === "super_admin");
+function mediumReset() {
+  localStorage.removeItem("activityLogs");
+  localStorage.removeItem("withdrawals");
+  alert("Medium Reset Done");
+}
+
+function fullReset() {
+  if (!confirm("⚠️ Full Reset?")) return;
+
+  let users = (getUsers() || []).filter(u => u.role === "super_admin");
   saveUsers(users);
 
+  alert("Full Reset Done");
   location.reload();
+}
+
+// MESSAGE
+function showMsg(msg) {
+  document.getElementById("msg").innerText = msg;
 }
 
 // LOGOUT
@@ -207,9 +363,8 @@ function logout() {
   location.href = "super_admin_login.html";
 }
 
-// INIT
-loadSystem();
-loadCounts();
+// DEFAULT LOAD
+loadSection("home");
 
 </script>
 
