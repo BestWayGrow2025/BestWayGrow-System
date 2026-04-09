@@ -1,5 +1,5 @@
 /* ===============================
-   CORE SYSTEM (FINAL CLEAN)
+   CORE SYSTEM (FINAL FIXED)
 =============================== */
 
 // ===================================
@@ -57,13 +57,12 @@ function getDirectUsers(userId) {
   return getUsers().filter(u => u.introducerId === userId);
 }
 
-// ⚠️ IMPORTANT → used in tree UI
 function getChildren(userId) {
   return getUsers().filter(u => u.sponsorId === userId);
 }
 
 // ===================================
-// 🔹 USER ID GENERATOR (SAFE)
+// 🔹 USER ID GENERATOR
 // ===================================
 function generateUserId() {
   let users = getUsers();
@@ -91,20 +90,19 @@ function generateUserId() {
 // ===================================
 function isValidIntroducer(id) {
   if (!id) return false;
-
-  let user = getUserById(id);
-  if (!user) return false;
-
-  return true;
+  return !!getUserById(id);
 }
 
 // ===================================
-// 🔐 PAGE SECURITY
+// 🔐 PAGE SECURITY (FIXED)
 // ===================================
 function protectPage(config) {
 
   const sessionKey = {
-    user: "loggedInUser"
+    user: "loggedInUser",
+    admin: "loggedInAdmin",
+    system_admin: "loggedInSystemAdmin",
+    super_admin: "loggedInSuperAdmin"
   };
 
   let key = sessionKey[config.role];
@@ -115,22 +113,23 @@ function protectPage(config) {
   if (!session || !session.userId) {
     alert("Login required");
     window.location.href = "user_login.html";
-    return;
+    return null;
   }
 
   let user = getUserById(session.userId);
 
-  if (!user) {
+  if (!user || user.role !== config.role) {
     localStorage.removeItem(key);
+    alert("Access denied");
     window.location.href = "user_login.html";
-    return;
+    return null;
   }
 
   return user;
 }
 
 // ===================================
-// 🔹 INIT SYSTEM
+// 🔹 INIT SYSTEM (CRITICAL FIX)
 // ===================================
 function initCoreSystem() {
 
@@ -151,26 +150,22 @@ function initCoreSystem() {
       password: btoa("123"),
       role: "super_admin",
       createdAt: Date.now(),
-
-      // 🔥 IMPORTANT
       leftChild: null,
       rightChild: null
     });
   }
 
-  // SYSTEM ADMIN
+  // SYSTEM ADMIN ✅ FIXED ROLE + LINK
   if (!users.find(u => u.userId === "BWG000001")) {
     users.push({
       userId: "BWG000001",
       username: "System Admin",
       password: btoa("1234"),
-      role: "admin",
-      introducerId: "BWG000000",
-      sponsorId: "BWG000000",
+      role: "system_admin", // 🔥 FIXED
+      introducerId: "BWG000000", // ✅ LINKED
+      sponsorId: "BWG000000",   // ✅ LINKED
       position: "L",
       createdAt: Date.now(),
-
-      // 🔥 IMPORTANT
       leftChild: null,
       rightChild: null
     });
@@ -178,4 +173,5 @@ function initCoreSystem() {
 
   saveUsers(users);
 }
+
 
