@@ -75,18 +75,20 @@
 <body>
 
 <header>
-  <h2>🔥 ADMIN CONTROL PANEL (V6++++ FINAL)</h2>
+  <h2>🔥 ADMIN CONTROL PANEL (FINAL STABLE)</h2>
   <p id="welcome"></p>
   <button class="danger" onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
 
+  <!-- PROFILE -->
   <div class="card">
     <h3>Profile</h3>
     <p id="profile"></p>
   </div>
 
+  <!-- SYSTEM CONTROL -->
   <div class="card">
     <h3>System Control</h3>
     <p id="system"></p>
@@ -96,6 +98,7 @@
     <button onclick="toggleSystem('repurchaseOpen')">Repurchase</button>
   </div>
 
+  <!-- OVERVIEW -->
   <div class="card">
     <h3>Overview</h3>
 
@@ -103,6 +106,7 @@
     <div>Active Users <div class="stat" id="activeUsers">0</div></div>
   </div>
 
+  <!-- PIN -->
   <div class="card">
     <h3>PIN Control</h3>
 
@@ -110,6 +114,7 @@
     <button onclick="goTo('admin_pin_panel.html')">Create PIN</button>
   </div>
 
+  <!-- USER CONTROL -->
   <div class="card">
     <h3>User Control</h3>
 
@@ -117,6 +122,7 @@
     <button onclick="goTo('admin_kyc.html')">KYC Verification</button>
   </div>
 
+  <!-- QUICK VIEW -->
   <div class="card">
     <h3>Quick View</h3>
 
@@ -133,7 +139,7 @@
 
 <script>
 
-// INIT
+// ================= INIT =================
 if (typeof initCoreSystem === "function") {
   initCoreSystem();
 } else {
@@ -141,11 +147,11 @@ if (typeof initCoreSystem === "function") {
   throw new Error("STOP");
 }
 
-// SECURITY
+// ================= SECURITY =================
 let admin = protectPage({ role: "admin" });
 if (!admin) throw new Error("STOP");
 
-// CACHE DOM (PRO)
+// ================= DOM =================
 const welcome = document.getElementById("welcome");
 const profile = document.getElementById("profile");
 const systemBox = document.getElementById("system");
@@ -153,17 +159,17 @@ const totalUsersBox = document.getElementById("totalUsers");
 const activeUsersBox = document.getElementById("activeUsers");
 const dataPanel = document.getElementById("dataPanel");
 
-// WELCOME
+// ================= WELCOME =================
 welcome.innerText = "Welcome ADMIN (" + admin.userId + ")";
 
-// PROFILE
+// ================= PROFILE =================
 profile.innerHTML = `
   ID: ${admin.userId} <br>
   Name: ${admin.username || admin.userId} <br>
-  Status: ${admin.status}
+  Status: ${admin.status || "active"}
 `;
 
-// SYSTEM STATUS
+// ================= SYSTEM =================
 function loadSystem() {
   let s = getSystemSettings() || {};
 
@@ -174,11 +180,10 @@ function loadSystem() {
   `;
 }
 
-// TOGGLE
+// ================= TOGGLE =================
 function toggleSystem(key) {
 
   let allowed = ["registrationOpen","upgradesOpen","repurchaseOpen"];
-
   if (!allowed.includes(key)) return alert("Not allowed");
 
   let s = getSystemSettings() || {};
@@ -193,7 +198,7 @@ function toggleSystem(key) {
   loadSystem();
 }
 
-// COUNTS ✅ FINAL FIX
+// ================= COUNTS =================
 function loadCounts() {
 
   let users = getUsers() || [];
@@ -205,12 +210,15 @@ function loadCounts() {
     users.filter(u => u.role === "user" && u.status === "active").length;
 }
 
-// QUICK VIEW
+// ================= QUICK VIEW =================
 function showData(role) {
 
   let users = (getUsers() || []).filter(u => u.role === role);
 
-  if (!users.length) return dataPanel.innerHTML = "No Data";
+  if (!users.length) {
+    dataPanel.innerHTML = "No Data";
+    return;
+  }
 
   let html = `<table>
     <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
@@ -229,28 +237,32 @@ function showData(role) {
   dataPanel.innerHTML = html;
 }
 
-// NAV
+// ================= NAV =================
 function goTo(page) {
   window.location.href = page;
 }
 
-// LOGOUT
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInAdmin");
   window.location.href = "admin_login.html";
 }
 
-// AUTO REFRESH ✅ FIXED
+// ================= AUTO REFRESH =================
 setInterval(() => {
   loadSystem();
   loadCounts();
 }, 8000);
 
-// INIT
+// ================= INIT LOAD =================
 loadSystem();
 loadCounts();
 
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
