@@ -28,7 +28,6 @@
 
 <div class="container">
 
-  <!-- SYSTEM CONTROL -->
   <div class="card">
     <h3>System Control</h3>
     <p id="systemStatus"></p>
@@ -44,12 +43,9 @@
 
     <hr>
 
-    <button onclick="softReset()">Soft</button>
-    <button onclick="mediumReset()">Medium</button>
-    <button onclick="fullReset()">Full</button>
+    <button onclick="fullReset()">Full Reset</button>
   </div>
 
-  <!-- CREATE SYSTEM ADMIN -->
   <div class="card">
     <h3>Create System Admin</h3>
 
@@ -60,25 +56,20 @@
     <button class="btn-main" onclick="createSystemAdmin()">CREATE</button>
   </div>
 
-  <!-- COUNTS -->
   <div class="card">
     <h3>Overview</h3>
     <div>System Admins <div class="stat" id="sysCount">0</div></div>
     <div>Admins <div class="stat" id="adminCount">0</div></div>
-    <div>Franchise <div class="stat" id="franchiseCount">0</div></div>
     <div>Users <div class="stat" id="userCount">0</div></div>
   </div>
 
-  <!-- QUICK VIEW -->
   <div class="card">
     <h3>Quick View</h3>
-    <button onclick="showData('system_admin')">System Admins</button>
-    <button onclick="showData('admin')">Admins</button>
-    <button onclick="showData('franchise')">Franchise</button>
-    <button onclick="showData('user')">Users</button>
+    <button onclick="showData('system_admin')">System Admin</button>
+    <button onclick="showData('admin')">Admin</button>
+    <button onclick="showData('user')">User</button>
   </div>
 
-  <!-- DATA -->
   <div class="card">
     <h3>Details</h3>
     <div id="dataPanel">Click to view</div>
@@ -87,25 +78,17 @@
 </div>
 
 <script src="core_system.js"></script>
-<script src="activity_log.js"></script>
 
 <script>
 
-// INIT SAFE
-if (typeof initCoreSystem === "function") initCoreSystem();
-else { alert("core_system.js missing"); throw new Error("STOP"); }
+// INIT
+initCoreSystem();
 
-// AUTH SAFE
-let session;
-try {
-  session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
-} catch {
-  session = null;
-}
+// AUTH
+let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
 
 if (!session || !session.userId) {
   location.href = "super_admin_login.html";
-  throw new Error("STOP");
 }
 
 let user = getUserById(session.userId);
@@ -113,14 +96,12 @@ let user = getUserById(session.userId);
 if (!user || user.role !== "super_admin") {
   localStorage.removeItem("loggedInSuperAdmin");
   location.href = "super_admin_login.html";
-  throw new Error("STOP");
 }
 
 // WELCOME
-document.getElementById("welcome").innerText =
-  "Welcome SUPER ADMIN (" + user.userId + ")";
+welcome.innerText = "SUPER ADMIN (" + user.userId + ")";
 
-// CREATE SYSTEM ADMIN (FIXED)
+// ✅ CREATE SYSTEM ADMIN (FIXED)
 function createSystemAdmin() {
 
   let id = sysId.value.trim();
@@ -129,22 +110,32 @@ function createSystemAdmin() {
 
   if (!id || !name || !pass) return alert("Fill all fields");
 
-  let users = getUsers() || [];
+  let users = getUsers();
 
-  if (users.find(u => u.userId.toLowerCase() === id.toLowerCase()))
+  if (users.find(u => u.userId === id)) {
     return alert("User exists");
+  }
 
   users.push({
     userId: id,
     username: name,
     password: btoa(pass),
     role: "system_admin",
-    status: "active"
+    status: "active",
+
+    // ✅ IMPORTANT LINK
+    introducerId: "BWG000000",
+    sponsorId: "BWG000000",
+    position: "L",
+
+    createdAt: Date.now(),
+    leftChild: null,
+    rightChild: null
   });
 
   saveUsers(users);
 
-  alert("System Admin Created");
+  alert("Created");
 
   sysId.value = "";
   sysName.value = "";
@@ -155,46 +146,36 @@ function createSystemAdmin() {
 
 // SYSTEM STATUS
 function loadSystem() {
-  let s = getSystemSettings() || {};
+  let s = getSystemSettings();
 
-  document.getElementById("systemStatus").innerHTML = `
+  systemStatus.innerHTML = `
     Lock: ${s.lockMode ? "🔴" : "🟢"} |
-    Admin: ${s.adminAccess !== false ? "🟢" : "🔴"} |
-    Franchise: ${s.franchiseAccess !== false ? "🟢" : "🔴"} <br>
-    Register: ${s.registrationOpen !== false ? "🟢" : "🔴"} |
-    Upgrade: ${s.upgradesOpen !== false ? "🟢" : "🔴"} |
-    Repurchase: ${s.repurchaseOpen !== false ? "🟢" : "🔴"} <br>
-    Queue: ${s.queueStop ? "🔴" : "🟢"} |
-    Withdraw: ${s.withdrawStop ? "🔴" : "🟢"}
+    Register: ${s.registrationOpen !== false ? "🟢" : "🔴"}
   `;
 }
 
-// COUNTS (100% CORRECT)
+// COUNTS
 function loadCounts() {
-  let users = getUsers() || [];
+  let users = getUsers();
 
   sysCount.innerText = users.filter(u => u.role === "system_admin").length;
   adminCount.innerText = users.filter(u => u.role === "admin").length;
-  franchiseCount.innerText = users.filter(u => u.role === "franchise").length;
   userCount.innerText = users.filter(u => u.role === "user").length;
 }
 
-// QUICK VIEW (FIXED)
+// VIEW
 function showData(role) {
-
-  let users = (getUsers() || []).filter(u => u.role === role);
+  let users = getUsers().filter(u => u.role === role);
 
   if (!users.length) return dataPanel.innerHTML = "No Data";
 
-  let html = `<table><tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+  let html = "<table><tr><th>ID</th><th>Name</th></tr>";
 
   users.forEach(u => {
-    html += `
-      <tr>
-        <td>${u.userId}</td>
-        <td>${u.username || u.userId}</td>
-        <td>${u.status || "active"}</td>
-      </tr>`;
+    html += `<tr>
+      <td>${u.userId}</td>
+      <td>${u.username || u.userId}</td>
+    </tr>`;
   });
 
   html += "</table>";
@@ -204,33 +185,19 @@ function showData(role) {
 
 // TOGGLE
 function toggle(key) {
-  let s = getSystemSettings() || {};
+  let s = getSystemSettings();
   s[key] = !s[key];
   localStorage.setItem("systemSettings", JSON.stringify(s));
   loadSystem();
 }
 
-// RESET
-function softReset() {
-  if (!confirm("Clear logs?")) return;
-  localStorage.removeItem("activityLogs");
-  alert("Done"); location.reload();
-}
-
-function mediumReset() {
-  if (!confirm("Clear logs + withdrawals?")) return;
-  localStorage.removeItem("activityLogs");
-  localStorage.removeItem("withdrawals");
-  alert("Done"); location.reload();
-}
-
+// RESET (SAFE)
 function fullReset() {
   if (!confirm("Full reset?")) return;
 
-  let users = (getUsers() || []).filter(u => u.role === "super_admin");
+  let users = getUsers().filter(u => u.role === "super_admin");
   saveUsers(users);
 
-  alert("Reset Done");
   location.reload();
 }
 
@@ -240,12 +207,6 @@ function logout() {
   location.href = "super_admin_login.html";
 }
 
-// AUTO REFRESH (PRO FIXED ↓)
-setInterval(() => {
-  loadSystem();
-  loadCounts();
-}, 8000);
-
 // INIT
 loadSystem();
 loadCounts();
@@ -254,4 +215,5 @@ loadCounts();
 
 </body>
 </html>
+
 
