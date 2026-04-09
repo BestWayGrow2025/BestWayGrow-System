@@ -5,90 +5,98 @@
   <link rel="icon" href="data:,">
 
   <style>
-    body { font-family: Arial; text-align:center; background:#f4f7f9; }
-    .card { background:#fff; padding:20px; margin:15px; border-radius:10px; box-shadow:0 4px 10px #ccc;}
-    .container { display:flex; flex-wrap:wrap; justify-content:center; }
-    table { width:100%; margin-top:10px; border-collapse: collapse; }
-    th,td { border:1px solid #ddd; padding:8px; font-size:13px; }
-    button { padding:6px 10px; margin:5px; cursor:pointer; }
-    select, input { padding:6px; margin:5px; width:85%; }
-    .stat { font-size:20px; font-weight:bold; }
+    body {
+      font-family: Arial;
+      margin:0;
+      background:#eef3f8;
+    }
+
+    header {
+      background:#006633;
+      color:#fff;
+      padding:15px;
+      text-align:center;
+    }
+
+    .menu {
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      background:#fff;
+      padding:10px;
+      box-shadow:0 2px 5px #ccc;
+    }
+
+    .menu button {
+      margin:5px;
+      padding:10px 15px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      background:#00994d;
+      color:#fff;
+    }
+
+    .menu button:hover {
+      background:#007a3d;
+    }
+
+    .content {
+      padding:20px;
+      text-align:center;
+    }
+
+    .card {
+      background:#fff;
+      padding:20px;
+      margin:auto;
+      max-width:700px;
+      border-radius:10px;
+      box-shadow:0 4px 10px #ccc;
+    }
+
+    input, select {
+      padding:8px;
+      margin:5px;
+      width:90%;
+    }
+
+    table {
+      width:100%;
+      border-collapse: collapse;
+      margin-top:10px;
+    }
+
+    th, td {
+      border:1px solid #ddd;
+      padding:6px;
+      font-size:13px;
+    }
+
   </style>
 </head>
 
 <body>
 
-<h2>SYSTEM ADMIN DASHBOARD</h2>
-<button onclick="logout()">Logout</button>
+<header>
+  <h2>SYSTEM ADMIN DASHBOARD</h2>
+  <p id="welcome"></p>
+  <button onclick="logout()">Logout</button>
+</header>
 
-<div class="container">
+<!-- MENU -->
+<div class="menu">
+  <button onclick="loadSection('home')">Home</button>
+  <button onclick="loadSection('createAdmin')">Create Admin</button>
+  <button onclick="loadSection('admins')">Admins</button>
+  <button onclick="loadSection('users')">Users</button>
+  <button onclick="loadSection('system')">System</button>
+  <button onclick="loadSection('profile')">Profile</button>
+</div>
 
-  <!-- CREATE ADMIN -->
-  <div class="card">
-    <h3>Create Admin</h3>
-
-    <input id="adminId" placeholder="Admin ID"><br>
-    <input id="name" placeholder="Name"><br>
-    <input id="password" type="password" placeholder="Password"><br>
-
-    <select id="type" onchange="toggleDepartments()">
-      <option value="A">TYPE A - All in One</option>
-      <option value="B">TYPE B - Department Wise</option>
-    </select>
-
-    <div id="deptBox" style="display:none; text-align:left;">
-      <label><input type="checkbox" value="finance"> Finance</label><br>
-      <label><input type="checkbox" value="franchise"> Franchise</label><br>
-      <label><input type="checkbox" value="kyc"> KYC</label><br>
-      <label><input type="checkbox" value="report"> Report</label>
-    </div>
-
-    <button onclick="createAdmin()">Create</button>
-    <p id="msg"></p>
-  </div>
-
-  <!-- PIN PANEL -->
-  <div class="card">
-    <h3>PIN CONTROL</h3>
-    <button onclick="goTo('system_admin_pin_panel.html')">
-      OPEN PIN PANEL
-    </button>
-  </div>
-
-  <!-- COUNTS -->
-  <div class="card">
-    <h3>Overview</h3>
-    <div>Admins <div class="stat" id="adminCount">0</div></div>
-    <div>Franchise <div class="stat" id="franchiseCount">0</div></div>
-    <div>Users <div class="stat" id="userCount">0</div></div>
-  </div>
-
-  <!-- QUICK VIEW -->
-  <div class="card">
-    <h3>Quick View</h3>
-    <button onclick="showData('admin')">Admins</button>
-    <button onclick="showData('franchise')">Franchise</button>
-    <button onclick="showData('user')">Users</button>
-  </div>
-
-  <!-- DATA PANEL -->
-  <div class="card">
-    <h3>Details</h3>
-    <div id="dataPanel">Click button to view</div>
-  </div>
-
-  <!-- ADMIN LIST -->
-  <div class="card">
-    <h3>Admin List</h3>
-    <div id="adminList"></div>
-  </div>
-
-  <!-- SYSTEM STATUS -->
-  <div class="card">
-    <h3>System Status</h3>
-    <p id="systemStatus"></p>
-  </div>
-
+<!-- CONTENT -->
+<div class="content">
+  <div id="mainBox" class="card">Loading...</div>
 </div>
 
 <script src="core_system.js"></script>
@@ -120,95 +128,156 @@ if (!currentUser || currentUser.role !== "system_admin") {
   throw new Error("STOP");
 }
 
-// NAV
-function goTo(page){
-  window.location.href = page;
-}
+// WELCOME
+document.getElementById("welcome").innerText =
+  "Welcome SYSTEM ADMIN (" + currentUser.userId + ")";
 
-// TYPE SWITCH
-function toggleDepartments() {
-  const typeEl = document.getElementById("type");
-  const box = document.getElementById("deptBox");
-  box.style.display = (typeEl.value === "B") ? "block" : "none";
-}
+// MAIN SECTION SWITCH
+function loadSection(section) {
 
-// SYSTEM STATUS
-function loadSystem() {
-  let s = getSystemSettings() || {};
+  let box = document.getElementById("mainBox");
 
-  document.getElementById("systemStatus").innerHTML = `
-    Admin: ${s.adminAccess !== false ? "🟢" : "🔴"} |
-    Lock: ${s.lockMode ? "🔴" : "🟢"} <br>
-    Queue: ${s.queueStop ? "🔴" : "🟢"} |
-    Withdraw: ${s.withdrawStop ? "🔴" : "🟢"} <br>
-    Repurchase: ${s.repurchaseOpen !== false ? "🟢" : "🔴"}
-  `;
-}
-
-// COUNTS
-function loadCounts() {
-  let users = getUsers() || [];
-
-  document.getElementById("adminCount").innerText =
-    users.filter(u => u.role === "admin").length;
-
-  document.getElementById("franchiseCount").innerText =
-    users.filter(u => u.role === "franchise").length;
-
-  document.getElementById("userCount").innerText =
-    users.filter(u => u.role === "user").length;
-}
-
-// SHOW DATA
-function showData(role) {
-
-  let users = (getUsers() || []).filter(u => u.role === role);
-
-  if (!users.length) {
-    document.getElementById("dataPanel").innerHTML = "No Data";
-    return;
+  // HOME
+  if (section === "home") {
+    box.innerHTML = `
+      <h3>Dashboard</h3>
+      <p>ID: ${currentUser.userId}</p>
+      <p>Name: ${currentUser.username || currentUser.userId}</p>
+      <p>Status: ${currentUser.status || "active"}</p>
+    `;
   }
 
-  let html = `<table>
-    <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+  // CREATE ADMIN
+  else if (section === "createAdmin") {
+    box.innerHTML = `
+      <h3>Create Admin</h3>
 
-  users.forEach(u => {
-    html += `
-      <tr>
-        <td>${u.userId}</td>
-        <td>${u.username || u.userId}</td>
-        <td>${u.status || "active"}</td>
-      </tr>`;
-  });
+      <input id="adminId" placeholder="Admin ID"><br>
+      <input id="name" placeholder="Name"><br>
+      <input id="password" type="password" placeholder="Password"><br>
 
-  html += "</table>";
+      <select id="type" onchange="toggleDept()">
+        <option value="A">TYPE A - All Access</option>
+        <option value="B">TYPE B - Department</option>
+      </select>
 
-  document.getElementById("dataPanel").innerHTML = html;
+      <div id="deptBox" style="display:none;">
+        <label><input type="checkbox" value="finance"> Finance</label><br>
+        <label><input type="checkbox" value="franchise"> Franchise</label><br>
+        <label><input type="checkbox" value="kyc"> KYC</label><br>
+        <label><input type="checkbox" value="report"> Report</label>
+      </div>
+
+      <button onclick="createAdmin()">Create</button>
+      <p id="msg"></p>
+    `;
+  }
+
+  // ADMIN LIST
+  else if (section === "admins") {
+
+    let users = (getUsers() || []).filter(u => u.role === "admin");
+
+    if (!users.length) {
+      box.innerHTML = "<h3>No Admin</h3>";
+      return;
+    }
+
+    let html = `<h3>Admins</h3><table>
+      <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+
+    users.forEach(a => {
+      html += `
+        <tr>
+          <td>${a.userId}</td>
+          <td>${a.username || a.userId}</td>
+          <td>${a.status || "active"}</td>
+        </tr>`;
+    });
+
+    html += "</table>";
+
+    box.innerHTML = html;
+  }
+
+  // USERS
+  else if (section === "users") {
+
+    let users = (getUsers() || []).filter(u => u.role === "user");
+
+    if (!users.length) {
+      box.innerHTML = "<h3>No Users</h3>";
+      return;
+    }
+
+    let html = `<h3>Users</h3><table>
+      <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+
+    users.forEach(u => {
+      html += `
+        <tr>
+          <td>${u.userId}</td>
+          <td>${u.username || u.userId}</td>
+          <td>${u.status || "active"}</td>
+        </tr>`;
+    });
+
+    html += "</table>";
+
+    box.innerHTML = html;
+  }
+
+  // SYSTEM CONTROL
+  else if (section === "system") {
+
+    let s = getSystemSettings() || {};
+
+    box.innerHTML = `
+      <h3>System Control</h3>
+
+      Admin: ${s.adminAccess !== false ? "🟢" : "🔴"} <br>
+      Lock: ${s.lockMode ? "🔴" : "🟢"} <br><br>
+
+      <button onclick="toggle('adminAccess')">Toggle Admin</button>
+      <button onclick="toggle('lockMode')">Toggle Lock</button>
+    `;
+  }
+
+  // PROFILE
+  else if (section === "profile") {
+    box.innerHTML = `
+      <h3>Profile</h3>
+      <p>ID: ${currentUser.userId}</p>
+      <p>Name: ${currentUser.username || currentUser.userId}</p>
+      <p>Status: ${currentUser.status || "active"}</p>
+    `;
+  }
+
 }
 
-// CREATE ADMIN
+// CREATE ADMIN FUNCTION
 function createAdmin() {
 
-  let adminIdVal = document.getElementById("adminId").value.trim();
-  let nameVal = document.getElementById("name").value.trim();
+  let adminId = document.getElementById("adminId").value.trim();
+  let name = document.getElementById("name").value.trim();
   let pass = document.getElementById("password").value.trim();
-  let typeVal = document.getElementById("type").value;
+  let type = document.getElementById("type").value;
 
-  if (!adminIdVal || !nameVal || !pass) {
+  if (!adminId || !name || !pass) {
     showMsg("❌ Fill all fields");
     return;
   }
 
   let users = getUsers() || [];
 
-  if (users.find(u => u.userId.toLowerCase() === adminIdVal.toLowerCase())) {
+  if (users.find(u => u.userId.toLowerCase() === adminId.toLowerCase())) {
     showMsg("⚠️ Admin exists");
     return;
   }
 
   let departments = [];
 
-  if (typeVal === "B") {
+  if (type === "B") {
     document.querySelectorAll("#deptBox input:checked").forEach(cb => {
       departments.push(cb.value);
     });
@@ -222,11 +291,11 @@ function createAdmin() {
   }
 
   users.push({
-    userId: adminIdVal,
-    username: nameVal,
+    userId: adminId,
+    username: name,
     password: btoa(pass),
     role: "admin",
-    type: typeVal,
+    type: type,
     departments: departments,
     status: "active",
     createdBy: currentUser.userId
@@ -236,39 +305,30 @@ function createAdmin() {
 
   showMsg("✅ Admin Created");
 
-  document.getElementById("adminId").value = "";
-  document.getElementById("name").value = "";
-  document.getElementById("password").value = "";
-
-  loadAdmins();
-  loadCounts();
+  loadSection("admins");
 }
 
-// ADMIN LIST
-function loadAdmins() {
+// TOGGLE DEPT
+function toggleDept() {
+  let type = document.getElementById("type").value;
+  document.getElementById("deptBox").style.display =
+    (type === "B") ? "block" : "none";
+}
 
-  let users = (getUsers() || []).filter(u => u.role === "admin");
+// SYSTEM TOGGLE
+function toggle(key) {
 
-  if (!users.length) {
-    document.getElementById("adminList").innerHTML = "No Admin";
-    return;
-  }
+  let s = getSystemSettings() || {};
+  s[key] = !s[key];
 
-  let html = `<table>
-    <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+  localStorage.setItem("systemSettings", JSON.stringify(s));
 
-  users.forEach(a => {
-    html += `
-      <tr>
-        <td>${a.userId}</td>
-        <td>${a.username || a.userId}</td>
-        <td>${a.status || "active"}</td>
-      </tr>`;
-  });
+  loadSection("system");
+}
 
-  html += "</table>";
-
-  document.getElementById("adminList").innerHTML = html;
+// MESSAGE
+function showMsg(msg) {
+  document.getElementById("msg").innerText = msg;
 }
 
 // LOGOUT
@@ -277,24 +337,10 @@ function logout() {
   location.href = "system_admin_login.html";
 }
 
-// MESSAGE
-function showMsg(msg) {
-  document.getElementById("msg").innerText = msg;
-}
-
-// AUTO REFRESH
-setInterval(() => {
-  loadSystem();
-  loadCounts();
-}, 8000);
-
-// INIT
-loadSystem();
-loadCounts();
-loadAdmins();
+// DEFAULT
+loadSection("home");
 
 </script>
 
 </body>
 </html>
-
