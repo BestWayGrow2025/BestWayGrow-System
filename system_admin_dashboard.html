@@ -1,98 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>System Admin Dashboard</title>
-  <link rel="icon" href="data:,">
-
-  <style>
-    body { font-family: Arial; text-align:center; background:#f4f7f9; }
-    .card { background:#fff; padding:20px; margin:15px; border-radius:10px; box-shadow:0 4px 10px #ccc;}
-    .container { display:flex; flex-wrap:wrap; justify-content:center; }
-    table { width:100%; margin-top:10px; border-collapse: collapse; }
-    th,td { border:1px solid #ddd; padding:8px; font-size:13px; }
-    button { padding:6px 10px; margin:5px; cursor:pointer; }
-    select, input { padding:6px; margin:5px; width:85%; }
-    .stat { font-size:20px; font-weight:bold; }
-  </style>
-</head>
-
-<body>
-
-<h2>SYSTEM ADMIN DASHBOARD</h2>
-<button onclick="logout()">Logout</button>
-
-<div class="container">
-
-  <!-- CREATE ADMIN -->
-  <div class="card">
-    <h3>Create Admin</h3>
-
-    <input id="adminId" placeholder="Admin ID"><br>
-    <input id="name" placeholder="Name"><br>
-    <input id="password" type="password" placeholder="Password"><br>
-
-    <select id="type" onchange="toggleDepartments()">
-      <option value="A">TYPE A - All in One</option>
-      <option value="B">TYPE B - Department Wise</option>
-    </select>
-
-    <div id="deptBox" style="display:none; text-align:left;">
-      <label><input type="checkbox" value="finance"> Finance</label><br>
-      <label><input type="checkbox" value="franchise"> Franchise</label><br>
-      <label><input type="checkbox" value="kyc"> KYC</label><br>
-      <label><input type="checkbox" value="report"> Report</label>
-    </div>
-
-    <button onclick="createAdmin()">Create</button>
-    <p id="msg"></p>
-  </div>
-
-  <!-- PIN PANEL -->
-  <div class="card">
-    <h3>PIN CONTROL</h3>
-    <button onclick="goTo('system_admin_pin_panel.html')">
-      OPEN PIN PANEL
-    </button>
-  </div>
-
-  <!-- COUNTS -->
-  <div class="card">
-    <h3>Overview</h3>
-    <div>Admins <div class="stat" id="adminCount">0</div></div>
-    <div>Franchise <div class="stat" id="franchiseCount">0</div></div>
-    <div>Users <div class="stat" id="userCount">0</div></div>
-  </div>
-
-  <!-- QUICK VIEW -->
-  <div class="card">
-    <h3>Quick View</h3>
-    <button onclick="showData('admin')">Admins</button>
-    <button onclick="showData('franchise')">Franchise</button>
-    <button onclick="showData('user')">Users</button>
-  </div>
-
-  <!-- DATA PANEL -->
-  <div class="card">
-    <h3>Details</h3>
-    <div id="dataPanel">Click button to view</div>
-  </div>
-
-  <!-- ADMIN LIST -->
-  <div class="card">
-    <h3>Admin List</h3>
-    <div id="adminList"></div>
-  </div>
-
-  <!-- SYSTEM STATUS -->
-  <div class="card">
-    <h3>System Status</h3>
-    <p id="systemStatus"></p>
-  </div>
-
-</div>
-
-<script src="core_system.js"></script>
-
 <script>
 
 // INIT
@@ -125,17 +30,19 @@ function goTo(page){
   window.location.href = page;
 }
 
-// TYPE SWITCH (SAFE)
+// TYPE SWITCH (FIXED)
 function toggleDepartments() {
+  const typeEl = document.getElementById("type");
   const box = document.getElementById("deptBox");
-  box.style.display = (type.value === "B") ? "block" : "none";
+
+  box.style.display = (typeEl.value === "B") ? "block" : "none";
 }
 
 // SYSTEM STATUS
 function loadSystem() {
   let s = getSystemSettings() || {};
 
-  systemStatus.innerHTML = `
+  document.getElementById("systemStatus").innerHTML = `
     Admin: ${s.adminAccess !== false ? "🟢" : "🔴"} |
     Lock: ${s.lockMode ? "🔴" : "🟢"} <br>
     Queue: ${s.queueStop ? "🔴" : "🟢"} |
@@ -148,9 +55,14 @@ function loadSystem() {
 function loadCounts() {
   let users = getUsers() || [];
 
-  adminCount.innerText = users.filter(u => u.role === "admin").length;
-  franchiseCount.innerText = users.filter(u => u.role === "franchise").length;
-  userCount.innerText = users.filter(u => u.role === "user").length;
+  document.getElementById("adminCount").innerText =
+    users.filter(u => u.role === "admin").length;
+
+  document.getElementById("franchiseCount").innerText =
+    users.filter(u => u.role === "franchise").length;
+
+  document.getElementById("userCount").innerText =
+    users.filter(u => u.role === "user").length;
 }
 
 // SHOW DATA
@@ -158,7 +70,10 @@ function showData(role) {
 
   let users = (getUsers() || []).filter(u => u.role === role);
 
-  if (!users.length) return dataPanel.innerHTML = "No Data";
+  if (!users.length) {
+    document.getElementById("dataPanel").innerHTML = "No Data";
+    return;
+  }
 
   let html = `<table>
     <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
@@ -174,23 +89,28 @@ function showData(role) {
 
   html += "</table>";
 
-  dataPanel.innerHTML = html;
+  document.getElementById("dataPanel").innerHTML = html;
 }
 
-// CREATE ADMIN
+// CREATE ADMIN (FIXED)
 function createAdmin() {
 
-  let adminId = adminId.value.trim();
-  let nameVal = name.value.trim();
-  let pass = password.value.trim();
-  let typeVal = type.value;
+  let adminIdVal = document.getElementById("adminId").value.trim();
+  let nameVal = document.getElementById("name").value.trim();
+  let pass = document.getElementById("password").value.trim();
+  let typeVal = document.getElementById("type").value;
 
-  if (!adminId || !nameVal || !pass) return showMsg("❌ Fill all fields");
+  if (!adminIdVal || !nameVal || !pass) {
+    showMsg("❌ Fill all fields");
+    return;
+  }
 
   let users = getUsers() || [];
 
-  if (users.find(u => u.userId.toLowerCase() === adminId.toLowerCase()))
-    return showMsg("⚠️ Admin exists");
+  if (users.find(u => u.userId.toLowerCase() === adminIdVal.toLowerCase())) {
+    showMsg("⚠️ Admin exists");
+    return;
+  }
 
   let departments = [];
 
@@ -199,13 +119,16 @@ function createAdmin() {
       departments.push(cb.value);
     });
 
-    if (!departments.length) return showMsg("⚠️ Select department");
+    if (!departments.length) {
+      showMsg("⚠️ Select department");
+      return;
+    }
   } else {
     departments = ["finance","franchise","kyc","report"];
   }
 
   users.push({
-    userId: adminId,
+    userId: adminIdVal,
     username: nameVal,
     password: btoa(pass),
     role: "admin",
@@ -219,20 +142,23 @@ function createAdmin() {
 
   showMsg("✅ Admin Created");
 
-  adminId.value = "";
-  name.value = "";
-  password.value = "";
+  document.getElementById("adminId").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("password").value = "";
 
   loadAdmins();
   loadCounts();
 }
 
-// ADMIN LIST (SAFE)
+// ADMIN LIST
 function loadAdmins() {
 
   let users = (getUsers() || []).filter(u => u.role === "admin");
 
-  if (!users.length) return adminList.innerHTML = "No Admin";
+  if (!users.length) {
+    document.getElementById("adminList").innerHTML = "No Admin";
+    return;
+  }
 
   let html = `<table>
     <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
@@ -248,7 +174,7 @@ function loadAdmins() {
 
   html += "</table>";
 
-  adminList.innerHTML = html;
+  document.getElementById("adminList").innerHTML = html;
 }
 
 // LOGOUT
@@ -257,11 +183,12 @@ function logout() {
   location.href = "system_admin_login.html";
 }
 
+// MESSAGE (FIXED)
 function showMsg(msg) {
-  msgBox.innerText = msg;
+  document.getElementById("msg").innerText = msg;
 }
 
-// AUTO REFRESH (PRO FIX)
+// AUTO REFRESH
 setInterval(() => {
   loadSystem();
   loadCounts();
@@ -274,5 +201,3 @@ loadAdmins();
 
 </script>
 
-</body>
-</html>
