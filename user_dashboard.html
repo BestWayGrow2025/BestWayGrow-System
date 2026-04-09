@@ -1,246 +1,285 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User Dashboard</title>
+  <title>User Dashboard V7</title>
   <link rel="icon" href="data:,">
 
   <style>
     body {
       margin:0;
       font-family: Arial;
-      background: linear-gradient(135deg,#0f2027,#2c5364);
-      color:#fff;
+      background:#f4f7f9;
     }
 
     header {
+      background: linear-gradient(90deg,#0066ff,#00cc99);
+      color:#fff;
       padding:15px;
       text-align:center;
-      background:#000;
-      font-size:18px;
-      font-weight:bold;
     }
 
-    /* TOP MENU */
     .menu {
       display:flex;
-      overflow-x:auto;
-      background:#111;
+      flex-wrap:wrap;
+      justify-content:center;
+      background:#fff;
       padding:10px;
+      box-shadow:0 2px 6px #ccc;
     }
 
     .menu button {
-      flex:1;
-      min-width:90px;
       margin:5px;
-      padding:10px;
+      padding:10px 15px;
       border:none;
-      border-radius:10px;
-      background:#222;
-      color:#fff;
+      border-radius:20px;
+      background:#eee;
       cursor:pointer;
+      transition:0.3s;
     }
 
     .menu button:hover {
-      background:#00c6ff;
-      color:#000;
+      background:#00cc99;
+      color:#fff;
     }
 
-    /* CONTENT AREA */
-    #content {
-      padding:15px;
+    .active {
+      background:#0066ff !important;
+      color:#fff !important;
     }
 
-    .card {
-      background:#ffffff10;
-      padding:15px;
-      margin:10px 0;
-      border-radius:10px;
-    }
-
-    .grid {
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:10px;
-    }
-
-    .box {
-      background:#ffffff20;
-      padding:15px;
-      border-radius:10px;
+    .content {
+      padding:20px;
       text-align:center;
     }
 
+    .card {
+      background:#fff;
+      padding:20px;
+      margin:10px auto;
+      width:90%;
+      max-width:500px;
+      border-radius:10px;
+      box-shadow:0 4px 10px #ccc;
+    }
+
+    table {
+      width:100%;
+      border-collapse: collapse;
+      margin-top:10px;
+    }
+
+    th,td {
+      border:1px solid #ddd;
+      padding:8px;
+      font-size:13px;
+    }
+
+    input, button {
+      padding:8px;
+      margin:5px;
+    }
   </style>
 </head>
 
 <body>
 
 <header>
-  USER DASHBOARD V5
+  <h2>🚀 USER DASHBOARD V7</h2>
+  <p id="welcome"></p>
 </header>
 
-<!-- TOP MENU -->
+<!-- MENU -->
 <div class="menu">
-  <button onclick="loadSection('home')">Home</button>
-  <button onclick="loadSection('category')">Category</button>
-  <button onclick="loadSection('plan')">Plan</button>
-  <button onclick="loadSection('pin')">PIN</button>
-  <button onclick="loadSection('tree')">Tree</button>
-  <button onclick="loadSection('ticket')">Ticket</button>
-  <button onclick="loadSection('wallet')">Wallet</button>
-  <button onclick="loadSection('profile')">Profile</button>
-  <button onclick="loadSection('help')">Help</button>
+
+  <button onclick="loadPage('home',this)">Home</button>
+  <button onclick="loadPage('user',this)">User</button>
+  <button onclick="loadPage('pin',this)">PIN</button>
+  <button onclick="loadPage('wallet',this)">Wallet</button>
+  <button onclick="loadPage('register',this)">Register</button>
+  <button onclick="loadPage('upgrade',this)">Upgrade</button>
+  <button onclick="loadPage('franchise',this)">Franchise</button>
+  <button onclick="loadPage('ticket',this)">Ticket</button>
+  <button onclick="loadPage('content',this)">Content</button>
+  <button onclick="loadPage('plan',this)">Plan</button>
+  <button onclick="loadPage('settings',this)">Settings</button>
+
 </div>
 
 <!-- CONTENT -->
-<div id="content"></div>
+<div class="content" id="contentBox">
+  Loading...
+</div>
 
 <script src="core_system.js"></script>
 
 <script>
 
 // INIT
-if (typeof initCoreSystem === "function") {
-  initCoreSystem();
-} else {
-  alert("core_system.js not loaded");
-  throw new Error("STOP");
-}
+if (typeof initCoreSystem === "function") initCoreSystem();
+else { alert("core_system.js missing"); throw new Error("STOP"); }
 
 // AUTH
-let session = JSON.parse(localStorage.getItem("loggedInUser"));
+let session;
+try {
+  session = JSON.parse(localStorage.getItem("loggedInUser"));
+} catch {
+  session = null;
+}
 
-if (!session) {
+if (!session || !session.userId) {
   location.href = "user_login.html";
+  throw new Error("STOP");
 }
 
 let user = getUserById(session.userId);
 
-// MAIN LOADER
-function loadSection(name){
+if (!user) {
+  localStorage.removeItem("loggedInUser");
+  location.href = "user_login.html";
+  throw new Error("STOP");
+}
+
+// WELCOME
+document.getElementById("welcome").innerText =
+  "Welcome (" + user.userId + ")";
+
+// MENU ACTIVE
+function setActive(btn){
+  document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+// LOAD PAGE
+function loadPage(page,btn){
+
+  if(btn) setActive(btn);
 
   let html = "";
 
   // HOME
-  if(name === "home"){
+  if(page === "home"){
     html = `
-      <div class="card">
-        <h3>Welcome ${user.userId}</h3>
-        <p>Trending Videos / Content</p>
-      </div>
-
-      <div class="grid">
-        <div class="box">Sarkari</div>
-        <div class="box">Income</div>
-        <div class="box">Education</div>
-        <div class="box">Business</div>
-      </div>
-    `;
+    <div class="card">
+      <h3>Dashboard Overview</h3>
+      <p>User ID: ${user.userId}</p>
+      <p>Status: ${user.status || "active"}</p>
+    </div>`;
   }
 
-  // CATEGORY
-  if(name === "category"){
-    html = `
-      <div class="card">
-        <h3>Categories</h3>
-      </div>
+  // USER TREE
+  if(page === "user"){
+    let directs = getDirectUsers(user.userId);
+    html = `<div class="card"><h3>Direct Users</h3>`;
 
-      <div class="grid">
-        <div class="box">Sarkari Kaam</div>
-        <div class="box">Part Time</div>
-        <div class="box">Education</div>
-        <div class="box">Digital Skills</div>
-      </div>
-    `;
-  }
+    if(!directs.length) html += "No Users";
+    else {
+      html += `<table><tr><th>ID</th></tr>`;
+      directs.forEach(u=>{
+        html += `<tr><td>${u.userId}</td></tr>`;
+      });
+      html += "</table>";
+    }
 
-  // PLAN
-  if(name === "plan"){
-    html = `
-      <div class="card">
-        <h3>Plans</h3>
-        <p>Basic / Premium Plans</p>
-        <button>Upgrade</button>
-      </div>
-    `;
+    html += "</div>";
   }
 
   // PIN
-  if(name === "pin"){
+  if(page === "pin"){
     html = `
-      <div class="card">
-        <h3>PIN SYSTEM</h3>
-        <button>Apply PIN</button>
-        <button>Available PIN</button>
-        <button>Used PIN</button>
-      </div>
-    `;
-  }
-
-  // TREE
-  if(name === "tree"){
-    html = `
-      <div class="card">
-        <h3>User Tree</h3>
-        <p>Downline structure here</p>
-      </div>
-    `;
-  }
-
-  // TICKET
-  if(name === "ticket"){
-    html = `
-      <div class="card">
-        <h3>Support Ticket</h3>
-        <button>Create Ticket</button>
-        <button>View Tickets</button>
-      </div>
-    `;
+    <div class="card">
+      <h3>PIN System</h3>
+      <p>Apply / View PIN here</p>
+    </div>`;
   }
 
   // WALLET
-  if(name === "wallet"){
+  if(page === "wallet"){
     html = `
-      <div class="card">
-        <h3>Wallet</h3>
-        <p>Balance: ₹0</p>
-        <button>Withdraw</button>
-      </div>
-    `;
+    <div class="card">
+      <h3>Wallet</h3>
+      <p>Balance: ₹0</p>
+    </div>`;
   }
 
-  // PROFILE
-  if(name === "profile"){
+  // REGISTER
+  if(page === "register"){
     html = `
-      <div class="card">
-        <h3>Profile</h3>
-        <p>ID: ${user.userId}</p>
-        <p>Name: ${user.username || user.userId}</p>
-      </div>
-    `;
+    <div class="card">
+      <h3>Register New User</h3>
+      <button onclick="alert('Use registration page')">Open Register</button>
+    </div>`;
   }
 
-  // HELP
-  if(name === "help"){
+  // UPGRADE
+  if(page === "upgrade"){
     html = `
-      <div class="card">
-        <h3>Help / FAQ</h3>
-        <p>Common Questions</p>
-      </div>
-    `;
+    <div class="card">
+      <h3>Upgrade Plan</h3>
+      <p>Upgrade feature here</p>
+    </div>`;
   }
 
-  document.getElementById("content").innerHTML = html;
+  // FRANCHISE
+  if(page === "franchise"){
+    html = `
+    <div class="card">
+      <h3>Franchise</h3>
+      <p>Apply / Status</p>
+    </div>`;
+  }
+
+  // TICKET
+  if(page === "ticket"){
+    html = `
+    <div class="card">
+      <h3>Support Ticket</h3>
+      <p>Create / View tickets</p>
+    </div>`;
+  }
+
+  // CONTENT
+  if(page === "content"){
+    html = `
+    <div class="card">
+      <h3>Content Platform</h3>
+      <p>Upload Shorts / View Feed</p>
+    </div>`;
+  }
+
+  // PLAN
+  if(page === "plan"){
+    html = `
+    <div class="card">
+      <h3>Plan Overview</h3>
+      <p>All plans here</p>
+    </div>`;
+  }
+
+  // SETTINGS
+  if(page === "settings"){
+    html = `
+    <div class="card">
+      <h3>Settings</h3>
+      <button onclick="logout()">Logout</button>
+    </div>`;
+  }
+
+  document.getElementById("contentBox").innerHTML = html;
+}
+
+// LOGOUT
+function logout(){
+  localStorage.removeItem("loggedInUser");
+  location.href = "user_login.html";
 }
 
 // DEFAULT LOAD
-loadSection("home");
+loadPage('home');
 
 </script>
 
 </body>
 </html>
-
 
 
 
