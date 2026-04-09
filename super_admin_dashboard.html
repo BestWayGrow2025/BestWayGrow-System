@@ -95,7 +95,7 @@
 if (typeof initCoreSystem === "function") initCoreSystem();
 else { alert("core_system.js missing"); throw new Error("STOP"); }
 
-// AUTH
+// AUTH SAFE
 let session;
 try {
   session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
@@ -120,7 +120,7 @@ if (!user || user.role !== "super_admin") {
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// CREATE SYSTEM ADMIN ✅ SAFE ROLE
+// CREATE SYSTEM ADMIN (FIXED)
 function createSystemAdmin() {
 
   let id = sysId.value.trim();
@@ -138,11 +138,11 @@ function createSystemAdmin() {
     userId: id,
     username: name,
     password: btoa(pass),
-    role: "system_admin",   // ✅ CRITICAL FIX
+    role: "system_admin",
     status: "active"
   });
 
-  saveUsers(users); // ✅ SAFE SAVE
+  saveUsers(users);
 
   alert("System Admin Created");
 
@@ -169,32 +169,22 @@ function loadSystem() {
   `;
 }
 
-// COUNTS ✅ FINAL FIX
+// COUNTS (100% CORRECT)
 function loadCounts() {
   let users = getUsers() || [];
 
-  document.getElementById("sysCount").innerText =
-    users.filter(u => u.role === "system_admin").length;
-
-  document.getElementById("adminCount").innerText =
-    users.filter(u => u.role === "admin").length;
-
-  document.getElementById("franchiseCount").innerText =
-    users.filter(u => u.role === "franchise").length;
-
-  document.getElementById("userCount").innerText =
-    users.filter(u => u.role === "user").length;
+  sysCount.innerText = users.filter(u => u.role === "system_admin").length;
+  adminCount.innerText = users.filter(u => u.role === "admin").length;
+  franchiseCount.innerText = users.filter(u => u.role === "franchise").length;
+  userCount.innerText = users.filter(u => u.role === "user").length;
 }
 
-// QUICK VIEW ✅ NAME FIXED
+// QUICK VIEW (FIXED)
 function showData(role) {
 
   let users = (getUsers() || []).filter(u => u.role === role);
 
-  if (!users.length) {
-    document.getElementById("dataPanel").innerHTML = "No Data";
-    return;
-  }
+  if (!users.length) return dataPanel.innerHTML = "No Data";
 
   let html = `<table><tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
 
@@ -202,14 +192,14 @@ function showData(role) {
     html += `
       <tr>
         <td>${u.userId}</td>
-        <td>${u.username || u.userId}</td> <!-- ✅ FIX -->
+        <td>${u.username || u.userId}</td>
         <td>${u.status || "active"}</td>
       </tr>`;
   });
 
   html += "</table>";
 
-  document.getElementById("dataPanel").innerHTML = html;
+  dataPanel.innerHTML = html;
 }
 
 // TOGGLE
@@ -250,11 +240,11 @@ function logout() {
   location.href = "super_admin_login.html";
 }
 
-// AUTO
+// AUTO REFRESH (PRO FIXED ↓)
 setInterval(() => {
   loadSystem();
   loadCounts();
-}, 3000);
+}, 8000);
 
 // INIT
 loadSystem();
