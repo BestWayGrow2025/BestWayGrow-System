@@ -6,33 +6,67 @@
   <link rel="icon" href="data:,">
 
   <style>
-    body { font-family: Arial; padding: 20px; }
-    input { padding: 6px; width: 200px; }
-    button { padding: 6px 10px; cursor: pointer; }
+    body { 
+      font-family: Arial; 
+      padding: 20px; 
+      text-align:center;
+      background:#f4f7f9;
+    }
+
+    input { 
+      padding: 8px; 
+      width: 240px; 
+      margin-bottom: 10px;
+    }
+
+    button { 
+      padding: 8px 15px; 
+      cursor: pointer;
+    }
+
+    #msg {
+      margin-top:10px;
+      font-weight:bold;
+    }
   </style>
 </head>
+
 <body>
 
-<h2>ADMIN / SUPER ADMIN LOGIN</h2>
+<h2>ADMIN LOGIN</h2>
 
-<input id="adminId" placeholder="Admin ID"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
+<input id="adminId" placeholder="Admin ID"><br>
+<input id="password" type="password" placeholder="Password"><br>
 
 <button onclick="login()">Login</button>
 
 <p id="msg"></p>
 
-<script src="CORE_system.js"></script>
+<!-- ✅ FIXED FILE NAME -->
+<script src="core_system.js"></script>
 <script src="activity_log.js"></script>
 
 <script>
 
-// ✅ INIT CORE
-initCoreSystem();
+// ================= SAFE INIT =================
+if (typeof initCoreSystem === "function") {
+  initCoreSystem();
+} else {
+  alert("❌ core_system.js not loaded");
+  throw new Error("STOP");
+}
 
 // ================= SAFE DECODE =================
 function safeDecode(p) {
   try { return atob(p); } catch { return p; }
+}
+
+// ================= GLOBAL LOGOUT =================
+function logoutAll() {
+  localStorage.removeItem("loggedInSuperAdmin");
+  localStorage.removeItem("loggedInSystemAdmin");
+  localStorage.removeItem("loggedInAdmin");
+  localStorage.removeItem("loggedInUser");
 }
 
 // ================= LOGIN =================
@@ -46,12 +80,12 @@ function login() {
     return;
   }
 
-  let users = getUsers();
+  let users = typeof getUsers === "function" ? getUsers() : [];
 
   let user = users.find(u =>
     u.userId.toLowerCase() === id.toLowerCase() &&
-    (u.role === "admin" || u.role === "super_admin") &&
-    (u.password === pass || safeDecode(u.password) === pass)
+    u.role === "admin" &&
+    safeDecode(u.password) === pass
   );
 
   if (!user) {
@@ -59,55 +93,29 @@ function login() {
     return;
   }
 
-  // ✅ STATUS CONTROL
-  if (user.status !== "active") {
-    showMsg("🚫 Account inactive by System Admin");
+  // ✅ STATUS CHECK
+  if (user.status && user.status !== "active") {
+    showMsg("🚫 Account inactive");
     return;
   }
 
   let settings = getSystemSettings();
 
-  // ================= 🔐 SUPER ADMIN LOGIN =================
-  if (user.role === "super_admin") {
-
-    localStorage.removeItem("loggedInAdmin");
-
-    localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
-      userId: user.userId
-    }));
-
-    // 📜 LOG
-    if (typeof logActivity === "function") {
-      logActivity(user.userId, "SUPER_ADMIN", "Login");
-    }
-
-    showMsg("👑 Super Admin Login Successful");
-
-    setTimeout(() => {
-      window.location.href = "super_admin_dashboard.html";
-    }, 800);
-
-    return;
-  }
-
-  // ================= 🔐 ADMIN LOGIN =================
-
-  // ❗ SUPER ADMIN CONTROL
+  // ❗ SYSTEM CONTROL
   if (settings.adminAccess === false) {
-    showMsg("🚫 Admin access OFF by Super Admin");
+    showMsg("🚫 Admin access OFF");
     return;
   }
 
-  // ❗ SYSTEM LOCK
   if (settings.lockMode === true) {
-    showMsg("🚫 System locked by Super Admin");
+    showMsg("🚫 System locked");
     return;
   }
 
   // ✅ CLEAR OLD SESSIONS
-  localStorage.removeItem("loggedInSuperAdmin");
-  localStorage.removeItem("loggedInAdmin");
+  logoutAll();
 
+  // ✅ SAVE SESSION
   localStorage.setItem("loggedInAdmin", JSON.stringify({
     userId: user.userId
   }));
@@ -117,11 +125,11 @@ function login() {
     logActivity(user.userId, "ADMIN", "Login");
   }
 
-  showMsg("✅ Admin Login Successful");
+  showMsg("✅ Login successful");
 
   setTimeout(() => {
     window.location.href = "admin_dashboard.html";
-  }, 800);
+  }, 700);
 }
 
 // ================= MESSAGE =================
