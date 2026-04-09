@@ -184,7 +184,7 @@ function showData(role) {
     html += `
       <tr>
         <td>${u.userId}</td>
-        <td>${u.username || "-"}</td>
+        <td>${u.username || u.userId}</td>
         <td>${u.status || "active"}</td>
       </tr>`;
   });
@@ -269,7 +269,7 @@ function loadAdmins() {
     html += `
       <tr>
         <td>${a.userId}</td>
-        <td>${a.username || "-"}</td>
+        <td>${a.username || a.userId}</td>
         <td>${a.status}</td>
       </tr>`;
   });
