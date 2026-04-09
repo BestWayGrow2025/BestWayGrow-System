@@ -50,7 +50,6 @@
   <!-- PIN PANEL -->
   <div class="card">
     <h3>PIN CONTROL</h3>
-
     <button onclick="goTo('system_admin_pin_panel.html')">
       OPEN PIN PANEL
     </button>
@@ -59,7 +58,6 @@
   <!-- COUNTS -->
   <div class="card">
     <h3>Overview</h3>
-
     <div>Admins <div class="stat" id="adminCount">0</div></div>
     <div>Franchise <div class="stat" id="franchiseCount">0</div></div>
     <div>Users <div class="stat" id="userCount">0</div></div>
@@ -68,7 +66,6 @@
   <!-- QUICK VIEW -->
   <div class="card">
     <h3>Quick View</h3>
-
     <button onclick="showData('admin')">Admins</button>
     <button onclick="showData('franchise')">Franchise</button>
     <button onclick="showData('user')">Users</button>
@@ -98,15 +95,11 @@
 
 <script>
 
-// ================= INIT =================
-if (typeof initCoreSystem === "function") {
-  initCoreSystem();
-} else {
-  alert("❌ core_system.js not loaded");
-  throw new Error("STOP");
-}
+// INIT
+if (typeof initCoreSystem === "function") initCoreSystem();
+else { alert("core_system.js not loaded"); throw new Error("STOP"); }
 
-// ================= AUTH =================
+// AUTH
 let session;
 try {
   session = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
@@ -115,8 +108,7 @@ try {
 }
 
 if (!session || !session.userId) {
-  alert("Access denied");
-  window.location.href = "system_admin_login.html";
+  location.href = "system_admin_login.html";
   throw new Error("STOP");
 }
 
@@ -124,27 +116,26 @@ let currentUser = getUserById(session.userId);
 
 if (!currentUser || currentUser.role !== "system_admin") {
   localStorage.removeItem("loggedInSystemAdmin");
-  window.location.href = "system_admin_login.html";
+  location.href = "system_admin_login.html";
   throw new Error("STOP");
 }
 
-// ================= NAVIGATION =================
+// NAV
 function goTo(page){
   window.location.href = page;
 }
 
-// ================= TYPE SWITCH =================
+// TYPE SWITCH (SAFE)
 function toggleDepartments() {
-  let type = document.getElementById("type").value;
-  document.getElementById("deptBox").style.display =
-    (type === "B") ? "block" : "none";
+  const box = document.getElementById("deptBox");
+  box.style.display = (type.value === "B") ? "block" : "none";
 }
 
-// ================= SYSTEM STATUS =================
+// SYSTEM STATUS
 function loadSystem() {
   let s = getSystemSettings() || {};
 
-  document.getElementById("systemStatus").innerHTML = `
+  systemStatus.innerHTML = `
     Admin: ${s.adminAccess !== false ? "🟢" : "🔴"} |
     Lock: ${s.lockMode ? "🔴" : "🟢"} <br>
     Queue: ${s.queueStop ? "🔴" : "🟢"} |
@@ -153,29 +144,21 @@ function loadSystem() {
   `;
 }
 
-// ================= COUNTS =================
+// COUNTS
 function loadCounts() {
   let users = getUsers() || [];
 
-  document.getElementById("adminCount").innerText =
-    users.filter(u => u.role === "admin").length;
-
-  document.getElementById("franchiseCount").innerText =
-    users.filter(u => u.role === "franchise").length;
-
-  document.getElementById("userCount").innerText =
-    users.filter(u => u.role === "user").length;
+  adminCount.innerText = users.filter(u => u.role === "admin").length;
+  franchiseCount.innerText = users.filter(u => u.role === "franchise").length;
+  userCount.innerText = users.filter(u => u.role === "user").length;
 }
 
-// ================= SHOW DATA =================
+// SHOW DATA
 function showData(role) {
 
   let users = (getUsers() || []).filter(u => u.role === role);
 
-  if (!users.length) {
-    document.getElementById("dataPanel").innerHTML = "No Data";
-    return;
-  }
+  if (!users.length) return dataPanel.innerHTML = "No Data";
 
   let html = `<table>
     <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
@@ -191,50 +174,42 @@ function showData(role) {
 
   html += "</table>";
 
-  document.getElementById("dataPanel").innerHTML = html;
+  dataPanel.innerHTML = html;
 }
 
-// ================= CREATE ADMIN =================
+// CREATE ADMIN
 function createAdmin() {
 
-  let adminId = document.getElementById("adminId").value.trim();
-  let name = document.getElementById("name").value.trim();
-  let password = document.getElementById("password").value.trim();
-  let type = document.getElementById("type").value;
+  let adminId = adminId.value.trim();
+  let nameVal = name.value.trim();
+  let pass = password.value.trim();
+  let typeVal = type.value;
 
-  if (!adminId || !name || !password) {
-    showMsg("❌ Fill all fields");
-    return;
-  }
+  if (!adminId || !nameVal || !pass) return showMsg("❌ Fill all fields");
 
   let users = getUsers() || [];
 
-  if (users.find(u => u.userId.toLowerCase() === adminId.toLowerCase())) {
-    showMsg("⚠️ Admin exists");
-    return;
-  }
+  if (users.find(u => u.userId.toLowerCase() === adminId.toLowerCase()))
+    return showMsg("⚠️ Admin exists");
 
   let departments = [];
 
-  if (type === "B") {
+  if (typeVal === "B") {
     document.querySelectorAll("#deptBox input:checked").forEach(cb => {
       departments.push(cb.value);
     });
 
-    if (!departments.length) {
-      showMsg("⚠️ Select department");
-      return;
-    }
+    if (!departments.length) return showMsg("⚠️ Select department");
   } else {
     departments = ["finance","franchise","kyc","report"];
   }
 
   users.push({
     userId: adminId,
-    username: name,
-    password: btoa(password),
+    username: nameVal,
+    password: btoa(pass),
     role: "admin",
-    type: type,
+    type: typeVal,
     departments: departments,
     status: "active",
     createdBy: currentUser.userId
@@ -244,23 +219,20 @@ function createAdmin() {
 
   showMsg("✅ Admin Created");
 
-  document.getElementById("adminId").value = "";
-  document.getElementById("name").value = "";
-  document.getElementById("password").value = "";
+  adminId.value = "";
+  name.value = "";
+  password.value = "";
 
   loadAdmins();
   loadCounts();
 }
 
-// ================= ADMIN LIST =================
+// ADMIN LIST (SAFE)
 function loadAdmins() {
 
   let users = (getUsers() || []).filter(u => u.role === "admin");
 
-  if (!users.length) {
-    document.getElementById("adminList").innerHTML = "No Admin";
-    return;
-  }
+  if (!users.length) return adminList.innerHTML = "No Admin";
 
   let html = `<table>
     <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
@@ -270,30 +242,30 @@ function loadAdmins() {
       <tr>
         <td>${a.userId}</td>
         <td>${a.username || a.userId}</td>
-        <td>${a.status}</td>
+        <td>${a.status || "active"}</td>
       </tr>`;
   });
 
   html += "</table>";
 
-  document.getElementById("adminList").innerHTML = html;
+  adminList.innerHTML = html;
 }
 
-// ================= LOGOUT =================
+// LOGOUT
 function logout() {
   localStorage.removeItem("loggedInSystemAdmin");
-  window.location.href = "system_admin_login.html";
+  location.href = "system_admin_login.html";
 }
 
 function showMsg(msg) {
-  document.getElementById("msg").innerText = msg;
+  msgBox.innerText = msg;
 }
 
-// ================= AUTO REFRESH =================
+// AUTO REFRESH (PRO FIX)
 setInterval(() => {
   loadSystem();
   loadCounts();
-}, 3000);
+}, 8000);
 
 // INIT
 loadSystem();
