@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard</title>
+  <title>Admin Dashboard V7</title>
   <link rel="icon" href="data:,">
 
   <style>
     body {
-      font-family: Arial;
       margin:0;
+      font-family: Arial;
       background:#f4f7f9;
     }
 
     header {
-      background:#0077b5;
+      background: linear-gradient(90deg,#222,#0077b5);
       color:#fff;
       padding:15px;
       text-align:center;
@@ -24,21 +24,27 @@
       justify-content:center;
       background:#fff;
       padding:10px;
-      box-shadow:0 2px 5px #ccc;
+      box-shadow:0 2px 6px #ccc;
     }
 
     .menu button {
       margin:5px;
       padding:10px 15px;
       border:none;
-      border-radius:6px;
+      border-radius:20px;
+      background:#eee;
       cursor:pointer;
-      background:#28a745;
-      color:#fff;
+      transition:0.3s;
     }
 
     .menu button:hover {
-      background:#1e7e34;
+      background:#0077b5;
+      color:#fff;
+    }
+
+    .active {
+      background:#222 !important;
+      color:#fff !important;
     }
 
     .content {
@@ -49,10 +55,28 @@
     .card {
       background:#fff;
       padding:20px;
-      margin:auto;
+      margin:10px auto;
+      width:90%;
       max-width:600px;
       border-radius:10px;
       box-shadow:0 4px 10px #ccc;
+    }
+
+    table {
+      width:100%;
+      border-collapse: collapse;
+      margin-top:10px;
+    }
+
+    th,td {
+      border:1px solid #ddd;
+      padding:8px;
+      font-size:13px;
+    }
+
+    input, button {
+      padding:8px;
+      margin:5px;
     }
   </style>
 </head>
@@ -60,27 +84,29 @@
 <body>
 
 <header>
-  <h2>ADMIN DASHBOARD</h2>
+  <h2>🔥 ADMIN DASHBOARD V7</h2>
   <p id="welcome"></p>
-  <button onclick="logout()">Logout</button>
 </header>
 
-<!-- TOP MENU -->
+<!-- MENU -->
 <div class="menu">
-  <button onclick="loadSection('home')">Home</button>
-  <button onclick="loadSection('users')">Users</button>
-  <button onclick="loadSection('franchise')">Franchise</button>
-  <button onclick="loadSection('pin')">PIN</button>
-  <button onclick="loadSection('kyc')">KYC</button>
-  <button onclick="loadSection('system')">System</button>
-  <button onclick="loadSection('profile')">Profile</button>
+
+  <button onclick="loadPage('home',this)">Home</button>
+  <button onclick="loadPage('users',this)">Users</button>
+  <button onclick="loadPage('pin',this)">PIN</button>
+  <button onclick="loadPage('wallet',this)">Wallet</button>
+  <button onclick="loadPage('franchise',this)">Franchise</button>
+  <button onclick="loadPage('kyc',this)">KYC</button>
+  <button onclick="loadPage('ticket',this)">Ticket</button>
+  <button onclick="loadPage('content',this)">Content</button>
+  <button onclick="loadPage('reports',this)">Reports</button>
+  <button onclick="loadPage('settings',this)">Settings</button>
+
 </div>
 
-<!-- DYNAMIC CONTENT -->
-<div class="content">
-  <div id="mainBox" class="card">
-    Loading...
-  </div>
+<!-- CONTENT -->
+<div class="content" id="contentBox">
+  Loading...
 </div>
 
 <script src="core_system.js"></script>
@@ -90,9 +116,9 @@
 
 // INIT
 if (typeof initCoreSystem === "function") initCoreSystem();
-else { alert("core_system.js not loaded"); throw new Error("STOP"); }
+else { alert("core_system.js missing"); throw new Error("STOP"); }
 
-// AUTH (SECURE)
+// AUTH (SAFE)
 let admin = protectPage({ role: "admin" });
 if (!admin) throw new Error("STOP");
 
@@ -100,137 +126,135 @@ if (!admin) throw new Error("STOP");
 document.getElementById("welcome").innerText =
   "Welcome ADMIN (" + admin.userId + ")";
 
-// SECTION LOADER
-function loadSection(section) {
+// ACTIVE MENU
+function setActive(btn){
+  document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+}
 
-  let box = document.getElementById("mainBox");
+// LOAD PAGE
+function loadPage(page,btn){
+
+  if(btn) setActive(btn);
+
+  let html = "";
 
   // HOME
-  if (section === "home") {
-    box.innerHTML = `
-      <h3>Dashboard</h3>
+  if(page === "home"){
+    html = `
+    <div class="card">
+      <h3>Overview</h3>
       <p>ID: ${admin.userId}</p>
-      <p>Name: ${admin.username || admin.userId}</p>
       <p>Status: ${admin.status}</p>
-    `;
+    </div>`;
   }
 
   // USERS
-  else if (section === "users") {
+  if(page === "users"){
+    let users = getUsers().filter(u => u.role === "user");
 
-    let users = (getUsers() || []).filter(u => u.role === "user");
+    html = `<div class="card"><h3>All Users</h3>`;
 
-    if (!users.length) {
-      box.innerHTML = "<h3>No Users</h3>";
-      return;
+    if(!users.length) html += "No Users";
+    else {
+      html += `<table><tr><th>ID</th><th>Status</th></tr>`;
+      users.forEach(u=>{
+        html += `<tr><td>${u.userId}</td><td>${u.status || "active"}</td></tr>`;
+      });
+      html += "</table>";
     }
 
-    let html = `<h3>Users</h3><table>
-      <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
-
-    users.forEach(u => {
-      html += `
-        <tr>
-          <td>${u.userId}</td>
-          <td>${u.username || u.userId}</td>
-          <td>${u.status || "active"}</td>
-        </tr>`;
-    });
-
-    html += "</table>";
-
-    box.innerHTML = html;
-  }
-
-  // FRANCHISE
-  else if (section === "franchise") {
-    box.innerHTML = `
-      <h3>Franchise Requests</h3>
-      <button onclick="goTo('admin_franchise_requests.html')">
-        Open Panel
-      </button>
-    `;
+    html += "</div>";
   }
 
   // PIN
-  else if (section === "pin") {
-    box.innerHTML = `
+  if(page === "pin"){
+    html = `
+    <div class="card">
       <h3>PIN Control</h3>
-      <button onclick="goTo('admin_pin_request.html')">Request PIN</button><br><br>
-      <button onclick="goTo('admin_pin_panel.html')">Create PIN</button>
-    `;
+      <button onclick="goTo('admin_pin_panel.html')">Open Panel</button>
+    </div>`;
+  }
+
+  // WALLET
+  if(page === "wallet"){
+    html = `
+    <div class="card">
+      <h3>Wallet Control</h3>
+      <p>Manage transactions</p>
+    </div>`;
+  }
+
+  // FRANCHISE
+  if(page === "franchise"){
+    html = `
+    <div class="card">
+      <h3>Franchise Requests</h3>
+      <button onclick="goTo('admin_franchise_requests.html')">Open</button>
+    </div>`;
   }
 
   // KYC
-  else if (section === "kyc") {
-    box.innerHTML = `
+  if(page === "kyc"){
+    html = `
+    <div class="card">
       <h3>KYC Verification</h3>
-      <button onclick="goTo('admin_kyc.html')">Open KYC Panel</button>
-    `;
+      <button onclick="goTo('admin_kyc.html')">Open</button>
+    </div>`;
   }
 
-  // SYSTEM CONTROL
-  else if (section === "system") {
-
-    let s = getSystemSettings() || {};
-
-    box.innerHTML = `
-      <h3>System Control</h3>
-
-      Register: ${s.registrationOpen !== false ? "🟢" : "🔴"} <br>
-      Upgrade: ${s.upgradesOpen !== false ? "🟢" : "🔴"} <br>
-      Repurchase: ${s.repurchaseOpen !== false ? "🟢" : "🔴"} <br><br>
-
-      <button onclick="toggle('registrationOpen')">Toggle Register</button>
-      <button onclick="toggle('upgradesOpen')">Toggle Upgrade</button>
-      <button onclick="toggle('repurchaseOpen')">Toggle Repurchase</button>
-    `;
+  // TICKET
+  if(page === "ticket"){
+    html = `
+    <div class="card">
+      <h3>Support Tickets</h3>
+      <p>Handle user issues</p>
+    </div>`;
   }
 
-  // PROFILE
-  else if (section === "profile") {
-    box.innerHTML = `
-      <h3>Profile</h3>
-      <p>ID: ${admin.userId}</p>
-      <p>Name: ${admin.username || admin.userId}</p>
-      <p>Status: ${admin.status}</p>
-    `;
+  // CONTENT
+  if(page === "content"){
+    html = `
+    <div class="card">
+      <h3>Content Control</h3>
+      <p>Manage posts / shorts</p>
+    </div>`;
   }
 
+  // REPORTS
+  if(page === "reports"){
+    html = `
+    <div class="card">
+      <h3>Reports</h3>
+      <p>System reports here</p>
+    </div>`;
+  }
+
+  // SETTINGS
+  if(page === "settings"){
+    html = `
+    <div class="card">
+      <h3>Settings</h3>
+      <button onclick="logout()">Logout</button>
+    </div>`;
+  }
+
+  document.getElementById("contentBox").innerHTML = html;
 }
 
-// TOGGLE SYSTEM
-function toggle(key) {
-
-  let allowed = ["registrationOpen","upgradesOpen","repurchaseOpen"];
-
-  if (!allowed.includes(key)) return alert("Not allowed");
-
-  let s = getSystemSettings() || {};
-  s[key] = !s[key];
-
-  localStorage.setItem("systemSettings", JSON.stringify(s));
-
-  if (typeof logActivity === "function") {
-    logActivity(admin.userId, "TOGGLE_" + key);
-  }
-
-  loadSection("system");
-}
-
-// NAVIGATION
-function goTo(page) {
+// NAV
+function goTo(page){
   window.location.href = page;
 }
 
 // LOGOUT
-function logout() {
+function logout(){
   localStorage.removeItem("loggedInAdmin");
   location.href = "admin_login.html";
 }
 
 // DEFAULT LOAD
-loadSection("home");
+loadPage('home');
 
 </script>
 
