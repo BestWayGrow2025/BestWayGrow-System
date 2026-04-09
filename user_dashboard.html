@@ -6,180 +6,231 @@
 
   <style>
     body {
-      font-family: Arial;
       margin:0;
-      background:#f4f7f9;
+      font-family: Arial;
+      background: linear-gradient(135deg,#0f2027,#2c5364);
+      color:#fff;
     }
 
     header {
-      background:#00994d;
-      color:#fff;
       padding:15px;
       text-align:center;
+      background:#000;
+      font-size:18px;
+      font-weight:bold;
     }
 
+    /* TOP MENU */
     .menu {
       display:flex;
-      flex-wrap:wrap;
-      justify-content:center;
-      background:#fff;
+      overflow-x:auto;
+      background:#111;
       padding:10px;
-      box-shadow:0 2px 5px #ccc;
     }
 
     .menu button {
+      flex:1;
+      min-width:90px;
       margin:5px;
-      padding:10px 15px;
+      padding:10px;
       border:none;
-      border-radius:6px;
-      cursor:pointer;
-      background:#007bff;
+      border-radius:10px;
+      background:#222;
       color:#fff;
+      cursor:pointer;
     }
 
     .menu button:hover {
-      background:#0056b3;
+      background:#00c6ff;
+      color:#000;
     }
 
-    .content {
-      padding:20px;
-      text-align:center;
+    /* CONTENT AREA */
+    #content {
+      padding:15px;
     }
 
     .card {
-      background:#fff;
-      padding:20px;
-      margin:auto;
-      max-width:500px;
+      background:#ffffff10;
+      padding:15px;
+      margin:10px 0;
       border-radius:10px;
-      box-shadow:0 4px 10px #ccc;
     }
+
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
+
+    .box {
+      background:#ffffff20;
+      padding:15px;
+      border-radius:10px;
+      text-align:center;
+    }
+
   </style>
 </head>
 
 <body>
 
 <header>
-  <h2>USER DASHBOARD</h2>
-  <p id="welcome"></p>
-  <button onclick="logout()">Logout</button>
+  USER DASHBOARD V5
 </header>
 
 <!-- TOP MENU -->
 <div class="menu">
   <button onclick="loadSection('home')">Home</button>
+  <button onclick="loadSection('category')">Category</button>
+  <button onclick="loadSection('plan')">Plan</button>
   <button onclick="loadSection('pin')">PIN</button>
+  <button onclick="loadSection('tree')">Tree</button>
+  <button onclick="loadSection('ticket')">Ticket</button>
   <button onclick="loadSection('wallet')">Wallet</button>
-  <button onclick="loadSection('upgrade')">Upgrade</button>
-  <button onclick="loadSection('repurchase')">Repurchase</button>
-  <button onclick="loadSection('franchise')">Franchise</button>
   <button onclick="loadSection('profile')">Profile</button>
+  <button onclick="loadSection('help')">Help</button>
 </div>
 
-<!-- DYNAMIC CONTENT -->
-<div class="content">
-  <div id="mainBox" class="card">
-    Loading...
-  </div>
-</div>
+<!-- CONTENT -->
+<div id="content"></div>
 
 <script src="core_system.js"></script>
 
 <script>
 
 // INIT
-if (typeof initCoreSystem === "function") initCoreSystem();
-else { alert("core_system.js not loaded"); throw new Error("STOP"); }
-
-// AUTH
-let session;
-try {
-  session = JSON.parse(localStorage.getItem("loggedInUser"));
-} catch {
-  session = null;
+if (typeof initCoreSystem === "function") {
+  initCoreSystem();
+} else {
+  alert("core_system.js not loaded");
+  throw new Error("STOP");
 }
 
-if (!session || !session.userId) {
+// AUTH
+let session = JSON.parse(localStorage.getItem("loggedInUser"));
+
+if (!session) {
   location.href = "user_login.html";
-  throw new Error("STOP");
 }
 
 let user = getUserById(session.userId);
 
-if (!user || user.role !== "user") {
-  localStorage.removeItem("loggedInUser");
-  location.href = "user_login.html";
-  throw new Error("STOP");
-}
+// MAIN LOADER
+function loadSection(name){
 
-// WELCOME
-document.getElementById("welcome").innerText =
-  "Welcome (" + user.userId + ")";
+  let html = "";
 
-// SECTION LOADER
-function loadSection(section) {
+  // HOME
+  if(name === "home"){
+    html = `
+      <div class="card">
+        <h3>Welcome ${user.userId}</h3>
+        <p>Trending Videos / Content</p>
+      </div>
 
-  let box = document.getElementById("mainBox");
-
-  if (section === "home") {
-    box.innerHTML = `
-      <h3>Home</h3>
-      <p>ID: ${user.userId}</p>
-      <p>Name: ${user.username || user.userId}</p>
-      <p>Status: ${user.status || "active"}</p>
+      <div class="grid">
+        <div class="box">Sarkari</div>
+        <div class="box">Income</div>
+        <div class="box">Education</div>
+        <div class="box">Business</div>
+      </div>
     `;
   }
 
-  else if (section === "pin") {
-    box.innerHTML = `
-      <h3>PIN Section</h3>
-      <p>Apply PIN / View PIN / Used PIN</p>
+  // CATEGORY
+  if(name === "category"){
+    html = `
+      <div class="card">
+        <h3>Categories</h3>
+      </div>
+
+      <div class="grid">
+        <div class="box">Sarkari Kaam</div>
+        <div class="box">Part Time</div>
+        <div class="box">Education</div>
+        <div class="box">Digital Skills</div>
+      </div>
     `;
   }
 
-  else if (section === "wallet") {
-    box.innerHTML = `
-      <h3>Wallet</h3>
-      <p>Balance: ₹0</p>
+  // PLAN
+  if(name === "plan"){
+    html = `
+      <div class="card">
+        <h3>Plans</h3>
+        <p>Basic / Premium Plans</p>
+        <button>Upgrade</button>
+      </div>
     `;
   }
 
-  else if (section === "upgrade") {
-    box.innerHTML = `
-      <h3>Upgrade</h3>
-      <button>Upgrade Plan</button>
+  // PIN
+  if(name === "pin"){
+    html = `
+      <div class="card">
+        <h3>PIN SYSTEM</h3>
+        <button>Apply PIN</button>
+        <button>Available PIN</button>
+        <button>Used PIN</button>
+      </div>
     `;
   }
 
-  else if (section === "repurchase") {
-    box.innerHTML = `
-      <h3>Repurchase</h3>
-      <button>Buy Again</button>
+  // TREE
+  if(name === "tree"){
+    html = `
+      <div class="card">
+        <h3>User Tree</h3>
+        <p>Downline structure here</p>
+      </div>
     `;
   }
 
-  else if (section === "franchise") {
-    box.innerHTML = `
-      <h3>Franchise</h3>
-      <button>Apply for Franchise</button>
+  // TICKET
+  if(name === "ticket"){
+    html = `
+      <div class="card">
+        <h3>Support Ticket</h3>
+        <button>Create Ticket</button>
+        <button>View Tickets</button>
+      </div>
     `;
   }
 
-  else if (section === "profile") {
-    box.innerHTML = `
-      <h3>Profile</h3>
-      <p>ID: ${user.userId}</p>
-      <p>Name: ${user.username || user.userId}</p>
-      <p>Status: ${user.status || "active"}</p>
+  // WALLET
+  if(name === "wallet"){
+    html = `
+      <div class="card">
+        <h3>Wallet</h3>
+        <p>Balance: ₹0</p>
+        <button>Withdraw</button>
+      </div>
     `;
   }
 
-}
+  // PROFILE
+  if(name === "profile"){
+    html = `
+      <div class="card">
+        <h3>Profile</h3>
+        <p>ID: ${user.userId}</p>
+        <p>Name: ${user.username || user.userId}</p>
+      </div>
+    `;
+  }
 
-// LOGOUT
-function logout() {
-  localStorage.removeItem("loggedInUser");
-  location.href = "user_login.html";
+  // HELP
+  if(name === "help"){
+    html = `
+      <div class="card">
+        <h3>Help / FAQ</h3>
+        <p>Common Questions</p>
+      </div>
+    `;
+  }
+
+  document.getElementById("content").innerHTML = html;
 }
 
 // DEFAULT LOAD
@@ -189,6 +240,7 @@ loadSection("home");
 
 </body>
 </html>
+
 
 
 
