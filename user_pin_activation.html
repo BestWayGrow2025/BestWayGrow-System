@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Activate PIN</title>
+  <link rel="icon" href="data:,">
+
+  <style>
+    body {
+      font-family: Arial;
+      background:#f4f7f9;
+      text-align:center;
+      padding:20px;
+    }
+
+    .card {
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+      box-shadow:0 4px 10px #ccc;
+      display:inline-block;
+      width:300px;
+    }
+
+    input {
+      padding:8px;
+      margin:10px;
+      width:90%;
+    }
+
+    button {
+      padding:8px 15px;
+      background:#007bff;
+      color:#fff;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+    }
+
+    #msg {
+      margin-top:10px;
+      font-weight:bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>🔑 Activate Your PIN</h2>
+
+<div class="card">
+
+  <input id="pinInput" placeholder="Enter PIN"><br>
+
+  <button onclick="activatePin()">Activate</button>
+
+  <p id="msg"></p>
+
+</div>
+
+<script src="core_system.js"></script>
+
+<script>
+
+// INIT
+if (typeof initCoreSystem === "function") initCoreSystem();
+else { alert("core_system.js missing"); throw new Error("STOP"); }
+
+// AUTH USER
+let session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+
+if (!session || !session.userId) {
+  location.href = "user_login.html";
+  throw new Error("STOP");
+}
+
+let user = getUserById(session.userId);
+
+if (!user || user.role !== "user") {
+  localStorage.removeItem("loggedInUser");
+  location.href = "user_login.html";
+  throw new Error("STOP");
+}
+
+// STORAGE
+function getPins() {
+  return JSON.parse(localStorage.getItem("pins") || "[]");
+}
+
+function savePins(pins) {
+  localStorage.setItem("pins", JSON.stringify(pins));
+}
+
+// ACTIVATE PIN
+function activatePin() {
+
+  let pinVal = document.getElementById("pinInput").value.trim();
+
+  if (!pinVal) return showMsg("⚠️ Enter PIN");
+
+  let pins = getPins();
+
+  let pinObj = pins.find(p => p.pin === pinVal);
+
+  if (!pinObj) {
+    showMsg("❌ Invalid PIN");
+    return;
+  }
+
+  if (pinObj.used) {
+    showMsg("🚫 PIN already used");
+    return;
+  }
+
+  // ✅ MARK USED
+  pinObj.used = true;
+  pinObj.usedBy = user.userId;
+  pinObj.usedAt = Date.now();
+
+  savePins(pins);
+
+  // ✅ UPDATE USER (ACTIVATE ACCOUNT)
+  let users = getUsers() || [];
+
+  let u = users.find(x => x.userId === user.userId);
+
+  if (u) {
+    u.status = "active";
+    u.pinActivated = true;
+    u.pinAmount = pinObj.amount;
+  }
+
+  saveUsers(users);
+
+  showMsg("✅ PIN Activated Successfully");
+
+  setTimeout(() => {
+    location.href = "user_dashboard.html";
+  }, 1000);
+}
+
+// MESSAGE
+function showMsg(m) {
+  document.getElementById("msg").innerText = m;
+}
+
+</script>
+
+</body>
+</html>
