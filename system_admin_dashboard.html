@@ -1,3 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Admin Dashboard</title>
+  <link rel="icon" href="data:,">
+
+  <style>
+    body { font-family: Arial; text-align:center; background:#f4f7f9; }
+    .card { background:#fff; padding:20px; margin:15px; border-radius:10px; box-shadow:0 4px 10px #ccc;}
+    .container { display:flex; flex-wrap:wrap; justify-content:center; }
+    table { width:100%; margin-top:10px; border-collapse: collapse; }
+    th,td { border:1px solid #ddd; padding:8px; font-size:13px; }
+    button { padding:6px 10px; margin:5px; cursor:pointer; }
+    select, input { padding:6px; margin:5px; width:85%; }
+    .stat { font-size:20px; font-weight:bold; }
+  </style>
+</head>
+
+<body>
+
+<h2>SYSTEM ADMIN DASHBOARD</h2>
+<button onclick="logout()">Logout</button>
+
+<div class="container">
+
+  <!-- CREATE ADMIN -->
+  <div class="card">
+    <h3>Create Admin</h3>
+
+    <input id="adminId" placeholder="Admin ID"><br>
+    <input id="name" placeholder="Name"><br>
+    <input id="password" type="password" placeholder="Password"><br>
+
+    <select id="type" onchange="toggleDepartments()">
+      <option value="A">TYPE A - All in One</option>
+      <option value="B">TYPE B - Department Wise</option>
+    </select>
+
+    <div id="deptBox" style="display:none; text-align:left;">
+      <label><input type="checkbox" value="finance"> Finance</label><br>
+      <label><input type="checkbox" value="franchise"> Franchise</label><br>
+      <label><input type="checkbox" value="kyc"> KYC</label><br>
+      <label><input type="checkbox" value="report"> Report</label>
+    </div>
+
+    <button onclick="createAdmin()">Create</button>
+    <p id="msg"></p>
+  </div>
+
+  <!-- PIN PANEL -->
+  <div class="card">
+    <h3>PIN CONTROL</h3>
+    <button onclick="goTo('system_admin_pin_panel.html')">
+      OPEN PIN PANEL
+    </button>
+  </div>
+
+  <!-- COUNTS -->
+  <div class="card">
+    <h3>Overview</h3>
+    <div>Admins <div class="stat" id="adminCount">0</div></div>
+    <div>Franchise <div class="stat" id="franchiseCount">0</div></div>
+    <div>Users <div class="stat" id="userCount">0</div></div>
+  </div>
+
+  <!-- QUICK VIEW -->
+  <div class="card">
+    <h3>Quick View</h3>
+    <button onclick="showData('admin')">Admins</button>
+    <button onclick="showData('franchise')">Franchise</button>
+    <button onclick="showData('user')">Users</button>
+  </div>
+
+  <!-- DATA PANEL -->
+  <div class="card">
+    <h3>Details</h3>
+    <div id="dataPanel">Click button to view</div>
+  </div>
+
+  <!-- ADMIN LIST -->
+  <div class="card">
+    <h3>Admin List</h3>
+    <div id="adminList"></div>
+  </div>
+
+  <!-- SYSTEM STATUS -->
+  <div class="card">
+    <h3>System Status</h3>
+    <p id="systemStatus"></p>
+  </div>
+
+</div>
+
+<script src="core_system.js"></script>
+
 <script>
 
 // INIT
@@ -30,11 +125,10 @@ function goTo(page){
   window.location.href = page;
 }
 
-// TYPE SWITCH (FIXED)
+// TYPE SWITCH
 function toggleDepartments() {
   const typeEl = document.getElementById("type");
   const box = document.getElementById("deptBox");
-
   box.style.display = (typeEl.value === "B") ? "block" : "none";
 }
 
@@ -92,7 +186,7 @@ function showData(role) {
   document.getElementById("dataPanel").innerHTML = html;
 }
 
-// CREATE ADMIN (FIXED)
+// CREATE ADMIN
 function createAdmin() {
 
   let adminIdVal = document.getElementById("adminId").value.trim();
@@ -183,7 +277,7 @@ function logout() {
   location.href = "system_admin_login.html";
 }
 
-// MESSAGE (FIXED)
+// MESSAGE
 function showMsg(msg) {
   document.getElementById("msg").innerText = msg;
 }
@@ -200,4 +294,7 @@ loadCounts();
 loadAdmins();
 
 </script>
+
+</body>
+</html>
 
