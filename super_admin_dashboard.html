@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Super Admin Dashboard V7</title>
+  <title>Super Admin Panel V7</title>
   <link rel="icon" href="data:,">
 
   <style>
     body {
       font-family: Arial;
       margin:0;
-      background:#f4f7f9;
+      background:#eef2f7;
     }
 
     header {
@@ -18,27 +18,27 @@
       text-align:center;
     }
 
-    .menu {
+    .top-menu {
       display:flex;
-      overflow-x:auto;
+      flex-wrap:wrap;
+      justify-content:center;
       background:#fff;
       padding:10px;
-      box-shadow:0 2px 5px #ccc;
+      box-shadow:0 2px 6px #ccc;
     }
 
-    .menu button {
+    .top-menu button {
       margin:5px;
-      padding:10px 15px;
+      padding:8px 12px;
       border:none;
-      border-radius:20px;
-      background:#e0e0e0;
+      background:#007bff;
+      color:#fff;
+      border-radius:5px;
       cursor:pointer;
-      white-space:nowrap;
     }
 
-    .menu button.active {
-      background:#000;
-      color:#fff;
+    .top-menu button:hover {
+      background:#0056b3;
     }
 
     .content {
@@ -49,13 +49,19 @@
       background:#fff;
       padding:20px;
       border-radius:10px;
-      box-shadow:0 4px 10px #ccc;
+      box-shadow:0 3px 8px #ccc;
       margin-bottom:20px;
+    }
+
+    .stat {
+      font-size:20px;
+      font-weight:bold;
     }
 
     table {
       width:100%;
-      border-collapse: collapse;
+      border-collapse:collapse;
+      margin-top:10px;
     }
 
     th,td {
@@ -63,42 +69,29 @@
       padding:8px;
       font-size:13px;
     }
-
-    input {
-      padding:6px;
-      margin:5px;
-      width:90%;
-    }
-
-    button.main {
-      background:#000;
-      color:#fff;
-    }
   </style>
 </head>
 
 <body>
 
 <header>
-  <h2>👑 SUPER ADMIN PANEL V7</h2>
+  <h2>👑 SUPER ADMIN CONTROL V7</h2>
+  <p id="welcome"></p>
   <button onclick="logout()">Logout</button>
 </header>
 
-<!-- MENU -->
-<div class="menu">
-  <button onclick="loadSection('dashboard')">Dashboard</button>
-  <button onclick="loadSection('systemAdmins')">System Admins</button>
-  <button onclick="loadSection('createSystemAdmin')">Create System Admin</button>
+<!-- TOP NAV -->
+<div class="top-menu">
+  <button onclick="loadSection('overview')">Overview</button>
+  <button onclick="loadSection('system')">System Control</button>
   <button onclick="loadSection('admins')">Admins</button>
   <button onclick="loadSection('users')">Users</button>
-  <button onclick="loadSection('system')">System Control</button>
-  <button onclick="loadSection('reset')">Reset</button>
+  <button onclick="loadSection('plans')">Plans</button>
+  <button onclick="loadSection('qa')">Q&A</button>
 </div>
 
-<!-- CONTENT -->
-<div class="content" id="contentArea">
-  Loading...
-</div>
+<!-- MAIN CONTENT -->
+<div class="content" id="mainContent"></div>
 
 <script src="core_system.js"></script>
 
@@ -116,96 +109,38 @@ if (!session || !session.userId) {
   throw new Error("STOP");
 }
 
-let currentUser = getUserById(session.userId);
+let user = getUserById(session.userId);
 
-if (!currentUser || currentUser.role !== "super_admin") {
+if (!user || user.role !== "super_admin") {
   localStorage.removeItem("loggedInSuperAdmin");
   location.href = "super_admin_login.html";
   throw new Error("STOP");
 }
 
-// MAIN SWITCH
+// WELCOME
+document.getElementById("welcome").innerText =
+  "Welcome SUPER ADMIN (" + user.userId + ")";
+
+// LOAD SECTIONS
 function loadSection(section) {
 
   let html = "";
 
-  // DASHBOARD
-  if (section === "dashboard") {
+  // ================= OVERVIEW =================
+  if (section === "overview") {
 
     let users = getUsers() || [];
 
     html = `
     <div class="card">
       <h3>Overview</h3>
-      System Admins: ${users.filter(u=>u.role==="system_admin").length}<br>
-      Admins: ${users.filter(u=>u.role==="admin").length}<br>
-      Users: ${users.filter(u=>u.role==="user").length}
+      <div>System Admins <div class="stat">${users.filter(u=>u.role==="system_admin").length}</div></div>
+      <div>Admins <div class="stat">${users.filter(u=>u.role==="admin").length}</div></div>
+      <div>Users <div class="stat">${users.filter(u=>u.role==="user").length}</div></div>
     </div>`;
   }
 
-  // SYSTEM ADMINS LIST
-  if (section === "systemAdmins") {
-
-    let users = (getUsers() || []).filter(u=>u.role==="system_admin");
-
-    let rows = users.map(a => `
-      <tr>
-        <td>${a.userId}</td>
-        <td>${a.username || a.userId}</td>
-        <td>${a.status || "active"}</td>
-      </tr>`).join("");
-
-    html = `
-    <div class="card">
-      <h3>System Admin List</h3>
-      <table>
-        <tr><th>ID</th><th>Name</th><th>Status</th></tr>
-        ${rows || "No Data"}
-      </table>
-    </div>`;
-  }
-
-  // CREATE SYSTEM ADMIN
-  if (section === "createSystemAdmin") {
-
-    html = `
-    <div class="card">
-      <h3>Create System Admin</h3>
-
-      <input id="sysId" placeholder="User ID"><br>
-      <input id="sysName" placeholder="Name"><br>
-      <input id="sysPass" type="password" placeholder="Password"><br>
-
-      <button class="main" onclick="createSystemAdmin()">Create</button>
-      <p id="msg"></p>
-    </div>`;
-  }
-
-  // ADMINS
-  if (section === "admins") {
-
-    let users = (getUsers() || []).filter(u=>u.role==="admin");
-
-    html = `
-    <div class="card">
-      <h3>Admins</h3>
-      Total: ${users.length}
-    </div>`;
-  }
-
-  // USERS
-  if (section === "users") {
-
-    let users = (getUsers() || []).filter(u=>u.role==="user");
-
-    html = `
-    <div class="card">
-      <h3>Users</h3>
-      Total: ${users.length}
-    </div>`;
-  }
-
-  // SYSTEM CONTROL
+  // ================= SYSTEM =================
   if (section === "system") {
 
     let s = getSystemSettings() || {};
@@ -214,96 +149,105 @@ function loadSection(section) {
     <div class="card">
       <h3>System Control</h3>
 
-      Lock: ${s.lockMode ? "🔴":"🟢"}<br>
-      Admin: ${s.adminAccess !== false ? "🟢":"🔴"}<br>
-      Register: ${s.registrationOpen !== false ? "🟢":"🔴"}<br>
-      Withdraw: ${s.withdrawStop ? "🔴":"🟢"}<br><br>
+      Lock: ${s.lockMode ? "🔴" : "🟢"}<br>
+      Admin: ${s.adminAccess !== false ? "🟢" : "🔴"}<br>
+      Register: ${s.registrationOpen !== false ? "🟢" : "🔴"}<br>
+
+      <br>
 
       <button onclick="toggle('lockMode')">Lock</button>
       <button onclick="toggle('adminAccess')">Admin</button>
       <button onclick="toggle('registrationOpen')">Register</button>
-      <button onclick="toggle('withdrawStop')">Withdraw</button>
     </div>`;
   }
 
-  // RESET
-  if (section === "reset") {
+  // ================= ADMINS =================
+  if (section === "admins") {
+
+    let users = (getUsers() || []).filter(u => u.role !== "user");
+
+    let rows = users.map(u => `
+      <tr>
+        <td>${u.userId}</td>
+        <td>${u.role}</td>
+        <td>${u.status || "active"}</td>
+      </tr>
+    `).join("");
 
     html = `
     <div class="card">
-      <h3>System Reset</h3>
-
-      <button onclick="softReset()">Soft Reset</button>
-      <button onclick="fullReset()">Full Reset</button>
+      <h3>All Admins</h3>
+      <table>
+        <tr><th>ID</th><th>Role</th><th>Status</th></tr>
+        ${rows}
+      </table>
     </div>`;
   }
 
-  document.getElementById("contentArea").innerHTML = html;
+  // ================= USERS =================
+  if (section === "users") {
+
+    let users = (getUsers() || []).filter(u => u.role === "user");
+
+    let rows = users.map(u => `
+      <tr>
+        <td>${u.userId}</td>
+        <td>${u.status || "active"}</td>
+      </tr>
+    `).join("");
+
+    html = `
+    <div class="card">
+      <h3>Users</h3>
+      <table>
+        <tr><th>ID</th><th>Status</th></tr>
+        ${rows}
+      </table>
+    </div>`;
+  }
+
+  // ================= PLANS =================
+  if (section === "plans") {
+    html = `
+    <div class="card">
+      <h3>Plans Overview</h3>
+      <p>👉 Add plan system here (Upgrade / Repurchase)</p>
+    </div>`;
+  }
+
+  // ================= Q&A =================
+  if (section === "qa") {
+    html = `
+    <div class="card">
+      <h3>Common Q&A</h3>
+      <p>Q: How system works?</p>
+      <p>A: Digital platform + internal logic</p>
+    </div>`;
+  }
+
+  document.getElementById("mainContent").innerHTML = html;
 }
 
-// CREATE SYSTEM ADMIN
-function createSystemAdmin() {
-
-  let id = document.getElementById("sysId").value.trim();
-  let name = document.getElementById("sysName").value.trim();
-  let pass = document.getElementById("sysPass").value.trim();
-
-  if (!id || !name || !pass) return showMsg("Fill all");
-
-  let users = getUsers() || [];
-
-  if (users.find(u=>u.userId.toLowerCase()===id.toLowerCase()))
-    return showMsg("Exists");
-
-  users.push({
-    userId:id,
-    username:name,
-    password:btoa(pass),
-    role:"system_admin",
-    status:"active"
-  });
-
-  saveUsers(users);
-
-  showMsg("Created");
-}
-
-// HELPERS
-function toggle(key){
+// TOGGLE
+function toggle(key) {
   let s = getSystemSettings() || {};
   s[key] = !s[key];
   localStorage.setItem("systemSettings", JSON.stringify(s));
   loadSection("system");
 }
 
-function softReset(){
-  localStorage.removeItem("activityLogs");
-  alert("Done");
-}
-
-function fullReset(){
-  let users = (getUsers()||[]).filter(u=>u.role==="super_admin");
-  saveUsers(users);
-  alert("Reset Done");
-  location.reload();
-}
-
-function showMsg(m){
-  document.getElementById("msg").innerText = m;
-}
-
-function logout(){
+// LOGOUT
+function logout() {
   localStorage.removeItem("loggedInSuperAdmin");
-  location.href="super_admin_login.html";
+  location.href = "super_admin_login.html";
 }
 
-// INIT
-loadSection("dashboard");
+// DEFAULT LOAD
+loadSection("overview");
 
 </script>
 
 </body>
 </html>
-
 
 
