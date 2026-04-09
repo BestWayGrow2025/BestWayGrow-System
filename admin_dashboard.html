@@ -82,13 +82,11 @@
 
 <div class="container">
 
-  <!-- PROFILE -->
   <div class="card">
     <h3>Profile</h3>
     <p id="profile"></p>
   </div>
 
-  <!-- SYSTEM CONTROL -->
   <div class="card">
     <h3>System Control</h3>
     <p id="system"></p>
@@ -98,7 +96,6 @@
     <button onclick="toggleSystem('repurchaseOpen')">Repurchase</button>
   </div>
 
-  <!-- COUNTS -->
   <div class="card">
     <h3>Overview</h3>
 
@@ -106,7 +103,6 @@
     <div>Active Users <div class="stat" id="activeUsers">0</div></div>
   </div>
 
-  <!-- PIN CONTROL (FIXED LINKS) -->
   <div class="card">
     <h3>PIN Control</h3>
 
@@ -114,7 +110,6 @@
     <button onclick="goTo('admin_pin_panel.html')">Create PIN</button>
   </div>
 
-  <!-- USER CONTROL (FIXED LINKS) -->
   <div class="card">
     <h3>User Control</h3>
 
@@ -122,7 +117,6 @@
     <button onclick="goTo('admin_kyc.html')">KYC Verification</button>
   </div>
 
-  <!-- QUICK VIEW -->
   <div class="card">
     <h3>Quick View</h3>
 
@@ -134,7 +128,6 @@
 
 </div>
 
-<!-- CORE -->
 <script src="core_system.js"></script>
 <script src="activity_log.js"></script>
 
@@ -144,7 +137,7 @@
 if (typeof initCoreSystem === "function") {
   initCoreSystem();
 } else {
-  alert("❌ core_system.js not loaded");
+  alert("core_system.js not loaded");
   throw new Error("STOP");
 }
 
@@ -152,12 +145,19 @@ if (typeof initCoreSystem === "function") {
 let admin = protectPage({ role: "admin" });
 if (!admin) throw new Error("STOP");
 
+// CACHE DOM (PRO)
+const welcome = document.getElementById("welcome");
+const profile = document.getElementById("profile");
+const systemBox = document.getElementById("system");
+const totalUsersBox = document.getElementById("totalUsers");
+const activeUsersBox = document.getElementById("activeUsers");
+const dataPanel = document.getElementById("dataPanel");
+
 // WELCOME
-document.getElementById("welcome").innerText =
-  "Welcome ADMIN (" + admin.userId + ")";
+welcome.innerText = "Welcome ADMIN (" + admin.userId + ")";
 
 // PROFILE
-document.getElementById("profile").innerHTML = `
+profile.innerHTML = `
   ID: ${admin.userId} <br>
   Name: ${admin.username || admin.userId} <br>
   Status: ${admin.status}
@@ -167,22 +167,19 @@ document.getElementById("profile").innerHTML = `
 function loadSystem() {
   let s = getSystemSettings() || {};
 
-  document.getElementById("system").innerHTML = `
+  systemBox.innerHTML = `
     Register: ${s.registrationOpen !== false ? "🟢" : "🔴"} <br>
     Upgrade: ${s.upgradesOpen !== false ? "🟢" : "🔴"} <br>
     Repurchase: ${s.repurchaseOpen !== false ? "🟢" : "🔴"}
   `;
 }
 
-// TOGGLE (SECURE)
+// TOGGLE
 function toggleSystem(key) {
 
   let allowed = ["registrationOpen","upgradesOpen","repurchaseOpen"];
 
-  if (!allowed.includes(key)) {
-    alert("Not allowed");
-    return;
-  }
+  if (!allowed.includes(key)) return alert("Not allowed");
 
   let s = getSystemSettings() || {};
   s[key] = !s[key];
@@ -196,16 +193,16 @@ function toggleSystem(key) {
   loadSystem();
 }
 
-// COUNTS
+// COUNTS ✅ FINAL FIX
 function loadCounts() {
 
   let users = getUsers() || [];
 
-  document.getElementById("totalUsers").innerText =
+  totalUsersBox.innerText =
     users.filter(u => u.role === "user").length;
 
-  document.getElementById("activeUsers").innerText =
-    users.filter(u => u.status === "active").length;
+  activeUsersBox.innerText =
+    users.filter(u => u.role === "user" && u.status === "active").length;
 }
 
 // QUICK VIEW
@@ -213,10 +210,7 @@ function showData(role) {
 
   let users = (getUsers() || []).filter(u => u.role === role);
 
-  if (!users.length) {
-    document.getElementById("dataPanel").innerHTML = "No Data";
-    return;
-  }
+  if (!users.length) return dataPanel.innerHTML = "No Data";
 
   let html = `<table>
     <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
@@ -232,7 +226,7 @@ function showData(role) {
 
   html += "</table>";
 
-  document.getElementById("dataPanel").innerHTML = html;
+  dataPanel.innerHTML = html;
 }
 
 // NAV
@@ -246,11 +240,11 @@ function logout() {
   window.location.href = "admin_login.html";
 }
 
-// AUTO REFRESH
+// AUTO REFRESH ✅ FIXED
 setInterval(() => {
   loadSystem();
   loadCounts();
-}, 3000);
+}, 8000);
 
 // INIT
 loadSystem();
