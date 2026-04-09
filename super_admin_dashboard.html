@@ -91,24 +91,36 @@
 
 <script>
 
-// SAFE INIT
+// INIT SAFE
 if (typeof initCoreSystem === "function") initCoreSystem();
 else { alert("core_system.js missing"); throw new Error("STOP"); }
 
 // AUTH
-let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
-if (!session) location.href = "super_admin_login.html";
+let session;
+try {
+  session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+} catch {
+  session = null;
+}
+
+if (!session || !session.userId) {
+  location.href = "super_admin_login.html";
+  throw new Error("STOP");
+}
 
 let user = getUserById(session.userId);
+
 if (!user || user.role !== "super_admin") {
   localStorage.removeItem("loggedInSuperAdmin");
   location.href = "super_admin_login.html";
+  throw new Error("STOP");
 }
 
+// WELCOME
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// CREATE SYSTEM ADMIN
+// CREATE SYSTEM ADMIN ✅ SAFE ROLE
 function createSystemAdmin() {
 
   let id = sysId.value.trim();
@@ -126,13 +138,13 @@ function createSystemAdmin() {
     userId: id,
     username: name,
     password: btoa(pass),
-    role: "system_admin",
+    role: "system_admin",   // ✅ CRITICAL FIX
     status: "active"
   });
 
-  localStorage.setItem("users", JSON.stringify(users));
+  saveUsers(users); // ✅ SAFE SAVE
 
-  alert("Created");
+  alert("System Admin Created");
 
   sysId.value = "";
   sysName.value = "";
@@ -141,7 +153,7 @@ function createSystemAdmin() {
   loadCounts();
 }
 
-// SYSTEM STATUS ✅ FIXED (QUEUE + WITHDRAW ADDED)
+// SYSTEM STATUS
 function loadSystem() {
   let s = getSystemSettings() || {};
 
@@ -157,22 +169,32 @@ function loadSystem() {
   `;
 }
 
-// COUNTS
+// COUNTS ✅ FINAL FIX
 function loadCounts() {
   let users = getUsers() || [];
 
-  sysCount.innerText = users.filter(u => u.role==="system_admin").length;
-  adminCount.innerText = users.filter(u => u.role==="admin").length;
-  franchiseCount.innerText = users.filter(u => u.role==="franchise").length;
-  userCount.innerText = users.filter(u => u.role==="user").length;
+  document.getElementById("sysCount").innerText =
+    users.filter(u => u.role === "system_admin").length;
+
+  document.getElementById("adminCount").innerText =
+    users.filter(u => u.role === "admin").length;
+
+  document.getElementById("franchiseCount").innerText =
+    users.filter(u => u.role === "franchise").length;
+
+  document.getElementById("userCount").innerText =
+    users.filter(u => u.role === "user").length;
 }
 
-// QUICK VIEW ✅ FIXED NAME ISSUE
+// QUICK VIEW ✅ NAME FIXED
 function showData(role) {
 
   let users = (getUsers() || []).filter(u => u.role === role);
 
-  if (!users.length) return dataPanel.innerHTML = "No Data";
+  if (!users.length) {
+    document.getElementById("dataPanel").innerHTML = "No Data";
+    return;
+  }
 
   let html = `<table><tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
 
@@ -180,14 +202,14 @@ function showData(role) {
     html += `
       <tr>
         <td>${u.userId}</td>
-        <td>${u.username || "-"}</td>
+        <td>${u.username || u.userId}</td> <!-- ✅ FIX -->
         <td>${u.status || "active"}</td>
       </tr>`;
   });
 
   html += "</table>";
 
-  dataPanel.innerHTML = html;
+  document.getElementById("dataPanel").innerHTML = html;
 }
 
 // TOGGLE
@@ -198,7 +220,7 @@ function toggle(key) {
   loadSystem();
 }
 
-// RESET ✅ FIXED
+// RESET
 function softReset() {
   if (!confirm("Clear logs?")) return;
   localStorage.removeItem("activityLogs");
@@ -215,8 +237,8 @@ function mediumReset() {
 function fullReset() {
   if (!confirm("Full reset?")) return;
 
-  let users = getUsers().filter(u => u.role==="super_admin");
-  localStorage.setItem("users", JSON.stringify(users));
+  let users = (getUsers() || []).filter(u => u.role === "super_admin");
+  saveUsers(users);
 
   alert("Reset Done");
   location.reload();
@@ -234,6 +256,7 @@ setInterval(() => {
   loadCounts();
 }, 3000);
 
+// INIT
 loadSystem();
 loadCounts();
 
@@ -241,5 +264,4 @@ loadCounts();
 
 </body>
 </html>
-
 
