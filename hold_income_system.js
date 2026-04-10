@@ -1,12 +1,14 @@
 /*
 ========================================
-HOLD INCOME SYSTEM (FINAL SAFE v2)
+HOLD INCOME SYSTEM V7 (FINAL LOCKED)
 ========================================
 ✔ Duplicate safe
 ✔ Memory safe
+✔ Wallet controlled (SAFE)
+✔ System lock protected
 ✔ Auto processor safe
-✔ Expire + release logic fixed
-✔ Production ready
+✔ Expire + release logic
+✔ Production locked
 ========================================
 */
 
@@ -16,7 +18,7 @@ HOLD INCOME SYSTEM (FINAL SAFE v2)
 const HOLD_LIMIT = 3000;
 
 // =====================
-// 🔹 GET / SAVE HOLD DATA
+// 🔹 GET / SAVE
 // =====================
 function getHoldIncome() {
   try {
@@ -31,7 +33,6 @@ function saveHoldIncome(data) {
 
   if (!Array.isArray(data)) data = [];
 
-  // 🔒 LIMIT CONTROL
   if (data.length > HOLD_LIMIT) {
     data = data.slice(-HOLD_LIMIT);
   }
@@ -40,7 +41,7 @@ function saveHoldIncome(data) {
 }
 
 // =====================
-// 🔐 DUPLICATE PROTECTION
+// 🔐 DUPLICATE
 // =====================
 function isDuplicateHold(userId, amount, reason) {
 
@@ -55,7 +56,7 @@ function isDuplicateHold(userId, amount, reason) {
 }
 
 // =====================
-// ➕ ADD HOLD INCOME
+// ➕ ADD HOLD
 // =====================
 function addHoldIncome(userId, amount, reason) {
 
@@ -70,7 +71,7 @@ function addHoldIncome(userId, amount, reason) {
   holds.push({
     id: "H" + Date.now(),
     userId,
-    amount,
+    amount: parseFloat(amount.toFixed(2)),
     reason: reason || "",
     time: new Date().toISOString(),
     status: "HOLD"
@@ -80,7 +81,33 @@ function addHoldIncome(userId, amount, reason) {
 }
 
 // =====================
-// 🔄 RELEASE HOLD INCOME
+// 🔒 SAFE WALLET CREDIT
+// =====================
+function safeWalletCredit(userId, amount, note) {
+
+  try {
+
+    // 🔒 SYSTEM LOCK
+    if (typeof getSystemSettings === "function") {
+      let s = getSystemSettings();
+      if (s && s.lockMode) return;
+    }
+
+    if (typeof creditWallet === "function") {
+      creditWallet(userId, amount, note);
+    }
+
+  } catch (err) {
+
+    if (typeof addCriticalIncomeLog === "function") {
+      addCriticalIncomeLog("Hold wallet error: " + err.message);
+    }
+
+  }
+}
+
+// =====================
+// 🔄 RELEASE USER
 // =====================
 function releaseHoldIncome(userId) {
 
@@ -93,7 +120,7 @@ function releaseHoldIncome(userId) {
 
       if (typeof isUserActive === "function" && isUserActive(userId)) {
 
-        creditWallet(userId, h.amount, "Released: " + h.reason);
+        safeWalletCredit(userId, h.amount, "Released: " + h.reason);
 
         h.status = "RELEASED";
         h.releaseTime = new Date().toISOString();
@@ -121,7 +148,7 @@ function releaseAllHoldIncome() {
 
       if (typeof isUserActive === "function" && isUserActive(h.userId)) {
 
-        creditWallet(h.userId, h.amount, "Released: " + h.reason);
+        safeWalletCredit(h.userId, h.amount, "Released: " + h.reason);
 
         h.status = "RELEASED";
         h.releaseTime = new Date().toISOString();
@@ -136,7 +163,7 @@ function releaseAllHoldIncome() {
 }
 
 // =====================
-// ❌ EXPIRE HOLD
+// ❌ EXPIRE
 // =====================
 function expireHoldIncome(days = 30) {
 
@@ -150,9 +177,11 @@ function expireHoldIncome(days = 30) {
 
       let holdTime = new Date(h.time).getTime();
 
-      if ((now - holdTime) > (days * 24 * 60 * 60 * 1000)) {
+      if ((now - holdTime) > (days * 86400000)) {
+
         h.status = "EXPIRED";
         h.expireTime = new Date().toISOString();
+
         updated = true;
       }
     }
@@ -163,7 +192,7 @@ function expireHoldIncome(days = 30) {
 }
 
 // =====================
-// 🔍 USER SUMMARY
+// 📊 SUMMARY
 // =====================
 function getUserHoldSummary(userId) {
 
@@ -193,21 +222,32 @@ function getUserHoldSummary(userId) {
 }
 
 // =====================
-// 🔄 AUTO PROCESSOR
+// 🔄 AUTO PROCESSOR SAFE
 // =====================
 function startHoldProcessor() {
 
-  if (window.holdProcessorRunning) return;
-  window.holdProcessorRunning = true;
+  if (window.__holdProcessorStarted) return;
+
+  window.__holdProcessorStarted = true;
 
   setInterval(() => {
-    releaseAllHoldIncome();
-    expireHoldIncome(30);
-  }, 5000);
+
+    try {
+      releaseAllHoldIncome();
+      expireHoldIncome(30);
+    } catch (err) {
+
+      if (typeof addCriticalIncomeLog === "function") {
+        addCriticalIncomeLog("Hold processor error: " + err.message);
+      }
+
+    }
+
+  }, 10000); // safer interval
 }
 
 // =====================
-// 🚀 START
+// 🚀 INIT
 // =====================
 startHoldProcessor();
 
