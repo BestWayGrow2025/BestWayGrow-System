@@ -1,14 +1,13 @@
 /*
 ========================================
-INCOME LOG SYSTEM V7 (LOCKED)
+INCOME LOG SYSTEM V7 (FINAL LOCKED)
 ========================================
 ✔ Pure logging system (NO wallet credit)
 ✔ Duplicate protected
 ✔ Memory safe
-✔ Type normalized
-✔ System lock safe
-✔ Income control safe
-✔ Hold system ready (optional)
+✔ No business logic
+✔ No control logic
+✔ Hold system optional
 ✔ Production locked
 ========================================
 */
@@ -45,21 +44,6 @@ function saveIncomeLogs(logs) {
 }
 
 // ===============================
-// 🔹 TYPE NORMALIZER
-// ===============================
-function normalizeIncomeType(type) {
-
-  if (!type) return "unknown";
-
-  type = String(type).toLowerCase();
-
-  if (type === "upgrade") return "ugli";
-  if (type === "repurchase") return "rli";
-
-  return type;
-}
-
-// ===============================
 // 🔹 ADD LOG (CORE ENTRY)
 // ===============================
 function addIncomeLog(data) {
@@ -69,26 +53,13 @@ function addIncomeLog(data) {
   let amount = Number(data.amount);
   if (isNaN(amount) || amount <= 0) return;
 
-  // 🔒 SYSTEM LOCK
-  if (typeof getSystemSettings === "function") {
-    let sys = getSystemSettings();
-    if (sys && sys.lockMode) return;
-  }
-
-  // 🔒 INCOME CONTROL
-  if (typeof isIncomeAllowed === "function") {
-    if (!isIncomeAllowed(data.type)) return;
-  }
-
   let logs = getIncomeLogs();
-
-  let type = normalizeIncomeType(data.type);
 
   // 🔒 DUPLICATE PROTECTION
   let exists = logs.some(l =>
     l.userId === data.userId &&
     Number(l.amount) === amount &&
-    l.type === type &&
+    l.type === data.type &&
     Math.abs(new Date() - new Date(l.time)) < 3000
   );
 
@@ -99,7 +70,7 @@ function addIncomeLog(data) {
     logId: "LOG_" + Date.now(),
 
     userId: data.userId || "UNKNOWN",
-    type: type,
+    type: data.type || "unknown",
 
     amount: parseFloat(amount.toFixed(2)),
 
@@ -113,7 +84,7 @@ function addIncomeLog(data) {
   saveIncomeLogs(logs);
 
   // ===============================
-  // 🔥 HOLD SYSTEM (OPTIONAL ONLY)
+  // 🔥 HOLD SYSTEM (OPTIONAL)
   // ===============================
   try {
 
@@ -157,7 +128,6 @@ function filterIncomeLogs({ userId, type }) {
   }
 
   if (type) {
-    type = normalizeIncomeType(type);
     logs = logs.filter(l => l.type === type);
   }
 
