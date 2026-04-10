@@ -1,24 +1,61 @@
 /*
 ========================================
-INCOME ENGINE V7 (MASTER ENGINE)
+COMMISSION ENGINE V7 (FINAL LOCKED)
 ========================================
-✔ Wallet integrated (creditWallet)
-✔ System lock protection
-✔ Income control integrated
-✔ Duplicate safe (basic guard)
-✔ Activity logging
-✔ BV based exact logic (unchanged)
-✔ CTOR system
-✔ Production ready
+✔ ❌ NO income calculation
+✔ ❌ NO duplicate logic
+✔ ✅ income_engine.js is ONLY MASTER
+✔ Production locked
 ========================================
 */
 
-// ================= COMMON CALC =================
+const COMMISSION_CONFIG = {
+  UGLI_LEVEL_1: 23.81,
+  UGLI_LEVEL_OTHERS: 1.19,
+  MAX_LEVELS: 30,
+  CTOR_PERCENT: 25
+};
+
+function processIncome() {
+  console.error("❌ BLOCKED: Use income_engine.js ONLY");
+}
+
+function payUGLIIncome() {
+  console.error("❌ BLOCKED");
+}
+
+function payRLIIncome() {
+  console.error("❌ BLOCKED");
+}
+
+function addToCTORPool() {
+  console.error("❌ BLOCKED");
+}
+
+
+✅ 2. income_engine.js → USE THIS FINAL
+/*
+========================================
+INCOME ENGINE V7 (MASTER CLEAN)
+========================================
+✔ Only calculation
+✔ No wallet logic
+✔ No duplicate system
+✔ Uses income_log_system
+========================================
+*/
+
+const INCOME_CONFIG = {
+  UGLI_LEVEL_1: 23.81,
+  UGLI_LEVEL_OTHERS: 1.19,
+  MAX_LEVELS: 30,
+  CTOR_PERCENT: 25
+};
+
 function calc(bv, percent) {
   return parseFloat(((bv * percent) / 100).toFixed(2));
 }
 
-// ================= SAFE INCOME =================
 function safeIncome(data) {
 
   if (!data) return;
@@ -33,32 +70,20 @@ function safeIncome(data) {
 
   if (safeData.amount <= 0) return;
 
-  // 🔒 SYSTEM LOCK
-  let settings = getSystemSettings();
-  if (settings.lockMode) return;
+  if (typeof getSystemSettings === "function") {
+    let s = getSystemSettings();
+    if (s && s.lockMode) return;
+  }
 
-  // 🔒 INCOME CONTROL (if exists)
   if (typeof isIncomeAllowed === "function") {
     if (!isIncomeAllowed(safeData.type)) return;
   }
 
-  // 💰 CREDIT WALLET (MAIN FIX)
-  if (safeData.userId !== "SYSTEM") {
-    creditWallet(safeData.userId, safeData.amount, safeData.type);
-  }
-
-  // 🧾 INCOME LOG
   if (typeof addIncomeLog === "function") {
     addIncomeLog(safeData);
   }
-
-  // 📊 ACTIVITY LOG
-  if (typeof addLog === "function") {
-    addLog("INCOME " + safeData.amount + " (" + safeData.type + ")", safeData.userId);
-  }
 }
 
-// ================= HELPERS =================
 function getUser(userId) {
   return getUsers().find(u => u.userId === userId);
 }
@@ -68,30 +93,28 @@ function getIntroducer(user) {
   return getUser(user.introducerId);
 }
 
-// ================= CTOR =================
 function distributeCTOR(userId, totalCTOR, type) {
 
-  const CTOR_SPLIT = [25, 15, 12, 6,6,6,6,6,6,6,6];
+  const CTOR_SPLIT = [25,15,12,6,6,6,6,6,6,6,6];
 
   totalCTOR = parseFloat(Number(totalCTOR).toFixed(2));
 
   CTOR_SPLIT.forEach((percent, index) => {
 
-    let amount = parseFloat(((totalCTOR * percent) / 100).toFixed(2));
+    let amount = calc(totalCTOR, percent);
     if (amount <= 0) return;
 
     safeIncome({
-      userId: "SYSTEM", // keep as system pool
+      userId: "SYSTEM",
       type: "ctor",
       amount: amount,
       sourceUser: userId,
-      note: `${type.toUpperCase()} CTOR ${index + 1} (${percent}%)`
+      note: `${type.toUpperCase()} CTOR ${index + 1}`
     });
 
   });
 }
 
-// ================= UPGRADE =================
 function processUpgradeIncome(userId, bv) {
 
   let current = getUser(userId);
@@ -99,15 +122,16 @@ function processUpgradeIncome(userId, bv) {
 
   let level = 1;
 
-  while (level <= 30) {
+  while (level <= INCOME_CONFIG.MAX_LEVELS) {
 
     let parent = getIntroducer(current);
     if (!parent) break;
 
-    let income = 0;
+    let percent = (level === 1)
+      ? INCOME_CONFIG.UGLI_LEVEL_1
+      : INCOME_CONFIG.UGLI_LEVEL_OTHERS;
 
-    if (level === 1) income = calc(bv, 23.81);
-    else income = calc(bv, 1.19);
+    let income = calc(bv, percent);
 
     if (income > 0) {
       safeIncome({
@@ -123,11 +147,10 @@ function processUpgradeIncome(userId, bv) {
     level++;
   }
 
-  let totalCTOR = calc(bv, 25);
+  let totalCTOR = calc(bv, INCOME_CONFIG.CTOR_PERCENT);
   distributeCTOR(userId, totalCTOR, "upgrade");
 }
 
-// ================= REPURCHASE =================
 function processRepurchaseIncome(userId, bv) {
 
   let current = getUser(userId);
@@ -137,11 +160,11 @@ function processRepurchaseIncome(userId, bv) {
   let rliPool = calc(usableBV, 40);
   let ctorPool = calc(usableBV, 60);
 
-  let perLevel = parseFloat((rliPool / 30).toFixed(2));
+  let perLevel = parseFloat((rliPool / INCOME_CONFIG.MAX_LEVELS).toFixed(2));
 
   let level = 1;
 
-  while (level <= 30) {
+  while (level <= INCOME_CONFIG.MAX_LEVELS) {
 
     let parent = getIntroducer(current);
     if (!parent) break;
@@ -163,26 +186,18 @@ function processRepurchaseIncome(userId, bv) {
   distributeCTOR(userId, ctorPool, "repurchase");
 }
 
-// ================= MASTER =================
 function processIncome(type, userId, bv) {
 
   bv = Number(bv);
 
   if (!userId || isNaN(bv) || bv <= 0) return;
 
-  let settings = getSystemSettings();
-  if (settings.lockMode) {
-    console.warn("System Locked");
-    return;
-  }
-
   if (type === "upgrade") {
     processUpgradeIncome(userId, bv);
   }
-
   else if (type === "repurchase") {
     processRepurchaseIncome(userId, bv);
   }
 
-  console.log("✅ Income processed:", type, userId);
+  console.log("✅ Income processed:", type);
 }
