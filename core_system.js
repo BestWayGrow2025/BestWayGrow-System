@@ -1,49 +1,72 @@
 /* ===============================
-   CORE SYSTEM (FINAL FIXED)
+   CORE SYSTEM V2 (MASTER FINAL)
 =============================== */
 
 // ===================================
-// 🔹 STORAGE HELPERS
+// 🔹 SAFE STORAGE HELPERS
+// ===================================
+function safeGet(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || fallback;
+  } catch {
+    localStorage.setItem(key, JSON.stringify(fallback));
+    return fallback;
+  }
+}
+
+function safeSet(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+// ===================================
+// 🔹 USERS
 // ===================================
 function getUsers() {
-  try {
-    return JSON.parse(localStorage.getItem("users") || "[]");
-  } catch {
-    localStorage.setItem("users", "[]");
-    return [];
-  }
+  return safeGet("users", []);
 }
 
 function saveUsers(users) {
-  localStorage.setItem("users", JSON.stringify(users));
+  safeSet("users", users);
 }
 
 // ===================================
-// 🔹 SYSTEM SETTINGS
+// 🔹 SYSTEM SETTINGS (EXPANDED)
 // ===================================
 function getSystemSettings() {
-  try {
-    let stored = JSON.parse(localStorage.getItem("systemSettings") || "{}");
 
-    let defaults = {
-      lockMode: false,
-      registrationOpen: true
-    };
+  let defaults = {
+    lockMode: false,
+    registrationOpen: true,
+    adminAccess: true,
+    upgradesOpen: true,
+    repurchaseOpen: true,
+    queueStop: false
+  };
 
-    let merged = { ...defaults, ...stored };
-    localStorage.setItem("systemSettings", JSON.stringify(merged));
+  let stored = safeGet("systemSettings", {});
+  let merged = { ...defaults, ...stored };
 
-    return merged;
+  safeSet("systemSettings", merged);
+  return merged;
+}
 
-  } catch {
-    let clean = {
-      lockMode: false,
-      registrationOpen: true
-    };
+// ===================================
+// 🔹 ACTIVITY LOG SYSTEM (NEW)
+// ===================================
+function getLogs() {
+  return safeGet("activityLogs", []);
+}
 
-    localStorage.setItem("systemSettings", JSON.stringify(clean));
-    return clean;
-  }
+function addLog(action, userId) {
+  let logs = getLogs();
+
+  logs.push({
+    action,
+    userId,
+    time: new Date().toISOString()
+  });
+
+  safeSet("activityLogs", logs);
 }
 
 // ===================================
@@ -65,6 +88,7 @@ function getChildren(userId) {
 // 🔹 USER ID GENERATOR
 // ===================================
 function generateUserId() {
+
   let users = getUsers();
   let existingIds = users.map(u => u.userId);
 
@@ -94,7 +118,7 @@ function isValidIntroducer(id) {
 }
 
 // ===================================
-// 🔐 PAGE SECURITY (FIXED)
+// 🔐 PAGE SECURITY (IMPROVED)
 // ===================================
 function protectPage(config) {
 
@@ -105,14 +129,21 @@ function protectPage(config) {
     super_admin: "loggedInSuperAdmin"
   };
 
-  let key = sessionKey[config.role];
+  const loginPage = {
+    user: "user_login.html",
+    admin: "admin_login.html",
+    system_admin: "system_admin_login.html",
+    super_admin: "super_admin_login.html"
+  };
 
-  let raw = localStorage.getItem(key);
-  let session = raw ? JSON.parse(raw) : null;
+  let key = sessionKey[config.role];
+  let redirect = loginPage[config.role];
+
+  let session = safeGet(key, null);
 
   if (!session || !session.userId) {
     alert("Login required");
-    window.location.href = "user_login.html";
+    window.location.href = redirect;
     return null;
   }
 
@@ -121,7 +152,7 @@ function protectPage(config) {
   if (!user || user.role !== config.role) {
     localStorage.removeItem(key);
     alert("Access denied");
-    window.location.href = "user_login.html";
+    window.location.href = redirect;
     return null;
   }
 
@@ -129,13 +160,13 @@ function protectPage(config) {
 }
 
 // ===================================
-// 🔹 INIT SYSTEM (CRITICAL FIX)
+// 🔹 INIT SYSTEM (MASTER INIT)
 // ===================================
 function initCoreSystem() {
 
-  let settingsCheck = getSystemSettings();
+  let settings = getSystemSettings();
 
-  if (settingsCheck.lockMode === true) {
+  if (settings.lockMode === true) {
     alert("🚫 System Locked");
     throw new Error("System Locked");
   }
@@ -155,15 +186,15 @@ function initCoreSystem() {
     });
   }
 
-  // SYSTEM ADMIN ✅ FIXED ROLE + LINK
+  // SYSTEM ADMIN
   if (!users.find(u => u.userId === "BWG000001")) {
     users.push({
       userId: "BWG000001",
       username: "System Admin",
       password: btoa("1234"),
-      role: "system_admin", // 🔥 FIXED
-      introducerId: "BWG000000", // ✅ LINKED
-      sponsorId: "BWG000000",   // ✅ LINKED
+      role: "system_admin",
+      introducerId: "BWG000000",
+      sponsorId: "BWG000000",
       position: "L",
       createdAt: Date.now(),
       leftChild: null,
