@@ -1,14 +1,14 @@
 /*
 ========================================
-💰 INCOME CONTROL SYSTEM (FINAL PRO v4)
+💰 INCOME CONTROL SYSTEM V7 (LOCKED)
 ========================================
-✔ Safe defaults
-✔ Self-healing
-✔ Toggle safe
-✔ Activity log integrated
-✔ Corruption-proof save
-✔ Runtime protection (NEW)
-✔ Production ready
+✔ Master income switch
+✔ Type mapping (upgrade / repurchase)
+✔ Backward compatible (ugli / rli)
+✔ System lock integrated
+✔ Self-healing storage
+✔ Corruption-proof
+✔ Production locked
 ========================================
 */
 
@@ -17,8 +17,9 @@
 // =====================
 function getDefaultIncomeSettings() {
   return {
-    ugli: true,
-    rli: true,
+    incomeEnabled: true,   // 🔥 MASTER SWITCH
+    ugli: true,            // upgrade income
+    rli: true,             // repurchase income
     binary: false,
     initialized: true,
     updatedAt: new Date().toISOString()
@@ -38,7 +39,6 @@ function getIncomeSettings() {
     };
 
     localStorage.setItem("incomeSettings", JSON.stringify(merged));
-
     return merged;
 
   } catch {
@@ -55,6 +55,8 @@ function saveIncomeSettings(data) {
     ...getDefaultIncomeSettings(),
     ...(data || {})
   };
+
+  safe.updatedAt = new Date().toISOString();
 
   localStorage.setItem("incomeSettings", JSON.stringify(safe));
 }
@@ -92,16 +94,48 @@ function isBinaryEnabled() {
   return getIncomeSettings().binary === true;
 }
 
+function isIncomeMasterEnabled() {
+  return getIncomeSettings().incomeEnabled === true;
+}
+
 // =====================
-// 🔥 CORE GUARD (NEW)
+// 🔥 TYPE NORMALIZER (V7 FIX)
+// =====================
+function normalizeIncomeType(type) {
+
+  if (!type) return "";
+
+  type = String(type).toLowerCase();
+
+  if (type === "upgrade") return "ugli";
+  if (type === "repurchase") return "rli";
+
+  return type;
+}
+
+// =====================
+// 🔥 CORE GUARD (V7)
 // =====================
 function isIncomeAllowed(type) {
 
+  // 🔒 SYSTEM LOCK
+  if (typeof getSystemSettings === "function") {
+    let sys = getSystemSettings();
+    if (sys && sys.lockMode) return false;
+  }
+
+  // 🔒 MASTER SWITCH
+  if (!isIncomeMasterEnabled()) return false;
+
+  // 🔒 SYSTEM SAFE
   if (!isIncomeSystemSafe()) return false;
 
-  if (type === "ugli") return isUGLIEnabled();
-  if (type === "rli") return isRLIEnabled();
-  if (type === "binary") return isBinaryEnabled();
+  // 🔄 NORMALIZE TYPE
+  let t = normalizeIncomeType(type);
+
+  if (t === "ugli") return isUGLIEnabled();
+  if (t === "rli") return isRLIEnabled();
+  if (t === "binary") return isBinaryEnabled();
 
   return false;
 }
@@ -109,12 +143,24 @@ function isIncomeAllowed(type) {
 // =====================
 // 🔘 ADMIN CONTROL
 // =====================
+function toggleMasterIncome(adminId = "ADMIN") {
+
+  let s = getIncomeSettings();
+
+  s.incomeEnabled = !s.incomeEnabled;
+
+  saveIncomeSettings(s);
+
+  if (typeof logActivity === "function") {
+    logActivity(adminId, "ADMIN", "MASTER INCOME → " + (s.incomeEnabled ? "ON" : "OFF"));
+  }
+}
+
 function toggleUGLI(adminId = "ADMIN") {
 
   let s = getIncomeSettings();
 
   s.ugli = !s.ugli;
-  s.updatedAt = new Date().toISOString();
 
   saveIncomeSettings(s);
 
@@ -128,7 +174,6 @@ function toggleRLI(adminId = "ADMIN") {
   let s = getIncomeSettings();
 
   s.rli = !s.rli;
-  s.updatedAt = new Date().toISOString();
 
   saveIncomeSettings(s);
 
@@ -142,7 +187,6 @@ function toggleBinary(adminId = "ADMIN") {
   let s = getIncomeSettings();
 
   s.binary = !s.binary;
-  s.updatedAt = new Date().toISOString();
 
   saveIncomeSettings(s);
 
@@ -163,7 +207,8 @@ function isIncomeSystemSafe() {
   if (
     typeof s.ugli !== "boolean" ||
     typeof s.rli !== "boolean" ||
-    typeof s.binary !== "boolean"
+    typeof s.binary !== "boolean" ||
+    typeof s.incomeEnabled !== "boolean"
   ) {
     console.warn("⚠ Corrupted income settings → auto fixing");
     saveIncomeSettings(getDefaultIncomeSettings());
@@ -182,4 +227,5 @@ function isIncomeSystemSafe() {
 // 🚀 INIT
 // =====================
 initIncomeControl();
+
 
