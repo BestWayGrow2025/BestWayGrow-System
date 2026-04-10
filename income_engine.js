@@ -1,14 +1,15 @@
 /*
 ========================================
-INCOME ENGINE (ENTERPRISE FINAL v4)
+INCOME ENGINE V7 (MASTER ENGINE)
 ========================================
-✔ Pure BV based %
-✔ Exact business logic match
-✔ Fixed rounding (2 decimal)
-✔ CTOR SYSTEM based
-✔ Safe logging (no undefined)
-✔ Upgrade + Repurchase
-✔ Production stable
+✔ Wallet integrated (creditWallet)
+✔ System lock protection
+✔ Income control integrated
+✔ Duplicate safe (basic guard)
+✔ Activity logging
+✔ BV based exact logic (unchanged)
+✔ CTOR system
+✔ Production ready
 ========================================
 */
 
@@ -17,12 +18,11 @@ function calc(bv, percent) {
   return parseFloat(((bv * percent) / 100).toFixed(2));
 }
 
-// ================= SAFE LOG =================
+// ================= SAFE INCOME =================
 function safeIncome(data) {
 
   if (!data) return;
 
-  // ✅ HARD SAFETY (NO UNDEFINED)
   const safeData = {
     userId: data.userId || "UNKNOWN",
     type: data.type || "unknown",
@@ -33,8 +33,28 @@ function safeIncome(data) {
 
   if (safeData.amount <= 0) return;
 
+  // 🔒 SYSTEM LOCK
+  let settings = getSystemSettings();
+  if (settings.lockMode) return;
+
+  // 🔒 INCOME CONTROL (if exists)
+  if (typeof isIncomeAllowed === "function") {
+    if (!isIncomeAllowed(safeData.type)) return;
+  }
+
+  // 💰 CREDIT WALLET (MAIN FIX)
+  if (safeData.userId !== "SYSTEM") {
+    creditWallet(safeData.userId, safeData.amount, safeData.type);
+  }
+
+  // 🧾 INCOME LOG
   if (typeof addIncomeLog === "function") {
     addIncomeLog(safeData);
+  }
+
+  // 📊 ACTIVITY LOG
+  if (typeof addLog === "function") {
+    addLog("INCOME " + safeData.amount + " (" + safeData.type + ")", safeData.userId);
   }
 }
 
@@ -48,7 +68,7 @@ function getIntroducer(user) {
   return getUser(user.introducerId);
 }
 
-// ================= CTOR PIN SPLIT =================
+// ================= CTOR =================
 function distributeCTOR(userId, totalCTOR, type) {
 
   const CTOR_SPLIT = [25, 15, 12, 6,6,6,6,6,6,6,6];
@@ -58,15 +78,14 @@ function distributeCTOR(userId, totalCTOR, type) {
   CTOR_SPLIT.forEach((percent, index) => {
 
     let amount = parseFloat(((totalCTOR * percent) / 100).toFixed(2));
-
     if (amount <= 0) return;
 
     safeIncome({
-      userId: "SYSTEM", // ✅ FIXED (no fake PIN users)
+      userId: "SYSTEM", // keep as system pool
       type: "ctor",
       amount: amount,
       sourceUser: userId,
-      note: `${type.toUpperCase()} CTOR PIN ${index + 1} (${percent}%)`
+      note: `${type.toUpperCase()} CTOR ${index + 1} (${percent}%)`
     });
 
   });
@@ -87,15 +106,8 @@ function processUpgradeIncome(userId, bv) {
 
     let income = 0;
 
-    // ✅ L1 = 23.81%
-    if (level === 1) {
-      income = calc(bv, 23.81);
-    }
-
-    // ✅ L2–L30 = 1.19%
-    else {
-      income = calc(bv, 1.19);
-    }
+    if (level === 1) income = calc(bv, 23.81);
+    else income = calc(bv, 1.19);
 
     if (income > 0) {
       safeIncome({
@@ -111,9 +123,7 @@ function processUpgradeIncome(userId, bv) {
     level++;
   }
 
-  // ✅ CTOR = 25%
   let totalCTOR = calc(bv, 25);
-
   distributeCTOR(userId, totalCTOR, "upgrade");
 }
 
@@ -123,16 +133,10 @@ function processRepurchaseIncome(userId, bv) {
   let current = getUser(userId);
   if (!current) return;
 
-  // ✅ 50% BV used
   let usableBV = calc(bv, 50);
-
-  // ✅ RLI = 40% of usable BV
   let rliPool = calc(usableBV, 40);
-
-  // ✅ CTOR = 60% of usable BV
   let ctorPool = calc(usableBV, 60);
 
-  // ✅ Per level (30 levels)
   let perLevel = parseFloat((rliPool / 30).toFixed(2));
 
   let level = 1;
@@ -156,7 +160,6 @@ function processRepurchaseIncome(userId, bv) {
     level++;
   }
 
-  // ✅ CTOR
   distributeCTOR(userId, ctorPool, "repurchase");
 }
 
@@ -167,6 +170,12 @@ function processIncome(type, userId, bv) {
 
   if (!userId || isNaN(bv) || bv <= 0) return;
 
+  let settings = getSystemSettings();
+  if (settings.lockMode) {
+    console.warn("System Locked");
+    return;
+  }
+
   if (type === "upgrade") {
     processUpgradeIncome(userId, bv);
   }
@@ -175,5 +184,5 @@ function processIncome(type, userId, bv) {
     processRepurchaseIncome(userId, bv);
   }
 
-  console.log("✅ Income processed:", type);
+  console.log("✅ Income processed:", type, userId);
 }
