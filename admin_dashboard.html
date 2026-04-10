@@ -5,54 +5,96 @@
   <link rel="icon" href="data:,">
 
   <style>
-    body { font-family: Arial; margin:0; background:#f4f7f9; text-align:center; }
-
-    header {
-      background:#222;
-      color:#fff;
-      padding:15px;
+    body {
+      font-family:'Segoe UI', Arial;
+      margin:0;
+      background:linear-gradient(135deg,#eef2f7,#e6ecf5);
     }
 
+    header {
+      background:linear-gradient(135deg,#000,#434343);
+      color:#fff;
+      padding:18px;
+      text-align:center;
+      box-shadow:0 3px 10px rgba(0,0,0,0.2);
+    }
+
+    header button {
+      margin-top:10px;
+      padding:6px 12px;
+      border:none;
+      border-radius:6px;
+      background:#ff4d4d;
+      color:#fff;
+      cursor:pointer;
+    }
+
+    /* MENU */
     .menu {
       display:flex;
-      flex-wrap:wrap;
-      justify-content:center;
+      overflow-x:auto;
+      white-space:nowrap;
       background:#fff;
       padding:10px;
-      box-shadow:0 2px 5px #ccc;
+      box-shadow:0 2px 8px rgba(0,0,0,0.1);
     }
 
     .menu button {
+      flex:0 0 auto;
       margin:5px;
-      padding:8px 12px;
+      padding:10px 14px;
       border:none;
-      border-radius:5px;
+      border-radius:20px;
       cursor:pointer;
-      background:#007bff;
+      background:linear-gradient(135deg,#007bff,#00c6ff);
       color:#fff;
+      font-size:13px;
+      transition:0.3s;
     }
 
-    .container { padding:20px; }
+    .menu button:hover {
+      transform:scale(1.05);
+      opacity:0.9;
+    }
+
+    .container {
+      padding:20px;
+    }
 
     .card {
       background:#fff;
       padding:20px;
-      border-radius:10px;
-      box-shadow:0 4px 10px #ccc;
-      max-width:700px;
+      border-radius:15px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.1);
+      max-width:800px;
       margin:auto;
+      animation:fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {opacity:0; transform:translateY(10px);}
+      to {opacity:1; transform:translateY(0);}
     }
 
     table {
       width:100%;
       border-collapse: collapse;
       margin-top:10px;
+      font-size:13px;
+    }
+
+    th {
+      background:#f1f4f8;
     }
 
     th, td {
-      border:1px solid #ddd;
-      padding:8px;
-      font-size:13px;
+      border:1px solid #eee;
+      padding:10px;
+      text-align:center;
+    }
+
+    h3 {
+      margin-bottom:10px;
     }
   </style>
 </head>
@@ -60,12 +102,11 @@
 <body>
 
 <header>
-  <h2>👨‍💼 ADMIN DASHBOARD V7</h2>
+  <h2>👨‍💼 ADMIN DASHBOARD</h2>
   <p id="welcome"></p>
   <button onclick="logout()">Logout</button>
 </header>
 
-<!-- MENU -->
 <div class="menu">
   <button onclick="loadHome()">Home</button>
   <button onclick="loadUsers()">Users</button>
@@ -75,7 +116,6 @@
   <button onclick="loadSystem()">System</button>
 </div>
 
-<!-- CONTENT -->
 <div class="container">
   <div id="mainContent" class="card">Loading...</div>
 </div>
@@ -101,7 +141,7 @@ function getPins() {
   return JSON.parse(localStorage.getItem("pins") || "[]");
 }
 
-// ================= HOME =================
+// HOME
 function loadHome() {
   document.getElementById("mainContent").innerHTML = `
     <h3>Overview</h3>
@@ -110,7 +150,7 @@ function loadHome() {
   `;
 }
 
-// ================= USERS =================
+// USERS
 function loadUsers() {
 
   let users = (getUsers() || []).filter(u => u.role === "user");
@@ -132,7 +172,7 @@ function loadUsers() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= FRANCHISE =================
+// FRANCHISE
 function loadFranchise() {
 
   let f = (getUsers() || []).filter(u => u.role === "franchise");
@@ -154,7 +194,7 @@ function loadFranchise() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= PIN =================
+// PIN
 function loadPins() {
 
   let pins = getPins();
@@ -178,9 +218,8 @@ function loadPins() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= REQUEST =================
+// REQUESTS
 function loadRequests() {
-
   document.getElementById("mainContent").innerHTML = `
     <h3>Requests</h3>
     <button onclick="location.href='admin_franchise_requests.html'">Franchise Requests</button>
@@ -188,7 +227,7 @@ function loadRequests() {
   `;
 }
 
-// ================= SYSTEM =================
+// SYSTEM
 function loadSystem() {
 
   let s = getSystemSettings() || {};
@@ -214,5 +253,4 @@ loadHome();
 
 </body>
 </html>
-
 
