@@ -5,13 +5,10 @@ COMMISSION ENGINE V7 (FINAL LOCKED)
 ✔ ❌ NO income calculation
 ✔ ❌ NO duplicate logic
 ✔ ✅ income_engine.js is ONLY MASTER
-✔ ✅ Safe config reference only
-✔ ✅ Prevents double income bugs
-✔ Production locked (DO NOT MODIFY)
+✔ Production locked
 ========================================
 */
 
-// ================= CONFIG (REFERENCE ONLY) =================
 const COMMISSION_CONFIG = {
   UGLI_LEVEL_1: 23.81,
   UGLI_LEVEL_OTHERS: 1.19,
@@ -19,22 +16,20 @@ const COMMISSION_CONFIG = {
   CTOR_PERCENT: 25
 };
 
-// ================= HARD BLOCK =================
 function processIncome() {
-  console.error("❌ BLOCKED: Use income_engine.js (V7 MASTER ONLY)");
+  console.error("❌ BLOCKED: Use income_engine.js ONLY");
 }
 
-// ================= EXTRA SAFETY =================
 function payUGLIIncome() {
-  console.error("❌ BLOCKED: Moved to income_engine.js");
+  console.error("❌ BLOCKED");
 }
 
 function payRLIIncome() {
-  console.error("❌ BLOCKED: Moved to income_engine.js");
+  console.error("❌ BLOCKED");
 }
 
 function addToCTORPool() {
-  console.error("❌ BLOCKED: Moved to income_engine.js");
+  console.error("❌ BLOCKED");
 }
 
 
