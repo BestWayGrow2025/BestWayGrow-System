@@ -1,14 +1,15 @@
 /*
 ========================================
-INCOME LOG SYSTEM (ENTERPRISE FINAL v5)
+INCOME LOG SYSTEM V7 (LOCKED)
 ========================================
-✔ No undefined values
-✔ Memory safe
+✔ Pure logging system (NO wallet credit)
 ✔ Duplicate protected
-✔ Wallet + Hold sync
-✔ Safe fallback values
-✔ Consistent data structure
-✔ Production ready
+✔ Memory safe
+✔ Type normalized
+✔ System lock safe
+✔ Income control safe
+✔ Hold system ready (optional)
+✔ Production locked
 ========================================
 */
 
@@ -44,7 +45,22 @@ function saveIncomeLogs(logs) {
 }
 
 // ===============================
-// 🔹 ADD LOG (CORE ENTRY POINT)
+// 🔹 TYPE NORMALIZER
+// ===============================
+function normalizeIncomeType(type) {
+
+  if (!type) return "unknown";
+
+  type = String(type).toLowerCase();
+
+  if (type === "upgrade") return "ugli";
+  if (type === "repurchase") return "rli";
+
+  return type;
+}
+
+// ===============================
+// 🔹 ADD LOG (CORE ENTRY)
 // ===============================
 function addIncomeLog(data) {
 
@@ -53,24 +69,37 @@ function addIncomeLog(data) {
   let amount = Number(data.amount);
   if (isNaN(amount) || amount <= 0) return;
 
+  // 🔒 SYSTEM LOCK
+  if (typeof getSystemSettings === "function") {
+    let sys = getSystemSettings();
+    if (sys && sys.lockMode) return;
+  }
+
+  // 🔒 INCOME CONTROL
+  if (typeof isIncomeAllowed === "function") {
+    if (!isIncomeAllowed(data.type)) return;
+  }
+
   let logs = getIncomeLogs();
+
+  let type = normalizeIncomeType(data.type);
 
   // 🔒 DUPLICATE PROTECTION
   let exists = logs.some(l =>
     l.userId === data.userId &&
     Number(l.amount) === amount &&
-    l.type === data.type &&
+    l.type === type &&
     Math.abs(new Date() - new Date(l.time)) < 3000
   );
 
   if (exists) return;
 
-  // ✅ SAFE LOG (NO UNDEFINED)
+  // ✅ SAFE LOG
   let newLog = {
     logId: "LOG_" + Date.now(),
 
     userId: data.userId || "UNKNOWN",
-    type: data.type || "unknown",
+    type: type,
 
     amount: parseFloat(amount.toFixed(2)),
 
@@ -84,37 +113,26 @@ function addIncomeLog(data) {
   saveIncomeLogs(logs);
 
   // ===============================
-  // 🔥 AUTO SYNC (SAFE)
+  // 🔥 HOLD SYSTEM (OPTIONAL ONLY)
   // ===============================
   try {
 
-    if (typeof creditWallet === "function") {
-
-      // 🔒 HOLD CHECK
-      if (typeof isUserActive === "function" && !isUserActive(data.userId)) {
-
-        if (typeof addHoldIncome === "function") {
-          addHoldIncome(
-            newLog.userId,
-            newLog.amount,
-            newLog.type
-          );
-        }
-
-      } else {
-
-        creditWallet(
+    if (
+      typeof isUserActive === "function" &&
+      typeof addHoldIncome === "function"
+    ) {
+      if (!isUserActive(newLog.userId)) {
+        addHoldIncome(
           newLog.userId,
           newLog.amount,
           newLog.type
         );
-
       }
     }
 
   } catch (err) {
 
-    addCriticalIncomeLog("Wallet sync failed: " + err.message);
+    addCriticalIncomeLog("Hold sync failed: " + err.message);
 
   }
 }
@@ -139,6 +157,7 @@ function filterIncomeLogs({ userId, type }) {
   }
 
   if (type) {
+    type = normalizeIncomeType(type);
     logs = logs.filter(l => l.type === type);
   }
 
