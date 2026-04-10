@@ -52,6 +52,10 @@
       transition:0.3s;
     }
 
+    .menu button.active {
+      background:linear-gradient(135deg,#003f88,#0059b3);
+    }
+
     .menu button:hover {
       transform:scale(1.05);
       opacity:0.9;
@@ -71,9 +75,22 @@
       animation:fadeIn 0.3s ease;
     }
 
-    @keyframes fadeIn {
-      from {opacity:0; transform:translateY(10px);}
-      to {opacity:1; transform:translateY(0);}
+    .section-title {
+      font-size:18px;
+      font-weight:bold;
+      margin-bottom:10px;
+      border-bottom:2px solid #eee;
+      padding-bottom:5px;
+    }
+
+    .action-btn {
+      margin:5px;
+      padding:8px 14px;
+      border:none;
+      border-radius:8px;
+      background:linear-gradient(135deg,#28a745,#00c851);
+      color:#fff;
+      cursor:pointer;
     }
 
     table {
@@ -96,8 +113,9 @@
     .green { color:green; font-weight:bold; }
     .red { color:red; font-weight:bold; }
 
-    h3 {
-      margin-bottom:10px;
+    @keyframes fadeIn {
+      from {opacity:0; transform:translateY(10px);}
+      to {opacity:1; transform:translateY(0);}
     }
   </style>
 </head>
@@ -111,13 +129,13 @@
 </header>
 
 <div class="menu">
-  <button onclick="loadHome()">Home</button>
-  <button onclick="loadPins()">PIN</button>
-  <button onclick="loadUpgrade()">Upgrade</button>
-  <button onclick="loadRepurchase()">Repurchase</button>
-  <button onclick="loadWallet()">Wallet</button>
-  <button onclick="loadTree()">Tree</button>
-  <button onclick="loadTickets()">Support</button>
+  <button onclick="setActive(this);loadHome()">Home</button>
+  <button onclick="setActive(this);loadPins()">PIN</button>
+  <button onclick="setActive(this);loadUpgrade()">Upgrade</button>
+  <button onclick="setActive(this);loadRepurchase()">Repurchase</button>
+  <button onclick="setActive(this);loadWallet()">Wallet</button>
+  <button onclick="setActive(this);loadTree()">Tree</button>
+  <button onclick="setActive(this);loadTickets()">Support</button>
 </div>
 
 <div class="container">
@@ -152,6 +170,12 @@ if (!user || user.role !== "user") {
 document.getElementById("welcome").innerText =
   "Welcome (" + user.userId + ")";
 
+// ACTIVE MENU
+function setActive(btn) {
+  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
 // STORAGE
 function getPins() {
   return JSON.parse(localStorage.getItem("pins") || "[]");
@@ -160,7 +184,7 @@ function getPins() {
 // HOME
 function loadHome() {
   document.getElementById("mainContent").innerHTML = `
-    <h3>Dashboard Overview</h3>
+    <div class="section-title">Dashboard Overview</div>
     <p>Status: ${user.status || "inactive"}</p>
     <p>Upgrade Level: ${user.upgradeLevel || 0}</p>
     <p>Repurchase Count: ${user.repurchaseCount || 0}</p>
@@ -174,9 +198,9 @@ function loadPins() {
     p.ownerId === user.userId || p.usedBy === user.userId
   );
 
-  let html = `<h3>PIN Section</h3>
-  <button onclick="location.href='user_pin_activation.html'">Activate PIN</button>
-  <button onclick="location.href='user_pin_use.html'">Use PIN</button>
+  let html = `<div class="section-title">PIN Section</div>
+  <button class="action-btn" onclick="location.href='user_pin_activation.html'">Activate PIN</button>
+  <button class="action-btn" onclick="location.href='user_pin_use.html'">Use PIN</button>
   <table>
     <tr><th>PIN</th><th>Amount</th><th>Status</th></tr>`;
 
@@ -204,25 +228,25 @@ function loadPins() {
 // UPGRADE
 function loadUpgrade() {
   document.getElementById("mainContent").innerHTML = `
-    <h3>Upgrade</h3>
+    <div class="section-title">Upgrade</div>
     <p>Current Level: ${user.upgradeLevel || 0}</p>
-    <button onclick="location.href='user_pin_use.html'">Upgrade Now</button>
+    <button class="action-btn" onclick="location.href='user_pin_use.html'">Upgrade Now</button>
   `;
 }
 
 // REPURCHASE
 function loadRepurchase() {
   document.getElementById("mainContent").innerHTML = `
-    <h3>Repurchase</h3>
+    <div class="section-title">Repurchase</div>
     <p>Total Repurchase: ${user.repurchaseCount || 0}</p>
-    <button onclick="location.href='user_pin_use.html'">Repurchase Now</button>
+    <button class="action-btn" onclick="location.href='user_pin_use.html'">Repurchase Now</button>
   `;
 }
 
 // WALLET
 function loadWallet() {
   document.getElementById("mainContent").innerHTML = `
-    <h3>Wallet</h3>
+    <div class="section-title">Wallet</div>
     <p>Balance: ₹${user.wallet || 0}</p>
   `;
 }
@@ -230,7 +254,7 @@ function loadWallet() {
 // TREE
 function loadTree() {
   document.getElementById("mainContent").innerHTML = `
-    <h3>User Tree</h3>
+    <div class="section-title">User Tree</div>
     <p>Coming Soon 🌳</p>
   `;
 }
@@ -238,7 +262,7 @@ function loadTree() {
 // SUPPORT
 function loadTickets() {
   document.getElementById("mainContent").innerHTML = `
-    <h3>Support / Tickets</h3>
+    <div class="section-title">Support / Tickets</div>
     <p>Coming Soon 🎫</p>
   `;
 }
