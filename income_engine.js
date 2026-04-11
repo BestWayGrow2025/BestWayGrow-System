@@ -1,11 +1,14 @@
 /*
 ========================================
-INCOME ENGINE V7 (MASTER CLEAN)
+💰 INCOME ENGINE V7 (MASTER FINAL)
 ========================================
-✔ Only calculation
-✔ No wallet logic
-✔ No duplicate system
-✔ Uses income_log_system
+✔ Calculation engine
+✔ Controlled wallet credit
+✔ Income control integrated
+✔ System lock safe
+✔ Duplicate safe (via log system)
+✔ Hold system compatible
+✔ Production locked
 ========================================
 */
 
@@ -16,38 +19,73 @@ const INCOME_CONFIG = {
   CTOR_PERCENT: 25
 };
 
+// ===============================
+// 🔹 CALC
+// ===============================
 function calc(bv, percent) {
   return parseFloat(((bv * percent) / 100).toFixed(2));
 }
 
+// ===============================
+// 🔥 CORE SAFE INCOME FLOW
+// ===============================
 function safeIncome(data) {
 
-  if (!data) return;
+  if (!data || !data.userId) return;
 
-  const safeData = {
-    userId: data.userId || "UNKNOWN",
-    type: data.type || "unknown",
-    amount: parseFloat(Number(data.amount || 0).toFixed(2)),
-    sourceUser: data.sourceUser || "-",
-    note: data.note || "",
-  };
+  let amount = Number(data.amount);
 
-  if (safeData.amount <= 0) return;
+  if (isNaN(amount) || amount <= 0) return;
 
+  // 🔒 SYSTEM LOCK
   if (typeof getSystemSettings === "function") {
     let s = getSystemSettings();
     if (s && s.lockMode) return;
   }
 
+  // 🔒 INCOME CONTROL
   if (typeof isIncomeAllowed === "function") {
-    if (!isIncomeAllowed(safeData.type)) return;
+    if (!isIncomeAllowed(data.type)) return;
   }
 
+  let payload = {
+    userId: data.userId,
+    type: data.type,
+    amount: parseFloat(amount.toFixed(2)),
+    sourceUser: data.sourceUser || "-",
+    note: data.note || ""
+  };
+
+  // ===============================
+  // 💰 WALLET CREDIT (FINAL FLOW)
+  // ===============================
+  try {
+
+    if (typeof creditWallet === "function") {
+      creditWallet(
+        payload.userId,
+        payload.amount,
+        `${payload.type.toUpperCase()} - ${payload.note}`
+      );
+    }
+
+  } catch (err) {
+    if (typeof logCritical === "function") {
+      logCritical("Wallet credit failed: " + err.message);
+    }
+  }
+
+  // ===============================
+  // 📜 LOGGING (AFTER CREDIT)
+  // ===============================
   if (typeof addIncomeLog === "function") {
-    addIncomeLog(safeData);
+    addIncomeLog(payload);
   }
 }
 
+// ===============================
+// 🔹 HELPERS
+// ===============================
 function getUser(userId) {
   return getUsers().find(u => u.userId === userId);
 }
@@ -57,6 +95,9 @@ function getIntroducer(user) {
   return getUser(user.introducerId);
 }
 
+// ===============================
+// 🔥 CTOR DISTRIBUTION
+// ===============================
 function distributeCTOR(userId, totalCTOR, type) {
 
   const CTOR_SPLIT = [25,15,12,6,6,6,6,6,6,6,6];
@@ -79,6 +120,9 @@ function distributeCTOR(userId, totalCTOR, type) {
   });
 }
 
+// ===============================
+// 🔥 UPGRADE INCOME
+// ===============================
 function processUpgradeIncome(userId, bv) {
 
   let current = getUser(userId);
@@ -115,6 +159,9 @@ function processUpgradeIncome(userId, bv) {
   distributeCTOR(userId, totalCTOR, "upgrade");
 }
 
+// ===============================
+// 🔥 REPURCHASE INCOME
+// ===============================
 function processRepurchaseIncome(userId, bv) {
 
   let current = getUser(userId);
@@ -150,11 +197,19 @@ function processRepurchaseIncome(userId, bv) {
   distributeCTOR(userId, ctorPool, "repurchase");
 }
 
+// ===============================
+// 🚀 MAIN ENTRY
+// ===============================
 function processIncome(type, userId, bv) {
 
   bv = Number(bv);
 
   if (!userId || isNaN(bv) || bv <= 0) return;
+
+  // 🔒 SYSTEM SAFETY
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) return;
+  }
 
   if (type === "upgrade") {
     processUpgradeIncome(userId, bv);
