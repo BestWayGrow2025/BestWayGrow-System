@@ -141,19 +141,22 @@ footer {
 
 <script src="income_log_system.js"></script>
 <script src="income_control_system.js"></script>
-
 <script src="hold_income_system.js"></script>
-<script src="commission_engine.js"></script>
+<script src="income_engine.js"></script> <!-- ✅ V7 MASTER -->
 
 <script src="withdrawal_system.js"></script>
 
-// 🔥 INIT CORE SYSTEM
-initCoreSystem();
+<!-- ✅ FIXED SCRIPT -->
+<script>
 
-// ================= LOGIN CHECK (CORE BASED) =================
+// 🔥 INIT CORE SYSTEM
+if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+}
+
+// ================= LOGIN CHECK =================
 let loginArea = document.getElementById("loginArea");
 
-// check any active session
 let userSession =
   JSON.parse(localStorage.getItem("loggedInUser")) ||
   JSON.parse(localStorage.getItem("loggedInAdmin")) ||
@@ -162,7 +165,7 @@ let userSession =
 
 if (userSession) {
 
-    let user = getUserById(userSession.userId);
+    let user = getUsers().find(u => u.userId === userSession.userId);
 
     loginArea.innerHTML = `
         <span style="margin-right:10px;">
@@ -194,5 +197,4 @@ function logout() {
 
 </body>
 </html>
-
 
