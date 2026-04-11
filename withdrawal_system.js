@@ -1,14 +1,110 @@
 /* ===============================
-   💸 WITHDRAWAL SYSTEM (FINAL PRO v3)
-=============================== */
+💸 WITHDRAWAL SYSTEM V7 (FINAL MAX)
+==================================
+✔ Wallet integrated (safe)
+✔ Admin charge ON/OFF
+✔ Dynamic % control
+✔ Reset system
+✔ System fee logging (NO admin credit)
+✔ Duplicate + spam protection
+✔ Lock safe
+✔ Production ready
+==================================
+*/
 
 // =====================
-// 🔹 CONSTANTS
+// 🔹 CONFIG
 // =====================
 const WITHDRAW_LIMIT = 3000;
+const WITHDRAW_CONFIG_KEY = "withdrawConfig";
 
 // =====================
-// 🔹 SAFE LOAD / SAVE
+// 🔹 DEFAULT CONFIG
+// =====================
+function getDefaultWithdrawConfig() {
+  return {
+    chargeEnabled: true,
+    chargePercent: 10,
+    minWithdraw: 500,
+    updatedAt: new Date().toISOString()
+  };
+}
+
+// =====================
+// 🔹 LOAD / SAVE CONFIG
+// =====================
+function getWithdrawConfig() {
+  try {
+    let stored = JSON.parse(localStorage.getItem(WITHDRAW_CONFIG_KEY) || "{}");
+
+    let merged = {
+      ...getDefaultWithdrawConfig(),
+      ...stored
+    };
+
+    localStorage.setItem(WITHDRAW_CONFIG_KEY, JSON.stringify(merged));
+    return merged;
+
+  } catch {
+    let clean = getDefaultWithdrawConfig();
+    localStorage.setItem(WITHDRAW_CONFIG_KEY, JSON.stringify(clean));
+    return clean;
+  }
+}
+
+function saveWithdrawConfig(data) {
+  let safe = {
+    ...getDefaultWithdrawConfig(),
+    ...(data || {})
+  };
+
+  safe.updatedAt = new Date().toISOString();
+
+  localStorage.setItem(WITHDRAW_CONFIG_KEY, JSON.stringify(safe));
+}
+
+// =====================
+// 🔘 ADMIN CONTROLS
+// =====================
+function toggleWithdrawCharge(adminId = "ADMIN") {
+  let cfg = getWithdrawConfig();
+  cfg.chargeEnabled = !cfg.chargeEnabled;
+  saveWithdrawConfig(cfg);
+
+  if (typeof logActivity === "function") {
+    logActivity(adminId, "ADMIN", "Withdraw Charge → " + (cfg.chargeEnabled ? "ON" : "OFF"));
+  }
+}
+
+function updateWithdrawChargePercent(percent, adminId = "ADMIN") {
+  percent = Number(percent);
+
+  if (isNaN(percent) || percent < 0 || percent > 100) {
+    alert("Invalid percent");
+    return;
+  }
+
+  let cfg = getWithdrawConfig();
+  cfg.chargePercent = percent;
+
+  saveWithdrawConfig(cfg);
+
+  if (typeof logActivity === "function") {
+    logActivity(adminId, "ADMIN", "Withdraw Charge % → " + percent);
+  }
+}
+
+function resetWithdrawConfig(adminId = "ADMIN") {
+  let clean = getDefaultWithdrawConfig();
+  saveWithdrawConfig(clean);
+
+  if (typeof logActivity === "function") {
+    logActivity(adminId, "ADMIN", "Withdraw config RESET");
+  }
+}
+
+// =====================
+// 🔹 STORAGE
 // =====================
 function getWithdrawals() {
   try {
@@ -20,11 +116,8 @@ function getWithdrawals() {
 }
 
 function saveWithdrawals(data) {
-
-  // 🔒 ARRAY SAFETY (CRITICAL)
   if (!Array.isArray(data)) data = [];
 
-  // 🔒 LIMIT CONTROL
   if (data.length > WITHDRAW_LIMIT) {
     data = data.slice(-WITHDRAW_LIMIT);
   }
@@ -36,99 +129,83 @@ function saveWithdrawals(data) {
 // 🔒 SYSTEM SAFETY
 // =====================
 function isWithdrawSystemSafe() {
-
   try {
     let system = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-    if (system.withdrawStop === true) {
-      console.warn("⛔ Withdraw system stopped by admin");
-      return false;
-    }
+    if (system.withdrawStop === true) return false;
   } catch {}
-
   return true;
 }
 
 // =====================
-// 💰 USER REQUEST
+// 💰 REQUEST WITHDRAW
 // =====================
 function requestWithdraw(userId, amount) {
 
-  // 🔒 MULTI-CLICK LOCK
   if (window.withdrawLock) {
-    return alert("Processing... please wait");
+    return alert("Processing...");
   }
   window.withdrawLock = true;
 
   try {
 
     amount = Number(amount);
-
     if (!userId || isNaN(amount) || amount <= 0) {
       return alert("Invalid amount");
     }
 
-    // 🔒 FAST DUPLICATE BLOCK (CRITICAL)
+    let cfg = getWithdrawConfig();
+
+    // 🔒 DUPLICATE FAST BLOCK
     let recent = getWithdrawals().find(r =>
       r.userId === userId &&
       (new Date() - new Date(r.time)) < 5000
     );
+    if (recent) return alert("Wait before retry");
 
-    if (recent) {
-      return alert("Please wait before making another request");
-    }
-
-    // 🔒 GLOBAL SAFETY
     if (!isWithdrawSystemSafe()) {
-      return alert("Withdraw system temporarily disabled");
+      return alert("Withdraw disabled");
     }
 
-    // 🔒 ACTIVE CHECK
-    if (typeof isUserActive === "function") {
-      if (!isUserActive(userId)) {
-        return alert("Activate account first");
-      }
+    if (typeof isUserActive === "function" && !isUserActive(userId)) {
+      return alert("Activate account first");
     }
 
-    // 🔒 DUPLICATE PENDING CHECK
     let pending = getWithdrawals().find(r =>
       r.userId === userId && r.status === "PENDING"
     );
+    if (pending) return alert("Pending request exists");
 
-    if (pending) {
-      return alert("You already have a pending request");
-    }
-
-    const MIN_WITHDRAW = 500;
-    const CHARGE_PERCENT = 10;
-
-    let users = getUsers(); // ✅ CORE
+    let users = getUsers();
     let user = users.find(u => u.userId === userId);
-
     if (!user) return alert("User not found");
 
-    if (amount < MIN_WITHDRAW) {
-      return alert("Minimum withdraw is ₹ " + MIN_WITHDRAW);
+    if (amount < cfg.minWithdraw) {
+      return alert("Minimum withdraw ₹" + cfg.minWithdraw);
     }
 
     if ((user.wallet || 0) < amount) {
       return alert("Insufficient balance");
     }
 
+    // =====================
     // 💸 CALCULATION
-    let charge = parseFloat(((amount * CHARGE_PERCENT) / 100).toFixed(2));
-    let finalAmount = parseFloat((amount - charge).toFixed(2));
+    // =====================
+    let charge = 0;
 
-    // 💳 SAFE WALLET DEDUCT
-    if (typeof debitWallet === "function") {
-      if (!debitWallet(userId, amount, "Withdrawal Request")) return;
-    } else {
-      user.wallet = (user.wallet || 0) - amount;
-      localStorage.setItem("users", JSON.stringify(users));
+    if (cfg.chargeEnabled) {
+      charge = parseFloat(((amount * cfg.chargePercent) / 100).toFixed(2));
     }
 
-    // 📦 CREATE REQUEST
-    let requests = getWithdrawals();
+    let finalAmount = parseFloat((amount - charge).toFixed(2));
 
+    // 💳 WALLET DEBIT
+    if (typeof debitWallet === "function") {
+      if (!debitWallet(userId, amount, "Withdrawal")) return;
+    }
+
+    // =====================
+    // 📦 SAVE REQUEST
+    // =====================
     let req = {
       requestId: "WD" + Date.now(),
       userId,
@@ -140,15 +217,23 @@ function requestWithdraw(userId, amount) {
       processedAt: null
     };
 
+    let requests = getWithdrawals();
     requests.push(req);
     saveWithdrawals(requests);
 
-    // 📜 ACTIVITY LOG
+    // =====================
+    // 📜 LOGGING
+    // =====================
     if (typeof logActivity === "function") {
-      logActivity(userId, "USER", "Withdrawal requested ₹" + amount);
+      logActivity(userId, "USER", `Withdraw ₹${amount} | Fee ₹${charge}`);
     }
 
-    alert("Request submitted. You will receive ₹ " + finalAmount);
+    // 🔥 SYSTEM FEE LOG (IMPORTANT)
+    if (charge > 0 && typeof addLog === "function") {
+      addLog(`SYSTEM FEE ₹${charge} from ${userId}`, "SYSTEM");
+    }
+
+    alert("Request submitted ₹" + finalAmount);
 
   } finally {
     window.withdrawLock = false;
@@ -160,21 +245,21 @@ function requestWithdraw(userId, amount) {
 // =====================
 function approveWithdraw(id, adminId = "ADMIN") {
 
-  let requests = getWithdrawals();
-  let req = requests.find(r => r.requestId === id);
+  let reqs = getWithdrawals();
+  let r = reqs.find(x => x.requestId === id);
 
-  if (!req || req.status !== "PENDING") return;
+  if (!r || r.status !== "PENDING") return;
 
-  req.status = "APPROVED";
-  req.processedAt = new Date().toISOString();
+  r.status = "APPROVED";
+  r.processedAt = new Date().toISOString();
 
-  saveWithdrawals(requests);
+  saveWithdrawals(reqs);
 
   if (typeof logActivity === "function") {
-    logActivity(adminId, "ADMIN", "Approved withdrawal " + id);
+    logActivity(adminId, "ADMIN", "Withdraw Approved " + id);
   }
 
-  alert("Withdrawal Approved");
+  alert("Approved");
 }
 
 // =====================
@@ -182,33 +267,24 @@ function approveWithdraw(id, adminId = "ADMIN") {
 // =====================
 function rejectWithdraw(id, adminId = "ADMIN") {
 
-  let requests = getWithdrawals();
-  let req = requests.find(r => r.requestId === id);
+  let reqs = getWithdrawals();
+  let r = reqs.find(x => x.requestId === id);
 
-  if (!req || req.status !== "PENDING") return;
+  if (!r || r.status !== "PENDING") return;
 
-  let users = getUsers(); // ✅ CORE
-  let user = users.find(u => u.userId === req.userId);
-
-  // 🔁 REFUND (SAFE)
-  if (user) {
-    if (typeof creditWallet === "function") {
-      creditWallet(user.userId, req.amount, "Withdrawal Refund");
-    } else {
-      user.wallet = (user.wallet || 0) + req.amount;
-      localStorage.setItem("users", JSON.stringify(users));
-    }
+  if (typeof creditWallet === "function") {
+    creditWallet(r.userId, r.amount, "Withdraw Refund");
   }
 
-  req.status = "REJECTED";
-  req.processedAt = new Date().toISOString();
+  r.status = "REJECTED";
+  r.processedAt = new Date().toISOString();
 
-  saveWithdrawals(requests);
+  saveWithdrawals(reqs);
 
   if (typeof logActivity === "function") {
-    logActivity(adminId, "ADMIN", "Rejected withdrawal " + id);
+    logActivity(adminId, "ADMIN", "Withdraw Rejected " + id);
   }
 
-  alert("Withdrawal Rejected & Refunded");
+  alert("Rejected & Refunded");
 }
 
