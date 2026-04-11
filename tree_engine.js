@@ -1,20 +1,20 @@
 /*
 ========================================
-TREE ENGINE (ENTERPRISE v4)
+TREE ENGINE V7 (FINAL LOCKED)
 ========================================
 ✔ Deep LEFT / RIGHT placement
-✔ Queue compatible
-✔ Wallet system added
-✔ Income engine connected (CORRECT)
-✔ Config based BV
-✔ Clean + scalable structure
+✔ Safe user creation
+✔ Core integrated (getUsers / saveUsers)
+✔ System lock protected
+✔ Income trigger connected (safe)
+✔ Clean wallet structure
+✔ Production ready
 ========================================
 */
 
 // ================= GET CHILDREN =================
 function getChildren(userId) {
-  let users = getUsers();
-  return users.filter(u => u.sponsorId === userId);
+  return getUsers().filter(u => u.sponsorId === userId);
 }
 
 // ================= GET LEFT CHILD =================
@@ -63,70 +63,92 @@ function findPlacement(introducerId, position) {
 // ================= CREATE USER =================
 function createUserWithTree(req) {
 
-  let users = getUsers();
+  try {
 
-  // 🔒 DUPLICATE CHECK
-  let exists = users.find(u => u.mobile === req.mobile);
-  if (exists) throw new Error("Mobile already exists");
-
-  let userId = "BWG" + Math.random().toString(36).substring(2, 8);
-
-  let placement = findPlacement(req.introducerId, req.position || "L");
-
-  let newUser = {
-    userId,
-    username: req.username,
-    password: req.password,
-    mobile: req.mobile,
-
-    introducerId: req.introducerId,
-    sponsorId: placement.parentId,
-    position: placement.side,
-
-    leftChild: null,
-    rightChild: null,
-
-    createdAt: Date.now(),
-
-    // 🔥 ENTERPRISE WALLET
-    wallet: {
-      balance: 0,
-      history: []
+    // 🔒 SYSTEM LOCK
+    if (typeof getSystemSettings === "function") {
+      let sys = getSystemSettings();
+      if (sys && sys.lockMode) {
+        throw new Error("System Locked");
+      }
     }
-  };
 
-  // 🔗 LINK TO PARENT
-  let parent = users.find(u => u.userId === placement.parentId);
-  if (!parent) throw new Error("Parent not found");
+    let users = getUsers();
 
-  if (placement.side === "L") {
-    parent.leftChild = userId;
-  } else {
-    parent.rightChild = userId;
-  }
+    // 🔒 DUPLICATE MOBILE
+    let exists = users.find(u => u.mobile === req.mobile);
+    if (exists) throw new Error("Mobile already exists");
 
-  users.push(newUser);
-  localStorage.setItem("users", JSON.stringify(users));
+    let userId = "BWG" + Date.now().toString().slice(-6);
 
-  // 🔥 INCOME TRIGGER (FINAL CORRECT)
-  if (
-    typeof processIncome === "function" &&
-    typeof loadSystemConfig === "function"
-  ) {
-    try {
+    let placement = findPlacement(req.introducerId, req.position || "L");
 
-      let config = loadSystemConfig();
+    let newUser = {
+      userId,
+      username: req.username,
+      password: req.password,
+      mobile: req.mobile,
 
-      processIncome(
-        "upgrade",                // TYPE
-        newUser.userId,           // USER
-        config.upgrade.bv         // BV (dynamic)
-      );
+      introducerId: req.introducerId,
+      sponsorId: placement.parentId,
+      position: placement.side,
 
-    } catch (e) {
-      console.warn("Income processing failed:", e.message);
+      leftChild: null,
+      rightChild: null,
+
+      createdAt: new Date().toISOString(),
+
+      // ✅ CORRECT WALLET (NUMBER)
+      wallet: 0
+    };
+
+    // 🔗 LINK TO PARENT
+    let parent = users.find(u => u.userId === placement.parentId);
+    if (!parent) throw new Error("Parent not found");
+
+    if (placement.side === "L") {
+      parent.leftChild = userId;
+    } else {
+      parent.rightChild = userId;
     }
-  }
 
-  return newUser;
+    users.push(newUser);
+
+    // ✅ SAFE SAVE
+    saveUsers(users);
+
+    // 🔥 INCOME TRIGGER (SAFE V7)
+    if (typeof processIncome === "function") {
+      try {
+
+        // Default fallback BV (safe)
+        let bv = 0;
+
+        if (typeof getSystemConfig === "function") {
+          let config = getSystemConfig();
+          bv = Number(config?.upgrade?.bv || 0);
+        }
+
+        if (bv > 0) {
+          processIncome("upgrade", newUser.userId, bv);
+        }
+
+      } catch (e) {
+        console.warn("Income processing failed:", e.message);
+      }
+    }
+
+    // 📊 ACTIVITY LOG (OPTIONAL)
+    if (typeof addLog === "function") {
+      addLog("NEW USER CREATED", newUser.userId);
+    }
+
+    return newUser;
+
+  } catch (err) {
+
+    console.error("User creation failed:", err.message);
+    throw err;
+
+  }
 }
