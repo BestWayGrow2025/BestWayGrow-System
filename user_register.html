@@ -12,7 +12,7 @@
   <input type="text" id="mobile" placeholder="Mobile"><br><br>
   <input type="password" id="password" placeholder="Password"><br><br>
 
-  <!-- 🔥 NEW: PIN INPUT -->
+  <!-- 🔥 PIN INPUT -->
   <input type="text" id="pin" placeholder="Enter Assigned PIN"><br><br>
 
   <label>Select Position:</label><br>
@@ -29,20 +29,22 @@
 <script src="core_system.js"></script>
 <script src="tree_engine.js"></script>
 <script src="registration_queue.js"></script>
-
-<!-- 🔥 PIN MASTER -->
 <script src="pin_master_system.js"></script>
 
 <script>
 
 // ================= INIT =================
-initCoreSystem();
+if (typeof initCoreSystem === "function") {
+  initCoreSystem();
+}
 
 // ================= PARAM =================
 let params = new URLSearchParams(window.location.search);
 let introducerId = params.get("ref") || "BWG000001";
 
-let introUser = getUserById(introducerId);
+let introUser = typeof getUserById === "function"
+  ? getUserById(introducerId)
+  : null;
 
 document.getElementById("introLabel").innerText =
   "Introducer: " + introducerId +
@@ -52,13 +54,17 @@ document.getElementById("introLabel").innerText =
 function validateAssignedPin(pinInput) {
 
   let pins = loadPins();
-
   let pin = pins.find(p => p.pinId === pinInput);
 
   if (!pin) return { ok: false, msg: "Invalid PIN" };
 
   if (pin.status !== "assigned") {
     return { ok: false, msg: "PIN not assigned" };
+  }
+
+  // 🔥 TYPE CHECK (IMPORTANT)
+  if (pin.type !== "upgrade") {
+    return { ok: false, msg: "Wrong PIN type (use upgrade PIN)" };
   }
 
   return { ok: true, pin };
@@ -85,20 +91,22 @@ function handleRegister() {
 
     if (!username || !mobile || !password || !pinInput) {
       alert("Fill all fields including PIN");
-      return;
+      return resetAll();
     }
 
     // ✅ MOBILE VALIDATION
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       alert("Invalid mobile number");
-      return;
+      return resetAll();
     }
 
     let position = positionElement ? positionElement.value : "L";
 
-    if (!isValidIntroducer(introducerId)) {
-      alert("Invalid Introducer");
-      return;
+    if (typeof isValidIntroducer === "function") {
+      if (!isValidIntroducer(introducerId)) {
+        alert("Invalid Introducer");
+        return resetAll();
+      }
     }
 
     let users = getUsers();
@@ -106,15 +114,15 @@ function handleRegister() {
     let duplicate = users.find(u => u.mobile === mobile);
     if (duplicate) {
       alert("Mobile already registered");
-      return;
+      return resetAll();
     }
 
-    // 🔥 PIN VALIDATION (ENTERPRISE)
+    // 🔥 PIN VALIDATION
     let pinCheck = validateAssignedPin(pinInput);
 
     if (!pinCheck.ok) {
       alert(pinCheck.msg);
-      return;
+      return resetAll();
     }
 
     let selectedPin = pinCheck.pin;
@@ -131,7 +139,7 @@ function handleRegister() {
     document.getElementById("msg").innerText =
       "⏳ Registration in process... Please wait";
 
-    // 🔍 CHECK RESULT
+    // ================= RESULT CHECK =================
     let attempts = 0;
 
     let checker = setInterval(() => {
@@ -157,6 +165,7 @@ function handleRegister() {
         `;
 
         clearInterval(checker);
+        resetAll();
 
       } else {
 
@@ -167,23 +176,27 @@ function handleRegister() {
             "⚠️ Processing delay... please wait or refresh";
 
           clearInterval(checker);
+          resetAll();
         }
 
       }
 
     }, 1000);
 
-  } finally {
-    resetBtn();
-    window.registerLock = false;
+  } catch (err) {
+
+    console.error("Registration Error:", err);
+    alert(err.message || "Registration failed");
+    resetAll();
   }
 }
 
 // ================= RESET =================
-function resetBtn() {
+function resetAll() {
   let btn = document.getElementById("regBtn");
   btn.disabled = false;
   btn.innerText = "Register";
+  window.registerLock = false;
 }
 
 </script>
