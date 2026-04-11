@@ -2,6 +2,9 @@
 ========================================
 COMMISSION ENGINE V7 (FINAL LOCKED)
 ========================================
+// ❌ DEPRECATED FILE (DO NOT USE)
+// Replaced by income_engine.js V7
+// This file is kept only for backup reference
 ✔ ❌ NO income calculation
 ✔ ❌ NO duplicate logic
 ✔ ✅ income_engine.js is ONLY MASTER
