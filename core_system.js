@@ -1,13 +1,25 @@
-/* ===============================
-   CORE SYSTEM V2 (MASTER FINAL)
-=============================== */
+/*
+========================================
+🧠 CORE SYSTEM V7 (MASTER ENGINE)
+========================================
+✔ Safe storage (self-healing)
+✔ System lock protection
+✔ User management safe
+✔ ID generation protected
+✔ Page security strong
+✔ Init system hardened
+✔ Corruption recovery
+✔ Production locked
+========================================
+*/
 
 // ===================================
-// 🔹 SAFE STORAGE HELPERS
+// 🔹 SAFE STORAGE
 // ===================================
 function safeGet(key, fallback) {
   try {
-    return JSON.parse(localStorage.getItem(key)) || fallback;
+    let data = JSON.parse(localStorage.getItem(key));
+    return (data !== null && data !== undefined) ? data : fallback;
   } catch {
     localStorage.setItem(key, JSON.stringify(fallback));
     return fallback;
@@ -15,22 +27,28 @@ function safeGet(key, fallback) {
 }
 
 function safeSet(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error("Storage error:", e.message);
+  }
 }
 
 // ===================================
 // 🔹 USERS
 // ===================================
 function getUsers() {
-  return safeGet("users", []);
+  let users = safeGet("users", []);
+  return Array.isArray(users) ? users : [];
 }
 
 function saveUsers(users) {
+  if (!Array.isArray(users)) users = [];
   safeSet("users", users);
 }
 
 // ===================================
-// 🔹 SYSTEM SETTINGS (EXPANDED)
+// 🔹 SYSTEM SETTINGS
 // ===================================
 function getSystemSettings() {
 
@@ -40,7 +58,8 @@ function getSystemSettings() {
     adminAccess: true,
     upgradesOpen: true,
     repurchaseOpen: true,
-    queueStop: false
+    queueStop: false,
+    withdrawStop: false
   };
 
   let stored = safeGet("systemSettings", {});
@@ -51,29 +70,28 @@ function getSystemSettings() {
 }
 
 // ===================================
-// 🔹 ACTIVITY LOG SYSTEM (NEW)
+// 🔐 SYSTEM SAFETY CHECK
 // ===================================
-function getLogs() {
-  return safeGet("activityLogs", []);
-}
+function isSystemSafe() {
 
-function addLog(action, userId) {
-  let logs = getLogs();
+  let settings = getSystemSettings();
 
-  logs.push({
-    action,
-    userId,
-    time: new Date().toISOString()
-  });
+  if (!settings || typeof settings !== "object") return false;
 
-  safeSet("activityLogs", logs);
+  if (settings.lockMode === true) {
+    console.warn("System locked");
+    return false;
+  }
+
+  return true;
 }
 
 // ===================================
 // 🔹 COMMON HELPERS
 // ===================================
 function getUserById(id) {
-  return getUsers().find(u => u.userId === id);
+  if (!id) return null;
+  return getUsers().find(u => u.userId === id) || null;
 }
 
 function getDirectUsers(userId) {
@@ -85,40 +103,38 @@ function getChildren(userId) {
 }
 
 // ===================================
-// 🔹 USER ID GENERATOR
+// 🔹 USER ID GENERATOR (SAFE)
 // ===================================
 function generateUserId() {
 
   let users = getUsers();
-  let existingIds = users.map(u => u.userId);
+  let existingIds = new Set(users.map(u => u.userId));
 
-  let newId;
   let attempts = 0;
 
-  do {
-    let randomNum = Math.floor(100000 + Math.random() * 900000);
-    newId = "BWG" + randomNum;
-    attempts++;
+  while (attempts < 100) {
 
-    if (attempts > 50) {
-      throw new Error("User ID generation failed");
+    let id = "BWG" + Math.floor(100000 + Math.random() * 900000);
+
+    if (!existingIds.has(id)) {
+      return id;
     }
 
-  } while (existingIds.includes(newId));
+    attempts++;
+  }
 
-  return newId;
+  throw new Error("User ID generation failed (collision)");
 }
 
 // ===================================
 // 🔹 INTRODUCER VALIDATION
 // ===================================
 function isValidIntroducer(id) {
-  if (!id) return false;
   return !!getUserById(id);
 }
 
 // ===================================
-// 🔐 PAGE SECURITY (IMPROVED)
+// 🔐 PAGE SECURITY (V7 STRONG)
 // ===================================
 function protectPage(config) {
 
@@ -160,18 +176,20 @@ function protectPage(config) {
 }
 
 // ===================================
-// 🔹 INIT SYSTEM (MASTER INIT)
+// 🔥 INIT SYSTEM (MASTER INIT)
 // ===================================
 function initCoreSystem() {
 
+  // 🔒 SYSTEM LOCK CHECK
   let settings = getSystemSettings();
-
   if (settings.lockMode === true) {
     alert("🚫 System Locked");
     throw new Error("System Locked");
   }
 
   let users = getUsers();
+
+  let updated = false;
 
   // SUPER ADMIN
   if (!users.find(u => u.userId === "BWG000000")) {
@@ -184,6 +202,7 @@ function initCoreSystem() {
       leftChild: null,
       rightChild: null
     });
+    updated = true;
   }
 
   // SYSTEM ADMIN
@@ -200,9 +219,13 @@ function initCoreSystem() {
       leftChild: null,
       rightChild: null
     });
+    updated = true;
   }
 
-  saveUsers(users);
-}
+  if (updated) {
+    saveUsers(users);
+  }
 
+  console.log("✅ Core system initialized");
+}
 
