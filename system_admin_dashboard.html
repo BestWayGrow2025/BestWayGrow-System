@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>System Admin Dashboard V7 PRO</title>
+  <title>System Admin Dashboard V7 FINAL</title>
   <link rel="icon" href="data:,">
 
   <style>
     body {
       font-family:'Segoe UI', Arial;
       margin:0;
-      background:linear-gradient(135deg,#eef2f7,#e6ecf5);
+      background:#eef2f7;
     }
 
     header {
-      background:linear-gradient(135deg,#006633,#00a86b);
+      background:#006633;
       color:#fff;
       padding:18px;
       text-align:center;
-      box-shadow:0 3px 10px rgba(0,0,0,0.2);
     }
 
     header button {
@@ -31,29 +30,19 @@
 
     .menu {
       display:flex;
-      overflow-x:auto;
-      white-space:nowrap;
+      overflow:auto;
       background:#fff;
       padding:10px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.1);
     }
 
     .menu button {
-      flex:0 0 auto;
       margin:5px;
-      padding:10px 14px;
+      padding:10px;
       border:none;
       border-radius:20px;
-      cursor:pointer;
-      background:linear-gradient(135deg,#28a745,#00c851);
+      background:#00a86b;
       color:#fff;
-      font-size:13px;
-      transition:0.3s;
-    }
-
-    .menu button:hover {
-      transform:scale(1.05);
-      opacity:0.9;
+      cursor:pointer;
     }
 
     .container {
@@ -63,41 +52,26 @@
     .card {
       background:#fff;
       padding:20px;
-      border-radius:15px;
-      box-shadow:0 6px 20px rgba(0,0,0,0.1);
-      max-width:850px;
+      border-radius:10px;
+      max-width:900px;
       margin:auto;
-      animation:fadeIn 0.3s ease;
     }
 
-    @keyframes fadeIn {
-      from {opacity:0; transform:translateY(10px);}
-      to {opacity:1; transform:translateY(0);}
-    }
-
-    input {
+    input, select {
       padding:10px;
-      margin:6px 0;
+      margin:5px;
       width:90%;
-      border-radius:8px;
-      border:1px solid #ddd;
-      font-size:13px;
     }
 
     table {
       width:100%;
-      border-collapse: collapse;
+      border-collapse:collapse;
       margin-top:10px;
-      font-size:13px;
-    }
-
-    th {
-      background:#f1f4f8;
     }
 
     th, td {
-      border:1px solid #eee;
-      padding:10px;
+      border:1px solid #ddd;
+      padding:8px;
       text-align:center;
     }
   </style>
@@ -115,12 +89,11 @@
   <button onclick="loadHome()">Home</button>
   <button onclick="loadCreateAdmin()">Create Admin</button>
   <button onclick="loadAdmins()">Admins</button>
-  <button onclick="loadPinsUI()">PIN</button>
   <button onclick="loadSystem()">System</button>
 </div>
 
 <div class="container">
-  <div id="mainContent" class="card">Loading...</div>
+  <div id="mainContent" class="card"></div>
 </div>
 
 <script src="core_system.js"></script>
@@ -154,19 +127,33 @@ document.getElementById("welcome").innerText =
 // ================= HOME =================
 function loadHome() {
   document.getElementById("mainContent").innerHTML = `
-    <h3>Overview</h3>
-    <p>Name: ${currentUser.username || currentUser.userId}</p>
+    <h3>Dashboard</h3>
+    <p>ID: ${currentUser.userId}</p>
     <p>Status: ${currentUser.status}</p>
   `;
 }
 
 // ================= CREATE ADMIN =================
 function loadCreateAdmin() {
+
+  let s = getSystemSettings() || {};
+  if (!s.adminAccess) {
+    return document.getElementById("mainContent").innerHTML =
+      `<h3>Access Denied (Admin Creation OFF)</h3>`;
+  }
+
   document.getElementById("mainContent").innerHTML = `
     <h3>Create Admin</h3>
+
     <input id="adminId" placeholder="Admin ID"><br>
     <input id="name" placeholder="Name"><br>
-    <input id="password" type="password" placeholder="Password"><br>
+    <input id="password" placeholder="Password"><br>
+
+    <select id="type">
+      <option value="adminA">Admin A</option>
+      <option value="adminB">Admin B</option>
+    </select><br>
+
     <button onclick="createAdmin()">Create</button>
     <p id="msg"></p>
   `;
@@ -174,39 +161,37 @@ function loadCreateAdmin() {
 
 function createAdmin() {
 
-  if (window.createLock) return;
-  window.createLock = true;
+  let s = getSystemSettings() || {};
+  if (s.lockMode) return alert("System Locked");
 
-  try {
+  let id = document.getElementById("adminId").value.trim();
+  let name = document.getElementById("name").value.trim();
+  let pass = document.getElementById("password").value.trim();
+  let type = document.getElementById("type").value;
 
-    let id = document.getElementById("adminId").value.trim();
-    let name = document.getElementById("name").value.trim();
-    let pass = document.getElementById("password").value.trim();
+  if (!id || !name || !pass) return alert("Fill all fields");
 
-    if (!id || !name || !pass) return showMsg("⚠ Fill all fields");
+  let users = getUsers() || [];
 
-    let users = getUsers() || [];
+  if (users.find(u => u.userId.toLowerCase() === id.toLowerCase()))
+    return alert("Admin exists");
 
-    if (users.find(u => u.userId.toLowerCase() === id.toLowerCase()))
-      return showMsg("❌ Admin exists");
+  users.push({
+    userId: id,
+    username: name,
+    password: btoa(pass),
+    role: "admin",
+    adminType: type,
+    status: "active",
+    createdBy: currentUser.userId,
+    createdAt: Date.now()
+  });
 
-    users.push({
-      userId: id,
-      username: name,
-      password: btoa(pass),
-      role: "admin",
-      status: "active",
-      createdBy: currentUser.userId,
-      createdAt: Date.now()
-    });
+  saveUsers(users);
 
-    saveUsers(users);
+  alert("Admin Created");
 
-    showMsg("✅ Admin Created");
-
-  } finally {
-    window.createLock = false;
-  }
+  loadAdmins();
 }
 
 // ================= ADMIN LIST =================
@@ -214,15 +199,17 @@ function loadAdmins() {
 
   let admins = (getUsers() || []).filter(u => u.role === "admin");
 
-  let html = `<h3>Admin List</h3><table>
-    <tr><th>ID</th><th>Name</th><th>Status</th></tr>`;
+  let html = `<h3>Admin List</h3>
+  <table>
+  <tr><th>ID</th><th>Name</th><th>Type</th><th>Status</th></tr>`;
 
-  if (!admins.length) html += `<tr><td colspan="3">No Admin</td></tr>`;
+  if (!admins.length) html += `<tr><td colspan="4">No Admin</td></tr>`;
 
   admins.forEach(a => {
     html += `<tr>
       <td>${a.userId}</td>
-      <td>${a.username || a.userId}</td>
+      <td>${a.username || ""}</td>
+      <td>${a.adminType || "-"}</td>
       <td>${a.status || "active"}</td>
     </tr>`;
   });
@@ -232,79 +219,25 @@ function loadAdmins() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= PIN =================
-function loadPinsUI() {
-
-  let pins = typeof loadPins === "function" ? loadPins() : [];
-
-  let html = `<h3>PIN Management</h3>
-  <button onclick="location.href='system_admin_pin_panel.html'">Open PIN Panel</button>
-  <table>
-    <tr><th>PIN</th><th>Status</th></tr>`;
-
-  if (!pins.length) html += `<tr><td colspan="2">No PIN</td></tr>`;
-
-  pins.forEach(p => {
-    html += `<tr>
-      <td>${p.pinId}</td>
-      <td>${p.status}</td>
-    </tr>`;
-  });
-
-  html += `</table>`;
-
-  document.getElementById("mainContent").innerHTML = html;
-}
-
-// ================= SYSTEM CONTROL =================
+// ================= SYSTEM =================
 function loadSystem() {
 
-  let s = getSystemSettings() || {
-    adminAccess: true,
-    lockMode: false,
-    registrationOpen: true,
-    withdrawOpen: true
-  };
+  let s = getSystemSettings() || {};
 
   document.getElementById("mainContent").innerHTML = `
-    <h3>System Control</h3>
+    <h3>System Status</h3>
 
-    <p>Admin Access: ${s.adminAccess ? "ON" : "OFF"}</p>
-    <button onclick="toggleSystem('adminAccess')">Toggle</button>
-
-    <p>Lock Mode: ${s.lockMode ? "ON" : "OFF"}</p>
-    <button onclick="toggleSystem('lockMode')">Toggle</button>
-
-    <p>Registration: ${s.registrationOpen ? "ON" : "OFF"}</p>
-    <button onclick="toggleSystem('registrationOpen')">Toggle</button>
-
-    <p>Withdraw: ${s.withdrawOpen ? "ON" : "OFF"}</p>
-    <button onclick="toggleSystem('withdrawOpen')">Toggle</button>
+    Admin Access: ${s.adminAccess ? "ON" : "OFF"}<br>
+    Lock Mode: ${s.lockMode ? "ON" : "OFF"}<br>
+    Registration: ${s.registrationOpen ? "ON" : "OFF"}<br>
+    Withdraw: ${s.withdrawOpen ? "ON" : "OFF"}<br>
   `;
-}
-
-function toggleSystem(key) {
-
-  let s = getSystemSettings() || {};
-  s[key] = !s[key];
-
-  if (typeof saveSystemSettings === "function") {
-    saveSystemSettings(s);
-  } else {
-    localStorage.setItem("systemSettings", JSON.stringify(s));
-  }
-
-  loadSystem();
 }
 
 // ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInSystemAdmin");
   location.href = "system_admin_login.html";
-}
-
-function showMsg(m) {
-  document.getElementById("msg").innerText = m;
 }
 
 // INIT
@@ -314,3 +247,4 @@ loadHome();
 
 </body>
 </html>
+
