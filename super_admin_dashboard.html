@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Super Admin Dashboard V7</title>
+  <title>Super Admin PRO Dashboard</title>
   <link rel="icon" href="data:,">
 
   <style>
@@ -16,7 +16,6 @@
       color:#fff;
       padding:18px;
       text-align:center;
-      box-shadow:0 3px 10px rgba(0,0,0,0.2);
     }
 
     header button {
@@ -29,18 +28,14 @@
       cursor:pointer;
     }
 
-    /* MENU */
     .menu {
       display:flex;
       overflow-x:auto;
-      white-space:nowrap;
       background:#fff;
       padding:10px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.1);
     }
 
     .menu button {
-      flex:0 0 auto;
       margin:5px;
       padding:10px 14px;
       border:none;
@@ -48,13 +43,10 @@
       cursor:pointer;
       background:linear-gradient(135deg,#ff6600,#ff944d);
       color:#fff;
-      font-size:13px;
-      transition:0.3s;
     }
 
-    .menu button:hover {
-      transform:scale(1.05);
-      opacity:0.9;
+    .menu button.active {
+      background:#000;
     }
 
     .container {
@@ -65,45 +57,35 @@
       background:#fff;
       padding:20px;
       border-radius:15px;
-      box-shadow:0 6px 20px rgba(0,0,0,0.1);
-      max-width:900px;
+      max-width:1000px;
       margin:auto;
-      animation:fadeIn 0.3s ease;
     }
 
-    @keyframes fadeIn {
-      from {opacity:0; transform:translateY(10px);}
-      to {opacity:1; transform:translateY(0);}
+    .stats {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
-    input {
-      padding:10px;
-      margin:6px 0;
-      width:90%;
-      border-radius:8px;
-      border:1px solid #ddd;
-      font-size:13px;
+    .box {
+      flex:1;
+      min-width:150px;
+      background:#f1f4f8;
+      padding:15px;
+      border-radius:10px;
+      text-align:center;
     }
 
     table {
       width:100%;
-      border-collapse: collapse;
       margin-top:10px;
-      font-size:13px;
-    }
-
-    th {
-      background:#f1f4f8;
+      border-collapse:collapse;
     }
 
     th, td {
       border:1px solid #eee;
-      padding:10px;
+      padding:8px;
       text-align:center;
-    }
-
-    h3 {
-      margin-bottom:10px;
     }
   </style>
 </head>
@@ -111,18 +93,17 @@
 <body>
 
 <header>
-  <h2>👑 SUPER ADMIN CONTROL PANEL</h2>
+  <h2>👑 SUPER ADMIN PANEL (PRO)</h2>
   <p id="welcome"></p>
   <button onclick="logout()">Logout</button>
 </header>
 
 <div class="menu">
-  <button onclick="loadHome()">Home</button>
-  <button onclick="loadSystemAdmins()">System Admin</button>
-  <button onclick="loadAdmins()">Admins</button>
-  <button onclick="loadUsers()">Users</button>
-  <button onclick="loadSystem()">System</button>
-  <button onclick="loadReset()">Reset</button>
+  <button onclick="setActive(this);loadHome()">Home</button>
+  <button onclick="setActive(this);loadUsers()">Users</button>
+  <button onclick="setActive(this);loadAdmins()">Admins</button>
+  <button onclick="setActive(this);loadSystem()">System</button>
+  <button onclick="setActive(this);loadReset()">Reset</button>
 </div>
 
 <div class="container">
@@ -134,92 +115,63 @@
 <script>
 
 // INIT
-if (typeof initCoreSystem === "function") initCoreSystem();
-else { alert("core_system.js missing"); throw new Error("STOP"); }
+initCoreSystem();
 
 // AUTH
 let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
 
-if (!session || !session.userId) {
+if (!session) {
   location.href = "super_admin_login.html";
-  throw new Error("STOP");
 }
 
 let user = getUserById(session.userId);
 
 if (!user || user.role !== "super_admin") {
-  localStorage.removeItem("loggedInSuperAdmin");
   location.href = "super_admin_login.html";
-  throw new Error("STOP");
 }
 
 // WELCOME
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// HOME
+// ACTIVE MENU
+function setActive(btn) {
+  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+// ================= HOME (UPGRADED) =================
 function loadHome() {
+
+  let users = getUsers() || [];
+
+  let totalUsers = users.filter(u => u.role === "user").length;
+  let admins = users.filter(u => u.role === "admin").length;
+  let sysAdmins = users.filter(u => u.role === "system_admin").length;
+
   document.getElementById("mainContent").innerHTML = `
-    <h3>Overview</h3>
-    <p>ID: ${user.userId}</p>
-    <p>Status: ${user.status || "active"}</p>
+    <h3>📊 System Overview</h3>
+
+    <div class="stats">
+      <div class="box">Users<br><b>${totalUsers}</b></div>
+      <div class="box">Admins<br><b>${admins}</b></div>
+      <div class="box">Sys Admins<br><b>${sysAdmins}</b></div>
+    </div>
+
+    <br>
+    <p><b>ID:</b> ${user.userId}</p>
+    <p><b>Status:</b> ${user.status || "active"}</p>
   `;
 }
 
-// SYSTEM ADMINS
-function loadSystemAdmins() {
-
-  let users = (getUsers() || []).filter(u => u.role === "system_admin");
-
-  let html = `<h3>System Admins</h3><table>
-  <tr><th>ID</th><th>Status</th></tr>`;
-
-  if (!users.length) html += `<tr><td colspan="2">No Data</td></tr>`;
-
-  users.forEach(u => {
-    html += `<tr>
-      <td>${u.userId}</td>
-      <td>${u.status || "active"}</td>
-    </tr>`;
-  });
-
-  html += `</table>`;
-
-  document.getElementById("mainContent").innerHTML = html;
-}
-
-// ADMINS
-function loadAdmins() {
-
-  let users = (getUsers() || []).filter(u => u.role === "admin");
-
-  let html = `<h3>Admins</h3><table>
-  <tr><th>ID</th><th>Status</th></tr>`;
-
-  if (!users.length) html += `<tr><td colspan="2">No Data</td></tr>`;
-
-  users.forEach(u => {
-    html += `<tr>
-      <td>${u.userId}</td>
-      <td>${u.status || "active"}</td>
-    </tr>`;
-  });
-
-  html += `</table>`;
-
-  document.getElementById("mainContent").innerHTML = html;
-}
-
-// USERS
+// ================= USERS =================
 function loadUsers() {
 
-  let users = (getUsers() || []).filter(u => u.role === "user");
+  let users = getUsers().filter(u => u.role === "user");
 
   let html = `<h3>Users</h3><table>
   <tr><th>ID</th><th>Status</th></tr>`;
 
-  if (!users.length) html += `<tr><td colspan="2">No Data</td></tr>`;
-
   users.forEach(u => {
     html += `<tr>
       <td>${u.userId}</td>
@@ -232,7 +184,27 @@ function loadUsers() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// SYSTEM
+// ================= ADMINS =================
+function loadAdmins() {
+
+  let users = getUsers().filter(u => u.role !== "user");
+
+  let html = `<h3>Admins</h3><table>
+  <tr><th>ID</th><th>Role</th></tr>`;
+
+  users.forEach(u => {
+    html += `<tr>
+      <td>${u.userId}</td>
+      <td>${u.role}</td>
+    </tr>`;
+  });
+
+  html += `</table>`;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+// ================= SYSTEM =================
 function loadSystem() {
 
   let s = getSystemSettings() || {};
@@ -241,16 +213,13 @@ function loadSystem() {
     <h3>System Control</h3>
 
     <p>Lock Mode: ${s.lockMode ? "ON" : "OFF"}</p>
-    <p>Admin Access: ${s.adminAccess ? "ON" : "OFF"}</p>
     <p>Registration: ${s.registrationOpen ? "ON" : "OFF"}</p>
 
     <button onclick="toggle('lockMode')">Toggle Lock</button>
-    <button onclick="toggle('adminAccess')">Toggle Admin</button>
     <button onclick="toggle('registrationOpen')">Toggle Register</button>
   `;
 }
 
-// TOGGLE
 function toggle(key) {
   let s = getSystemSettings() || {};
   s[key] = !s[key];
@@ -258,30 +227,21 @@ function toggle(key) {
   loadSystem();
 }
 
-// RESET
+// ================= RESET =================
 function loadReset() {
-
   document.getElementById("mainContent").innerHTML = `
     <h3>System Reset</h3>
-
-    <button onclick="softReset()">Soft Reset</button>
-    <button onclick="fullReset()">Full Reset</button>
+    <button onclick="fullReset()">FULL RESET</button>
   `;
 }
 
-function softReset() {
-  if (!confirm("Clear logs?")) return;
-  localStorage.removeItem("activityLogs");
-  alert("Done"); location.reload();
-}
-
 function fullReset() {
-  if (!confirm("Full reset?")) return;
+  if (!confirm("Danger! Reset system?")) return;
 
-  let users = (getUsers() || []).filter(u => u.role === "super_admin");
+  let users = getUsers().filter(u => u.role === "super_admin");
   saveUsers(users);
 
-  alert("System Reset Done");
+  alert("Reset Done");
   location.reload();
 }
 
