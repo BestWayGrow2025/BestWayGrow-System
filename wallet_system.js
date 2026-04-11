@@ -1,15 +1,14 @@
 /*
 ========================================
-WALLET SYSTEM V7 (MASTER ENGINE)
+WALLET SYSTEM V7 (FINAL LOCKED)
 ========================================
-✔ Core integrated (safeGet / safeSet)
-✔ System lock protection
-✔ Duplicate protection
+✔ Core integrated
+✔ System lock protected
+✔ Duplicate safe
 ✔ Transaction limit control
-✔ User transaction filtering
-✔ Activity logging integrated
+✔ Safe logging
 ✔ Decimal safe
-✔ Production ready
+✔ Production locked
 ========================================
 */
 
@@ -22,7 +21,12 @@ const TXN_LIMIT = 5000;
 // 🔹 STORAGE
 // =====================
 function getTransactions() {
-  return safeGet("transactions", []);
+  try {
+    return JSON.parse(localStorage.getItem("transactions") || "[]");
+  } catch {
+    localStorage.setItem("transactions", "[]");
+    return [];
+  }
 }
 
 function saveTransactions(txns) {
@@ -33,7 +37,7 @@ function saveTransactions(txns) {
     txns = txns.slice(-TXN_LIMIT);
   }
 
-  safeSet("transactions", txns);
+  localStorage.setItem("transactions", JSON.stringify(txns));
 }
 
 // =====================
@@ -63,7 +67,7 @@ function isDuplicateTxn(userId, amount, reason) {
 }
 
 // =====================
-// 📊 USER TRANSACTIONS
+// 📊 USER TXNS
 // =====================
 function getUserTransactions(userId) {
   return getTransactions().filter(t => t.userId === userId);
@@ -74,34 +78,48 @@ function getUserTransactions(userId) {
 // =====================
 function creditWallet(userId, amount, reason = "SYSTEM") {
 
-  let settings = getSystemSettings();
-  if (settings.lockMode) {
-    console.warn("System Locked");
-    return;
+  try {
+
+    let settings = getSystemSettings();
+    if (settings.lockMode) {
+      console.warn("System Locked");
+      return;
+    }
+
+    amount = Number(amount);
+
+    if (!userId || isNaN(amount) || amount <= 0) return;
+
+    let users = getUsers();
+    let user = users.find(u => u.userId === userId);
+
+    if (!user) return;
+
+    initWallet(user);
+
+    if (isDuplicateTxn(userId, amount, reason)) {
+      console.warn("Duplicate credit blocked");
+      return;
+    }
+
+    user.wallet = parseFloat((user.wallet + amount).toFixed(2));
+
+    saveUsers(users);
+
+    logTransaction(userId, amount, "CREDIT", reason);
+
+    // optional activity log
+    if (typeof addLog === "function") {
+      addLog("CREDIT " + amount + " (" + reason + ")", userId);
+    }
+
+  } catch (err) {
+
+    if (typeof addCriticalIncomeLog === "function") {
+      addCriticalIncomeLog("Wallet credit error: " + err.message);
+    }
+
   }
-
-  amount = Number(amount);
-
-  if (!userId || isNaN(amount) || amount <= 0) return;
-
-  let users = getUsers();
-  let user = users.find(u => u.userId === userId);
-
-  if (!user) return;
-
-  initWallet(user);
-
-  if (isDuplicateTxn(userId, amount, reason)) {
-    console.warn("Duplicate credit blocked");
-    return;
-  }
-
-  user.wallet = parseFloat((user.wallet + amount).toFixed(2));
-
-  saveUsers(users);
-
-  logTransaction(userId, amount, "CREDIT", reason);
-  addLog("CREDIT " + amount + " (" + reason + ")", userId);
 }
 
 // =====================
@@ -109,40 +127,54 @@ function creditWallet(userId, amount, reason = "SYSTEM") {
 // =====================
 function debitWallet(userId, amount, reason = "SYSTEM") {
 
-  let settings = getSystemSettings();
-  if (settings.lockMode) {
-    alert("System Locked");
+  try {
+
+    let settings = getSystemSettings();
+    if (settings.lockMode) {
+      alert("System Locked");
+      return false;
+    }
+
+    amount = Number(amount);
+
+    if (!userId || isNaN(amount) || amount <= 0) return false;
+
+    let users = getUsers();
+    let user = users.find(u => u.userId === userId);
+
+    if (!user) return false;
+
+    initWallet(user);
+
+    if (user.wallet < amount) {
+      alert("Insufficient balance");
+      return false;
+    }
+
+    user.wallet = parseFloat((user.wallet - amount).toFixed(2));
+
+    saveUsers(users);
+
+    logTransaction(userId, amount, "DEBIT", reason);
+
+    if (typeof addLog === "function") {
+      addLog("DEBIT " + amount + " (" + reason + ")", userId);
+    }
+
+    return true;
+
+  } catch (err) {
+
+    if (typeof addCriticalIncomeLog === "function") {
+      addCriticalIncomeLog("Wallet debit error: " + err.message);
+    }
+
     return false;
   }
-
-  amount = Number(amount);
-
-  if (!userId || isNaN(amount) || amount <= 0) return false;
-
-  let users = getUsers();
-  let user = users.find(u => u.userId === userId);
-
-  if (!user) return false;
-
-  initWallet(user);
-
-  if (user.wallet < amount) {
-    alert("Insufficient balance");
-    return false;
-  }
-
-  user.wallet = parseFloat((user.wallet - amount).toFixed(2));
-
-  saveUsers(users);
-
-  logTransaction(userId, amount, "DEBIT", reason);
-  addLog("DEBIT " + amount + " (" + reason + ")", userId);
-
-  return true;
 }
 
 // =====================
-// 🧾 LOG TRANSACTION
+// 🧾 LOG
 // =====================
 function logTransaction(userId, amount, type, reason) {
 
