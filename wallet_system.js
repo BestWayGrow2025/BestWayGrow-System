@@ -1,14 +1,15 @@
 /*
 ========================================
-WALLET SYSTEM V7 (FINAL LOCKED)
+WALLET SYSTEM V7 (ULTIMATE FINAL)
 ========================================
 ✔ Core integrated
 ✔ System lock protected
 ✔ Duplicate safe
 ✔ Transaction limit control
-✔ Safe logging
 ✔ Decimal safe
-✔ Production locked
+✔ Unified logging (FIXED)
+✔ Error-safe handling
+✔ Production BEST
 ========================================
 */
 
@@ -82,7 +83,7 @@ function creditWallet(userId, amount, reason = "SYSTEM") {
 
     let settings = getSystemSettings();
     if (settings.lockMode) {
-      console.warn("System Locked");
+      console.warn("🚫 System Locked");
       return;
     }
 
@@ -98,7 +99,7 @@ function creditWallet(userId, amount, reason = "SYSTEM") {
     initWallet(user);
 
     if (isDuplicateTxn(userId, amount, reason)) {
-      console.warn("Duplicate credit blocked");
+      console.warn("⚠ Duplicate credit blocked");
       return;
     }
 
@@ -108,15 +109,14 @@ function creditWallet(userId, amount, reason = "SYSTEM") {
 
     logTransaction(userId, amount, "CREDIT", reason);
 
-    // optional activity log
-    if (typeof addLog === "function") {
-      addLog("CREDIT " + amount + " (" + reason + ")", userId);
+    if (typeof logActivity === "function") {
+      logActivity(userId, "USER", `CREDIT ₹${amount} (${reason})`);
     }
 
   } catch (err) {
 
-    if (typeof addCriticalIncomeLog === "function") {
-      addCriticalIncomeLog("Wallet credit error: " + err.message);
+    if (typeof logCritical === "function") {
+      logCritical("Wallet credit error: " + err.message);
     }
 
   }
@@ -131,7 +131,7 @@ function debitWallet(userId, amount, reason = "SYSTEM") {
 
     let settings = getSystemSettings();
     if (settings.lockMode) {
-      alert("System Locked");
+      alert("🚫 System Locked");
       return false;
     }
 
@@ -157,16 +157,16 @@ function debitWallet(userId, amount, reason = "SYSTEM") {
 
     logTransaction(userId, amount, "DEBIT", reason);
 
-    if (typeof addLog === "function") {
-      addLog("DEBIT " + amount + " (" + reason + ")", userId);
+    if (typeof logActivity === "function") {
+      logActivity(userId, "USER", `DEBIT ₹${amount} (${reason})`);
     }
 
     return true;
 
   } catch (err) {
 
-    if (typeof addCriticalIncomeLog === "function") {
-      addCriticalIncomeLog("Wallet debit error: " + err.message);
+    if (typeof logCritical === "function") {
+      logCritical("Wallet debit error: " + err.message);
     }
 
     return false;
