@@ -16,7 +16,6 @@
       color:#fff;
       padding:18px;
       text-align:center;
-      box-shadow:0 3px 10px rgba(0,0,0,0.2);
     }
 
     header button {
@@ -29,36 +28,25 @@
       cursor:pointer;
     }
 
-    /* MENU */
     .menu {
       display:flex;
       overflow-x:auto;
-      white-space:nowrap;
       background:#fff;
       padding:10px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.1);
     }
 
     .menu button {
-      flex:0 0 auto;
       margin:5px;
       padding:10px 14px;
       border:none;
       border-radius:20px;
-      cursor:pointer;
       background:linear-gradient(135deg,#007bff,#00c6ff);
       color:#fff;
-      font-size:13px;
-      transition:0.3s;
+      cursor:pointer;
     }
 
     .menu button.active {
       background:linear-gradient(135deg,#003f88,#0059b3);
-    }
-
-    .menu button:hover {
-      transform:scale(1.05);
-      opacity:0.9;
     }
 
     .container {
@@ -69,18 +57,14 @@
       background:#fff;
       padding:20px;
       border-radius:15px;
-      box-shadow:0 6px 20px rgba(0,0,0,0.1);
       max-width:700px;
       margin:auto;
-      animation:fadeIn 0.3s ease;
     }
 
     .section-title {
       font-size:18px;
       font-weight:bold;
       margin-bottom:10px;
-      border-bottom:2px solid #eee;
-      padding-bottom:5px;
     }
 
     .action-btn {
@@ -93,30 +77,16 @@
       cursor:pointer;
     }
 
-    table {
+    input.ref-box {
       width:100%;
-      border-collapse: collapse;
-      margin-top:10px;
-      font-size:13px;
+      padding:8px;
+      border-radius:6px;
+      border:1px solid #ccc;
     }
 
-    th {
-      background:#f1f4f8;
-    }
+    .green { color:green; }
+    .red { color:red; }
 
-    th, td {
-      border:1px solid #eee;
-      padding:10px;
-      text-align:center;
-    }
-
-    .green { color:green; font-weight:bold; }
-    .red { color:red; font-weight:bold; }
-
-    @keyframes fadeIn {
-      from {opacity:0; transform:translateY(10px);}
-      to {opacity:1; transform:translateY(0);}
-    }
   </style>
 </head>
 
@@ -134,8 +104,6 @@
   <button onclick="setActive(this);loadUpgrade()">Upgrade</button>
   <button onclick="setActive(this);loadRepurchase()">Repurchase</button>
   <button onclick="setActive(this);loadWallet()">Wallet</button>
-  <button onclick="setActive(this);loadTree()">Tree</button>
-  <button onclick="setActive(this);loadTickets()">Support</button>
 </div>
 
 <div class="container">
@@ -143,12 +111,12 @@
 </div>
 
 <script src="core_system.js"></script>
+<script src="pin_master_system.js"></script>
 
 <script>
 
 // INIT
 if (typeof initCoreSystem === "function") initCoreSystem();
-else { alert("core_system.js missing"); throw new Error("STOP"); }
 
 // AUTH
 let session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
@@ -158,9 +126,11 @@ if (!session || !session.userId) {
   throw new Error("STOP");
 }
 
-let user = getUserById(session.userId);
+let user = typeof getUserById === "function"
+  ? getUserById(session.userId)
+  : null;
 
-if (!user || user.role !== "user") {
+if (!user) {
   localStorage.removeItem("loggedInUser");
   location.href = "user_login.html";
   throw new Error("STOP");
@@ -176,94 +146,81 @@ function setActive(btn) {
   btn.classList.add("active");
 }
 
-// STORAGE
-function getPins() {
-  return JSON.parse(localStorage.getItem("pins") || "[]");
+// ================= REFERRAL =================
+function generateRefLink(userId) {
+  return window.location.origin +
+    "/BestWayGrow-System/user_register.html?ref=" + userId;
 }
 
-// HOME
+function copyRefLink() {
+  let input = document.getElementById("refLink");
+  input.select();
+  input.setSelectionRange(0, 99999);
+
+  navigator.clipboard.writeText(input.value);
+
+  document.getElementById("copyMsg").innerText = "✅ Link copied!";
+}
+
+// ================= HOME =================
 function loadHome() {
+
+  let refLink = generateRefLink(user.userId);
+
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Dashboard Overview</div>
+
     <p>Status: ${user.status || "inactive"}</p>
     <p>Upgrade Level: ${user.upgradeLevel || 0}</p>
     <p>Repurchase Count: ${user.repurchaseCount || 0}</p>
+
+    <hr><br>
+
+    <div class="section-title">My Referral Link 🔗</div>
+
+    <input id="refLink" class="ref-box" value="${refLink}" readonly><br><br>
+
+    <button class="action-btn" onclick="copyRefLink()">Copy Link</button>
+
+    <p id="copyMsg"></p>
   `;
 }
 
-// PIN
+// ================= PIN =================
 function loadPins() {
 
-  let pins = getPins().filter(p =>
+  let pins = loadPins().filter(p =>
     p.ownerId === user.userId || p.usedBy === user.userId
   );
 
-  let html = `<div class="section-title">PIN Section</div>
-  <button class="action-btn" onclick="location.href='user_pin_activation.html'">Activate PIN</button>
-  <button class="action-btn" onclick="location.href='user_pin_use.html'">Use PIN</button>
-  <table>
-    <tr><th>PIN</th><th>Amount</th><th>Status</th></tr>`;
+  let html = `<div class="section-title">PIN Section</div>`;
 
   if (!pins.length) {
-    html += `<tr><td colspan="3">No PIN</td></tr>`;
+    html += `<p>No PIN</p>`;
   }
 
   pins.forEach(p => {
-    let status = p.used ? "USED" : "AVAILABLE";
-    let cls = p.used ? "red" : "green";
-
-    html += `
-      <tr>
-        <td>${p.pin}</td>
-        <td>₹${p.amount || 0}</td>
-        <td class="${cls}">${status}</td>
-      </tr>`;
+    html += `<p>${p.pinId} - ₹${p.amount || 0} (${p.status})</p>`;
   });
-
-  html += `</table>`;
 
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// UPGRADE
+// ================= UPGRADE =================
 function loadUpgrade() {
-  document.getElementById("mainContent").innerHTML = `
-    <div class="section-title">Upgrade</div>
-    <p>Current Level: ${user.upgradeLevel || 0}</p>
-    <button class="action-btn" onclick="location.href='user_pin_use.html'">Upgrade Now</button>
-  `;
+  location.href = "user_upgrade.html";
 }
 
-// REPURCHASE
+// ================= REPURCHASE =================
 function loadRepurchase() {
-  document.getElementById("mainContent").innerHTML = `
-    <div class="section-title">Repurchase</div>
-    <p>Total Repurchase: ${user.repurchaseCount || 0}</p>
-    <button class="action-btn" onclick="location.href='user_pin_use.html'">Repurchase Now</button>
-  `;
+  location.href = "user_repurchase.html";
 }
 
-// WALLET
+// ================= WALLET =================
 function loadWallet() {
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Wallet</div>
     <p>Balance: ₹${user.wallet || 0}</p>
-  `;
-}
-
-// TREE
-function loadTree() {
-  document.getElementById("mainContent").innerHTML = `
-    <div class="section-title">User Tree</div>
-    <p>Coming Soon 🌳</p>
-  `;
-}
-
-// SUPPORT
-function loadTickets() {
-  document.getElementById("mainContent").innerHTML = `
-    <div class="section-title">Support / Tickets</div>
-    <p>Coming Soon 🎫</p>
   `;
 }
 
