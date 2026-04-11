@@ -1,6 +1,16 @@
-// ===============================
-// 📜 ACTIVITY LOG SYSTEM (FINAL ENTERPRISE v3)
-// ===============================
+/*
+========================================
+📜 ACTIVITY LOG SYSTEM V7 (MASTER LOG)
+========================================
+✔ Central logging system
+✔ Duplicate protection
+✔ Limit controlled
+✔ Critical + normal logs separated
+✔ System lock safe
+✔ Source tagging added
+✔ Production ready
+========================================
+*/
 
 const ACTIVITY_LOG_LIMIT = 5000;
 const CRITICAL_LOG_LIMIT = 1000;
@@ -21,14 +31,11 @@ function safeLoad(key) {
 }
 
 // ===============================
-// 🔹 SAFE SAVE (UPGRADED 🔥)
+// 🔹 SAFE SAVE
 // ===============================
 function safeSave(key, data, limit = null) {
 
-  if (!Array.isArray(data)) {
-    localStorage.setItem(key, JSON.stringify(data || []));
-    return;
-  }
+  if (!Array.isArray(data)) data = [];
 
   if (limit && data.length > limit) {
     data = data.slice(-limit);
@@ -38,11 +45,34 @@ function safeSave(key, data, limit = null) {
 }
 
 // ===============================
-// ✅ ADD LOG
+// 🔐 DUPLICATE PROTECTION
 // ===============================
-function logActivity(userId, role, action) {
+function isDuplicateLog(userId, action) {
+
+  let logs = safeLoad(ACTIVITY_KEY);
+
+  return logs.some(l =>
+    l.userId === userId &&
+    l.action === action &&
+    (new Date() - new Date(l.time)) < 3000
+  );
+}
+
+// ===============================
+// ✅ ADD ACTIVITY LOG
+// ===============================
+function logActivity(userId, role, action, source = "SYSTEM") {
 
   if (!userId || !role || !action) return;
+
+  // 🔒 SYSTEM LOCK
+  if (typeof getSystemSettings === "function") {
+    let sys = getSystemSettings();
+    if (sys && sys.lockMode) return;
+  }
+
+  // 🔒 DUPLICATE BLOCK
+  if (isDuplicateLog(userId, action)) return;
 
   let logs = safeLoad(ACTIVITY_KEY);
 
@@ -51,6 +81,7 @@ function logActivity(userId, role, action) {
     userId,
     role,
     action,
+    source, // 🔥 NEW (which system triggered)
     type: "NORMAL",
     time: new Date().toISOString()
   });
@@ -74,7 +105,7 @@ function clearActivityLogs(performedBy = "SYSTEM") {
 
   safeSave(ACTIVITY_KEY, []);
 
-  logActivity(performedBy, "SYSTEM", "Activity logs cleared");
+  logActivity(performedBy, "SYSTEM", "Activity logs cleared", "ADMIN");
 }
 
 // ===============================
@@ -91,12 +122,13 @@ function filterLogsByRole(role) {
 // ===============================
 // 🔍 ADVANCED FILTER
 // ===============================
-function filterLogsAdvanced({ userId, role, keyword }) {
+function filterLogsAdvanced({ userId, role, keyword, source }) {
 
   let logs = getActivityLogs();
 
   if (userId) logs = logs.filter(l => l.userId === userId);
   if (role) logs = logs.filter(l => l.role === role);
+  if (source) logs = logs.filter(l => l.source === source);
 
   if (keyword) {
     logs = logs.filter(l =>
@@ -110,7 +142,7 @@ function filterLogsAdvanced({ userId, role, keyword }) {
 // ===============================
 // ⚠️ CRITICAL LOG
 // ===============================
-function logCritical(message, userId = "SYSTEM") {
+function logCritical(message, userId = "SYSTEM", source = "SYSTEM") {
 
   if (!message) return;
 
@@ -120,6 +152,7 @@ function logCritical(message, userId = "SYSTEM") {
     id: "CRIT_" + Date.now(),
     userId,
     message,
+    source,
     type: "CRITICAL",
     time: new Date().toISOString()
   });
