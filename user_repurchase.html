@@ -23,6 +23,9 @@
 <script src="pin_config_system.js"></script>
 <script src="pin_master_system.js"></script>
 
+<!-- ❤️ TRIGGER SYSTEM -->
+<script src="trigger_system.js"></script>
+
 <script>
 
 // ================= INIT =================
@@ -59,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("info").innerText =
     "User: " + user.username + " (" + user.userId + ")";
 
-  // ✅ AUTO PIN FILL (SAFE)
+  // AUTO PIN FILL
   try {
     let selected = JSON.parse(localStorage.getItem("selectedPin"));
     if (selected && selected.type === "repurchase") {
@@ -101,7 +104,7 @@ function repurchase() {
 
   try {
 
-    // 🔥 SINGLE SOURCE OF TRUTH
+    // 🔥 USE PIN (NO INCOME HERE)
     let pin = usePin(pinId, u.userId, "repurchase");
 
     if (!pin) {
@@ -114,7 +117,14 @@ function repurchase() {
       throw new Error("Wrong PIN type");
     }
 
-    // ❌ NO processIncome HERE (handled inside usePin)
+    // ❤️ TRIGGER INCOME (FINAL V7 FLOW)
+    if (typeof triggerRepurchaseIncome === "function") {
+      try {
+        triggerRepurchaseIncome(u.userId, Number(pin.bv || 0));
+      } catch (e) {
+        console.warn("Repurchase trigger failed:", e.message);
+      }
+    }
 
     // ✅ CLEANUP
     localStorage.removeItem("selectedPin");
@@ -135,4 +145,3 @@ function repurchase() {
 
 </body>
 </html>
-
