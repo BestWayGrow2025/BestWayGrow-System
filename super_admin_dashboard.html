@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Super Admin PRO Dashboard</title>
+  <title>Super Admin Dashboard V7 MASTER</title>
   <link rel="icon" href="data:,">
 
   <style>
@@ -76,6 +76,14 @@
       text-align:center;
     }
 
+    input {
+      padding:10px;
+      margin:6px 0;
+      width:90%;
+      border-radius:8px;
+      border:1px solid #ddd;
+    }
+
     table {
       width:100%;
       margin-top:10px;
@@ -93,15 +101,15 @@
 <body>
 
 <header>
-  <h2>👑 SUPER ADMIN PANEL (PRO)</h2>
+  <h2>👑 SUPER ADMIN MASTER CONTROL</h2>
   <p id="welcome"></p>
   <button onclick="logout()">Logout</button>
 </header>
 
 <div class="menu">
   <button onclick="setActive(this);loadHome()">Home</button>
+  <button onclick="setActive(this);loadCreateSysAdmin()">Create Sys Admin</button>
   <button onclick="setActive(this);loadUsers()">Users</button>
-  <button onclick="setActive(this);loadAdmins()">Admins</button>
   <button onclick="setActive(this);loadSystem()">System</button>
   <button onclick="setActive(this);loadReset()">Reset</button>
 </div>
@@ -115,47 +123,46 @@
 <script>
 
 // INIT
-initCoreSystem();
+if (typeof initCoreSystem === "function") initCoreSystem();
+else { alert("core_system.js missing"); throw new Error("STOP"); }
 
 // AUTH
 let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
 
-if (!session) {
+if (!session || !session.userId) {
   location.href = "super_admin_login.html";
+  throw new Error("STOP");
 }
 
 let user = getUserById(session.userId);
 
 if (!user || user.role !== "super_admin") {
   location.href = "super_admin_login.html";
+  throw new Error("STOP");
 }
 
 // WELCOME
 document.getElementById("welcome").innerText =
   "Welcome SUPER ADMIN (" + user.userId + ")";
 
-// ACTIVE MENU
+// MENU ACTIVE
 function setActive(btn) {
   document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
 }
 
-// ================= HOME (UPGRADED) =================
+// ================= HOME =================
 function loadHome() {
 
   let users = getUsers() || [];
-
-  let totalUsers = users.filter(u => u.role === "user").length;
-  let admins = users.filter(u => u.role === "admin").length;
-  let sysAdmins = users.filter(u => u.role === "system_admin").length;
 
   document.getElementById("mainContent").innerHTML = `
     <h3>📊 System Overview</h3>
 
     <div class="stats">
-      <div class="box">Users<br><b>${totalUsers}</b></div>
-      <div class="box">Admins<br><b>${admins}</b></div>
-      <div class="box">Sys Admins<br><b>${sysAdmins}</b></div>
+      <div class="box">Users<br><b>${users.filter(u=>u.role==="user").length}</b></div>
+      <div class="box">Admins<br><b>${users.filter(u=>u.role==="admin").length}</b></div>
+      <div class="box">Sys Admins<br><b>${users.filter(u=>u.role==="system_admin").length}</b></div>
     </div>
 
     <br>
@@ -164,91 +171,158 @@ function loadHome() {
   `;
 }
 
+// ================= CREATE SYSTEM ADMIN =================
+function loadCreateSysAdmin() {
+  document.getElementById("mainContent").innerHTML = `
+    <h3>Create System Admin</h3>
+
+    <input id="id" placeholder="User ID"><br>
+    <input id="name" placeholder="Name"><br>
+    <input id="pass" type="password" placeholder="Password"><br>
+
+    <button onclick="createSysAdmin()">Create</button>
+    <p id="msg"></p>
+  `;
+}
+
+function createSysAdmin() {
+
+  if (window.lock) return;
+  window.lock = true;
+
+  try {
+
+    let id = document.getElementById("id").value.trim();
+    let name = document.getElementById("name").value.trim();
+    let pass = document.getElementById("pass").value.trim();
+
+    if (!id || !name || !pass) return showMsg("⚠ Fill all fields");
+
+    let users = getUsers() || [];
+
+    if (users.find(u => u.userId.toLowerCase() === id.toLowerCase()))
+      return showMsg("❌ Already exists");
+
+    users.push({
+      userId: id,
+      username: name,
+      password: btoa(pass),
+      role: "system_admin",
+      status: "active",
+      createdBy: user.userId,
+      createdAt: Date.now()
+    });
+
+    saveUsers(users);
+
+    showMsg("✅ System Admin Created");
+
+  } finally {
+    window.lock = false;
+  }
+}
+
 // ================= USERS =================
 function loadUsers() {
 
-  let users = getUsers().filter(u => u.role === "user");
+  let users = getUsers() || [];
 
-  let html = `<h3>Users</h3><table>
-  <tr><th>ID</th><th>Status</th></tr>`;
+  let html = `<h3>All Users</h3><table>
+  <tr><th>ID</th><th>Role</th><th>Status</th></tr>`;
 
-  users.forEach(u => {
-    html += `<tr>
-      <td>${u.userId}</td>
-      <td>${u.status || "active"}</td>
-    </tr>`;
-  });
-
-  html += `</table>`;
-
-  document.getElementById("mainContent").innerHTML = html;
-}
-
-// ================= ADMINS =================
-function loadAdmins() {
-
-  let users = getUsers().filter(u => u.role !== "user");
-
-  let html = `<h3>Admins</h3><table>
-  <tr><th>ID</th><th>Role</th></tr>`;
-
-  users.forEach(u => {
-    html += `<tr>
+  users.forEach(u=>{
+    html+=`<tr>
       <td>${u.userId}</td>
       <td>${u.role}</td>
+      <td>${u.status||"active"}</td>
     </tr>`;
   });
 
-  html += `</table>`;
+  html+=`</table>`;
 
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= SYSTEM =================
+// ================= SYSTEM CONTROL =================
 function loadSystem() {
 
-  let s = getSystemSettings() || {};
+  let s = getSystemSettings() || {
+    lockMode:false,
+    registrationOpen:true,
+    adminAccess:true,
+    withdrawOpen:true,
+    queueStop:false
+  };
 
   document.getElementById("mainContent").innerHTML = `
     <h3>System Control</h3>
 
-    <p>Lock Mode: ${s.lockMode ? "ON" : "OFF"}</p>
-    <p>Registration: ${s.registrationOpen ? "ON" : "OFF"}</p>
+    <p>Lock Mode: ${s.lockMode?"ON":"OFF"}</p>
+    <button onclick="toggle('lockMode')">Toggle</button>
 
-    <button onclick="toggle('lockMode')">Toggle Lock</button>
-    <button onclick="toggle('registrationOpen')">Toggle Register</button>
+    <p>Registration: ${s.registrationOpen?"ON":"OFF"}</p>
+    <button onclick="toggle('registrationOpen')">Toggle</button>
+
+    <p>Admin Access: ${s.adminAccess?"ON":"OFF"}</p>
+    <button onclick="toggle('adminAccess')">Toggle</button>
+
+    <p>Withdraw: ${s.withdrawOpen?"ON":"OFF"}</p>
+    <button onclick="toggle('withdrawOpen')">Toggle</button>
+
+    <p>Queue: ${s.queueStop?"STOP":"RUNNING"}</p>
+    <button onclick="toggle('queueStop')">Toggle</button>
   `;
 }
 
-function toggle(key) {
+function toggle(key){
+
   let s = getSystemSettings() || {};
   s[key] = !s[key];
-  localStorage.setItem("systemSettings", JSON.stringify(s));
+
+  if(typeof saveSystemSettings==="function"){
+    saveSystemSettings(s);
+  }else{
+    localStorage.setItem("systemSettings",JSON.stringify(s));
+  }
+
   loadSystem();
 }
 
 // ================= RESET =================
-function loadReset() {
+function loadReset(){
   document.getElementById("mainContent").innerHTML = `
     <h3>System Reset</h3>
+
+    <button onclick="softReset()">Soft Reset (Logs)</button>
     <button onclick="fullReset()">FULL RESET</button>
   `;
 }
 
-function fullReset() {
-  if (!confirm("Danger! Reset system?")) return;
+function softReset(){
+  if(!confirm("Clear logs?")) return;
+  localStorage.removeItem("activityLogs");
+  alert("Logs cleared");
+}
 
-  let users = getUsers().filter(u => u.role === "super_admin");
+function fullReset(){
+
+  if(!confirm("DANGER: Full reset?")) return;
+
+  let users = (getUsers() || []).filter(u=>u.role==="super_admin");
   saveUsers(users);
 
-  alert("Reset Done");
+  alert("System Reset Done");
   location.reload();
 }
 
-// LOGOUT
-function logout() {
+// ================= LOGOUT =================
+function logout(){
   localStorage.removeItem("loggedInSuperAdmin");
-  location.href = "super_admin_login.html";
+  location.href="super_admin_login.html";
+}
+
+function showMsg(m){
+  document.getElementById("msg").innerText = m;
 }
 
 // INIT
@@ -258,5 +332,6 @@ loadHome();
 
 </body>
 </html>
+
 
 
