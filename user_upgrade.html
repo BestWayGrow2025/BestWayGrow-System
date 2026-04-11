@@ -23,17 +23,18 @@
 <script src="pin_config_system.js"></script>
 <script src="pin_master_system.js"></script>
 
+<!-- ❤️ TRIGGER SYSTEM -->
+<script src="trigger_system.js"></script>
+
 <script>
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
 
-  // ✅ CORE INIT SAFE
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   }
 
-  // ✅ SAFE SESSION LOAD
   let session;
   try {
     session = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -47,7 +48,6 @@ document.addEventListener("DOMContentLoaded", function () {
     throw new Error("STOP");
   }
 
-  // ✅ GET USER SAFE
   let user = typeof getUserById === "function"
     ? getUserById(session.userId)
     : null;
@@ -59,11 +59,10 @@ document.addEventListener("DOMContentLoaded", function () {
     throw new Error("STOP");
   }
 
-  // ✅ DISPLAY INFO
   document.getElementById("info").innerText =
     "User: " + user.username + " (" + user.userId + ")";
 
-  // ✅ AUTO PIN FILL (SAFE)
+  // AUTO PIN FILL
   try {
     let selected = JSON.parse(localStorage.getItem("selectedPin"));
     if (selected && selected.type === "upgrade") {
@@ -82,7 +81,6 @@ function isAlreadyUpgraded(u) {
 // ================= UPGRADE =================
 function upgradeNow() {
 
-  // 🔍 DEBUG (IMPORTANT)
   console.log("Upgrade button clicked");
 
   let session = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -111,7 +109,7 @@ function upgradeNow() {
 
   try {
 
-    // 🔥 SINGLE SOURCE OF TRUTH
+    // 🔥 USE PIN (NO INCOME HERE)
     let pin = usePin(pinId, u.userId, "upgrade");
 
     if (!pin) {
@@ -126,7 +124,14 @@ function upgradeNow() {
       throw new Error("Activation system missing");
     }
 
-    // ❌ NO processIncome HERE (already handled inside usePin)
+    // ❤️ TRIGGER INCOME (FINAL V7 FLOW)
+    if (typeof triggerUpgradeIncome === "function") {
+      try {
+        triggerUpgradeIncome(u.userId, Number(pin.bv || 0));
+      } catch (e) {
+        console.warn("Upgrade trigger failed:", e.message);
+      }
+    }
 
     // ✅ CLEANUP
     localStorage.removeItem("selectedPin");
@@ -147,7 +152,6 @@ function upgradeNow() {
 
 </body>
 </html>
-
 
 
 
