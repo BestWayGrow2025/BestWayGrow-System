@@ -1,13 +1,13 @@
 /*
 ========================================
-🧠 CORE SYSTEM V7 (MASTER ENGINE)
+🧠 CORE SYSTEM V7 (MASTER ENGINE FINAL)
 ========================================
 ✔ Safe storage (self-healing)
 ✔ System lock protection
 ✔ User management safe
 ✔ ID generation protected
 ✔ Page security strong
-✔ Init system hardened
+✔ Feature control centralized
 ✔ Corruption recovery
 ✔ Production locked
 ========================================
@@ -58,8 +58,8 @@ function getSystemSettings() {
     adminAccess: true,
     upgradesOpen: true,
     repurchaseOpen: true,
-    queueStop: false,
-    withdrawStop: false
+    withdrawOpen: true,
+    queueStop: false
   };
 
   let stored = safeGet("systemSettings", {});
@@ -69,21 +69,40 @@ function getSystemSettings() {
   return merged;
 }
 
+function saveSystemSettings(settings) {
+  if (!settings || typeof settings !== "object") return;
+  safeSet("systemSettings", settings);
+}
+
 // ===================================
 // 🔐 SYSTEM SAFETY CHECK
 // ===================================
 function isSystemSafe() {
+  let s = getSystemSettings();
+  return !(s.lockMode === true);
+}
 
-  let settings = getSystemSettings();
+// ===================================
+// 🔹 FEATURE CONTROLS (GLOBAL)
+// ===================================
+function canRegister() {
+  return getSystemSettings().registrationOpen && isSystemSafe();
+}
 
-  if (!settings || typeof settings !== "object") return false;
+function canAdminAccess() {
+  return getSystemSettings().adminAccess && isSystemSafe();
+}
 
-  if (settings.lockMode === true) {
-    console.warn("System locked");
-    return false;
-  }
+function canWithdraw() {
+  return getSystemSettings().withdrawOpen && isSystemSafe();
+}
 
-  return true;
+function canUpgrade() {
+  return getSystemSettings().upgradesOpen && isSystemSafe();
+}
+
+function canRepurchase() {
+  return getSystemSettings().repurchaseOpen && isSystemSafe();
 }
 
 // ===================================
@@ -103,38 +122,27 @@ function getChildren(userId) {
 }
 
 // ===================================
-// 🔹 USER ID GENERATOR (SAFE)
+// 🔹 USER ID GENERATOR (SAFE + FALLBACK)
 // ===================================
 function generateUserId() {
 
   let users = getUsers();
-  let existingIds = new Set(users.map(u => u.userId));
+  let existing = new Set(users.map(u => u.userId));
 
-  let attempts = 0;
-
-  while (attempts < 100) {
-
+  // Try random
+  for (let i = 0; i < 50; i++) {
     let id = "BWG" + Math.floor(100000 + Math.random() * 900000);
-
-    if (!existingIds.has(id)) {
-      return id;
-    }
-
-    attempts++;
+    if (!existing.has(id)) return id;
   }
 
-  throw new Error("User ID generation failed (collision)");
+  // Fallback sequential
+  let base = users.length + 100000;
+  let id = "BWG" + base;
+  return id;
 }
 
 // ===================================
-// 🔹 INTRODUCER VALIDATION
-// ===================================
-function isValidIntroducer(id) {
-  return !!getUserById(id);
-}
-
-// ===================================
-// 🔐 PAGE SECURITY (V7 STRONG)
+// 🔐 PAGE SECURITY (STRONG)
 // ===================================
 function protectPage(config) {
 
@@ -159,7 +167,7 @@ function protectPage(config) {
 
   if (!session || !session.userId) {
     alert("Login required");
-    window.location.href = redirect;
+    location.href = redirect;
     return null;
   }
 
@@ -168,8 +176,14 @@ function protectPage(config) {
   if (!user || user.role !== config.role) {
     localStorage.removeItem(key);
     alert("Access denied");
-    window.location.href = redirect;
+    location.href = redirect;
     return null;
+  }
+
+  // 🔒 SYSTEM LOCK CHECK
+  if (!isSystemSafe()) {
+    alert("System Locked");
+    throw new Error("LOCKED");
   }
 
   return user;
@@ -180,15 +194,7 @@ function protectPage(config) {
 // ===================================
 function initCoreSystem() {
 
-  // 🔒 SYSTEM LOCK CHECK
-  let settings = getSystemSettings();
-  if (settings.lockMode === true) {
-    alert("🚫 System Locked");
-    throw new Error("System Locked");
-  }
-
   let users = getUsers();
-
   let updated = false;
 
   // SUPER ADMIN
@@ -198,9 +204,8 @@ function initCoreSystem() {
       username: "Super Admin",
       password: btoa("123"),
       role: "super_admin",
-      createdAt: Date.now(),
-      leftChild: null,
-      rightChild: null
+      status: "active",
+      createdAt: Date.now()
     });
     updated = true;
   }
@@ -212,20 +217,14 @@ function initCoreSystem() {
       username: "System Admin",
       password: btoa("1234"),
       role: "system_admin",
-      introducerId: "BWG000000",
-      sponsorId: "BWG000000",
-      position: "L",
-      createdAt: Date.now(),
-      leftChild: null,
-      rightChild: null
+      status: "active",
+      createdBy: "BWG000000",
+      createdAt: Date.now()
     });
     updated = true;
   }
 
-  if (updated) {
-    saveUsers(users);
-  }
+  if (updated) saveUsers(users);
 
   console.log("✅ Core system initialized");
 }
-
