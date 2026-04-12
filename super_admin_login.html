@@ -42,6 +42,7 @@
 
 <script src="core_system.js"></script>
 <script src="activity_log.js"></script>
+<script src="session_manager.js"></script>
 
 <script>
 
@@ -134,27 +135,6 @@ function getSafeUsers() {
   }
 }
 
-// ================= SAFE SESSION SAVE =================
-function saveSession(user) {
-  try {
-    localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
-      userId: user.userId,
-      role: user.role
-    }));
-
-    // ✅ VERIFY SAVE
-    let test = localStorage.getItem("loggedInSuperAdmin");
-    return !!test;
-
-  } catch (e) {
-    console.error(e);
-    if (typeof logCritical === "function") {
-      logCritical("Session save failed");
-    }
-    return false;
-  }
-}
-
 // ================= LOGIN =================
 function login() {
 
@@ -192,12 +172,8 @@ function login() {
   // CLEAR OLD
   logoutAll();
 
-  // SAVE SESSION
-  let saved = saveSession(user);
-
-  if (!saved) {
-    return showMsg("❌ Session Failed");
-  }
+  // ✅ NEW SESSION SYSTEM
+  setSession(user);
 
   // LOG
   if (typeof logActivity === "function") {
