@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Activity Log Panel</title>
+  <link rel="icon" href="data:,">
+
+  <style>
+    body { font-family: Arial; margin:0; background:#f4f7f9; }
+
+    header {
+      background:#333;
+      color:#fff;
+      padding:15px;
+      text-align:center;
+    }
+
+    .container { padding:20px; }
+
+    .card {
+      background:#fff;
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:20px;
+    }
+
+    input, select {
+      padding:8px;
+      margin:5px;
+      width:180px;
+    }
+
+    button {
+      padding:8px 12px;
+      margin:5px;
+      cursor:pointer;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      margin-top:10px;
+    }
+
+    th, td {
+      border:1px solid #ddd;
+      padding:8px;
+      text-align:center;
+      font-size:12px;
+    }
+
+    .critical {
+      background:#ffe6e6;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>📜 ACTIVITY LOG PANEL</h2>
+  <button onclick="goBack()">⬅ Back</button>
+</header>
+
+<div class="container">
+
+  <!-- FILTER -->
+  <div class="card">
+    <h3>🔍 Filters</h3>
+
+    <input id="fUser" placeholder="User ID">
+    
+    <select id="fRole">
+      <option value="">All Roles</option>
+      <option value="super_admin">Super Admin</option>
+      <option value="system_admin">System Admin</option>
+      <option value="admin">Admin</option>
+      <option value="user">User</option>
+    </select>
+
+    <input id="fKeyword" placeholder="Keyword">
+
+    <button onclick="safeClick(applyFilter)">Apply</button>
+    <button onclick="safeClick(loadLogs)">Reset</button>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="card">
+    <button onclick="safeClick(loadLogs)">🔄 Refresh</button>
+    <button onclick="safeClick(clearLogs)">🧹 Clear Logs</button>
+  </div>
+
+  <!-- LOG TABLE -->
+  <div class="card">
+    <h3>📄 Activity Logs</h3>
+    <div id="logTable"></div>
+  </div>
+
+  <!-- CRITICAL -->
+  <div class="card">
+    <h3>⚠️ Critical Logs</h3>
+    <div id="criticalTable"></div>
+  </div>
+
+</div>
+
+<script src="core_system.js"></script>
+<script src="activity_log.js"></script>
+
+<script>
+
+// INIT
+if (typeof initCoreSystem === "function") initCoreSystem();
+else { alert("core_system.js missing"); throw new Error("STOP"); }
+
+// AUTH 🔒
+let currentUser = protectPage({ role: ["super_admin","system_admin"] });
+if (!currentUser) throw new Error("STOP");
+
+// LOCK SYSTEM
+let lock = false;
+function safeClick(fn) {
+  if (lock) return;
+  lock = true;
+  fn();
+  setTimeout(()=> lock=false, 400);
+}
+
+// LOAD LOGS
+function loadLogs() {
+
+  let logs = getActivityLogs() || [];
+
+  let html = `<table>
+  <tr>
+    <th>ID</th><th>User</th><th>Role</th>
+    <th>Action</th><th>Source</th><th>Time</th>
+  </tr>`;
+
+  if (!logs.length) {
+    html += `<tr><td colspan="6">No Logs</td></tr>`;
+  }
+
+  logs.slice().reverse().forEach(l => {
+    html += `<tr>
+      <td>${l.logId}</td>
+      <td>${l.userId}</td>
+      <td>${l.role}</td>
+      <td>${l.action}</td>
+      <td>${l.source}</td>
+      <td>${new Date(l.time).toLocaleString()}</td>
+    </tr>`;
+  });
+
+  html += `</table>`;
+
+  document.getElementById("logTable").innerHTML = html;
+
+  loadCritical();
+}
+
+// CRITICAL
+function loadCritical() {
+
+  let logs = getCriticalLogs() || [];
+
+  let html = `<table>
+  <tr><th>ID</th><th>User</th><th>Message</th><th>Time</th></tr>`;
+
+  if (!logs.length) {
+    html += `<tr><td colspan="4">No Critical Logs</td></tr>`;
+  }
+
+  logs.slice().reverse().forEach(l => {
+    html += `<tr class="critical">
+      <td>${l.id}</td>
+      <td>${l.userId}</td>
+      <td>${l.message}</td>
+      <td>${new Date(l.time).toLocaleString()}</td>
+    </tr>`;
+  });
+
+  html += `</table>`;
+
+  document.getElementById("criticalTable").innerHTML = html;
+}
+
+// FILTER
+function applyFilter() {
+
+  let userId = document.getElementById("fUser").value.trim();
+  let role = document.getElementById("fRole").value;
+  let keyword = document.getElementById("fKeyword").value.trim();
+
+  let logs = filterLogsAdvanced({ userId, role, keyword });
+
+  let html = `<table>
+  <tr>
+    <th>ID</th><th>User</th><th>Role</th>
+    <th>Action</th><th>Source</th><th>Time</th>
+  </tr>`;
+
+  if (!logs.length) {
+    html += `<tr><td colspan="6">No Results</td></tr>`;
+  }
+
+  logs.slice().reverse().forEach(l => {
+    html += `<tr>
+      <td>${l.logId}</td>
+      <td>${l.userId}</td>
+      <td>${l.role}</td>
+      <td>${l.action}</td>
+      <td>${l.source}</td>
+      <td>${new Date(l.time).toLocaleString()}</td>
+    </tr>`;
+  });
+
+  html += `</table>`;
+
+  document.getElementById("logTable").innerHTML = html;
+}
+
+// CLEAR
+function clearLogs() {
+
+  if (!confirm("Clear all logs?")) return;
+
+  clearActivityLogs(currentUser.userId);
+
+  loadLogs();
+}
+
+// BACK
+function goBack() {
+  history.back();
+}
+
+// INIT
+loadLogs();
+
+</script>
+
+</body>
+</html>
