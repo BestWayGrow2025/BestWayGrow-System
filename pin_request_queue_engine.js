@@ -1,20 +1,19 @@
 /*
 ========================================
-PIN REQUEST QUEUE ENGINE (FINAL STABLE v5)
+PIN REQUEST QUEUE ENGINE (ENTERPRISE FINAL v8)
 ========================================
-✔ Priority based (GREEN > YELLOW > RED)
-✔ Batch system (3:2:1)
-✔ Lock system
-✔ Retry control
-✔ Fail-safe (never stops)
-✔ Data-safe
-✔ System control
+✔ Fully system aligned (core_system)
+✔ No direct localStorage
+✔ Safe lock system
+✔ Priority batch processing
+✔ Retry + fail-safe
+✔ System ON/OFF control
 ✔ Dependency-safe (WAIT MODE)
+✔ Production ready
 ========================================
 */
 
 // ================= CONFIG =================
-const PIN_QUEUE_LOCK = "PIN_QUEUE_LOCK";
 const RETRY_LIMIT = 3;
 
 // ================= DEPENDENCY CHECK =================
@@ -22,28 +21,47 @@ function isDependencyReady() {
   return (
     typeof processPinRequestAuto === "function" &&
     typeof getPinRequests === "function" &&
-    typeof savePinRequests === "function"
+    typeof savePinRequests === "function" &&
+    typeof getSystemSettings === "function" &&
+    typeof saveSystemSettings === "function"
   );
 }
 
-// ================= LOCK =================
-function isPinQueueLocked() {
-  return localStorage.getItem(PIN_QUEUE_LOCK) === "true";
-}
+// ================= SYSTEM SETTINGS =================
+function getQueueSettings() {
+  let settings = getSystemSettings() || {};
 
-function setPinQueueLock(val) {
-  localStorage.setItem(PIN_QUEUE_LOCK, val ? "true" : "false");
-}
-
-// ================= SYSTEM CONTROL =================
-function isQueueAllowed() {
-  let s;
-  try {
-    s = JSON.parse(localStorage.getItem("systemSettings")) || {};
-  } catch {
-    s = {};
+  if (!settings.pinQueue) {
+    settings.pinQueue = {
+      enabled: true,
+      lock: false
+    };
+    saveSystemSettings(settings);
   }
-  return !s.queueStop;
+
+  return settings.pinQueue;
+}
+
+function updateQueueSettings(data) {
+  let settings = getSystemSettings() || {};
+  settings.pinQueue = { ...settings.pinQueue, ...data };
+  saveSystemSettings(settings);
+}
+
+// ================= CONTROL =================
+function isQueueAllowed() {
+  let q = getQueueSettings();
+  return q.enabled === true;
+}
+
+// ================= LOCK =================
+function isQueueLocked() {
+  let q = getQueueSettings();
+  return q.lock === true;
+}
+
+function setQueueLock(val) {
+  updateQueueSettings({ lock: val });
 }
 
 // ================= PRIORITY =================
@@ -53,13 +71,11 @@ const PRIORITY_WEIGHT = {
   RED: 1
 };
 
-// ================= GET REQUESTS =================
+// ================= REQUEST HELPERS =================
 function getPendingRequests() {
-  let all = getPinRequests();
-  return all.filter(r => r.status === "PENDING");
+  return getPinRequests().filter(r => r.status === "PENDING");
 }
 
-// ================= GROUP =================
 function groupByPriority(requests) {
   return {
     GREEN: requests.filter(r => (r.priority || "YELLOW") === "GREEN"),
@@ -68,10 +84,8 @@ function groupByPriority(requests) {
   };
 }
 
-// ================= BATCH =================
 function getNextBatch() {
-  let pending = getPendingRequests();
-  let grouped = groupByPriority(pending);
+  let grouped = groupByPriority(getPendingRequests());
 
   return [
     ...grouped.GREEN.slice(0, PRIORITY_WEIGHT.GREEN),
@@ -85,7 +99,7 @@ let isRunning = false;
 
 function processPinQueue() {
 
-  // 🟡 WAIT MODE (NOT STOP)
+  // 🟡 WAIT MODE
   if (!isDependencyReady()) {
     console.warn("⏳ Waiting for dependencies...");
     return;
@@ -93,13 +107,13 @@ function processPinQueue() {
 
   if (!isQueueAllowed()) return;
   if (isRunning) return;
-  if (isPinQueueLocked()) return;
+  if (isQueueLocked()) return;
 
   let batch = getNextBatch();
   if (!batch.length) return;
 
   isRunning = true;
-  setPinQueueLock(true);
+  setQueueLock(true);
 
   try {
 
@@ -118,11 +132,11 @@ function processPinQueue() {
 
         console.warn("Queue Error:", err.message);
 
-        realReq.retry = (realReq.retry || 0) + 1;
+        realReq.retry = Number(realReq.retry || 0) + 1;
 
         if (realReq.retry >= RETRY_LIMIT) {
           realReq.status = "FAILED";
-          realReq.failReason = err.message;
+          realReq.failReason = err.message || "Unknown error";
           realReq.processedAt = Date.now();
         }
       }
@@ -137,7 +151,7 @@ function processPinQueue() {
 
   } finally {
 
-    setPinQueueLock(false);
+    setQueueLock(false);
     isRunning = false;
   }
 }
