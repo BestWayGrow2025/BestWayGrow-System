@@ -1,7 +1,7 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Dashboard V7 PRO+</title>
+  <title>Admin Dashboard V7 FINAL</title>
   <link rel="icon" href="data:,">
 
   <style>
@@ -16,7 +16,6 @@
       color:#fff;
       padding:18px;
       text-align:center;
-      box-shadow:0 3px 10px rgba(0,0,0,0.2);
     }
 
     header button {
@@ -34,7 +33,6 @@
       overflow-x:auto;
       background:#fff;
       padding:10px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.1);
     }
 
     .menu button {
@@ -61,7 +59,6 @@
       border-radius:15px;
       max-width:900px;
       margin:auto;
-      box-shadow:0 6px 20px rgba(0,0,0,0.1);
     }
 
     table {
@@ -71,15 +68,16 @@
       font-size:13px;
     }
 
-    th {
-      background:#f1f4f8;
-    }
-
     th, td {
       border:1px solid #eee;
       padding:10px;
       text-align:center;
     }
+
+    th { background:#f1f4f8; }
+
+    .on { background:#28a745; color:#fff; }
+    .off { background:#dc3545; color:#fff; }
 
   </style>
 </head>
@@ -93,12 +91,12 @@
 </header>
 
 <div class="menu">
-  <button onclick="setActive(this);loadHome()">Home</button>
-  <button onclick="setActive(this);loadUsers()">Users</button>
-  <button onclick="setActive(this);loadPins()">PIN</button>
-  <button onclick="setActive(this);loadWallet()">Wallet</button>
-  <button onclick="setActive(this);loadIncome()">Income</button>
-  <button onclick="setActive(this);loadSystem()">System</button>
+  <button onclick="safeClick(this,loadHome)">Home</button>
+  <button onclick="safeClick(this,loadUsers)">Users</button>
+  <button onclick="safeClick(this,loadPins)">PIN</button>
+  <button onclick="safeClick(this,loadWallet)">Wallet</button>
+  <button onclick="safeClick(this,loadIncome)">Income</button>
+  <button onclick="safeClick(this,loadSystem)">System</button>
 </div>
 
 <div class="container">
@@ -109,6 +107,7 @@
 <script src="wallet_system.js"></script>
 <script src="income_log_system.js"></script>
 <script src="pin_master_system.js"></script>
+<script src="pin_request_system.js"></script>
 
 <script>
 
@@ -123,10 +122,18 @@ if (!admin) throw new Error("STOP");
 document.getElementById("welcome").innerText =
   "Welcome ADMIN (" + admin.userId + ")";
 
-// ACTIVE BUTTON
-function setActive(btn) {
+// LOCK BUTTON
+let lock = false;
+function safeClick(btn, fn) {
+  if (lock) return;
+  lock = true;
+
   document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
+
+  fn();
+
+  setTimeout(()=> lock=false, 300);
 }
 
 // HOME
@@ -140,13 +147,10 @@ function loadHome() {
 
 // USERS
 function loadUsers() {
-
   let users = (getUsers() || []).filter(u => u.role === "user");
 
   let html = `<h3>Users</h3><table>
   <tr><th>ID</th><th>Wallet</th><th>Status</th></tr>`;
-
-  if (!users.length) html += `<tr><td colspan="3">No Users</td></tr>`;
 
   users.forEach(u => {
     html += `<tr>
@@ -160,16 +164,12 @@ function loadUsers() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// PIN (FIXED NEW SYSTEM)
+// PIN
 function loadPins() {
+  let pins = typeof getPins === "function" ? getPins() : [];
 
-  let pins = typeof loadPins === "function" ? loadPins() : [];
-
-  let html = `<h3>PIN Control</h3>
-  <table>
+  let html = `<h3>PIN Control</h3><table>
   <tr><th>PIN</th><th>Status</th></tr>`;
-
-  if (!pins.length) html += `<tr><td colspan="2">No PIN</td></tr>`;
 
   pins.slice(-20).reverse().forEach(p => {
     html += `<tr>
@@ -179,27 +179,23 @@ function loadPins() {
   });
 
   html += `</table>`;
-
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// WALLET (NEW)
+// WALLET
 function loadWallet() {
-
   let users = getUsers() || [];
-
   let total = users.reduce((sum,u)=> sum + Number(u.wallet||0),0);
 
   document.getElementById("mainContent").innerHTML = `
     <h3>Wallet Overview</h3>
-    <p>Total System Balance: ₹${total}</p>
+    <p>Total Balance: ₹${total}</p>
   `;
 }
 
-// INCOME (NEW)
+// INCOME
 function loadIncome() {
-
-  let logs = JSON.parse(localStorage.getItem("incomeLogs") || "[]");
+  let logs = typeof getIncomeLogs === "function" ? getIncomeLogs() : [];
 
   let html = `<h3>Income Logs</h3><table>
   <tr><th>User</th><th>Amount</th><th>Type</th></tr>`;
@@ -213,21 +209,55 @@ function loadIncome() {
   });
 
   html += `</table>`;
-
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// SYSTEM
+// SYSTEM + QUEUE CONTROL 🔥
 function loadSystem() {
 
   let s = getSystemSettings() || {};
+  let requests = typeof getPinRequests === "function" ? getPinRequests() : [];
+
+  let pending = requests.filter(r=>r.status==="PENDING").length;
+  let completed = requests.filter(r=>r.status==="COMPLETED").length;
+  let failed = requests.filter(r=>r.status==="FAILED").length;
+
+  let q = s.pinQueue || { enabled:true, lock:false };
 
   document.getElementById("mainContent").innerHTML = `
     <h3>System Control</h3>
+
     <p>Register: ${s.registrationOpen ? "ON" : "OFF"}</p>
     <p>Upgrade: ${s.upgradesOpen ? "ON" : "OFF"}</p>
     <p>Repurchase: ${s.repurchaseOpen ? "ON" : "OFF"}</p>
+    <p>Lock Mode: ${s.lockMode ? "ON" : "OFF"}</p>
+
+    <hr>
+
+    <h3>Queue Control</h3>
+    <p>Status: ${q.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
+
+    <button class="on" onclick="toggleQueue(true)">ON</button>
+    <button class="off" onclick="toggleQueue(false)">OFF</button>
+
+    <hr>
+
+    <h3>Live Queue Monitor</h3>
+    <p>Total: ${requests.length}</p>
+    <p>Pending: ${pending}</p>
+    <p>Completed: ${completed}</p>
+    <p>Failed: ${failed}</p>
+    <p>Running: ${q.lock ? "⚙️ PROCESSING" : "IDLE"}</p>
   `;
+}
+
+// TOGGLE QUEUE
+function toggleQueue(val) {
+  let s = getSystemSettings() || {};
+  s.pinQueue = s.pinQueue || {};
+  s.pinQueue.enabled = val;
+  saveSystemSettings(s);
+  loadSystem();
 }
 
 // LOGOUT
@@ -243,4 +273,3 @@ loadHome();
 
 </body>
 </html>
-
