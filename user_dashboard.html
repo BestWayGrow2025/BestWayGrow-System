@@ -83,10 +83,6 @@
       border-radius:6px;
       border:1px solid #ccc;
     }
-
-    .green { color:green; }
-    .red { color:red; }
-
   </style>
 </head>
 
@@ -99,11 +95,11 @@
 </header>
 
 <div class="menu">
-  <button onclick="setActive(this);loadHome()">Home</button>
-  <button onclick="setActive(this);loadPins()">PIN</button>
-  <button onclick="setActive(this);loadUpgrade()">Upgrade</button>
-  <button onclick="setActive(this);loadRepurchase()">Repurchase</button>
-  <button onclick="setActive(this);loadWallet()">Wallet</button>
+  <button onclick="safeClick(this,loadHome)">Home</button>
+  <button onclick="safeClick(this,loadPinSection)">PIN</button>
+  <button onclick="safeClick(this,loadUpgrade)">Upgrade</button>
+  <button onclick="safeClick(this,loadRepurchase)">Repurchase</button>
+  <button onclick="safeClick(this,loadWallet)">Wallet</button>
 </div>
 
 <div class="container">
@@ -115,13 +111,51 @@
 
 <script>
 
-// INIT
+// ================= INIT =================
 if (typeof initCoreSystem === "function") initCoreSystem();
 
-// AUTH
-let session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+// ================= SYSTEM SAFETY =================
+function isDashboardAllowed() {
 
-if (!session || !session.userId) {
+  if (typeof getSystemSettings === "function") {
+    let s = getSystemSettings();
+    if (s && s.lockMode) return false;
+  }
+
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) return false;
+  }
+
+  return true;
+}
+
+// ================= SAFE CLICK =================
+function safeClick(btn, fn) {
+  if (window.uiLock) return;
+  window.uiLock = true;
+
+  setActive(btn);
+
+  try {
+    fn();
+  } catch (e) {
+    console.error(e);
+  }
+
+  setTimeout(() => {
+    window.uiLock = false;
+  }, 500);
+}
+
+// ================= AUTH =================
+let session = null;
+
+try {
+  session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+} catch {}
+
+if (!session || !session.userId || !isDashboardAllowed()) {
+  localStorage.removeItem("loggedInUser");
   location.href = "user_login.html";
   throw new Error("STOP");
 }
@@ -136,13 +170,14 @@ if (!user) {
   throw new Error("STOP");
 }
 
-// WELCOME
+// ================= WELCOME =================
 document.getElementById("welcome").innerText =
   "Welcome (" + user.userId + ")";
 
-// ACTIVE MENU
+// ================= MENU =================
 function setActive(btn) {
-  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".menu button")
+    .forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
 }
 
@@ -155,10 +190,7 @@ function generateRefLink(userId) {
 function copyRefLink() {
   let input = document.getElementById("refLink");
   input.select();
-  input.setSelectionRange(0, 99999);
-
   navigator.clipboard.writeText(input.value);
-
   document.getElementById("copyMsg").innerText = "✅ Link copied!";
 }
 
@@ -186,10 +218,12 @@ function loadHome() {
   `;
 }
 
-// ================= PIN =================
-function loadPins() {
+// ================= PIN (FIXED 🔥) =================
+function loadPinSection() {
 
-  let pins = loadPins().filter(p =>
+  let allPins = typeof loadPins === "function" ? loadPins() : [];
+
+  let pins = allPins.filter(p =>
     p.ownerId === user.userId || p.usedBy === user.userId
   );
 
@@ -206,17 +240,15 @@ function loadPins() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= UPGRADE =================
+// ================= NAV =================
 function loadUpgrade() {
   location.href = "user_upgrade.html";
 }
 
-// ================= REPURCHASE =================
 function loadRepurchase() {
   location.href = "user_repurchase.html";
 }
 
-// ================= WALLET =================
 function loadWallet() {
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Wallet</div>
@@ -224,7 +256,7 @@ function loadWallet() {
   `;
 }
 
-// LOGOUT
+// ================= LOGOUT =================
 function logout() {
   localStorage.removeItem("loggedInUser");
   location.href = "user_login.html";
@@ -237,7 +269,6 @@ loadHome();
 
 </body>
 </html>
-
 
 
 
