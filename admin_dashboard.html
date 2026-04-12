@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>Admin Dashboard V7 FINAL</title>
@@ -265,11 +265,315 @@ function logout() {
   localStorage.removeItem("loggedInAdmin");
   location.href = "admin_login.html";
 }
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard V7 FINAL</title>
+  <link rel="icon" href="data:,">
 
-// INIT
+  <style>
+    body {
+      font-family:'Segoe UI', Arial;
+      margin:0;
+      background:linear-gradient(135deg,#eef2f7,#e6ecf5);
+    }
+
+    header {
+      background:linear-gradient(135deg,#000,#434343);
+      color:#fff;
+      padding:18px;
+      text-align:center;
+    }
+
+    header button {
+      margin-top:10px;
+      padding:6px 12px;
+      border:none;
+      border-radius:6px;
+      background:#ff4d4d;
+      color:#fff;
+      cursor:pointer;
+    }
+
+    .menu {
+      display:flex;
+      overflow-x:auto;
+      background:#fff;
+      padding:10px;
+    }
+
+    .menu button {
+      margin:5px;
+      padding:10px 14px;
+      border:none;
+      border-radius:20px;
+      background:linear-gradient(135deg,#007bff,#00c6ff);
+      color:#fff;
+      cursor:pointer;
+    }
+
+    .menu button.active {
+      background:linear-gradient(135deg,#003f88,#0059b3);
+    }
+
+    .container {
+      padding:20px;
+    }
+
+    .card {
+      background:#fff;
+      padding:20px;
+      border-radius:15px;
+      max-width:900px;
+      margin:auto;
+    }
+
+    table {
+      width:100%;
+      border-collapse: collapse;
+      margin-top:10px;
+      font-size:13px;
+    }
+
+    th, td {
+      border:1px solid #eee;
+      padding:10px;
+      text-align:center;
+    }
+
+    th { background:#f1f4f8; }
+
+    .on { background:#28a745; color:#fff; }
+    .off { background:#dc3545; color:#fff; }
+
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>👨‍💼 ADMIN DASHBOARD</h2>
+  <p id="welcome"></p>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="menu">
+  <button onclick="safeClick(this,loadHome)">Home</button>
+  <button onclick="safeClick(this,loadUsers)">Users</button>
+  <button onclick="safeClick(this,loadPins)">PIN</button>
+  <button onclick="safeClick(this,loadWallet)">Wallet</button>
+  <button onclick="safeClick(this,loadIncome)">Income</button>
+  <button onclick="safeClick(this,loadSystem)">System</button>
+</div>
+
+<div class="container">
+  <div id="mainContent" class="card">Loading...</div>
+</div>
+
+<script src="core_system.js"></script>
+<script src="wallet_system.js"></script>
+<script src="income_log_system.js"></script>
+<script src="pin_master_system.js"></script>
+<script src="pin_request_system.js"></script>
+
+<script>
+
+// ================= INIT =================
+if (typeof initCoreSystem === "function") initCoreSystem();
+else { alert("core_system.js missing"); throw new Error("STOP"); }
+
+// ================= AUTH =================
+let admin = protectPage({ role: "admin" });
+if (!admin) throw new Error("STOP");
+
+// ================= WELCOME =================
+document.getElementById("welcome").innerText =
+  "Welcome ADMIN (" + admin.userId + ")";
+
+// ================= BUTTON LOCK =================
+let clickLock = false;
+
+function safeClick(btn, fn) {
+  if (clickLock) return;
+  clickLock = true;
+
+  document.querySelectorAll(".menu button")
+    .forEach(b => b.classList.remove("active"));
+
+  btn.classList.add("active");
+
+  fn();
+
+  setTimeout(()=> clickLock = false, 300);
+}
+
+// ================= HOME =================
+function loadHome() {
+  document.getElementById("mainContent").innerHTML = `
+    <h3>Overview</h3>
+    <p>Name: ${admin.username || admin.userId}</p>
+    <p>Status: ${admin.status}</p>
+  `;
+}
+
+// ================= USERS =================
+function loadUsers() {
+
+  let users = getUsers().filter(u => u.role === "user");
+
+  let html = `<h3>Users</h3><table>
+  <tr><th>ID</th><th>Wallet</th><th>Status</th></tr>`;
+
+  if (!users.length) html += `<tr><td colspan="3">No Users</td></tr>`;
+
+  users.forEach(u => {
+    html += `<tr>
+      <td>${u.userId}</td>
+      <td>₹${u.wallet || 0}</td>
+      <td>${u.status || "active"}</td>
+    </tr>`;
+  });
+
+  html += `</table>`;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+// ================= PIN =================
+function loadPins() {
+
+  let pins = getPins();
+
+  let html = `<h3>PIN Control</h3><table>
+  <tr><th>PIN</th><th>Status</th></tr>`;
+
+  if (!pins.length) html += `<tr><td colspan="2">No PIN</td></tr>`;
+
+  pins.slice(-20).reverse().forEach(p => {
+    html += `<tr>
+      <td>${p.pinId}</td>
+      <td>${p.status}</td>
+    </tr>`;
+  });
+
+  html += `</table>`;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+// ================= WALLET =================
+function loadWallet() {
+
+  let users = getUsers();
+
+  let total = users.reduce((sum,u)=> sum + Number(u.wallet || 0),0);
+
+  document.getElementById("mainContent").innerHTML = `
+    <h3>Wallet Overview</h3>
+    <p>Total Balance: ₹${total}</p>
+  `;
+}
+
+// ================= INCOME =================
+function loadIncome() {
+
+  let logs = getIncomeLogs();
+
+  let html = `<h3>Income Logs</h3><table>
+  <tr><th>User</th><th>Amount</th><th>Type</th></tr>`;
+
+  if (!logs.length) html += `<tr><td colspan="3">No Logs</td></tr>`;
+
+  logs.slice(-20).reverse().forEach(l => {
+    html += `<tr>
+      <td>${l.userId}</td>
+      <td>₹${l.amount}</td>
+      <td>${l.type}</td>
+    </tr>`;
+  });
+
+  html += `</table>`;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+// ================= SYSTEM + QUEUE =================
+let queueBtnLock = false;
+
+function loadSystem() {
+
+  let s = getSystemSettings();
+
+  // SAFE DEFAULTS
+  s.registrationOpen ??= true;
+  s.upgradesOpen ??= true;
+  s.repurchaseOpen ??= true;
+  s.lockMode ??= false;
+  s.pinQueue ??= { enabled:true, lock:false };
+
+  let requests = getPinRequests();
+
+  let pending = requests.filter(r=>r.status==="PENDING").length;
+  let completed = requests.filter(r=>r.status==="COMPLETED").length;
+  let failed = requests.filter(r=>r.status==="FAILED").length;
+
+  document.getElementById("mainContent").innerHTML = `
+    <h3>System Control</h3>
+
+    <p>Register: ${s.registrationOpen ? "ON" : "OFF"}</p>
+    <p>Upgrade: ${s.upgradesOpen ? "ON" : "OFF"}</p>
+    <p>Repurchase: ${s.repurchaseOpen ? "ON" : "OFF"}</p>
+    <p>Lock Mode: ${s.lockMode ? "ON" : "OFF"}</p>
+
+    <hr>
+
+    <h3>Queue Control</h3>
+    <p>Status: ${s.pinQueue.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
+
+    <button class="on" onclick="toggleQueue(true)">ON</button>
+    <button class="off" onclick="toggleQueue(false)">OFF</button>
+
+    <hr>
+
+    <h3>Live Queue Monitor</h3>
+    <p>Total: ${requests.length}</p>
+    <p>Pending: ${pending}</p>
+    <p>Completed: ${completed}</p>
+    <p>Failed: ${failed}</p>
+    <p>Running: ${s.pinQueue.lock ? "⚙️ PROCESSING" : "IDLE"}</p>
+  `;
+}
+
+// ================= TOGGLE QUEUE =================
+function toggleQueue(val) {
+
+  if (queueBtnLock) return;
+  queueBtnLock = true;
+
+  let s = getSystemSettings();
+
+  s.pinQueue = s.pinQueue || {};
+  s.pinQueue.enabled = val;
+
+  saveSystemSettings(s);
+
+  setTimeout(()=>{
+    queueBtnLock = false;
+    loadSystem();
+  },300);
+}
+
+// ================= LOGOUT =================
+function logout() {
+  localStorage.removeItem("loggedInAdmin");
+  location.href = "admin_login.html";
+}
+
+// ================= INIT =================
 loadHome();
 
 </script>
 
 </body>
 </html>
+
