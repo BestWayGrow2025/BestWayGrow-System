@@ -87,9 +87,25 @@ function safeDecode(p) {
   try { return atob(p); } catch { return p; }
 }
 
+// ================= SAFE SYSTEM SETTINGS =================
+function getSafeSystemSettings() {
+  try {
+    if (typeof getSystemSettings !== "function") {
+      throw new Error("getSystemSettings missing");
+    }
+    return getSystemSettings() || {};
+  } catch (e) {
+    console.error(e);
+    if (typeof logCritical === "function") {
+      logCritical("getSystemSettings failed: " + e.message);
+    }
+    return {};
+  }
+}
+
 // ================= SYSTEM CHECK =================
 function isSystemAllowed() {
-  let s = typeof getSystemSettings === "function" ? getSystemSettings() : {};
+  let s = getSafeSystemSettings();
 
   if (s.lockMode === true) {
     showMsg("🚫 System Locked");
@@ -125,11 +141,17 @@ function saveSession(user) {
       userId: user.userId,
       role: user.role
     }));
+
+    // ✅ VERIFY SAVE
+    let test = localStorage.getItem("loggedInSuperAdmin");
+    return !!test;
+
   } catch (e) {
     console.error(e);
     if (typeof logCritical === "function") {
       logCritical("Session save failed");
     }
+    return false;
   }
 }
 
@@ -171,7 +193,11 @@ function login() {
   logoutAll();
 
   // SAVE SESSION
-  saveSession(user);
+  let saved = saveSession(user);
+
+  if (!saved) {
+    return showMsg("❌ Session Failed");
+  }
 
   // LOG
   if (typeof logActivity === "function") {
@@ -194,3 +220,4 @@ function showMsg(text) {
 
 </body>
 </html>
+
