@@ -1,11 +1,11 @@
 /*
 ========================================
-PIN REQUEST SYSTEM (ENTERPRISE FINAL v7)
+PIN REQUEST SYSTEM V7 (CORE ALIGNED)
 ========================================
-✔ Fully safe data handling
+✔ Safe storage (self-healing)
+✔ System lock protected
+✔ PIN config validation added
 ✔ Retry + fail-safe improved
-✔ No undefined values
-✔ Strong validation
 ✔ Clean processing flow
 ✔ Production stable
 ========================================
@@ -15,16 +15,13 @@ const PIN_REQUEST_KEY = "PIN_REQUEST_DATA";
 
 // ================= LOAD / SAVE =================
 function getPinRequests() {
-  try {
-    return JSON.parse(localStorage.getItem(PIN_REQUEST_KEY)) || [];
-  } catch {
-    localStorage.setItem(PIN_REQUEST_KEY, "[]");
-    return [];
-  }
+  let data = safeGet(PIN_REQUEST_KEY, []);
+  return Array.isArray(data) ? data : [];
 }
 
 function savePinRequests(data) {
-  localStorage.setItem(PIN_REQUEST_KEY, JSON.stringify(data || []));
+  if (!Array.isArray(data)) data = [];
+  safeSet(PIN_REQUEST_KEY, data);
 }
 
 // ================= ID =================
@@ -50,6 +47,18 @@ function detectPriority(userId) {
 // ================= CREATE REQUEST =================
 function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
+  // 🔒 SYSTEM LOCK
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) throw new Error("System locked");
+  }
+
+  // 🔒 PIN SYSTEM CHECK
+  if (typeof isPinSystemSafe === "function") {
+    if (!isPinSystemSafe(type)) {
+      throw new Error("PIN system disabled");
+    }
+  }
+
   if (!userId || !type || !paymentId) {
     throw new Error("Invalid request data");
   }
@@ -66,7 +75,7 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
   let requests = getPinRequests();
 
-  // 🔒 DUPLICATE REQUEST BLOCK
+  // 🔒 DUPLICATE BLOCK
   let pending = requests.find(r =>
     r.userId === userId &&
     r.type === type &&
@@ -114,6 +123,10 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
 // ================= AUTO PROCESS =================
 function processPinRequestAuto(requestId) {
+
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) throw new Error("System locked");
+  }
 
   let requests = getPinRequests();
   let req = requests.find(r => r.requestId === requestId);
@@ -171,7 +184,6 @@ function processPinRequestAuto(requestId) {
 
   } catch (err) {
 
-    // 🔁 RETRY SAFE
     req.retry = Number(req.retry || 0) + 1;
 
     if (req.retry >= 3) {
@@ -192,6 +204,10 @@ function processPinRequestAuto(requestId) {
 
 // ================= MANUAL PROCESS =================
 function processPinRequestManual(requestId, pinIds = [], performedBy) {
+
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) throw new Error("System locked");
+  }
 
   let requests = getPinRequests();
   let req = requests.find(r => r.requestId === requestId);
@@ -246,6 +262,10 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
 
 // ================= REJECT =================
 function rejectPinRequest(requestId, performedBy = "ADMIN") {
+
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) throw new Error("System locked");
+  }
 
   let requests = getPinRequests();
   let req = requests.find(r => r.requestId === requestId);
