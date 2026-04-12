@@ -199,11 +199,248 @@ function loadAdmins() {
 
   let admins = (getUsers() || []).filter(u => u.role === "admin");
 
-  let html = `<h3>Admin List</h3>
-  <table>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Admin Dashboard FINAL</title>
+  <link rel="icon" href="data:,">
+
+  <style>
+    body {
+      font-family:'Segoe UI', Arial;
+      margin:0;
+      background:#eef2f7;
+    }
+
+    header {
+      background:#006633;
+      color:#fff;
+      padding:18px;
+      text-align:center;
+    }
+
+    header button {
+      margin-top:10px;
+      padding:6px 12px;
+      border:none;
+      border-radius:6px;
+      background:#ff4d4d;
+      color:#fff;
+      cursor:pointer;
+    }
+
+    .menu {
+      display:flex;
+      overflow:auto;
+      background:#fff;
+      padding:10px;
+    }
+
+    .menu button {
+      margin:5px;
+      padding:10px;
+      border:none;
+      border-radius:20px;
+      background:#00a86b;
+      color:#fff;
+      cursor:pointer;
+    }
+
+    .menu button.active {
+      background:#004d33;
+    }
+
+    .container {
+      padding:20px;
+    }
+
+    .card {
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+      max-width:900px;
+      margin:auto;
+    }
+
+    input, select {
+      padding:10px;
+      margin:5px;
+      width:90%;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      margin-top:10px;
+    }
+
+    th, td {
+      border:1px solid #ddd;
+      padding:8px;
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>🛠 SYSTEM ADMIN DASHBOARD</h2>
+  <p id="welcome"></p>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="menu">
+  <button onclick="safeClick(this,loadHome)">Home</button>
+  <button onclick="safeClick(this,loadCreateAdmin)">Create Admin</button>
+  <button onclick="safeClick(this,loadAdmins)">Admins</button>
+  <button onclick="safeClick(this,loadSystem)">System</button>
+</div>
+
+<div class="container">
+  <div id="mainContent" class="card"></div>
+</div>
+
+<script src="core_system.js"></script>
+<script src="activity_log.js"></script>
+
+<script>
+
+// INIT
+if (typeof initCoreSystem === "function") initCoreSystem();
+else { alert("core_system.js missing"); throw new Error("STOP"); }
+
+// AUTH 🔒
+let currentUser = protectPage({ role: "system_admin" });
+if (!currentUser) throw new Error("STOP");
+
+// WELCOME
+document.getElementById("welcome").innerText =
+  "Welcome SYSTEM ADMIN (" + currentUser.userId + ")";
+
+// LOCK SYSTEM
+let lock = false;
+function safeClick(btn, fn) {
+  if (lock) return;
+  lock = true;
+
+  document.querySelectorAll(".menu button")
+    .forEach(b => b.classList.remove("active"));
+
+  if (btn) btn.classList.add("active");
+
+  try {
+    fn();
+  } catch (e) {
+    console.error(e);
+  }
+
+  setTimeout(()=> lock=false, 500);
+}
+
+// SYSTEM CHECK
+function isSystemSafe() {
+  let s = getSystemSettings ? getSystemSettings() : {};
+
+  if (s.lockMode) {
+    alert("System Locked");
+    return false;
+  }
+
+  return true;
+}
+
+// HOME
+function loadHome() {
+  document.getElementById("mainContent").innerHTML = `
+    <h3>Dashboard</h3>
+    <p>ID: ${currentUser.userId}</p>
+    <p>Status: ${currentUser.status}</p>
+  `;
+}
+
+// CREATE ADMIN
+function loadCreateAdmin() {
+
+  let s = getSystemSettings ? getSystemSettings() : {};
+
+  if (!s.adminAccess) {
+    return document.getElementById("mainContent").innerHTML =
+      `<h3>Access Denied</h3>`;
+  }
+
+  document.getElementById("mainContent").innerHTML = `
+    <h3>Create Admin</h3>
+
+    <input id="adminId" placeholder="Admin ID"><br>
+    <input id="name" placeholder="Name"><br>
+    <input id="password" placeholder="Password"><br>
+
+    <select id="type">
+      <option value="adminA">Admin A</option>
+      <option value="adminB">Admin B</option>
+    </select><br>
+
+    <button onclick="safeClick(this,createAdmin)">Create</button>
+  `;
+}
+
+function createAdmin() {
+
+  let s = getSystemSettings ? getSystemSettings() : {};
+
+  // 🔒 DOUBLE SAFETY
+  if (!s.adminAccess) return alert("Admin creation OFF");
+  if (!isSystemSafe()) return;
+
+  let id = document.getElementById("adminId").value.trim();
+  let name = document.getElementById("name").value.trim();
+  let pass = document.getElementById("password").value.trim();
+  let type = document.getElementById("type").value;
+
+  if (!id || !name || !pass) return alert("Fill all fields");
+
+  let users = typeof getUsers === "function" ? getUsers() : [];
+
+  if (users.find(u => u.userId.toLowerCase() === id.toLowerCase()))
+    return alert("Admin exists");
+
+  users.push({
+    userId: id,
+    username: name,
+    password: btoa(pass),
+    role: "admin",
+    adminType: type,
+    status: "active",
+    createdBy: currentUser.userId,
+    createdAt: Date.now()
+  });
+
+  if (typeof saveUsers === "function") {
+    saveUsers(users);
+  }
+
+  // LOG
+  if (typeof logActivity === "function") {
+    logActivity(currentUser.userId, "SYSTEM_ADMIN", "Create Admin: " + id);
+  }
+
+  alert("Admin Created");
+  loadAdmins();
+}
+
+// ADMIN LIST
+function loadAdmins() {
+
+  let admins = (typeof getUsers === "function" ? getUsers() : [])
+    .filter(u => u.role === "admin");
+
+  let html = `<h3>Admin List</h3><table>
   <tr><th>ID</th><th>Name</th><th>Type</th><th>Status</th></tr>`;
 
-  if (!admins.length) html += `<tr><td colspan="4">No Admin</td></tr>`;
+  if (!admins.length) {
+    html += `<tr><td colspan="4">No Admin</td></tr>`;
+  }
 
   admins.forEach(a => {
     html += `<tr>
@@ -219,22 +456,22 @@ function loadAdmins() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= SYSTEM =================
+// SYSTEM
 function loadSystem() {
 
-  let s = getSystemSettings() || {};
+  let s = getSystemSettings ? getSystemSettings() : {};
 
   document.getElementById("mainContent").innerHTML = `
     <h3>System Status</h3>
 
-    Admin Access: ${s.adminAccess ? "ON" : "OFF"}<br>
-    Lock Mode: ${s.lockMode ? "ON" : "OFF"}<br>
-    Registration: ${s.registrationOpen ? "ON" : "OFF"}<br>
-    Withdraw: ${s.withdrawOpen ? "ON" : "OFF"}<br>
+    <p>Admin Access: ${s.adminAccess ? "ON" : "OFF"}</p>
+    <p>Lock Mode: ${s.lockMode ? "ON" : "OFF"}</p>
+    <p>Registration: ${s.registrationOpen ? "ON" : "OFF"}</p>
+    <p>Withdraw: ${s.withdrawOpen ? "ON" : "OFF"}</p>
   `;
 }
 
-// ================= LOGOUT =================
+// LOGOUT
 function logout() {
   localStorage.removeItem("loggedInSystemAdmin");
   location.href = "system_admin_login.html";
