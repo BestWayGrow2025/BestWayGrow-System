@@ -1,33 +1,25 @@
 /*
 ========================================
-WALLET SYSTEM V7 (ULTIMATE FINAL)
+💰 WALLET SYSTEM V7 (ULTRA FINAL ENGINE)
 ========================================
-✔ Core integrated
-✔ System lock protected
-✔ Duplicate safe
-✔ Transaction limit control
+✔ Core integrated (safeGet / safeSet)
+✔ Wallet structure standardized
+✔ Transaction logging (limited + safe)
+✔ Duplicate protection
 ✔ Decimal safe
-✔ Unified logging (FIXED)
-✔ Error-safe handling
-✔ Production BEST
+✔ System control aware
+✔ Production locked
 ========================================
 */
 
-// =====================
-// 🔹 CONFIG
-// =====================
 const TXN_LIMIT = 5000;
 
-// =====================
-// 🔹 STORAGE
-// =====================
+// ===================================
+// 🔹 TRANSACTION STORAGE (SAFE)
+// ===================================
 function getTransactions() {
-  try {
-    return JSON.parse(localStorage.getItem("transactions") || "[]");
-  } catch {
-    localStorage.setItem("transactions", "[]");
-    return [];
-  }
+  let txns = safeGet("transactions", []);
+  return Array.isArray(txns) ? txns : [];
 }
 
 function saveTransactions(txns) {
@@ -38,23 +30,28 @@ function saveTransactions(txns) {
     txns = txns.slice(-TXN_LIMIT);
   }
 
-  localStorage.setItem("transactions", JSON.stringify(txns));
+  safeSet("transactions", txns);
 }
 
-// =====================
-// 🔹 INIT WALLET
-// =====================
+// ===================================
+// 🔹 INIT WALLET STRUCTURE
+// ===================================
 function initWallet(user) {
+
   if (!user) return;
 
-  if (user.wallet === undefined || isNaN(user.wallet)) {
-    user.wallet = 0;
+  if (!user.wallet || typeof user.wallet !== "object") {
+    user.wallet = {
+      balance: 0,
+      totalCredit: 0,
+      totalDebit: 0
+    };
   }
 }
 
-// =====================
-// 🔐 DUPLICATE CHECK
-// =====================
+// ===================================
+// 🔐 DUPLICATE CHECK (SAFE)
+// ===================================
 function isDuplicateTxn(userId, amount, reason) {
 
   let txns = getTransactions();
@@ -63,77 +60,25 @@ function isDuplicateTxn(userId, amount, reason) {
     t.userId === userId &&
     Number(t.amount) === Number(amount) &&
     t.reason === reason &&
-    (new Date() - new Date(t.time)) < 5000
+    (Date.now() - new Date(t.time).getTime()) < 5000
   );
 }
 
-// =====================
+// ===================================
 // 📊 USER TXNS
-// =====================
+// ===================================
 function getUserTransactions(userId) {
   return getTransactions().filter(t => t.userId === userId);
 }
 
-// =====================
-// 💰 CREDIT
-// =====================
+// ===================================
+// 💰 CREDIT WALLET
+// ===================================
 function creditWallet(userId, amount, reason = "SYSTEM") {
 
   try {
 
-    let settings = getSystemSettings();
-    if (settings.lockMode) {
-      console.warn("🚫 System Locked");
-      return;
-    }
-
-    amount = Number(amount);
-
-    if (!userId || isNaN(amount) || amount <= 0) return;
-
-    let users = getUsers();
-    let user = users.find(u => u.userId === userId);
-
-    if (!user) return;
-
-    initWallet(user);
-
-    if (isDuplicateTxn(userId, amount, reason)) {
-      console.warn("⚠ Duplicate credit blocked");
-      return;
-    }
-
-    user.wallet = parseFloat((user.wallet + amount).toFixed(2));
-
-    saveUsers(users);
-
-    logTransaction(userId, amount, "CREDIT", reason);
-
-    if (typeof logActivity === "function") {
-      logActivity(userId, "USER", `CREDIT ₹${amount} (${reason})`);
-    }
-
-  } catch (err) {
-
-    if (typeof logCritical === "function") {
-      logCritical("Wallet credit error: " + err.message);
-    }
-
-  }
-}
-
-// =====================
-// 💸 DEBIT
-// =====================
-function debitWallet(userId, amount, reason = "SYSTEM") {
-
-  try {
-
-    let settings = getSystemSettings();
-    if (settings.lockMode) {
-      alert("🚫 System Locked");
-      return false;
-    }
+    if (!isSystemSafe()) return false;
 
     amount = Number(amount);
 
@@ -146,12 +91,65 @@ function debitWallet(userId, amount, reason = "SYSTEM") {
 
     initWallet(user);
 
-    if (user.wallet < amount) {
-      alert("Insufficient balance");
+    if (isDuplicateTxn(userId, amount, reason)) {
+      console.warn("Duplicate credit blocked");
       return false;
     }
 
-    user.wallet = parseFloat((user.wallet - amount).toFixed(2));
+    amount = parseFloat(amount.toFixed(2));
+
+    user.wallet.balance += amount;
+    user.wallet.totalCredit += amount;
+
+    saveUsers(users);
+
+    logTransaction(userId, amount, "CREDIT", reason);
+
+    if (typeof logActivity === "function") {
+      logActivity(userId, "USER", `CREDIT ₹${amount} (${reason})`);
+    }
+
+    return true;
+
+  } catch (err) {
+
+    if (typeof logCritical === "function") {
+      logCritical("Wallet credit error: " + err.message);
+    }
+
+    return false;
+  }
+}
+
+// ===================================
+// 💸 DEBIT WALLET
+// ===================================
+function debitWallet(userId, amount, reason = "SYSTEM") {
+
+  try {
+
+    if (!isSystemSafe()) return false;
+
+    amount = Number(amount);
+
+    if (!userId || isNaN(amount) || amount <= 0) return false;
+
+    let users = getUsers();
+    let user = users.find(u => u.userId === userId);
+
+    if (!user) return false;
+
+    initWallet(user);
+
+    amount = parseFloat(amount.toFixed(2));
+
+    if (user.wallet.balance < amount) {
+      console.warn("Insufficient balance");
+      return false;
+    }
+
+    user.wallet.balance -= amount;
+    user.wallet.totalDebit += amount;
 
     saveUsers(users);
 
@@ -173,9 +171,31 @@ function debitWallet(userId, amount, reason = "SYSTEM") {
   }
 }
 
-// =====================
-// 🧾 LOG
-// =====================
+// ===================================
+// 🔁 TRANSFER WALLET (SAFE)
+// ===================================
+function transferWallet(fromId, toId, amount, reason = "TRANSFER") {
+
+  if (!isSystemSafe()) return false;
+
+  if (!fromId || !toId || amount <= 0) return false;
+
+  let debit = debitWallet(fromId, amount, reason + "_OUT");
+  if (!debit) return false;
+
+  let credit = creditWallet(toId, amount, reason + "_IN");
+
+  if (!credit) {
+    creditWallet(fromId, amount, "ROLLBACK");
+    return false;
+  }
+
+  return true;
+}
+
+// ===================================
+// 🧾 LOG TRANSACTION
+// ===================================
 function logTransaction(userId, amount, type, reason) {
 
   let txns = getTransactions();
@@ -192,12 +212,18 @@ function logTransaction(userId, amount, type, reason) {
   saveTransactions(txns);
 }
 
-// =====================
+// ===================================
 // 📊 BALANCE
-// =====================
+// ===================================
 function getWalletBalance(userId) {
-  let user = getUsers().find(u => u.userId === userId);
-  return Number(user?.wallet || 0);
+
+  let user = getUserById(userId);
+
+  if (!user) return 0;
+
+  initWallet(user);
+
+  return Number(user.wallet.balance || 0);
 }
 
 
