@@ -38,17 +38,16 @@
 <input id="adminId" placeholder="Admin ID"><br>
 <input id="password" type="password" placeholder="Password"><br>
 
-<button onclick="login()">Login</button>
+<button id="loginBtn" onclick="login()">Login</button>
 
 <p id="msg"></p>
 
-<!-- ✅ FIXED FILE NAME -->
 <script src="core_system.js"></script>
 <script src="activity_log.js"></script>
 
 <script>
 
-// ================= SAFE INIT =================
+// ================= INIT =================
 if (typeof initCoreSystem === "function") {
   initCoreSystem();
 } else {
@@ -61,54 +60,90 @@ function safeDecode(p) {
   try { return atob(p); } catch { return p; }
 }
 
+// ================= BUTTON LOCK =================
+function lockBtn() {
+  let btn = document.getElementById("loginBtn");
+  btn.disabled = true;
+  btn.innerText = "Checking...";
+}
+
+function unlockBtn() {
+  let btn = document.getElementById("loginBtn");
+  btn.disabled = false;
+  btn.innerText = "Login";
+}
+
 // ================= GLOBAL LOGOUT =================
 function logoutAll() {
-  localStorage.removeItem("loggedInSuperAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInUser");
+  try {
+    localStorage.removeItem("loggedInSuperAdmin");
+    localStorage.removeItem("loggedInSystemAdmin");
+    localStorage.removeItem("loggedInAdmin");
+    localStorage.removeItem("loggedInUser");
+  } catch (e) {
+    console.warn("Logout cleanup failed");
+  }
 }
 
 // ================= LOGIN =================
 function login() {
 
-  let id = document.getElementById("adminId").value.trim();
+  lockBtn();
+
+  let id = document.getElementById("adminId").value.trim().toLowerCase();
   let pass = document.getElementById("password").value.trim();
 
   if (!id || !pass) {
     showMsg("⚠ Enter ID & Password");
+    unlockBtn();
     return;
   }
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  if (typeof getUsers !== "function") {
+    alert("System error");
+    unlockBtn();
+    return;
+  }
+
+  let users = getUsers() || [];
 
   let user = users.find(u =>
-    u.userId.toLowerCase() === id.toLowerCase() &&
+    (u.userId || "").toLowerCase() === id &&
     u.role === "admin" &&
-    safeDecode(u.password) === pass
+    (safeDecode(u.password) === pass)
   );
 
   if (!user) {
     showMsg("❌ Invalid login");
+    unlockBtn();
     return;
   }
 
   // ✅ STATUS CHECK
   if (user.status && user.status !== "active") {
     showMsg("🚫 Account inactive");
+    unlockBtn();
     return;
   }
 
-  let settings = getSystemSettings();
+  if (typeof getSystemSettings !== "function") {
+    alert("System settings error");
+    unlockBtn();
+    return;
+  }
+
+  let settings = getSystemSettings() || {};
 
   // ❗ SYSTEM CONTROL
   if (settings.adminAccess === false) {
     showMsg("🚫 Admin access OFF");
+    unlockBtn();
     return;
   }
 
   if (settings.lockMode === true) {
     showMsg("🚫 System locked");
+    unlockBtn();
     return;
   }
 
@@ -116,9 +151,23 @@ function login() {
   logoutAll();
 
   // ✅ SAVE SESSION
-  localStorage.setItem("loggedInAdmin", JSON.stringify({
-    userId: user.userId
-  }));
+  try {
+    localStorage.setItem("loggedInAdmin", JSON.stringify({
+      userId: user.userId
+    }));
+  } catch (e) {
+    alert("Storage error");
+    unlockBtn();
+    return;
+  }
+
+  // 🔍 VERIFY SESSION
+  let check = localStorage.getItem("loggedInAdmin");
+  if (!check) {
+    alert("Session not saved");
+    unlockBtn();
+    return;
+  }
 
   // 📜 LOG
   if (typeof logActivity === "function") {
