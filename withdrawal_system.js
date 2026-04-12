@@ -1,15 +1,15 @@
-/* ===============================
-💸 WITHDRAWAL SYSTEM V7 (FINAL MAX)
-==================================
-✔ Wallet integrated (safe)
-✔ Admin charge ON/OFF
-✔ Dynamic % control
-✔ Reset system
-✔ System fee logging (NO admin credit)
+/*
+========================================
+💸 WITHDRAWAL SYSTEM V7 (CORE ALIGNED)
+========================================
+✔ Core system integrated
+✔ Safe storage (self-healing)
+✔ System lock protected
+✔ Admin charge control
 ✔ Duplicate + spam protection
-✔ Lock safe
+✔ Wallet safe debit/credit
 ✔ Production ready
-==================================
+========================================
 */
 
 // =====================
@@ -34,25 +34,19 @@ function getDefaultWithdrawConfig() {
 // 🔹 LOAD / SAVE CONFIG
 // =====================
 function getWithdrawConfig() {
-  try {
-    let stored = JSON.parse(localStorage.getItem(WITHDRAW_CONFIG_KEY) || "{}");
 
-    let merged = {
-      ...getDefaultWithdrawConfig(),
-      ...stored
-    };
+  let stored = safeGet(WITHDRAW_CONFIG_KEY, {});
+  let merged = {
+    ...getDefaultWithdrawConfig(),
+    ...stored
+  };
 
-    localStorage.setItem(WITHDRAW_CONFIG_KEY, JSON.stringify(merged));
-    return merged;
-
-  } catch {
-    let clean = getDefaultWithdrawConfig();
-    localStorage.setItem(WITHDRAW_CONFIG_KEY, JSON.stringify(clean));
-    return clean;
-  }
+  safeSet(WITHDRAW_CONFIG_KEY, merged);
+  return merged;
 }
 
 function saveWithdrawConfig(data) {
+
   let safe = {
     ...getDefaultWithdrawConfig(),
     ...(data || {})
@@ -60,15 +54,17 @@ function saveWithdrawConfig(data) {
 
   safe.updatedAt = new Date().toISOString();
 
-  localStorage.setItem(WITHDRAW_CONFIG_KEY, JSON.stringify(safe));
+  safeSet(WITHDRAW_CONFIG_KEY, safe);
 }
 
 // =====================
 // 🔘 ADMIN CONTROLS
 // =====================
 function toggleWithdrawCharge(adminId = "ADMIN") {
+
   let cfg = getWithdrawConfig();
   cfg.chargeEnabled = !cfg.chargeEnabled;
+
   saveWithdrawConfig(cfg);
 
   if (typeof logActivity === "function") {
@@ -77,6 +73,7 @@ function toggleWithdrawCharge(adminId = "ADMIN") {
 }
 
 function updateWithdrawChargePercent(percent, adminId = "ADMIN") {
+
   percent = Number(percent);
 
   if (isNaN(percent) || percent < 0 || percent > 100) {
@@ -95,6 +92,7 @@ function updateWithdrawChargePercent(percent, adminId = "ADMIN") {
 }
 
 function resetWithdrawConfig(adminId = "ADMIN") {
+
   let clean = getDefaultWithdrawConfig();
   saveWithdrawConfig(clean);
 
@@ -107,32 +105,35 @@ function resetWithdrawConfig(adminId = "ADMIN") {
 // 🔹 STORAGE
 // =====================
 function getWithdrawals() {
-  try {
-    return JSON.parse(localStorage.getItem("withdrawals") || "[]");
-  } catch {
-    localStorage.setItem("withdrawals", "[]");
-    return [];
-  }
+  return safeGet("withdrawals", []);
 }
 
 function saveWithdrawals(data) {
+
   if (!Array.isArray(data)) data = [];
 
   if (data.length > WITHDRAW_LIMIT) {
     data = data.slice(-WITHDRAW_LIMIT);
   }
 
-  localStorage.setItem("withdrawals", JSON.stringify(data));
+  safeSet("withdrawals", data);
 }
 
 // =====================
 // 🔒 SYSTEM SAFETY
 // =====================
 function isWithdrawSystemSafe() {
-  try {
-    let system = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-    if (system.withdrawStop === true) return false;
-  } catch {}
+
+  let settings = getSystemSettings();
+
+  if (!settings || settings.withdrawStop === true) {
+    return false;
+  }
+
+  if (typeof isSystemSafe === "function") {
+    return isSystemSafe();
+  }
+
   return true;
 }
 
@@ -149,22 +150,23 @@ function requestWithdraw(userId, amount) {
   try {
 
     amount = Number(amount);
+
     if (!userId || isNaN(amount) || amount <= 0) {
       return alert("Invalid amount");
     }
 
+    if (!isWithdrawSystemSafe()) {
+      return alert("Withdraw disabled");
+    }
+
     let cfg = getWithdrawConfig();
 
-    // 🔒 DUPLICATE FAST BLOCK
+    // 🔒 DUPLICATE BLOCK
     let recent = getWithdrawals().find(r =>
       r.userId === userId &&
       (new Date() - new Date(r.time)) < 5000
     );
     if (recent) return alert("Wait before retry");
-
-    if (!isWithdrawSystemSafe()) {
-      return alert("Withdraw disabled");
-    }
 
     if (typeof isUserActive === "function" && !isUserActive(userId)) {
       return alert("Activate account first");
@@ -177,6 +179,7 @@ function requestWithdraw(userId, amount) {
 
     let users = getUsers();
     let user = users.find(u => u.userId === userId);
+
     if (!user) return alert("User not found");
 
     if (amount < cfg.minWithdraw) {
@@ -219,6 +222,7 @@ function requestWithdraw(userId, amount) {
 
     let requests = getWithdrawals();
     requests.push(req);
+
     saveWithdrawals(requests);
 
     // =====================
@@ -228,7 +232,6 @@ function requestWithdraw(userId, amount) {
       logActivity(userId, "USER", `Withdraw ₹${amount} | Fee ₹${charge}`);
     }
 
-    // 🔥 SYSTEM FEE LOG (IMPORTANT)
     if (charge > 0 && typeof addLog === "function") {
       addLog(`SYSTEM FEE ₹${charge} from ${userId}`, "SYSTEM");
     }
@@ -287,4 +290,3 @@ function rejectWithdraw(id, adminId = "ADMIN") {
 
   alert("Rejected & Refunded");
 }
-
