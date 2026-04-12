@@ -5,51 +5,64 @@
   <link rel="icon" href="data:,">
 
   <style>
-    body { font-family: Arial; margin:0; background:#f4f7f9; }
-
-    header {
-      background:#333;
-      color:#fff;
-      padding:15px;
-      text-align:center;
+    body {
+      font-family: 'Segoe UI', Arial;
+      margin: 0;
+      background: #eef2f7;
     }
 
-    .container { padding:20px; }
+    header {
+      background: #333;
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .container {
+      padding: 20px;
+    }
 
     .card {
-      background:#fff;
-      padding:15px;
-      border-radius:10px;
-      margin-bottom:20px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 1100px;
+      margin: auto;
     }
 
     input, select {
-      padding:8px;
-      margin:5px;
-      width:180px;
+      padding: 8px;
+      margin: 5px;
     }
 
     button {
-      padding:8px 12px;
-      margin:5px;
-      cursor:pointer;
+      padding: 8px 12px;
+      margin: 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: #fff;
+    }
+
+    button.danger {
+      background: #dc3545;
     }
 
     table {
-      width:100%;
-      border-collapse:collapse;
-      margin-top:10px;
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
     }
 
     th, td {
-      border:1px solid #ddd;
-      padding:8px;
-      text-align:center;
-      font-size:12px;
+      border: 1px solid #ddd;
+      padding: 8px;
+      font-size: 13px;
     }
 
-    .critical {
-      background:#ffe6e6;
+    th {
+      background: #f1f1f1;
     }
   </style>
 </head>
@@ -57,50 +70,48 @@
 <body>
 
 <header>
-  <h2>📜 ACTIVITY LOG PANEL</h2>
-  <button onclick="goBack()">⬅ Back</button>
+  <h2>📜 Activity Log Panel</h2>
+  <p id="welcome"></p>
 </header>
 
 <div class="container">
-
-  <!-- FILTER -->
   <div class="card">
+
     <h3>🔍 Filters</h3>
 
-    <input id="fUser" placeholder="User ID">
+    <input id="userId" placeholder="User ID">
     
-    <select id="fRole">
+    <select id="role">
       <option value="">All Roles</option>
-      <option value="super_admin">Super Admin</option>
-      <option value="system_admin">System Admin</option>
-      <option value="admin">Admin</option>
       <option value="user">User</option>
+      <option value="admin">Admin</option>
+      <option value="system_admin">System Admin</option>
+      <option value="super_admin">Super Admin</option>
     </select>
 
-    <input id="fKeyword" placeholder="Keyword">
+    <input id="keyword" placeholder="Keyword">
+    
+    <select id="source">
+      <option value="">All Source</option>
+      <option value="SYSTEM">SYSTEM</option>
+      <option value="ADMIN">ADMIN</option>
+    </select>
 
-    <button onclick="safeClick(applyFilter)">Apply</button>
-    <button onclick="safeClick(loadLogs)">Reset</button>
-  </div>
+    <br>
 
-  <!-- ACTIONS -->
-  <div class="card">
-    <button onclick="safeClick(loadLogs)">🔄 Refresh</button>
-    <button onclick="safeClick(clearLogs)">🧹 Clear Logs</button>
-  </div>
+    <button onclick="safeClick(loadLogs)">Load Logs</button>
+    <button class="danger" onclick="safeClick(clearLogs)">Clear Logs</button>
 
-  <!-- LOG TABLE -->
-  <div class="card">
-    <h3>📄 Activity Logs</h3>
     <div id="logTable"></div>
-  </div>
 
-  <!-- CRITICAL -->
-  <div class="card">
+    <hr>
+
     <h3>⚠️ Critical Logs</h3>
-    <div id="criticalTable"></div>
-  </div>
+    <button onclick="safeClick(loadCritical)">Load Critical</button>
 
+    <div id="criticalTable"></div>
+
+  </div>
 </div>
 
 <script src="core_system.js"></script>
@@ -112,23 +123,43 @@
 if (typeof initCoreSystem === "function") initCoreSystem();
 else { alert("core_system.js missing"); throw new Error("STOP"); }
 
-// AUTH 🔒
-let currentUser = protectPage({ role: ["super_admin","system_admin"] });
+// AUTH
+let currentUser = protectPage({ role: ["super_admin", "system_admin"] });
 if (!currentUser) throw new Error("STOP");
+
+document.getElementById("welcome").innerText =
+  "Logged in: " + currentUser.userId + " (" + currentUser.role + ")";
 
 // LOCK SYSTEM
 let lock = false;
 function safeClick(fn) {
   if (lock) return;
   lock = true;
-  fn();
+
+  try { fn(); } catch(e){ console.error(e); }
+
   setTimeout(()=> lock=false, 400);
+}
+
+// SYSTEM CHECK
+function isSystemSafe() {
+  let s = getSystemSettings() || {};
+  if (s.lockMode) {
+    alert("System Locked");
+    return false;
+  }
+  return true;
 }
 
 // LOAD LOGS
 function loadLogs() {
 
-  let logs = getActivityLogs() || [];
+  let userId = document.getElementById("userId").value.trim();
+  let role = document.getElementById("role").value;
+  let keyword = document.getElementById("keyword").value.trim();
+  let source = document.getElementById("source").value;
+
+  let logs = filterLogsAdvanced({ userId, role, keyword, source });
 
   let html = `<table>
   <tr>
@@ -136,11 +167,9 @@ function loadLogs() {
     <th>Action</th><th>Source</th><th>Time</th>
   </tr>`;
 
-  if (!logs.length) {
-    html += `<tr><td colspan="6">No Logs</td></tr>`;
-  }
+  if (!logs.length) html += `<tr><td colspan="6">No Logs</td></tr>`;
 
-  logs.slice().reverse().forEach(l => {
+  logs.reverse().forEach(l => {
     html += `<tr>
       <td>${l.logId}</td>
       <td>${l.userId}</td>
@@ -154,27 +183,40 @@ function loadLogs() {
   html += `</table>`;
 
   document.getElementById("logTable").innerHTML = html;
+}
 
-  loadCritical();
+// CLEAR LOGS
+function clearLogs() {
+
+  if (!isSystemSafe()) return;
+
+  if (!confirm("Clear all logs?")) return;
+
+  clearActivityLogs(currentUser.userId);
+
+  if (typeof logActivity === "function") {
+    logActivity(currentUser.userId, currentUser.role, "Cleared Activity Logs", "ADMIN");
+  }
+
+  loadLogs();
 }
 
 // CRITICAL
 function loadCritical() {
 
-  let logs = getCriticalLogs() || [];
+  let logs = getCriticalLogs();
 
   let html = `<table>
-  <tr><th>ID</th><th>User</th><th>Message</th><th>Time</th></tr>`;
+  <tr><th>ID</th><th>User</th><th>Message</th><th>Source</th><th>Time</th></tr>`;
 
-  if (!logs.length) {
-    html += `<tr><td colspan="4">No Critical Logs</td></tr>`;
-  }
+  if (!logs.length) html += `<tr><td colspan="5">No Critical Logs</td></tr>`;
 
-  logs.slice().reverse().forEach(l => {
-    html += `<tr class="critical">
+  logs.reverse().forEach(l => {
+    html += `<tr>
       <td>${l.id}</td>
       <td>${l.userId}</td>
       <td>${l.message}</td>
+      <td>${l.source}</td>
       <td>${new Date(l.time).toLocaleString()}</td>
     </tr>`;
   });
@@ -183,59 +225,6 @@ function loadCritical() {
 
   document.getElementById("criticalTable").innerHTML = html;
 }
-
-// FILTER
-function applyFilter() {
-
-  let userId = document.getElementById("fUser").value.trim();
-  let role = document.getElementById("fRole").value;
-  let keyword = document.getElementById("fKeyword").value.trim();
-
-  let logs = filterLogsAdvanced({ userId, role, keyword });
-
-  let html = `<table>
-  <tr>
-    <th>ID</th><th>User</th><th>Role</th>
-    <th>Action</th><th>Source</th><th>Time</th>
-  </tr>`;
-
-  if (!logs.length) {
-    html += `<tr><td colspan="6">No Results</td></tr>`;
-  }
-
-  logs.slice().reverse().forEach(l => {
-    html += `<tr>
-      <td>${l.logId}</td>
-      <td>${l.userId}</td>
-      <td>${l.role}</td>
-      <td>${l.action}</td>
-      <td>${l.source}</td>
-      <td>${new Date(l.time).toLocaleString()}</td>
-    </tr>`;
-  });
-
-  html += `</table>`;
-
-  document.getElementById("logTable").innerHTML = html;
-}
-
-// CLEAR
-function clearLogs() {
-
-  if (!confirm("Clear all logs?")) return;
-
-  clearActivityLogs(currentUser.userId);
-
-  loadLogs();
-}
-
-// BACK
-function goBack() {
-  history.back();
-}
-
-// INIT
-loadLogs();
 
 </script>
 
