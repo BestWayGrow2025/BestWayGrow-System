@@ -1,9 +1,9 @@
 /*
 ========================================
-PIN CONFIG SYSTEM (FINAL MASTER CONTROL v3)
+PIN CONFIG SYSTEM V7 (CORE ALIGNED)
 ========================================
-✔ Safe defaults
-✔ No overwrite bugs
+✔ Safe storage (self-healing)
+✔ System lock protected
 ✔ Full system sync
 ✔ Mode control (AUTO / MANUAL / OFF)
 ✔ Global OFF protection
@@ -31,7 +31,7 @@ function getDefaultPin() {
 // =====================
 function getDefaultControls() {
   return {
-    pinMode: "AUTO", // AUTO / MANUAL / OFF
+    pinMode: "AUTO",
     enablePinRefund: true,
     enableFranchiseSecurity: false,
     enableMinStockRule: false,
@@ -43,48 +43,36 @@ function getDefaultControls() {
 // 🔹 SAFE PIN SETTINGS
 // =====================
 function getPinSettings() {
-  try {
-    let data = JSON.parse(localStorage.getItem("pinSettings") || "{}");
 
-    return {
-      upgrade: { ...getDefaultPin(), ...(data.upgrade || {}) },
-      repurchase: { ...getDefaultPin(), ...(data.repurchase || {}) }
-    };
+  let data = safeGet("pinSettings", {});
 
-  } catch {
-    let clean = {
-      upgrade: getDefaultPin(),
-      repurchase: getDefaultPin()
-    };
-    savePinSettings(clean);
-    return clean;
-  }
+  let merged = {
+    upgrade: { ...getDefaultPin(), ...(data.upgrade || {}) },
+    repurchase: { ...getDefaultPin(), ...(data.repurchase || {}) }
+  };
+
+  safeSet("pinSettings", merged);
+  return merged;
 }
 
 function savePinSettings(data) {
-  localStorage.setItem("pinSettings", JSON.stringify(data || {}));
+  safeSet("pinSettings", data || {});
 }
 
 // =====================
-// 🔹 SYSTEM CONTROLS SAFE 🔥
+// 🔹 SYSTEM CONTROLS SAFE
 // =====================
 function loadSystemControls() {
-  try {
-    let stored = JSON.parse(localStorage.getItem("systemControls") || "{}");
 
-    let merged = {
-      ...getDefaultControls(),
-      ...stored
-    };
+  let stored = safeGet("systemControls", {});
 
-    localStorage.setItem("systemControls", JSON.stringify(merged));
-    return merged;
+  let merged = {
+    ...getDefaultControls(),
+    ...stored
+  };
 
-  } catch {
-    let clean = getDefaultControls();
-    localStorage.setItem("systemControls", JSON.stringify(clean));
-    return clean;
-  }
+  safeSet("systemControls", merged);
+  return merged;
 }
 
 // =====================
@@ -120,6 +108,11 @@ function enablePin(type, config) {
     return;
   }
 
+  // 🔒 SYSTEM LOCK
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) return;
+  }
+
   if (
     isNaN(config.bv) || isNaN(config.amount) ||
     config.bv <= 0 || config.amount <= 0
@@ -151,6 +144,10 @@ function enablePin(type, config) {
 function disablePin(type) {
 
   if (!["upgrade", "repurchase"].includes(type)) return;
+
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) return;
+  }
 
   let settings = getPinSettings();
 
@@ -184,7 +181,7 @@ function isPinActive(type) {
 }
 
 // =====================
-// 🔹 GET ACTIVE PIN (FIXED 🔥)
+// 🔹 GET ACTIVE PIN
 // =====================
 function getActivePin(type) {
 
@@ -200,6 +197,11 @@ function getActivePin(type) {
 // 🔒 SYSTEM SAFETY
 // =====================
 function isPinSystemSafe(type) {
+
+  // 🔒 GLOBAL SYSTEM LOCK
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) return false;
+  }
 
   // 🔴 GLOBAL OFF MODE
   if (isPinMode("OFF")) return false;
@@ -231,5 +233,3 @@ function calculateTotalWithGST(amount, gst) {
   gst = Number(gst || 0);
   return amount + (amount * gst / 100);
 }
-
-
