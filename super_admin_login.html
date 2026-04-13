@@ -42,7 +42,6 @@
 
 <script src="core_system.js"></script>
 <script src="activity_log.js"></script>
-<script src="session_manager.js"></script>
 
 <script>
 
@@ -51,9 +50,6 @@ if (typeof initCoreSystem === "function") {
   initCoreSystem();
 } else {
   alert("❌ core_system.js not loaded");
-  if (typeof logCritical === "function") {
-    logCritical("core_system.js missing");
-  }
   throw new Error("STOP");
 }
 
@@ -67,9 +63,6 @@ function safeClick(fn) {
     fn();
   } catch (e) {
     console.error(e);
-    if (typeof logCritical === "function") {
-      logCritical("Login crash: " + e.message);
-    }
   }
 
   setTimeout(() => lock = false, 500);
@@ -88,57 +81,42 @@ function safeDecode(p) {
   try { return atob(p); } catch { return p; }
 }
 
-// ================= SAFE SYSTEM SETTINGS =================
-function getSafeSystemSettings() {
-  try {
-    if (typeof getSystemSettings !== "function") {
-      throw new Error("getSystemSettings missing");
-    }
-    return getSystemSettings() || {};
-  } catch (e) {
-    console.error(e);
-    if (typeof logCritical === "function") {
-      logCritical("getSystemSettings failed: " + e.message);
-    }
-    return {};
-  }
-}
-
-// ================= SYSTEM CHECK =================
-function isSystemAllowed() {
-  let s = getSafeSystemSettings();
-
-  if (s.lockMode === true) {
-    showMsg("🚫 System Locked");
-    return false;
-  }
-
-  return true;
-}
-
 // ================= SAFE USERS =================
 function getSafeUsers() {
   try {
-    if (typeof getUsers !== "function") {
-      throw new Error("getUsers missing");
-    }
     return getUsers() || [];
   } catch (e) {
     console.error(e);
     showMsg("❌ System Error");
-
-    if (typeof logCritical === "function") {
-      logCritical("getUsers failed: " + e.message);
-    }
-
     return [];
+  }
+}
+
+// ================= SAVE SESSION (FINAL FIX) =================
+function saveSession(user) {
+  try {
+    let data = JSON.stringify({
+      userId: user.userId,
+      role: user.role
+    });
+
+    localStorage.setItem("loggedInSuperAdmin", data);
+
+    // VERIFY
+    let check = localStorage.getItem("loggedInSuperAdmin");
+    if (!check) throw new Error("Save failed");
+
+    return true;
+
+  } catch (e) {
+    console.error(e);
+    showMsg("❌ Session Failed");
+    return false;
   }
 }
 
 // ================= LOGIN =================
 function login() {
-
-  if (!isSystemAllowed()) return;
 
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value.trim();
@@ -158,33 +136,31 @@ function login() {
     return showMsg("❌ Invalid ID");
   }
 
-  // STATUS CHECK
   if (user.status && user.status !== "active") {
     return showMsg("🚫 Account inactive");
   }
 
-  // PASSWORD CHECK
   let storedPass = safeDecode(user.password);
   if (storedPass !== password) {
     return showMsg("❌ Wrong Password");
   }
 
-  // CLEAR OLD
+  // CLEAR OLD SESSION
   logoutAll();
 
-  // ✅ NEW SESSION SYSTEM
-  setSession(user);
+  // SAVE SESSION
+  let ok = saveSession(user);
+  if (!ok) return;
 
   // LOG
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "SUPER_ADMIN", "Login", "LOGIN_PAGE");
+    logActivity(user.userId, "SUPER_ADMIN", "Login");
   }
 
   showMsg("✅ Login successful");
 
-  setTimeout(() => {
-    window.location.href = "super_admin_dashboard.html";
-  }, 500);
+  // DIRECT REDIRECT (FIXED)
+  window.location.href = "super_admin_dashboard.html";
 }
 
 // ================= MESSAGE =================
@@ -196,4 +172,5 @@ function showMsg(text) {
 
 </body>
 </html>
+
 
