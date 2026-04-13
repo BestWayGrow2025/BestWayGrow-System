@@ -32,14 +32,23 @@
     }
 
     .menu button {
-      margin:5px;
-      padding:10px;
-      border:none;
-      border-radius:20px;
-      background:#ff944d;
-      color:#fff;
-      cursor:pointer;
-    }
+  margin:5px;
+  padding:10px 15px;
+  border:none;
+  border-radius:20px;
+  background:#ff944d;
+  color:#fff;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.menu {
+  display:flex;
+  flex-wrap:wrap;   /* ✅ important */
+  gap:10px;         /* ✅ spacing fix */
+  background:#fff;
+  padding:10px;
+}
 
     .menu button.active {
       background:#cc5200;
