@@ -1,12 +1,12 @@
 /*
 ========================================
-INCOME LOG SYSTEM V7 (FINAL LOCKED)
+INCOME LOG SYSTEM V7.2 (ULTIMATE FINAL)
 ========================================
-✔ Pure logging system (NO wallet credit)
-✔ Duplicate protected
-✔ Memory safe
-✔ No business logic
-✔ No control logic
+✔ Core aligned (safeGet / safeSet)
+✔ Strong duplicate protection (hash-based)
+✔ System lock protected
+✔ Memory safe (auto trim)
+✔ Error safe (no crash)
 ✔ Hold system optional
 ✔ Production locked
 ========================================
@@ -21,12 +21,12 @@ const INCOME_LOG_LIMIT = 5000;
 // 🔹 GET LOGS
 // ===============================
 function getIncomeLogs() {
-  try {
-    return JSON.parse(localStorage.getItem("incomeLogs") || "[]");
-  } catch {
-    localStorage.setItem("incomeLogs", "[]");
-    return [];
-  }
+
+  let logs = safeGet("incomeLogs", []);
+
+  if (!Array.isArray(logs)) logs = [];
+
+  return logs;
 }
 
 // ===============================
@@ -36,11 +36,25 @@ function saveIncomeLogs(logs) {
 
   if (!Array.isArray(logs)) logs = [];
 
+  // 🔥 AUTO TRIM
   if (logs.length > INCOME_LOG_LIMIT) {
     logs = logs.slice(-INCOME_LOG_LIMIT);
   }
 
-  localStorage.setItem("incomeLogs", JSON.stringify(logs));
+  safeSet("incomeLogs", logs);
+}
+
+// ===============================
+// 🔹 UNIQUE KEY GENERATOR
+// ===============================
+function generateIncomeKey(data) {
+  return [
+    data.userId,
+    data.type,
+    Number(data.amount).toFixed(2),
+    data.sourceUser || "-",
+    data.note || "-"
+  ].join("|");
 }
 
 // ===============================
@@ -48,63 +62,78 @@ function saveIncomeLogs(logs) {
 // ===============================
 function addIncomeLog(data) {
 
-  if (!data || !data.userId) return;
-
-  let amount = Number(data.amount);
-  if (isNaN(amount) || amount <= 0) return;
-
-  let logs = getIncomeLogs();
-
-  // 🔒 DUPLICATE PROTECTION
-  let exists = logs.some(l =>
-    l.userId === data.userId &&
-    Number(l.amount) === amount &&
-    l.type === data.type &&
-    Math.abs(new Date() - new Date(l.time)) < 3000
-  );
-
-  if (exists) return;
-
-  // ✅ SAFE LOG
-  let newLog = {
-    logId: "LOG_" + Date.now(),
-
-    userId: data.userId || "UNKNOWN",
-    type: data.type || "unknown",
-
-    amount: parseFloat(amount.toFixed(2)),
-
-    sourceUser: data.sourceUser || "-",
-    note: data.note || "",
-
-    time: new Date().toISOString()
-  };
-
-  logs.push(newLog);
-  saveIncomeLogs(logs);
-
-  // ===============================
-  // 🔥 HOLD SYSTEM (OPTIONAL)
-  // ===============================
   try {
 
-    if (
-      typeof isUserActive === "function" &&
-      typeof addHoldIncome === "function"
-    ) {
-      if (!isUserActive(newLog.userId)) {
-        addHoldIncome(
-          newLog.userId,
-          newLog.amount,
-          newLog.type
-        );
-      }
+    if (!data || !data.userId) return false;
+
+    // 🔒 SYSTEM LOCK
+    if (typeof isSystemSafe === "function") {
+      if (!isSystemSafe()) return false;
     }
+
+    let amount = Number(data.amount);
+
+    if (isNaN(amount) || amount <= 0) return false;
+
+    let logs = getIncomeLogs();
+
+    // 🔒 STRONG DUPLICATE PROTECTION
+    let uniqueKey = generateIncomeKey(data);
+
+    let exists = logs.some(l => l.uniqueKey === uniqueKey);
+
+    if (exists) return false;
+
+    // ✅ SAFE LOG
+    let newLog = {
+      logId: "LOG_" + Date.now(),
+
+      userId: data.userId || "UNKNOWN",
+      type: data.type || "unknown",
+
+      amount: parseFloat(amount.toFixed(2)),
+
+      sourceUser: data.sourceUser || "-",
+      note: data.note || "",
+
+      uniqueKey,
+
+      time: new Date().toISOString()
+    };
+
+    logs.push(newLog);
+    saveIncomeLogs(logs);
+
+    // ===============================
+    // 🔥 HOLD SYSTEM (OPTIONAL)
+    // ===============================
+    try {
+
+      if (
+        typeof isUserActive === "function" &&
+        typeof addHoldIncome === "function"
+      ) {
+        if (!isUserActive(newLog.userId)) {
+          addHoldIncome(
+            newLog.userId,
+            newLog.amount,
+            newLog.type
+          );
+        }
+      }
+
+    } catch (err) {
+
+      addCriticalIncomeLog("Hold sync failed: " + err.message);
+
+    }
+
+    return true;
 
   } catch (err) {
 
-    addCriticalIncomeLog("Hold sync failed: " + err.message);
-
+    addCriticalIncomeLog("addIncomeLog error: " + err.message);
+    return false;
   }
 }
 
@@ -112,7 +141,9 @@ function addIncomeLog(data) {
 // 🔹 GET USER LOGS
 // ===============================
 function getUserIncomeLogs(userId) {
+
   if (!userId) return [];
+
   return getIncomeLogs().filter(l => l.userId === userId);
 }
 
@@ -138,7 +169,7 @@ function filterIncomeLogs({ userId, type }) {
 // 🔹 CLEAR LOGS (ADMIN)
 // ===============================
 function clearIncomeLogs() {
-  localStorage.setItem("incomeLogs", "[]");
+  safeSet("incomeLogs", []);
 }
 
 // ===============================
@@ -148,14 +179,9 @@ function addCriticalIncomeLog(message) {
 
   if (!message) return;
 
-  let key = "incomeCriticalLogs";
-  let logs;
+  let logs = safeGet("incomeCriticalLogs", []);
 
-  try {
-    logs = JSON.parse(localStorage.getItem(key)) || [];
-  } catch {
-    logs = [];
-  }
+  if (!Array.isArray(logs)) logs = [];
 
   logs.push({
     id: "CRITICAL_" + Date.now(),
@@ -163,10 +189,12 @@ function addCriticalIncomeLog(message) {
     time: new Date().toISOString()
   });
 
+  // 🔥 LIMIT
   if (logs.length > 1000) {
     logs = logs.slice(-1000);
   }
 
-  localStorage.setItem(key, JSON.stringify(logs));
+  safeSet("incomeCriticalLogs", logs);
 }
+
 
