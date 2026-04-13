@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Login</title>
+  <title>Admin Login V8 FINAL</title>
 
   <link rel="icon" href="data:,">
 
@@ -42,8 +42,9 @@
 
 <p id="msg"></p>
 
+<!-- ✅ CORE DEPENDENCIES -->
 <script src="core_system.js"></script>
-<script src="activity_log.js"></script>
+<script src="activity_log_system.js"></script>
 
 <script>
 
@@ -80,9 +81,14 @@ function logoutAll() {
     localStorage.removeItem("loggedInSystemAdmin");
     localStorage.removeItem("loggedInAdmin");
     localStorage.removeItem("loggedInUser");
-  } catch (e) {
-    console.warn("Logout cleanup failed");
-  }
+  } catch {}
+}
+
+// ================= SESSION KEY =================
+function getSessionKey(role) {
+  if (role === "super_admin") return "loggedInSuperAdmin";
+  if (role === "system_admin") return "loggedInSystemAdmin";
+  return "loggedInAdmin";
 }
 
 // ================= LOGIN =================
@@ -109,9 +115,10 @@ function login() {
 
   let user = users.find(u => {
     let storedPass = safeDecode(u.password);
+
     return (
       (u.userId || "").toLowerCase() === id &&
-      u.role === "admin" &&
+      ["admin","system_admin","super_admin"].includes(u.role) &&
       storedPass === pass
     );
   });
@@ -122,14 +129,14 @@ function login() {
     return;
   }
 
-  // ✅ STATUS CHECK
+  // ================= STATUS CHECK =================
   if (user.status && user.status !== "active") {
     showMsg("🚫 Account inactive");
     unlockBtn();
     return;
   }
 
-  // 🔒 SAFE SYSTEM SETTINGS
+  // ================= SYSTEM CHECK =================
   let settings = {};
   if (typeof getSystemSettings === "function") {
     settings = getSystemSettings() || {};
@@ -139,7 +146,6 @@ function login() {
     return;
   }
 
-  // ❗ SYSTEM CONTROL
   if (settings.adminAccess === false) {
     showMsg("🚫 Admin access OFF");
     unlockBtn();
@@ -152,38 +158,46 @@ function login() {
     return;
   }
 
-  // ✅ CLEAR OLD SESSIONS
+  // ================= CLEAR OLD =================
   logoutAll();
 
-  // ✅ SAVE SESSION
+  // ================= SAVE SESSION =================
   try {
-    localStorage.setItem("loggedInAdmin", JSON.stringify({
+    let key = getSessionKey(user.role);
+
+    localStorage.setItem(key, JSON.stringify({
       userId: user.userId
     }));
-  } catch (e) {
+
+  } catch {
     alert("Storage error");
     unlockBtn();
     return;
   }
 
-  // 🔍 VERIFY SESSION
-  let check = localStorage.getItem("loggedInAdmin");
-  if (!check) {
+  // ================= VERIFY =================
+  let sessionExists =
+    localStorage.getItem("loggedInAdmin") ||
+    localStorage.getItem("loggedInSystemAdmin") ||
+    localStorage.getItem("loggedInSuperAdmin");
+
+  if (!sessionExists) {
     alert("Session not saved");
     unlockBtn();
     return;
   }
 
-  // 📜 LOG
+  // ================= LOG =================
   if (typeof logActivity === "function") {
     logActivity(user.userId, "ADMIN", "Login");
   }
 
+  // ================= SUCCESS =================
   showMsg("✅ Login successful");
 
   setTimeout(() => {
     window.location.href = "admin_dashboard.html";
-  }, 700);
+  }, 600);
 }
 
 // ================= MESSAGE =================
@@ -195,3 +209,4 @@ function showMsg(text) {
 
 </body>
 </html>
+
