@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User Dashboard V7</title>
+  <title>User Dashboard V7 FINAL</title>
   <link rel="icon" href="data:,">
 
   <style>
@@ -30,13 +30,13 @@
 
     .menu {
       display:flex;
-      overflow-x:auto;
+      flex-wrap:wrap;
+      gap:10px;
       background:#fff;
       padding:10px;
     }
 
     .menu button {
-      margin:5px;
       padding:10px 14px;
       border:none;
       border-radius:20px;
@@ -91,7 +91,7 @@
 <header>
   <h2>🚀 USER DASHBOARD</h2>
   <p id="welcome"></p>
-  <button onclick="logout()">Logout</button>
+  <button onclick="safeClick(null, logout)">Logout</button>
 </header>
 
 <div class="menu">
@@ -108,64 +108,25 @@
 
 <script src="core_system.js"></script>
 <script src="pin_master_system.js"></script>
+<script src="activity_log.js"></script>
+<script src="session_manager.js"></script>
 
 <script>
 
-// ================= INIT =================
+// INIT
 if (typeof initCoreSystem === "function") initCoreSystem();
 
-// ================= SYSTEM SAFETY =================
-function isDashboardAllowed() {
+// ================= AUTH (FIXED ✅) =================
+let session = getSession();
 
-  if (typeof getSystemSettings === "function") {
-    let s = getSystemSettings();
-    if (s && s.lockMode) return false;
-  }
-
-  if (typeof isSystemSafe === "function") {
-    if (!isSystemSafe()) return false;
-  }
-
-  return true;
-}
-
-// ================= SAFE CLICK =================
-function safeClick(btn, fn) {
-  if (window.uiLock) return;
-  window.uiLock = true;
-
-  setActive(btn);
-
-  try {
-    fn();
-  } catch (e) {
-    console.error(e);
-  }
-
-  setTimeout(() => {
-    window.uiLock = false;
-  }, 500);
-}
-
-// ================= AUTH =================
-let session = null;
-
-try {
-  session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
-} catch {}
-
-if (!session || !session.userId || !isDashboardAllowed()) {
-  localStorage.removeItem("loggedInUser");
+if (!session || session.role !== "user") {
   location.href = "user_login.html";
   throw new Error("STOP");
 }
 
-let user = typeof getUserById === "function"
-  ? getUserById(session.userId)
-  : null;
+let user = getUserById(session.userId);
 
 if (!user) {
-  localStorage.removeItem("loggedInUser");
   location.href = "user_login.html";
   throw new Error("STOP");
 }
@@ -174,14 +135,25 @@ if (!user) {
 document.getElementById("welcome").innerText =
   "Welcome (" + user.userId + ")";
 
-// ================= MENU =================
-function setActive(btn) {
-  document.querySelectorAll(".menu button")
-    .forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
+// ================= SAFE CLICK =================
+let lock = false;
+
+function safeClick(btn, fn) {
+  if (lock) return;
+  lock = true;
+
+  if (btn) {
+    document.querySelectorAll(".menu button")
+      .forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+
+  try { fn(); } catch (e) { console.error(e); }
+
+  setTimeout(()=> lock=false, 400);
 }
 
-// ================= REFERRAL =================
+// ================= REF LINK =================
 function generateRefLink(userId) {
   return window.location.origin +
     "/BestWayGrow-System/user_register.html?ref=" + userId;
@@ -191,7 +163,7 @@ function copyRefLink() {
   let input = document.getElementById("refLink");
   input.select();
   navigator.clipboard.writeText(input.value);
-  document.getElementById("copyMsg").innerText = "✅ Link copied!";
+  document.getElementById("copyMsg").innerText = "✅ Copied";
 }
 
 // ================= HOME =================
@@ -208,7 +180,7 @@ function loadHome() {
 
     <hr><br>
 
-    <div class="section-title">My Referral Link 🔗</div>
+    <div class="section-title">Referral Link</div>
 
     <input id="refLink" class="ref-box" value="${refLink}" readonly><br><br>
 
@@ -218,20 +190,25 @@ function loadHome() {
   `;
 }
 
-// ================= PIN (FIXED 🔥) =================
+// ================= PIN =================
 function loadPinSection() {
 
-  let allPins = typeof loadPins === "function" ? loadPins() : [];
+  let pins = [];
 
-  let pins = allPins.filter(p =>
-    p.ownerId === user.userId || p.usedBy === user.userId
-  );
+  try {
+    if (typeof loadPins === "function") {
+      let all = loadPins();
+      pins = all.filter(p =>
+        p.ownerId === user.userId || p.usedBy === user.userId
+      );
+    }
+  } catch(e){
+    console.error(e);
+  }
 
   let html = `<div class="section-title">PIN Section</div>`;
 
-  if (!pins.length) {
-    html += `<p>No PIN</p>`;
-  }
+  if (!pins.length) html += `<p>No PIN</p>`;
 
   pins.forEach(p => {
     html += `<p>${p.pinId} - ₹${p.amount || 0} (${p.status})</p>`;
@@ -241,25 +218,25 @@ function loadPinSection() {
 }
 
 // ================= NAV =================
-function loadUpgrade() {
-  location.href = "user_upgrade.html";
-}
+function loadUpgrade(){ location.href="user_upgrade.html"; }
+function loadRepurchase(){ location.href="user_repurchase.html"; }
 
-function loadRepurchase() {
-  location.href = "user_repurchase.html";
-}
-
-function loadWallet() {
-  document.getElementById("mainContent").innerHTML = `
+function loadWallet(){
+  document.getElementById("mainContent").innerHTML=`
     <div class="section-title">Wallet</div>
     <p>Balance: ₹${user.wallet || 0}</p>
   `;
 }
 
 // ================= LOGOUT =================
-function logout() {
-  localStorage.removeItem("loggedInUser");
-  location.href = "user_login.html";
+function logout(){
+
+  if (typeof logActivity === "function") {
+    logActivity(user.userId, "USER", "Logout", "USER_PANEL");
+  }
+
+  clearSession();
+  location.href="user_login.html";
 }
 
 // INIT
@@ -269,6 +246,7 @@ loadHome();
 
 </body>
 </html>
+
 
 
 
