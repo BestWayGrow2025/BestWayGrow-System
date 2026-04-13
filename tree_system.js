@@ -1,17 +1,17 @@
 /*
 ========================================
-TREE ENGINE V10 (FINAL CLEAN LOCK)
+TREE SYSTEM V11 (FINAL STABLE LOCK) ❤️ FIXED NAME
 ========================================
 ✔ Random User ID (A-Z a-z 0-9)
 ✔ Referral link added
+✔ Wallet structure FIXED
 ✔ Safe placement logic
 ✔ Loop protection
 ✔ Core system aligned
-✔ No extra changes (clean integration)
+✔ No overwrite bug
 ✔ Production ready
 ========================================
 */
-
 // ================= GET CHILDREN =================
 function getChildren(userId, users) {
   return users.filter(u => u.sponsorId === userId);
@@ -70,7 +70,6 @@ function generateUserId(users) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
   let id;
-  let exists;
   let safety = 0;
 
   do {
@@ -83,9 +82,7 @@ function generateUserId(users) {
       id += chars[Math.floor(Math.random() * chars.length)];
     }
 
-    exists = users.some(u => u.userId === id);
-
-  } while (exists);
+  } while (users.some(u => u.userId === id));
 
   return id;
 }
@@ -119,7 +116,8 @@ function createUserWithTree(req) {
       if (!isSystemSafe()) throw new Error("System not ready");
     }
 
-    let users = getUsers();
+    let users = (typeof getUsers === "function") ? getUsers() : [];
+    if (!Array.isArray(users)) users = [];
 
     // 🔒 BASIC VALIDATION
     if (!req || !req.introducerId || !req.mobile) {
@@ -167,30 +165,44 @@ function createUserWithTree(req) {
       upgradeLevel: 0,
       repurchaseCount: 0,
 
-      wallet: 0,
+      // ✅ FIXED STRUCTURE
+      wallet: {
+        balance: 0
+      },
+
       totalIncome: 0,
 
-      referralLink: referralLink,
+      referralLink,
 
       createdAt: new Date().toISOString()
     };
 
-    // 🔗 LINK PARENT
+    // 🔗 LINK PARENT (SAFE)
     let parentIndex = users.findIndex(u => u.userId === placement.parentId);
     if (parentIndex === -1) throw new Error("Parent not found");
 
     if (placement.side === "L") {
+      if (users[parentIndex].leftChild) {
+        throw new Error("Left already occupied");
+      }
       users[parentIndex].leftChild = userId;
     } else {
+      if (users[parentIndex].rightChild) {
+        throw new Error("Right already occupied");
+      }
       users[parentIndex].rightChild = userId;
     }
 
     users.push(newUser);
 
     // 💾 SAVE
-    saveUsers(users);
+    if (typeof saveUsers === "function") {
+      saveUsers(users);
+    } else {
+      throw new Error("saveUsers missing");
+    }
 
-    // 🔥 INCOME TRIGGER (SAFE)
+    // 🔥 INCOME TRIGGER
     if (typeof processIncome === "function") {
       try {
 
