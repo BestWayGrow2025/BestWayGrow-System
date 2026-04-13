@@ -1,14 +1,15 @@
 /*
 ========================================
-PIN MASTER SYSTEM V7.1 (TRUE FINAL LOCK)
+PIN MASTER SYSTEM V7.3 (ULTRA FINAL LOCK)
 ========================================
 ✔ Safe storage (safeGet / safeSet)
 ✔ System lock protected
 ✔ PIN config validation
 ✔ Duplicate-safe ID generation
-✔ Auto-unlock stuck pins
+✔ Auto-unlock stuck pins (with save fix)
 ✔ Full audit logging
 ✔ Safe trigger system
+✔ Dashboard compatible (getPins added)
 ✔ Production stable
 ========================================
 */
@@ -22,14 +23,19 @@ function loadPins() {
 
   if (!Array.isArray(pins)) pins = [];
 
-  // 🔥 AUTO-UNLOCK (ANTI-DEADLOCK)
+  let updated = false;
+
+  // 🔥 AUTO-UNLOCK + SAVE FIX
   let now = Date.now();
   pins.forEach(p => {
     let refTime = p.usedAt || p.assignedAt || p.createdAt || now;
     if (p.lock && (now - refTime > 10000)) {
       p.lock = false;
+      updated = true;
     }
   });
+
+  if (updated) savePins(pins);
 
   return pins;
 }
@@ -39,10 +45,17 @@ function savePins(pins) {
   safeSet(PIN_STORAGE_KEY, pins);
 }
 
+// ✅ DASHBOARD COMPATIBILITY
+function getPins() {
+  return loadPins();
+}
+
 // ================= LOG =================
 function logPinAction(data) {
 
   let logs = safeGet(PIN_LOG_KEY, []);
+
+  if (!Array.isArray(logs)) logs = [];
 
   logs.push({
     id: "LOG_" + Date.now(),
@@ -67,25 +80,14 @@ function generatePinId(prefix = "PIN") {
 // ================= CREATE =================
 function createPin({ type="upgrade", bv=0, amount=0, gst=0, createdBy }) {
 
-  // 🔒 SYSTEM SAFE
-  if (typeof isSystemSafe === "function") {
-    if (!isSystemSafe()) {
-      console.warn("System not safe for PIN create");
-      return null;
-    }
-  }
+  if (typeof isSystemSafe === "function" && !isSystemSafe()) return null;
 
-  // 🔒 PIN CONFIG CHECK
   if (typeof isPinSystemSafe === "function") {
-    if (!isPinSystemSafe(type)) {
-      alert("PIN system disabled");
-      return null;
-    }
+    if (!isPinSystemSafe(type)) return null;
   }
 
   let pins = loadPins();
 
-  // 🔥 DUPLICATE SAFE ID
   let pinId;
   do {
     pinId = generatePinId(type === "upgrade" ? "UP" : "RP");
@@ -132,16 +134,12 @@ function createPin({ type="upgrade", bv=0, amount=0, gst=0, createdBy }) {
 // ================= ASSIGN =================
 function assignPin(pinId, toId, toType, performedBy) {
 
-  if (typeof isSystemSafe === "function") {
-    if (!isSystemSafe()) return false;
-  }
+  if (typeof isSystemSafe === "function" && !isSystemSafe()) return false;
 
   let pins = loadPins();
   let pin = pins.find(p => p.pinId === pinId);
 
-  if (!pin) throw new Error("PIN not found");
-  if (pin.lock) throw new Error("PIN locked");
-  if (pin.status !== "active") throw new Error("PIN not available");
+  if (!pin || pin.lock || pin.status !== "active") return false;
 
   pin.lock = true;
 
@@ -178,36 +176,28 @@ function assignPin(pinId, toId, toType, performedBy) {
   } catch (err) {
     pin.lock = false;
     savePins(pins);
-    throw err;
+    return false;
   }
 }
 
 // ================= USE PIN =================
 function usePin(pinId, userId, purpose) {
 
-  if (typeof isSystemSafe === "function") {
-    if (!isSystemSafe()) throw new Error("System locked");
-  }
+  if (typeof isSystemSafe === "function" && !isSystemSafe()) return null;
 
   let pins = loadPins();
   let pin = pins.find(p => p.pinId === pinId);
 
-  if (!pin) throw new Error("Invalid PIN");
-  if (pin.lock) throw new Error("Processing");
-  if (pin.status !== "assigned") throw new Error("Not usable");
+  if (!pin || pin.lock || pin.status !== "assigned") return null;
 
-  // 🔒 PURPOSE CHECK
   if (typeof isPinAllowedForPurpose === "function") {
-    if (!isPinAllowedForPurpose(pin.type, purpose)) {
-      throw new Error("PIN not allowed for this purpose");
-    }
+    if (!isPinAllowedForPurpose(pin.type, purpose)) return null;
   }
 
   pin.lock = true;
 
   try {
 
-    // ✅ MARK USED
     pin.status = "used";
     pin.usedBy = userId;
     pin.usedAt = Date.now();
@@ -225,7 +215,7 @@ function usePin(pinId, userId, purpose) {
       status: "success"
     });
 
-    // ❤️ SAFE TRIGGER
+    // 🔥 SAFE TRIGGER
     if (typeof triggerPinUseIncome === "function") {
       try {
         triggerPinUseIncome(userId, pin);
@@ -239,7 +229,11 @@ function usePin(pinId, userId, purpose) {
   } catch (err) {
     pin.lock = false;
     savePins(pins);
-    throw err;
+    return null;
   }
 }
+
+
+
+
 
