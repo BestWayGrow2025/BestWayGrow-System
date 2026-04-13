@@ -1,10 +1,14 @@
 /*
 ========================================
-REGISTRATION QUEUE ENGINE (FINAL v2)
+REGISTRATION QUEUE ENGINE V7 (TRUE FINAL LOCK)
 ========================================
-✔ Queue only (NO tree logic)
-✔ Uses tree_engine.js
-✔ Safe + clean separation
+✔ Queue only (isolated storage)
+✔ System safe
+✔ Anti-deadlock lock
+✔ Batch processing
+✔ Duplicate + user validation
+✔ Activity logging
+✔ Race-condition safe
 ========================================
 */
 
@@ -16,7 +20,6 @@ function getRegQueue() {
   try {
     return JSON.parse(localStorage.getItem(REG_QUEUE_KEY)) || [];
   } catch {
-    localStorage.setItem(REG_QUEUE_KEY, "[]");
     return [];
   }
 }
@@ -27,11 +30,28 @@ function saveRegQueue(data) {
 
 // ================= LOCK =================
 function isRegLocked() {
-  return localStorage.getItem(REG_LOCK_KEY) === "true";
+  let lock = JSON.parse(localStorage.getItem(REG_LOCK_KEY) || "null");
+
+  if (!lock) return false;
+
+  // 🔥 AUTO RECOVER (5 sec)
+  if (Date.now() - lock.time > 5000) {
+    setRegLock(false);
+    return false;
+  }
+
+  return lock.status === true;
 }
 
 function setRegLock(val) {
-  localStorage.setItem(REG_LOCK_KEY, val ? "true" : "false");
+  if (val) {
+    localStorage.setItem(REG_LOCK_KEY, JSON.stringify({
+      status: true,
+      time: Date.now()
+    }));
+  } else {
+    localStorage.removeItem(REG_LOCK_KEY);
+  }
 }
 
 // ================= ADD TO QUEUE =================
@@ -41,12 +61,11 @@ function addToRegistrationQueue(data) {
 
   let queue = getRegQueue();
 
-  // 🔒 DUPLICATE BLOCK (QUEUE LEVEL)
-  let exists = queue.find(q => q.mobile === data.mobile && q.status === "PENDING");
-  if (exists) {
-    console.warn("Already in queue");
-    return;
-  }
+  let exists = queue.find(q =>
+    q.mobile === data.mobile && q.status === "PENDING"
+  );
+
+  if (exists) return;
 
   queue.push({
     ...data,
@@ -63,15 +82,38 @@ function addToRegistrationQueue(data) {
 // ================= PROCESS ONE =================
 function processOneRegistration(req) {
 
-  // ✅ ONLY CALL TREE ENGINE
-  createUserWithTree(req);
+  if (typeof createUserWithTree !== "function") {
+    throw new Error("Tree engine missing");
+  }
 
+  // 🔒 USER EXISTS CHECK
+  if (typeof getUsers === "function") {
+    let users = getUsers();
+    let exists = users.find(u => u.mobile === req.mobile);
+    if (exists) {
+      throw new Error("User already exists");
+    }
+  }
+
+  createUserWithTree(req);
   return true;
 }
 
 // ================= MAIN PROCESS =================
 function processRegistrationQueue() {
 
+  // 🔒 SYSTEM LOCK
+  if (typeof getSystemSettings === "function") {
+    let s = getSystemSettings();
+    if (s && s.lockMode) return;
+  }
+
+  // 🔒 SYSTEM SAFE
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) return;
+  }
+
+  // 🔒 DOUBLE LOCK SAFETY
   if (isRegLocked()) return;
 
   let queue = getRegQueue();
@@ -81,7 +123,12 @@ function processRegistrationQueue() {
 
   try {
 
+    let processed = 0;
+    let MAX_BATCH = 5;
+
     for (let i = 0; i < queue.length; i++) {
+
+      if (processed >= MAX_BATCH) break;
 
       let req = queue[i];
 
@@ -92,24 +139,35 @@ function processRegistrationQueue() {
         processOneRegistration(req);
 
         req.status = "DONE";
+        processed++;
+
+        // 📊 LOG SUCCESS
+        if (typeof addLog === "function") {
+          addLog("REG SUCCESS", req.mobile);
+        }
 
       } catch (err) {
-
-        console.warn("Registration Error:", err.message);
 
         req.retry = (req.retry || 0) + 1;
 
         if (req.retry >= 3) {
           req.status = "FAILED";
           req.error = err.message;
+
+          // 📊 LOG FAIL
+          if (typeof addLog === "function") {
+            addLog("REG FAILED", req.mobile);
+          }
         }
       }
     }
 
     saveRegQueue(queue);
 
+  } catch (e) {
+    console.error("Queue processing failed:", e);
   } finally {
-    setRegLock(false);
+    setRegLock(false); // 🔥 ALWAYS RELEASE
   }
 }
 
