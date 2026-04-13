@@ -1,12 +1,14 @@
 /*
 ========================================
-PIN REQUEST SYSTEM V7 (CORE ALIGNED)
+PIN REQUEST SYSTEM V7.2 (ULTRA FINAL)
 ========================================
 ✔ Safe storage (self-healing)
 ✔ System lock protected
-✔ PIN config validation added
+✔ Queue control integrated
+✔ PIN config validation
+✔ Full rollback safety
 ✔ Retry + fail-safe improved
-✔ Clean processing flow
+✔ Deadlock protection
 ✔ Production stable
 ========================================
 */
@@ -44,19 +46,29 @@ function detectPriority(userId) {
   return "RED";
 }
 
+// ================= QUEUE CHECK =================
+function isQueueEnabled() {
+  if (typeof getSystemSettings !== "function") return true;
+
+  let s = getSystemSettings();
+  let q = s.pinQueue || {};
+
+  return q.enabled !== false;
+}
+
 // ================= CREATE REQUEST =================
 function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
-  // 🔒 SYSTEM LOCK
-  if (typeof isSystemSafe === "function") {
-    if (!isSystemSafe()) throw new Error("System locked");
+  if (typeof isSystemSafe === "function" && !isSystemSafe()) {
+    throw new Error("System locked");
   }
 
-  // 🔒 PIN SYSTEM CHECK
-  if (typeof isPinSystemSafe === "function") {
-    if (!isPinSystemSafe(type)) {
-      throw new Error("PIN system disabled");
-    }
+  if (!isQueueEnabled()) {
+    throw new Error("Queue OFF");
+  }
+
+  if (typeof isPinSystemSafe === "function" && !isPinSystemSafe(type)) {
+    throw new Error("PIN system disabled");
   }
 
   if (!userId || !type || !paymentId) {
@@ -68,7 +80,6 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
   }
 
   amount = Number(amount);
-
   if (isNaN(amount) || amount <= 0) {
     throw new Error("Invalid amount");
   }
@@ -83,7 +94,7 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
   );
 
   if (pending) {
-    throw new Error("You already have a pending request");
+    throw new Error("Pending request already exists");
   }
 
   let safeQty = parseInt(quantity) || 1;
@@ -91,19 +102,16 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
   let newRequest = {
     requestId: generateRequestId(),
-
     userId,
     type,
-    amount: Number(amount),
+    amount,
     paymentId,
-
     quantity: safeQty,
 
     status: "PENDING",
     lock: false,
 
     assignedPins: [],
-
     priority: detectPriority(userId),
 
     retry: 0,
@@ -124,15 +132,19 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 // ================= AUTO PROCESS =================
 function processPinRequestAuto(requestId) {
 
-  if (typeof isSystemSafe === "function") {
-    if (!isSystemSafe()) throw new Error("System locked");
+  if (typeof isSystemSafe === "function" && !isSystemSafe()) {
+    throw new Error("System locked");
+  }
+
+  if (!isQueueEnabled()) {
+    throw new Error("Queue OFF");
   }
 
   let requests = getPinRequests();
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) throw new Error("Request not found");
-  if (req.lock) throw new Error("Already processing");
+  if (req.lock) throw new Error("Processing");
   if (req.status !== "PENDING") throw new Error("Already processed");
 
   req.lock = true;
@@ -140,6 +152,8 @@ function processPinRequestAuto(requestId) {
   req.processedBy = "SYSTEM";
 
   savePinRequests(requests);
+
+  let assigned = [];
 
   try {
 
@@ -161,13 +175,9 @@ function processPinRequestAuto(requestId) {
       throw new Error("Insufficient PIN stock");
     }
 
-    let assigned = [];
-
+    // 🔥 SAFE LOOP
     for (let i = 0; i < requiredQty; i++) {
-
       let pin = availablePins[i];
-
-      if (!pin || !pin.pinId) continue;
 
       assignPin(pin.pinId, req.userId, "user", "SYSTEM");
       assigned.push(pin.pinId);
@@ -183,6 +193,26 @@ function processPinRequestAuto(requestId) {
     return true;
 
   } catch (err) {
+
+    // 🔁 FULL ROLLBACK
+    try {
+      let pins = loadPins();
+
+      assigned.forEach(pinId => {
+        let p = pins.find(x => x.pinId === pinId);
+        if (p) {
+          p.status = "active";
+          p.ownerId = null;
+          p.ownerType = "admin";
+          p.assignedTo = null;
+          p.assignedAt = null;
+        }
+      });
+
+      savePins(pins);
+    } catch (e) {
+      console.warn("Rollback failed");
+    }
 
     req.retry = Number(req.retry || 0) + 1;
 
@@ -205,15 +235,15 @@ function processPinRequestAuto(requestId) {
 // ================= MANUAL PROCESS =================
 function processPinRequestManual(requestId, pinIds = [], performedBy) {
 
-  if (typeof isSystemSafe === "function") {
-    if (!isSystemSafe()) throw new Error("System locked");
+  if (typeof isSystemSafe === "function" && !isSystemSafe()) {
+    throw new Error("System locked");
   }
 
   let requests = getPinRequests();
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) throw new Error("Request not found");
-  if (req.lock) throw new Error("Already processing");
+  if (req.lock) throw new Error("Processing");
   if (req.status !== "PENDING") throw new Error("Already processed");
 
   if (!Array.isArray(pinIds) || !pinIds.length) {
@@ -226,14 +256,11 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
 
   savePinRequests(requests);
 
+  let assigned = [];
+
   try {
 
-    let assigned = [];
-
     pinIds.forEach(pinId => {
-
-      if (!pinId) return;
-
       assignPin(pinId, req.userId, "user", req.processedBy);
       assigned.push(pinId);
     });
@@ -263,20 +290,20 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
 // ================= REJECT =================
 function rejectPinRequest(requestId, performedBy = "ADMIN") {
 
-  if (typeof isSystemSafe === "function") {
-    if (!isSystemSafe()) throw new Error("System locked");
+  if (typeof isSystemSafe === "function" && !isSystemSafe()) {
+    throw new Error("System locked");
   }
 
   let requests = getPinRequests();
   let req = requests.find(r => r.requestId === requestId);
 
   if (!req) throw new Error("Request not found");
-  if (req.lock) throw new Error("Processing in progress");
+  if (req.lock) throw new Error("Processing");
   if (req.status !== "PENDING") throw new Error("Already processed");
 
   req.status = "REJECTED";
   req.processedAt = Date.now();
-  req.processedBy = performedBy || "ADMIN";
+  req.processedBy = performedBy;
 
   savePinRequests(requests);
 
