@@ -1,205 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Super Admin Dashboard V7 FINAL</title>
-  <link rel="icon" href="data:,">
-
-  <style>
-    body {font-family:'Segoe UI'; margin:0; background:#eef2f7;}
-
-    header {
-      background:#ff6600;
-      color:#fff;
-      padding:18px;
-      text-align:center;
-    }
-
-    .menu {
-      display:flex;
-      overflow:auto;
-      background:#fff;
-      padding:10px;
-    }
-
-    .menu button {
-      margin:5px;
-      padding:10px;
-      border:none;
-      border-radius:20px;
-      background:#ff944d;
-      color:#fff;
-      cursor:pointer;
-    }
-
-    .container {padding:20px;}
-
-    .card {
-      background:#fff;
-      padding:20px;
-      border-radius:10px;
-      max-width:1000px;
-      margin:auto;
-    }
-
-    input {padding:10px; margin:5px; width:90%;}
-
-    table {width:100%; border-collapse:collapse; margin-top:10px;}
-    th, td {border:1px solid #ddd; padding:8px;}
-  </style>
-</head>
-
-<body>
-
-<header>
-  <h2>👑 SUPER ADMIN MASTER CONTROL</h2>
-  <p id="welcome"></p>
-  <button onclick="logout()">Logout</button>
-</header>
-
-<div class="menu">
-  <button onclick="loadHome()">Home</button>
-  <button onclick="loadCreate()">Create Sys Admin</button>
-  <button onclick="loadUsers()">Users</button>
-  <button onclick="loadSystem()">System</button>
-</div>
-
-<div class="container">
-  <div id="mainContent" class="card"></div>
-</div>
-
-<script src="core_system.js"></script>
-
-<script>
-
-// INIT
-if (typeof initCoreSystem === "function") initCoreSystem();
-else { alert("core_system.js missing"); throw new Error("STOP"); }
-
-// AUTH
-let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
-if (!session || !session.userId) location.href = "super_admin_login.html";
-
-let user = getUserById(session.userId);
-if (!user || user.role !== "super_admin") location.href = "super_admin_login.html";
-
-// WELCOME
-document.getElementById("welcome").innerText =
-"Welcome SUPER ADMIN (" + user.userId + ")";
-
-// ================= HOME =================
-function loadHome(){
-
-  let users = getUsers() || [];
-
-  document.getElementById("mainContent").innerHTML = `
-    <h3>📊 Dashboard</h3>
-    Users: ${users.filter(u=>u.role==="user").length}<br>
-    Admins: ${users.filter(u=>u.role==="admin").length}<br>
-    System Admins: ${users.filter(u=>u.role==="system_admin").length}<br>
-  `;
-}
-
-// ================= CREATE =================
-function loadCreate(){
-  document.getElementById("mainContent").innerHTML=`
-    <h3>Create System Admin</h3>
-
-    <input id="id" placeholder="User ID"><br>
-    <input id="name" placeholder="Name"><br>
-    <input id="pass" placeholder="Password"><br>
-
-    <button onclick="create()">Create</button>
-    <p id="msg"></p>
-  `;
-}
-
-function create(){
-
-  let id=document.getElementById("id").value.trim();
-  let name=document.getElementById("name").value.trim();
-  let pass=document.getElementById("pass").value.trim();
-
-  if(!id||!name||!pass) return alert("Fill all fields");
-
-  let users=getUsers() || [];
-
-  if(users.find(u=>u.userId.toLowerCase()===id.toLowerCase()))
-    return alert("Already exists");
-
-  users.push({
-    userId:id,
-    username:name,
-    password:btoa(pass),
-    role:"system_admin",
-    status:"active",
-    createdAt:Date.now()
-  });
-
-  saveUsers(users);
-
-  alert("System Admin Created");
-
-  loadUsers(); // AUTO VIEW
-}
-
-// ================= USERS =================
-function loadUsers(){
-
-  let users=getUsers() || [];
-
-  let html=`<h3>All Users</h3>
-  <table>
-  <tr><th>ID</th><th>Name</th><th>Password</th><th>Role</th></tr>`;
-
-  users.forEach(u=>{
-    html+=`<tr>
-      <td>${u.userId}</td>
-      <td>${u.username||""}</td>
-      <td>${u.password ? atob(u.password) : ""}</td>
-      <td>${u.role}</td>
-    </tr>`;
-  });
-
-  html+=`</table>`;
-
-  document.getElementById("mainContent").innerHTML=html;
-}
-
-// ================= SYSTEM =================
-function loadSystem(){
-
-  let s=getSystemSettings()||{
-    lockMode:false,
-    registrationOpen:true,
-    adminAccess:true,
-    withdrawOpen:true
-  };
-
-  document.getElementById("mainContent").innerHTML=`
-    <h3>System Control</h3>
-
-    Lock Mode: ${s.lockMode?"ON":"OFF"}
-    <button onclick="toggle('lockMode')">Toggle</button><br><br>
-
-    Registration: ${s.registrationOpen?"ON":"OFF"}
-    <button onclick="toggle('registrationOpen')">Toggle</button><br><br>
-
-    Admin Access: ${s.adminAccess?"ON":"OFF"}
-    <button onclick="toggle('adminAccess')">Toggle</button><br><br>
-
-    Withdraw: ${s.withdrawOpen?"ON":"OFF"}
-    <button onclick="toggle('withdrawOpen')">Toggle</button>
-  `;
-}
-
-function toggle(key){
-
-  let s=getSystemSettings()||{};
-  s[key]=!s[key];
-
-<!DOCTYPE html>
-<html>
-<head>
   <title>Super Admin Dashboard FINAL</title>
   <link rel="icon" href="data:,">
 
@@ -266,7 +67,7 @@ function toggle(key){
 <header>
   <h2>👑 SUPER ADMIN MASTER CONTROL</h2>
   <p id="welcome"></p>
-  <button onclick="logout()">Logout</button>
+  <button onclick="safeClick(null, logout)">Logout</button>
 </header>
 
 <div class="menu">
@@ -285,33 +86,53 @@ function toggle(key){
 
 <script>
 
-// INIT
+// ================= INIT =================
 if (typeof initCoreSystem === "function") initCoreSystem();
 else { alert("core_system.js missing"); throw new Error("STOP"); }
 
-// AUTH 🔒
-let currentUser = protectPage({ role: "super_admin" });
-if (!currentUser) throw new Error("STOP");
+// ================= AUTH (LOCAL STORAGE) =================
+let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
 
-// WELCOME
+if (!session || !session.userId) {
+  location.href = "super_admin_login.html";
+  throw new Error("STOP");
+}
+
+let user = getUserById(session.userId);
+
+if (!user || user.role !== "super_admin") {
+  location.href = "super_admin_login.html";
+  throw new Error("STOP");
+}
+
+let currentUser = user;
+
+// ================= WELCOME =================
 document.getElementById("welcome").innerText =
 "Welcome SUPER ADMIN (" + currentUser.userId + ")";
 
-// LOCK SYSTEM
+// ================= LOCK SYSTEM =================
 let lock = false;
 function safeClick(btn, fn) {
   if (lock) return;
   lock = true;
 
-  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
-  if (btn) btn.classList.add("active");
+  if (btn) {
+    document.querySelectorAll(".menu button")
+      .forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
 
-  fn();
+  try {
+    fn();
+  } catch (e) {
+    console.error(e);
+  }
 
   setTimeout(()=> lock=false, 400);
 }
 
-// SYSTEM CHECK
+// ================= SYSTEM CHECK =================
 function isSystemSafe() {
   let s = getSystemSettings() || {};
   if (s.lockMode) {
@@ -323,7 +144,6 @@ function isSystemSafe() {
 
 // ================= HOME =================
 function loadHome(){
-
   let users = getUsers() || [];
 
   document.getElementById("mainContent").innerHTML = `
@@ -343,7 +163,7 @@ function loadCreate(){
     <input id="name" placeholder="Name"><br>
     <input id="pass" placeholder="Password"><br>
 
-    <button onclick="safeClick(this,create)">Create</button>
+    <button onclick="safeClick(null,create)">Create</button>
   `;
 }
 
@@ -379,7 +199,6 @@ function create(){
   }
 
   alert("System Admin Created");
-
   loadUsers();
 }
 
@@ -419,20 +238,20 @@ function loadSystem(){
     <h3>System Control</h3>
 
     Lock Mode: ${s.lockMode?"ON":"OFF"}
-    <button onclick="safeClick(this,toggleLock)">Toggle</button><br><br>
+    <button onclick="safeClick(null,toggleLock)">Toggle</button><br><br>
 
     Registration: ${s.registrationOpen?"ON":"OFF"}
-    <button onclick="safeClick(this,toggleRegistration)">Toggle</button><br><br>
+    <button onclick="safeClick(null,toggleRegistration)">Toggle</button><br><br>
 
     Admin Access: ${s.adminAccess?"ON":"OFF"}
-    <button onclick="safeClick(this,toggleAdmin)">Toggle</button><br><br>
+    <button onclick="safeClick(null,toggleAdmin)">Toggle</button><br><br>
 
     Withdraw: ${s.withdrawOpen?"ON":"OFF"}
-    <button onclick="safeClick(this,toggleWithdraw)">Toggle</button>
+    <button onclick="safeClick(null,toggleWithdraw)">Toggle</button>
   `;
 }
 
-// SAFE WRAPPERS 🔒
+// WRAPPERS
 function toggleLock(){ toggle('lockMode'); }
 function toggleRegistration(){ toggle('registrationOpen'); }
 function toggleAdmin(){ toggle('adminAccess'); }
@@ -448,7 +267,7 @@ function toggle(key){
   if(typeof saveSystemSettings==="function"){
     saveSystemSettings(s);
   }else{
-    alert("System Error: saveSystemSettings missing");
+    alert("System Error");
     return;
   }
 
@@ -459,8 +278,13 @@ function toggle(key){
   loadSystem();
 }
 
-// LOGOUT
+// ================= LOGOUT =================
 function logout(){
+
+  if (typeof logActivity === "function") {
+    logActivity(currentUser.userId, "SUPER_ADMIN", "Logout");
+  }
+
   localStorage.removeItem("loggedInSuperAdmin");
   location.href="super_admin_login.html";
 }
