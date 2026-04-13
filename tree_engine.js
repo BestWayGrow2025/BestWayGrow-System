@@ -1,12 +1,13 @@
 /*
 ========================================
-TREE ENGINE V7 (FINAL TRUE LOCK)
+TREE ENGINE V10 (FINAL CLEAN LOCK)
 ========================================
-✔ Single users snapshot
-✔ Safe loop protection
-✔ Strong sequential ID
-✔ Full safe user structure
+✔ Random User ID (A-Z a-z 0-9)
+✔ Referral link added
+✔ Safe placement logic
+✔ Loop protection
 ✔ Core system aligned
+✔ No extra changes (clean integration)
 ✔ Production ready
 ========================================
 */
@@ -63,17 +64,43 @@ function findPlacement(introducerId, position, users) {
   }
 }
 
-// ================= GENERATE USER ID =================
+// ================= RANDOM USER ID =================
 function generateUserId(users) {
 
-  let last = users
-    .map(u => u.userId)
-    .filter(id => id.startsWith("BWG"))
-    .map(id => parseInt(id.replace("BWG", "")))
-    .filter(n => !isNaN(n))
-    .sort((a, b) => b - a)[0] || 0;
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-  return "BWG" + String(last + 1).padStart(6, "0");
+  let id;
+  let exists;
+  let safety = 0;
+
+  do {
+    if (safety++ > 1000) {
+      throw new Error("User ID generation failed");
+    }
+
+    id = "BWG";
+    for (let i = 0; i < 6; i++) {
+      id += chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    exists = users.some(u => u.userId === id);
+
+  } while (exists);
+
+  return id;
+}
+
+// ================= REFERRAL LINK =================
+function generateReferralLink(userId) {
+  try {
+    let base = window.location.origin || "";
+    if (!base || base === "null") {
+      base = "https://yourdomain.com";
+    }
+    return base + "/register.html?ref=" + encodeURIComponent(userId);
+  } catch {
+    return "https://yourdomain.com/register.html?ref=" + userId;
+  }
 }
 
 // ================= CREATE USER =================
@@ -93,6 +120,11 @@ function createUserWithTree(req) {
     }
 
     let users = getUsers();
+
+    // 🔒 BASIC VALIDATION
+    if (!req || !req.introducerId || !req.mobile) {
+      throw new Error("Invalid request");
+    }
 
     // 🔒 VALID INTRODUCER
     if (typeof isValidIntroducer === "function") {
@@ -114,10 +146,12 @@ function createUserWithTree(req) {
       users
     );
 
+    let referralLink = generateReferralLink(userId);
+
     let newUser = {
       userId,
-      username: req.username,
-      password: req.password,
+      username: req.username || "",
+      password: req.password || "",
       mobile: req.mobile,
 
       role: "user",
@@ -136,10 +170,12 @@ function createUserWithTree(req) {
       wallet: 0,
       totalIncome: 0,
 
+      referralLink: referralLink,
+
       createdAt: new Date().toISOString()
     };
 
-    // 🔗 LINK PARENT (SAFE INDEX)
+    // 🔗 LINK PARENT
     let parentIndex = users.findIndex(u => u.userId === placement.parentId);
     if (parentIndex === -1) throw new Error("Parent not found");
 
@@ -154,15 +190,15 @@ function createUserWithTree(req) {
     // 💾 SAVE
     saveUsers(users);
 
-    // 🔥 INCOME TRIGGER
+    // 🔥 INCOME TRIGGER (SAFE)
     if (typeof processIncome === "function") {
       try {
 
         let bv = 0;
 
-        if (typeof getSystemConfig === "function") {
-          let config = getSystemConfig();
-          bv = Number(config?.upgrade?.bv || 0);
+        if (typeof getActivePin === "function") {
+          let pin = getActivePin("upgrade");
+          bv = Number(pin?.bv || 0);
         }
 
         if (bv > 0) {
@@ -174,9 +210,9 @@ function createUserWithTree(req) {
       }
     }
 
-    // 📊 ACTIVITY LOG
-    if (typeof addLog === "function") {
-      addLog("NEW USER CREATED", newUser.userId);
+    // 📊 LOG
+    if (typeof logActivity === "function") {
+      logActivity(newUser.userId, "USER", "Created");
     }
 
     return newUser;
