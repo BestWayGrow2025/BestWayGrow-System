@@ -57,7 +57,7 @@ if (typeof initCoreSystem === "function") {
 
 // ================= SAFE DECODE =================
 function safeDecode(p) {
-  try { return atob(p); } catch { return p; }
+  try { return atob(p); } catch { return p || ""; }
 }
 
 // ================= BUTTON LOCK =================
@@ -107,11 +107,14 @@ function login() {
 
   let users = getUsers() || [];
 
-  let user = users.find(u =>
-    (u.userId || "").toLowerCase() === id &&
-    u.role === "admin" &&
-    (safeDecode(u.password) === pass)
-  );
+  let user = users.find(u => {
+    let storedPass = safeDecode(u.password);
+    return (
+      (u.userId || "").toLowerCase() === id &&
+      u.role === "admin" &&
+      storedPass === pass
+    );
+  });
 
   if (!user) {
     showMsg("❌ Invalid login");
@@ -126,13 +129,15 @@ function login() {
     return;
   }
 
-  if (typeof getSystemSettings !== "function") {
+  // 🔒 SAFE SYSTEM SETTINGS
+  let settings = {};
+  if (typeof getSystemSettings === "function") {
+    settings = getSystemSettings() || {};
+  } else {
     alert("System settings error");
     unlockBtn();
     return;
   }
-
-  let settings = getSystemSettings() || {};
 
   // ❗ SYSTEM CONTROL
   if (settings.adminAccess === false) {
