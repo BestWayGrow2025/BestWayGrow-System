@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User Register V7 FINAL</title>
+  <title>User Register V8 FINAL</title>
 </head>
 <body>
 
@@ -25,7 +25,7 @@
 <p id="msg"></p>
 
 <script src="core_system.js"></script>
-<script src="tree_engine.js"></script>
+<script src="tree_system.js"></script> <!-- ✅ FIXED -->
 <script src="registration_queue.js"></script>
 <script src="pin_master_system.js"></script>
 <script src="activity_log.js"></script>
@@ -152,8 +152,7 @@ function handleRegister() {
       position
     });
 
-    document.getElementById("msg").innerText =
-      "⏳ Processing...";
+    document.getElementById("msg").innerText = "⏳ Processing...";
 
     // ================= CHECK RESULT =================
     let attempts = 0;
@@ -180,7 +179,8 @@ function handleRegister() {
         document.getElementById("msg").innerHTML = `
           ✅ Registration Successful <br>
           User ID: <b>${newUser.userId}</b><br>
-          🔗 <a href="user_login.html">Login</a>
+          🔗 Referral: <small>${newUser.referralLink || "N/A"}</small><br>
+          👉 <a href="user_login.html">Login</a>
         `;
 
         clearInterval(checker);
@@ -190,9 +190,9 @@ function handleRegister() {
 
         attempts++;
 
-        if (attempts > 8) {
+        if (attempts > 10) {
           document.getElementById("msg").innerText =
-            "⚠️ Delay... try again";
+            "⚠️ Delay... please retry";
           clearInterval(checker);
           resetAll();
         }
@@ -220,4 +220,3 @@ function resetAll() {
 
 </body>
 </html>
-
