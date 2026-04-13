@@ -1,14 +1,15 @@
 /*
 ========================================
-🧠 CORE SYSTEM V7 (MASTER ENGINE FINAL)
+🧠 CORE SYSTEM V7 (MASTER ENGINE FINAL LOCK)
 ========================================
-✔ Safe storage (self-healing)
+✔ Safe storage (self-healing + recovery log)
 ✔ System lock protection
 ✔ User management safe
-✔ ID generation protected
-✔ Page security strong
+✔ ID generation protected (no duplicate)
+✔ Page security strong (feature control added)
 ✔ Feature control centralized
 ✔ Corruption recovery
+✔ Default users (Super + System + Admin)
 ✔ Production locked
 ========================================
 */
@@ -18,9 +19,15 @@
 // ===================================
 function safeGet(key, fallback) {
   try {
-    let data = JSON.parse(localStorage.getItem(key));
+    let raw = localStorage.getItem(key);
+    if (!raw) {
+      localStorage.setItem(key, JSON.stringify(fallback));
+      return fallback;
+    }
+    let data = JSON.parse(raw);
     return (data !== null && data !== undefined) ? data : fallback;
-  } catch {
+  } catch (e) {
+    console.warn("Storage corrupted → reset:", key);
     localStorage.setItem(key, JSON.stringify(fallback));
     return fallback;
   }
@@ -83,30 +90,35 @@ function isSystemSafe() {
 }
 
 // ===================================
-// 🔹 FEATURE CONTROLS (GLOBAL)
+// 🔹 FEATURE CONTROLS
 // ===================================
 function canRegister() {
-  return getSystemSettings().registrationOpen && isSystemSafe();
+  let s = getSystemSettings();
+  return s.registrationOpen && isSystemSafe();
 }
 
 function canAdminAccess() {
-  return getSystemSettings().adminAccess && isSystemSafe();
+  let s = getSystemSettings();
+  return s.adminAccess && isSystemSafe();
 }
 
 function canWithdraw() {
-  return getSystemSettings().withdrawOpen && isSystemSafe();
+  let s = getSystemSettings();
+  return s.withdrawOpen && isSystemSafe();
 }
 
 function canUpgrade() {
-  return getSystemSettings().upgradesOpen && isSystemSafe();
+  let s = getSystemSettings();
+  return s.upgradesOpen && isSystemSafe();
 }
 
 function canRepurchase() {
-  return getSystemSettings().repurchaseOpen && isSystemSafe();
+  let s = getSystemSettings();
+  return s.repurchaseOpen && isSystemSafe();
 }
 
 // ===================================
-// 🔹 COMMON HELPERS
+// 🔹 HELPERS
 // ===================================
 function getUserById(id) {
   if (!id) return null;
@@ -122,27 +134,28 @@ function getChildren(userId) {
 }
 
 // ===================================
-// 🔹 USER ID GENERATOR (SAFE + FALLBACK)
+// 🔹 USER ID GENERATOR (SAFE)
 // ===================================
 function generateUserId() {
 
   let users = getUsers();
   let existing = new Set(users.map(u => u.userId));
 
-  // Try random
   for (let i = 0; i < 50; i++) {
     let id = "BWG" + Math.floor(100000 + Math.random() * 900000);
     if (!existing.has(id)) return id;
   }
 
-  // Fallback sequential
-  let base = users.length + 100000;
-  let id = "BWG" + base;
-  return id;
+  let i = 100000;
+  while (true) {
+    let id = "BWG" + i;
+    if (!existing.has(id)) return id;
+    i++;
+  }
 }
 
 // ===================================
-// 🔐 PAGE SECURITY (STRONG)
+// 🔐 PAGE SECURITY
 // ===================================
 function protectPage(config) {
 
@@ -166,7 +179,6 @@ function protectPage(config) {
   let session = safeGet(key, null);
 
   if (!session || !session.userId) {
-    alert("Login required");
     location.href = redirect;
     return null;
   }
@@ -175,27 +187,33 @@ function protectPage(config) {
 
   if (!user || user.role !== config.role) {
     localStorage.removeItem(key);
-    alert("Access denied");
     location.href = redirect;
     return null;
   }
 
-  // 🔒 SYSTEM LOCK CHECK
   if (!isSystemSafe()) {
     alert("System Locked");
     throw new Error("LOCKED");
+  }
+
+  if (config.role === "admin" && !canAdminAccess()) {
+    alert("Admin access disabled");
+    throw new Error("ADMIN_BLOCKED");
   }
 
   return user;
 }
 
 // ===================================
-// 🔥 INIT SYSTEM (MASTER INIT)
+// 🔥 INIT SYSTEM (PERMANENT USERS)
 // ===================================
 function initCoreSystem() {
 
   let users = getUsers();
   let updated = false;
+
+  // ensure settings exist
+  getSystemSettings();
 
   // SUPER ADMIN
   if (!users.find(u => u.userId === "BWG000000")) {
@@ -219,6 +237,20 @@ function initCoreSystem() {
       role: "system_admin",
       status: "active",
       createdBy: "BWG000000",
+      createdAt: Date.now()
+    });
+    updated = true;
+  }
+
+  // ADMIN (PERMANENT)
+  if (!users.find(u => u.userId === "BWG000002")) {
+    users.push({
+      userId: "BWG000002",
+      username: "Admin",
+      password: btoa("admin123"),
+      role: "admin",
+      status: "active",
+      createdBy: "BWG000001",
       createdAt: Date.now()
     });
     updated = true;
