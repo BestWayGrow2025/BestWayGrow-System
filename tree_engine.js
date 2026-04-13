@@ -1,43 +1,46 @@
 /*
 ========================================
-TREE ENGINE V7 (FINAL LOCKED)
+TREE ENGINE V7 (FINAL TRUE LOCK)
 ========================================
-✔ Deep LEFT / RIGHT placement
-✔ Safe user creation
-✔ Core integrated (getUsers / saveUsers)
-✔ System lock protected
-✔ Income trigger connected (safe)
-✔ Clean wallet structure
+✔ Single users snapshot
+✔ Safe loop protection
+✔ Strong sequential ID
+✔ Full safe user structure
+✔ Core system aligned
 ✔ Production ready
 ========================================
 */
 
 // ================= GET CHILDREN =================
-function getChildren(userId) {
-  return getUsers().filter(u => u.sponsorId === userId);
+function getChildren(userId, users) {
+  return users.filter(u => u.sponsorId === userId);
 }
 
 // ================= GET LEFT CHILD =================
-function getLeftChild(userId) {
-  let user = getUsers().find(u => u.userId === userId);
+function getLeftChild(userId, users) {
+  let user = users.find(u => u.userId === userId);
   return user ? user.leftChild : null;
 }
 
 // ================= GET RIGHT CHILD =================
-function getRightChild(userId) {
-  let user = getUsers().find(u => u.userId === userId);
+function getRightChild(userId, users) {
+  let user = users.find(u => u.userId === userId);
   return user ? user.rightChild : null;
 }
 
 // ================= FIND PLACEMENT =================
-function findPlacement(introducerId, position) {
-
-  let users = getUsers();
+function findPlacement(introducerId, position, users) {
 
   let current = users.find(u => u.userId === introducerId);
   if (!current) throw new Error("Invalid introducer");
 
+  let safety = 0;
+
   while (true) {
+
+    if (safety++ > 1000) {
+      throw new Error("Tree loop overflow");
+    }
 
     if (position === "L") {
 
@@ -60,6 +63,19 @@ function findPlacement(introducerId, position) {
   }
 }
 
+// ================= GENERATE USER ID =================
+function generateUserId(users) {
+
+  let last = users
+    .map(u => u.userId)
+    .filter(id => id.startsWith("BWG"))
+    .map(id => parseInt(id.replace("BWG", "")))
+    .filter(n => !isNaN(n))
+    .sort((a, b) => b - a)[0] || 0;
+
+  return "BWG" + String(last + 1).padStart(6, "0");
+}
+
 // ================= CREATE USER =================
 function createUserWithTree(req) {
 
@@ -68,26 +84,44 @@ function createUserWithTree(req) {
     // 🔒 SYSTEM LOCK
     if (typeof getSystemSettings === "function") {
       let sys = getSystemSettings();
-      if (sys && sys.lockMode) {
-        throw new Error("System Locked");
-      }
+      if (sys && sys.lockMode) throw new Error("System Locked");
+    }
+
+    // 🔒 SYSTEM SAFE
+    if (typeof isSystemSafe === "function") {
+      if (!isSystemSafe()) throw new Error("System not ready");
     }
 
     let users = getUsers();
 
+    // 🔒 VALID INTRODUCER
+    if (typeof isValidIntroducer === "function") {
+      if (!isValidIntroducer(req.introducerId)) {
+        throw new Error("Invalid introducer");
+      }
+    }
+
     // 🔒 DUPLICATE MOBILE
-    let exists = users.find(u => u.mobile === req.mobile);
-    if (exists) throw new Error("Mobile already exists");
+    if (users.find(u => u.mobile === req.mobile)) {
+      throw new Error("Mobile already exists");
+    }
 
-    let userId = "BWG" + Date.now().toString().slice(-6);
+    let userId = generateUserId(users);
 
-    let placement = findPlacement(req.introducerId, req.position || "L");
+    let placement = findPlacement(
+      req.introducerId,
+      req.position || "L",
+      users
+    );
 
     let newUser = {
       userId,
       username: req.username,
       password: req.password,
       mobile: req.mobile,
+
+      role: "user",
+      status: "active",
 
       introducerId: req.introducerId,
       sponsorId: placement.parentId,
@@ -96,32 +130,34 @@ function createUserWithTree(req) {
       leftChild: null,
       rightChild: null,
 
-      createdAt: new Date().toISOString(),
+      upgradeLevel: 0,
+      repurchaseCount: 0,
 
-      // ✅ CORRECT WALLET (NUMBER)
-      wallet: 0
+      wallet: 0,
+      totalIncome: 0,
+
+      createdAt: new Date().toISOString()
     };
 
-    // 🔗 LINK TO PARENT
-    let parent = users.find(u => u.userId === placement.parentId);
-    if (!parent) throw new Error("Parent not found");
+    // 🔗 LINK PARENT (SAFE INDEX)
+    let parentIndex = users.findIndex(u => u.userId === placement.parentId);
+    if (parentIndex === -1) throw new Error("Parent not found");
 
     if (placement.side === "L") {
-      parent.leftChild = userId;
+      users[parentIndex].leftChild = userId;
     } else {
-      parent.rightChild = userId;
+      users[parentIndex].rightChild = userId;
     }
 
     users.push(newUser);
 
-    // ✅ SAFE SAVE
+    // 💾 SAVE
     saveUsers(users);
 
-    // 🔥 INCOME TRIGGER (SAFE V7)
+    // 🔥 INCOME TRIGGER
     if (typeof processIncome === "function") {
       try {
 
-        // Default fallback BV (safe)
         let bv = 0;
 
         if (typeof getSystemConfig === "function") {
@@ -134,11 +170,11 @@ function createUserWithTree(req) {
         }
 
       } catch (e) {
-        console.warn("Income processing failed:", e.message);
+        console.warn("Income fail:", e.message);
       }
     }
 
-    // 📊 ACTIVITY LOG (OPTIONAL)
+    // 📊 ACTIVITY LOG
     if (typeof addLog === "function") {
       addLog("NEW USER CREATED", newUser.userId);
     }
@@ -146,9 +182,7 @@ function createUserWithTree(req) {
     return newUser;
 
   } catch (err) {
-
     console.error("User creation failed:", err.message);
     throw err;
-
   }
 }
