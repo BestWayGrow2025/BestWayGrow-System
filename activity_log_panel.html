@@ -123,10 +123,26 @@
 if (typeof initCoreSystem === "function") initCoreSystem();
 else { alert("core_system.js missing"); throw new Error("STOP"); }
 
-// AUTH
-let currentUser = protectPage({ role: ["super_admin", "system_admin"] });
-if (!currentUser) throw new Error("STOP");
+// ================= AUTH (LOCAL STORAGE) =================
+let session =
+  JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null") ||
+  JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
 
+if (!session || !session.userId) {
+  location.href = "super_admin_login.html";
+  throw new Error("STOP");
+}
+
+let user = getUserById(session.userId);
+
+if (!user || (user.role !== "super_admin" && user.role !== "system_admin")) {
+  location.href = "super_admin_login.html";
+  throw new Error("STOP");
+}
+
+let currentUser = user;
+
+// WELCOME
 document.getElementById("welcome").innerText =
   "Logged in: " + currentUser.userId + " (" + currentUser.role + ")";
 
@@ -153,6 +169,8 @@ function isSystemSafe() {
 
 // LOAD LOGS
 function loadLogs() {
+
+  if (!isSystemSafe()) return;
 
   let userId = document.getElementById("userId").value.trim();
   let role = document.getElementById("role").value;
@@ -201,8 +219,10 @@ function clearLogs() {
   loadLogs();
 }
 
-// CRITICAL
+// LOAD CRITICAL
 function loadCritical() {
+
+  if (!isSystemSafe()) return;
 
   let logs = getCriticalLogs();
 
