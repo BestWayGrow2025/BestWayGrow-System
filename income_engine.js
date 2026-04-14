@@ -1,12 +1,10 @@
 /*
 ========================================
-💰 INCOME ENGINE V7.4 (ABSOLUTE FINAL)
+💰 INCOME ENGINE V7.5 (QUALIFIED CTOR LOCK) ❤️
 ========================================
-✔ Pure calculation engine
-✔ Strict wallet credit validation
-✔ System + feature control integrated
-✔ CTOR + level distribution safe
-✔ SYSTEM fallback protected
+✔ Qualification-based CTOR distribution
+✔ SYSTEM fallback if not qualified
+✔ Safe wallet validation (FIXED)
 ✔ Zero silent failure
 ✔ Fully production locked
 ========================================
@@ -20,7 +18,7 @@ const INCOME_CONFIG = {
 };
 
 // ===================================
-// 🔹 CALC (STRICT)
+// 🔹 CALC
 // ===================================
 function calc(bv, percent) {
   let result = (Number(bv) * Number(percent)) / 100;
@@ -31,19 +29,13 @@ function calc(bv, percent) {
 // 🔒 VALIDATION
 // ===================================
 function canRunIncome(type) {
-
   try {
     let s = getSystemSettings();
-
     if (!s || typeof s !== "object") return false;
-
     if (s.lockMode === true) return false;
-
     if (type === "upgrade" && s.upgradesOpen === false) return false;
     if (type === "repurchase" && s.repurchaseOpen === false) return false;
-
     return true;
-
   } catch {
     return false;
   }
@@ -58,6 +50,12 @@ function safeIncome(data) {
 
     if (!data || !data.userId) return false;
 
+    // ❤️ FIX: USER VALIDATION ADDED
+    if (typeof getUserById === "function") {
+      let u = getUserById(data.userId);
+      if (!u) return false;
+    }
+
     let amount = Number(data.amount);
     if (isNaN(amount) || amount <= 0) return false;
 
@@ -67,28 +65,24 @@ function safeIncome(data) {
       if (!isIncomeAllowed(data.type)) return false;
     }
 
-    let payload = {
-      userId: data.userId,
-      type: data.type,
-      amount: parseFloat(amount.toFixed(2)),
-      sourceUser: data.sourceUser || "-",
-      note: data.note || ""
-    };
-
-    // 💰 WALLET CREDIT
     if (typeof creditWallet !== "function") return false;
 
     let success = creditWallet(
-      payload.userId,
-      payload.amount,
-      `${payload.type.toUpperCase()} - ${payload.note}`
+      data.userId,
+      parseFloat(amount.toFixed(2)),
+      `${data.type.toUpperCase()} - ${data.note || ""}`
     );
 
     if (!success) return false;
 
-    // 📜 LOG
     if (typeof addIncomeLog === "function") {
-      addIncomeLog(payload);
+      addIncomeLog({
+        userId: data.userId,
+        type: data.type,
+        amount: amount,
+        sourceUser: data.sourceUser || "-",
+        note: data.note || ""
+      });
     }
 
     return true;
@@ -116,7 +110,28 @@ function getIntroducer(user) {
 }
 
 // ===================================
-// 🔥 CTOR DISTRIBUTION
+// ❤️ QUALIFICATION CHECK (NEW)
+// ===================================
+function isUserQualified(user) {
+
+  if (!user) return false;
+
+  // ❤️ DIRECT COUNT
+  let directs = (typeof getUsers === "function")
+    ? getUsers().filter(u => u.introducerId === user.userId).length
+    : 0;
+
+  // ❤️ BV POINT
+  let bv = Number(user.totalIncome || 0);
+  let bvPoints = Math.floor(bv / 500);
+
+  let totalPoints = directs + bvPoints;
+
+  return totalPoints >= 1; // ❤️ RULE
+}
+
+// ===================================
+// 🔥 CTOR DISTRIBUTION (FIXED)
 // ===================================
 function distributeCTOR(userId, totalCTOR, type) {
 
@@ -124,21 +139,29 @@ function distributeCTOR(userId, totalCTOR, type) {
 
   totalCTOR = parseFloat(Number(totalCTOR).toFixed(2));
 
-  // 🔒 SYSTEM USER SAFETY
-  let systemUser = getUserById("SYSTEM");
-
-  if (!systemUser) {
-    console.warn("SYSTEM user missing → CTOR skipped");
-    return false;
-  }
+  let current = getUser(userId);
 
   CTOR_SPLIT.forEach((percent, index) => {
 
     let amount = calc(totalCTOR, percent);
     if (amount <= 0) return;
 
+    let receiver = null;
+
+    if (current) {
+      current = getIntroducer(current);
+    }
+
+    // ❤️ CHECK QUALIFICATION
+    if (current && isUserQualified(current) && current.status === "active") {
+      receiver = current.userId;
+    } else {
+      // ❤️ FALLBACK TO SYSTEM
+      receiver = "SYSTEM";
+    }
+
     safeIncome({
-      userId: "SYSTEM",
+      userId: receiver,
       type: "ctor",
       amount: amount,
       sourceUser: userId,
@@ -264,4 +287,3 @@ function processIncome(type, userId, bv) {
     return false;
   }
 }
-
