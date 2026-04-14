@@ -1,10 +1,11 @@
 /*
 ========================================
-💰 INCOME ENGINE V7.5 (QUALIFIED CTOR LOCK) ❤️
+💰 INCOME ENGINE V7.6 (FINAL CTOR FIX LOCK)
 ========================================
 ✔ Qualification-based CTOR distribution
 ✔ SYSTEM fallback if not qualified
-✔ Safe wallet validation (FIXED)
+✔ Active user check enforced ❤️
+✔ Safe wallet validation
 ✔ Zero silent failure
 ✔ Fully production locked
 ========================================
@@ -50,11 +51,9 @@ function safeIncome(data) {
 
     if (!data || !data.userId) return false;
 
-    // ❤️ FIX: USER VALIDATION ADDED
-    if (typeof getUserById === "function") {
-      let u = getUserById(data.userId);
-      if (!u) return false;
-    }
+    // ❤️ USER VALIDATION
+    let user = (typeof getUserById === "function") ? getUserById(data.userId) : null;
+    if (!user) return false;
 
     let amount = Number(data.amount);
     if (isNaN(amount) || amount <= 0) return false;
@@ -110,28 +109,27 @@ function getIntroducer(user) {
 }
 
 // ===================================
-// ❤️ QUALIFICATION CHECK (NEW)
+// ❤️ QUALIFICATION CHECK (FINAL FIX)
 // ===================================
-function isUserQualified(user) {
+function isUserQualified(userId) {
 
-  if (!user) return false;
+  let user = getUserById(userId);
+  if (!user || user.status !== "active") return false; // ❤️ ACTIVE CHECK
+
+  let users = (typeof getUsers === "function") ? getUsers() : [];
 
   // ❤️ DIRECT COUNT
-  let directs = (typeof getUsers === "function")
-    ? getUsers().filter(u => u.introducerId === user.userId).length
-    : 0;
+  let directs = users.filter(u => u.introducerId === userId).length;
 
-  // ❤️ BV POINT
+  // ❤️ BV POINT (as per your rule)
   let bv = Number(user.totalIncome || 0);
-  let bvPoints = Math.floor(bv / 500);
+  let points = directs + Math.floor(bv / 500);
 
-  let totalPoints = directs + bvPoints;
-
-  return totalPoints >= 1; // ❤️ RULE
+  return points >= 1;
 }
 
 // ===================================
-// 🔥 CTOR DISTRIBUTION (FIXED)
+// 🔥 CTOR DISTRIBUTION (FINAL FIX)
 // ===================================
 function distributeCTOR(userId, totalCTOR, type) {
 
@@ -140,33 +138,47 @@ function distributeCTOR(userId, totalCTOR, type) {
   totalCTOR = parseFloat(Number(totalCTOR).toFixed(2));
 
   let current = getUser(userId);
+  let level = 1;
 
-  CTOR_SPLIT.forEach((percent, index) => {
+  CTOR_SPLIT.forEach((percent) => {
+
+    if (!current) return;
+
+    let parent = getIntroducer(current);
+    if (!parent) return;
 
     let amount = calc(totalCTOR, percent);
-    if (amount <= 0) return;
 
-    let receiver = null;
+    if (amount > 0) {
 
-    if (current) {
-      current = getIntroducer(current);
+      // ❤️ QUALIFICATION CHECK
+      if (isUserQualified(parent.userId)) {
+
+        safeIncome({
+          userId: parent.userId,
+          type: "ctor",
+          amount: amount,
+          sourceUser: userId,
+          note: `${type.toUpperCase()} CTOR LEVEL ${level}`
+        });
+
+      } else {
+
+        // ❤️ SYSTEM FALLBACK
+        safeIncome({
+          userId: "SYSTEM",
+          type: "ctor",
+          amount: amount,
+          sourceUser: userId,
+          note: `MISS CTOR L${level}`
+        });
+
+      }
+
     }
 
-    // ❤️ CHECK QUALIFICATION
-    if (current && isUserQualified(current) && current.status === "active") {
-      receiver = current.userId;
-    } else {
-      // ❤️ FALLBACK TO SYSTEM
-      receiver = "SYSTEM";
-    }
-
-    safeIncome({
-      userId: receiver,
-      type: "ctor",
-      amount: amount,
-      sourceUser: userId,
-      note: `${type.toUpperCase()} CTOR ${index + 1}`
-    });
+    current = parent;
+    level++;
 
   });
 
