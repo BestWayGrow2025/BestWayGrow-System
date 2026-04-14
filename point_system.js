@@ -1,6 +1,6 @@
 /*
 ========================================
-📊 POINT SYSTEM V1 (FINAL LOCK ❤️)
+📊 POINT SYSTEM V1.1 (FINAL LOCK ❤️)
 ========================================
 ✔ Monthly points tracking
 ✔ Direct + BV logic
@@ -8,7 +8,9 @@
 ✔ Weekly release engine
 ✔ Monthly closing reset
 ✔ No carry forward
+✔ SYSTEM fallback safe
 ✔ Fully aligned with income engine
+✔ Production safe (no crash)
 ========================================
 */
 
@@ -17,18 +19,18 @@
 // ===================================
 function updateUserPoints(userId, bv = 0, isDirect = false) {
 
-  let users = getUsers();
+  let users = (typeof getUsers === "function") ? getUsers() : [];
   let user = users.find(u => u.userId === userId);
   if (!user) return;
 
-  // INIT FIELDS (SAFE)
+  // 🔒 SAFE INIT
   if (typeof user.monthlyPoints !== "number") user.monthlyPoints = 0;
   if (typeof user.rliHoldBalance !== "number") user.rliHoldBalance = 0;
 
   let now = new Date();
   let last = user.lastPointReset ? new Date(user.lastPointReset) : null;
 
-  // 🔄 MONTH RESET
+  // 🔄 MONTH RESET (SAFE YEAR CHECK)
   if (!last || last.getMonth() !== now.getMonth() || last.getFullYear() !== now.getFullYear()) {
     user.monthlyPoints = 0;
     user.rliHoldBalance = 0;
@@ -38,7 +40,7 @@ function updateUserPoints(userId, bv = 0, isDirect = false) {
   let points = 0;
 
   // ❤️ DIRECT POINT
-  if (isDirect) {
+  if (isDirect === true) {
     points += 1;
   }
 
@@ -57,7 +59,7 @@ function updateUserPoints(userId, bv = 0, isDirect = false) {
 // ===================================
 function hasValidPoints(user) {
   if (!user) return false;
-  return (user.monthlyPoints || 0) >= 1;
+  return Number(user.monthlyPoints || 0) >= 1;
 }
 
 // ===================================
@@ -65,19 +67,21 @@ function hasValidPoints(user) {
 // ===================================
 function releaseRLIWeekly() {
 
-  let users = getUsers();
+  let users = (typeof getUsers === "function") ? getUsers() : [];
 
   users.forEach(user => {
 
-    if (hasValidPoints(user) && user.rliHoldBalance > 0) {
+    if (hasValidPoints(user) && Number(user.rliHoldBalance || 0) > 0) {
 
-      safeIncome({
-        userId: user.userId,
-        type: "repurchase_release",
-        amount: user.rliHoldBalance,
-        sourceUser: "SYSTEM",
-        note: "WEEKLY RLI RELEASE"
-      });
+      if (typeof safeIncome === "function") {
+        safeIncome({
+          userId: user.userId,
+          type: "repurchase_release",
+          amount: Number(user.rliHoldBalance),
+          sourceUser: "SYSTEM",
+          note: "WEEKLY RLI RELEASE"
+        });
+      }
 
       user.rliHoldBalance = 0;
     }
@@ -92,20 +96,24 @@ function releaseRLIWeekly() {
 // ===================================
 function monthlyClosing() {
 
-  let users = getUsers();
+  let users = (typeof getUsers === "function") ? getUsers() : [];
 
   users.forEach(user => {
 
-    // ❌ NOT QUALIFIED → FLUSH TO SYSTEM
-    if (!hasValidPoints(user) && user.rliHoldBalance > 0) {
+    let hold = Number(user.rliHoldBalance || 0);
 
-      safeIncome({
-        userId: "SYSTEM",
-        type: "flush",
-        amount: user.rliHoldBalance,
-        sourceUser: user.userId,
-        note: "MONTH END FLUSH"
-      });
+    // ❌ NOT QUALIFIED → FLUSH TO SYSTEM
+    if (!hasValidPoints(user) && hold > 0) {
+
+      if (typeof safeIncome === "function") {
+        safeIncome({
+          userId: "SYSTEM",
+          type: "flush",
+          amount: hold,
+          sourceUser: user.userId,
+          note: "MONTH END FLUSH"
+        });
+      }
 
       user.rliHoldBalance = 0;
     }
@@ -120,7 +128,17 @@ function monthlyClosing() {
 }
 
 // ===================================
-// 🔁 AUTO RUN ENGINES
+// 🔁 AUTO RUN ENGINES (SAFE INIT)
 // ===================================
-setInterval(releaseRLIWeekly, 7 * 24 * 60 * 60 * 1000);
-setInterval(monthlyClosing, 30 * 24 * 60 * 60 * 1000);
+if (typeof window !== "undefined") {
+
+  // prevent duplicate intervals
+  if (!window.__pointSystemInitialized) {
+
+    setInterval(releaseRLIWeekly, 7 * 24 * 60 * 60 * 1000);
+    setInterval(monthlyClosing, 30 * 24 * 60 * 60 * 1000);
+
+    window.__pointSystemInitialized = true;
+  }
+
+}
