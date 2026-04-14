@@ -1,15 +1,16 @@
 /*
 ========================================
-TREE SYSTEM V12 (MASTER LOCK ❤️)
+TREE SYSTEM V12 (MASTER LOCK ❤️ FINAL)
 ========================================
 ✔ Random User ID
 ✔ Referral link
-✔ Wallet aligned
+✔ Wallet aligned (balance + credit + debit)
 ✔ Point system attached ❤️
 ✔ Rank system attached ❤️
 ✔ Safe placement
 ✔ No overwrite bug
-✔ Fully income-engine compatible
+✔ Direct point trigger added
+✔ Fully income-engine V8 compatible
 ========================================
 */
 
@@ -165,7 +166,7 @@ function createUserWithTree(req) {
       upgradeLevel: 0,
       repurchaseCount: 0,
 
-      // ❤️ POINT SYSTEM (REQUIRED)
+      // ❤️ POINT SYSTEM
       monthlyPoints: 0,
       lastPointReset: new Date().toISOString(),
       rliHoldBalance: 0,
@@ -173,7 +174,7 @@ function createUserWithTree(req) {
       // ❤️ RANK SYSTEM (CTOR)
       rankLevel: 0,
 
-      // 💰 WALLET (ALIGNED)
+      // 💰 WALLET
       wallet: {
         balance: 0,
         totalCredit: 0,
@@ -212,7 +213,7 @@ function createUserWithTree(req) {
       throw new Error("saveUsers missing");
     }
 
-    // ❤️ DIRECT POINT ADD (CRITICAL LINK)
+    // ❤️ DIRECT POINT (CRITICAL)
     if (typeof updateUserPoints === "function") {
       updateUserPoints(req.introducerId, 0, true);
     }
