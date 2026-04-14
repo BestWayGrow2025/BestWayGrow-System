@@ -1,14 +1,14 @@
 /*
 ========================================
-🧠 CORE SYSTEM V8 (POINT SYSTEM READY ❤️)
+🧠 CORE SYSTEM V8 (FINAL LOCK ❤️)
 ========================================
 ✔ Safe storage
 ✔ User management
 ✔ System settings
-✔ Feature control
-✔ Default admins
+✔ Feature control ready
+✔ SYSTEM user added (critical)
 ✔ Point system compatible
-✔ Production locked
+✔ Production safe
 ========================================
 */
 
@@ -88,6 +88,15 @@ function getUserById(id) {
   return getUsers().find(u => u.userId === id) || null;
 }
 
+// ❤️ NEW (REQUIRED FOR POINT SYSTEM + TREE)
+function getDirectUsers(userId) {
+  return getUsers().filter(u => u.introducerId === userId);
+}
+
+function getChildren(userId) {
+  return getUsers().filter(u => u.sponsorId === userId);
+}
+
 // ===================================
 // 🔥 INIT SYSTEM
 // ===================================
@@ -96,6 +105,7 @@ function initCoreSystem() {
   let users = getUsers();
   let updated = false;
 
+  // ensure settings exist
   getSystemSettings();
 
   // SUPER ADMIN
@@ -111,14 +121,20 @@ function initCoreSystem() {
     updated = true;
   }
 
-  // SYSTEM USER (VERY IMPORTANT ❤️)
+  // ❤️ SYSTEM USER (CRITICAL FOR CTOR / HOLD / FLUSH)
   if (!users.find(u => u.userId === "SYSTEM")) {
     users.push({
       userId: "SYSTEM",
       username: "System Pool",
       role: "system",
       status: "active",
-      wallet: { balance: 0 },
+
+      wallet: {
+        balance: 0,
+        totalCredit: 0,
+        totalDebit: 0
+      },
+
       totalIncome: 0,
       createdAt: Date.now()
     });
@@ -140,5 +156,29 @@ function initCoreSystem() {
 
   if (updated) saveUsers(users);
 
-  console.log("✅ Core system ready (V8)");
+  console.log("✅ Core system ready (V8 FINAL)");
 }
+
+
+⚠️ WHAT I FIXED (IMPORTANT)
+1. ❤️ SYSTEM WALLET STRUCTURE FIXED
+Your version:
+wallet: { balance: 0 }
+
+❌ Problem → breaks with wallet_system.js
+✅ Fixed:
+wallet: {
+  balance: 0,
+  totalCredit: 0,
+  totalDebit: 0
+}
+
+
+2. ❤️ ADDED REQUIRED HELPERS
+Needed for:
+point system
+tree system
+income engine
+getDirectUsers()
+getChildren()
+
