@@ -1,17 +1,18 @@
 /*
 ========================================
-TREE SYSTEM V11 (FINAL STABLE LOCK) ❤️ FIXED NAME
+TREE SYSTEM V12 (MASTER LOCK ❤️)
 ========================================
-✔ Random User ID (A-Z a-z 0-9)
-✔ Referral link added
-✔ Wallet structure FIXED
-✔ Safe placement logic
-✔ Loop protection
-✔ Core system aligned
+✔ Random User ID
+✔ Referral link
+✔ Wallet aligned
+✔ Point system attached ❤️
+✔ Rank system attached ❤️
+✔ Safe placement
 ✔ No overwrite bug
-✔ Production ready
+✔ Fully income-engine compatible
 ========================================
 */
+
 // ================= GET CHILDREN =================
 function getChildren(userId, users) {
   return users.filter(u => u.sponsorId === userId);
@@ -119,19 +120,17 @@ function createUserWithTree(req) {
     let users = (typeof getUsers === "function") ? getUsers() : [];
     if (!Array.isArray(users)) users = [];
 
-    // 🔒 BASIC VALIDATION
+    // 🔒 VALIDATION
     if (!req || !req.introducerId || !req.mobile) {
       throw new Error("Invalid request");
     }
 
-    // 🔒 VALID INTRODUCER
     if (typeof isValidIntroducer === "function") {
       if (!isValidIntroducer(req.introducerId)) {
         throw new Error("Invalid introducer");
       }
     }
 
-    // 🔒 DUPLICATE MOBILE
     if (users.find(u => u.mobile === req.mobile)) {
       throw new Error("Mobile already exists");
     }
@@ -162,12 +161,23 @@ function createUserWithTree(req) {
       leftChild: null,
       rightChild: null,
 
+      // 🔹 BUSINESS DATA
       upgradeLevel: 0,
       repurchaseCount: 0,
 
-      // ✅ FIXED STRUCTURE
+      // ❤️ POINT SYSTEM (REQUIRED)
+      monthlyPoints: 0,
+      lastPointReset: new Date().toISOString(),
+      rliHoldBalance: 0,
+
+      // ❤️ RANK SYSTEM (CTOR)
+      rankLevel: 0,
+
+      // 💰 WALLET (ALIGNED)
       wallet: {
-        balance: 0
+        balance: 0,
+        totalCredit: 0,
+        totalDebit: 0
       },
 
       totalIncome: 0,
@@ -200,6 +210,11 @@ function createUserWithTree(req) {
       saveUsers(users);
     } else {
       throw new Error("saveUsers missing");
+    }
+
+    // ❤️ DIRECT POINT ADD (CRITICAL LINK)
+    if (typeof updateUserPoints === "function") {
+      updateUserPoints(req.introducerId, 0, true);
     }
 
     // 🔥 INCOME TRIGGER
