@@ -1,10 +1,9 @@
+HTML
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Login V9 FINAL</title>
-
+  <title>Admin Login V10 FINAL</title>
   <link rel="icon" href="data:,">
-
   <style>
     body { 
       font-family: Arial; 
@@ -12,25 +11,21 @@
       text-align:center;
       background:#f4f7f9;
     }
-
     input { 
       padding: 8px; 
       width: 240px; 
       margin-bottom: 10px;
     }
-
     button { 
       padding: 8px 15px; 
       cursor: pointer;
     }
-
     #msg {
       margin-top:10px;
       font-weight:bold;
     }
   </style>
 </head>
-
 <body>
 
 <h2>ADMIN LOGIN</h2>
@@ -42,13 +37,11 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORE FIRST (VERY IMPORTANT) -->
 <script src="core_system.js"></script>
 <script src="activity_log_system.js"></script>
 
 <script>
-
-// ================= SAFE INIT =================
+// ================= INIT =================
 window.addEventListener("load", function () {
 
   if (typeof initCoreSystem !== "function") {
@@ -58,8 +51,8 @@ window.addEventListener("load", function () {
 
   initCoreSystem();
 
-  // attach click AFTER system ready
-  document.getElementById("loginBtn").addEventListener("click", login);
+  document.getElementById("loginBtn")
+    .addEventListener("click", login);
 });
 
 // ================= SAFE DECODE =================
@@ -80,19 +73,9 @@ function unlockBtn() {
   btn.innerText = "Login";
 }
 
-// ================= GLOBAL LOGOUT =================
+// ================= CLEAR OLD SESSION =================
 function logoutAll() {
-  localStorage.removeItem("loggedInSuperAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
   localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInUser");
-}
-
-// ================= SESSION KEY =================
-function getSessionKey(role) {
-  if (role === "super_admin") return "loggedInSuperAdmin";
-  if (role === "system_admin") return "loggedInSystemAdmin";
-  return "loggedInAdmin";
 }
 
 // ================= LOGIN =================
@@ -119,10 +102,9 @@ function login() {
 
   let user = users.find(u => {
     let storedPass = safeDecode(u.password);
-
     return (
       (u.userId || "").toLowerCase() === id &&
-      ["admin","system_admin","super_admin"].includes(u.role) &&
+      u.role === "admin" &&
       storedPass === pass
     );
   });
@@ -133,14 +115,12 @@ function login() {
     return;
   }
 
-  // ================= STATUS =================
   if (user.status && user.status !== "active") {
     showMsg("🚫 Account inactive");
     unlockBtn();
     return;
   }
 
-  // ================= SYSTEM CHECK =================
   if (typeof getSystemSettings !== "function") {
     alert("System settings missing");
     unlockBtn();
@@ -161,34 +141,24 @@ function login() {
     return;
   }
 
-  // ================= SESSION =================
+  // ================= SESSION FIXED =================
   logoutAll();
 
-  let key = getSessionKey(user.role);
+  localStorage.setItem("loggedInAdmin", JSON.stringify({
+    userId: user.userId,
+    role: user.role
+  }));
 
-  try {
-    localStorage.setItem(key, JSON.stringify({
-      userId: user.userId
-    }));
-  } catch {
-    alert("Storage error");
-    unlockBtn();
-    return;
-  }
-
-  // ================= VERIFY =================
-  if (!localStorage.getItem(key)) {
+  if (!localStorage.getItem("loggedInAdmin")) {
     alert("Session failed");
     unlockBtn();
     return;
   }
 
-  // ================= LOG =================
   if (typeof logActivity === "function") {
     logActivity(user.userId, "ADMIN", "Login");
   }
 
-  // ================= SUCCESS =================
   showMsg("✅ Login successful");
 
   setTimeout(() => {
