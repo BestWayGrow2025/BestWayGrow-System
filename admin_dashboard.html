@@ -1,23 +1,21 @@
+HTML
 <!DOCTYPE html>
 <html>
 <head>
   <title>Admin Dashboard V7.6 FINAL</title>
   <link rel="icon" href="data:,">
-
   <style>
     body {
       font-family:'Segoe UI', Arial;
       margin:0;
       background:linear-gradient(135deg,#eef2f7,#e6ecf5);
     }
-
     header {
       background:linear-gradient(135deg,#000,#434343);
       color:#fff;
       padding:18px;
       text-align:center;
     }
-
     header button {
       margin-top:10px;
       padding:6px 12px;
@@ -27,14 +25,12 @@
       color:#fff;
       cursor:pointer;
     }
-
     .menu {
       display:flex;
       overflow-x:auto;
       background:#fff;
       padding:10px;
     }
-
     .menu button {
       margin:5px;
       padding:10px 14px;
@@ -44,15 +40,12 @@
       color:#fff;
       cursor:pointer;
     }
-
     .menu button.active {
       background:linear-gradient(135deg,#003f88,#0059b3);
     }
-
     .container {
       padding:20px;
     }
-
     .card {
       background:#fff;
       padding:20px;
@@ -60,27 +53,22 @@
       max-width:900px;
       margin:auto;
     }
-
     table {
       width:100%;
       border-collapse: collapse;
       margin-top:10px;
       font-size:13px;
     }
-
     th, td {
       border:1px solid #eee;
       padding:10px;
       text-align:center;
     }
-
     th { background:#f1f4f8; }
-
     .on { background:#28a745; color:#fff; }
     .off { background:#dc3545; color:#fff; }
   </style>
 </head>
-
 <body>
 
 <header>
@@ -102,7 +90,7 @@
   <div id="mainContent" class="card">Loading...</div>
 </div>
 
-<!-- ✅ FINAL SCRIPT ORDER -->
+<!-- ✅ SCRIPT ORDER -->
 <script src="core_system.js"></script>
 <script src="wallet_system.js"></script>
 <script src="income_log_system.js"></script>
@@ -111,22 +99,21 @@
 <script src="pin_request_system.js"></script>
 
 <script>
-
 // ================= INIT =================
 if (typeof initCoreSystem === "function") initCoreSystem();
 else { alert("core_system.js missing"); throw new Error("STOP"); }
 
-// ================= AUTH =================
-let admin =
-  protectPage({ role: "admin" }) ||
-  protectPage({ role: "system_admin" }) ||
-  protectPage({ role: "super_admin" });
+// ================= AUTH (FIXED) =================
+let admin = JSON.parse(localStorage.getItem("loggedInAdmin"));
 
-if (!admin) throw new Error("STOP");
+if (!admin) {
+  alert("Login Required");
+  window.location.href = "admin_login.html";
+}
 
 // ================= WELCOME =================
 document.getElementById("welcome").innerText =
-  "Welcome (" + admin.userId + ")";
+  "Welcome (" + (admin.userId || "Admin") + ")";
 
 // ================= BUTTON LOCK =================
 let clickLock = false;
@@ -150,13 +137,12 @@ function loadHome() {
   document.getElementById("mainContent").innerHTML = `
     <h3>Overview</h3>
     <p>Name: ${admin.username || admin.userId}</p>
-    <p>Status: ${admin.status}</p>
+    <p>Status: ${admin.status || "active"}</p>
   `;
 }
 
 // ================= USERS =================
 function loadUsers() {
-
   let users = (typeof getUsers === "function") ? getUsers() : [];
   users = users.filter(u => u.role === "user");
 
@@ -179,7 +165,6 @@ function loadUsers() {
 
 // ================= PIN =================
 function loadPinsUI() {
-
   let pins = (typeof loadPins === "function") ? loadPins() : [];
 
   let html = `<h3>PIN Control</h3><table>
@@ -200,7 +185,6 @@ function loadPinsUI() {
 
 // ================= WALLET =================
 function loadWallet() {
-
   let users = (typeof getUsers === "function") ? getUsers() : [];
 
   let total = users.reduce((sum,u)=>
@@ -213,9 +197,8 @@ function loadWallet() {
   `;
 }
 
-// ================= INCOME (✅ FIXED) =================
+// ================= INCOME =================
 function loadIncome() {
-
   let logs = (typeof getIncomeLogs === "function") ? getIncomeLogs() : [];
 
   let html = `<h3>Income Logs</h3><table>
@@ -234,7 +217,6 @@ function loadIncome() {
   });
 
   html += `</table>`;
-
   document.getElementById("mainContent").innerHTML = html;
 }
 
@@ -242,9 +224,7 @@ function loadIncome() {
 let queueBtnLock = false;
 
 function loadSystem() {
-
   let s = (typeof getSystemSettings === "function") ? getSystemSettings() : {};
-
   let requests = (typeof getPinRequests === "function") ? getPinRequests() : [];
 
   let pending = requests.filter(r=>r.status==="PENDING").length;
@@ -253,7 +233,6 @@ function loadSystem() {
 
   document.getElementById("mainContent").innerHTML = `
     <h3>System Control</h3>
-
     <p>Register: ${s.registrationOpen ? "ON" : "OFF"}</p>
     <p>Upgrade: ${s.upgradesOpen ? "ON" : "OFF"}</p>
     <p>Repurchase: ${s.repurchaseOpen ? "ON" : "OFF"}</p>
@@ -263,7 +242,6 @@ function loadSystem() {
 
     <h3>Queue</h3>
     <p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
-
     <button class="on" onclick="toggleQueue(true)">ON</button>
     <button class="off" onclick="toggleQueue(false)">OFF</button>
 
@@ -277,8 +255,8 @@ function loadSystem() {
 
 // ================= TOGGLE =================
 function toggleQueue(val) {
-
   if (queueBtnLock) return;
+
   queueBtnLock = true;
 
   let s = getSystemSettings() || {};
@@ -304,7 +282,6 @@ document.querySelector(".menu button").classList.add("active");
 loadHome();
 
 </script>
-
 </body>
 </html>
 
