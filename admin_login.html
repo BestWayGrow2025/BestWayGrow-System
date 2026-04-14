@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Login V8 FINAL</title>
+  <title>Admin Login V9 FINAL</title>
 
   <link rel="icon" href="data:,">
 
@@ -38,23 +38,29 @@
 <input id="adminId" placeholder="Admin ID"><br>
 <input id="password" type="password" placeholder="Password"><br>
 
-<button id="loginBtn" onclick="login()">Login</button>
+<button id="loginBtn">Login</button>
 
 <p id="msg"></p>
 
-<!-- ✅ CORE DEPENDENCIES -->
+<!-- ✅ CORE FIRST (VERY IMPORTANT) -->
 <script src="core_system.js"></script>
 <script src="activity_log_system.js"></script>
 
 <script>
 
-// ================= INIT =================
-if (typeof initCoreSystem === "function") {
+// ================= SAFE INIT =================
+window.addEventListener("load", function () {
+
+  if (typeof initCoreSystem !== "function") {
+    alert("❌ core_system.js not loaded");
+    return;
+  }
+
   initCoreSystem();
-} else {
-  alert("❌ core_system.js not loaded");
-  throw new Error("STOP");
-}
+
+  // attach click AFTER system ready
+  document.getElementById("loginBtn").addEventListener("click", login);
+});
 
 // ================= SAFE DECODE =================
 function safeDecode(p) {
@@ -76,12 +82,10 @@ function unlockBtn() {
 
 // ================= GLOBAL LOGOUT =================
 function logoutAll() {
-  try {
-    localStorage.removeItem("loggedInSuperAdmin");
-    localStorage.removeItem("loggedInSystemAdmin");
-    localStorage.removeItem("loggedInAdmin");
-    localStorage.removeItem("loggedInUser");
-  } catch {}
+  localStorage.removeItem("loggedInSuperAdmin");
+  localStorage.removeItem("loggedInSystemAdmin");
+  localStorage.removeItem("loggedInAdmin");
+  localStorage.removeItem("loggedInUser");
 }
 
 // ================= SESSION KEY =================
@@ -106,7 +110,7 @@ function login() {
   }
 
   if (typeof getUsers !== "function") {
-    alert("System error");
+    alert("Core system not loaded");
     unlockBtn();
     return;
   }
@@ -129,7 +133,7 @@ function login() {
     return;
   }
 
-  // ================= STATUS CHECK =================
+  // ================= STATUS =================
   if (user.status && user.status !== "active") {
     showMsg("🚫 Account inactive");
     unlockBtn();
@@ -137,14 +141,13 @@ function login() {
   }
 
   // ================= SYSTEM CHECK =================
-  let settings = {};
-  if (typeof getSystemSettings === "function") {
-    settings = getSystemSettings() || {};
-  } else {
-    alert("System settings error");
+  if (typeof getSystemSettings !== "function") {
+    alert("System settings missing");
     unlockBtn();
     return;
   }
+
+  let settings = getSystemSettings();
 
   if (settings.adminAccess === false) {
     showMsg("🚫 Admin access OFF");
@@ -158,17 +161,15 @@ function login() {
     return;
   }
 
-  // ================= CLEAR OLD =================
+  // ================= SESSION =================
   logoutAll();
 
-  // ================= SAVE SESSION =================
-  try {
-    let key = getSessionKey(user.role);
+  let key = getSessionKey(user.role);
 
+  try {
     localStorage.setItem(key, JSON.stringify({
       userId: user.userId
     }));
-
   } catch {
     alert("Storage error");
     unlockBtn();
@@ -176,13 +177,8 @@ function login() {
   }
 
   // ================= VERIFY =================
-  let sessionExists =
-    localStorage.getItem("loggedInAdmin") ||
-    localStorage.getItem("loggedInSystemAdmin") ||
-    localStorage.getItem("loggedInSuperAdmin");
-
-  if (!sessionExists) {
-    alert("Session not saved");
+  if (!localStorage.getItem(key)) {
+    alert("Session failed");
     unlockBtn();
     return;
   }
@@ -197,7 +193,7 @@ function login() {
 
   setTimeout(() => {
     window.location.href = "admin_dashboard.html";
-  }, 600);
+  }, 500);
 }
 
 // ================= MESSAGE =================
@@ -209,4 +205,3 @@ function showMsg(text) {
 
 </body>
 </html>
-
