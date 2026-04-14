@@ -1,20 +1,17 @@
 /*
 ========================================
-🧠 CORE SYSTEM V8 (FINAL LOCK ❤️)
+CORE SYSTEM V8 (FINAL CLEAN)
 ========================================
 ✔ Safe storage
 ✔ User management
 ✔ System settings
-✔ Feature control ready
-✔ SYSTEM user added (critical)
-✔ Point system compatible
+✔ SYSTEM user
+✔ No syntax error
 ✔ Production safe
 ========================================
 */
 
-// ===================================
-// 🔹 SAFE STORAGE
-// ===================================
+// ================= SAFE STORAGE =================
 function safeGet(key, fallback) {
   try {
     let raw = localStorage.getItem(key);
@@ -24,7 +21,7 @@ function safeGet(key, fallback) {
     }
     let data = JSON.parse(raw);
     return (data !== null && data !== undefined) ? data : fallback;
-  } catch {
+  } catch (e) {
     localStorage.setItem(key, JSON.stringify(fallback));
     return fallback;
   }
@@ -38,9 +35,7 @@ function safeSet(key, value) {
   }
 }
 
-// ===================================
-// 🔹 USERS
-// ===================================
+// ================= USERS =================
 function getUsers() {
   let users = safeGet("users", []);
   return Array.isArray(users) ? users : [];
@@ -51,9 +46,7 @@ function saveUsers(users) {
   safeSet("users", users);
 }
 
-// ===================================
-// 🔹 SYSTEM SETTINGS
-// ===================================
+// ================= SYSTEM SETTINGS =================
 function getSystemSettings() {
 
   let defaults = {
@@ -66,29 +59,24 @@ function getSystemSettings() {
   };
 
   let stored = safeGet("systemSettings", {});
-  let merged = { ...defaults, ...stored };
+  let merged = Object.assign({}, defaults, stored);
 
   safeSet("systemSettings", merged);
   return merged;
 }
 
-// ===================================
-// 🔐 SYSTEM SAFE
-// ===================================
+// ================= SYSTEM SAFE =================
 function isSystemSafe() {
   let s = getSystemSettings();
   return !(s.lockMode === true);
 }
 
-// ===================================
-// 🔹 HELPERS
-// ===================================
+// ================= HELPERS =================
 function getUserById(id) {
   if (!id) return null;
   return getUsers().find(u => u.userId === id) || null;
 }
 
-// ❤️ NEW (REQUIRED FOR POINT SYSTEM + TREE)
 function getDirectUsers(userId) {
   return getUsers().filter(u => u.introducerId === userId);
 }
@@ -97,15 +85,12 @@ function getChildren(userId) {
   return getUsers().filter(u => u.sponsorId === userId);
 }
 
-// ===================================
-// 🔥 INIT SYSTEM
-// ===================================
+// ================= INIT =================
 function initCoreSystem() {
 
   let users = getUsers();
   let updated = false;
 
-  // ensure settings exist
   getSystemSettings();
 
   // SUPER ADMIN
@@ -121,20 +106,18 @@ function initCoreSystem() {
     updated = true;
   }
 
-  // ❤️ SYSTEM USER (CRITICAL FOR CTOR / HOLD / FLUSH)
+  // SYSTEM USER
   if (!users.find(u => u.userId === "SYSTEM")) {
     users.push({
       userId: "SYSTEM",
       username: "System Pool",
       role: "system",
       status: "active",
-
       wallet: {
         balance: 0,
         totalCredit: 0,
         totalDebit: 0
       },
-
       totalIncome: 0,
       createdAt: Date.now()
     });
@@ -156,29 +139,5 @@ function initCoreSystem() {
 
   if (updated) saveUsers(users);
 
-  console.log("✅ Core system ready (V8 FINAL)");
+  console.log("Core system loaded successfully");
 }
-
-
-⚠️ WHAT I FIXED (IMPORTANT)
-1. ❤️ SYSTEM WALLET STRUCTURE FIXED
-Your version:
-wallet: { balance: 0 }
-
-❌ Problem → breaks with wallet_system.js
-✅ Fixed:
-wallet: {
-  balance: 0,
-  totalCredit: 0,
-  totalDebit: 0
-}
-
-
-2. ❤️ ADDED REQUIRED HELPERS
-Needed for:
-point system
-tree system
-income engine
-getDirectUsers()
-getChildren()
-
