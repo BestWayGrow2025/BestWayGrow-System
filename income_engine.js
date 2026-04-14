@@ -1,11 +1,12 @@
 /*
 ========================================
-💰 INCOME ENGINE V8.0 (MASTER FINAL LOCK)
+💰 INCOME ENGINE V8.2 (ABSOLUTE FINAL LOCK 🔒)
 ========================================
 ✔ UGLI → No condition (instant)
-✔ RLI → Point based + HOLD + weekly release ❤️
-✔ CTOR → Rank + Point + Active + SYSTEM fallback ❤️
-✔ Monthly reset system
+✔ RLI → Point based + HOLD (external release system)
+✔ CTOR → Rank + Point + Active + SYSTEM fallback
+✔ External point system (no duplication)
+✔ Safe wallet + logging
 ✔ Zero leakage
 ✔ Fully production ready
 ========================================
@@ -51,16 +52,14 @@ function safeIncome(data) {
     if (!data || !data.userId) return false;
 
     let user = getUserById(data.userId);
-    if (!user) return false;
+
+    // ✅ SYSTEM allowed
+    if (!user && data.userId !== "SYSTEM") return false;
 
     let amount = Number(data.amount);
     if (isNaN(amount) || amount <= 0) return false;
 
     if (!canRunIncome(data.type)) return false;
-
-    if (typeof isIncomeAllowed === "function") {
-      if (!isIncomeAllowed(data.type)) return false;
-    }
 
     if (typeof creditWallet !== "function") return false;
 
@@ -105,34 +104,6 @@ function getIntroducer(user) {
 }
 
 // ===================================
-// ❤️ POINT SYSTEM
-// ===================================
-function updateUserPoints(userId, bv = 0, isDirect = false) {
-
-  let user = getUserById(userId);
-  if (!user) return;
-
-  let now = new Date();
-  let last = user.lastPointReset ? new Date(user.lastPointReset) : null;
-
-  // 🔄 MONTH RESET
-  if (!last || last.getMonth() !== now.getMonth()) {
-    user.monthlyPoints = 0;
-    user.rliHoldBalance = 0;
-    user.lastPointReset = now.toISOString();
-  }
-
-  let points = 0;
-
-  if (isDirect) points += 1;
-  if (bv > 0) points += Math.floor(bv / 500);
-
-  user.monthlyPoints = (user.monthlyPoints || 0) + points;
-
-  saveUsers(getUsers());
-}
-
-// ===================================
 // ❤️ CTOR QUALIFICATION
 // ===================================
 function isCTORQualified(user) {
@@ -141,9 +112,10 @@ function isCTORQualified(user) {
 
   if (user.status !== "active") return false;
 
-  // ❤️ RANK REQUIRED (FIXED)
+  // ❤️ RANK REQUIRED
   if (!user.rankLevel || user.rankLevel <= 0) return false;
 
+  // ❤️ POINT REQUIRED
   if ((user.monthlyPoints || 0) < 1) return false;
 
   return true;
@@ -208,7 +180,10 @@ function distributeCTOR(userId, totalCTOR, type) {
 // ===================================
 function processUpgradeIncome(userId, bv) {
 
-  updateUserPoints(userId, bv, false); // ❤️ POINT UPDATE
+  // ❤️ POINT UPDATE (external system)
+  if (typeof updateUserPoints === "function") {
+    updateUserPoints(userId, bv, false);
+  }
 
   let current = getUser(userId);
   if (!current) return false;
@@ -247,11 +222,14 @@ function processUpgradeIncome(userId, bv) {
 }
 
 // ===================================
-// 🔥 RLI (FINAL)
+// 🔥 RLI (HOLD BASED)
 // ===================================
 function processRepurchaseIncome(userId, bv) {
 
-  updateUserPoints(userId, bv, false); // ❤️ POINT UPDATE
+  // ❤️ POINT UPDATE
+  if (typeof updateUserPoints === "function") {
+    updateUserPoints(userId, bv, false);
+  }
 
   let current = getUser(userId);
   if (!current) return false;
@@ -271,13 +249,14 @@ function processRepurchaseIncome(userId, bv) {
     let parent = getIntroducer(current);
     if (!parent) break;
 
-    let parentIndex = users.findIndex(u => u.userId === parent.userId);
-    if (parentIndex === -1) break;
+    let index = users.findIndex(u => u.userId === parent.userId);
+    if (index === -1) break;
 
     if (perLevel > 0) {
 
       if ((parent.monthlyPoints || 0) >= 1) {
 
+        // ✅ GIVE INCOME
         safeIncome({
           userId: parent.userId,
           type: "repurchase",
@@ -288,8 +267,9 @@ function processRepurchaseIncome(userId, bv) {
 
       } else {
 
-        users[parentIndex].rliHoldBalance =
-          (users[parentIndex].rliHoldBalance || 0) + perLevel;
+        // ❤️ HOLD INCOME
+        users[index].rliHoldBalance =
+          (users[index].rliHoldBalance || 0) + perLevel;
       }
     }
 
@@ -302,63 +282,6 @@ function processRepurchaseIncome(userId, bv) {
   distributeCTOR(userId, ctorPool, "repurchase");
 
   return true;
-}
-
-// ===================================
-// 🔁 WEEKLY RLI RELEASE
-// ===================================
-function releaseRLIWeekly() {
-
-  let users = getUsers();
-
-  users.forEach(user => {
-
-    if ((user.monthlyPoints || 0) >= 1 && user.rliHoldBalance > 0) {
-
-      safeIncome({
-        userId: user.userId,
-        type: "repurchase_release",
-        amount: user.rliHoldBalance,
-        sourceUser: "SYSTEM",
-        note: "WEEKLY RLI RELEASE"
-      });
-
-      user.rliHoldBalance = 0;
-    }
-
-  });
-
-  saveUsers(users);
-}
-
-// ===================================
-// 🔄 MONTHLY CLOSING
-// ===================================
-function monthlyClosing() {
-
-  let users = getUsers();
-
-  users.forEach(user => {
-
-    if ((user.monthlyPoints || 0) < 1 && user.rliHoldBalance > 0) {
-
-      safeIncome({
-        userId: "SYSTEM",
-        type: "flush",
-        amount: user.rliHoldBalance,
-        sourceUser: user.userId,
-        note: "MONTH END FLUSH"
-      });
-
-      user.rliHoldBalance = 0;
-    }
-
-    user.monthlyPoints = 0;
-    user.lastPointReset = new Date().toISOString();
-
-  });
-
-  saveUsers(users);
 }
 
 // ===================================
@@ -377,6 +300,7 @@ function processIncome(type, userId, bv) {
     if (type === "upgrade") return processUpgradeIncome(userId, bv);
     if (type === "repurchase") return processRepurchaseIncome(userId, bv);
 
+    console.warn("Unknown income type:", type);
     return false;
 
   } catch (err) {
@@ -389,8 +313,3 @@ function processIncome(type, userId, bv) {
   }
 }
 
-// ===================================
-// ⏱ AUTO RUN
-// ===================================
-setInterval(releaseRLIWeekly, 7 * 24 * 60 * 60 * 1000);
-setInterval(monthlyClosing, 30 * 24 * 60 * 60 * 1000);
