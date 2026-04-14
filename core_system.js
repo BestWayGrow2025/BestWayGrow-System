@@ -156,3 +156,7 @@ function initCoreSystem() {
     console.error("❌ initCoreSystem failed:", e.message);
   }
 }
+function saveSystemSettings(settings) {
+  localStorage.setItem("systemSettings", JSON.stringify(settings));
+}
+
