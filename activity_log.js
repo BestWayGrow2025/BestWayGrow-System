@@ -77,7 +77,7 @@ function logActivity(userId, role, action, source = "SYSTEM") {
   let logs = safeLoad(ACTIVITY_KEY);
 
   logs.push({
-    logId: "LOG_" + Date.now(),
+   logId: "LOG_" + Date.now() + "_" + Math.floor(Math.random() * 100000),
     userId,
     role,
     action,
@@ -149,7 +149,7 @@ function logCritical(message, userId = "SYSTEM", source = "SYSTEM") {
   let logs = safeLoad(CRITICAL_KEY);
 
   logs.push({
-    id: "CRIT_" + Date.now(),
+    id: "CRIT_" + Date.now() + "_" + Math.floor(Math.random() * 100000),
     userId,
     message,
     source,
