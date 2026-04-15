@@ -183,13 +183,37 @@ function startDashboard() {
     return;
   }
 
-  user = getUserById(session.userId);
+ user = getUserById(session.userId);
 
-  if (!user) {
+if (!user) {
+  clearSession();
+  location.href = "user_login.html";
+  return;
+}
+
+let settings = {};
+
+if (typeof getSystemSettings === "function") {
+  settings = getSystemSettings() || {};
+}
+
+if (settings.lockMode) {
+  alert("System Locked");
+  location.href = "user_login.html";
+  return;
+}
+
+if (user.status !== "active") {
+
+  if (typeof clearSession === "function") {
     clearSession();
-    location.href = "user_login.html";
-    return;
   }
+
+  alert("Account Inactive");
+  location.href = "user_login.html";
+  return;
+}
+
 
   document.getElementById("welcome").innerText =
     "Welcome (" + user.userId + ")";
