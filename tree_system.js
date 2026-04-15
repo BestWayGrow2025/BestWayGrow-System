@@ -19,6 +19,10 @@ function getChildren(userId, users) {
   return users.filter(u => u.sponsorId === userId);
 }
 
+function getIntroducerChildren(userId, users) {
+  return users.filter(u => u.introducerId === userId);
+}
+
 // ================= GET LEFT CHILD =================
 function getLeftChild(userId, users) {
   let user = users.find(u => u.userId === userId);
@@ -110,6 +114,14 @@ function createUserWithTree(req) {
     // 🔒 SYSTEM LOCK
     if (typeof getSystemSettings === "function") {
       let sys = getSystemSettings();
+
+      if (sys && sys.registrationOpen === false) {
+        throw new Error("Registration Closed");
+      }
+    }
+
+    if (typeof getSystemSettings === "function") {
+      let sys = getSystemSettings();
       if (sys && sys.lockMode) throw new Error("System Locked");
     }
 
@@ -122,9 +134,14 @@ function createUserWithTree(req) {
     if (!Array.isArray(users)) users = [];
 
     // 🔒 VALIDATION
-    if (!req || !req.introducerId || !req.mobile) {
+      if (!req || !req.introducerId || !req.mobile) {
       throw new Error("Invalid request");
     }
+
+    if (!req.position || !["L", "R"].includes(req.position)) {
+      req.position = "L";
+    }
+
 
     if (typeof isValidIntroducer === "function") {
       if (!isValidIntroducer(req.introducerId)) {
@@ -149,14 +166,19 @@ function createUserWithTree(req) {
     let newUser = {
       userId,
       username: req.username || "",
-      password: req.password || "",
+        password: req.password || "",
+      name: req.name || "",
+      email: req.email || "",
+
       mobile: req.mobile,
 
       role: "user",
       status: "active",
 
-      introducerId: req.introducerId,
+        introducerId: req.introducerId,
       sponsorId: placement.parentId,
+      sponsorVisible: false,
+      introducerVisible: true,
       position: placement.side,
 
       leftChild: null,
@@ -219,6 +241,14 @@ function createUserWithTree(req) {
     }
 
     // 🔥 INCOME TRIGGER
+      if (typeof triggerRegistrationIncome === "function") {
+      try {
+        triggerRegistrationIncome(newUser.userId, 0);
+      } catch (e) {
+        console.warn("Registration trigger fail:", e.message);
+      }
+    }
+
     if (typeof processIncome === "function") {
       try {
 
