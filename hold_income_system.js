@@ -71,7 +71,12 @@ function addHoldIncome(userId, amount, reason) {
     if (s && s.lockMode) return;
   }
 
+  if (typeof isIncomeSystemSafe === "function") {
+    if (!isIncomeSystemSafe()) return;
+  }
+
   amount = Number(amount);
+
 
   if (!userId || isNaN(amount) || amount <= 0) return;
 
@@ -100,12 +105,18 @@ function safeWalletCredit(userId, amount, note) {
 
     if (typeof getSystemSettings === "function") {
       let s = getSystemSettings();
-      if (s && s.lockMode) return;
+      if (s && s.lockMode) return false;
+    }
+
+    if (typeof isIncomeSystemSafe === "function") {
+      if (!isIncomeSystemSafe()) return false;
     }
 
     if (typeof creditWallet === "function") {
-      creditWallet(userId, amount, note);
+      return creditWallet(userId, amount, note);
     }
+
+    return false;
 
   } catch (err) {
 
