@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User Register V9 FINAL</title>
+  <title>User Register V10 FINAL</title>
 
   <link rel="icon" href="data:,">
 
@@ -15,7 +15,7 @@
 
     #formArea {
       background: #fff;
-      max-width: 420px;
+      max-width: 500px;
       margin: auto;
       padding: 20px;
       border-radius: 10px;
@@ -39,11 +39,30 @@
       background: #007bff;
       color: #fff;
       font-size: 14px;
+      margin: 5px;
     }
 
     button:disabled {
       background: #999;
       cursor: not-allowed;
+    }
+
+    .success-box {
+      background: #f0fff4;
+      border: 1px solid #b7ebc6;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+
+    .link-box {
+      background: #f7f7f7;
+      border: 1px solid #ddd;
+      padding: 8px;
+      border-radius: 6px;
+      word-break: break-all;
+      margin: 10px 0;
+      font-size: 13px;
     }
 
     #msg {
@@ -61,8 +80,6 @@
   <input type="text" id="mobile" placeholder="Mobile"><br>
   <input type="password" id="password" placeholder="Password"><br>
 
-  <input type="text" id="pin" placeholder="Enter Assigned PIN"><br>
-
   <label>Select Position:</label><br><br>
 
   <input type="radio" name="position" value="L"> LEFT
@@ -77,7 +94,6 @@
 <script src="core_system.js"></script>
 <script src="tree_system.js"></script>
 <script src="registration_queue.js"></script>
-<script src="pin_master_system.js"></script>
 <script src="activity_log.js"></script>
 
 <script>
@@ -115,21 +131,11 @@ function encodePass(p) {
   }
 }
 
-// ================= PIN VALIDATION =================
-function validateAssignedPin(pinInput) {
-
-  if (!pinInput || typeof loadPins !== "function") {
-    return { ok: false, msg: "PIN system error" };
-  }
-
-  let pins = loadPins();
-  let pin = pins.find(p => p.pinId === pinInput);
-
-  if (!pin) return { ok: false, msg: "Invalid PIN" };
-  if (pin.status !== "assigned") return { ok: false, msg: "PIN not assigned" };
-  if (pin.type !== "upgrade") return { ok: false, msg: "Use upgrade PIN only" };
-
-  return { ok: true, pin };
+// ================= REFERRAL LINK =================
+function generateReferralLink(userId) {
+  return window.location.origin +
+    window.location.pathname.replace("user_register.html", "") +
+    "user_register.html?ref=" + userId;
 }
 
 // ================= REGISTER =================
@@ -159,22 +165,13 @@ function handleRegister() {
       return resetAll();
     }
 
-    // ================= PIN SYSTEM CHECK =================
-    if (typeof isPinSystemSafe === "function") {
-      if (!isPinSystemSafe("upgrade")) {
-        alert("PIN system disabled");
-        return resetAll();
-      }
-    }
-
     let username = document.getElementById("username").value.trim();
     let mobile = document.getElementById("mobile").value.trim();
     let password = document.getElementById("password").value.trim();
-    let pinInput = document.getElementById("pin").value.trim();
 
     let positionElement = document.querySelector('input[name="position"]:checked');
 
-    if (!username || !mobile || !password || !pinInput) {
+    if (!username || !mobile || !password) {
       alert("Fill all fields");
       return resetAll();
     }
@@ -220,16 +217,6 @@ function handleRegister() {
       }
     }
 
-    // ================= PIN CHECK =================
-    let pinCheck = validateAssignedPin(pinInput);
-
-    if (!pinCheck.ok) {
-      alert(pinCheck.msg);
-      return resetAll();
-    }
-
-    let selectedPin = pinCheck.pin;
-
     // ================= QUEUE CHECK =================
     if (typeof addToRegistrationQueue !== "function") {
       alert("Queue system missing");
@@ -257,26 +244,36 @@ function handleRegister() {
 
       if (newUser) {
 
-        // ================= USE PIN =================
-        if (typeof usePin === "function") {
-          try {
-            usePin(selectedPin.pinId, newUser.userId, "registration");
-          } catch (e) {
-            console.warn("PIN use failed:", e.message);
-          }
-        }
-
         // ================= LOG =================
         if (typeof logActivity === "function") {
           logActivity(newUser.userId, "USER", "Registered", "REGISTRATION");
         }
 
+        let refLink = generateReferralLink(newUser.userId);
+
         document.getElementById("msg").innerHTML = `
-          ✅ Registration Successful <br><br>
-          User ID: <b>${newUser.userId}</b><br><br>
-          Referral Link:<br>
-          <small>${newUser.referralLink || "N/A"}</small><br><br>
-          <a href="user_login.html">Login Now</a>
+          <div class="success-box">
+            ✅ Registration Successful <br><br>
+
+            Welcome to BestWayGrow <br><br>
+
+            User ID: <b>${newUser.userId}</b><br><br>
+
+            Referral Link:
+            <div class="link-box">${refLink}</div>
+
+            <a href="user_login.html">
+              <button type="button">Login</button>
+            </a>
+
+            <a href="user_upgrade.html">
+              <button type="button">Upgrade</button>
+            </a>
+
+            <a href="user_repurchase.html">
+              <button type="button">Repurchase</button>
+            </a>
+          </div>
         `;
 
         clearInterval(checker);
