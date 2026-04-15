@@ -57,15 +57,56 @@ function getSessionKeyByRole(role) {
 
 // ================= GET ACTIVE SESSION =================
 function getSession() {
-
+  
   let keys = [
     SESSION_KEYS.super_admin,
     SESSION_KEYS.system_admin,
     SESSION_KEYS.admin,
-    SESSION_KEYS.user,
-    SESSION_KEYS.legacy
+    SESSION_KEYS.user
   ];
 
+  for (let key of keys) {
+    try {
+      let raw = localStorage.getItem(key);
+      if (!raw) continue;
+
+      let session = JSON.parse(raw);
+
+      if (
+        session &&
+        typeof session === "object" &&
+        session.userId &&
+        session.role
+      ) {
+        return session;
+      }
+    } catch (err) {
+      localStorage.removeItem(key);
+    }
+  }
+
+  // legacy fallback only if no active role session found
+  try {
+    let legacyRaw = localStorage.getItem(SESSION_KEYS.legacy);
+
+    if (legacyRaw) {
+      let legacySession = JSON.parse(legacyRaw);
+
+      if (
+        legacySession &&
+        typeof legacySession === "object" &&
+        legacySession.userId &&
+        legacySession.role
+      ) {
+        return legacySession;
+      }
+    }
+  } catch (err) {
+    localStorage.removeItem(SESSION_KEYS.legacy);
+  }
+
+  return null;
+}
   for (let key of keys) {
     try {
       let raw = localStorage.getItem(key);
