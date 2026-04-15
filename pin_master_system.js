@@ -136,6 +136,8 @@ function assignPin(pinId, toId, toType, performedBy) {
 
   if (typeof isSystemSafe === "function" && !isSystemSafe()) return false;
 
+  if (!toId || !toType) return false;
+
   let pins = loadPins();
   let pin = pins.find(p => p.pinId === pinId);
 
@@ -185,7 +187,18 @@ function usePin(pinId, userId, purpose) {
 
   if (typeof isSystemSafe === "function" && !isSystemSafe()) return null;
 
+  if (!userId) return null;
+
+  if (typeof getUserById === "function") {
+    let user = getUserById(userId);
+
+    if (!user) return null;
+    if (user.status && user.status !== "active") return null;
+  }
+
   let pins = loadPins();
+
+
   let pin = pins.find(p => p.pinId === pinId);
 
   if (!pin || pin.lock || pin.status !== "assigned") return null;
