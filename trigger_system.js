@@ -134,6 +134,17 @@ function canRunTrigger(type) {
 // ===================================
 function runIncomeTrigger(type, userId, bv, source, uniqueKey) {
 
+     if (!canRunTrigger(type)) return false;
+
+    if (typeof isIncomeAllowed === "function") {
+      if (!isIncomeAllowed(type)) return false;
+    }
+
+    if (typeof processIncome !== "function") {
+      console.warn("processIncome missing");
+      return false;
+    }
+  
   try {
 
     if (!userId || !type) return false;
@@ -194,6 +205,11 @@ function runIncomeTrigger(type, userId, bv, source, uniqueKey) {
 // ===================================
 function triggerPinUseIncome(userId, pin) {
 
+   let triggerType = pin.type || "upgrade";
+  let bv = Number(pin.bv || 0);
+
+  triggerType = String(triggerType).toLowerCase();
+  
   if (!userId || !pin) return false;
 
   let triggerType = pin.type || "upgrade";
