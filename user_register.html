@@ -1,20 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User Register V8 FINAL</title>
+  <title>User Register V9 FINAL</title>
+
+  <link rel="icon" href="data:,">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7f9;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #formArea {
+      background: #fff;
+      max-width: 420px;
+      margin: auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 90%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 10px 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+
+    #msg {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
 <h2 id="introLabel">User Registration</h2>
 
 <div id="formArea">
-  <input type="text" id="username" placeholder="Name"><br><br>
-  <input type="text" id="mobile" placeholder="Mobile"><br><br>
-  <input type="password" id="password" placeholder="Password"><br><br>
+  <input type="text" id="username" placeholder="Name"><br>
+  <input type="text" id="mobile" placeholder="Mobile"><br>
+  <input type="password" id="password" placeholder="Password"><br>
 
-  <input type="text" id="pin" placeholder="Enter Assigned PIN"><br><br>
+  <input type="text" id="pin" placeholder="Enter Assigned PIN"><br>
 
-  <label>Select Position:</label><br>
+  <label>Select Position:</label><br><br>
+
   <input type="radio" name="position" value="L"> LEFT
   <input type="radio" name="position" value="R"> RIGHT
   <br><br>
@@ -25,7 +75,7 @@
 <p id="msg"></p>
 
 <script src="core_system.js"></script>
-<script src="tree_system.js"></script> 
+<script src="tree_system.js"></script>
 <script src="registration_queue.js"></script>
 <script src="pin_master_system.js"></script>
 <script src="activity_log.js"></script>
@@ -33,7 +83,9 @@
 <script>
 
 // ================= INIT =================
-if (typeof initCoreSystem === "function") initCoreSystem();
+if (typeof initCoreSystem === "function") {
+  initCoreSystem();
+}
 
 // ================= PARAM =================
 let params = new URLSearchParams(window.location.search);
@@ -43,30 +95,41 @@ let introUser = (typeof getUserById === "function")
   ? getUserById(introducerId)
   : null;
 
-document.getElementById("introLabel").innerText =
-  "Introducer: " + introducerId +
-  (introUser ? " (" + (introUser.username || "") + ")" : "");
+// ================= INVALID REFERRAL =================
+if (!introUser) {
+  document.getElementById("introLabel").innerText = "Invalid Referral Link";
+  document.getElementById("formArea").style.display = "none";
+  document.getElementById("msg").innerText = "Please use a valid referral link";
+} else {
+  document.getElementById("introLabel").innerText =
+    "Introducer: " + introducerId +
+    (introUser.username ? " (" + introUser.username + ")" : "");
+}
 
 // ================= SAFE =================
-function encodePass(p){
-  try { return btoa(p); } catch { return p; }
+function encodePass(p) {
+  try {
+    return btoa(p);
+  } catch {
+    return p;
+  }
 }
 
 // ================= PIN VALIDATION =================
 function validateAssignedPin(pinInput) {
 
   if (!pinInput || typeof loadPins !== "function") {
-    return { ok:false, msg:"PIN system error" };
+    return { ok: false, msg: "PIN system error" };
   }
 
   let pins = loadPins();
   let pin = pins.find(p => p.pinId === pinInput);
 
-  if (!pin) return { ok:false, msg:"Invalid PIN" };
-  if (pin.status !== "assigned") return { ok:false, msg:"PIN not assigned" };
-  if (pin.type !== "upgrade") return { ok:false, msg:"Use upgrade PIN" };
+  if (!pin) return { ok: false, msg: "Invalid PIN" };
+  if (pin.status !== "assigned") return { ok: false, msg: "PIN not assigned" };
+  if (pin.type !== "upgrade") return { ok: false, msg: "Use upgrade PIN only" };
 
-  return { ok:true, pin };
+  return { ok: true, pin };
 }
 
 // ================= REGISTER =================
@@ -81,14 +144,22 @@ function handleRegister() {
 
   try {
 
-    // 🔒 SYSTEM CHECK
-    let s = (typeof getSystemSettings === "function") ? getSystemSettings() : {};
+    // ================= SYSTEM CHECK =================
+    let s = (typeof getSystemSettings === "function")
+      ? getSystemSettings()
+      : {};
+
     if (s.lockMode) {
       alert("System locked");
       return resetAll();
     }
 
-    // 🔒 PIN SYSTEM
+    if (s.registrationOpen === false) {
+      alert("Registration closed");
+      return resetAll();
+    }
+
+    // ================= PIN SYSTEM CHECK =================
     if (typeof isPinSystemSafe === "function") {
       if (!isPinSystemSafe("upgrade")) {
         alert("PIN system disabled");
@@ -98,7 +169,7 @@ function handleRegister() {
 
     let username = document.getElementById("username").value.trim();
     let mobile = document.getElementById("mobile").value.trim();
-    let password = document.getElementById("password").value;
+    let password = document.getElementById("password").value.trim();
     let pinInput = document.getElementById("pin").value.trim();
 
     let positionElement = document.querySelector('input[name="position"]:checked');
@@ -108,16 +179,21 @@ function handleRegister() {
       return resetAll();
     }
 
+    if (!positionElement) {
+      alert("Select position");
+      return resetAll();
+    }
+
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       alert("Invalid mobile");
       return resetAll();
     }
 
-    let position = positionElement ? positionElement.value : "L";
+    let position = positionElement.value;
 
     if (typeof isValidIntroducer === "function") {
       if (!isValidIntroducer(introducerId)) {
-        alert("Invalid Introducer");
+        alert("Invalid introducer");
         return resetAll();
       }
     }
@@ -125,12 +201,28 @@ function handleRegister() {
     let users = (typeof getUsers === "function") ? getUsers() : [];
 
     if (users.find(u => u.mobile === mobile)) {
-      alert("Mobile exists");
+      alert("Mobile already exists");
       return resetAll();
     }
 
-    // 🔥 PIN CHECK
+    // ================= DUPLICATE QUEUE CHECK =================
+    if (typeof getRegQueue === "function") {
+      let queue = getRegQueue();
+
+      let pending = queue.find(q =>
+        q.mobile === mobile &&
+        q.status === "PENDING"
+      );
+
+      if (pending) {
+        alert("Registration already pending");
+        return resetAll();
+      }
+    }
+
+    // ================= PIN CHECK =================
     let pinCheck = validateAssignedPin(pinInput);
+
     if (!pinCheck.ok) {
       alert(pinCheck.msg);
       return resetAll();
@@ -138,12 +230,13 @@ function handleRegister() {
 
     let selectedPin = pinCheck.pin;
 
-    // ================= QUEUE =================
+    // ================= QUEUE CHECK =================
     if (typeof addToRegistrationQueue !== "function") {
-      alert("Queue error");
+      alert("Queue system missing");
       return resetAll();
     }
 
+    // ================= ADD TO QUEUE =================
     addToRegistrationQueue({
       username,
       password: encodePass(password),
@@ -152,35 +245,38 @@ function handleRegister() {
       position
     });
 
-    document.getElementById("msg").innerText = "⏳ Processing...";
+    document.getElementById("msg").innerText = "⏳ Registration processing...";
 
     // ================= CHECK RESULT =================
     let attempts = 0;
 
     let checker = setInterval(() => {
 
-      let users = getUsers();
+      let users = getUsers() || [];
       let newUser = users.find(u => u.mobile === mobile);
 
       if (newUser) {
 
-        // 🔥 USE PIN
+        // ================= USE PIN =================
         if (typeof usePin === "function") {
           try {
             usePin(selectedPin.pinId, newUser.userId, "registration");
-          } catch {}
+          } catch (e) {
+            console.warn("PIN use failed:", e.message);
+          }
         }
 
-        // 🔥 LOG
+        // ================= LOG =================
         if (typeof logActivity === "function") {
           logActivity(newUser.userId, "USER", "Registered", "REGISTRATION");
         }
 
         document.getElementById("msg").innerHTML = `
-          ✅ Registration Successful <br>
-          User ID: <b>${newUser.userId}</b><br>
-          🔗 Referral: <small>${newUser.referralLink || "N/A"}</small><br>
-          👉 <a href="user_login.html">Login</a>
+          ✅ Registration Successful <br><br>
+          User ID: <b>${newUser.userId}</b><br><br>
+          Referral Link:<br>
+          <small>${newUser.referralLink || "N/A"}</small><br><br>
+          <a href="user_login.html">Login Now</a>
         `;
 
         clearInterval(checker);
@@ -191,18 +287,17 @@ function handleRegister() {
         attempts++;
 
         if (attempts > 10) {
-          document.getElementById("msg").innerText =
-            "⚠️ Delay... please retry";
           clearInterval(checker);
+          document.getElementById("msg").innerText =
+            "⚠ Registration delayed. Please retry after a few seconds.";
           resetAll();
         }
-
       }
 
     }, 1000);
 
   } catch (err) {
-    console.error(err);
+    console.error("Registration failed:", err);
     alert("Registration failed");
     resetAll();
   }
