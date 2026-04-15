@@ -3,26 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BestWayGrow System</title>
+<title>BestWayGrow System V8 FINAL</title>
 
-<!-- ✅ FIX: REMOVE FAVICON ERROR -->
 <link rel="icon" href="data:,">
 
 <style>
-
 body {
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family:'Segoe UI', Arial, sans-serif;
     margin:0;
-    background: linear-gradient(135deg, #e6f2ef, #f8fbfa);
+    background:linear-gradient(135deg,#e6f2ef,#f8fbfa);
     text-align:center;
 }
 
-/* Header */
 header {
-    background: linear-gradient(90deg, #006633, #00994d);
+    background:linear-gradient(90deg,#006633,#00994d);
     color:white;
     padding:30px 15px;
-    position: relative;
+    position:relative;
 }
 
 header img {
@@ -32,61 +29,96 @@ header img {
 
 header h1 {
     margin:10px 0;
-    font-size:28px;
+    font-size:30px;
 }
 
-/* Login area */
+header p {
+    margin:5px 0;
+}
+
 #loginArea {
     position:absolute;
     top:20px;
     right:20px;
 }
 
-/* Container */
 .container {
     display:flex;
     flex-wrap:wrap;
     justify-content:center;
+    gap:20px;
     padding:30px;
 }
 
-/* Plan box */
 .plan {
     background:white;
-    margin:20px;
-    padding:30px;
-    border-radius:15px;
     width:300px;
-    box-shadow:0 6px 15px rgba(0,0,0,0.1);
+    padding:30px;
+    border-radius:18px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
     transition:0.3s;
 }
 
 .plan:hover {
-    transform: translateY(-8px);
+    transform:translateY(-8px);
 }
 
-/* Buttons */
+.plan h2 {
+    color:#006633;
+    margin-bottom:10px;
+}
+
+.plan p {
+    margin:8px 0;
+    color:#444;
+}
+
 button {
-    background: linear-gradient(90deg, #0077b5, #00aaff);
+    background:linear-gradient(90deg,#0077b5,#00aaff);
     color:white;
     border:none;
-    padding:12px 25px;
+    padding:12px 22px;
     border-radius:8px;
     cursor:pointer;
+    font-weight:bold;
 }
 
 button:hover {
-    background: linear-gradient(90deg, #005f8a, #008ecc);
+    background:linear-gradient(90deg,#005f8a,#008ecc);
 }
 
-/* Footer */
+.top-btn {
+    margin-left:8px;
+}
+
+.notice {
+    max-width:900px;
+    margin:20px auto;
+    background:#fff;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.06);
+}
+
+.notice h3 {
+    margin-top:0;
+    color:#006633;
+}
+
+.status-box {
+    margin-top:15px;
+    padding:10px;
+    border-radius:8px;
+    background:#f4f7f9;
+    color:#333;
+}
+
 footer {
     background:#00331a;
     color:white;
     padding:20px;
     margin-top:40px;
 }
-
 </style>
 </head>
 
@@ -103,11 +135,20 @@ footer {
 
 </header>
 
+<div class="notice">
+    <h3>Welcome to BestWayGrow</h3>
+    <p>Secure registration, upgrade, repurchase and income system are now fully integrated.</p>
+    <div id="systemStatus" class="status-box">
+        Checking system status...
+    </div>
+</div>
+
 <div class="container">
 
     <div class="plan">
         <h2>BV 2100 Plan</h2>
-        <p><strong>Amount:</strong> 3000</p>
+        <p><strong>Amount:</strong> ₹3000</p>
+        <p><strong>BV:</strong> 2100</p>
         <p>Digital Product Category</p>
         <a href="BV2100/index.html">
             <button>View Details</button>
@@ -116,7 +157,8 @@ footer {
 
     <div class="plan">
         <h2>BV 500 Plan</h2>
-        <p><strong>Amount:</strong> (your amount)</p>
+        <p><strong>Amount:</strong> ₹500</p>
+        <p><strong>BV:</strong> 500</p>
         <p>Digital Product Category</p>
         <a href="BV500/index.html">
             <button>View Details</button>
@@ -126,69 +168,172 @@ footer {
 </div>
 
 <footer>
-    © 2026 BestWayGrow
+    © 2026 BestWayGrow. All Rights Reserved.
 </footer>
 
-<!-- ✅ CORE FIRST -->
+<!-- CORE -->
 <script src="core_system.js"></script>
 <script src="activity_log.js"></script>
+<script src="session_manager.js"></script>
 
+<!-- CONFIG -->
+<script src="system_config.js"></script>
 <script src="pin_config_system.js"></script>
+
+<!-- PIN -->
 <script src="pin_master_system.js"></script>
 <script src="pin_request_system.js"></script>
+<script src="pin_request_queue_engine.js"></script>
 
+<!-- WALLET -->
 <script src="wallet_system.js"></script>
 
+<!-- INCOME -->
 <script src="income_log_system.js"></script>
 <script src="income_control_system.js"></script>
 <script src="hold_income_system.js"></script>
-
-<!-- ❤️ TRIGGER SYSTEM (NEW - VERY IMPORTANT) -->
 <script src="trigger_system.js"></script>
-
 <script src="income_engine.js"></script>
 
+<!-- WITHDRAW -->
 <script src="withdrawal_system.js"></script>
 
-<!-- ✅ FIXED SCRIPT -->
 <script>
 
-// 🔥 INIT CORE SYSTEM
+// ===================================
+// INIT CORE
+// ===================================
 if (typeof initCoreSystem === "function") {
     initCoreSystem();
 }
 
-// ================= LOGIN CHECK =================
-let loginArea = document.getElementById("loginArea");
+// ===================================
+// LOAD SYSTEM STATUS
+// ===================================
+function loadSystemStatus() {
 
-let userSession =
-  JSON.parse(localStorage.getItem("loggedInUser")) ||
-  JSON.parse(localStorage.getItem("loggedInAdmin")) ||
-  JSON.parse(localStorage.getItem("loggedInSystemAdmin")) ||
-  JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+    let box = document.getElementById("systemStatus");
 
-if (userSession) {
+    try {
 
-    let user = getUsers().find(u => u.userId === userSession.userId);
+        let settings = {};
+
+        if (typeof getSystemSettings === "function") {
+            settings = getSystemSettings() || {};
+        }
+
+        let lockStatus = settings.lockMode ? "🔴 LOCKED" : "🟢 ACTIVE";
+        let regStatus = settings.registrationOpen === false ? "OFF" : "ON";
+        let upStatus = settings.upgradesOpen === false ? "OFF" : "ON";
+        let repStatus = settings.repurchaseOpen === false ? "OFF" : "ON";
+
+        box.innerHTML = `
+            <strong>System:</strong> ${lockStatus}<br>
+            <strong>Registration:</strong> ${regStatus}<br>
+            <strong>Upgrade:</strong> ${upStatus}<br>
+            <strong>Repurchase:</strong> ${repStatus}
+        `;
+
+    } catch (err) {
+        box.innerHTML = "⚠️ Unable to load system status";
+    }
+}
+
+// ===================================
+// LOAD LOGIN AREA
+// ===================================
+function loadLoginArea() {
+
+    let loginArea = document.getElementById("loginArea");
+
+    let session = null;
+
+    try {
+        if (typeof getSession === "function") {
+            session = getSession();
+        }
+    } catch (e) {
+        session = null;
+    }
+
+    if (!session) {
+
+        loginArea.innerHTML = `
+            <a href="user_login.html">
+                <button>Login</button>
+            </a>
+        `;
+
+        return;
+    }
+
+    let displayName = session.userId || "User";
+    let dashboardLink = "user_dashboard.html";
+
+    if (session.role === "admin") {
+        dashboardLink = "admin_dashboard.html";
+    }
+
+    if (session.role === "system_admin") {
+        dashboardLink = "system_admin_dashboard.html";
+    }
+
+    if (session.role === "super_admin") {
+        dashboardLink = "super_admin_dashboard.html";
+    }
+
+    try {
+
+        if (typeof getUserById === "function" && session.role === "user") {
+            let user = getUserById(session.userId);
+            if (user) {
+                displayName = user.username || user.userId;
+            }
+        }
+
+    } catch (e) {}
 
     loginArea.innerHTML = `
         <span style="margin-right:10px;">
-            Welcome ${user ? user.username || user.userId : "User"}
+            Welcome ${displayName}
         </span>
-        <button onclick="logout()">Logout</button>
-    `;
 
-} else {
-
-    loginArea.innerHTML = `
-        <a href="user_login.html">
-            <button>Login</button>
+        <a href="${dashboardLink}">
+            <button class="top-btn">Dashboard</button>
         </a>
+
+        <button class="top-btn" onclick="logout()">Logout</button>
     `;
 }
 
-// ================= LOGOUT =================
+// ===================================
+// LOGOUT
+// ===================================
 function logout() {
+
+    try {
+
+        let session = null;
+
+        if (typeof getSession === "function") {
+            session = getSession();
+        }
+
+        if (session && typeof logActivity === "function") {
+            logActivity(
+                session.userId || "UNKNOWN",
+                "SYSTEM",
+                "Logout",
+                "INDEX_PAGE"
+            );
+        }
+
+    } catch (e) {}
+
+    if (typeof clearSession === "function") {
+        clearSession();
+    }
+
     localStorage.removeItem("loggedInUser");
     localStorage.removeItem("loggedInAdmin");
     localStorage.removeItem("loggedInSystemAdmin");
@@ -196,6 +341,12 @@ function logout() {
 
     window.location.reload();
 }
+
+// ===================================
+// AUTO START
+// ===================================
+loadSystemStatus();
+loadLoginArea();
 
 </script>
 
