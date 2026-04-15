@@ -1,87 +1,116 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User Dashboard V7 FINAL</title>
+  <title>User Dashboard V8 FINAL LOCK</title>
   <link rel="icon" href="data:,">
 
   <style>
     body {
-      font-family: 'Segoe UI', Arial;
-      margin:0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
       background: linear-gradient(135deg,#eef2f7,#e6ecf5);
     }
 
     header {
       background: linear-gradient(135deg,#4a00e0,#8e2de2);
-      color:#fff;
-      padding:18px;
-      text-align:center;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
     }
 
     header button {
-      margin-top:10px;
-      padding:6px 12px;
-      border:none;
-      border-radius:6px;
-      background:#ff4d4d;
-      color:#fff;
-      cursor:pointer;
+      margin-top: 10px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #ff4d4d;
+      color: #fff;
+      cursor: pointer;
     }
 
     .menu {
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      background:#fff;
-      padding:10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: #fff;
+      padding: 12px;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
 
     .menu button {
-      padding:10px 14px;
-      border:none;
-      border-radius:20px;
-      background:linear-gradient(135deg,#007bff,#00c6ff);
-      color:#fff;
-      cursor:pointer;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 20px;
+      background: linear-gradient(135deg,#007bff,#00c6ff);
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
     }
 
     .menu button.active {
-      background:linear-gradient(135deg,#003f88,#0059b3);
+      background: linear-gradient(135deg,#003f88,#0059b3);
     }
 
     .container {
-      padding:20px;
+      padding: 20px;
     }
 
     .card {
-      background:#fff;
-      padding:20px;
-      border-radius:15px;
-      max-width:700px;
-      margin:auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      max-width: 850px;
+      margin: auto;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }
 
     .section-title {
-      font-size:18px;
-      font-weight:bold;
-      margin-bottom:10px;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .info-box {
+      background: #f8f9fb;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
     }
 
     .action-btn {
-      margin:5px;
-      padding:8px 14px;
-      border:none;
-      border-radius:8px;
-      background:linear-gradient(135deg,#28a745,#00c851);
-      color:#fff;
-      cursor:pointer;
+      margin-top: 10px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg,#28a745,#00c851);
+      color: #fff;
+      cursor: pointer;
     }
 
-    input.ref-box {
-      width:100%;
-      padding:8px;
-      border-radius:6px;
-      border:1px solid #ccc;
+    .ref-box {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    table th, table td {
+      border: 1px solid #eee;
+      padding: 10px;
+      text-align: center;
+    }
+
+    table th {
+      background: #f3f5f8;
     }
   </style>
 </head>
@@ -95,11 +124,12 @@
 </header>
 
 <div class="menu">
-  <button onclick="safeClick(this,loadHome)">Home</button>
-  <button onclick="safeClick(this,loadPinSection)">PIN</button>
-  <button onclick="safeClick(this,loadUpgrade)">Upgrade</button>
-  <button onclick="safeClick(this,loadRepurchase)">Repurchase</button>
-  <button onclick="safeClick(this,loadWallet)">Wallet</button>
+  <button onclick="safeClick(this, loadHome)">Home</button>
+  <button onclick="safeClick(this, loadPinSection)">PIN</button>
+  <button onclick="safeClick(this, loadWallet)">Wallet</button>
+  <button onclick="safeClick(this, loadProfile)">Profile</button>
+  <button onclick="safeClick(this, loadUpgrade)">Upgrade</button>
+  <button onclick="safeClick(this, loadRepurchase)">Repurchase</button>
 </div>
 
 <div class="container">
@@ -107,82 +137,138 @@
 </div>
 
 <script src="core_system.js"></script>
+<script src="wallet_system.js"></script>
 <script src="pin_master_system.js"></script>
 <script src="activity_log.js"></script>
 <script src="session_manager.js"></script>
 
 <script>
 
-// INIT
-if (typeof initCoreSystem === "function") initCoreSystem();
+// ================= INIT =================
+window.addEventListener("load", function () {
 
-// ================= AUTH (FIXED ✅) =================
-let session = getSession();
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  } else {
+    alert("core_system.js missing");
+    return;
+  }
 
-if (!session || session.role !== "user") {
-  location.href = "user_login.html";
-  throw new Error("STOP");
+  startDashboard();
+});
+
+// ================= START =================
+let session = null;
+let user = null;
+let clickLock = false;
+
+function startDashboard() {
+
+  if (typeof getSession !== "function") {
+    alert("session_manager.js missing");
+    location.href = "user_login.html";
+    return;
+  }
+
+  session = getSession();
+
+  if (!session || session.role !== "user") {
+    location.href = "user_login.html";
+    return;
+  }
+
+  if (typeof getUserById !== "function") {
+    alert("User system missing");
+    location.href = "user_login.html";
+    return;
+  }
+
+  user = getUserById(session.userId);
+
+  if (!user) {
+    clearSession();
+    location.href = "user_login.html";
+    return;
+  }
+
+  document.getElementById("welcome").innerText =
+    "Welcome (" + user.userId + ")";
+
+  document.querySelector(".menu button").classList.add("active");
+
+  loadHome();
 }
-
-let user = getUserById(session.userId);
-
-if (!user) {
-  location.href = "user_login.html";
-  throw new Error("STOP");
-}
-
-// ================= WELCOME =================
-document.getElementById("welcome").innerText =
-  "Welcome (" + user.userId + ")";
 
 // ================= SAFE CLICK =================
-let lock = false;
-
 function safeClick(btn, fn) {
-  if (lock) return;
-  lock = true;
+
+  if (clickLock) return;
+
+  clickLock = true;
 
   if (btn) {
     document.querySelectorAll(".menu button")
       .forEach(b => b.classList.remove("active"));
+
     btn.classList.add("active");
   }
 
-  try { fn(); } catch (e) { console.error(e); }
+  try {
+    fn();
+  } catch (err) {
+    console.error(err);
+  }
 
-  setTimeout(()=> lock=false, 400);
+  setTimeout(() => {
+    clickLock = false;
+  }, 400);
 }
 
 // ================= REF LINK =================
 function generateRefLink(userId) {
   return window.location.origin +
-    "/BestWayGrow-System/user_register.html?ref=" + userId;
+    "/user_register.html?ref=" + userId;
 }
 
 function copyRefLink() {
   let input = document.getElementById("refLink");
+
+  if (!input) return;
+
   input.select();
+  input.setSelectionRange(0, 99999);
+
   navigator.clipboard.writeText(input.value);
-  document.getElementById("copyMsg").innerText = "✅ Copied";
+
+  document.getElementById("copyMsg").innerText = "✅ Referral Link Copied";
 }
 
 // ================= HOME =================
 function loadHome() {
+
+  user = getUserById(session.userId);
 
   let refLink = generateRefLink(user.userId);
 
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Dashboard Overview</div>
 
-    <p>Status: ${user.status || "inactive"}</p>
-    <p>Upgrade Level: ${user.upgradeLevel || 0}</p>
-    <p>Repurchase Count: ${user.repurchaseCount || 0}</p>
+    <div class="info-box">
+      <p><b>User ID:</b> ${user.userId}</p>
+      <p><b>Name:</b> ${user.username || "N/A"}</p>
+      <p><b>Status:</b> ${user.status || "inactive"}</p>
+      <p><b>Mobile:</b> ${user.mobile || "N/A"}</p>
+    </div>
 
-    <hr><br>
+    <div class="info-box">
+      <p><b>Upgrade Level:</b> ${user.upgradeLevel || 0}</p>
+      <p><b>Repurchase Count:</b> ${user.repurchaseCount || 0}</p>
+      <p><b>Total Income:</b> ₹${Number(user.totalIncome || 0)}</p>
+    </div>
 
     <div class="section-title">Referral Link</div>
 
-    <input id="refLink" class="ref-box" value="${refLink}" readonly><br><br>
+    <input id="refLink" class="ref-box" value="${refLink}" readonly>
 
     <button class="action-btn" onclick="copyRefLink()">Copy Link</button>
 
@@ -190,63 +276,127 @@ function loadHome() {
   `;
 }
 
-// ================= PIN =================
+// ================= PIN SECTION =================
 function loadPinSection() {
 
   let pins = [];
 
   try {
     if (typeof loadPins === "function") {
-      let all = loadPins();
-      pins = all.filter(p =>
-        p.ownerId === user.userId || p.usedBy === user.userId
+      let allPins = loadPins();
+
+      pins = allPins.filter(pin =>
+        pin.ownerId === user.userId ||
+        pin.usedBy === user.userId
       );
     }
-  } catch(e){
-    console.error(e);
+  } catch (err) {
+    console.error(err);
   }
 
-  let html = `<div class="section-title">PIN Section</div>`;
+  let html = `
+    <div class="section-title">PIN Section</div>
+    <table>
+      <tr>
+        <th>PIN</th>
+        <th>Amount</th>
+        <th>Status</th>
+      </tr>
+  `;
 
-  if (!pins.length) html += `<p>No PIN</p>`;
+  if (!pins.length) {
+    html += `<tr><td colspan="3">No PIN Available</td></tr>`;
+  }
 
-  pins.forEach(p => {
-    html += `<p>${p.pinId} - ₹${p.amount || 0} (${p.status})</p>`;
+  pins.slice(-20).reverse().forEach(pin => {
+    html += `
+      <tr>
+        <td>${pin.pinId}</td>
+        <td>₹${Number(pin.amount || 0)}</td>
+        <td>${pin.status || "unused"}</td>
+      </tr>
+    `;
   });
+
+  html += `</table>`;
 
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= NAV =================
-function loadUpgrade(){ location.href="user_upgrade.html"; }
-function loadRepurchase(){ location.href="user_repurchase.html"; }
+// ================= WALLET =================
+function loadWallet() {
 
-function loadWallet(){
-  document.getElementById("mainContent").innerHTML=`
-    <div class="section-title">Wallet</div>
-    <p>Balance: ₹${user.wallet || 0}</p>
+  user = getUserById(session.userId);
+
+  let balance = 0;
+
+  if (typeof getWalletBalance === "function") {
+    balance = getWalletBalance(user.userId);
+  } else {
+    balance = Number(user.wallet?.balance || 0);
+  }
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Wallet Overview</div>
+
+    <div class="info-box">
+      <p><b>Current Balance:</b> ₹${balance}</p>
+      <p><b>Total Credit:</b> ₹${Number(user.wallet?.totalCredit || 0)}</p>
+      <p><b>Total Debit:</b> ₹${Number(user.wallet?.totalDebit || 0)}</p>
+    </div>
   `;
 }
 
-// ================= LOGOUT =================
-function logout(){
+// ================= PROFILE =================
+function loadProfile() {
 
-  if (typeof logActivity === "function") {
-    logActivity(user.userId, "USER", "Logout", "USER_PANEL");
-  }
+  user = getUserById(session.userId);
 
-  clearSession();
-  location.href="user_login.html";
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">User Profile</div>
+
+    <div class="info-box">
+      <p><b>User ID:</b> ${user.userId}</p>
+      <p><b>Name:</b> ${user.username || "N/A"}</p>
+      <p><b>Mobile:</b> ${user.mobile || "N/A"}</p>
+      <p><b>Introducer ID:</b> ${user.introducerId || "N/A"}</p>
+      <p><b>Position:</b> ${user.position || "L"}</p>
+      <p><b>Created:</b> ${user.createdAt ? new Date(user.createdAt).toLocaleString() : "N/A"}</p>
+    </div>
+  `;
 }
 
-// INIT
-loadHome();
+// ================= PAGE NAVIGATION =================
+function loadUpgrade() {
+  location.href = "user_upgrade.html";
+}
+
+function loadRepurchase() {
+  location.href = "user_repurchase.html";
+}
+
+// ================= LOGOUT =================
+function logout() {
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(user.userId, "USER", "Logout", "USER_DASHBOARD");
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (typeof clearSession === "function") {
+    clearSession();
+  }
+
+  location.href = "user_login.html";
+}
 
 </script>
 
 </body>
 </html>
-
 
 
 
