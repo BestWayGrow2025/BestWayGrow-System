@@ -1,13 +1,17 @@
-/* WALLET SYSTEM V7.2 (TRUE FINAL LOCK) ✔ Core aligned
- ✔ LockMode protected
- ✔ Wallet migration safe
- ✔ Strong duplicate protection
- ✔ Clean rollback system
- ✔ User-level lock
- ✔ Anti-deadlock protection ♥️
- ✔ Debit protection added ♥️
- ✔ Production ready
- */
+/* WALLET SYSTEM V7.3 (FINAL LOCK)
+✔ Core aligned
+✔ LockMode protected
+✔ Wallet migration safe
+✔ Strong duplicate protection
+✔ Clean rollback system
+✔ User-level lock
+✔ Anti-deadlock protection
+✔ Debit protection added
+✔ Status protection added
+✔ Self-transfer blocked
+✔ Production ready
+*/
+
 const TXN_LIMIT = 5000;
 
 // ===================================
@@ -20,9 +24,11 @@ function getTransactions() {
 
 function saveTransactions(txns) {
   if (!Array.isArray(txns)) txns = [];
+
   if (txns.length > TXN_LIMIT) {
     txns = txns.slice(-TXN_LIMIT);
   }
+
   safeSet("transactions", txns);
 }
 
@@ -30,35 +36,52 @@ function saveTransactions(txns) {
 // INIT WALLET (SAFE MIGRATION)
 // ===================================
 function initWallet(user) {
-  if (!user) return;
+  if (!user) return false;
 
-  // 🔥 MIGRATION FIX
+  let walletChanged = false;
+
+  // OLD NUMBER FORMAT SUPPORT
   if (typeof user.wallet === "number") {
     user.wallet = {
       balance: user.wallet,
       totalCredit: user.wallet,
       totalDebit: 0
     };
+    walletChanged = true;
   }
 
+  // MISSING WALLET FIX
   if (!user.wallet || typeof user.wallet !== "object") {
     user.wallet = {
       balance: 0,
       totalCredit: 0,
       totalDebit: 0
     };
+    walletChanged = true;
   }
+
+  // NEGATIVE BALANCE FIX
+  if (Number(user.wallet.balance) < 0) {
+    user.wallet.balance = 0;
+    walletChanged = true;
+  }
+
+  user.wallet.balance = Number(user.wallet.balance || 0);
+  user.wallet.totalCredit = Number(user.wallet.totalCredit || 0);
+  user.wallet.totalDebit = Number(user.wallet.totalDebit || 0);
+
+  return walletChanged;
 }
 
 // ===================================
-// USER LOCK (ANTI-DEADLOCK ♥️)
+// USER LOCK
 // ===================================
 const WALLET_LOCK = {};
 
 function isUserLocked(userId) {
   let lockTime = WALLET_LOCK[userId];
 
-  // ♥️ AUTO RECOVER AFTER 5s
+  // AUTO RECOVER AFTER 5s
   if (lockTime && (Date.now() - lockTime > 5000)) {
     WALLET_LOCK[userId] = false;
     return false;
@@ -100,7 +123,7 @@ function creditWallet(userId, amount, reason = "SYSTEM") {
 
   try {
 
-    // 🔒 SYSTEM LOCK
+    // SYSTEM LOCK
     if (typeof getSystemSettings === "function") {
       let s = getSystemSettings();
       if (s && s.lockMode) return false;
@@ -128,7 +151,17 @@ function creditWallet(userId, amount, reason = "SYSTEM") {
       return false;
     }
 
-    initWallet(user);
+    // STATUS CHECK
+    if (user.status && user.status !== "active") {
+      setUserLock(userId, false);
+      return false;
+    }
+
+    let changed = initWallet(user);
+
+    if (changed) {
+      saveUsers(users);
+    }
 
     if (isDuplicateTxn(userId, amount, reason, "CREDIT")) {
       setUserLock(userId, false);
@@ -164,7 +197,7 @@ function creditWallet(userId, amount, reason = "SYSTEM") {
 }
 
 // ===================================
-// DEBIT WALLET (FIXED ♥️)
+// DEBIT WALLET
 // ===================================
 function debitWallet(userId, amount, reason = "SYSTEM") {
 
@@ -197,9 +230,18 @@ function debitWallet(userId, amount, reason = "SYSTEM") {
       return false;
     }
 
-    initWallet(user);
+    // STATUS CHECK
+    if (user.status && user.status !== "active") {
+      setUserLock(userId, false);
+      return false;
+    }
 
-    // ♥️ DUPLICATE PROTECTION ADDED
+    let changed = initWallet(user);
+
+    if (changed) {
+      saveUsers(users);
+    }
+
     if (isDuplicateTxn(userId, amount, reason, "DEBIT")) {
       setUserLock(userId, false);
       return false;
@@ -239,11 +281,14 @@ function debitWallet(userId, amount, reason = "SYSTEM") {
 }
 
 // ===================================
-// TRANSFER WALLET (FIXED ♥️)
+// TRANSFER WALLET
 // ===================================
 function transferWallet(fromId, toId, amount, reason = "TRANSFER") {
 
   if (!fromId || !toId || amount <= 0) return false;
+
+  // BLOCK SELF TRANSFER
+  if (fromId === toId) return false;
 
   // STEP 1: debit sender
   if (!debitWallet(fromId, amount, reason + "_OUT")) return false;
@@ -251,7 +296,7 @@ function transferWallet(fromId, toId, amount, reason = "TRANSFER") {
   // STEP 2: credit receiver
   if (!creditWallet(toId, amount, reason + "_IN")) {
 
-    // ♥️ CORRECT ROLLBACK (ONLY RETURN TO SENDER)
+    // ROLLBACK TO SENDER
     creditWallet(fromId, amount, "ROLLBACK_FIX");
 
     return false;
@@ -267,7 +312,7 @@ function logTransaction(userId, amount, type, reason) {
   let txns = getTransactions();
 
   txns.push({
-    txnId: "TXN_" + Date.now(),
+    txnId: "TXN_" + Date.now() + "_" + Math.floor(Math.random() * 100000),
     userId,
     amount: Number(amount),
     type,
@@ -283,13 +328,13 @@ function logTransaction(userId, amount, type, reason) {
 // ===================================
 function getWalletBalance(userId) {
   let user = getUserById(userId);
+
   if (!user) return 0;
 
   initWallet(user);
+
   return Number(user.wallet.balance || 0);
 }
-
-
 
 
 
