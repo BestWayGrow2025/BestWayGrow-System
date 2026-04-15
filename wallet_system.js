@@ -331,7 +331,12 @@ function getWalletBalance(userId) {
 
   if (!user) return 0;
 
-  initWallet(user);
+  let changed = initWallet(user);
+
+  if (changed) {
+    let users = getUsers();
+    saveUsers(users);
+  }
 
   return Number(user.wallet.balance || 0);
 }
