@@ -73,15 +73,17 @@
   <h2>USER LOGIN</h2>
 
   <input type="text" id="userId" placeholder="Enter User ID">
-  <input type="password" id="password" placeholder="Enter Password">
+<input type="password" id="password" placeholder="Enter Password">
+<input type="checkbox" id="showPass" onchange="togglePassword()"> Show Password
 
   <button id="loginBtn" onclick="safeClick(login)">Login</button>
 
   <div id="msg"></div>
 
-  <div class="linkBox">
-    New User? <a href="user_register.html">Register Here</a>
-  </div>
+<div class="linkBox">
+  New User? <a href="user_register.html">Register Here</a><br><br>
+  Forgot Password? Contact Admin
+</div>
 </div>
 
 <script src="core_system.js"></script>
@@ -148,6 +150,16 @@ function safeDecode(password) {
   }
 }
 
+function togglePassword() {
+  let pass = document.getElementById("password");
+
+  if (document.getElementById("showPass").checked) {
+    pass.type = "text";
+  } else {
+    pass.type = "password";
+  }
+}
+
 // ================= MESSAGE =================
 function showMsg(text, color = "red") {
   let msg = document.getElementById("msg");
@@ -184,11 +196,17 @@ function login() {
   let userId = document.getElementById("userId").value.trim().toUpperCase();
   let password = document.getElementById("password").value.trim();
 
-  if (!userId || !password) {
-    showMsg("⚠️ Enter User ID & Password");
-    resetLogin();
-    return;
-  }
+ if (!userId || !password) {
+  showMsg("⚠️ Enter User ID & Password");
+  resetLogin();
+  return;
+}
+
+if (password.length < 4) {
+  showMsg("⚠️ Password too short");
+  resetLogin();
+  return;
+}
 
   if (typeof getUsers !== "function") {
     showMsg("User system missing");
@@ -203,12 +221,17 @@ function login() {
     u.role === "user"
   );
 
-  if (!user) {
-    showMsg("❌ Invalid User ID");
-    resetLogin();
-    return;
-  }
+ if (!user) {
+  showMsg("❌ Invalid User ID");
+  resetLogin();
+  return;
+}
 
+if (!user.password) {
+  showMsg("❌ Password Missing");
+  resetLogin();
+  return;
+}
   if (user.status && user.status !== "active") {
     showMsg("🚫 Account Inactive");
     resetLogin();
@@ -252,9 +275,11 @@ function login() {
 
   showMsg("✅ Login Successful", "green");
 
-  setTimeout(function () {
-    window.location.href = "user_dashboard.html";
-  }, 500);
+document.getElementById("loginBtn").innerText = "Redirecting...";
+
+setTimeout(function () {
+  window.location.href = "user_dashboard.html";
+}, 500);
 }
 
 </script>
