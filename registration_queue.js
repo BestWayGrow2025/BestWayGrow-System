@@ -76,7 +76,12 @@ function addToRegistrationQueue(data) {
   let queue = getRegQueue();
 
   // stronger duplicate check
-  let exists = queue.find(q => q.mobile === data.mobile);
+  let exists = queue.find(q =>
+    q.mobile === data.mobile &&
+    q.status !== "REJECTED" &&
+    q.status !== "FAILED"
+  );
+
   if (exists) return false;
 
   // existing user check
@@ -184,6 +189,10 @@ function processOneRegistration(req) {
     }
   }
 
+  if (!req.username || !req.mobile || !req.password) {
+    throw new Error("Missing required registration fields");
+  }
+
   createUserWithTree(req);
   return true;
 }
@@ -286,3 +295,5 @@ if (!window.__REG_QUEUE_STARTED__) {
   window.__REG_QUEUE_STARTED__ = true;
   startRegistrationQueue();
 }
+
+
