@@ -52,6 +52,11 @@ function getIncomeSettings() {
 // =====================
 function saveIncomeSettings(data) {
 
+  if (typeof getSystemSettings === "function") {
+    let sys = getSystemSettings();
+    if (sys && sys.lockMode) return false;
+  }
+
   let safe = {
     ...getDefaultIncomeSettings(),
     ...(data || {})
@@ -60,8 +65,9 @@ function saveIncomeSettings(data) {
   safe.updatedAt = new Date().toISOString();
 
   safeSet(INCOME_SETTINGS_KEY, safe);
-}
 
+  return true;
+}
 // =====================
 // 🔹 INIT
 // =====================
