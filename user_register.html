@@ -76,9 +76,10 @@
 <h2 id="introLabel">User Registration</h2>
 
 <div id="formArea">
-  <input type="text" id="username" placeholder="Name"><br>
-  <input type="text" id="mobile" placeholder="Mobile"><br>
-  <input type="password" id="password" placeholder="Password"><br>
+ <input type="text" id="username" placeholder="Name"><br>
+<input type="text" id="email" placeholder="Email"><br>
+<input type="text" id="mobile" placeholder="Mobile"><br>
+<input type="password" id="password" placeholder="Password"><br>
 
   <label>Select Position:</label><br><br>
 
@@ -165,16 +166,22 @@ function handleRegister() {
       return resetAll();
     }
 
-    let username = document.getElementById("username").value.trim();
-    let mobile = document.getElementById("mobile").value.trim();
-    let password = document.getElementById("password").value.trim();
+   let username = document.getElementById("username").value.trim();
+   let email = document.getElementById("email").value.trim();
+   let mobile = document.getElementById("mobile").value.trim();
+   let password = document.getElementById("password").value.trim();
 
     let positionElement = document.querySelector('input[name="position"]:checked');
 
-    if (!username || !mobile || !password) {
-      alert("Fill all fields");
-      return resetAll();
-    }
+  if (!username || !email || !mobile || !password) {
+  alert("Fill all fields");
+  return resetAll();
+}
+
+if (!/^\S+@\S+\.\S+$/.test(email)) {
+  alert("Invalid email");
+  return resetAll();
+}`
 
     if (!positionElement) {
       alert("Select position");
@@ -197,10 +204,16 @@ function handleRegister() {
 
     let users = (typeof getUsers === "function") ? getUsers() : [];
 
-    if (users.find(u => u.mobile === mobile)) {
-      alert("Mobile already exists");
-      return resetAll();
-    }
+   if (users.find(u => u.mobile === mobile)) {
+  alert("Mobile already exists");
+  return resetAll();
+}
+
+if (users.find(u => u.email === email)) {
+  alert("Email already exists");
+  return resetAll();
+}
+
 
     // ================= DUPLICATE QUEUE CHECK =================
     if (typeof getRegQueue === "function") {
@@ -224,15 +237,24 @@ function handleRegister() {
     }
 
     // ================= ADD TO QUEUE =================
-    addToRegistrationQueue({
-      username,
-      password: encodePass(password),
-      mobile,
-      introducerId,
-      position
-    });
+   addToRegistrationQueue({
+  username,
+  name: username,
+  email,
+  password: encodePass(password),
+  mobile,
+  introducerId,
+  position
+});
 
-    document.getElementById("msg").innerText = "⏳ Registration processing...";
+
+    document.getElementById("msg").innerHTML = `
+  <div class="success-box">
+    ⏳ Registration processing...<br><br>
+    Please wait while your account is being created.
+  </div>
+`;
+
 
     // ================= CHECK RESULT =================
     let attempts = 0;
@@ -257,7 +279,11 @@ function handleRegister() {
 
             Welcome to BestWayGrow <br><br>
 
-            User ID: <b>${newUser.userId}</b><br><br>
+          Name: <b>${newUser.username || "-"}</b><br><br>
+
+          Mobile: <b>${newUser.mobile || "-"}</b><br><br>
+
+          User ID: <b>${newUser.userId}</b><br><br>
 
             Referral Link:
             <div class="link-box">${refLink}</div>
