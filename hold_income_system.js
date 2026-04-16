@@ -209,6 +209,22 @@ function releaseAllHoldIncome() {
         h.status = "RELEASED";
         h.releaseTime = new Date().toISOString();
 
+        let users = getUsers() || [];
+        let user = users.find(u => u.userId === h.userId);
+
+        if (user) {
+          if (!user.wallet) {
+            user.wallet = {};
+          }
+
+          user.wallet.holdIncome = Math.max(
+            0,
+            Number(user.wallet.holdIncome || 0) - Number(h.amount || 0)
+          );
+
+          saveUsers(users);
+        }
+
         updated = true;
       }
     }
@@ -217,6 +233,7 @@ function releaseAllHoldIncome() {
 
   if (updated) saveHoldIncome(holds);
 }
+
 
 // =====================
 // ❌ EXPIRE
