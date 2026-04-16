@@ -365,11 +365,13 @@ function loadWallet() {
   let totalBalance = 0;
   let totalCredit = 0;
   let totalDebit = 0;
+  let totalHoldIncome = 0;
 
   users.forEach(u => {
     totalBalance += Number(u.wallet?.balance || 0);
     totalCredit += Number(u.wallet?.totalCredit || 0);
     totalDebit += Number(u.wallet?.totalDebit || 0);
+    totalHoldIncome += Number(u.wallet?.holdIncome || 0);
   });
 
   document.getElementById("mainContent").innerHTML = `
@@ -390,16 +392,50 @@ function loadWallet() {
         <h4>Total Debit</h4>
         <p>₹${totalDebit.toFixed(2)}</p>
       </div>
+
+      <div class="miniCard">
+        <h4>Total Hold Income</h4>
+        <p>₹${totalHoldIncome.toFixed(2)}</p>
+      </div>
     </div>
   `;
 }
 
+
 // ================= INCOME =================
 function loadIncome() {
   let logs = (typeof getIncomeLogs === "function") ? getIncomeLogs() : [];
+  let incomeSettings = (typeof getIncomeSettings === "function")
+    ? getIncomeSettings()
+    : {};
 
   let html = `
     <h3>Income Logs</h3>
+
+    <div class="grid">
+      <div class="miniCard">
+        <h4>Master Income</h4>
+        <p>${incomeSettings.incomeEnabled ? "ON" : "OFF"}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>UGLI</h4>
+        <p>${incomeSettings.ugli ? "ON" : "OFF"}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>RLI</h4>
+        <p>${incomeSettings.rli ? "ON" : "OFF"}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Binary</h4>
+        <p>${incomeSettings.binary ? "ON" : "OFF"}</p>
+      </div>
+    </div>
+
+    <br>
+    
     <table>
       <tr>
         <th>User ID</th>
