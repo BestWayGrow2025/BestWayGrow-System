@@ -27,6 +27,11 @@ function getDefaultIncomeSettings() {
     ugli: true,
     rli: true,
     binary: false,
+
+    incomeWalletEnabled: true,
+    holdWalletEnabled: true,
+    totalIncomeTracking: true,
+
     initialized: true,
     updatedAt: new Date().toISOString()
   };
@@ -68,6 +73,7 @@ function saveIncomeSettings(data) {
 
   return true;
 }
+
 // =====================
 // 🔹 INIT
 // =====================
@@ -89,6 +95,10 @@ function initIncomeControl() {
 // =====================
 // 🔹 SAFE GETTERS
 // =====================
+function isIncomeMasterEnabled() {
+  return getIncomeSettings().incomeEnabled === true;
+}
+
 function isUGLIEnabled() {
   return getIncomeSettings().ugli === true;
 }
@@ -112,7 +122,6 @@ function isHoldWalletEnabled() {
 function isTotalIncomeTrackingEnabled() {
   return getIncomeSettings().totalIncomeTracking !== false;
 }
-
 
 // =====================
 // 🔥 TYPE NORMALIZER
@@ -195,6 +204,18 @@ function toggleRLI(adminId = "ADMIN") {
   }
 }
 
+function toggleBinary(adminId = "ADMIN") {
+
+  let s = getIncomeSettings();
+  s.binary = !s.binary;
+
+  saveIncomeSettings(s);
+
+  if (typeof logActivity === "function") {
+    logActivity(adminId, "ADMIN", "Binary → " + (s.binary ? "ON" : "OFF"));
+  }
+}
+
 function toggleIncomeWallet(adminId = "ADMIN") {
 
   let s = getIncomeSettings();
@@ -243,8 +264,6 @@ function toggleTotalIncomeTracking(adminId = "ADMIN") {
   }
 }
 
-
-
 // =====================
 // 🔒 HARD SAFETY
 // =====================
@@ -258,7 +277,10 @@ function isIncomeSystemSafe() {
     typeof s.ugli !== "boolean" ||
     typeof s.rli !== "boolean" ||
     typeof s.binary !== "boolean" ||
-    typeof s.incomeEnabled !== "boolean"
+    typeof s.incomeEnabled !== "boolean" ||
+    typeof s.incomeWalletEnabled !== "boolean" ||
+    typeof s.holdWalletEnabled !== "boolean" ||
+    typeof s.totalIncomeTracking !== "boolean"
   ) {
     console.warn("⚠ Corrupted income settings → auto fix");
     saveIncomeSettings(getDefaultIncomeSettings());
@@ -277,3 +299,4 @@ function isIncomeSystemSafe() {
 // 🚀 INIT CALL
 // =====================
 initIncomeControl();
+
