@@ -84,14 +84,27 @@ function addHoldIncome(userId, amount, reason) {
 
   let holds = getHoldIncome();
 
-  holds.push({
-    id: "H" + Date.now(),
-    userId,
-    amount: parseFloat(amount.toFixed(2)),
-    reason: reason || "",
-    time: new Date().toISOString(),
-    status: "HOLD"
-  });
+ holds.push({
+  id: "H" + Date.now(),
+  userId,
+  amount: parseFloat(amount.toFixed(2)),
+  reason: reason || "",
+  time: new Date().toISOString(),
+  status: "HOLD"
+});
+
+let users = getUsers() || [];
+let user = users.find(u => u.userId === userId);
+
+if (user) {
+  if (!user.wallet) {
+    user.wallet = {};
+  }
+
+  user.wallet.holdIncome = Number(user.wallet.holdIncome || 0) + parseFloat(amount.toFixed(2));
+  saveUsers(users);
+}
+
 
   saveHoldIncome(holds);
 }
@@ -143,10 +156,26 @@ function releaseHoldIncome(userId) {
 
         safeWalletCredit(userId, h.amount, "Released: " + h.reason);
 
-        h.status = "RELEASED";
-        h.releaseTime = new Date().toISOString();
+       h.status = "RELEASED";
+h.releaseTime = new Date().toISOString();
 
-        updated = true;
+let users = getUsers() || [];
+let user = users.find(u => u.userId === userId);
+
+if (user) {
+  if (!user.wallet) {
+    user.wallet = {};
+  }
+
+  user.wallet.holdIncome = Math.max(
+    0,
+    Number(user.wallet.holdIncome || 0) - Number(h.amount || 0)
+  );
+
+  saveUsers(users);
+}
+
+updated = true;
       }
     }
 
@@ -206,10 +235,26 @@ function expireHoldIncome(days = 30) {
 
       if ((now - holdTime) > (days * 86400000)) {
 
-        h.status = "EXPIRED";
-        h.expireTime = new Date().toISOString();
+       h.status = "EXPIRED";
+h.expireTime = new Date().toISOString();
 
-        updated = true;
+let users = getUsers() || [];
+let user = users.find(u => u.userId === h.userId);
+
+if (user) {
+  if (!user.wallet) {
+    user.wallet = {};
+  }
+
+  user.wallet.holdIncome = Math.max(
+    0,
+    Number(user.wallet.holdIncome || 0) - Number(h.amount || 0)
+  );
+
+  saveUsers(users);
+}
+
+updated = true;
       }
     }
 
