@@ -42,23 +42,27 @@ function initWallet(user) {
 
   // OLD NUMBER FORMAT SUPPORT
   if (typeof user.wallet === "number") {
-    user.wallet = {
-      balance: user.wallet,
-      totalCredit: user.wallet,
-      totalDebit: 0
-    };
-    walletChanged = true;
-  }
+  user.wallet = {
+    balance: user.wallet,
+    incomeBalance: 0,
+    holdIncome: 0,
+    totalCredit: user.wallet,
+    totalDebit: 0
+  };
+  walletChanged = true;
+}
 
   // MISSING WALLET FIX
   if (!user.wallet || typeof user.wallet !== "object") {
-    user.wallet = {
-      balance: 0,
-      totalCredit: 0,
-      totalDebit: 0
-    };
-    walletChanged = true;
-  }
+  user.wallet = {
+    balance: 0,
+    incomeBalance: 0,
+    holdIncome: 0,
+    totalCredit: 0,
+    totalDebit: 0
+  };
+  walletChanged = true;
+}
 
   // NEGATIVE BALANCE FIX
   if (Number(user.wallet.balance) < 0) {
@@ -66,9 +70,11 @@ function initWallet(user) {
     walletChanged = true;
   }
 
-  user.wallet.balance = Number(user.wallet.balance || 0);
-  user.wallet.totalCredit = Number(user.wallet.totalCredit || 0);
-  user.wallet.totalDebit = Number(user.wallet.totalDebit || 0);
+ user.wallet.balance = Number(user.wallet.balance || 0);
+user.wallet.incomeBalance = Number(user.wallet.incomeBalance || 0);
+user.wallet.holdIncome = Number(user.wallet.holdIncome || 0);
+user.wallet.totalCredit = Number(user.wallet.totalCredit || 0);
+user.wallet.totalDebit = Number(user.wallet.totalDebit || 0);
 
   return walletChanged;
 }
@@ -170,8 +176,10 @@ function creditWallet(userId, amount, reason = "SYSTEM") {
 
     amount = parseFloat(amount.toFixed(2));
 
-    user.wallet.balance += amount;
-    user.wallet.totalCredit += amount;
+   user.wallet.balance += amount;
+user.wallet.incomeBalance += amount;
+user.wallet.totalCredit += amount;
+
 
     saveUsers(users);
 
@@ -255,7 +263,12 @@ function debitWallet(userId, amount, reason = "SYSTEM") {
     }
 
     user.wallet.balance -= amount;
-    user.wallet.totalDebit += amount;
+user.wallet.totalDebit += amount;
+
+if (user.wallet.incomeBalance >= amount) {
+  user.wallet.incomeBalance -= amount;
+}
+
 
     saveUsers(users);
 
