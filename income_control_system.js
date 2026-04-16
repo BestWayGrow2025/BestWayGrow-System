@@ -101,9 +101,18 @@ function isBinaryEnabled() {
   return getIncomeSettings().binary === true;
 }
 
-function isIncomeMasterEnabled() {
-  return getIncomeSettings().incomeEnabled === true;
+function isIncomeWalletEnabled() {
+  return getIncomeSettings().incomeWalletEnabled !== false;
 }
+
+function isHoldWalletEnabled() {
+  return getIncomeSettings().holdWalletEnabled !== false;
+}
+
+function isTotalIncomeTrackingEnabled() {
+  return getIncomeSettings().totalIncomeTracking !== false;
+}
+
 
 // =====================
 // 🔥 TYPE NORMALIZER
@@ -186,17 +195,55 @@ function toggleRLI(adminId = "ADMIN") {
   }
 }
 
-function toggleBinary(adminId = "ADMIN") {
+function toggleIncomeWallet(adminId = "ADMIN") {
 
   let s = getIncomeSettings();
-  s.binary = !s.binary;
+  s.incomeWalletEnabled = !s.incomeWalletEnabled;
 
   saveIncomeSettings(s);
 
   if (typeof logActivity === "function") {
-    logActivity(adminId, "ADMIN", "Binary → " + (s.binary ? "ON" : "OFF"));
+    logActivity(
+      adminId,
+      "ADMIN",
+      "Income Wallet → " + (s.incomeWalletEnabled ? "ON" : "OFF")
+    );
   }
 }
+
+function toggleHoldWallet(adminId = "ADMIN") {
+
+  let s = getIncomeSettings();
+  s.holdWalletEnabled = !s.holdWalletEnabled;
+
+  saveIncomeSettings(s);
+
+  if (typeof logActivity === "function") {
+    logActivity(
+      adminId,
+      "ADMIN",
+      "Hold Wallet → " + (s.holdWalletEnabled ? "ON" : "OFF")
+    );
+  }
+}
+
+function toggleTotalIncomeTracking(adminId = "ADMIN") {
+
+  let s = getIncomeSettings();
+  s.totalIncomeTracking = !s.totalIncomeTracking;
+
+  saveIncomeSettings(s);
+
+  if (typeof logActivity === "function") {
+    logActivity(
+      adminId,
+      "ADMIN",
+      "Total Income Tracking → " + (s.totalIncomeTracking ? "ON" : "OFF")
+    );
+  }
+}
+
+
 
 // =====================
 // 🔒 HARD SAFETY
