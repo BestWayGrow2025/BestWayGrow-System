@@ -496,7 +496,11 @@ function loadSystem() {
     <p>Repurchase: <b>${s.repurchaseOpen ? "ON" : "OFF"}</b></p>
     <p>Withdraw: <b>${s.withdrawOpen ? "ON" : "OFF"}</b></p>
     <p>Admin Access: <b>${s.adminAccess ? "ON" : "OFF"}</b></p>
-    <p>Lock Mode: <b>${s.lockMode ? "ON" : "OFF"}</b></p>
+   <p>Lock Mode: <b>${s.lockMode ? "ON" : "OFF"}</b></p>
+<p>Income Master: <b>${typeof getIncomeSettings === "function" && getIncomeSettings().incomeEnabled ? "ON" : "OFF"}</b></p>
+<p>UGLI: <b>${typeof getIncomeSettings === "function" && getIncomeSettings().ugli ? "ON" : "OFF"}</b></p>
+<p>RLI: <b>${typeof getIncomeSettings === "function" && getIncomeSettings().rli ? "ON" : "OFF"}</b></p>
+<p>Binary: <b>${typeof getIncomeSettings === "function" && getIncomeSettings().binary ? "ON" : "OFF"}</b></p>
 
     <hr>
 
