@@ -285,7 +285,8 @@ if (typeof getUserById === "function") {
     }
   }
 }
-
+savePins(pins);
+    
     logPinAction({
       action: "PIN_USE",
       pinId,
