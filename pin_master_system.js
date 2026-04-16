@@ -148,10 +148,40 @@ function assignPin(pinId, toId, toType, performedBy) {
   try {
 
     pin.ownerId = toId;
-    pin.ownerType = toType;
-    pin.assignedTo = toId;
-    pin.assignedAt = Date.now();
-    pin.status = "assigned";
+pin.ownerType = toType;
+pin.assignedTo = toId;
+pin.assignedAt = Date.now();
+pin.status = "assigned";
+
+if (toType === "user" && typeof getUserById === "function") {
+  let user = getUserById(toId);
+
+  if (user) {
+
+    if (pin.type === "upgrade") {
+      user.availableUpgradePins =
+        Number(user.availableUpgradePins || 0) + 1;
+    }
+
+    if (pin.type === "repurchase") {
+      user.availableRepurchasePins =
+        Number(user.availableRepurchasePins || 0) + 1;
+    }
+
+    user.pinStatus = "active";
+
+    if (typeof getUsers === "function" && typeof saveUsers === "function") {
+      let users = getUsers() || [];
+      let index = users.findIndex(u => u.userId === user.userId);
+
+      if (index !== -1) {
+        users[index] = user;
+        saveUsers(users);
+      }
+    }
+  }
+}
+
 
     pin.transferHistory.push({
       from: "admin",
@@ -212,11 +242,49 @@ function usePin(pinId, userId, purpose) {
   try {
 
     pin.status = "used";
-    pin.usedBy = userId;
-    pin.usedAt = Date.now();
-    pin.lock = false;
+pin.usedBy = userId;
+pin.usedAt = Date.now();
+pin.lock = false;
 
-    savePins(pins);
+if (typeof getUserById === "function") {
+  let user = getUserById(userId);
+
+  if (user) {
+
+    user.usedPinCount =
+      Number(user.usedPinCount || 0) + 1;
+
+    if (pin.type === "upgrade") {
+      user.availableUpgradePins = Math.max(
+        0,
+        Number(user.availableUpgradePins || 0) - 1
+      );
+    }
+
+    if (pin.type === "repurchase") {
+      user.availableRepurchasePins = Math.max(
+        0,
+        Number(user.availableRepurchasePins || 0) - 1
+      );
+    }
+
+    let totalPins =
+      Number(user.availableUpgradePins || 0) +
+      Number(user.availableRepurchasePins || 0);
+
+    user.pinStatus = totalPins > 0 ? "active" : "none";
+
+    if (typeof getUsers === "function" && typeof saveUsers === "function") {
+      let users = getUsers() || [];
+      let index = users.findIndex(u => u.userId === user.userId);
+
+      if (index !== -1) {
+        users[index] = user;
+        saveUsers(users);
+      }
+    }
+  }
+}
 
     logPinAction({
       action: "PIN_USE",
