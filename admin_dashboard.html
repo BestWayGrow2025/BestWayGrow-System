@@ -569,6 +569,16 @@ function logout() {
 document.querySelector(".menu button").classList.add("active");
 loadHome();
 
+// AUTO REFRESH SYSTEM SECTION
+setInterval(() => {
+  let currentBtn = document.querySelector(".menu button.active");
+
+  if (currentBtn && currentBtn.innerText === "System") {
+    loadSystem();
+  }
+}, 5000);
+
+
 </script>
 
 </body>
