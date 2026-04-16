@@ -4,13 +4,13 @@ TREE SYSTEM V12 (MASTER LOCK ❤️ FINAL)
 ========================================
 ✔ Random User ID
 ✔ Referral link
-✔ Wallet aligned (balance + credit + debit)
-✔ Point system attached ❤️
-✔ Rank system attached ❤️
+✔ Wallet aligned
+✔ Point system attached
+✔ Rank system attached
 ✔ Safe placement
 ✔ No overwrite bug
 ✔ Direct point trigger added
-✔ Fully income-engine V8 compatible
+✔ Fully income-engine compatible
 ========================================
 */
 
@@ -39,7 +39,10 @@ function getRightChild(userId, users) {
 function findPlacement(introducerId, position, users) {
 
   let current = users.find(u => u.userId === introducerId);
-  if (!current) throw new Error("Invalid introducer");
+
+  if (!current) {
+    throw new Error("Invalid introducer");
+  }
 
   let safety = 0;
 
@@ -52,7 +55,10 @@ function findPlacement(introducerId, position, users) {
     if (position === "L") {
 
       if (!current.leftChild) {
-        return { parentId: current.userId, side: "L" };
+        return {
+          parentId: current.userId,
+          side: "L"
+        };
       }
 
       current = users.find(u => u.userId === current.leftChild);
@@ -60,13 +66,18 @@ function findPlacement(introducerId, position, users) {
     } else {
 
       if (!current.rightChild) {
-        return { parentId: current.userId, side: "R" };
+        return {
+          parentId: current.userId,
+          side: "R"
+        };
       }
 
       current = users.find(u => u.userId === current.rightChild);
     }
 
-    if (!current) throw new Error("Tree broken");
+    if (!current) {
+      throw new Error("Tree broken");
+    }
   }
 }
 
@@ -79,11 +90,13 @@ function generateUserId(users) {
   let safety = 0;
 
   do {
+
     if (safety++ > 1000) {
       throw new Error("User ID generation failed");
     }
 
     id = "BWG";
+
     for (let i = 0; i < 6; i++) {
       id += chars[Math.floor(Math.random() * chars.length)];
     }
@@ -97,10 +110,13 @@ function generateUserId(users) {
 function generateReferralLink(userId) {
   try {
     let base = window.location.origin || "";
+
     if (!base || base === "null") {
       base = "https://yourdomain.com";
     }
+
     return base + "/register.html?ref=" + encodeURIComponent(userId);
+
   } catch {
     return "https://yourdomain.com/register.html?ref=" + userId;
   }
@@ -111,37 +127,42 @@ function createUserWithTree(req) {
 
   try {
 
-    // 🔒 SYSTEM LOCK
+    // 🔒 REGISTRATION CHECK
     if (typeof getSystemSettings === "function") {
       let sys = getSystemSettings();
 
       if (sys && sys.registrationOpen === false) {
         throw new Error("Registration Closed");
       }
-    }
 
-    if (typeof getSystemSettings === "function") {
-      let sys = getSystemSettings();
-      if (sys && sys.lockMode) throw new Error("System Locked");
+      if (sys && sys.lockMode) {
+        throw new Error("System Locked");
+      }
     }
 
     // 🔒 SYSTEM SAFE
     if (typeof isSystemSafe === "function") {
-      if (!isSystemSafe()) throw new Error("System not ready");
+      if (!isSystemSafe()) {
+        throw new Error("System not ready");
+      }
     }
 
-    let users = (typeof getUsers === "function") ? getUsers() : [];
-    if (!Array.isArray(users)) users = [];
+    let users = (typeof getUsers === "function")
+      ? getUsers()
+      : [];
+
+    if (!Array.isArray(users)) {
+      users = [];
+    }
 
     // 🔒 VALIDATION
-      if (!req || !req.introducerId || !req.mobile) {
+    if (!req || !req.introducerId || !req.mobile) {
       throw new Error("Invalid request");
     }
 
     if (!req.position || !["L", "R"].includes(req.position)) {
       req.position = "L";
     }
-
 
     if (typeof isValidIntroducer === "function") {
       if (!isValidIntroducer(req.introducerId)) {
@@ -157,25 +178,44 @@ function createUserWithTree(req) {
 
     let placement = findPlacement(
       req.introducerId,
-      req.position || "L",
+      req.position,
       users
     );
 
     let referralLink = generateReferralLink(userId);
 
     let newUser = {
+      upgradeStatus: false,
+      repurchaseStatus: false,
+
+      wallet: {
+        balance: 0,
+        incomeBalance: 0,
+        holdIncome: 0,
+        totalCredit: 0,
+        totalDebit: 0
+      },
+
+      kycStatus: "pending",
+
+      pinStatus: "none",
+      availableUpgradePins: 0,
+      availableRepurchasePins: 0,
+      usedPinCount: 0,
+
+      lastLogin: null,
+
       userId,
       username: req.username || "",
-        password: req.password || "",
+      password: req.password || "",
       name: req.name || "",
       email: req.email || "",
-
       mobile: req.mobile,
 
       role: "user",
       status: "active",
 
-        introducerId: req.introducerId,
+      introducerId: req.introducerId,
       sponsorId: placement.parentId,
       sponsorVisible: false,
       introducerVisible: true,
@@ -193,15 +233,8 @@ function createUserWithTree(req) {
       lastPointReset: new Date().toISOString(),
       rliHoldBalance: 0,
 
-      // ❤️ RANK SYSTEM (CTOR)
+      // ❤️ RANK SYSTEM
       rankLevel: 0,
-
-      // 💰 WALLET
-      wallet: {
-        balance: 0,
-        totalCredit: 0,
-        totalDebit: 0
-      },
 
       totalIncome: 0,
 
@@ -210,19 +243,29 @@ function createUserWithTree(req) {
       createdAt: new Date().toISOString()
     };
 
-    // 🔗 LINK PARENT (SAFE)
-    let parentIndex = users.findIndex(u => u.userId === placement.parentId);
-    if (parentIndex === -1) throw new Error("Parent not found");
+    // 🔗 LINK PARENT
+    let parentIndex = users.findIndex(
+      u => u.userId === placement.parentId
+    );
+
+    if (parentIndex === -1) {
+      throw new Error("Parent not found");
+    }
 
     if (placement.side === "L") {
+
       if (users[parentIndex].leftChild) {
         throw new Error("Left already occupied");
       }
+
       users[parentIndex].leftChild = userId;
+
     } else {
+
       if (users[parentIndex].rightChild) {
         throw new Error("Right already occupied");
       }
+
       users[parentIndex].rightChild = userId;
     }
 
@@ -235,13 +278,13 @@ function createUserWithTree(req) {
       throw new Error("saveUsers missing");
     }
 
-    // ❤️ DIRECT POINT (CRITICAL)
+    // ❤️ DIRECT POINT
     if (typeof updateUserPoints === "function") {
       updateUserPoints(req.introducerId, 0, true);
     }
 
-    // 🔥 INCOME TRIGGER
-      if (typeof triggerRegistrationIncome === "function") {
+    // 🔥 REGISTRATION TRIGGER
+    if (typeof triggerRegistrationIncome === "function") {
       try {
         triggerRegistrationIncome(newUser.userId, 0);
       } catch (e) {
@@ -249,6 +292,7 @@ function createUserWithTree(req) {
       }
     }
 
+    // 🔥 INCOME TRIGGER
     if (typeof processIncome === "function") {
       try {
 
@@ -280,3 +324,5 @@ function createUserWithTree(req) {
     throw err;
   }
 }
+
+
