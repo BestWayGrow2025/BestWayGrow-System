@@ -203,7 +203,7 @@ if (settings.lockMode) {
   return;
 }
 
-if (user.status !== "active") {
+if (user.accountStatus !== "active") {
 
   if (typeof clearSession === "function") {
     clearSession();
@@ -279,15 +279,30 @@ function loadHome() {
 
     <div class="info-box">
       <p><b>User ID:</b> ${user.userId}</p>
-      <p><b>Name:</b> ${user.username || "N/A"}</p>
-      <p><b>Status:</b> ${user.status || "inactive"}</p>
+      <p><b>Full Name:</b> ${user.fullName || user.username || "N/A"}</p>
       <p><b>Mobile:</b> ${user.mobile || "N/A"}</p>
+      <p><b>Email:</b> ${user.email || "N/A"}</p>
+      <p><b>Sponsor ID:</b> ${user.sponsorId || "N/A"}</p>
+      <p><b>Join Date:</b> ${user.joinDate ? new Date(user.joinDate).toLocaleDateString() : "N/A"}</p>
+      <p><b>City:</b> ${user.city || "N/A"}</p>
+      <p><b>State:</b> ${user.state || "N/A"}</p>
+      <p><b>Country:</b> ${user.country || "N/A"}</p>
     </div>
 
     <div class="info-box">
-      <p><b>Upgrade Level:</b> ${user.upgradeLevel || 0}</p>
-      <p><b>Repurchase Count:</b> ${user.repurchaseCount || 0}</p>
+      <p><b>Wallet Balance:</b> ₹${Number(user.walletBalance || 0)}</p>
+      <p><b>Income Balance:</b> ₹${Number(user.incomeBalance || 0)}</p>
+      <p><b>Hold Income:</b> ₹${Number(user.holdIncome || 0)}</p>
+      <p><b>Total Credit:</b> ₹${Number(user.totalCredit || 0)}</p>
+      <p><b>Total Debit:</b> ₹${Number(user.totalDebit || 0)}</p>
       <p><b>Total Income:</b> ₹${Number(user.totalIncome || 0)}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Total Pins:</b> ${user.totalPins || 0}</p>
+      <p><b>Used Pins:</b> ${user.usedPins || 0}</p>
+      <p><b>Available Pins:</b> ${user.availablePins || 0}</p>
+      <p><b>Last Pin Used:</b> ${user.lastPinUsedDate || "N/A"}</p>
     </div>
 
     <div class="section-title">Referral Link</div>
@@ -299,6 +314,7 @@ function loadHome() {
     <p id="copyMsg"></p>
   `;
 }
+
 
 // ================= PIN SECTION =================
 function loadPinSection() {
@@ -381,13 +397,42 @@ function loadProfile() {
 
     <div class="info-box">
       <p><b>User ID:</b> ${user.userId}</p>
-      <p><b>Name:</b> ${user.username || "N/A"}</p>
+      <p><b>Full Name:</b> ${user.fullName || user.username || "N/A"}</p>
       <p><b>Mobile:</b> ${user.mobile || "N/A"}</p>
+      <p><b>Email:</b> ${user.email || "N/A"}</p>
       <p><b>Introducer ID:</b> ${user.introducerId || "N/A"}</p>
+      <p><b>Sponsor ID:</b> ${user.sponsorId || "N/A"}</p>
       <p><b>Position:</b> ${user.position || "L"}</p>
-      <p><b>Created:</b> ${user.createdAt ? new Date(user.createdAt).toLocaleString() : "N/A"}</p>
+      <p><b>Join Date:</b> ${user.joinDate ? new Date(user.joinDate).toLocaleString() : "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Account Status:</b> ${user.accountStatus || "active"}</p>
+      <p><b>KYC Status:</b> ${user.kycStatus || "pending"}</p>
+      <p><b>Upgrade Status:</b> ${user.upgradeStatus || "not_upgraded"}</p>
+      <p><b>Repurchase Status:</b> ${user.repurchaseStatus || "not_started"}</p>
+      <p><b>Block Status:</b> ${user.blockStatus || "unblocked"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Office Name:</b> ${user.officeName || "N/A"}</p>
+      <p><b>Office City:</b> ${user.officeCity || "N/A"}</p>
+      <p><b>Office Code:</b> ${user.officeCode || "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Department:</b> ${user.department || "N/A"}</p>
+      <p><b>Designation:</b> ${user.designation || "N/A"}</p>
+      <p><b>Reporting Admin:</b> ${user.reportingAdmin || "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Support Tickets:</b> ${user.supportTicketCount || 0}</p>
+      <p><b>Last Support Date:</b> ${user.lastSupportDate || "N/A"}</p>
+      <p><b>Remarks:</b> ${user.remarks || "N/A"}</p>
     </div>
   `;
+}
 }
 
 // ================= PAGE NAVIGATION =================
