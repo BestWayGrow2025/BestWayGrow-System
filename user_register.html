@@ -237,15 +237,53 @@ if (users.find(u => u.email === email)) {
     }
 
     // ================= ADD TO QUEUE =================
-   addToRegistrationQueue({
+  addToRegistrationQueue({
   username,
+  fullName: username,
   name: username,
   email,
   password: encodePass(password),
   mobile,
   introducerId,
-  position
+  sponsorId: introducerId,
+  position,
+
+  joinDate: new Date().toISOString(),
+  city: "",
+  state: "",
+  country: "India",
+
+  walletBalance: 0,
+  incomeBalance: 0,
+  holdIncome: 0,
+  totalCredit: 0,
+  totalDebit: 0,
+  totalIncome: 0,
+
+  totalPins: 0,
+  usedPins: 0,
+  availablePins: 0,
+  lastPinUsedDate: "",
+
+  accountStatus: "active",
+  kycStatus: "pending",
+  upgradeStatus: "not_upgraded",
+  repurchaseStatus: "not_started",
+  blockStatus: "unblocked",
+
+  officeName: "",
+  officeCity: "",
+  officeCode: "",
+
+  department: "",
+  designation: "",
+  reportingAdmin: "",
+
+  supportTicketCount: 0,
+  lastSupportDate: "",
+  remarks: ""
 });
+
 
 
     document.getElementById("msg").innerHTML = `
