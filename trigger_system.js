@@ -205,15 +205,13 @@ function runIncomeTrigger(type, userId, bv, source, uniqueKey) {
 // ===================================
 function triggerPinUseIncome(userId, pin) {
 
-   let triggerType = pin.type || "upgrade";
-  let bv = Number(pin.bv || 0);
-
-  triggerType = String(triggerType).toLowerCase();
-  
   if (!userId || !pin) return false;
 
   let triggerType = pin.type || "upgrade";
   let bv = Number(pin.bv || 0);
+
+  triggerType = String(triggerType).toLowerCase();
+
 
   // fallback from config
   if (!bv && typeof getUpgradeBV === "function") {
