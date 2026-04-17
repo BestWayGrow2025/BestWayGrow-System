@@ -507,10 +507,20 @@ function loadSystem() {
     <hr>
 
     <h3>PIN Queue</h3>
-    <p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
+<p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
 
-    <button class="on" onclick="toggleQueue(true)">ON</button>
-    <button class="off" onclick="toggleQueue(false)">OFF</button>
+${
+  adminUser.role === "super_admin" ||
+  adminUser.role === "system_admin"
+    ? `
+      <button class="on" onclick="toggleQueue(true)">ON</button>
+      <button class="off" onclick="toggleQueue(false)">OFF</button>
+    `
+    : `
+      <p class="warn">Only Super Admin / System Admin can control PIN Queue</p>
+    `
+}
+
 
     <hr>
 
