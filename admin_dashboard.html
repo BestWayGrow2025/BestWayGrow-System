@@ -210,10 +210,11 @@ if (!adminUser) {
   window.location.href = "admin_login.html";
 }
 
-if (adminUser.accountStatus && adminUser.accountStatus !== "active") {
+if ((adminUser.accountStatus || "active") !== "active") {
   alert("Admin inactive");
   logout();
 }
+
 
 // ================= WELCOME =================
 document.getElementById("welcome").innerText =
