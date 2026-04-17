@@ -107,28 +107,6 @@ function getSession() {
 
   return null;
 }
-  for (let key of keys) {
-    try {
-      let raw = localStorage.getItem(key);
-      if (!raw) continue;
-
-      let session = JSON.parse(raw);
-
-      if (
-        session &&
-        typeof session === "object" &&
-        session.userId &&
-        session.role
-      ) {
-        return session;
-      }
-    } catch (err) {
-      localStorage.removeItem(key);
-    }
-  }
-
-  return null;
-}
 
 // ================= CLEAR SESSION =================
 function clearSession() {
