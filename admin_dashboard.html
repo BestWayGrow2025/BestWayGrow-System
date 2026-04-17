@@ -506,21 +506,21 @@ function loadSystem() {
 
     <hr>
 
-    <h3>PIN Queue</h3>
-<p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
+<h3>PIN Queue</h3>
 
 ${
   adminUser.role === "super_admin" ||
   adminUser.role === "system_admin"
     ? `
+      <p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
+
       <button class="on" onclick="toggleQueue(true)">ON</button>
       <button class="off" onclick="toggleQueue(false)">OFF</button>
     `
     : `
-      <p class="warn">Only Super Admin / System Admin can control PIN Queue</p>
+      <p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
     `
 }
-
 
     <hr>
 
@@ -528,6 +528,16 @@ ${
     <p>Pending: ${pendingPins}</p>
     <p>Completed: ${completedPins}</p>
     <p>Failed: ${failedPins}</p>
+
+    ${adminUser.role === "admin" ? `
+  <hr>
+
+  <h3>PIN Stock</h3>
+
+  <button class="on" onclick="requestPinStock()">
+    Request PIN Stock
+  </button>
+` : ``}
 
     <hr>
 
