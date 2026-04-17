@@ -313,16 +313,17 @@ function loadUsers() {
     html += `<tr><td colspan="4">No Users Found</td></tr>`;
   }
 
-  users.forEach(u => {
-    html += `
-      <tr>
-       <td>${u.fullName || u.username || "-"}</td>
-<td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
-<td>${u.accountStatus || "active"}</td>
+users.forEach(u => {
+  html += `
+    <tr>
+      <td>${u.userId || "-"}</td>
+      <td>${u.fullName || u.username || "-"}</td>
+      <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
+      <td>${u.accountStatus || "active"}</td>
+    </tr>
+  `;
+});
 
-      </tr>
-    `;
-  });
 
   html += `</table>`;
 
