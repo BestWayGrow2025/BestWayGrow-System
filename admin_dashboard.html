@@ -210,7 +210,7 @@ if (!adminUser) {
   window.location.href = "admin_login.html";
 }
 
-if (adminUser.status && adminUser.status !== "active") {
+if (adminUser.accountStatus && adminUser.accountStatus !== "active") {
   alert("Admin inactive");
   logout();
 }
@@ -252,11 +252,11 @@ function loadHome() {
 
   let users = (typeof getUsers === "function") ? getUsers() : [];
   let allUsers = users.filter(u => u.role === "user");
-  let activeUsers = allUsers.filter(u => u.status === "active");
-  let blockedUsers = allUsers.filter(u => u.status !== "active");
+ let activeUsers = allUsers.filter(u => u.accountStatus === "active");
+let blockedUsers = allUsers.filter(u => u.accountStatus !== "active");
 
   let totalWallet = users.reduce((sum, u) => {
-    return sum + Number(u.wallet?.balance || 0);
+    return sum + Number(u.walletBalance || 0);
   }, 0);
 
   document.getElementById("mainContent").innerHTML = `
@@ -289,7 +289,7 @@ function loadHome() {
     <p><b>Name:</b> ${adminUser.username || "Admin"}</p>
     <p><b>User ID:</b> ${adminUser.userId}</p>
     <p><b>Role:</b> ${adminUser.role}</p>
-    <p><b>Status:</b> ${adminUser.status || "active"}</p>
+    <p><b>Status:</b> ${adminUser.accountStatus || "active"}</p>
   `;
 }
 
@@ -316,10 +316,10 @@ function loadUsers() {
   users.forEach(u => {
     html += `
       <tr>
-        <td>${u.userId || "-"}</td>
-        <td>${u.username || "-"}</td>
-        <td>₹${Number(u.wallet?.balance || 0).toFixed(2)}</td>
-        <td>${u.status || "active"}</td>
+       <td>${u.fullName || u.username || "-"}</td>
+<td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
+<td>${u.accountStatus || "active"}</td>
+
       </tr>
     `;
   });
@@ -372,10 +372,11 @@ function loadWallet() {
   let totalHoldIncome = 0;
 
   users.forEach(u => {
-    totalBalance += Number(u.wallet?.balance || 0);
-    totalCredit += Number(u.wallet?.totalCredit || 0);
-    totalDebit += Number(u.wallet?.totalDebit || 0);
-    totalHoldIncome += Number(u.wallet?.holdIncome || 0);
+  totalBalance += Number(u.walletBalance || 0);
+totalCredit += Number(u.totalCredit || 0);
+totalDebit += Number(u.totalDebit || 0);
+totalHoldIncome += Number(u.holdIncome || 0);
+
   });
 
   document.getElementById("mainContent").innerHTML = `
