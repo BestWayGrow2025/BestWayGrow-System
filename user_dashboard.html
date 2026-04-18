@@ -371,6 +371,68 @@ function loadPinSection() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
+  // ================= TREE =================
+function loadTree() {
+
+  user = getUserById(session.userId);
+
+  let leftUsers = [];
+  let rightUsers = [];
+
+  try {
+    let allUsers = getUsers() || [];
+
+    leftUsers = allUsers.filter(u =>
+      u.sponsorId === user.userId &&
+      u.position === "L"
+    );
+
+    rightUsers = allUsers.filter(u =>
+      u.sponsorId === user.userId &&
+      u.position === "R"
+    );
+  } catch (err) {
+    console.error(err);
+  }
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">User Tree</div>
+
+    <div class="info-box">
+      <p><b>My User ID:</b> ${user.userId}</p>
+      <p><b>My Name:</b> ${user.fullName || user.username || "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <h3>Left Team</h3>
+      ${
+        leftUsers.length
+          ? leftUsers.map(u => `
+            <p>
+              ${u.userId} -
+              ${u.fullName || u.username || "N/A"}
+            </p>
+          `).join("")
+          : "<p>No Left User</p>"
+      }
+    </div>
+
+    <div class="info-box">
+      <h3>Right Team</h3>
+      ${
+        rightUsers.length
+          ? rightUsers.map(u => `
+            <p>
+              ${u.userId} -
+              ${u.fullName || u.username || "N/A"}
+            </p>
+          `).join("")
+          : "<p>No Right User</p>"
+      }
+    </div>
+  `;
+}
+
 // ================= WALLET =================
 function loadWallet() {
 
