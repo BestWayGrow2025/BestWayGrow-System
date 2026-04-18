@@ -371,7 +371,7 @@ function loadPinSection() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-  // ================= TREE =================
+// ================= TREE =================
 function loadTree() {
 
   user = getUserById(session.userId);
@@ -408,10 +408,7 @@ function loadTree() {
       ${
         leftUsers.length
           ? leftUsers.map(u => `
-            <p>
-              ${u.userId} -
-              ${u.fullName || u.username || "N/A"}
-            </p>
+            <p>${u.userId} - ${u.fullName || u.username || "N/A"}</p>
           `).join("")
           : "<p>No Left User</p>"
       }
@@ -422,10 +419,7 @@ function loadTree() {
       ${
         rightUsers.length
           ? rightUsers.map(u => `
-            <p>
-              ${u.userId} -
-              ${u.fullName || u.username || "N/A"}
-            </p>
+            <p>${u.userId} - ${u.fullName || u.username || "N/A"}</p>
           `).join("")
           : "<p>No Right User</p>"
       }
