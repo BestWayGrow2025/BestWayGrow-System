@@ -281,6 +281,13 @@ function loadHome() {
   user = getUserById(session.userId);
 
   let refLink = generateRefLink(user.userId);
+  let directUsers = [];
+
+  try {
+    directUsers = getDirectUsers(user.userId) || [];
+  } catch (err) {
+    console.error(err);
+  }
 
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Dashboard Overview</div>
@@ -313,6 +320,12 @@ function loadHome() {
       <p><b>Last Pin Used:</b> ${user.lastPinUsedDate || "N/A"}</p>
     </div>
 
+    <div class="info-box">
+      <p><b>Direct Team Count:</b> ${directUsers.length}</p>
+      <p><b>Left Count:</b> ${directUsers.filter(u => u.position === "L").length}</p>
+      <p><b>Right Count:</b> ${directUsers.filter(u => u.position === "R").length}</p>
+    </div>
+
     <div class="section-title">Referral Link</div>
 
     <input id="refLink" class="ref-box" value="${refLink}" readonly>
@@ -322,7 +335,6 @@ function loadHome() {
     <p id="copyMsg"></p>
   `;
 }
-
 
 // ================= PIN SECTION =================
 function loadPinSection() {
