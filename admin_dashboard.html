@@ -881,19 +881,36 @@ function logout() {
 // ================= DEFAULT =================
 document.querySelector(".menu button").classList.add("active");
 loadHome();
-
+  
 // ================= AUTO REFRESH SYSTEM =================
 setInterval(() => {
   let currentBtn = document.querySelector(".menu button.active");
 
-  if (currentBtn && currentBtn.innerText.trim() === "System") {
+  if (currentBtn && currentBtn.innerText === "System") {
     loadSystem();
+  }
+
+  if (currentBtn && currentBtn.innerText === "Users") {
+    renderUsers(currentPage);
+  }
+
+  if (currentBtn && currentBtn.innerText === "PIN") {
+    renderPins();
+  }
+
+  if (currentBtn && currentBtn.innerText === "Income") {
+    renderIncomeLogs();
   }
 }, 5000);
 
 // ================= SAFE ERROR LOG =================
 window.addEventListener("error", function(e) {
   console.error("Dashboard Error:", e.message);
+});
+
+// ================= FINAL SAFE STARTUP CHECK =================
+window.addEventListener("load", function() {
+  console.log("Admin Dashboard Loaded Successfully");
 });
 
 </script>
