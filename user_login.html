@@ -202,8 +202,8 @@ function login() {
   return;
 }
 
-if (password.length < 4) {
-  showMsg("⚠️ Password too short");
+if (storedPassword !== password) {
+  showMsg("❌ Wrong Password");
   resetLogin();
   return;
 }
