@@ -203,7 +203,10 @@ if (settings.lockMode) {
   return;
 }
 
-if (user.accountStatus !== "active") {
+if (
+  user.accountStatus &&
+  user.accountStatus !== "active"
+) {
 
   if (typeof clearSession === "function") {
     clearSession();
@@ -213,7 +216,6 @@ if (user.accountStatus !== "active") {
   location.href = "user_login.html";
   return;
 }
-
 
   document.getElementById("welcome").innerText =
     "Welcome (" + user.userId + ")";
