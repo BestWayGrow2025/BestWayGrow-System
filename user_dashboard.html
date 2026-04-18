@@ -524,14 +524,41 @@ function loadProfile() {
   `;
 }
 
+// ================= UPGRADE STATUS CHECK =================
+function canUpgrade(user) {
+  return user.accountStatus === "active";
+}
+
+// ================= REPURCHASE STATUS CHECK =================
+function canRepurchase(user) {
+  return user.accountStatus === "active";
+}
+
 // ================= PAGE NAVIGATION =================
 function loadUpgrade() {
+
+  user = getUserById(session.userId);
+
+  if (!canUpgrade(user)) {
+    alert("Upgrade Not Allowed");
+    return;
+  }
+
   location.href = "user_upgrade.html";
 }
 
 function loadRepurchase() {
+
+  user = getUserById(session.userId);
+
+  if (!canRepurchase(user)) {
+    alert("Repurchase Not Allowed");
+    return;
+  }
+
   location.href = "user_repurchase.html";
 }
+
 
 // ================= LOGOUT =================
 function logout() {
