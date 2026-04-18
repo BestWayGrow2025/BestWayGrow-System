@@ -882,58 +882,19 @@ function logout() {
 document.querySelector(".menu button").classList.add("active");
 loadHome();
 
-// AUTO REFRESH SYSTEM SECTION
+// ================= AUTO REFRESH SYSTEM =================
 setInterval(() => {
   let currentBtn = document.querySelector(".menu button.active");
 
-  if (currentBtn && currentBtn.innerText === "System") {
+  if (currentBtn && currentBtn.innerText.trim() === "System") {
     loadSystem();
   }
 }, 5000);
 
-// ================= TOGGLE QUEUE =================
-function toggleQueue(val) {
-  if (queueBtnLock) return;
-
-  queueBtnLock = true;
-
-  let s = getSystemSettings() || {};
-
-  if (!s.pinQueue) {
-    s.pinQueue = {};
-  }
-
-  s.pinQueue.enabled = val;
-
-  saveSystemSettingsSafe(s);
-
-  setTimeout(() => {
-    queueBtnLock = false;
-    loadSystem();
-  }, 300);
-}
-
-// ================= LOGOUT =================
-function logout() {
-  localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInSuperAdmin");
-  window.location.href = "admin_login.html";
-}
-
-// ================= DEFAULT =================
-document.querySelector(".menu button").classList.add("active");
-loadHome();
-
-// AUTO REFRESH SYSTEM SECTION
-setInterval(() => {
-  let currentBtn = document.querySelector(".menu button.active");
-
-  if (currentBtn && currentBtn.innerText === "System") {
-    loadSystem();
-  }
-}, 5000);
-
+// ================= SAFE ERROR LOG =================
+window.addEventListener("error", function(e) {
+  console.error("Dashboard Error:", e.message);
+});
 
 </script>
 
