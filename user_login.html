@@ -222,19 +222,24 @@ function login() {
     return;
   }
 
-  if (!user.password) {
-    showMsg("❌ Password Missing");
-    resetLogin();
-    return;
-  }
+ if (!user.password) {
+  showMsg("❌ Password Missing");
+  resetLogin();
+  return;
+}
 
-  if (user.status && user.status !== "active") {
-    showMsg("🚫 Account Inactive");
-    resetLogin();
-    return;
-  }
+// ================= ACCOUNT STATUS CHECK =================
+if (
+  (user.accountStatus && user.accountStatus !== "active") ||
+  (user.status && user.status !== "active")
+) {
+  showMsg("🚫 Account Inactive");
+  resetLogin();
+  return;
+}
 
-  let storedPassword = safeDecode(user.password);
+let storedPassword = safeDecode(user.password);
+
 
   if (storedPassword !== password) {
     showMsg("❌ Wrong Password");
