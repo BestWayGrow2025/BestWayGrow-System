@@ -237,7 +237,7 @@ if (users.find(u => u.email === email)) {
     }
 
     // ================= ADD TO QUEUE =================
-  addToRegistrationQueue({
+ addToRegistrationQueue({
   username,
   fullName: username,
   name: username,
@@ -266,10 +266,15 @@ if (users.find(u => u.email === email)) {
   lastPinUsedDate: "",
 
   accountStatus: "active",
+  incomeStatus: "inactive",
+
   kycStatus: "pending",
   upgradeStatus: "not_upgraded",
   repurchaseStatus: "not_started",
   blockStatus: "unblocked",
+
+  activePoints: 0,
+  incomeExpiry: "",
 
   officeName: "",
   officeCity: "",
@@ -283,8 +288,6 @@ if (users.find(u => u.email === email)) {
   lastSupportDate: "",
   remarks: ""
 });
-
-
 
     document.getElementById("msg").innerHTML = `
   <div class="success-box">
