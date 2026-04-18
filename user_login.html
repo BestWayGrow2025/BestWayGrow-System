@@ -230,8 +230,8 @@ function login() {
 
 // ================= ACCOUNT STATUS CHECK =================
 if (
-  (user.accountStatus && user.accountStatus !== "active") ||
-  (user.status && user.status !== "active")
+  user.accountStatus === "inactive" ||
+  user.status === "inactive"
 ) {
   showMsg("🚫 Account Inactive");
   resetLogin();
