@@ -273,34 +273,32 @@ function login() {
   }, 500);
 }
 
-  // ================= SAVE SESSION =================
-  let sessionSaved = false;
+ // ================= SAVE SESSION =================
+let sessionSaved = false;
 
-  try {
-
-    if (typeof setSession === "function") {
-      sessionSaved = setSession({
-        userId: user.userId,
-        role: user.role
-      });
-    }
-
-  } catch (err) {
-    console.error(err);
+try {
+  if (typeof setSession === "function") {
+    sessionSaved = setSession({
+      userId: user.userId,
+      role: user.role
+    });
   }
+} catch (err) {
+  console.error(err);
+}
 
-  if (!sessionSaved) {
-    showMsg("❌ Session Failed");
-    resetLogin();
-    return;
-  }
+if (!sessionSaved) {
+  showMsg("❌ Session Failed");
+  resetLogin();
+  return;
+}
 
-  // ================= LOG =================
-  if (typeof logActivity === "function") {
-    logActivity(user.userId, "USER", "Login", "USER_LOGIN");
-  }
+// ================= LOG =================
+if (typeof logActivity === "function") {
+  logActivity(user.userId, "USER", "Login", "USER_LOGIN");
+}
 
-  showMsg("✅ Login Successful", "green");
+showMsg("✅ Login Successful", "green");
 
 document.getElementById("loginBtn").innerText = "Redirecting...";
 
