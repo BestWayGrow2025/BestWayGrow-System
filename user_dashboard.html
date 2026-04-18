@@ -126,6 +126,7 @@
 <div class="menu">
   <button onclick="safeClick(this, loadHome)">Home</button>
   <button onclick="safeClick(this, loadPinSection)">PIN</button>
+  <button onclick="safeClick(this, loadTree)">Tree</button>
   <button onclick="safeClick(this, loadWallet)">Wallet</button>
   <button onclick="safeClick(this, loadProfile)">Profile</button>
   <button onclick="safeClick(this, loadUpgrade)">Upgrade</button>
@@ -183,39 +184,40 @@ function startDashboard() {
     return;
   }
 
- user = getUserById(session.userId);
+  user = getUserById(session.userId);
 
-if (!user) {
-  clearSession();
-  location.href = "user_login.html";
-  return;
-}
-
-let settings = {};
-
-if (typeof getSystemSettings === "function") {
-  settings = getSystemSettings() || {};
-}
-
-if (settings.lockMode) {
-  alert("System Locked");
-  location.href = "user_login.html";
-  return;
-}
-
-if (
-  user.accountStatus &&
-  user.accountStatus !== "active"
-) {
-
-  if (typeof clearSession === "function") {
-    clearSession();
+  if (!user) {
+    if (typeof clearSession === "function") {
+      clearSession();
+    }
+    location.href = "user_login.html";
+    return;
   }
 
-  alert("Account Inactive");
-  location.href = "user_login.html";
-  return;
-}
+  let settings = {};
+
+  if (typeof getSystemSettings === "function") {
+    settings = getSystemSettings() || {};
+  }
+
+  if (settings.lockMode) {
+    alert("System Locked");
+    location.href = "user_login.html";
+    return;
+  }
+
+  if (
+    user.accountStatus &&
+    user.accountStatus !== "active"
+  ) {
+    if (typeof clearSession === "function") {
+      clearSession();
+    }
+
+    alert("Account Inactive");
+    location.href = "user_login.html";
+    return;
+  }
 
   document.getElementById("welcome").innerText =
     "Welcome (" + user.userId + ")";
@@ -252,6 +254,7 @@ function safeClick(btn, fn) {
 
 // ================= REF LINK =================
 function generateRefLink(userId) {
+
   let basePath = window.location.pathname
     .replace("user_dashboard.html", "")
     .replace("user_login.html", "")
@@ -261,8 +264,9 @@ function generateRefLink(userId) {
     basePath +
     "user_register.html?ref=" + userId;
 }
-  
+
 function copyRefLink() {
+
   let input = document.getElementById("refLink");
 
   if (!input) return;
@@ -272,7 +276,8 @@ function copyRefLink() {
 
   navigator.clipboard.writeText(input.value);
 
-  document.getElementById("copyMsg").innerText = "✅ Referral Link Copied";
+  document.getElementById("copyMsg").innerText =
+    "✅ Referral Link Copied";
 }
 
 // ================= HOME =================
@@ -284,7 +289,9 @@ function loadHome() {
   let directUsers = [];
 
   try {
-    directUsers = getDirectUsers(user.userId) || [];
+    if (typeof getDirectUsers === "function") {
+      directUsers = getDirectUsers(user.userId) || [];
+    }
   } catch (err) {
     console.error(err);
   }
@@ -321,9 +328,9 @@ function loadHome() {
     </div>
 
     <div class="info-box">
-      <p><b>Direct Team Count:</b> ${directUsers.length}</p>
-      <p><b>Left Count:</b> ${directUsers.filter(u => u.position === "L").length}</p>
-      <p><b>Right Count:</b> ${directUsers.filter(u => u.position === "R").length}</p>
+      <p><b>Total Direct Team:</b> ${directUsers.length}</p>
+      <p><b>Left Team:</b> ${directUsers.filter(u => u.position === "L").length}</p>
+      <p><b>Right Team:</b> ${directUsers.filter(u => u.position === "R").length}</p>
     </div>
 
     <div class="section-title">Referral Link</div>
@@ -392,17 +399,19 @@ function loadTree() {
   let rightUsers = [];
 
   try {
-    let allUsers = getUsers() || [];
+    if (typeof getUsers === "function") {
+      let allUsers = getUsers() || [];
 
-    leftUsers = allUsers.filter(u =>
-      u.sponsorId === user.userId &&
-      u.position === "L"
-    );
+      leftUsers = allUsers.filter(u =>
+        u.sponsorId === user.userId &&
+        u.position === "L"
+      );
 
-    rightUsers = allUsers.filter(u =>
-      u.sponsorId === user.userId &&
-      u.position === "R"
-    );
+      rightUsers = allUsers.filter(u =>
+        u.sponsorId === user.userId &&
+        u.position === "R"
+      );
+    }
   } catch (err) {
     console.error(err);
   }
@@ -471,7 +480,9 @@ function loadProfile() {
   let directUsers = [];
 
   try {
-    directUsers = getDirectUsers(user.userId) || [];
+    if (typeof getDirectUsers === "function") {
+      directUsers = getDirectUsers(user.userId) || [];
+    }
   } catch (err) {
     console.error(err);
   }
@@ -559,7 +570,6 @@ function loadRepurchase() {
   location.href = "user_repurchase.html";
 }
 
-
 // ================= LOGOUT =================
 function logout() {
 
@@ -579,7 +589,7 @@ function logout() {
 
   location.href = "user_login.html";
 }
-  
+
 </script>
 
 </body>
