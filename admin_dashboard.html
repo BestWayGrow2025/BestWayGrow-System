@@ -706,7 +706,6 @@ function filterIncomeLogs() {
 let queueBtnLock = false;
 
 function loadSystem() {
-
   let s = (typeof getSystemSettings === "function")
     ? getSystemSettings()
     : {};
@@ -727,63 +726,117 @@ function loadSystem() {
   let doneReg = regQueue.filter(r => r.status === "DONE").length;
   let failedReg = regQueue.filter(r => r.status === "FAILED").length;
 
-  document.getElementById("mainContent").innerHTML = `
+  let html = `
     <h3>System Control</h3>
 
-    <p>Registration: <b>${s.registrationOpen ? "ON" : "OFF"}</b></p>
-    <p>Upgrade: <b>${s.upgradesOpen ? "ON" : "OFF"}</b></p>
-    <p>Repurchase: <b>${s.repurchaseOpen ? "ON" : "OFF"}</b></p>
-    <p>Withdraw: <b>${s.withdrawOpen ? "ON" : "OFF"}</b></p>
-   <p>Admin Access: <b>${s.adminAccess ? "ON" : "OFF"}</b></p>
-   <p>Lock Mode: <b>${s.lockMode ? "ON" : "OFF"}</b></p>
-   <p>Income Master: <b>${typeof getIncomeSettings === "function" && getIncomeSettings().incomeEnabled ? "ON" : "OFF"}</b></p>
-   <p>UGLI: <b>${typeof getIncomeSettings === "function" && getIncomeSettings().ugli ? "ON" : "OFF"}</b></p>
-   <p>RLI: <b>${typeof getIncomeSettings === "function" && getIncomeSettings().rli ? "ON" : "OFF"}</b></p>
-   <p>Binary: <b>${typeof getIncomeSettings === "function" && getIncomeSettings().binary ? "ON" : "OFF"}</b></p>
+    <div class="grid">
+      <div class="miniCard">
+        <h4>Registration</h4>
+        <p>${s.registrationOpen ? "ON" : "OFF"}</p>
+      </div>
 
+      <div class="miniCard">
+        <h4>Upgrade</h4>
+        <p>${s.upgradesOpen ? "ON" : "OFF"}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Repurchase</h4>
+        <p>${s.repurchaseOpen ? "ON" : "OFF"}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Withdraw</h4>
+        <p>${s.withdrawOpen ? "ON" : "OFF"}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Admin Access</h4>
+        <p>${s.adminAccess ? "ON" : "OFF"}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Lock Mode</h4>
+        <p>${s.lockMode ? "ON" : "OFF"}</p>
+      </div>
+    </div>
 
     <hr>
 
-<h3>PIN Queue</h3>
+    <h3>PIN Queue</h3>
 
-${
-  adminUser.role === "super_admin" ||
-  adminUser.role === "system_admin"
-    ? `
-      <p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
+    <p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
+  `;
 
+  if (
+    adminUser.role === "super_admin" ||
+    adminUser.role === "system_admin"
+  ) {
+    html += `
       <button class="on" onclick="toggleQueue(true)">ON</button>
       <button class="off" onclick="toggleQueue(false)">OFF</button>
-    `
-    : `
-      <p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
-    `
-}
+    `;
+  }
 
+  html += `
     <hr>
 
     <h3>PIN Request Stats</h3>
-    <p>Pending: ${pendingPins}</p>
-    <p>Completed: ${completedPins}</p>
-    <p>Failed: ${failedPins}</p>
 
-    ${adminUser.role === "admin" ? `
-  <hr>
+    <div class="grid">
+      <div class="miniCard">
+        <h4>Pending</h4>
+        <p>${pendingPins}</p>
+      </div>
 
-  <h3>PIN Stock</h3>
+      <div class="miniCard">
+        <h4>Completed</h4>
+        <p>${completedPins}</p>
+      </div>
 
-  <button class="on" onclick="requestPinStock()">
-    Request PIN Stock
-  </button>
-` : ``}
+      <div class="miniCard">
+        <h4>Failed</h4>
+        <p>${failedPins}</p>
+      </div>
+    </div>
+  `;
 
+  if (adminUser.role === "admin") {
+    html += `
+      <hr>
+
+      <h3>PIN Stock</h3>
+
+      <button class="on" onclick="requestPinStock()">
+        Request PIN Stock
+      </button>
+    `;
+  }
+
+  html += `
     <hr>
 
     <h3>Registration Queue Stats</h3>
-    <p>Pending: ${pendingReg}</p>
-    <p>Done: ${doneReg}</p>
-    <p>Failed: ${failedReg}</p>
+
+    <div class="grid">
+      <div class="miniCard">
+        <h4>Pending</h4>
+        <p>${pendingReg}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Done</h4>
+        <p>${doneReg}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Failed</h4>
+        <p>${failedReg}</p>
+      </div>
+    </div>
   `;
+
+  document.getElementById("mainContent").innerHTML = html;
 }
 
 // ================= SAVE SETTINGS SAFE =================
@@ -794,6 +847,49 @@ function saveSystemSettingsSafe(settings) {
     localStorage.setItem("systemSettings", JSON.stringify(settings));
   }
 }
+
+// ================= TOGGLE QUEUE =================
+function toggleQueue(val) {
+  if (queueBtnLock) return;
+
+  queueBtnLock = true;
+
+  let s = getSystemSettings() || {};
+
+  if (!s.pinQueue) {
+    s.pinQueue = {};
+  }
+
+  s.pinQueue.enabled = val;
+
+  saveSystemSettingsSafe(s);
+
+  setTimeout(() => {
+    queueBtnLock = false;
+    loadSystem();
+  }, 300);
+}
+
+// ================= LOGOUT =================
+function logout() {
+  localStorage.removeItem("loggedInAdmin");
+  localStorage.removeItem("loggedInSystemAdmin");
+  localStorage.removeItem("loggedInSuperAdmin");
+  window.location.href = "admin_login.html";
+}
+
+// ================= DEFAULT =================
+document.querySelector(".menu button").classList.add("active");
+loadHome();
+
+// AUTO REFRESH SYSTEM SECTION
+setInterval(() => {
+  let currentBtn = document.querySelector(".menu button.active");
+
+  if (currentBtn && currentBtn.innerText === "System") {
+    loadSystem();
+  }
+}, 5000);
 
 // ================= TOGGLE QUEUE =================
 function toggleQueue(val) {
