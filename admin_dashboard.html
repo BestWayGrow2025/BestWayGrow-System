@@ -440,31 +440,79 @@ function loadPinsUI() {
 
   let html = `
     <h3>PIN Control</h3>
+
+    <input
+      type="text"
+      id="pinSearch"
+      placeholder="Search PIN ID / Type"
+      onkeyup="filterPins()"
+      style="
+        padding:10px;
+        width:100%;
+        margin-bottom:10px;
+        border:1px solid #ddd;
+        border-radius:8px;
+      "
+    >
+
     <table>
       <tr>
         <th>PIN ID</th>
         <th>Type</th>
         <th>Status</th>
       </tr>
+
+      <tbody id="pinTableBody"></tbody>
+    </table>
   `;
 
-  if (!pins.length) {
-    html += `<tr><td colspan="3">No PIN Available</td></tr>`;
+  document.getElementById("mainContent").innerHTML = html;
+
+  renderPins();
+}
+
+function renderPins() {
+  let pins = (typeof loadPins === "function") ? loadPins() : [];
+
+  let input = "";
+  let searchBox = document.getElementById("pinSearch");
+
+  if (searchBox) {
+    input = searchBox.value.toLowerCase();
+
+    pins = pins.filter(p => {
+      let pinId = (p.pinId || "").toLowerCase();
+      let type = (p.type || "").toLowerCase();
+
+      return pinId.includes(input) || type.includes(input);
+    });
   }
 
-  pins.slice(-20).reverse().forEach(p => {
-    html += `
+  let rows = "";
+
+  if (!pins.length) {
+    rows = `
       <tr>
-        <td>${p.pinId || "-"}</td>
-        <td>${p.type || "-"}</td>
-        <td>${p.status || "-"}</td>
+        <td colspan="3">No PIN Available</td>
       </tr>
     `;
-  });
+  } else {
+    pins.slice(-50).reverse().forEach(p => {
+      rows += `
+        <tr>
+          <td>${p.pinId || "-"}</td>
+          <td>${p.type || "-"}</td>
+          <td>${p.status || "-"}</td>
+        </tr>
+      `;
+    });
+  }
 
-  html += `</table>`;
+  document.getElementById("pinTableBody").innerHTML = rows;
+}
 
-  document.getElementById("mainContent").innerHTML = html;
+function filterPins() {
+  renderPins();
 }
 
 // ================= WALLET =================
