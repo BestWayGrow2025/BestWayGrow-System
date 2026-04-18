@@ -318,10 +318,11 @@ function loadUsers() {
 
     <table>
       <tr>
-        <th>User ID</th>
-        <th>Name</th>
-        <th>Wallet</th>
-        <th>Status</th>
+       <th>User ID</th>
+<th>Name</th>
+<th onclick="sortUsers('wallet')" style="cursor:pointer;">Wallet ⬍</th>
+<th onclick="sortUsers('status')" style="cursor:pointer;">Status ⬍</th>
+
       </tr>
 
       <tbody id="userTableBody"></tbody>
@@ -336,6 +337,8 @@ function loadUsers() {
 }
 let currentPage = 1;
 let perPage = 10;
+
+  let userSortType = "";
 
 function renderUsers(page = 1) {
   currentPage = page;
