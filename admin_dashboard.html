@@ -518,6 +518,7 @@ function filterPins() {
 // ================= WALLET =================
 function loadWallet() {
   let users = (typeof getUsers === "function") ? getUsers() : [];
+  users = users.filter(u => u.role === "user");
 
   let totalBalance = 0;
   let totalCredit = 0;
@@ -525,14 +526,13 @@ function loadWallet() {
   let totalHoldIncome = 0;
 
   users.forEach(u => {
-  totalBalance += Number(u.walletBalance || 0);
-totalCredit += Number(u.totalCredit || 0);
-totalDebit += Number(u.totalDebit || 0);
-totalHoldIncome += Number(u.holdIncome || 0);
-
+    totalBalance += Number(u.walletBalance || 0);
+    totalCredit += Number(u.totalCredit || 0);
+    totalDebit += Number(u.totalDebit || 0);
+    totalHoldIncome += Number(u.holdIncome || 0);
   });
 
-  document.getElementById("mainContent").innerHTML = `
+  let html = `
     <h3>Wallet Overview</h3>
 
     <div class="grid">
@@ -556,9 +556,43 @@ totalHoldIncome += Number(u.holdIncome || 0);
         <p>₹${totalHoldIncome.toFixed(2)}</p>
       </div>
     </div>
-  `;
-}
 
+    <br>
+
+    <table>
+      <tr>
+        <th>User ID</th>
+        <th>Wallet</th>
+        <th>Total Credit</th>
+        <th>Total Debit</th>
+        <th>Hold Income</th>
+      </tr>
+  `;
+
+  if (!users.length) {
+    html += `
+      <tr>
+        <td colspan="5">No Users Found</td>
+      </tr>
+    `;
+  } else {
+    users.forEach(u => {
+      html += `
+        <tr>
+          <td>${u.userId || "-"}</td>
+          <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
+          <td>₹${Number(u.totalCredit || 0).toFixed(2)}</td>
+          <td>₹${Number(u.totalDebit || 0).toFixed(2)}</td>
+          <td>₹${Number(u.holdIncome || 0).toFixed(2)}</td>
+        </tr>
+      `;
+    });
+  }
+
+  html += `</table>`;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
 
 // ================= INCOME =================
 function loadIncome() {
@@ -593,32 +627,79 @@ function loadIncome() {
     </div>
 
     <br>
-    
+
+    <input
+      type="text"
+      id="incomeSearch"
+      placeholder="Search User ID / Income Type"
+      onkeyup="filterIncomeLogs()"
+      style="
+        padding:10px;
+        width:100%;
+        margin-bottom:10px;
+        border:1px solid #ddd;
+        border-radius:8px;
+      "
+    >
+
     <table>
       <tr>
         <th>User ID</th>
         <th>Amount</th>
         <th>Type</th>
       </tr>
+
+      <tbody id="incomeTableBody"></tbody>
+    </table>
   `;
 
-  if (!logs.length) {
-    html += `<tr><td colspan="3">No Income Logs</td></tr>`;
+  document.getElementById("mainContent").innerHTML = html;
+
+  renderIncomeLogs();
+}
+
+function renderIncomeLogs() {
+  let logs = (typeof getIncomeLogs === "function") ? getIncomeLogs() : [];
+
+  let input = "";
+  let searchBox = document.getElementById("incomeSearch");
+
+  if (searchBox) {
+    input = searchBox.value.toLowerCase();
+
+    logs = logs.filter(l => {
+      let userId = (l.userId || "").toLowerCase();
+      let type = (l.type || "").toLowerCase();
+
+      return userId.includes(input) || type.includes(input);
+    });
   }
 
-  logs.slice(-20).reverse().forEach(l => {
-    html += `
+  let rows = "";
+
+  if (!logs.length) {
+    rows = `
       <tr>
-        <td>${l.userId || "-"}</td>
-        <td>₹${Number(l.amount || 0).toFixed(2)}</td>
-        <td>${l.type || "-"}</td>
+        <td colspan="3">No Income Logs</td>
       </tr>
     `;
-  });
+  } else {
+    logs.slice(-50).reverse().forEach(l => {
+      rows += `
+        <tr>
+          <td>${l.userId || "-"}</td>
+          <td>₹${Number(l.amount || 0).toFixed(2)}</td>
+          <td>${l.type || "-"}</td>
+        </tr>
+      `;
+    });
+  }
 
-  html += `</table>`;
+  document.getElementById("incomeTableBody").innerHTML = rows;
+}
 
-  document.getElementById("mainContent").innerHTML = html;
+function filterIncomeLogs() {
+  renderIncomeLogs();
 }
 
 // ================= SYSTEM =================
