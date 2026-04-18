@@ -295,10 +295,11 @@ let blockedUsers = allUsers.filter(u => u.accountStatus !== "active");
 }
 
 // ================= USERS =================
-function loadUsers() {
-  let users = (typeof getUsers === "function") ? getUsers() : [];
-  users = users.filter(u => u.role === "user");
+let currentPage = 1;
+let perPage = 10;
+let userSortType = "";
 
+function loadUsers() {
   let html = `
     <h3>User List</h3>
 
@@ -318,11 +319,14 @@ function loadUsers() {
 
     <table>
       <tr>
-       <th>User ID</th>
-<th>Name</th>
-<th onclick="sortUsers('wallet')" style="cursor:pointer;">Wallet ⬍</th>
-<th onclick="sortUsers('status')" style="cursor:pointer;">Status ⬍</th>
-
+        <th>User ID</th>
+        <th>Name</th>
+        <th onclick="sortUsers('wallet')" style="cursor:pointer;">
+          Wallet ⬍
+        </th>
+        <th onclick="sortUsers('status')" style="cursor:pointer;">
+          Status ⬍
+        </th>
       </tr>
 
       <tbody id="userTableBody"></tbody>
@@ -335,16 +339,40 @@ function loadUsers() {
 
   renderUsers(1);
 }
-let currentPage = 1;
-let perPage = 10;
-
-  let userSortType = "";
 
 function renderUsers(page = 1) {
   currentPage = page;
 
   let users = (typeof getUsers === "function") ? getUsers() : [];
   users = users.filter(u => u.role === "user");
+
+  if (userSortType === "wallet") {
+    users.sort((a, b) => {
+      return Number(b.walletBalance || 0) - Number(a.walletBalance || 0);
+    });
+  }
+
+  if (userSortType === "status") {
+    users.sort((a, b) => {
+      let statusA = (a.accountStatus || "").toLowerCase();
+      let statusB = (b.accountStatus || "").toLowerCase();
+      return statusA.localeCompare(statusB);
+    });
+  }
+
+  let input = "";
+  let searchBox = document.getElementById("userSearch");
+
+  if (searchBox) {
+    input = searchBox.value.toLowerCase();
+
+    users = users.filter(u => {
+      let userId = (u.userId || "").toLowerCase();
+      let name = (u.fullName || u.username || "").toLowerCase();
+
+      return userId.includes(input) || name.includes(input);
+    });
+  }
 
   let start = (page - 1) * perPage;
   let end = start + perPage;
@@ -399,47 +427,13 @@ function renderUsers(page = 1) {
 }
 
 function filterUsers() {
-  let input = document.getElementById("userSearch").value.toLowerCase();
-  let rows = document.querySelectorAll("#userTableBody tr");
-
-  rows.forEach(row => {
-    let text = row.innerText.toLowerCase();
-    row.style.display = text.includes(input) ? "" : "none";
-  });
+  renderUsers(1);
 }
+
 function sortUsers(type) {
-  let users = (typeof getUsers === "function") ? getUsers() : [];
-  users = users.filter(u => u.role === "user");
-
-  if (type === "wallet") {
-    users.sort((a, b) => Number(b.walletBalance || 0) - Number(a.walletBalance || 0));
-  }
-
-  if (type === "status") {
-    users.sort((a, b) => {
-      let statusA = (a.accountStatus || "").toLowerCase();
-      let statusB = (b.accountStatus || "").toLowerCase();
-      return statusA.localeCompare(statusB);
-    });
-  }
-
-  let rows = "";
-
-  users.forEach(u => {
-    rows += `
-      <tr>
-        <td>${u.userId || "-"}</td>
-        <td>${u.fullName || u.username || "-"}</td>
-        <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
-        <td>${u.accountStatus || "active"}</td>
-      </tr>
-    `;
-  });
-
-  document.getElementById("userTableBody").innerHTML = rows;
-  document.getElementById("pagination").innerHTML = "";
-}
-
+  userSortType = type;
+  renderUsers(1);
+}                       
 // ================= PIN =================
 function loadPinsUI() {
   let pins = (typeof loadPins === "function") ? loadPins() : [];
