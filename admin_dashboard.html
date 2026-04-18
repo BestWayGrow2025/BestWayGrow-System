@@ -301,6 +301,21 @@ function loadUsers() {
 
   let html = `
     <h3>User List</h3>
+
+    <input
+      type="text"
+      id="userSearch"
+      placeholder="Search User ID / Name"
+      onkeyup="filterUsers()"
+      style="
+        padding:10px;
+        width:100%;
+        margin-bottom:10px;
+        border:1px solid #ddd;
+        border-radius:8px;
+      "
+    >
+
     <table>
       <tr>
         <th>User ID</th>
@@ -308,27 +323,86 @@ function loadUsers() {
         <th>Wallet</th>
         <th>Status</th>
       </tr>
+
+      <tbody id="userTableBody"></tbody>
+    </table>
+
+    <div id="pagination" style="margin-top:15px;text-align:center;"></div>
   `;
-
-  if (!users.length) {
-    html += `<tr><td colspan="4">No Users Found</td></tr>`;
-  }
-
-users.forEach(u => {
-  html += `
-    <tr>
-      <td>${u.userId || "-"}</td>
-      <td>${u.fullName || u.username || "-"}</td>
-      <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
-      <td>${u.accountStatus || "active"}</td>
-    </tr>
-  `;
-});
-
-
-  html += `</table>`;
 
   document.getElementById("mainContent").innerHTML = html;
+
+  renderUsers(1);
+}
+let currentPage = 1;
+let perPage = 10;
+
+function renderUsers(page = 1) {
+  currentPage = page;
+
+  let users = (typeof getUsers === "function") ? getUsers() : [];
+  users = users.filter(u => u.role === "user");
+
+  let start = (page - 1) * perPage;
+  let end = start + perPage;
+  let paginatedUsers = users.slice(start, end);
+
+  let rows = "";
+
+  if (!paginatedUsers.length) {
+    rows = `
+      <tr>
+        <td colspan="4">No Users Found</td>
+      </tr>
+    `;
+  } else {
+    paginatedUsers.forEach(u => {
+      rows += `
+        <tr>
+          <td>${u.userId || "-"}</td>
+          <td>${u.fullName || u.username || "-"}</td>
+          <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
+          <td>${u.accountStatus || "active"}</td>
+        </tr>
+      `;
+    });
+  }
+
+  document.getElementById("userTableBody").innerHTML = rows;
+
+  let totalPages = Math.ceil(users.length / perPage);
+  let pageHtml = "";
+
+  for (let i = 1; i <= totalPages; i++) {
+    pageHtml += `
+      <button
+        onclick="renderUsers(${i})"
+        style="
+          margin:3px;
+          padding:6px 10px;
+          border:none;
+          border-radius:6px;
+          background:${i === page ? '#007bff' : '#ddd'};
+          color:${i === page ? '#fff' : '#000'};
+          cursor:pointer;
+        "
+      >
+        ${i}
+      </button>
+    `;
+  }
+
+  document.getElementById("pagination").innerHTML = pageHtml;
+}
+
+function filterUsers() {
+  let input = document.getElementById("userSearch").value.toLowerCase();
+  let rows = document.querySelectorAll("#userTableBody tr");
+
+  rows.forEach(row => {
+    let text = row.innerText.toLowerCase();
+    row.style.display = text.includes(input) ? "" : "none";
+  });
 }
 
 // ================= PIN =================
