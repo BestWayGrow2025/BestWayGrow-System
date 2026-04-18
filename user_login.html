@@ -73,22 +73,23 @@
   <h2>USER LOGIN</h2>
 
   <input type="text" id="userId" placeholder="Enter User ID">
-<input type="password" id="password" placeholder="Enter Password">
-<input type="checkbox" id="showPass" onchange="togglePassword()"> Show Password
+  <input type="password" id="password" placeholder="Enter Password">
+  <input type="checkbox" id="showPass" onchange="togglePassword()"> Show Password
 
   <button id="loginBtn" onclick="safeClick(login)">Login</button>
 
   <div id="msg"></div>
 
-<div class="linkBox">
-  New User? <a href="user_register.html">Register Here</a><br><br>
-  Forgot Password? Contact Admin
-</div>
+  <div class="linkBox">
+    New User? <a href="user_register.html">Register Here</a><br><br>
+    Forgot Password? Contact Admin
+  </div>
 </div>
 
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
 <script src="activity_log.js"></script>
+<script src="system_config.js"></script>
 
 <script>
 
@@ -102,7 +103,6 @@ window.addEventListener("load", function () {
     return;
   }
 
-  // auto redirect if already logged in
   let existing = (typeof getSession === "function")
     ? getSession()
     : null;
@@ -150,6 +150,7 @@ function safeDecode(password) {
   }
 }
 
+// ================= TOGGLE PASSWORD =================
 function togglePassword() {
   let pass = document.getElementById("password");
 
@@ -241,6 +242,7 @@ function login() {
     return;
   }
 
+  // ================= SAVE SESSION =================
   let sessionSaved = false;
 
   try {
@@ -260,6 +262,7 @@ function login() {
     return;
   }
 
+  // ================= LOG =================
   if (typeof logActivity === "function") {
     logActivity(user.userId, "USER", "Login", "USER_LOGIN");
   }
@@ -273,41 +276,10 @@ function login() {
   }, 500);
 }
 
- // ================= SAVE SESSION =================
-let sessionSaved = false;
-
-try {
-  if (typeof setSession === "function") {
-    sessionSaved = setSession({
-      userId: user.userId,
-      role: user.role
-    });
-  }
-} catch (err) {
-  console.error(err);
-}
-
-if (!sessionSaved) {
-  showMsg("❌ Session Failed");
-  resetLogin();
-  return;
-}
-
-// ================= LOG =================
-if (typeof logActivity === "function") {
-  logActivity(user.userId, "USER", "Login", "USER_LOGIN");
-}
-
-showMsg("✅ Login Successful", "green");
-
-document.getElementById("loginBtn").innerText = "Redirecting...";
-
-setTimeout(function () {
-  window.location.href = "user_dashboard.html";
-}, 500);
-}
-
 </script>
 
 </body>
 </html>
+
+
+
