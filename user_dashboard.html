@@ -468,6 +468,14 @@ function loadProfile() {
 
   user = getUserById(session.userId);
 
+  let directUsers = [];
+
+  try {
+    directUsers = getDirectUsers(user.userId) || [];
+  } catch (err) {
+    console.error(err);
+  }
+
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">User Profile</div>
 
@@ -488,6 +496,12 @@ function loadProfile() {
       <p><b>Upgrade Status:</b> ${user.upgradeStatus || "not_upgraded"}</p>
       <p><b>Repurchase Status:</b> ${user.repurchaseStatus || "not_started"}</p>
       <p><b>Block Status:</b> ${user.blockStatus || "unblocked"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Total Direct Team:</b> ${directUsers.length}</p>
+      <p><b>Left Team:</b> ${directUsers.filter(u => u.position === "L").length}</p>
+      <p><b>Right Team:</b> ${directUsers.filter(u => u.position === "R").length}</p>
     </div>
 
     <div class="info-box">
