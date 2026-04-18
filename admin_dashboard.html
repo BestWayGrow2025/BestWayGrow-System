@@ -407,6 +407,38 @@ function filterUsers() {
     row.style.display = text.includes(input) ? "" : "none";
   });
 }
+function sortUsers(type) {
+  let users = (typeof getUsers === "function") ? getUsers() : [];
+  users = users.filter(u => u.role === "user");
+
+  if (type === "wallet") {
+    users.sort((a, b) => Number(b.walletBalance || 0) - Number(a.walletBalance || 0));
+  }
+
+  if (type === "status") {
+    users.sort((a, b) => {
+      let statusA = (a.accountStatus || "").toLowerCase();
+      let statusB = (b.accountStatus || "").toLowerCase();
+      return statusA.localeCompare(statusB);
+    });
+  }
+
+  let rows = "";
+
+  users.forEach(u => {
+    rows += `
+      <tr>
+        <td>${u.userId || "-"}</td>
+        <td>${u.fullName || u.username || "-"}</td>
+        <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
+        <td>${u.accountStatus || "active"}</td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("userTableBody").innerHTML = rows;
+  document.getElementById("pagination").innerHTML = "";
+}
 
 // ================= PIN =================
 function loadPinsUI() {
