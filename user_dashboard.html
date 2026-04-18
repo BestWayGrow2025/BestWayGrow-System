@@ -252,10 +252,16 @@ function safeClick(btn, fn) {
 
 // ================= REF LINK =================
 function generateRefLink(userId) {
-  return window.location.origin +
-    "/user_register.html?ref=" + userId;
-}
+  let basePath = window.location.pathname
+    .replace("user_dashboard.html", "")
+    .replace("user_login.html", "")
+    .replace("user_profile.html", "");
 
+  return window.location.origin +
+    basePath +
+    "user_register.html?ref=" + userId;
+}
+  
 function copyRefLink() {
   let input = document.getElementById("refLink");
 
