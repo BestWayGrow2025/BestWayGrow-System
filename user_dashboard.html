@@ -1148,8 +1148,40 @@ function saveKYC() {
   }
 }
   
+// ================= AUTO RANK CALCULATION =================
+function calculateUserRank() {
+
+  let directCount = 0;
+
+  try {
+    if (typeof getDirectUsers === "function") {
+      directCount = getDirectUsers(user.userId).length;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (directCount >= 20) {
+    user.rank = "Diamond";
+  } else if (directCount >= 10) {
+    user.rank = "Gold";
+  } else if (directCount >= 5) {
+    user.rank = "Silver";
+  } else if (directCount >= 2) {
+    user.rank = "Bronze";
+  } else {
+    user.rank = "Starter";
+  }
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+}
+
 // ================= RANK / REWARD =================
 function loadRankReward() {
+
+  calculateUserRank();
 
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Rank / Reward Status</div>
@@ -1160,7 +1192,6 @@ function loadRankReward() {
     </div>
   `;
 }
-
 
 // ================= LOGOUT =================
 function logout() {
