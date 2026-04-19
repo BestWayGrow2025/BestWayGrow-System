@@ -655,7 +655,7 @@ function canUpgrade(user) {
          user.upgradeStatus !== "completed";
 }
 
-  // ================= REPURCHASE STATUS CHECK =================
+// ================= REPURCHASE STATUS CHECK =================
 function canRepurchase(user) {
   return user.accountStatus === "active" &&
          user.upgradeStatus === "completed";
