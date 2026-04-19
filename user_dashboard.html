@@ -452,9 +452,9 @@ function loadTree() {
     </div>
 
     <div class="info-box">
-      <h3>Complete Downline Tree</h3>
-      ${buildTree(user.userId)}
-    </div>
+  <h3>Complete Downline Tree</h3>
+  ${buildTree(user.userId) || "<p>No Team Found</p>"}
+</div>
   `;
 }
 
@@ -688,7 +688,21 @@ function loadRepurchase() {
 
 // ================= PIN REQUEST =================
 function requestPin() {
+
   alert("PIN Request Sent To Admin");
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "PIN Request",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 // ================= LOGOUT =================
