@@ -249,6 +249,7 @@ function processRegistrationQueue() {
       } catch (err) {
 
         console.warn("REG ERROR:", err.message);
+        console.log("FAILED REQUEST:", req);
 
         req.retry = (req.retry || 0) + 1;
         req.error = err.message;
@@ -261,7 +262,6 @@ function processRegistrationQueue() {
           }
         }
       }
-    }
 
     saveRegQueue(queue);
 
