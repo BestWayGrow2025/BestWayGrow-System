@@ -716,6 +716,168 @@ function requestPin() {
   }
 }
 
+// ================= INCOME HISTORY =================
+function loadIncomeHistory() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Income History</div>
+
+    <div class="info-box">
+      <p><b>Total Income:</b> ₹${Number(user.totalIncome || 0)}</p>
+      <p><b>Direct Income:</b> ₹${Number(user.directIncome || 0)}</p>
+      <p><b>Level Income:</b> ₹${Number(user.levelIncome || 0)}</p>
+      <p><b>Reward Income:</b> ₹${Number(user.rewardIncome || 0)}</p>
+    </div>
+  `;
+}
+
+// ================= WITHDRAW REQUEST =================
+function loadWithdrawSection() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Withdraw Request</div>
+
+    <div class="info-box">
+      <p><b>Available Balance:</b> ₹${Number(user.walletBalance || 0)}</p>
+
+      <input type="number" id="withdrawAmount" class="ref-box" placeholder="Enter Withdraw Amount">
+
+      <button class="action-btn" onclick="submitWithdrawRequest()">
+        Submit Withdraw
+      </button>
+    </div>
+  `;
+}
+
+function submitWithdrawRequest() {
+
+  let amount = Number(document.getElementById("withdrawAmount").value);
+
+  if (!amount || amount <= 0 || amount > Number(user.walletBalance || 0)) {
+    alert("Enter Valid Amount");
+    return;
+  }
+
+  alert("Withdraw Request Submitted");
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "Withdraw Request ₹" + amount,
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// ================= NOTIFICATIONS =================
+function loadNotifications() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Notifications</div>
+
+    <div class="info-box">
+      <p>No New Notifications</p>
+    </div>
+  `;
+}
+
+// ================= SUPPORT TICKETS =================
+function loadSupportTickets() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Support Tickets</div>
+
+    <div class="info-box">
+      <p>No Support Tickets Found</p>
+    </div>
+  `;
+}
+
+// ================= EDIT PROFILE =================
+function loadEditProfile() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Edit Profile</div>
+
+    <div class="info-box">
+      <input type="text" class="ref-box" value="${user.fullName || ""}" placeholder="Full Name"><br><br>
+      <input type="text" class="ref-box" value="${user.mobile || ""}" placeholder="Mobile"><br><br>
+      <input type="email" class="ref-box" value="${user.email || ""}" placeholder="Email"><br><br>
+
+      <button class="action-btn">
+        Save Profile
+      </button>
+    </div>
+  `;
+}
+
+// ================= CHANGE PASSWORD =================
+function loadChangePassword() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Change Password</div>
+
+    <div class="info-box">
+      <input type="password" class="ref-box" placeholder="Old Password"><br><br>
+      <input type="password" class="ref-box" placeholder="New Password"><br><br>
+      <input type="password" class="ref-box" placeholder="Confirm Password"><br><br>
+
+      <button class="action-btn">
+        Change Password
+      </button>
+    </div>
+  `;
+}
+
+// ================= ACTIVITY LOGS =================
+function loadActivityLogs() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Recent Activity Logs</div>
+
+    <div class="info-box">
+      <p>Login Activity</p>
+      <p>PIN Request Activity</p>
+      <p>Wallet Activity</p>
+    </div>
+  `;
+}
+
+// ================= KYC SECTION =================
+function loadKYCSection() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">KYC Upload</div>
+
+    <div class="info-box">
+      <input type="file" class="ref-box"><br><br>
+
+      <button class="action-btn">
+        Upload KYC
+      </button>
+    </div>
+  `;
+}
+
+// ================= RANK / REWARD =================
+function loadRankReward() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Rank / Reward Status</div>
+
+    <div class="info-box">
+      <p><b>Current Rank:</b> ${user.rank || "Starter"}</p>
+      <p><b>Total Reward:</b> ₹${Number(user.rewardIncome || 0)}</p>
+    </div>
+  `;
+}
+
+
 // ================= LOGOUT =================
 function logout() {
 
