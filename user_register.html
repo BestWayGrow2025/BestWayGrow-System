@@ -298,67 +298,96 @@ if (users.find(u => u.email === email)) {
 
 
     // ================= CHECK RESULT =================
-    let attempts = 0;
+// ================= CHECK RESULT =================
+let attempts = 0;
 
-    let checker = setInterval(() => {
+let checker = setInterval(() => {
 
-      let users = getUsers() || [];
-      let newUser = users.find(u => u.mobile === mobile);
+  let users = (typeof getUsers === "function")
+    ? getUsers()
+    : [];
 
-      if (newUser) {
+  let queue = (typeof getRegQueue === "function")
+    ? getRegQueue()
+    : [];
 
-        // ================= LOG =================
-        if (typeof logActivity === "function") {
-          logActivity(newUser.userId, "USER", "Registered", "REGISTRATION");
-        }
+  let newUser = users.find(u => u.mobile === mobile);
 
-        let refLink = generateReferralLink(newUser.userId);
+  let pendingQueue = queue.find(q =>
+    q.mobile === mobile &&
+    (
+      q.status === "PENDING" ||
+      q.status === "PROCESSING"
+    )
+  );
 
-        document.getElementById("msg").innerHTML = `
-          <div class="success-box">
-            ✅ Registration Successful <br><br>
+  if (newUser) {
 
-            Welcome to BestWayGrow <br><br>
+    // ================= LOG =================
+    if (typeof logActivity === "function") {
+      logActivity(newUser.userId, "USER", "Registered", "REGISTRATION");
+    }
 
-          Name: <b>${newUser.username || "-"}</b><br><br>
+    let refLink = generateReferralLink(newUser.userId);
 
-          Mobile: <b>${newUser.mobile || "-"}</b><br><br>
+    document.getElementById("msg").innerHTML = `
+      <div class="success-box">
+        ✅ Registration Successful <br><br>
 
-          User ID: <b>${newUser.userId}</b><br><br>
+        Welcome to BestWayGrow <br><br>
 
-            Referral Link:
-            <div class="link-box">${refLink}</div>
+        Name: <b>${newUser.username || "-"}</b><br><br>
 
-            <a href="user_login.html">
-              <button type="button">Login</button>
-            </a>
+        Mobile: <b>${newUser.mobile || "-"}</b><br><br>
 
-            <a href="user_upgrade.html">
-              <button type="button">Upgrade</button>
-            </a>
+        User ID: <b>${newUser.userId}</b><br><br>
 
-            <a href="user_repurchase.html">
-              <button type="button">Repurchase</button>
-            </a>
-          </div>
-        `;
+        Referral Link:
+        <div class="link-box">${refLink}</div>
 
-        clearInterval(checker);
-        resetAll();
+        <a href="user_login.html">
+          <button type="button">Login</button>
+        </a>
 
-      } else {
+        <a href="user_upgrade.html">
+          <button type="button">Upgrade</button>
+        </a>
 
-        attempts++;
+        <a href="user_repurchase.html">
+          <button type="button">Repurchase</button>
+        </a>
+      </div>
+    `;
 
-        if (attempts > 10) {
-          clearInterval(checker);
-          document.getElementById("msg").innerText =
-            "⚠ Registration delayed. Please retry after a few seconds.";
-          resetAll();
-        }
+    clearInterval(checker);
+    resetAll();
+
+  } else {
+
+    attempts++;
+
+    if (attempts > 20) {
+
+      if (pendingQueue) {
+        attempts = 0;
+        return;
       }
 
-    }, 1000);
+      clearInterval(checker);
+
+      document.getElementById("msg").innerHTML = `
+        <div class="success-box">
+          ⚠ Registration delayed.<br><br>
+          Please wait a few seconds and do not refresh page.
+        </div>
+      `;
+
+      resetAll();
+    }
+  }
+
+}, 1000);
+
 
   } catch (err) {
     console.error("Registration failed:", err);
