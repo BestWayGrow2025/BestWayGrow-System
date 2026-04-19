@@ -948,15 +948,49 @@ function loadKYCSection() {
     <div class="section-title">KYC Upload</div>
 
     <div class="info-box">
-      <input type="file" class="ref-box"><br><br>
+      <input type="file" id="kycFile" class="ref-box"><br><br>
 
-      <button class="action-btn">
+      <button class="action-btn" onclick="saveKYC()">
         Upload KYC
       </button>
     </div>
   `;
 }
 
+// ================= SAVE KYC =================
+function saveKYC() {
+
+  let kycFile = document.getElementById("kycFile");
+
+  if (!kycFile || !kycFile.files.length) {
+    alert("Select KYC File");
+    return;
+  }
+
+  user.kycStatus = "submitted";
+  user.kycFileName = kycFile.files[0].name;
+  user.kycUploadDate = new Date().toLocaleString();
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+
+  alert("KYC Uploaded Successfully");
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "KYC Uploaded",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+  
 // ================= RANK / REWARD =================
 function loadRankReward() {
 
