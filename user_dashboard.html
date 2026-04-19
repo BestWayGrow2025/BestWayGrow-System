@@ -614,6 +614,14 @@ function loadProfile() {
     console.error(err);
   }
 
+  try {
+    if (typeof calculateUserRank === "function") {
+      calculateUserRank();
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">User Profile</div>
 
@@ -634,6 +642,7 @@ function loadProfile() {
       <p><b>Upgrade Status:</b> ${user.upgradeStatus || "not_upgraded"}</p>
       <p><b>Repurchase Status:</b> ${user.repurchaseStatus || "not_started"}</p>
       <p><b>Block Status:</b> ${user.blockStatus || "unblocked"}</p>
+      <p><b>Current Rank:</b> ${user.rank || "Starter"}</p>
     </div>
 
     <div class="info-box">
@@ -661,7 +670,7 @@ function loadProfile() {
     </div>
   `;
 }
-
+  
 // ================= UPGRADE STATUS CHECK =================
 function canUpgrade(user) {
   return user.accountStatus === "active" &&
@@ -1050,18 +1059,22 @@ function saveProfile() {
 
   alert("Profile Updated Successfully");
 
-  try {
-    if (typeof logActivity === "function") {
-      logActivity(
-        user.userId,
-        "USER",
-        "Profile Updated",
-        "USER_DASHBOARD"
-      );
-    }
-  } catch (err) {
-    console.error(err);
+addUserNotification(
+  "Profile Updated",
+  "Your profile updated successfully"
+);
+
+try {
+  if (typeof logActivity === "function") {
+    logActivity(
+      user.userId,
+      "USER",
+      "Profile Updated",
+      "USER_DASHBOARD"
+    );
   }
+} catch (err) {
+  console.error(err);
 }
   
 // ================= CHANGE PASSWORD =================
@@ -1205,20 +1218,24 @@ function saveKYC() {
     saveUsers();
   }
 
-  alert("KYC Uploaded Successfully");
+ alert("KYC Uploaded Successfully");
 
-  try {
-    if (typeof logActivity === "function") {
-      logActivity(
-        user.userId,
-        "USER",
-        "KYC Uploaded",
-        "USER_DASHBOARD"
-      );
-    }
-  } catch (err) {
-    console.error(err);
+addUserNotification(
+  "KYC Uploaded",
+  "Your KYC submitted successfully"
+);
+
+try {
+  if (typeof logActivity === "function") {
+    logActivity(
+      user.userId,
+      "USER",
+      "KYC Uploaded",
+      "USER_DASHBOARD"
+    );
   }
+} catch (err) {
+  console.error(err);
 }
   
 // ================= AUTO RANK CALCULATION =================
