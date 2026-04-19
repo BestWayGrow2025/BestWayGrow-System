@@ -858,6 +858,26 @@ function saveProfile() {
   }
 }
   
+// ================= CHANGE PASSWORD =================
+function loadChangePassword() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Change Password</div>
+
+    <div class="info-box">
+      <input type="password" id="oldPassword" class="ref-box" placeholder="Old Password"><br><br>
+
+      <input type="password" id="newPassword" class="ref-box" placeholder="New Password"><br><br>
+
+      <input type="password" id="confirmPassword" class="ref-box" placeholder="Confirm Password"><br><br>
+
+      <button class="action-btn" onclick="savePassword()">
+        Change Password
+      </button>
+    </div>
+  `;
+}
+
 // ================= CHANGE PASSWORD SAVE =================
 function savePassword() {
 
