@@ -274,10 +274,14 @@ function copyRefLink() {
   input.select();
   input.setSelectionRange(0, 99999);
 
-  navigator.clipboard.writeText(input.value);
-
-  document.getElementById("copyMsg").innerText =
-    "✅ Referral Link Copied";
+  navigator.clipboard.writeText(input.value)
+    .then(() => {
+      document.getElementById("copyMsg").innerText =
+        "✅ Referral Link Copied";
+    })
+    .catch(() => {
+      alert("Copy Failed");
+    });
 }
 
 // ================= HOME =================
@@ -363,6 +367,11 @@ function loadPinSection() {
 
   let html = `
     <div class="section-title">PIN Section</div>
+
+    <button class="action-btn" onclick="requestPin()">
+      Request PIN
+    </button>
+
     <table>
       <tr>
         <th>PIN</th>
@@ -406,10 +415,15 @@ function loadTree() {
   }
 
   function buildTree(parentId, level = 1) {
+
+    if (level > 10) {
+      return "";
+    }
+
     let team = allUsers.filter(u => u.sponsorId === parentId);
 
     if (!team.length) {
-      return `<p style="margin-left:${level * 20}px;">No Team Found</p>`;
+      return "";
     }
 
     let html = "";
@@ -442,8 +456,6 @@ function loadTree() {
     </div>
   `;
 }
-
-
 
 // ================= WALLET =================
 function loadWallet() {
