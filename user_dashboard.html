@@ -823,6 +823,17 @@ function saveProfile() {
   let mobile = document.getElementById("editMobile").value.trim();
   let email = document.getElementById("editEmail").value.trim();
 
+  // ================= PROFILE VALIDATION =================
+  if (!fullName || !mobile || !email) {
+    alert("All Fields Required");
+    return;
+  }
+
+  if (!email.includes("@")) {
+    alert("Enter Valid Email");
+    return;
+  }
+
   user.fullName = fullName;
   user.mobile = mobile;
   user.email = email;
@@ -846,7 +857,7 @@ function saveProfile() {
     console.error(err);
   }
 }
-
+  
 // ================= CHANGE PASSWORD =================
 function loadChangePassword() {
 
