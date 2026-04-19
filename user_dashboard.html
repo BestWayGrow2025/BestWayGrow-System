@@ -805,15 +805,46 @@ function loadEditProfile() {
     <div class="section-title">Edit Profile</div>
 
     <div class="info-box">
-      <input type="text" class="ref-box" value="${user.fullName || ""}" placeholder="Full Name"><br><br>
-      <input type="text" class="ref-box" value="${user.mobile || ""}" placeholder="Mobile"><br><br>
-      <input type="email" class="ref-box" value="${user.email || ""}" placeholder="Email"><br><br>
+      <input type="text" id="editFullName" class="ref-box" value="${user.fullName || ""}" placeholder="Full Name"><br><br>
+      <input type="text" id="editMobile" class="ref-box" value="${user.mobile || ""}" placeholder="Mobile"><br><br>
+      <input type="email" id="editEmail" class="ref-box" value="${user.email || ""}" placeholder="Email"><br><br>
 
-      <button class="action-btn">
+      <button class="action-btn" onclick="saveProfile()">
         Save Profile
       </button>
     </div>
   `;
+}
+
+// ================= SAVE PROFILE =================
+function saveProfile() {
+
+  let fullName = document.getElementById("editFullName").value.trim();
+  let mobile = document.getElementById("editMobile").value.trim();
+  let email = document.getElementById("editEmail").value.trim();
+
+  user.fullName = fullName;
+  user.mobile = mobile;
+  user.email = email;
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+
+  alert("Profile Updated Successfully");
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "Profile Updated",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 // ================= CHANGE PASSWORD =================
