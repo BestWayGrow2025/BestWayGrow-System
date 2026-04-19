@@ -6,6 +6,7 @@ CORE SYSTEM V8 (FINAL STABLE LOCK)
 ✔ User management
 ✔ System settings
 ✔ SYSTEM user
+✔ SYSTEM ADMIN reserved
 ✔ No syntax error
 ✔ No dependency break
 ✔ Login compatible
@@ -115,6 +116,27 @@ function initCoreSystem() {
       updated = true;
     }
 
+    // SYSTEM ADMIN
+    if (!users.find(u => u.userId === "BWG000001")) {
+      users.push({
+        userId: "BWG000001",
+        username: "System Admin",
+        password: btoa("123456"),
+        role: "system_admin",
+        status: "active",
+        createdAt: Date.now()
+      });
+      updated = true;
+    }
+
+    // REMOVE OLD ADMIN BWG000002
+    let oldAdminIndex = users.findIndex(u => u.userId === "BWG000002");
+
+    if (oldAdminIndex !== -1) {
+      users.splice(oldAdminIndex, 1);
+      updated = true;
+    }
+
     // SYSTEM USER
     if (!users.find(u => u.userId === "SYSTEM")) {
       users.push({
@@ -133,19 +155,6 @@ function initCoreSystem() {
       updated = true;
     }
 
-    // ADMIN
-    if (!users.find(u => u.userId === "BWG000002")) {
-      users.push({
-        userId: "BWG000002",
-        username: "Admin",
-        password: btoa("admin123"),
-        role: "admin",
-        status: "active",
-        createdAt: Date.now()
-      });
-      updated = true;
-    }
-
     if (updated) {
       saveUsers(users);
     }
@@ -156,7 +165,10 @@ function initCoreSystem() {
     console.error("❌ initCoreSystem failed:", e.message);
   }
 }
+
+// ================= SAVE SETTINGS =================
 function saveSystemSettings(settings) {
   localStorage.setItem("systemSettings", JSON.stringify(settings));
 }
+
 
