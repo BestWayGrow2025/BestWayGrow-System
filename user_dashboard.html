@@ -844,6 +844,24 @@ function loadWithdrawHistory() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
+  // ================= NOTIFICATION ADD =================
+function addUserNotification(title, message) {
+
+  if (!user.notifications) {
+    user.notifications = [];
+  }
+
+  user.notifications.push({
+    title: title,
+    message: message,
+    date: new Date().toLocaleString()
+  });
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+}
+
 // ================= NOTIFICATIONS =================
 function loadNotifications() {
 
