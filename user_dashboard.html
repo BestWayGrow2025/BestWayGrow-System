@@ -843,7 +843,6 @@ function loadNotifications() {
 }
 
 // ================= SUPPORT TICKETS =================
-// ================= SUPPORT TICKETS =================
 function loadSupportTickets() {
 
   let tickets = user.supportTickets || [];
@@ -949,6 +948,24 @@ function loadEditProfile() {
   `;
 }
 
+// ================= PROFILE VALIDATION =================
+function validateProfileBeforeSave() {
+
+  if (!user.fullName || user.fullName.trim().length < 3) {
+    return "Full Name Required";
+  }
+
+  if (!user.mobile || user.mobile.trim().length < 10) {
+    return "Valid Mobile Required";
+  }
+
+  if (!user.email || !user.email.includes("@")) {
+    return "Valid Email Required";
+  }
+
+  return "ok";
+}
+
 // ================= SAVE PROFILE =================
 function saveProfile() {
 
@@ -956,7 +973,6 @@ function saveProfile() {
   let mobile = document.getElementById("editMobile").value.trim();
   let email = document.getElementById("editEmail").value.trim();
 
-  // ================= PROFILE VALIDATION =================
   if (!fullName || !mobile || !email) {
     alert("All Fields Required");
     return;
@@ -970,6 +986,13 @@ function saveProfile() {
   user.fullName = fullName;
   user.mobile = mobile;
   user.email = email;
+
+  let validation = validateProfileBeforeSave();
+
+  if (validation !== "ok") {
+    alert(validation);
+    return;
+  }
 
   if (typeof saveUsers === "function") {
     saveUsers();
