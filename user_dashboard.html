@@ -870,6 +870,11 @@ function savePassword() {
     return;
   }
 
+  if (user.password && oldPassword !== user.password) {
+    alert("Old Password Incorrect");
+    return;
+  }
+
   if (newPassword.length < 6) {
     alert("Password Minimum 6 Characters");
     return;
@@ -901,7 +906,7 @@ function savePassword() {
     console.error(err);
   }
 }
-
+  
 // ================= ACTIVITY LOGS =================
 function loadActivityLogs() {
 
