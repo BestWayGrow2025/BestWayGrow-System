@@ -549,6 +549,13 @@ function canUpgrade(user) {
   return user.accountStatus === "active" &&
          user.upgradeStatus !== "completed";
 }
+
+  // ================= REPURCHASE STATUS CHECK =================
+function canRepurchase(user) {
+  return user.accountStatus === "active" &&
+         user.upgradeStatus === "completed";
+}
+  
 // ================= PAGE NAVIGATION =================
 function loadUpgrade() {
 
