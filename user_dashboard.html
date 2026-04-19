@@ -858,22 +858,48 @@ function saveProfile() {
   }
 }
   
-// ================= CHANGE PASSWORD =================
-function loadChangePassword() {
+// ================= CHANGE PASSWORD SAVE =================
+function savePassword() {
 
-  document.getElementById("mainContent").innerHTML = `
-    <div class="section-title">Change Password</div>
+  let oldPassword = document.getElementById("oldPassword").value.trim();
+  let newPassword = document.getElementById("newPassword").value.trim();
+  let confirmPassword = document.getElementById("confirmPassword").value.trim();
 
-    <div class="info-box">
-      <input type="password" class="ref-box" placeholder="Old Password"><br><br>
-      <input type="password" class="ref-box" placeholder="New Password"><br><br>
-      <input type="password" class="ref-box" placeholder="Confirm Password"><br><br>
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    alert("All Fields Required");
+    return;
+  }
 
-      <button class="action-btn">
-        Change Password
-      </button>
-    </div>
-  `;
+  if (newPassword.length < 6) {
+    alert("Password Minimum 6 Characters");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    alert("Password Not Match");
+    return;
+  }
+
+  user.password = newPassword;
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+
+  alert("Password Changed Successfully");
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "Password Changed",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 // ================= ACTIVITY LOGS =================
