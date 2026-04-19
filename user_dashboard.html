@@ -843,15 +843,92 @@ function loadNotifications() {
 }
 
 // ================= SUPPORT TICKETS =================
+// ================= SUPPORT TICKETS =================
 function loadSupportTickets() {
 
-  document.getElementById("mainContent").innerHTML = `
+  let tickets = user.supportTickets || [];
+
+  let html = `
     <div class="section-title">Support Tickets</div>
 
     <div class="info-box">
-      <p>No Support Tickets Found</p>
+      <input type="text" id="supportSubject" class="ref-box" placeholder="Subject"><br><br>
+
+      <textarea id="supportMessage" class="ref-box" placeholder="Enter Message"></textarea><br><br>
+
+      <button class="action-btn" onclick="submitSupportTicket()">
+        Submit Ticket
+      </button>
     </div>
   `;
+
+  if (!tickets.length) {
+    html += `
+      <div class="info-box">
+        <p>No Support Tickets Found</p>
+      </div>
+    `;
+  }
+
+  tickets.slice(-20).reverse().forEach(item => {
+    html += `
+      <div class="info-box">
+        <p><b>${item.subject || "Support Ticket"}</b></p>
+        <p>${item.message || "N/A"}</p>
+        <p>Status: ${item.status || "pending"}</p>
+        <p>${item.date || "N/A"}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+  // ================= SUPPORT TICKET SAVE =================
+function submitSupportTicket() {
+
+  let subject = document.getElementById("supportSubject").value.trim();
+  let message = document.getElementById("supportMessage").value.trim();
+
+  if (!subject || !message) {
+    alert("All Fields Required");
+    return;
+  }
+
+  if (!user.supportTickets) {
+    user.supportTickets = [];
+  }
+
+  user.supportTickets.push({
+    subject: subject,
+    message: message,
+    status: "pending",
+    date: new Date().toLocaleString()
+  });
+
+  user.supportTicketCount = user.supportTickets.length;
+  user.lastSupportDate = new Date().toLocaleString();
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+
+  alert("Support Ticket Submitted");
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "Support Ticket Submitted",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  loadSupportTickets();
 }
 
 // ================= EDIT PROFILE =================
@@ -986,15 +1063,39 @@ function savePassword() {
 // ================= ACTIVITY LOGS =================
 function loadActivityLogs() {
 
-  document.getElementById("mainContent").innerHTML = `
-    <div class="section-title">Recent Activity Logs</div>
+  let logs = [];
 
-    <div class="info-box">
-      <p>Login Activity</p>
-      <p>PIN Request Activity</p>
-      <p>Wallet Activity</p>
-    </div>
+  try {
+    if (typeof getActivityLogs === "function") {
+      logs = getActivityLogs(user.userId) || [];
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  let html = `
+    <div class="section-title">Recent Activity Logs</div>
   `;
+
+  if (!logs.length) {
+    html += `
+      <div class="info-box">
+        <p>No Activity Found</p>
+      </div>
+    `;
+  }
+
+  logs.slice(-20).reverse().forEach(item => {
+    html += `
+      <div class="info-box">
+        <p><b>${item.action || "Activity"}</b></p>
+        <p>${item.module || "USER_DASHBOARD"}</p>
+        <p>${item.date || "N/A"}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("mainContent").innerHTML = html;
 }
 
 // ================= KYC SECTION =================
