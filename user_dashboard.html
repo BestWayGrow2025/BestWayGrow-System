@@ -1316,6 +1316,36 @@ function loadRankReward() {
   `;
 }
 
+  // ================= REFERRAL LINK =================
+function loadReferralLink() {
+
+  let referralLink = location.origin + "/register.html?ref=" + user.userId;
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Referral Link</div>
+
+    <div class="info-box">
+      <input type="text" id="referralLinkBox" class="ref-box" value="${referralLink}" readonly><br><br>
+
+      <button class="action-btn" onclick="copyReferralLink()">
+        Copy Referral Link
+      </button>
+    </div>
+  `;
+}
+
+function copyReferralLink() {
+
+  let copyText = document.getElementById("referralLinkBox");
+
+  copyText.select();
+  copyText.setSelectionRange(0, 99999);
+
+  document.execCommand("copy");
+
+  alert("Referral Link Copied");
+}
+
 // ================= LOGOUT =================
 function logout() {
 
