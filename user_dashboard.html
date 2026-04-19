@@ -535,6 +535,57 @@ function loadWalletHistory() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
+// ================= DIRECT TEAM LIST =================
+function loadDirectTeam() {
+
+  user = getUserById(session.userId);
+
+  let directUsers = [];
+
+  try {
+    if (typeof getDirectUsers === "function") {
+      directUsers = getDirectUsers(user.userId) || [];
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  let html = `
+    <div class="section-title">Direct Team List</div>
+
+    <table>
+      <tr>
+        <th>User ID</th>
+        <th>Name</th>
+        <th>Position</th>
+        <th>Status</th>
+      </tr>
+  `;
+
+  if (!directUsers.length) {
+    html += `
+      <tr>
+        <td colspan="4">No Direct Team Found</td>
+      </tr>
+    `;
+  }
+
+  directUsers.forEach(member => {
+    html += `
+      <tr>
+        <td>${member.userId}</td>
+        <td>${member.fullName || member.username || "N/A"}</td>
+        <td>${member.position || "N/A"}</td>
+        <td>${member.accountStatus || "active"}</td>
+      </tr>
+    `;
+  });
+
+  html += `</table>`;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
 // ================= PROFILE =================
 function loadProfile() {
 
