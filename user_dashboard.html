@@ -871,6 +871,36 @@ function addUserNotification(title, message) {
   }
 }
 
+  // ================= LOGIN HISTORY =================
+function loadLoginHistory() {
+
+  let history = user.loginHistory || [];
+
+  let html = `
+    <div class="section-title">Login History</div>
+  `;
+
+  if (!history.length) {
+    html += `
+      <div class="info-box">
+        <p>No Login History Found</p>
+      </div>
+    `;
+  }
+
+  history.slice(-20).reverse().forEach(item => {
+    html += `
+      <div class="info-box">
+        <p><b>Date:</b> ${item.date || "N/A"}</p>
+        <p><b>Device:</b> ${item.device || "N/A"}</p>
+        <p><b>IP:</b> ${item.ip || "N/A"}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
 // ================= NOTIFICATIONS =================
 function loadNotifications() {
 
