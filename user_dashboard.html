@@ -815,13 +815,31 @@ function submitWithdrawRequest() {
 // ================= NOTIFICATIONS =================
 function loadNotifications() {
 
-  document.getElementById("mainContent").innerHTML = `
-    <div class="section-title">Notifications</div>
+  let notifications = user.notifications || [];
 
-    <div class="info-box">
-      <p>No New Notifications</p>
-    </div>
+  let html = `
+    <div class="section-title">Notifications</div>
   `;
+
+  if (!notifications.length) {
+    html += `
+      <div class="info-box">
+        <p>No New Notifications</p>
+      </div>
+    `;
+  }
+
+  notifications.slice(-20).reverse().forEach(item => {
+    html += `
+      <div class="info-box">
+        <p><b>${item.title || "Notification"}</b></p>
+        <p>${item.message || "N/A"}</p>
+        <p>${item.date || "N/A"}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("mainContent").innerHTML = html;
 }
 
 // ================= SUPPORT TICKETS =================
