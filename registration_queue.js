@@ -282,6 +282,15 @@ function startRegistrationQueue() {
   setInterval(processRegistrationQueue, 2000);
 }
 
+// ================= GLOBAL ACCESS =================
+window.getRegQueue = getRegQueue;
+window.saveRegQueue = saveRegQueue;
+window.addToRegistrationQueue = addToRegistrationQueue;
+window.processRegistrationQueue = processRegistrationQueue;
+window.approveRegistration = approveRegistration;
+window.rejectRegistration = rejectRegistration;
+window.clearCompletedRegistrations = clearCompletedRegistrations;
+
 // ================= MULTI TAB SAFE =================
 if (!window.__REG_QUEUE_STARTED__) {
   window.__REG_QUEUE_STARTED__ = true;
