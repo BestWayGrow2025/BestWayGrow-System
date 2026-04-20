@@ -155,20 +155,30 @@ function createUserWithTree(req) {
       users = [];
     }
 
-    // 🔒 VALIDATION
-    if (!req || !req.introducerId || !req.mobile) {
-      throw new Error("Invalid request");
-    }
+   // 🔒 VALIDATION
+if (!req || !req.mobile) {
+  throw new Error("Invalid request");
+}
 
+if (!req.introducerId) {
+  req.introducerId = "BWG000000";
+}
+
+if (!req.sponsorId) {
+  req.sponsorId = "BWG000000";
+}
     if (!req.position || !["L", "R"].includes(req.position)) {
       req.position = "L";
     }
 
-    if (typeof isValidIntroducer === "function") {
-      if (!isValidIntroducer(req.introducerId)) {
-        throw new Error("Invalid introducer");
-      }
-    }
+  // 🔒 INTRODUCER CHECK
+let introducerUser = users.find(
+  u => u.userId === req.introducerId
+);
+
+if (!introducerUser) {
+  throw new Error("Invalid introducer");
+}
 
     if (users.find(u => u.mobile === req.mobile)) {
       throw new Error("Mobile already exists");
@@ -176,11 +186,12 @@ function createUserWithTree(req) {
 
     let userId = generateUserId(users);
 
-    let placement = findPlacement(
-      req.introducerId,
-      req.position,
-      users
-    );
+    // 🌳 TREE PLACEMENT
+let placement = findPlacement(
+  req.sponsorId || "BWG000000",
+  req.position,
+  users
+);
 
     let referralLink = generateReferralLink(userId);
 
@@ -215,8 +226,8 @@ function createUserWithTree(req) {
       role: "user",
       status: "active",
 
-      introducerId: req.introducerId,
-      sponsorId: placement.parentId,
+    introducerId: req.introducerId || "BWG000000",
+sponsorId: placement.parentId || "BWG000000",
       sponsorVisible: false,
       introducerVisible: true,
       position: placement.side,
@@ -280,8 +291,11 @@ function createUserWithTree(req) {
 
     // ❤️ DIRECT POINT
     if (typeof updateUserPoints === "function") {
-      updateUserPoints(req.introducerId, 0, true);
-    }
+      updateUserPoints(
+  req.introducerId || "BWG000000",
+  0,
+  true
+);
 
     // 🔥 REGISTRATION TRIGGER
     if (typeof triggerRegistrationIncome === "function") {
