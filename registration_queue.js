@@ -264,7 +264,7 @@ function processRegistrationQueue() {
       }
     }
 
-    saveRegQueue(queue);
+   saveRegQueue(queue);
 
   } catch (e) {
     console.error("Queue processing failed:", e);
