@@ -36,12 +36,12 @@ function getRightChild(userId, users) {
 }
 
 // ================= FIND PLACEMENT =================
-function findPlacement(introducerId, position, users) {
+function findPlacement(sponsorId, position, users) {
 
-  let current = users.find(u => u.userId === introducerId);
+  let current = users.find(u => u.userId === sponsorId);
 
   if (!current) {
-    throw new Error("Invalid introducer");
+    throw new Error("Invalid sponsor");
   }
 
   let safety = 0;
