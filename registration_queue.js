@@ -1,4 +1,4 @@
-/*
+ /*
 ========================================
 REGISTRATION QUEUE SYSTEM V9 (FINAL LOCK)
 ========================================
@@ -296,6 +296,5 @@ if (!window.__REG_QUEUE_STARTED__) {
   window.__REG_QUEUE_STARTED__ = true;
   startRegistrationQueue();
 }
-
 
 
