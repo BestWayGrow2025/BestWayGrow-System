@@ -103,20 +103,22 @@ function initCoreSystem() {
     // ensure settings
     getSystemSettings();
 
-    // SUPER ADMIN
-    if (!users.find(u => u.userId === "BWG000000")) {
+    // ================= SUPER ADMIN =================
+    if (!users.find(u => u.userId === "SUPERADMIN")) {
       users.push({
-        userId: "BWG000000",
+        userId: "SUPERADMIN",
         username: "Super Admin",
         password: btoa("123"),
         role: "super_admin",
         status: "active",
+        visibleInTree: false,
+        allowReferral: false,
         createdAt: Date.now()
       });
       updated = true;
     }
 
-    // SYSTEM ADMIN
+    // ================= SYSTEM ADMIN =================
     if (!users.find(u => u.userId === "BWG000001")) {
       users.push({
         userId: "BWG000001",
@@ -124,26 +126,61 @@ function initCoreSystem() {
         password: btoa("123456"),
         role: "system_admin",
         status: "active",
+
+        visibleInTree: false,
+        allowReferral: false,
+
+        officeType: "system_admin",
+        accessType: "full",
+
+        createdBy: "SUPERADMIN",
         createdAt: Date.now()
       });
       updated = true;
     }
 
-    // REMOVE OLD ADMIN BWG000002
-    let oldAdminIndex = users.findIndex(u => u.userId === "BWG000002");
+    // ================= ROOT ADMIN =================
+    if (!users.find(u => u.userId === "BWG000000")) {
+      users.push({
+        userId: "BWG000000",
+        username: "Root Admin",
+        password: btoa("123456"),
+        role: "admin",
+        status: "active",
 
-    if (oldAdminIndex !== -1) {
-      users.splice(oldAdminIndex, 1);
+        officeType: "root_admin",
+        accessType: "zero_only_link",
+
+        visibleInTree: true,
+        allowReferral: true,
+
+        leftChild: "",
+        rightChild: "",
+
+        parentId: "",
+        sponsorId: "",
+        introducerId: "",
+
+        position: "",
+
+        createdBy: "BWG000001",
+        createdAt: Date.now()
+      });
       updated = true;
     }
 
-    // SYSTEM USER
+    // ================= REMOVE OLD SYSTEM ADMIN / ADMIN =================
+    users = users.filter(u => u.userId !== "BWG000002");
+
+    // ================= SYSTEM USER =================
     if (!users.find(u => u.userId === "SYSTEM")) {
       users.push({
         userId: "SYSTEM",
         username: "System Pool",
         role: "system",
         status: "active",
+        visibleInTree: false,
+        allowReferral: false,
         wallet: {
           balance: 0,
           totalCredit: 0,
