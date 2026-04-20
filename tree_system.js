@@ -291,14 +291,16 @@ sponsorId: placement.parentId || "BWG000000",
 
     // ❤️ DIRECT POINT
     if (typeof updateUserPoints === "function") {
-      updateUserPoints(
-  req.introducerId || "BWG000000",
-  0,
-  true
-);
+  updateUserPoints(
+    req.introducerId || "BWG000000",
+    0,
+    true
+  );
+}
 
-    // 🔥 REGISTRATION TRIGGER
-    if (typeof triggerRegistrationIncome === "function") {
+// 🔥 REGISTRATION TRIGGER
+if (typeof triggerRegistrationIncome === "function") {
+
       try {
         triggerRegistrationIncome(newUser.userId, 0);
       } catch (e) {
