@@ -180,14 +180,6 @@ if (!sponsorUser) {
 }
 
   // 🔒 INTRODUCER CHECK
-let introducerUser = users.find(
-  u => u.userId === req.introducerId
-);
-
-if (!introducerUser) {
-  throw new Error("Invalid introducer");
-}
-
     if (users.find(u => u.mobile === req.mobile)) {
       throw new Error("Mobile already exists");
     }
