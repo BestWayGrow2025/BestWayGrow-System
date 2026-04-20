@@ -1,19 +1,14 @@
 /*
 ========================================
-REGISTRATION QUEUE SYSTEM V9 (FINAL LOCK) ❤️
+REGISTRATION QUEUE SYSTEM V9 (FINAL LOCK)
 ========================================
-✔ Queue only (isolated storage)
-✔ System safe
-✔ Anti-deadlock lock
+✔ Queue only
+✔ Safe lock
+✔ Duplicate protection
 ✔ Batch processing
-✔ Duplicate protection upgraded
-✔ User validation
-✔ Activity logging
 ✔ Multi-tab safe
 ✔ Error visibility
-✔ registrationOpen control added
-✔ Approve / Reject support added
-✔ Queue cleanup support added
+✔ Registration control
 ✔ Production ready
 ========================================
 */
@@ -48,7 +43,6 @@ function isRegLocked() {
 
   if (!lock) return false;
 
-  // auto unlock after 5 sec
   if (Date.now() - lock.time > 5000) {
     setRegLock(false);
     return false;
@@ -75,7 +69,6 @@ function addToRegistrationQueue(data) {
 
   let queue = getRegQueue();
 
-  // stronger duplicate check
   let exists = queue.find(q =>
     q.mobile === data.mobile &&
     q.status !== "REJECTED" &&
@@ -84,11 +77,11 @@ function addToRegistrationQueue(data) {
 
   if (exists) return false;
 
-  // existing user check
   if (typeof getUsers === "function") {
     let users = getUsers() || [];
 
     let userExists = users.find(u => u.mobile === data.mobile);
+
     if (userExists) return false;
   }
 
@@ -100,7 +93,6 @@ function addToRegistrationQueue(data) {
     error: ""
   });
 
-  // oldest first
   queue.sort((a, b) => a.requestTime - b.requestTime);
 
   saveRegQueue(queue);
@@ -180,6 +172,7 @@ function processOneRegistration(req) {
 
   if (typeof getUsers === "function") {
     let users = getUsers() || [];
+
     if (!Array.isArray(users)) users = [];
 
     let exists = users.find(u => u.mobile === req.mobile);
@@ -200,7 +193,6 @@ function processOneRegistration(req) {
 // ================= MAIN PROCESS =================
 function processRegistrationQueue() {
 
-  // system setting check
   if (typeof getSystemSettings === "function") {
     let s = getSystemSettings();
 
@@ -208,15 +200,14 @@ function processRegistrationQueue() {
     if (s && s.registrationOpen === false) return;
   }
 
-  // system safe check
   if (typeof isSystemSafe === "function") {
     if (!isSystemSafe()) return;
   }
 
-  // lock check
   if (isRegLocked()) return;
 
   let queue = getRegQueue();
+
   if (!queue.length) return;
 
   setRegLock(true);
@@ -246,7 +237,7 @@ function processRegistrationQueue() {
           logActivity(req.mobile, "SYSTEM", "REG SUCCESS");
         }
 
-     } catch (err) {
+      } catch (err) {
 
         console.warn("REG ERROR:", err.message);
         console.log("FAILED REQUEST:", req);
@@ -264,7 +255,7 @@ function processRegistrationQueue() {
       }
     }
 
-   saveRegQueue(queue);
+    saveRegQueue(queue);
 
   } catch (e) {
     console.error("Queue processing failed:", e);
