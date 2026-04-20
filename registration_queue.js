@@ -246,7 +246,7 @@ function processRegistrationQueue() {
           logActivity(req.mobile, "SYSTEM", "REG SUCCESS");
         }
 
-      } catch (err) {
+     } catch (err) {
 
         console.warn("REG ERROR:", err.message);
         console.log("FAILED REQUEST:", req);
@@ -262,6 +262,7 @@ function processRegistrationQueue() {
           }
         }
       }
+    }
 
     saveRegQueue(queue);
 
