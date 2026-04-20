@@ -155,21 +155,29 @@ function createUserWithTree(req) {
       users = [];
     }
 
-   // 🔒 VALIDATION
+  // 🔒 VALIDATION
 if (!req || !req.mobile) {
   throw new Error("Invalid request");
 }
 
-if (!req.introducerId) {
-  req.introducerId = "BWG000000";
+req.introducerId = req.introducerId || "BWG000000";
+req.sponsorId = req.sponsorId || "BWG000000";
+
+if (!req.position || !["L", "R"].includes(req.position)) {
+  req.position = "L";
 }
 
-if (!req.sponsorId) {
-  req.sponsorId = "BWG000000";
+let introducerUser = users.find(u => u.userId === req.introducerId);
+
+if (!introducerUser) {
+  throw new Error("Invalid introducer");
 }
-    if (!req.position || !["L", "R"].includes(req.position)) {
-      req.position = "L";
-    }
+
+let sponsorUser = users.find(u => u.userId === req.sponsorId);
+
+if (!sponsorUser) {
+  throw new Error("Invalid sponsor");
+}
 
   // 🔒 INTRODUCER CHECK
 let introducerUser = users.find(
