@@ -185,14 +185,14 @@ if (typeof initCoreSystem === "function") {
 }
 
 // ================= AUTH =================
-let adminSession =
-  JSON.parse(localStorage.getItem("loggedInAdmin")) ||
-  JSON.parse(localStorage.getItem("loggedInSystemAdmin")) ||
-  JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
+let adminSession = JSON.parse(
+  localStorage.getItem("loggedInAdmin")
+);
 
 if (!adminSession || !adminSession.userId) {
   alert("Login Required");
   window.location.href = "admin_login.html";
+  throw new Error("STOP");
 }
 
 // ================= ADMIN USER =================
@@ -205,16 +205,25 @@ if (typeof getUserById === "function") {
 if (!adminUser) {
   alert("Admin not found");
   localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "admin_login.html";
+  throw new Error("STOP");
 }
 
-if ((adminUser.accountStatus || "active") !== "active") {
+// ================= STATUS CHECK =================
+if (
+  (adminUser.accountStatus || adminUser.status || "active") !== "active"
+) {
   alert("Admin inactive");
   logout();
+  throw new Error("STOP");
 }
 
+// ================= ROLE CHECK =================
+if (adminUser.role !== "admin") {
+  alert("Access Denied");
+  logout();
+  throw new Error("STOP");
+}
 
 // ================= WELCOME =================
 document.getElementById("welcome").innerText =
