@@ -103,7 +103,7 @@ function initCoreSystem() {
     // ensure settings
     getSystemSettings();
 
-    // ================= SUPER ADMIN =================
+    // ================= HIDDEN SUPER ADMIN =================
     if (!users.find(u => u.userId === "SUPERADMIN")) {
       users.push({
         userId: "SUPERADMIN",
@@ -111,8 +111,13 @@ function initCoreSystem() {
         password: btoa("123"),
         role: "super_admin",
         status: "active",
+
         visibleInTree: false,
         allowReferral: false,
+
+        officeType: "super_admin",
+        accessType: "full",
+
         createdAt: Date.now()
       });
       updated = true;
@@ -170,7 +175,10 @@ function initCoreSystem() {
     }
 
     // ================= REMOVE OLD SYSTEM ADMIN / ADMIN =================
-    users = users.filter(u => u.userId !== "BWG000002");
+    users = users.filter(u =>
+      u.userId !== "BWG000002" &&
+      u.userId !== "BWG000003"
+    );
 
     // ================= SYSTEM USER =================
     if (!users.find(u => u.userId === "SYSTEM")) {
@@ -179,13 +187,16 @@ function initCoreSystem() {
         username: "System Pool",
         role: "system",
         status: "active",
+
         visibleInTree: false,
         allowReferral: false,
+
         wallet: {
           balance: 0,
           totalCredit: 0,
           totalDebit: 0
         },
+
         totalIncome: 0,
         createdAt: Date.now()
       });
