@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
- <title>System Admin Dashboard</title>
+  <title>System Admin Login</title>
   <link rel="icon" href="data:,">
 
   <style>
@@ -31,7 +31,7 @@
 </head>
 <body>
 
-<h2>SUPER ADMIN LOGIN</h2>
+<h2>SYSTEM ADMIN LOGIN</h2>
 
 <input id="userId" placeholder="User ID"><br>
 <input id="password" type="password" placeholder="Password"><br>
@@ -78,20 +78,11 @@ function logoutAll() {
 
 // ================= SAFE DECODE =================
 function safeDecode(p) {
-  try { return atob(p); } catch { return p; }
-}
-
-// ================= SYSTEM CHECK =================
-function isSystemAllowed() {
-  let s = typeof getSystemSettings === "function" ? getSystemSettings() : {};
-
-  // ONLY lockMode applies to super admin
-  if (s.lockMode === true) {
-    showMsg("🚫 System Locked");
-    return false;
+  try { 
+    return atob(p); 
+  } catch { 
+    return p; 
   }
-
-  return true;
 }
 
 // ================= SAFE USERS =================
@@ -106,8 +97,6 @@ function getSafeUsers() {
 // ================= LOGIN =================
 function login() {
 
-  if (!isSystemAllowed()) return;
-
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value.trim();
 
@@ -118,8 +107,8 @@ function login() {
   let users = getSafeUsers();
 
   let user = users.find(u =>
-    u.userId.toLowerCase() === userId.toLowerCase() &&
-    u.role === "super_admin"
+    u.userId === userId &&
+    u.role === "system_admin"
   );
 
   if (!user) {
@@ -142,20 +131,20 @@ function login() {
   logoutAll();
 
   // ================= SAVE SESSION =================
-  localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
+  localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
     userId: user.userId,
     role: user.role
   }));
 
   // ================= ACTIVITY LOG =================
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "SUPER_ADMIN", "Login");
+    logActivity(user.userId, "SYSTEM_ADMIN", "Login");
   }
 
   showMsg("✅ Login successful");
 
   setTimeout(() => {
-    window.location.href = "super_admin_dashboard.html";
+    window.location.href = "system_admin_dashboard.html";
   }, 500);
 }
 
@@ -168,4 +157,3 @@ function showMsg(text) {
 
 </body>
 </html>
-
