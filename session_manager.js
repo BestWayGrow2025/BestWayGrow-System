@@ -33,11 +33,12 @@ function setSession(user) {
   if (!key) return false;
 
   let sessionData = {
-    userId: user.userId,
-    role: user.role,
-    loginTime: Date.now()
-  };
-
+  userId: user.userId,
+  username: user.username || "",
+  role: user.role,
+  loginTime: Date.now()
+};
+  
   localStorage.setItem(key, JSON.stringify(sessionData));
 
   // legacy support
