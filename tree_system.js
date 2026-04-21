@@ -290,7 +290,7 @@ sponsorId: placement.parentId || "BWG000000",
     }
 
     // ❤️ DIRECT POINT
-    if (typeof updateUserPoints === "function") {
+if (typeof updateUserPoints === "function") {
   updateUserPoints(
     req.introducerId || "BWG000000",
     0,
