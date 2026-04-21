@@ -176,7 +176,7 @@ function safeDecode(p) {
 }
 
 // ================= SYSTEM CHECK =================
-function isSystemAllowed() {
+function isSystemAllowed(user) {
 
   if (typeof getSystemSettings !== "function") {
     showMsg("❌ System not ready");
@@ -185,6 +185,12 @@ function isSystemAllowed() {
 
   let s = getSystemSettings() || {};
 
+  // SUPER ADMIN always bypass
+  if (user.role === "super_admin") {
+    return true;
+  }
+
+  // SYSTEM ADMIN obeys lock mode
   if (s.lockMode === true) {
     showMsg("🚫 System is locked");
     return false;
@@ -198,10 +204,9 @@ function isSystemAllowed() {
   return true;
 }
 
+
 // ================= LOGIN =================
 function login() {
-
-  if (!isSystemAllowed()) return;
 
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value.trim();
@@ -224,21 +229,19 @@ function login() {
     return;
   }
 
-  // STATUS CHECK
+  if (!isSystemAllowed(user)) return;
+
   if (user.status && user.status !== "active") {
     showMsg("🚫 Account inactive");
     return;
   }
 
-  // CLEAR OLD SESSIONS
   logoutAll();
 
-  // SAVE SESSION
   localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
     userId: user.userId
   }));
 
-  // ACTIVITY LOG
   if (typeof logActivity === "function") {
     logActivity(user.userId, "SYSTEM_ADMIN", "Login");
   }
