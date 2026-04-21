@@ -244,19 +244,21 @@ function loadUsers(){
   <table>
   <tr><th>ID</th><th>Name</th><th>Role</th></tr>`;
 
-  users.forEach(u=>{
-    html+=`<tr>
-      <td>${u.userId}</td>
-      <td>${u.username||""}</td>
-      <td>${u.role}</td>
-    </tr>`;
-  });
+  users
+    .filter(u => u.userId !== "BWG000000")
+    .forEach(u => {
+      html += `<tr>
+        <td>${u.userId}</td>
+        <td>${u.username || ""}</td>
+        <td>${u.role}</td>
+      </tr>`;
+    });
 
   html+=`</table>`;
 
   document.getElementById("mainContent").innerHTML=html;
 }
-
+  
 // ================= SYSTEM =================
 function loadSystem(){
 
