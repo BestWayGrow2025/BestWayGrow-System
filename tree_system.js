@@ -300,13 +300,13 @@ if (typeof updateUserPoints === "function") {
 
 // 🔥 REGISTRATION TRIGGER
 if (typeof triggerRegistrationIncome === "function") {
+  try {
+    triggerRegistrationIncome(newUser.userId, 0);
+  } catch (e) {
+    console.warn("Registration trigger fail:", e.message);
+  }
+}
 
-      try {
-        triggerRegistrationIncome(newUser.userId, 0);
-      } catch (e) {
-        console.warn("Registration trigger fail:", e.message);
-      }
-    }
 
     // 🔥 INCOME TRIGGER
     if (typeof processIncome === "function") {
