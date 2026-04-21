@@ -294,20 +294,29 @@ function toggleWithdraw(){ toggle('withdrawOpen'); }
 
 function toggle(key){
 
-  if (!isSystemSafe()) return;
+  let s = getSystemSettings() || {};
 
-  let s=getSystemSettings()||{};
-  s[key]=!s[key];
+  // allow super admin to toggle even in lock mode
+  if (s.lockMode && currentUser.role !== "super_admin") {
+    alert("System Locked");
+    return;
+  }
+
+  s[key] = !s[key];
 
   saveSystemSettings(s);
 
   if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Toggle " + key + ": " + s[key]);
+    logActivity(
+      currentUser.userId,
+      "SUPER_ADMIN",
+      "Toggle " + key + ": " + s[key]
+    );
   }
 
   loadSystem();
 }
-
+  
 // ================= LOGOUT =================
 function logout(){
 
