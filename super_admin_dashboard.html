@@ -156,9 +156,9 @@ function loadHome(){
 
   let users = getUsers() || [];
 
-  let totalUsers = users.filter(u=>u.role==="user").length;
-  let admins = users.filter(u=>u.role==="admin").length;
-  let sysAdmins = users.filter(u=>u.role==="system_admin").length;
+  let totalUsers = users.filter(u => u.role === "user").length;
+  let admins = users.filter(u => u.role === "admin").length;
+  let sysAdmins = users.filter(u => u.role === "system_admin").length;
 
   document.getElementById("mainContent").innerHTML = `
     <h3>📊 Dashboard Overview</h3>
