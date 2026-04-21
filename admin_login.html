@@ -102,6 +102,7 @@ function login() {
 
   let user = users.find(u => {
     let storedPass = safeDecode(u.password);
+
     return (
       (u.userId || "").toLowerCase() === id &&
       u.role === "admin" &&
@@ -110,6 +111,13 @@ function login() {
   });
 
   if (!user) {
+    showMsg("❌ Invalid login");
+    unlockBtn();
+    return;
+  }
+
+  // extra role safety
+  if (user.role !== "admin") {
     showMsg("❌ Invalid login");
     unlockBtn();
     return;
@@ -141,6 +149,30 @@ function login() {
     return;
   }
 
+  logoutAll();
+
+  localStorage.setItem("loggedInAdmin", JSON.stringify({
+    userId: user.userId,
+    role: user.role
+  }));
+
+  if (!localStorage.getItem("loggedInAdmin")) {
+    alert("Session failed");
+    unlockBtn();
+    return;
+  }
+
+  if (typeof logActivity === "function") {
+    logActivity(user.userId, "ADMIN", "Login");
+  }
+
+  showMsg("✅ Login successful");
+
+  setTimeout(() => {
+    window.location.href = "admin_dashboard.html";
+  }, 500);
+}
+  
   // ================= SESSION FIXED =================
   logoutAll();
 
