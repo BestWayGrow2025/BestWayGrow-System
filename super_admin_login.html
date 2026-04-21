@@ -127,10 +127,19 @@ function login() {
 
   let users = getSafeUsers();
 
-  let user = users.find(u =>
-    u.userId.toLowerCase() === userId.toLowerCase() &&
-    u.role === "super_admin"
-  );
+  let user = users.find(u => {
+
+    let inputId = userId.toLowerCase();
+
+    let allowed =
+      inputId === "superadmin" ||
+      inputId === "bwg000000";
+
+    return (
+      allowed &&
+      u.role === "super_admin"
+    );
+  });
 
   if (!user) {
     return showMsg("❌ Invalid ID");
@@ -141,26 +150,27 @@ function login() {
   }
 
   let storedPass = safeDecode(user.password);
-  if (storedPass !== password) {
+
+  if (storedPass.trim() !== password) {
     return showMsg("❌ Wrong Password");
   }
 
-  // CLEAR OLD SESSION
+  // super admin bypass lock mode
+
   logoutAll();
 
-  // SAVE SESSION
   let ok = saveSession(user);
   if (!ok) return;
 
-  // LOG
   if (typeof logActivity === "function") {
     logActivity(user.userId, "SUPER_ADMIN", "Login");
   }
 
   showMsg("✅ Login successful");
 
-  // DIRECT REDIRECT (FIXED)
-  window.location.href = "super_admin_dashboard.html";
+  setTimeout(() => {
+    window.location.href = "super_admin_dashboard.html";
+  }, 500);
 }
 
 // ================= MESSAGE =================
