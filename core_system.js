@@ -175,10 +175,12 @@ function initCoreSystem() {
     }
 
     // ================= REMOVE OLD SYSTEM ADMIN / ADMIN =================
-    users = users.filter(u =>
-      u.userId !== "BWG000002" &&
-      u.userId !== "BWG000003"
-    );
+users = users.filter(u =>
+  u.userId !== "BWG000002" &&
+  u.userId !== "BWG000003"
+);
+
+updated = true;
 
     // ================= SYSTEM USER =================
     if (!users.find(u => u.userId === "SYSTEM")) {
