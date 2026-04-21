@@ -74,8 +74,27 @@ function getSystemSettings() {
 
 // ================= SYSTEM SAFE =================
 function isSystemSafe() {
-  let s = getSystemSettings();
-  return !(s.lockMode === true);
+  let s = getSystemSettings() || {};
+
+  // allow super admin to access system panel even if locked
+  let session = null;
+
+  try {
+    if (typeof getSession === "function") {
+      session = getSession();
+    }
+  } catch (e) {}
+
+  if (
+    s.lockMode === true &&
+    session &&
+    session.role !== "super_admin"
+  ) {
+    alert("System Locked");
+    return false;
+  }
+
+  return true;
 }
 
 // ================= HELPERS =================
