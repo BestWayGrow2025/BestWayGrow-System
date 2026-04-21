@@ -132,11 +132,11 @@ function login() {
     let inputId = userId.toLowerCase();
 
     let allowed =
-      inputId === "superadmin" ||
-      inputId === "bwg000000";
+      inputId === "superadmin";
 
     return (
       allowed &&
+      u.userId === "SUPERADMIN" &&
       u.role === "super_admin"
     );
   });
