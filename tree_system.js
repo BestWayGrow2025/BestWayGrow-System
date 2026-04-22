@@ -151,7 +151,7 @@ function createUserWithTree(req) {
     // ================= GENERATE USER =================
     let userId = generateUserId(users);
 
-    // ================= SAFE TREE PLACEMENT =================
+   // ================= SAFE TREE PLACEMENT =================
     let placement;
 
     try {
@@ -204,9 +204,21 @@ function createUserWithTree(req) {
       throw new Error("Parent not found");
     }
 
+    // ✅ SAFE INSERT (NO OVERWRITE BUG)
     if (placement.side === "L") {
+
+      if (users[parentIndex].leftChild) {
+        throw new Error("Left already occupied");
+      }
+
       users[parentIndex].leftChild = userId;
+
     } else {
+
+      if (users[parentIndex].rightChild) {
+        throw new Error("Right already occupied");
+      }
+
       users[parentIndex].rightChild = userId;
     }
 
