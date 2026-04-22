@@ -2,104 +2,6 @@
 <html>
 <head>
   <title>System Admin Login</title>
-
-  <!-- ✅ remove favicon error -->
-  <link rel="icon" href="data:,">
-
-  <style>
-    body { 
-      font-family: Arial; 
-      padding: 20px; 
-      text-align: center;
-      background: #f4f7f9;
-    }
-
-    input { 
-      margin-bottom: 10px; 
-      padding: 8px; 
-      width: 240px; 
-    }
-
-    button { 
-      padding: 8px 15px; 
-      cursor: pointer;
-    }
-
-    #msg {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-  </style>
-</head>
-
-<body>
-
-<h2>SYSTEM ADMIN LOGIN</h2>
-
-<input id="userId" placeholder="System Admin ID"><br>
-<input id="password" type="password" placeholder="Password"><br>
-
-<button onclick="login()">Login</button>
-
-<p id="msg"></p>
-
-<!-- ✅ FIXED SCRIPT NAME -->
-<script src="core_system.js"></script>
-
-<script>
-
-// ================= SAFE INIT =================
-if (typeof initCoreSystem === "function") {
-  initCoreSystem();
-} else {
-  alert("❌ core_system.js not loaded");
-  throw new Error("STOP");
-}
-
-// ================= GLOBAL LOGOUT =================
-function logoutAll() {
-  localStorage.removeItem("loggedInSuperAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInFranchise");
-  localStorage.removeItem("loggedInUser");
-}
-
-// ================= SAFE DECODE =================
-function safeDecode(p) {
-  try {
-    return atob(p);
-  } catch (e) {
-    return p;
-  }
-}
-
-// ================= LOGIN =================
-function login() {
-
-  let userId = document.getElementById("userId").value.trim();
-  let password = document.getElementById("password").value.trim();
-
-  if (!userId || !password) {
-    showMsg("⚠️ Enter ID & Password");
-    return;
-  }
-
-  let users = typeof getUsers === "function" ? getUsers() : [];
-
-  let user = users.find(u =>
-    u.userId.toLowerCase() === userId.toLowerCase() &&
-    u.role === "system_admin" &&
-    safeDecode(u.password) === password
-  );
-
-  if (!user) {
-    showMsg("❌ Invalid login");
-<!DOCTYPE html>
-<html>
-<head>
-  <title>System Admin Login</title>
-
   <link rel="icon" href="data:,">
 
   <style>
@@ -152,13 +54,22 @@ if (typeof initCoreSystem === "function") {
   throw new Error("STOP");
 }
 
-// ================= LOCK SYSTEM =================
+// ================= LOCK BUTTON =================
 let lock = false;
+
 function safeClick(fn) {
   if (lock) return;
   lock = true;
-  fn();
-  setTimeout(() => lock = false, 800); // safer
+
+  try {
+    fn();
+  } catch (e) {
+    console.error(e);
+  }
+
+  setTimeout(() => {
+    lock = false;
+  }, 800);
 }
 
 // ================= GLOBAL LOGOUT =================
@@ -172,38 +83,40 @@ function logoutAll() {
 
 // ================= SAFE DECODE =================
 function safeDecode(p) {
-  try { return atob(p); } catch { return p; }
+  try {
+    return atob(p);
+  } catch (e) {
+    return p;
+  }
 }
 
 // ================= SYSTEM CHECK =================
 function isSystemAllowed(user) {
 
   if (typeof getSystemSettings !== "function") {
-    showMsg("❌ System not ready");
+    showMsg("❌ System settings missing");
     return false;
   }
 
   let s = getSystemSettings() || {};
 
-  // SUPER ADMIN always bypass
-  if (user.role === "super_admin") {
+  // system admin bypass lock mode
+  if (user.role === "system_admin" || user.role === "super_admin") {
     return true;
   }
 
-  // SYSTEM ADMIN obeys lock mode
   if (s.lockMode === true) {
-    showMsg("🚫 System is locked");
+    showMsg("🚫 System Locked");
     return false;
   }
 
   if (s.adminAccess === false) {
-    showMsg("🚫 Admin access OFF");
+    showMsg("🚫 Admin Access OFF");
     return false;
   }
 
   return true;
 }
-
 
 // ================= LOGIN =================
 function login() {
@@ -219,27 +132,35 @@ function login() {
   let users = typeof getUsers === "function" ? getUsers() : [];
 
   let user = users.find(u =>
-    (u.userId || "").toLowerCase() === userId.toLowerCase() &&
-    (u.role || "").toLowerCase() === "system_admin" &&
-    safeDecode(u.password).trim() === password
+    u.userId === userId &&
+    u.role === "system_admin"
   );
 
   if (!user) {
-    showMsg("❌ Invalid login");
+    showMsg("❌ Invalid ID");
     return;
   }
 
   if (!isSystemAllowed(user)) return;
 
-  if (user.status && user.status !== "active") {
+  if ((user.status || "active") !== "active") {
     showMsg("🚫 Account inactive");
+    return;
+  }
+
+  let storedPass = safeDecode(user.password);
+
+  if (storedPass.trim() !== password) {
+    showMsg("❌ Wrong Password");
     return;
   }
 
   logoutAll();
 
+  // IMPORTANT FIX
   localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
-    userId: user.userId
+    userId: user.userId,
+    role: user.role
   }));
 
   if (typeof logActivity === "function") {
@@ -262,4 +183,3 @@ function showMsg(text) {
 
 </body>
 </html>
-
