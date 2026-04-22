@@ -236,8 +236,8 @@ if (users.find(u => u.email === email)) {
       return resetAll();
     }
 
-    // ================= ADD TO QUEUE =================
- addToRegistrationQueue({
+  // ================= ADD TO QUEUE =================
+let added = addToRegistrationQueue({
   username,
   fullName: username,
   name: username,
@@ -289,7 +289,14 @@ if (users.find(u => u.email === email)) {
   remarks: ""
 });
 
-    document.getElementById("msg").innerHTML = `
+// ❗ IMPORTANT CHECK
+if (!added) {
+  alert("⚠ Registration blocked or duplicate");
+  return resetAll();
+}
+
+// ================= UI MESSAGE =================
+document.getElementById("msg").innerHTML = `
   <div class="success-box">
     ⏳ Registration processing...<br><br>
     Please wait while your account is being created.
