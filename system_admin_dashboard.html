@@ -159,12 +159,48 @@ function loadHome() {
     u => u.tree === "office" && u.role === "admin"
   );
 
+  let officeRootAdmins = users.filter(
+    u => u.tree === "office" &&
+         u.role === "admin" &&
+         u.adminType === "root_admin"
+  );
+
+  let officeAdminA = users.filter(
+    u => u.tree === "office" &&
+         u.role === "admin" &&
+         u.adminType === "admin_a"
+  );
+
+  let officeAdminB = users.filter(
+    u => u.tree === "office" &&
+         u.role === "admin" &&
+         u.adminType === "admin_b"
+  );
+
   let fieldUsers = users.filter(
     u => u.tree === "field" && u.role === "user"
   );
 
   let fieldAdmins = users.filter(
     u => u.tree === "field" && u.role === "admin"
+  );
+
+  let fieldRootAdmins = users.filter(
+    u => u.tree === "field" &&
+         u.role === "admin" &&
+         u.adminType === "root_admin"
+  );
+
+  let fieldAdminA = users.filter(
+    u => u.tree === "field" &&
+         u.role === "admin" &&
+         u.adminType === "admin_a"
+  );
+
+  let fieldAdminB = users.filter(
+    u => u.tree === "field" &&
+         u.role === "admin" &&
+         u.adminType === "admin_b"
   );
 
   document.getElementById("mainContent").innerHTML = `
@@ -177,12 +213,18 @@ function loadHome() {
           <h4>🏢 Office Tree</h4>
           <p>Total Office Users: ${officeUsers.length}</p>
           <p>Total Office Admins: ${officeAdmins.length}</p>
+          <p>Root Admin: ${officeRootAdmins.length}</p>
+          <p>Admin A: ${officeAdminA.length}</p>
+          <p>Admin B: ${officeAdminB.length}</p>
         </div>
 
         <div style="flex:1; min-width:250px; background:#2196F3; color:#fff; padding:20px; border-radius:10px;">
           <h4>👤 User Tree</h4>
           <p>Total Field Users: ${fieldUsers.length}</p>
           <p>Total Field Admins: ${fieldAdmins.length}</p>
+          <p>Root Admin: ${fieldRootAdmins.length}</p>
+          <p>Admin A: ${fieldAdminA.length}</p>
+          <p>Admin B: ${fieldAdminB.length}</p>
         </div>
 
       </div>
@@ -199,26 +241,26 @@ function loadUsers() {
     <div class="card">
       <h3>All Users</h3>
       <table>
-       <tr>
-  <th>ID</th>
-  <th>Name</th>
-  <th>Role</th>
-  <th>Admin Type</th>
-  <th>Tree</th>
-  <th>Status</th>
-</tr>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Admin Type</th>
+          <th>Tree</th>
+          <th>Status</th>
+        </tr>
   `;
 
   users.forEach(u => {
     html += `
       <tr>
-  <td>${u.userId}</td>
-  <td>${u.username || ""}</td>
-  <td>${u.role || ""}</td>
-  <td>${u.adminType || "-"}</td>
-  <td>${u.tree || "-"}</td>
-  <td>${u.status || "active"}</td>
-</tr>
+        <td>${u.userId}</td>
+        <td>${u.username || ""}</td>
+        <td>${u.role || ""}</td>
+        <td>${u.adminType || "-"}</td>
+        <td>${u.tree || "-"}</td>
+        <td>${u.status || "active"}</td>
+      </tr>
     `;
   });
 
@@ -232,6 +274,7 @@ function loadUsers() {
 
 // ================= CREATE ADMIN =================
 function loadCreateAdmin() {
+
   document.getElementById("mainContent").innerHTML = `
     <div class="card">
       <h3>Create Admin</h3>
