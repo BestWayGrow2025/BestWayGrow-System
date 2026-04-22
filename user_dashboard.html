@@ -1133,6 +1133,10 @@ function loadChangePassword() {
   `;
 }
 
+// ================= PASSWORD ENCODE / DECODE =================
+function encode(p){ return btoa(p); }
+function decode(p){ return atob(p); }
+
 // ================= CHANGE PASSWORD SAVE =================
 function savePassword() {
 
@@ -1145,10 +1149,8 @@ function savePassword() {
     return;
   }
 
-  function encode(p){ return btoa(p); }
-function decode(p){ return atob(p); }
-
-if (decode(user.password) !== oldPassword)
+  // ✅ Correct password check
+  if (decode(user.password || "") !== oldPassword) {
     alert("Old Password Incorrect");
     return;
   }
@@ -1163,7 +1165,8 @@ if (decode(user.password) !== oldPassword)
     return;
   }
 
-  user.password = newPassword;
+  // ✅ Save encoded password
+  user.password = encode(newPassword);
 
   if (typeof saveUsers === "function") {
     saveUsers();
