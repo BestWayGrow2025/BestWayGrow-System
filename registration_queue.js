@@ -96,6 +96,14 @@ function addToRegistrationQueue(data) {
   queue.sort((a, b) => a.requestTime - b.requestTime);
 
   saveRegQueue(queue);
+
+  // 🔥 FORCE PROCESS IMMEDIATELY (IMPORTANT FIX)
+  try {
+    processRegistrationQueue();
+  } catch (e) {
+    console.warn("Force process failed:", e.message);
+  }
+
   return true;
 }
 
@@ -279,7 +287,7 @@ function clearCompletedRegistrations() {
 
 // ================= AUTO RUN =================
 function startRegistrationQueue() {
-  setInterval(processRegistrationQueue, 2000);
+  setInterval(processRegistrationQueue, 800);
 }
 
 // ================= GLOBAL ACCESS =================
