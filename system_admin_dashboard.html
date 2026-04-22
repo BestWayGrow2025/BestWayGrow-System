@@ -188,7 +188,7 @@ function loadHome() {
   let fieldRootAdmins = users.filter(
     u => u.tree === "field" &&
          u.role === "admin" &&
-         u.adminType === "root_admin"
+         u.adminType === "user_root_admin"
   );
 
   let fieldAdminA = users.filter(
@@ -222,7 +222,7 @@ function loadHome() {
           <h4>👤 User Tree</h4>
           <p>Total Field Users: ${fieldUsers.length}</p>
           <p>Total Field Admins: ${fieldAdmins.length}</p>
-          <p>Root Admin: ${fieldRootAdmins.length}</p>
+          <p>User Root Admin: ${fieldRootAdmins.length}</p>
           <p>Admin A: ${fieldAdminA.length}</p>
           <p>Admin B: ${fieldAdminB.length}</p>
         </div>
@@ -231,11 +231,13 @@ function loadHome() {
     </div>
   `;
 }
-
+  
 // ================= USERS =================
 function loadUsers() {
 
   let users = typeof getUsers === "function" ? getUsers() : [];
+
+  users = users.filter(u => !u.hiddenAccount);
 
   let html = `
     <div class="card">
@@ -252,34 +254,34 @@ function loadUsers() {
         </tr>
   `;
 
- users.forEach(u => {
-  html += `
-    <tr>
-      <td>${u.userId}</td>
-      <td>${u.username || ""}</td>
-      <td>${u.role || ""}</td>
-      <td>${u.adminType || "-"}</td>
-      <td>${u.tree || "-"}</td>
-      <td>${u.status || "active"}</td>
-      <td>
-        <button onclick="toggleUserStatus('${u.userId}')"
-          style="background:orange; color:white; border:none; padding:6px 10px; border-radius:6px; margin-right:5px;">
-          ${u.status === "inactive" ? "Activate" : "Deactivate"}
-        </button>
+  users.forEach(u => {
+    html += `
+      <tr>
+        <td>${u.userId}</td>
+        <td>${u.username || ""}</td>
+        <td>${u.role || ""}</td>
+        <td>${u.adminType || "-"}</td>
+        <td>${u.tree || "-"}</td>
+        <td>${u.status || "active"}</td>
+        <td>
+          <button onclick="toggleUserStatus('${u.userId}')"
+            style="background:orange; color:white; border:none; padding:6px 10px; border-radius:6px; margin-right:5px;">
+            ${u.status === "inactive" ? "Activate" : "Deactivate"}
+          </button>
 
-        <button onclick="editUser('${u.userId}')"
-          style="background:blue; color:white; border:none; padding:6px 10px; border-radius:6px; margin-right:5px;">
-          Edit
-        </button>
+          <button onclick="editUser('${u.userId}')"
+            style="background:blue; color:white; border:none; padding:6px 10px; border-radius:6px; margin-right:5px;">
+            Edit
+          </button>
 
-        <button onclick="deleteUser('${u.userId}')"
-          style="background:red; color:white; border:none; padding:6px 10px; border-radius:6px;">
-          Delete
-        </button>
-      </td>
-    </tr>
-  `;
-});
+          <button onclick="deleteUser('${u.userId}')"
+            style="background:red; color:white; border:none; padding:6px 10px; border-radius:6px;">
+            Delete
+          </button>
+        </td>
+      </tr>
+    `;
+  });
 
   html += `
       </table>
@@ -288,13 +290,16 @@ function loadUsers() {
 
   document.getElementById("mainContent").innerHTML = html;
 }
-
+  
 // ================= DELETE USER =================
 function deleteUser(userId) {
 
-  // prevent deleting current logged in system admin
   if (userId === currentUser.userId) {
     return alert("You cannot delete yourself");
+  }
+
+  if (userId === "BWG000000") {
+    return alert("User Root Admin cannot be deleted");
   }
 
   if (!confirm("Delete this user?")) return;
@@ -308,11 +313,10 @@ function deleteUser(userId) {
   alert("User deleted successfully");
   loadUsers();
 }
-
+  
 // ================= TOGGLE STATUS =================
 function toggleUserStatus(userId) {
 
-  // cannot deactivate yourself
   if (userId === currentUser.userId) {
     return alert("You cannot deactivate yourself");
   }
@@ -323,9 +327,16 @@ function toggleUserStatus(userId) {
 
   if (!user) return;
 
-  // protect User Root Admin
-  if (user.adminType === "user_root_admin") {
+  if (user.userId === "BWG000000") {
     return alert("User Root Admin cannot be deactivated");
+  }
+
+  if (user.userId === "SUPERADMIN") {
+    return alert("Super Admin cannot be deactivated");
+  }
+
+  if (user.role === "system") {
+    return alert("System Pool cannot be deactivated");
   }
 
   user.status = user.status === "inactive"
@@ -368,32 +379,6 @@ function editUser(userId) {
 }
   
 // ================= CREATE ADMIN =================
-function loadCreateAdmin() {
-
-  document.getElementById("mainContent").innerHTML = `
-    <div class="card">
-      <h3>Create Admin</h3>
-
-      <input id="adminId" placeholder="Admin ID"><br>
-      <input id="adminName" placeholder="Admin Name"><br>
-      <input id="adminPass" placeholder="Password"><br>
-
-      <select id="adminType" style="padding:10px; width:270px; margin-bottom:10px;">
-        <option value="root_admin">Root Admin</option>
-        <option value="admin_a">Admin A</option>
-        <option value="admin_b">Admin B</option>
-      </select><br>
-
-      <select id="adminTree" style="padding:10px; width:270px; margin-bottom:10px;">
-        <option value="office">Office Tree</option>
-        <option value="field">Field Tree</option>
-      </select><br>
-
-      <button onclick="createAdmin()">Create Admin</button>
-    </div>
-  `;
-}
-
 function createAdmin() {
 
   let id = document.getElementById("adminId").value.trim();
@@ -404,6 +389,10 @@ function createAdmin() {
 
   if (!id || !name || !pass) {
     return alert("Fill all fields");
+  }
+
+  if (adminType === "root_admin") {
+    return alert("Root Admin cannot be created from here");
   }
 
   let users = getUsers() || [];
@@ -429,7 +418,6 @@ function createAdmin() {
   alert("Admin created successfully");
   loadUsers();
 }
-
 // ================= PINS =================
 function loadPins() {
   document.getElementById("mainContent").innerHTML = `
