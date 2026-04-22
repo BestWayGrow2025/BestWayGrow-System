@@ -139,11 +139,48 @@ document.getElementById("welcome").innerText =
   "Welcome " + (currentUser.username || "") + " (" + currentUser.userId + ")";
 
 // ================= HOME =================
+// ================= HOME =================
 function loadHome() {
+
+  let users = getUsers() || [];
+
+  // ================= OFFICE TREE =================
+  let officeUsers = users.filter(
+    u => u.tree === "office" && u.role === "user"
+  );
+
+  let officeAdmins = users.filter(
+    u => u.tree === "office" && u.role === "admin"
+  );
+
+  // ================= USER TREE =================
+  let fieldUsers = users.filter(
+    u => u.tree === "field" && u.role === "user"
+  );
+
+  let fieldAdmins = users.filter(
+    u => u.tree === "field" && u.role === "admin"
+  );
+
   document.getElementById("mainContent").innerHTML = `
     <div class="card">
-      <h3>Welcome System Admin</h3>
-      <p>Dashboard working correctly ❤️</p>
+      <h3>Dashboard Overview</h3>
+
+      <div style="display:flex; flex-wrap:wrap; gap:15px;">
+
+        <div style="flex:1; min-width:250px; background:#4CAF50; color:#fff; padding:20px; border-radius:10px;">
+          <h4>🏢 Office Tree</h4>
+          <p>Total Office Users: ${officeUsers.length}</p>
+          <p>Total Office Admins: ${officeAdmins.length}</p>
+        </div>
+
+        <div style="flex:1; min-width:250px; background:#2196F3; color:#fff; padding:20px; border-radius:10px;">
+          <h4>👤 User Tree</h4>
+          <p>Total Field Users: ${fieldUsers.length}</p>
+          <p>Total Field Admins: ${fieldAdmins.length}</p>
+        </div>
+
+      </div>
     </div>
   `;
 }
