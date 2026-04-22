@@ -455,15 +455,31 @@ function savePin() {
 
   alert("PIN Saved");
 }
-  
+
 // ================= SETTINGS =================
 function loadSettings() {
   document.getElementById("mainContent").innerHTML = `
     <div class="card">
       <h3>Settings</h3>
+
       <p>System Admin settings panel</p>
+
+      <button onclick="clearLogs()"
+        style="background:red; color:white; border:none; padding:10px 15px; border-radius:6px; margin-top:10px;">
+        Clear Activity Logs
+      </button>
     </div>
   `;
+}
+
+// ================= CLEAR LOGS =================
+function clearLogs() {
+
+  if (!confirm("Clear all activity logs?")) return;
+
+  localStorage.removeItem("activityLogs");
+
+  alert("Activity logs cleared");
 }
 
 // ================= LOGOUT =================
@@ -478,4 +494,3 @@ loadHome();
 </script>
 
 </body>
-</html>
