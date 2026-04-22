@@ -262,7 +262,12 @@ function loadUsers() {
         <td>${u.tree || "-"}</td>
         <td>${u.status || "active"}</td>
         <td>
-          <button onclick="deleteUser('${u.userId}')" 
+          <button onclick="toggleUserStatus('${u.userId}')"
+            style="background:orange; color:white; border:none; padding:6px 10px; border-radius:6px; margin-right:5px;">
+            ${u.status === "inactive" ? "Activate" : "Deactivate"}
+          </button>
+
+          <button onclick="deleteUser('${u.userId}')"
             style="background:red; color:white; border:none; padding:6px 10px; border-radius:6px;">
             Delete
           </button>
@@ -291,6 +296,26 @@ function deleteUser(userId) {
   saveUsers(users);
 
   alert("User deleted successfully");
+  loadUsers();
+}
+
+// ================= TOGGLE STATUS =================
+function toggleUserStatus(userId) {
+
+  let users = getUsers() || [];
+
+  let user = users.find(u => u.userId === userId);
+
+  if (!user) return;
+
+  user.status = user.status === "inactive"
+    ? "active"
+    : "inactive";
+
+  saveUsers(users);
+
+  alert(user.userId + " is now " + user.status);
+
   loadUsers();
 }
 
