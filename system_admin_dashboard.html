@@ -359,6 +359,13 @@ function editUser(userId) {
 
   if (!user) return;
 
+  if (
+    user.userId === "SUPERADMIN" ||
+    user.userId === "SYSTEM"
+  ) {
+    return alert("This account cannot be edited");
+  }
+
   let newName = prompt("Enter new name", user.username || "");
   if (newName === null) return;
 
