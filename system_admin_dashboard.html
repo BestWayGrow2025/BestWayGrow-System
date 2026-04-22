@@ -292,6 +292,11 @@ function loadUsers() {
 // ================= DELETE USER =================
 function deleteUser(userId) {
 
+  // prevent deleting current logged in system admin
+  if (userId === currentUser.userId) {
+    return alert("You cannot delete yourself");
+  }
+
   if (!confirm("Delete this user?")) return;
 
   let users = getUsers() || [];
