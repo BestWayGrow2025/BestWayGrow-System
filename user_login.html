@@ -21,9 +21,7 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }
 
-    h2 {
-      margin-bottom: 20px;
-    }
+    h2 { margin-bottom: 20px; }
 
     input {
       width: 90%;
@@ -67,6 +65,7 @@
     }
   </style>
 </head>
+
 <body>
 
 <div class="card">
@@ -153,12 +152,7 @@ function safeDecode(password) {
 // ================= TOGGLE PASSWORD =================
 function togglePassword() {
   let pass = document.getElementById("password");
-
-  if (document.getElementById("showPass").checked) {
-    pass.type = "text";
-  } else {
-    pass.type = "password";
-  }
+  pass.type = document.getElementById("showPass").checked ? "text" : "password";
 }
 
 // ================= MESSAGE =================
@@ -222,37 +216,29 @@ function login() {
     return;
   }
 
- if (!user.password) {
-  showMsg("❌ Password Missing");
-  resetLogin();
-  return;
-}
+  if (!user.password) {
+    showMsg("❌ Password Missing");
+    resetLogin();
+    return;
+  }
 
-// ================= ACCOUNT STATUS CHECK =================
-if (
-  user.accountStatus === "inactive" ||
-  user.status === "inactive"
-) {
-  showMsg("🚫 Account Inactive");
-  resetLogin();
-  return;
-}
+  // ✅ ACCOUNT STATUS CHECK
+  if (
+    (user.accountStatus || user.status || "active") !== "active"
+  ) {
+    showMsg("🚫 Account Inactive");
+    resetLogin();
+    return;
+  }
 
-let storedPassword = safeDecode(user.password || "");
+  // ✅ PASSWORD CHECK
+  let storedPassword = safeDecode(user.password || "");
 
-if (
-  (user.accountStatus || user.status || "active") !== "active"
-) {
-  showMsg("🚫 Account Inactive");
-  resetLogin();
-  return;
-}
-
-if (storedPassword !== password) {
-  showMsg("❌ Wrong Password");
-  resetLogin();
-  return;
-}
+  if (storedPassword !== password) {
+    showMsg("❌ Wrong Password");
+    resetLogin();
+    return;
+  }
 
   // ================= SAVE SESSION =================
   let sessionSaved = false;
@@ -292,6 +278,3 @@ if (storedPassword !== password) {
 
 </body>
 </html>
-
-
-
