@@ -334,8 +334,13 @@ function toggleUserStatus(userId) {
   loadUsers();
 }
 
-  // ================= EDIT USER =================
+// ================= EDIT USER =================
 function editUser(userId) {
+
+  // prevent editing current logged in system admin password accidentally
+  if (userId === currentUser.userId) {
+    alert("Editing your own account");
+  }
 
   let users = getUsers() || [];
 
