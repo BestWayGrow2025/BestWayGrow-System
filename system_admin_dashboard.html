@@ -58,6 +58,8 @@ let session = JSON.parse(
   localStorage.getItem("loggedInSystemAdmin")
 );
 
+console.log(session);
+
 if (!session || session.role !== "system_admin") {
   window.location.href = "system_admin_login.html";
   throw new Error("STOP");
