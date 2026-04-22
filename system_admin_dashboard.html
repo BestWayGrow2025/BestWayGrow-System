@@ -232,6 +232,266 @@ function loadHome() {
   `;
 }
   
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Admin Dashboard</title>
+  <link rel="icon" href="data:,">
+
+  <style>
+    body {
+      font-family: Arial;
+      margin: 0;
+      background: #f4f7f9;
+    }
+
+    header {
+      background: #ff6600;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+
+    header button {
+      margin-top: 10px;
+      padding: 8px 15px;
+      border: none;
+      background: red;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .menu {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      background: white;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .menu button {
+      padding: 10px 15px;
+      border: none;
+      background: #ff944d;
+      color: white;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    #mainContent {
+      padding: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    input {
+      padding: 10px;
+      width: 250px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h2>SYSTEM ADMIN DASHBOARD</h2>
+  <p id="welcome"></p>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="menu">
+  <button onclick="loadHome()">Home</button>
+  <button onclick="loadUsers()">Users</button>
+  <button onclick="loadCreateAdmin()">Create Admin</button>
+  <button onclick="loadPins()">Pins</button>
+  <button onclick="loadSettings()">Settings</button>
+</div>
+
+<div id="mainContent"></div>
+
+<script src="core_system.js"></script>
+<script src="activity_log.js"></script>
+
+<script>
+
+// ================= INIT =================
+if (typeof initCoreSystem === "function") {
+  initCoreSystem();
+} else {
+  alert("core_system.js missing");
+  throw new Error("STOP");
+}
+
+// ================= AUTH =================
+let session = JSON.parse(
+  localStorage.getItem("loggedInSystemAdmin")
+);
+
+if (!session || session.role !== "system_admin") {
+  window.location.href = "system_admin_login.html";
+  throw new Error("STOP");
+}
+
+// ================= CURRENT USER =================
+let currentUser = null;
+
+if (typeof getUserById === "function") {
+  currentUser = getUserById(session.userId);
+}
+
+if (!currentUser) {
+  localStorage.removeItem("loggedInSystemAdmin");
+  window.location.href = "system_admin_login.html";
+  throw new Error("STOP");
+}
+
+if (currentUser.role !== "system_admin") {
+  localStorage.removeItem("loggedInSystemAdmin");
+  window.location.href = "system_admin_login.html";
+  throw new Error("STOP");
+}
+
+if ((currentUser.status || "active") !== "active") {
+  localStorage.removeItem("loggedInSystemAdmin");
+  alert("Account inactive");
+  window.location.href = "system_admin_login.html";
+  throw new Error("STOP");
+}
+
+// ================= WELCOME =================
+document.getElementById("welcome").innerText =
+  "Welcome " + (currentUser.username || "") + " (" + currentUser.userId + ")";
+
+// ================= HOME =================
+function loadHome() {
+
+  let users = getUsers() || [];
+
+  let officeUsers = users.filter(
+    u => u.tree === "office" && u.role === "user"
+  );
+
+  let officeAdmins = users.filter(
+    u => u.tree === "office" && u.role === "admin"
+  );
+
+  let officeRootAdmins = users.filter(
+    u => u.tree === "office" &&
+         u.role === "admin" &&
+         u.adminType === "root_admin"
+  );
+
+  let officeAdminA = users.filter(
+    u => u.tree === "office" &&
+         u.role === "admin" &&
+         u.adminType === "admin_a"
+  );
+
+  let officeAdminB = users.filter(
+    u => u.tree === "office" &&
+         u.role === "admin" &&
+         u.adminType === "admin_b"
+  );
+
+  let fieldUsers = users.filter(
+    u => u.tree === "field" && u.role === "user"
+  );
+
+  let fieldAdmins = users.filter(
+    u => u.tree === "field" && u.role === "admin"
+  );
+
+  let fieldRootAdmins = users.filter(
+    u => u.tree === "field" &&
+         u.role === "admin" &&
+         u.adminType === "user_root_admin"
+  );
+
+  let fieldAdminA = users.filter(
+    u => u.tree === "field" &&
+         u.role === "admin" &&
+         u.adminType === "admin_a"
+  );
+
+  let fieldAdminB = users.filter(
+    u => u.tree === "field" &&
+         u.role === "admin" &&
+         u.adminType === "admin_b"
+  );
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="card">
+      <h3>Dashboard Overview</h3>
+
+      <div style="display:flex; flex-wrap:wrap; gap:15px;">
+
+        <div style="flex:1; min-width:250px; background:#4CAF50; color:#fff; padding:20px; border-radius:10px;">
+          <h4>🏢 Office Tree</h4>
+          <p>Total Office Users: ${officeUsers.length}</p>
+          <p>Total Office Admins: ${officeAdmins.length}</p>
+          <p>Root Admin: ${officeRootAdmins.length}</p>
+          <p>Admin A: ${officeAdminA.length}</p>
+          <p>Admin B: ${officeAdminB.length}</p>
+        </div>
+
+        <div style="flex:1; min-width:250px; background:#2196F3; color:#fff; padding:20px; border-radius:10px;">
+          <h4>👤 User Tree</h4>
+          <p>Total Field Users: ${fieldUsers.length}</p>
+          <p>Total Field Admins: ${fieldAdmins.length}</p>
+          <p>User Root Admin: ${fieldRootAdmins.length}</p>
+          <p>Admin A: ${fieldAdminA.length}</p>
+          <p>Admin B: ${fieldAdminB.length}</p>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+  
+// ================= CREATE ADMIN FORM =================
+function loadCreateAdmin() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="card">
+      <h3>Create Admin</h3>
+
+      <input id="adminId" placeholder="Admin ID"><br>
+      <input id="adminName" placeholder="Admin Name"><br>
+      <input id="adminPass" placeholder="Password"><br>
+
+      <select id="adminType" style="padding:10px; width:270px; margin-bottom:10px;">
+        <option value="admin_a">Admin A</option>
+        <option value="admin_b">Admin B</option>
+      </select><br>
+
+      <select id="adminTree" style="padding:10px; width:270px; margin-bottom:10px;">
+        <option value="office">Office Tree</option>
+        <option value="field">Field Tree</option>
+      </select><br>
+
+      <button onclick="createAdmin()">Create Admin</button>
+    </div>
+  `;
+}
+
 // ================= USERS =================
 function loadUsers() {
 
@@ -290,7 +550,7 @@ function loadUsers() {
 
   document.getElementById("mainContent").innerHTML = html;
 }
-  
+
 // ================= DELETE USER =================
 function deleteUser(userId) {
 
@@ -300,6 +560,14 @@ function deleteUser(userId) {
 
   if (userId === "BWG000000") {
     return alert("User Root Admin cannot be deleted");
+  }
+
+  if (
+    userId === "SUPERADMIN" ||
+    userId === "BWG000001" ||
+    userId === "SYSTEM"
+  ) {
+    return alert("Protected account cannot be deleted");
   }
 
   if (!confirm("Delete this user?")) return;
@@ -313,7 +581,7 @@ function deleteUser(userId) {
   alert("User deleted successfully");
   loadUsers();
 }
-  
+
 // ================= TOGGLE STATUS =================
 function toggleUserStatus(userId) {
 
@@ -331,12 +599,12 @@ function toggleUserStatus(userId) {
     return alert("User Root Admin cannot be deactivated");
   }
 
-  if (user.userId === "SUPERADMIN") {
-    return alert("Super Admin cannot be deactivated");
-  }
-
-  if (user.role === "system") {
-    return alert("System Pool cannot be deactivated");
+  if (
+    user.userId === "SUPERADMIN" ||
+    user.userId === "BWG000001" ||
+    user.userId === "SYSTEM"
+  ) {
+    return alert("Protected account cannot be deactivated");
   }
 
   user.status = user.status === "inactive"
@@ -361,6 +629,7 @@ function editUser(userId) {
 
   if (
     user.userId === "SUPERADMIN" ||
+    user.userId === "BWG000001" ||
     user.userId === "SYSTEM"
   ) {
     return alert("This account cannot be edited");
@@ -384,7 +653,7 @@ function editUser(userId) {
 
   loadUsers();
 }
-  
+
 // ================= CREATE ADMIN =================
 function createAdmin() {
 
@@ -396,10 +665,6 @@ function createAdmin() {
 
   if (!id || !name || !pass) {
     return alert("Fill all fields");
-  }
-
-  if (adminType === "root_admin") {
-    return alert("Root Admin cannot be created from here");
   }
 
   let users = getUsers() || [];
@@ -416,6 +681,8 @@ function createAdmin() {
     adminType: adminType,
     tree: adminTree,
     status: "active",
+    visibleInTree: false,
+    allowReferral: false,
     createdBy: currentUser.userId,
     createdAt: Date.now()
   });
@@ -425,6 +692,72 @@ function createAdmin() {
   alert("Admin created successfully");
   loadUsers();
 }
+
+// ================= PINS =================
+function loadPins() {
+  document.getElementById("mainContent").innerHTML = `
+    <div class="card">
+      <h3>PIN Control</h3>
+
+      <input id="newPin" placeholder="Enter New PIN"><br>
+
+      <button onclick="savePin()">Save PIN</button>
+    </div>
+  `;
+}
+
+function savePin() {
+
+  let pin = document.getElementById("newPin").value.trim();
+
+  if (!pin) {
+    return alert("Enter PIN");
+  }
+
+  localStorage.setItem("systemPin", pin);
+
+  alert("PIN Saved");
+}
+
+// ================= SETTINGS =================
+function loadSettings() {
+  document.getElementById("mainContent").innerHTML = `
+    <div class="card">
+      <h3>Settings</h3>
+
+      <p>System Admin settings panel</p>
+
+      <button onclick="clearLogs()"
+        style="background:red; color:white; border:none; padding:10px 15px; border-radius:6px; margin-top:10px;">
+        Clear Activity Logs
+      </button>
+    </div>
+  `;
+}
+
+// ================= CLEAR LOGS =================
+function clearLogs() {
+
+  if (!confirm("Clear all activity logs?")) return;
+
+  localStorage.removeItem("activityLogs");
+
+  alert("Activity logs cleared");
+}
+
+// ================= LOGOUT =================
+function logout() {
+  localStorage.removeItem("loggedInSystemAdmin");
+  window.location.href = "system_admin_login.html";
+}
+
+// ================= INIT PAGE =================
+loadHome();
+
+</script>
+
+</body>
+  
 // ================= PINS =================
 function loadPins() {
   document.getElementById("mainContent").innerHTML = `
