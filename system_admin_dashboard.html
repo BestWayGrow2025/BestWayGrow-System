@@ -234,6 +234,17 @@ function loadCreateAdmin() {
       <input id="adminName" placeholder="Admin Name"><br>
       <input id="adminPass" placeholder="Password"><br>
 
+      <select id="adminType" style="padding:10px; width:270px; margin-bottom:10px;">
+        <option value="root_admin">Root Admin</option>
+        <option value="admin_a">Admin A</option>
+        <option value="admin_b">Admin B</option>
+      </select><br>
+
+      <select id="adminTree" style="padding:10px; width:270px; margin-bottom:10px;">
+        <option value="office">Office Tree</option>
+        <option value="field">Field Tree</option>
+      </select><br>
+
       <button onclick="createAdmin()">Create Admin</button>
     </div>
   `;
@@ -244,6 +255,8 @@ function createAdmin() {
   let id = document.getElementById("adminId").value.trim();
   let name = document.getElementById("adminName").value.trim();
   let pass = document.getElementById("adminPass").value.trim();
+  let adminType = document.getElementById("adminType").value;
+  let adminTree = document.getElementById("adminTree").value;
 
   if (!id || !name || !pass) {
     return alert("Fill all fields");
@@ -260,8 +273,9 @@ function createAdmin() {
     username: name,
     password: btoa(pass),
     role: "admin",
+    adminType: adminType,
+    tree: adminTree,
     status: "active",
-    tree: "office",
     createdBy: currentUser.userId,
     createdAt: Date.now()
   });
