@@ -49,7 +49,43 @@
 if (typeof initCoreSystem === "function") {
   initCoreSystem();
 } else {
-  alert("❌ core_system.js not loaded");
+  alert("core_system.js missing");
+  throw new Error("STOP");
+}
+
+// ================= AUTH =================
+let session = JSON.parse(
+  localStorage.getItem("loggedInSystemAdmin")
+);
+
+if (!session || session.role !== "system_admin") {
+  window.location.href = "system_admin_login.html";
+  throw new Error("STOP");
+}
+
+// ================= CURRENT USER =================
+let currentUser = null;
+
+if (typeof getUserById === "function") {
+  currentUser = getUserById(session.userId);
+}
+
+if (!currentUser) {
+  localStorage.removeItem("loggedInSystemAdmin");
+  window.location.href = "system_admin_login.html";
+  throw new Error("STOP");
+}
+
+if (currentUser.role !== "system_admin") {
+  localStorage.removeItem("loggedInSystemAdmin");
+  window.location.href = "system_admin_login.html";
+  throw new Error("STOP");
+}
+
+if ((currentUser.status || "active") !== "active") {
+  localStorage.removeItem("loggedInSystemAdmin");
+  alert("Account inactive");
+  window.location.href = "system_admin_login.html";
   throw new Error("STOP");
 }
 
