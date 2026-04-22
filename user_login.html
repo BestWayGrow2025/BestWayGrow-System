@@ -203,12 +203,14 @@ function login() {
     return;
   }
 
-  let users = getUsers() || [];
+  // ================= FIND USER =================
+let users = getUsers() || [];
 
-  let user = users.find(u =>
-    (u.userId || "").toUpperCase() === userId &&
-    u.role === "user"
-  );
+let user = users.find(u =>
+  (u.userId || "").toUpperCase() === userId ||
+  (u.mobile || "") === userId ||
+  (u.email || "") === userId
+);
 
   if (!user) {
     showMsg("❌ Invalid User ID");
@@ -264,6 +266,15 @@ function login() {
   if (typeof logActivity === "function") {
     logActivity(user.userId, "USER", "Login", "USER_LOGIN");
   }
+
+  // ================= LAST LOGIN UPDATE =================
+let index = users.findIndex(u => u.userId === user.userId);
+if (index !== -1) {
+  users[index].lastLogin = new Date().toISOString();
+  if (typeof saveUsers === "function") {
+    saveUsers(users);
+  }
+}
 
   showMsg("✅ Login Successful", "green");
 
