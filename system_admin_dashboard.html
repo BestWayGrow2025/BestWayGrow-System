@@ -252,29 +252,34 @@ function loadUsers() {
         </tr>
   `;
 
-  users.forEach(u => {
-    html += `
-      <tr>
-        <td>${u.userId}</td>
-        <td>${u.username || ""}</td>
-        <td>${u.role || ""}</td>
-        <td>${u.adminType || "-"}</td>
-        <td>${u.tree || "-"}</td>
-        <td>${u.status || "active"}</td>
-        <td>
-          <button onclick="toggleUserStatus('${u.userId}')"
-            style="background:orange; color:white; border:none; padding:6px 10px; border-radius:6px; margin-right:5px;">
-            ${u.status === "inactive" ? "Activate" : "Deactivate"}
-          </button>
+ users.forEach(u => {
+  html += `
+    <tr>
+      <td>${u.userId}</td>
+      <td>${u.username || ""}</td>
+      <td>${u.role || ""}</td>
+      <td>${u.adminType || "-"}</td>
+      <td>${u.tree || "-"}</td>
+      <td>${u.status || "active"}</td>
+      <td>
+        <button onclick="toggleUserStatus('${u.userId}')"
+          style="background:orange; color:white; border:none; padding:6px 10px; border-radius:6px; margin-right:5px;">
+          ${u.status === "inactive" ? "Activate" : "Deactivate"}
+        </button>
 
-          <button onclick="deleteUser('${u.userId}')"
-            style="background:red; color:white; border:none; padding:6px 10px; border-radius:6px;">
-            Delete
-          </button>
-        </td>
-      </tr>
-    `;
-  });
+        <button onclick="editUser('${u.userId}')"
+          style="background:blue; color:white; border:none; padding:6px 10px; border-radius:6px; margin-right:5px;">
+          Edit
+        </button>
+
+        <button onclick="deleteUser('${u.userId}')"
+          style="background:red; color:white; border:none; padding:6px 10px; border-radius:6px;">
+          Delete
+        </button>
+      </td>
+    </tr>
+  `;
+});
 
   html += `
       </table>
@@ -319,6 +324,34 @@ function toggleUserStatus(userId) {
   loadUsers();
 }
 
+  // ================= EDIT USER =================
+function editUser(userId) {
+
+  let users = getUsers() || [];
+
+  let user = users.find(u => u.userId === userId);
+
+  if (!user) return;
+
+  let newName = prompt("Enter new name", user.username || "");
+  if (newName === null) return;
+
+  let newPass = prompt("Enter new password", "");
+  if (newPass === null) return;
+
+  user.username = newName.trim();
+
+  if (newPass.trim() !== "") {
+    user.password = btoa(newPass.trim());
+  }
+
+  saveUsers(users);
+
+  alert("User updated successfully");
+
+  loadUsers();
+}
+  
 // ================= CREATE ADMIN =================
 function loadCreateAdmin() {
 
