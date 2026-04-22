@@ -248,6 +248,7 @@ function loadUsers() {
           <th>Admin Type</th>
           <th>Tree</th>
           <th>Status</th>
+          <th>Action</th>
         </tr>
   `;
 
@@ -260,6 +261,12 @@ function loadUsers() {
         <td>${u.adminType || "-"}</td>
         <td>${u.tree || "-"}</td>
         <td>${u.status || "active"}</td>
+        <td>
+          <button onclick="deleteUser('${u.userId}')" 
+            style="background:red; color:white; border:none; padding:6px 10px; border-radius:6px;">
+            Delete
+          </button>
+        </td>
       </tr>
     `;
   });
@@ -270,6 +277,21 @@ function loadUsers() {
   `;
 
   document.getElementById("mainContent").innerHTML = html;
+}
+
+// ================= DELETE USER =================
+function deleteUser(userId) {
+
+  if (!confirm("Delete this user?")) return;
+
+  let users = getUsers() || [];
+
+  users = users.filter(u => u.userId !== userId);
+
+  saveUsers(users);
+
+  alert("User deleted successfully");
+  loadUsers();
 }
 
 // ================= CREATE ADMIN =================
