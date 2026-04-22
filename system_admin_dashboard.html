@@ -199,20 +199,26 @@ function loadUsers() {
     <div class="card">
       <h3>All Users</h3>
       <table>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Role</th>
-        </tr>
+       <tr>
+  <th>ID</th>
+  <th>Name</th>
+  <th>Role</th>
+  <th>Admin Type</th>
+  <th>Tree</th>
+  <th>Status</th>
+</tr>
   `;
 
   users.forEach(u => {
     html += `
       <tr>
-        <td>${u.userId}</td>
-        <td>${u.username || ""}</td>
-        <td>${u.role}</td>
-      </tr>
+  <td>${u.userId}</td>
+  <td>${u.username || ""}</td>
+  <td>${u.role || ""}</td>
+  <td>${u.adminType || "-"}</td>
+  <td>${u.tree || "-"}</td>
+  <td>${u.status || "active"}</td>
+</tr>
     `;
   });
 
