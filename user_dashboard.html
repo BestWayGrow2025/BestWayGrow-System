@@ -1145,7 +1145,10 @@ function savePassword() {
     return;
   }
 
-  if (user.password && oldPassword !== user.password) {
+  function encode(p){ return btoa(p); }
+function decode(p){ return atob(p); }
+
+if (decode(user.password) !== oldPassword)
     alert("Old Password Incorrect");
     return;
   }
@@ -1320,7 +1323,7 @@ function loadRankReward() {
   `;
 }
 
-  // ================= REFERRAL LINK =================
+ // ================= REFERRAL LINK =================
 function loadReferralLink() {
 
   let referralLink = location.origin + "/register.html?ref=" + user.userId;
@@ -1338,18 +1341,23 @@ function loadReferralLink() {
   `;
 }
 
+// ================= COPY REFERRAL =================
 function copyReferralLink() {
 
   let copyText = document.getElementById("referralLinkBox");
 
-  copyText.select();
-  copyText.setSelectionRange(0, 99999);
+  if (!copyText) return;
 
-  document.execCommand("copy");
-
-  alert("Referral Link Copied");
+  navigator.clipboard.writeText(copyText.value)
+    .then(() => {
+      alert("Referral Link Copied");
+    })
+    .catch(() => {
+      alert("Copy Failed");
+    });
 }
 
+ 
 // ================= LOGOUT =================
 function logout() {
 
