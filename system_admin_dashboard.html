@@ -1,44 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>System Admin Login</title>
+  <title>System Admin Dashboard</title>
   <link rel="icon" href="data:,">
 
   <style>
-    body { 
-      font-family: Arial; 
-      padding: 20px; 
-      text-align: center;
+    body {
+      font-family: Arial;
       background: #f4f7f9;
+      margin: 0;
+      padding: 0;
     }
 
-    input { 
-      margin-bottom: 10px; 
-      padding: 8px; 
-      width: 240px; 
+    header {
+      background: #1976d2;
+      color: white;
+      padding: 20px;
+      text-align: center;
     }
 
-    button { 
-      padding: 8px 15px; 
+    .container {
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    button {
+      padding: 10px 15px;
       cursor: pointer;
-    }
-
-    #msg {
       margin-top: 10px;
-      font-weight: bold;
     }
   </style>
 </head>
+
 <body>
 
-<h2>SYSTEM ADMIN LOGIN</h2>
+<header>
+  <h2>SYSTEM ADMIN DASHBOARD</h2>
+  <p id="welcome"></p>
+  <button onclick="logout()">Logout</button>
+</header>
 
-<input id="userId" placeholder="User ID"><br>
-<input id="password" type="password" placeholder="Password"><br>
-
-<button onclick="safeClick(login)">Login</button>
-
-<p id="msg"></p>
+<div class="container">
+  <div class="card">
+    <h3>Welcome System Admin</h3>
+    <p>Dashboard working correctly ❤️</p>
+  </div>
+</div>
 
 <script src="core_system.js"></script>
 <script src="activity_log.js"></script>
@@ -93,104 +107,20 @@ if ((currentUser.status || "active") !== "active") {
   throw new Error("STOP");
 }
 
-// ================= LOCK SYSTEM =================
-let lock = false;
-function safeClick(fn) {
-  if (lock) return;
-  lock = true;
+// ================= WELCOME =================
+document.getElementById("welcome").innerText =
+  "Welcome " + (currentUser.username || currentUser.userId) +
+  " (" + currentUser.userId + ")";
 
-  try {
-    fn();
-  } catch (e) {
-    console.error(e);
-  }
+// ================= LOGOUT =================
+function logout() {
 
-  setTimeout(() => lock = false, 500);
-}
-
-// ================= LOGOUT ALL =================
-function logoutAll() {
-  localStorage.removeItem("loggedInSuperAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInUser");
-}
-
-// ================= SAFE DECODE =================
-function safeDecode(p) {
-  try { 
-    return atob(p); 
-  } catch { 
-    return p; 
-  }
-}
-
-// ================= SAFE USERS =================
-function getSafeUsers() {
-  if (typeof getUsers !== "function") {
-    showMsg("❌ System Error: getUsers missing");
-    return [];
-  }
-  return getUsers() || [];
-}
-
-// ================= LOGIN =================
-function login() {
-
-  let userId = document.getElementById("userId").value.trim();
-  let password = document.getElementById("password").value.trim();
-
-  if (!userId || !password) {
-    return showMsg("⚠️ Enter ID & Password");
-  }
-
-  let users = getSafeUsers();
-
-  let user = users.find(u =>
-    u.userId === userId &&
-    u.role === "system_admin"
-  );
-
-  if (!user) {
-    return showMsg("❌ Invalid ID");
-  }
-
-  // ================= STATUS CHECK =================
-  if (user.status && user.status !== "active") {
-    return showMsg("🚫 Account inactive");
-  }
-
-  // ================= PASSWORD CHECK =================
-  let storedPass = safeDecode(user.password);
-
-  if (storedPass !== password) {
-    return showMsg("❌ Wrong Password");
-  }
-
-  // ================= CLEAR OLD SESSIONS =================
-  logoutAll();
-
-  // ================= SAVE SESSION =================
-  localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
-    userId: user.userId,
-    role: user.role
-  }));
-
-  // ================= ACTIVITY LOG =================
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "SYSTEM_ADMIN", "Login");
+    logActivity(currentUser.userId, "SYSTEM_ADMIN", "Logout");
   }
 
-  showMsg("✅ Login successful");
-
-  setTimeout(() => {
-    window.location.href = "system_admin_dashboard.html";
-  }, 500);
-}
-
-// ================= MESSAGE =================
-function showMsg(text) {
-  document.getElementById("msg").innerText = text;
+  localStorage.removeItem("loggedInSystemAdmin");
+  window.location.href = "system_admin_login.html";
 }
 
 </script>
