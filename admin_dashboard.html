@@ -712,9 +712,8 @@ function filterIncomeLogs() {
 }
 
 // ================= SYSTEM =================
-let queueBtnLock = false;
-
 function loadSystem() {
+
   let s = (typeof getSystemSettings === "function")
     ? getSystemSettings()
     : {};
@@ -739,48 +738,22 @@ function loadSystem() {
     <h3>System Control</h3>
 
     <div class="grid">
-      <div class="miniCard">
-        <h4>Registration</h4>
-        <p>${s.registrationOpen ? "ON" : "OFF"}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Upgrade</h4>
-        <p>${s.upgradesOpen ? "ON" : "OFF"}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Repurchase</h4>
-        <p>${s.repurchaseOpen ? "ON" : "OFF"}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Withdraw</h4>
-        <p>${s.withdrawOpen ? "ON" : "OFF"}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Admin Access</h4>
-        <p>${s.adminAccess ? "ON" : "OFF"}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Lock Mode</h4>
-        <p>${s.lockMode ? "ON" : "OFF"}</p>
-      </div>
+      <div class="miniCard"><h4>Registration</h4><p>${s.registrationOpen ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Upgrade</h4><p>${s.upgradesOpen ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Repurchase</h4><p>${s.repurchaseOpen ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Withdraw</h4><p>${s.withdrawOpen ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Admin Access</h4><p>${s.adminAccess ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Lock Mode</h4><p>${s.lockMode ? "ON" : "OFF"}</p></div>
     </div>
 
     <hr>
 
     <h3>PIN Queue</h3>
-
     <p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
   `;
 
-  if (
-    adminUser.role === "super_admin" ||
-    adminUser.role === "system_admin"
-  ) {
+  // ✅ FIXED: only admin can control queue
+  if (adminUser.role === "admin") {
     html += `
       <button class="on" onclick="toggleQueue(true)">ON</button>
       <button class="off" onclick="toggleQueue(false)">OFF</button>
@@ -791,57 +764,19 @@ function loadSystem() {
     <hr>
 
     <h3>PIN Request Stats</h3>
-
     <div class="grid">
-      <div class="miniCard">
-        <h4>Pending</h4>
-        <p>${pendingPins}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Completed</h4>
-        <p>${completedPins}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Failed</h4>
-        <p>${failedPins}</p>
-      </div>
+      <div class="miniCard"><h4>Pending</h4><p>${pendingPins}</p></div>
+      <div class="miniCard"><h4>Completed</h4><p>${completedPins}</p></div>
+      <div class="miniCard"><h4>Failed</h4><p>${failedPins}</p></div>
     </div>
-  `;
 
-  if (adminUser.role === "admin") {
-    html += `
-      <hr>
-
-      <h3>PIN Stock</h3>
-
-      <button class="on" onclick="requestPinStock()">
-        Request PIN Stock
-      </button>
-    `;
-  }
-
-  html += `
     <hr>
 
     <h3>Registration Queue Stats</h3>
-
     <div class="grid">
-      <div class="miniCard">
-        <h4>Pending</h4>
-        <p>${pendingReg}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Done</h4>
-        <p>${doneReg}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Failed</h4>
-        <p>${failedReg}</p>
-      </div>
+      <div class="miniCard"><h4>Pending</h4><p>${pendingReg}</p></div>
+      <div class="miniCard"><h4>Done</h4><p>${doneReg}</p></div>
+      <div class="miniCard"><h4>Failed</h4><p>${failedReg}</p></div>
     </div>
   `;
 
