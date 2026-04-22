@@ -312,6 +312,11 @@ function deleteUser(userId) {
 // ================= TOGGLE STATUS =================
 function toggleUserStatus(userId) {
 
+  // prevent deactivating current logged in system admin
+  if (userId === currentUser.userId) {
+    return alert("You cannot deactivate yourself");
+  }
+
   let users = getUsers() || [];
 
   let user = users.find(u => u.userId === userId);
