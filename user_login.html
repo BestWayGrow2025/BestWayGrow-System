@@ -238,10 +238,9 @@ if (
   return;
 }
 
-let storedPassword = safeDecode(user.password);
+let storedPassword = safeDecode(user.password || "");
 
-
-  if (storedPassword !== password) {
+if (storedPassword !== password) {
     showMsg("❌ Wrong Password");
     resetLogin();
     return;
