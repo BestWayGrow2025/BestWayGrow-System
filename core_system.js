@@ -119,6 +119,41 @@ function initCoreSystem() {
     let users = getUsers();
     let updated = false;
 
+    // ================= FIX OLD USERS DATA =================
+    users.forEach(u => {
+
+      if (u.userId === "BWG000000") {
+        u.username = "User Root Admin";
+        u.role = "admin";
+        u.adminType = "user_root_admin";
+        u.tree = "field";
+        u.officeType = "user_root_admin";
+        u.accessType = "full_user_tree_control";
+        u.status = "active";
+        u.visibleInTree = true;
+        u.allowReferral = true;
+        updated = true;
+      }
+
+      if (u.userId === "BWG000001") {
+        u.username = "Default System Admin";
+        u.role = "system_admin";
+        u.visibleInTree = false;
+        u.hiddenAccount = true;
+        updated = true;
+      }
+
+      if (
+        u.userId === "SUPERADMIN" ||
+        u.userId === "BWG000001" ||
+        u.userId === "SYSTEM"
+      ) {
+        u.hiddenAccount = true;
+        updated = true;
+      }
+
+    });
+
     // ensure settings
     getSystemSettings();
 
@@ -163,35 +198,38 @@ function initCoreSystem() {
       updated = true;
     }
 
-    // ================= ROOT ADMIN =================
-    if (!users.find(u => u.userId === "BWG000000")) {
-      users.push({
-        userId: "BWG000000",
-        username: "Root Admin",
-        password: btoa("123456"),
-        role: "admin",
-        status: "active",
+   // ================= USER ROOT ADMIN =================
+if (!users.find(u => u.userId === "BWG000000")) {
+  users.push({
+    userId: "BWG000000",
+    username: "User Root Admin",
+    password: btoa("123456"),
+    role: "admin",
+    status: "active",
 
-        officeType: "root_admin",
-        accessType: "zero_only_link",
+    adminType: "user_root_admin",
+    tree: "field",
 
-        visibleInTree: true,
-        allowReferral: true,
+    officeType: "user_root_admin",
+    accessType: "full_user_tree_control",
 
-        leftChild: "",
-        rightChild: "",
+    visibleInTree: true,
+    allowReferral: true,
 
-        parentId: "",
-        sponsorId: "",
-        introducerId: "",
+    leftChild: "",
+    rightChild: "",
 
-        position: "",
+    parentId: "",
+    sponsorId: "",
+    introducerId: "",
 
-        createdBy: "BWG000001",
-        createdAt: Date.now()
-      });
-      updated = true;
-    }
+    position: "",
+
+    createdBy: "BWG000001",
+    createdAt: Date.now()
+  });
+  updated = true;
+}
 
     // ================= REMOVE OLD SYSTEM ADMIN / ADMIN =================
 users = users.filter(u =>
