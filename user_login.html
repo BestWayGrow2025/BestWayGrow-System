@@ -240,11 +240,19 @@ if (
 
 let storedPassword = safeDecode(user.password || "");
 
+if (
+  (user.accountStatus || user.status || "active") !== "active"
+) {
+  showMsg("🚫 Account Inactive");
+  resetLogin();
+  return;
+}
+
 if (storedPassword !== password) {
-    showMsg("❌ Wrong Password");
-    resetLogin();
-    return;
-  }
+  showMsg("❌ Wrong Password");
+  resetLogin();
+  return;
+}
 
   // ================= SAVE SESSION =================
   let sessionSaved = false;
