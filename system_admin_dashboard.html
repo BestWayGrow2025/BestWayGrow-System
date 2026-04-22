@@ -312,7 +312,7 @@ function deleteUser(userId) {
 // ================= TOGGLE STATUS =================
 function toggleUserStatus(userId) {
 
-  // prevent deactivating current logged in system admin
+  // cannot deactivate yourself
   if (userId === currentUser.userId) {
     return alert("You cannot deactivate yourself");
   }
@@ -322,6 +322,11 @@ function toggleUserStatus(userId) {
   let user = users.find(u => u.userId === userId);
 
   if (!user) return;
+
+  // protect User Root Admin
+  if (user.adminType === "user_root_admin") {
+    return alert("User Root Admin cannot be deactivated");
+  }
 
   user.status = user.status === "inactive"
     ? "active"
@@ -336,11 +341,6 @@ function toggleUserStatus(userId) {
 
 // ================= EDIT USER =================
 function editUser(userId) {
-
-  // prevent editing current logged in system admin password accidentally
-  if (userId === currentUser.userId) {
-    alert("Editing your own account");
-  }
 
   let users = getUsers() || [];
 
