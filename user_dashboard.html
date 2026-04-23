@@ -205,8 +205,11 @@ function getSafeUser() {
   return u;
 }
 
+
+// ================= START DASHBOARD =================
 function startDashboard() {
 
+  // ================= SESSION CHECK =================
   if (typeof getSession !== "function") {
     alert("session_manager.js missing");
     location.href = "user_login.html";
@@ -220,22 +223,18 @@ function startDashboard() {
     return;
   }
 
+  // ================= USER SYSTEM CHECK =================
   if (typeof getUserById !== "function") {
     alert("User system missing");
     location.href = "user_login.html";
     return;
   }
 
-  user = getUserById(session.userId);
+  // ✅ FIXED USER LOAD (IMPORTANT)
+  user = getSafeUser();
+  if (!user) return;
 
-  if (!user) {
-    if (typeof clearSession === "function") {
-      clearSession();
-    }
-    location.href = "user_login.html";
-    return;
-  }
-
+  // ================= SYSTEM SETTINGS =================
   let settings = {};
 
   if (typeof getSystemSettings === "function") {
@@ -248,6 +247,7 @@ function startDashboard() {
     return;
   }
 
+  // ================= ACCOUNT STATUS =================
   if (
     user.accountStatus &&
     user.accountStatus !== "active"
@@ -261,6 +261,7 @@ function startDashboard() {
     return;
   }
 
+  // ================= UI LOAD =================
   document.getElementById("welcome").innerText =
     "Welcome (" + user.userId + ")";
 
