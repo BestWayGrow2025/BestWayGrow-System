@@ -270,7 +270,7 @@ function startDashboard() {
   loadHome();
 }
 
-// ================= SAFE CLICK (FINAL FIXED) =================
+// ================= SAFE CLICK (FINAL STABLE) =================
 function safeClick(btn, fn) {
 
   if (clickLock) return;
@@ -286,23 +286,33 @@ function safeClick(btn, fn) {
 
   try {
 
-    if (typeof fn !== "function") {
-      throw new Error("Function not found");
+    // ✅ ALWAYS REFRESH SESSION
+    if (typeof getSession === "function") {
+      session = getSession();
     }
+
+    if (!session || !session.userId) {
+      alert("Session expired. Login again.");
+      location.href = "user_login.html";
+      return;
+    }
+
+    // ✅ ALWAYS REFRESH USER
+    user = getSafeUser();
+    if (!user) return;
 
     fn();
 
   } catch (err) {
+    console.error(err);
+    alert("Error: " + err.message);
+  } finally {
 
-    console.error("SAFE CLICK ERROR:", err);
-
-    alert("Error: " + err.message); // ✅ SHOW ERROR
-
+    // ✅ GUARANTEED UNLOCK
+    setTimeout(() => {
+      clickLock = false;
+    }, 200);
   }
-
-  setTimeout(() => {
-    clickLock = false;
-  }, 400);
 }
 
 // ================= REF LINK =================
