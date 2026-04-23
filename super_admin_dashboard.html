@@ -88,7 +88,7 @@
   <button onclick="safeClick(this,loadSystem)">System</button>
 
   <!-- ✅ ADD THIS -->
-  <button onclick="loadResetPanel()">Reset</button>
+<button onclick="safeClick(this, loadResetPanel)">Reset</button>
 </div>
 
 <div class="container">
@@ -330,6 +330,79 @@ function logout(){
   }
 
   location.href="super_admin_login.html";
+}
+
+// ================= RESET PANEL =================
+function loadResetPanel() {
+
+  document.getElementById("mainContent").innerHTML = `
+    <h3>⚠️ System Reset Control</h3>
+
+    <p style="color:red;"><b>Danger Zone</b></p>
+
+    <button onclick="safeClick(null, resetUsers)">🗑 Delete All Users</button><br><br>
+
+    <button onclick="safeClick(null, resetSystem)">♻️ Full System Reset</button><br><br>
+
+    <button onclick="safeClick(null, resetPartial)">⚙️ Reset User Data Only</button>
+  `;
+}
+
+
+// ================= RESET FUNCTIONS =================
+function resetUsers() {
+
+  if (!confirm("Delete ALL users?")) return;
+
+  let users = getUsers() || [];
+
+  users = users.filter(u => u.userId === "BWG000000");
+
+  saveUsers(users);
+
+  alert("All users deleted (except root)");
+
+  loadHome();
+}
+
+function resetSystem() {
+
+  if (!confirm("FULL SYSTEM RESET?")) return;
+
+  localStorage.clear();
+
+  alert("System reset done");
+
+  location.reload();
+}
+
+function resetPartial() {
+
+  if (!confirm("Reset user data only?")) return;
+
+  let users = getUsers() || [];
+
+  users.forEach(u => {
+    if (u.role === "user") {
+
+      u.wallet = {
+        balance: 0,
+        incomeBalance: 0,
+        holdIncome: 0,
+        totalCredit: 0,
+        totalDebit: 0
+      };
+
+      u.leftChild = null;
+      u.rightChild = null;
+    }
+  });
+
+  saveUsers(users);
+
+  alert("User data reset");
+
+  loadHome();
 }
 
 // INIT
