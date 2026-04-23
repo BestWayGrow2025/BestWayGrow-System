@@ -147,7 +147,7 @@ function safeClick(btn, fn) {
     console.error(e);
     alert("Error: " + e.message);
   } finally {
-    // ✅ ALWAYS UNLOCK (FINAL FIX)
+    // ✅ IMPORTANT FIX (ALWAYS UNLOCK)
     setTimeout(() => {
       lock = false;
     }, 200);
