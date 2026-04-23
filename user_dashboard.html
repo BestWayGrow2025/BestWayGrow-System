@@ -553,9 +553,10 @@ function loadWallet() {
 // ================= WALLET HISTORY =================
 function loadWalletHistory() {
 
-  user = getUserById(session.userId);
+  user = getSafeUser();
+  if (!user) return;
 
-  let history = [];
+  let history = []; 
 
   try {
     if (typeof getWalletHistory === "function") {
@@ -606,7 +607,8 @@ function loadWalletHistory() {
 // ================= DIRECT TEAM LIST =================
 function loadDirectTeam() {
 
-  user = getUserById(session.userId);
+  user = getSafeUser();
+  if (!user) return;
 
   let directUsers = [];
 
@@ -657,7 +659,8 @@ function loadDirectTeam() {
 // ================= PROFILE =================
 function loadProfile() {
 
-  user = getUserById(session.userId);
+  user = getSafeUser();
+  if (!user) return;
 
   let directUsers = [];
 
@@ -741,7 +744,8 @@ function canRepurchase(user) {
 // ================= PAGE NAVIGATION =================
 function loadUpgrade() {
 
-  user = getUserById(session.userId);
+ user = getSafeUser();
+if (!user) return;
 
   if (!canUpgrade(user)) {
     alert("Upgrade Not Allowed");
@@ -753,7 +757,8 @@ function loadUpgrade() {
 
 function loadRepurchase() {
 
-  user = getUserById(session.userId);
+user = getSafeUser();
+if (!user) return;
 
   if (!canRepurchase(user)) {
     alert("Repurchase Not Allowed");
