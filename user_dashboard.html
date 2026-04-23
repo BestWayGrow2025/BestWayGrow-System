@@ -340,6 +340,8 @@ function safeClick(btn, fn) {
 // ================= REF LINK =================
 function generateRefLink(userId) {
 
+  if (!userId) return "";
+
   let basePath = window.location.pathname
     .replace("user_dashboard.html", "")
     .replace("user_login.html", "")
@@ -347,26 +349,45 @@ function generateRefLink(userId) {
 
   return window.location.origin +
     basePath +
-    "user_register.html?ref=" + userId;
+    "user_register.html?ref=" + encodeURIComponent(userId); // ✅ SAFE URL
 }
 
 function copyRefLink() {
 
   let input = document.getElementById("refLink");
 
-  if (!input) return;
+  if (!input) {
+    alert("Referral link not found");
+    return;
+  }
 
-  input.select();
-  input.setSelectionRange(0, 99999);
+  // ✅ MODERN + FALLBACK SUPPORT
+  let text = input.value;
 
-  navigator.clipboard.writeText(input.value)
-    .then(() => {
-      document.getElementById("copyMsg").innerText =
-        "✅ Referral Link Copied";
-    })
-    .catch(() => {
+  if (navigator.clipboard && window.isSecureContext) {
+
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        let msg = document.getElementById("copyMsg");
+        if (msg) msg.innerText = "✅ Referral Link Copied";
+      })
+      .catch(() => {
+        alert("Copy Failed");
+      });
+
+  } else {
+    // ✅ FALLBACK (OLD BROWSERS)
+    input.select();
+    input.setSelectionRange(0, 99999);
+
+    try {
+      document.execCommand("copy");
+      let msg = document.getElementById("copyMsg");
+      if (msg) msg.innerText = "✅ Referral Link Copied";
+    } catch {
       alert("Copy Failed");
-    });
+    }
+  }
 }
 
 // ================= HOME =================
@@ -374,6 +395,12 @@ function loadHome() {
 
   user = getSafeUser();
   if (!user) return;
+
+  let main = document.getElementById("mainContent");
+  if (!main) {
+    console.error("mainContent missing");
+    return;
+  }
 
   let refLink = generateRefLink(user.userId);
   let directUsers = [];
@@ -383,14 +410,18 @@ function loadHome() {
       directUsers = getDirectUsers(user.userId) || [];
     }
   } catch (err) {
-    console.error(err);
+    console.error("Direct users error:", err);
   }
 
-  document.getElementById("mainContent").innerHTML = `
+  // ✅ SAFE FILTER (avoid crash if position missing)
+  let leftCount = directUsers.filter(u => (u.position || "") === "L").length;
+  let rightCount = directUsers.filter(u => (u.position || "") === "R").length;
+
+  main.innerHTML = `
     <div class="section-title">Dashboard Overview</div>
 
     <div class="info-box">
-      <p><b>User ID:</b> ${user.userId}</p>
+      <p><b>User ID:</b> ${user.userId || "N/A"}</p>
       <p><b>Full Name:</b> ${user.fullName || user.username || "N/A"}</p>
       <p><b>Mobile:</b> ${user.mobile || "N/A"}</p>
       <p><b>Email:</b> ${user.email || "N/A"}</p>
@@ -419,8 +450,8 @@ function loadHome() {
 
     <div class="info-box">
       <p><b>Total Direct Team:</b> ${directUsers.length}</p>
-      <p><b>Left Team:</b> ${directUsers.filter(u => u.position === "L").length}</p>
-      <p><b>Right Team:</b> ${directUsers.filter(u => u.position === "R").length}</p>
+      <p><b>Left Team:</b> ${leftCount}</p>
+      <p><b>Right Team:</b> ${rightCount}</p>
     </div>
 
     <div class="section-title">Referral Link</div>
@@ -432,23 +463,29 @@ function loadHome() {
     <p id="copyMsg"></p>
   `;
 }
-
+  
 // ================= PIN SECTION =================
 function loadPinSection() {
+
+  user = getSafeUser();
+  if (!user) return;
+
+  let main = document.getElementById("mainContent");
+  if (!main) return;
 
   let pins = [];
 
   try {
     if (typeof loadPins === "function") {
-      let allPins = loadPins();
+      let allPins = loadPins() || [];
 
       pins = allPins.filter(pin =>
-        pin.ownerId === user.userId ||
-        pin.usedBy === user.userId
+        (pin.ownerId === user.userId) ||
+        (pin.usedBy === user.userId)
       );
     }
   } catch (err) {
-    console.error(err);
+    console.error("PIN error:", err);
   }
 
   let html = `
@@ -473,7 +510,7 @@ function loadPinSection() {
   pins.slice(-20).reverse().forEach(pin => {
     html += `
       <tr>
-        <td>${pin.pinId}</td>
+        <td>${pin.pinId || "N/A"}</td>
         <td>₹${Number(pin.amount || 0)}</td>
         <td>${pin.status || "unused"}</td>
       </tr>
@@ -482,7 +519,7 @@ function loadPinSection() {
 
   html += `</table>`;
 
-  document.getElementById("mainContent").innerHTML = html;
+  main.innerHTML = html;
 }
 
 // ================= TREE =================
@@ -491,6 +528,9 @@ function loadTree() {
   user = getSafeUser();
   if (!user) return;
 
+  let main = document.getElementById("mainContent");
+  if (!main) return;
+
   let allUsers = [];
 
   try {
@@ -498,27 +538,24 @@ function loadTree() {
       allUsers = getUsers() || [];
     }
   } catch (err) {
-    console.error(err);
+    console.error("Users error:", err);
   }
 
   function buildTree(parentId, level = 1) {
 
-    if (level > 10) {
-      return "";
-    }
+    if (level > 10) return "";
 
     let team = allUsers.filter(u => u.sponsorId === parentId);
 
-    if (!team.length) {
-      return "";
-    }
+    if (!team.length) return "";
 
     let html = "";
 
     team.forEach(member => {
+
       html += `
         <div style="margin-left:${level * 20}px; padding:8px; border-left:3px solid #4a00e0; margin-bottom:8px;">
-          <p><b>${member.userId}</b> - ${member.fullName || member.username || "N/A"}</p>
+          <p><b>${member.userId || "N/A"}</b> - ${member.fullName || member.username || "N/A"}</p>
           <p>Position: ${member.position || "N/A"}</p>
         </div>
       `;
@@ -529,18 +566,18 @@ function loadTree() {
     return html;
   }
 
-  document.getElementById("mainContent").innerHTML = `
+  main.innerHTML = `
     <div class="section-title">Full Team Tree</div>
 
     <div class="info-box">
-      <p><b>My User ID:</b> ${user.userId}</p>
+      <p><b>My User ID:</b> ${user.userId || "N/A"}</p>
       <p><b>My Name:</b> ${user.fullName || user.username || "N/A"}</p>
     </div>
 
     <div class="info-box">
-  <h3>Complete Downline Tree</h3>
-  ${buildTree(user.userId) || "<p>No Team Found</p>"}
-</div>
+      <h3>Complete Downline Tree</h3>
+      ${buildTree(user.userId) || "<p>No Team Found</p>"}
+    </div>
   `;
 }
 
@@ -550,15 +587,22 @@ function loadWallet() {
   user = getSafeUser();
   if (!user) return;
 
+  let main = document.getElementById("mainContent");
+  if (!main) return;
+
   let balance = 0;
 
-  if (typeof getWalletBalance === "function") {
-    balance = getWalletBalance(user.userId);
-  } else {
-    balance = Number(user.wallet?.balance || 0);
+  try {
+    if (typeof getWalletBalance === "function") {
+      balance = getWalletBalance(user.userId);
+    } else {
+      balance = Number(user.wallet?.balance || 0);
+    }
+  } catch (err) {
+    console.error("Wallet error:", err);
   }
 
-  document.getElementById("mainContent").innerHTML = `
+  main.innerHTML = `
     <div class="section-title">Wallet Overview</div>
 
     <div class="info-box">
@@ -575,7 +619,10 @@ function loadWalletHistory() {
   user = getSafeUser();
   if (!user) return;
 
-  let history = []; 
+  let main = document.getElementById("mainContent");
+  if (!main) return;
+
+  let history = [];
 
   try {
     if (typeof getWalletHistory === "function") {
@@ -584,7 +631,7 @@ function loadWalletHistory() {
       history = user.walletHistory;
     }
   } catch (err) {
-    console.error(err);
+    console.error("Wallet history error:", err);
   }
 
   let html = `
@@ -620,14 +667,17 @@ function loadWalletHistory() {
 
   html += `</table>`;
 
-  document.getElementById("mainContent").innerHTML = html;
+  main.innerHTML = html;
 }
-
+  
 // ================= DIRECT TEAM LIST =================
 function loadDirectTeam() {
 
   user = getSafeUser();
   if (!user) return;
+
+  let main = document.getElementById("mainContent");
+  if (!main) return;
 
   let directUsers = [];
 
@@ -636,7 +686,7 @@ function loadDirectTeam() {
       directUsers = getDirectUsers(user.userId) || [];
     }
   } catch (err) {
-    console.error(err);
+    console.error("Direct team error:", err);
   }
 
   let html = `
@@ -662,7 +712,7 @@ function loadDirectTeam() {
   directUsers.forEach(member => {
     html += `
       <tr>
-        <td>${member.userId}</td>
+        <td>${member.userId || "N/A"}</td>
         <td>${member.fullName || member.username || "N/A"}</td>
         <td>${member.position || "N/A"}</td>
         <td>${member.accountStatus || "active"}</td>
@@ -672,7 +722,7 @@ function loadDirectTeam() {
 
   html += `</table>`;
 
-  document.getElementById("mainContent").innerHTML = html;
+  main.innerHTML = html;
 }
 
 // ================= PROFILE =================
@@ -681,6 +731,9 @@ function loadProfile() {
   user = getSafeUser();
   if (!user) return;
 
+  let main = document.getElementById("mainContent");
+  if (!main) return;
+
   let directUsers = [];
 
   try {
@@ -688,7 +741,7 @@ function loadProfile() {
       directUsers = getDirectUsers(user.userId) || [];
     }
   } catch (err) {
-    console.error(err);
+    console.error("Direct users error:", err);
   }
 
   try {
@@ -696,14 +749,18 @@ function loadProfile() {
       calculateUserRank();
     }
   } catch (err) {
-    console.error(err);
+    console.error("Rank error:", err);
   }
 
-  document.getElementById("mainContent").innerHTML = `
+  // ✅ SAFE FILTER
+  let leftCount = directUsers.filter(u => (u.position || "") === "L").length;
+  let rightCount = directUsers.filter(u => (u.position || "") === "R").length;
+
+  main.innerHTML = `
     <div class="section-title">User Profile</div>
 
     <div class="info-box">
-      <p><b>User ID:</b> ${user.userId}</p>
+      <p><b>User ID:</b> ${user.userId || "N/A"}</p>
       <p><b>Full Name:</b> ${user.fullName || user.username || "N/A"}</p>
       <p><b>Mobile:</b> ${user.mobile || "N/A"}</p>
       <p><b>Email:</b> ${user.email || "N/A"}</p>
@@ -724,8 +781,8 @@ function loadProfile() {
 
     <div class="info-box">
       <p><b>Total Direct Team:</b> ${directUsers.length}</p>
-      <p><b>Left Team:</b> ${directUsers.filter(u => u.position === "L").length}</p>
-      <p><b>Right Team:</b> ${directUsers.filter(u => u.position === "R").length}</p>
+      <p><b>Left Team:</b> ${leftCount}</p>
+      <p><b>Right Team:</b> ${rightCount}</p>
     </div>
 
     <div class="info-box">
@@ -747,24 +804,28 @@ function loadProfile() {
     </div>
   `;
 }
-  
+
 // ================= UPGRADE STATUS CHECK =================
 function canUpgrade(user) {
-  return user.accountStatus === "active" &&
+  if (!user) return false;
+
+  return (user.accountStatus || "active") === "active" &&
          user.upgradeStatus !== "completed";
 }
 
 // ================= REPURCHASE STATUS CHECK =================
 function canRepurchase(user) {
-  return user.accountStatus === "active" &&
+  if (!user) return false;
+
+  return (user.accountStatus || "active") === "active" &&
          user.upgradeStatus === "completed";
 }
-  
+
 // ================= PAGE NAVIGATION =================
 function loadUpgrade() {
 
- user = getSafeUser();
-if (!user) return;
+  user = getSafeUser();
+  if (!user) return;
 
   if (!canUpgrade(user)) {
     alert("Upgrade Not Allowed");
@@ -776,8 +837,8 @@ if (!user) return;
 
 function loadRepurchase() {
 
-user = getSafeUser();
-if (!user) return;
+  user = getSafeUser();
+  if (!user) return;
 
   if (!canRepurchase(user)) {
     alert("Repurchase Not Allowed");
@@ -786,9 +847,12 @@ if (!user) return;
 
   location.href = "user_repurchase.html";
 }
-
+  
 // ================= PIN REQUEST =================
 function requestPin() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   alert("PIN Request Sent To Admin");
 
@@ -809,6 +873,9 @@ function requestPin() {
 // ================= INCOME HISTORY =================
 function loadIncomeHistory() {
 
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
+
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Income History</div>
 
@@ -823,6 +890,9 @@ function loadIncomeHistory() {
 
 // ================= WITHDRAW REQUEST =================
 function loadWithdrawSection() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Withdraw Request</div>
@@ -840,6 +910,9 @@ function loadWithdrawSection() {
 }
 
 function submitWithdrawRequest() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   let amount = Number(document.getElementById("withdrawAmount").value);
 
@@ -902,8 +975,11 @@ function submitWithdrawRequest() {
   }
 }
 
-  // ================= WITHDRAW HISTORY =================
+// ================= WITHDRAW HISTORY =================
 function loadWithdrawHistory() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   let requests = user.withdrawRequests || [];
 
@@ -931,9 +1007,12 @@ function loadWithdrawHistory() {
 
   document.getElementById("mainContent").innerHTML = html;
 }
-
-  // ================= NOTIFICATION ADD =================
+  
+// ================= NOTIFICATION ADD =================
 function addUserNotification(title, message) {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   if (!user.notifications) {
     user.notifications = [];
@@ -950,8 +1029,11 @@ function addUserNotification(title, message) {
   }
 }
 
-  // ================= LOGIN HISTORY =================
+// ================= LOGIN HISTORY =================
 function loadLoginHistory() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   let history = user.loginHistory || [];
 
@@ -983,6 +1065,9 @@ function loadLoginHistory() {
 // ================= NOTIFICATIONS =================
 function loadNotifications() {
 
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
+
   let notifications = user.notifications || [];
 
   let html = `
@@ -1012,6 +1097,9 @@ function loadNotifications() {
 
 // ================= SUPPORT TICKETS =================
 function loadSupportTickets() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   let tickets = user.supportTickets || [];
 
@@ -1051,8 +1139,11 @@ function loadSupportTickets() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-  // ================= SUPPORT TICKET SAVE =================
+// ================= SUPPORT TICKET SAVE =================
 function submitSupportTicket() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   let subject = document.getElementById("supportSubject").value.trim();
   let message = document.getElementById("supportMessage").value.trim();
@@ -1101,6 +1192,9 @@ function submitSupportTicket() {
 // ================= EDIT PROFILE =================
 function loadEditProfile() {
 
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
+
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Edit Profile</div>
 
@@ -1119,6 +1213,9 @@ function loadEditProfile() {
 // ================= PROFILE VALIDATION =================
 function validateProfileBeforeSave() {
 
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return "Session error";
+
   if (!user.fullName || user.fullName.trim().length < 3) {
     return "Full Name Required";
   }
@@ -1136,6 +1233,9 @@ function validateProfileBeforeSave() {
 
 // ================= SAVE PROFILE =================
 function saveProfile() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   let fullName = document.getElementById("editFullName").value.trim();
   let mobile = document.getElementById("editMobile").value.trim();
@@ -1168,36 +1268,37 @@ function saveProfile() {
 
   alert("Profile Updated Successfully");
 
-addUserNotification(
-  "Profile Updated",
-  "Your profile updated successfully"
-);
+  addUserNotification(
+    "Profile Updated",
+    "Your profile updated successfully"
+  );
 
-try {
-  if (typeof logActivity === "function") {
-    logActivity(
-      user.userId,
-      "USER",
-      "Profile Updated",
-      "USER_DASHBOARD"
-    );
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "Profile Updated",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
   }
-} catch (err) {
-  console.error(err);
-}
 }
   
 // ================= CHANGE PASSWORD =================
 function loadChangePassword() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Change Password</div>
 
     <div class="info-box">
       <input type="password" id="oldPassword" class="ref-box" placeholder="Old Password"><br><br>
-
       <input type="password" id="newPassword" class="ref-box" placeholder="New Password"><br><br>
-
       <input type="password" id="confirmPassword" class="ref-box" placeholder="Confirm Password"><br><br>
 
       <button class="action-btn" onclick="savePassword()">
@@ -1209,10 +1310,20 @@ function loadChangePassword() {
 
 // ================= PASSWORD ENCODE / DECODE =================
 function encode(p){ return btoa(p); }
-function decode(p){ return atob(p); }
+
+function decode(p){
+  try {
+    return atob(p);
+  } catch(e) {
+    return "";   // ✅ FIX (prevent crash)
+  }
+}
 
 // ================= CHANGE PASSWORD SAVE =================
 function savePassword() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   let oldPassword = document.getElementById("oldPassword").value.trim();
   let newPassword = document.getElementById("newPassword").value.trim();
@@ -1223,7 +1334,6 @@ function savePassword() {
     return;
   }
 
-  // ✅ Correct password check
   if (decode(user.password || "") !== oldPassword) {
     alert("Old Password Incorrect");
     return;
@@ -1239,7 +1349,6 @@ function savePassword() {
     return;
   }
 
-  // ✅ Save encoded password
   user.password = encode(newPassword);
 
   if (typeof saveUsers === "function") {
@@ -1261,9 +1370,12 @@ function savePassword() {
     console.error(err);
   }
 }
-  
+
 // ================= ACTIVITY LOGS =================
 function loadActivityLogs() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   let logs = [];
 
@@ -1275,16 +1387,10 @@ function loadActivityLogs() {
     console.error(err);
   }
 
-  let html = `
-    <div class="section-title">Recent Activity Logs</div>
-  `;
+  let html = `<div class="section-title">Recent Activity Logs</div>`;
 
   if (!logs.length) {
-    html += `
-      <div class="info-box">
-        <p>No Activity Found</p>
-      </div>
-    `;
+    html += `<div class="info-box"><p>No Activity Found</p></div>`;
   }
 
   logs.slice(-20).reverse().forEach(item => {
@@ -1303,6 +1409,9 @@ function loadActivityLogs() {
 // ================= KYC SECTION =================
 function loadKYCSection() {
 
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
+
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">KYC Upload</div>
 
@@ -1319,6 +1428,9 @@ function loadKYCSection() {
 // ================= SAVE KYC =================
 function saveKYC() {
 
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
+
   let kycFile = document.getElementById("kycFile");
 
   if (!kycFile || !kycFile.files.length) {
@@ -1334,29 +1446,32 @@ function saveKYC() {
     saveUsers();
   }
 
- alert("KYC Uploaded Successfully");
+  alert("KYC Uploaded Successfully");
 
-addUserNotification(
-  "KYC Uploaded",
-  "Your KYC submitted successfully"
-);
+  addUserNotification(
+    "KYC Uploaded",
+    "Your KYC submitted successfully"
+  );
 
-try {
-  if (typeof logActivity === "function") {
-    logActivity(
-      user.userId,
-      "USER",
-      "KYC Uploaded",
-      "USER_DASHBOARD"
-    );
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "KYC Uploaded",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
   }
-} catch (err) {
-  console.error(err);
 }
-}
-  
+
 // ================= AUTO RANK CALCULATION =================
 function calculateUserRank() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   let directCount = 0;
 
@@ -1368,17 +1483,11 @@ function calculateUserRank() {
     console.error(err);
   }
 
-  if (directCount >= 20) {
-    user.rank = "Diamond";
-  } else if (directCount >= 10) {
-    user.rank = "Gold";
-  } else if (directCount >= 5) {
-    user.rank = "Silver";
-  } else if (directCount >= 2) {
-    user.rank = "Bronze";
-  } else {
-    user.rank = "Starter";
-  }
+  if (directCount >= 20) user.rank = "Diamond";
+  else if (directCount >= 10) user.rank = "Gold";
+  else if (directCount >= 5) user.rank = "Silver";
+  else if (directCount >= 2) user.rank = "Bronze";
+  else user.rank = "Starter";
 
   if (typeof saveUsers === "function") {
     saveUsers();
@@ -1387,6 +1496,9 @@ function calculateUserRank() {
 
 // ================= RANK / REWARD =================
 function loadRankReward() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   calculateUserRank();
 
@@ -1400,8 +1512,11 @@ function loadRankReward() {
   `;
 }
 
- // ================= REFERRAL LINK =================
+// ================= REFERRAL LINK =================
 function loadReferralLink() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   let referralLink = location.origin + "/register.html?ref=" + user.userId;
 
@@ -1422,21 +1537,18 @@ function loadReferralLink() {
 function copyReferralLink() {
 
   let copyText = document.getElementById("referralLinkBox");
-
   if (!copyText) return;
 
   navigator.clipboard.writeText(copyText.value)
-    .then(() => {
-      alert("Referral Link Copied");
-    })
-    .catch(() => {
-      alert("Copy Failed");
-    });
+    .then(() => alert("Referral Link Copied"))
+    .catch(() => alert("Copy Failed"));
 }
 
- 
 // ================= LOGOUT =================
 function logout() {
+
+  user = getSafeUser();   // ✅ FIX
+  if (!user) return;
 
   try {
     if (typeof logActivity === "function") {
@@ -1454,11 +1566,5 @@ function logout() {
 
   location.href = "user_login.html";
 }
-
-</script>
-
-</body>
-</html>
-
 
 
