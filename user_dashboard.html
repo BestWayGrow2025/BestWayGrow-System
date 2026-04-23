@@ -350,7 +350,8 @@ function copyRefLink() {
 // ================= HOME =================
 function loadHome() {
 
-  user = getUserById(session.userId);
+  user = getSafeUser();
+  if (!user) return;
 
   let refLink = generateRefLink(user.userId);
   let directUsers = [];
@@ -365,6 +366,9 @@ function loadHome() {
 
   document.getElementById("mainContent").innerHTML = `
     <div class="section-title">Dashboard Overview</div>
+    ...
+  `;
+}
 
     <div class="info-box">
       <p><b>User ID:</b> ${user.userId}</p>
@@ -465,7 +469,8 @@ function loadPinSection() {
 // ================= TREE =================
 function loadTree() {
 
-  user = getUserById(session.userId);
+  user = getSafeUser();
+  if (!user) return;
 
   let allUsers = [];
 
@@ -523,7 +528,8 @@ function loadTree() {
 // ================= WALLET =================
 function loadWallet() {
 
-  user = getUserById(session.userId);
+  user = getSafeUser();
+  if (!user) return;
 
   let balance = 0;
 
