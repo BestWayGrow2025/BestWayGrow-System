@@ -5,21 +5,21 @@
   <link rel="icon" href="data:,">
 
   <!-- ✅ FIX: safeClick available globally BEFORE buttons -->
-  <script>
-    function safeClick(btn, fn){
-      console.log("CLICK WORKING");
+ <script>
+window.safeClick = function(btn, fn){
+  alert("CLICK WORKING");
 
-      if(btn){
-        document.querySelectorAll(".menu button")
-          .forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-      }
+  if(btn){
+    document.querySelectorAll(".menu button")
+      .forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
 
-      if(typeof fn === "function"){
-        fn();
-      }
-    }
-  </script>
+  if(typeof fn === "function"){
+    fn();
+  }
+};
+</script>
 
   <style>
     body {
