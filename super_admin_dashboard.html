@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html>
 <head>
   <title>Super Admin Dashboard FINAL</title>
@@ -127,19 +127,31 @@ document.getElementById("welcome").innerText =
 
 // ================= LOCK SYSTEM =================
 let lock = false;
+
 function safeClick(btn, fn) {
+
   if (lock) return;
+
   lock = true;
 
   if (btn) {
     document.querySelectorAll(".menu button")
       .forEach(b => b.classList.remove("active"));
+
     btn.classList.add("active");
   }
 
-  try { fn(); } catch (e) { console.error(e); }
-
-  setTimeout(()=> lock=false, 400);
+  try {
+    fn();
+  } catch (e) {
+    console.error(e);
+    alert("Error: " + e.message);
+  } finally {
+    // ✅ ALWAYS UNLOCK (FINAL FIX)
+    setTimeout(() => {
+      lock = false;
+    }, 200);
+  }
 }
 
 // ================= SYSTEM CHECK =================
