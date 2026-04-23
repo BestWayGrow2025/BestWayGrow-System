@@ -4,6 +4,23 @@
   <title>User Dashboard V8 FINAL LOCK</title>
   <link rel="icon" href="data:,">
 
+  <!-- ✅ FIX: safeClick available globally BEFORE buttons -->
+  <script>
+    function safeClick(btn, fn){
+      console.log("CLICK WORKING");
+
+      if(btn){
+        document.querySelectorAll(".menu button")
+          .forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      }
+
+      if(typeof fn === "function"){
+        fn();
+      }
+    }
+  </script>
+
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -21,25 +38,6 @@
     header button {
       margin-top: 10px;
       padding: 8px 14px;
-      border: none;
-      border-radius: 8px;
-      background: #ff4d4d;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    .menu {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      background: #fff;
-      padding: 12px;
-      justify-content: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    .menu button {
-      padding: 10px 16px;
       border: none;
       border-radius: 20px;
       background: linear-gradient(135deg,#007bff,#00c6ff);
