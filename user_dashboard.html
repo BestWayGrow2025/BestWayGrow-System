@@ -246,7 +246,7 @@ function startDashboard() {
   loadHome();
 }
 
-// ================= SAFE CLICK =================
+// ================= SAFE CLICK (FINAL FIXED) =================
 function safeClick(btn, fn) {
 
   if (clickLock) return;
@@ -261,9 +261,19 @@ function safeClick(btn, fn) {
   }
 
   try {
+
+    if (typeof fn !== "function") {
+      throw new Error("Function not found");
+    }
+
     fn();
+
   } catch (err) {
-    console.error(err);
+
+    console.error("SAFE CLICK ERROR:", err);
+
+    alert("Error: " + err.message); // ✅ SHOW ERROR
+
   }
 
   setTimeout(() => {
