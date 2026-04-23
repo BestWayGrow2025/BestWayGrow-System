@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>User Dashboard V8 FINAL LOCK</title>
@@ -149,32 +149,36 @@
   <button onclick="safeClick(this, loadKYCSection)">KYC</button>
   <button onclick="safeClick(this, loadRankReward)">Rank</button>
   <button onclick="safeClick(this, loadReferralLink)">Referral Link</button>
-
 </div>
 
 <div class="container">
   <div id="mainContent" class="card">Loading...</div>
 </div>
 
-<script src="core_system.js"></script>
-<script src="wallet_system.js"></script>
-<script src="pin_master_system.js"></script>
-<script src="activity_log.js"></script>
-<script src="session_manager.js"></script>
+<!-- ✅ FIX: add defer to ensure proper loading order -->
+<script src="core_system.js" defer></script>
+<script src="wallet_system.js" defer></script>
+<script src="pin_master_system.js" defer></script>
+<script src="activity_log.js" defer></script>
+<script src="session_manager.js" defer></script>
 
 <script>
 
 // ================= INIT =================
 window.addEventListener("load", function () {
 
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
+  // ✅ STRICT CHECK
+  if (typeof initCoreSystem !== "function") {
     alert("core_system.js missing");
     return;
   }
 
-  startDashboard();
+  initCoreSystem();
+
+  // ✅ DELAY SAFE (ensures all scripts ready)
+  setTimeout(() => {
+    startDashboard();
+  }, 50);
 });
 
 // ================= START =================
@@ -185,14 +189,22 @@ let clickLock = false;
 // ================= SAFE USER ENGINE =================
 function getSafeUser() {
 
+  // ✅ SESSION CHECK
   if (!session || !session.userId) {
     alert("Session expired. Login again.");
     location.href = "user_login.html";
     return null;
   }
 
+  // ✅ FUNCTION SAFETY
+  if (typeof getUserById !== "function") {
+    alert("User system missing");
+    return null;
+  }
+
   let u = getUserById(session.userId);
 
+  // ✅ USER VALIDATION
   if (!u) {
     if (typeof clearSession === "function") {
       clearSession();
@@ -218,40 +230,36 @@ function startDashboard() {
 
   session = getSession();
 
-  if (!session || session.role !== "user") {
+  // ✅ STRICT ROLE CHECK
+  if (!session || session.role !== "user" || !session.userId) {
     location.href = "user_login.html";
     return;
   }
 
-  // ================= USER SYSTEM CHECK =================
-  if (typeof getUserById !== "function") {
-    alert("User system missing");
-    location.href = "user_login.html";
-    return;
-  }
-
-  // ✅ FIXED USER LOAD (IMPORTANT)
+  // ================= USER LOAD =================
   user = getSafeUser();
   if (!user) return;
 
   // ================= SYSTEM SETTINGS =================
   let settings = {};
 
-  if (typeof getSystemSettings === "function") {
-    settings = getSystemSettings() || {};
+  try {
+    if (typeof getSystemSettings === "function") {
+      settings = getSystemSettings() || {};
+    }
+  } catch (err) {
+    console.error("Settings error:", err);
   }
 
-  if (settings.lockMode) {
+  if (settings.lockMode === true) {
     alert("System Locked");
     location.href = "user_login.html";
     return;
   }
 
   // ================= ACCOUNT STATUS =================
-  if (
-    user.accountStatus &&
-    user.accountStatus !== "active"
-  ) {
+  if ((user.accountStatus || "active") !== "active") {
+
     if (typeof clearSession === "function") {
       clearSession();
     }
@@ -262,11 +270,18 @@ function startDashboard() {
   }
 
   // ================= UI LOAD =================
-  document.getElementById("welcome").innerText =
-    "Welcome (" + user.userId + ")";
+  let welcomeEl = document.getElementById("welcome");
+  if (welcomeEl) {
+    welcomeEl.innerText = "Welcome (" + user.userId + ")";
+  }
 
-  document.querySelector(".menu button").classList.add("active");
+  // ✅ SAFE ACTIVE BUTTON
+  let firstBtn = document.querySelector(".menu button");
+  if (firstBtn) {
+    firstBtn.classList.add("active");
+  }
 
+  // ✅ LOAD DEFAULT PAGE
   loadHome();
 }
 
@@ -277,6 +292,7 @@ function safeClick(btn, fn) {
 
   clickLock = true;
 
+  // ✅ BUTTON UI SAFE
   if (btn) {
     document.querySelectorAll(".menu button")
       .forEach(b => b.classList.remove("active"));
@@ -286,7 +302,7 @@ function safeClick(btn, fn) {
 
   try {
 
-    // ✅ ALWAYS REFRESH SESSION
+    // ✅ REFRESH SESSION
     if (typeof getSession === "function") {
       session = getSession();
     }
@@ -297,14 +313,20 @@ function safeClick(btn, fn) {
       return;
     }
 
-    // ✅ ALWAYS REFRESH USER
+    // ✅ REFRESH USER
     user = getSafeUser();
     if (!user) return;
 
-    fn();
+    // ✅ FUNCTION CHECK (IMPORTANT FIX)
+    if (typeof fn === "function") {
+      fn();
+    } else {
+      console.error("Invalid function call");
+      alert("Feature not available");
+    }
 
   } catch (err) {
-    console.error(err);
+    console.error("Click Error:", err);
     alert("Error: " + err.message);
   } finally {
 
