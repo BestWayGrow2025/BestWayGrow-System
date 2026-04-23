@@ -292,7 +292,7 @@ function safeClick(btn, fn) {
 
   clickLock = true;
 
-  // ✅ BUTTON UI SAFE
+  // BUTTON UI
   if (btn) {
     document.querySelectorAll(".menu button")
       .forEach(b => b.classList.remove("active"));
@@ -302,7 +302,7 @@ function safeClick(btn, fn) {
 
   try {
 
-    // ✅ REFRESH SESSION
+    // SESSION REFRESH
     if (typeof getSession === "function") {
       session = getSession();
     }
@@ -313,15 +313,15 @@ function safeClick(btn, fn) {
       return;
     }
 
-    // ✅ REFRESH USER
+    // USER REFRESH
     user = getSafeUser();
     if (!user) return;
 
-    // ✅ FUNCTION CHECK (IMPORTANT FIX)
+    // CALL FUNCTION
     if (typeof fn === "function") {
       fn();
     } else {
-      console.error("Invalid function call");
+      console.error("Invalid function");
       alert("Feature not available");
     }
 
@@ -330,7 +330,6 @@ function safeClick(btn, fn) {
     alert("Error: " + err.message);
   } finally {
 
-    // ✅ GUARANTEED UNLOCK
     setTimeout(() => {
       clickLock = false;
     }, 200);
