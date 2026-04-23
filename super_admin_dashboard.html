@@ -102,9 +102,7 @@
 if (typeof initCoreSystem === "function") initCoreSystem();
 else { alert("core_system.js missing"); throw new Error("STOP"); }
 
-// ================= AUTH (FINAL FIX ✅) =================
-let session = null;
-
+// ================= AUTH (FINAL FIX ✅) =================  
 try {
   if (typeof getSession === "function") {
     session = getSession();
