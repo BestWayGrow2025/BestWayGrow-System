@@ -78,8 +78,9 @@
 
 <p id="msg"></p>
 
+<!-- ✅ CORRECT SCRIPT ORDER -->
 <script src="core_system.js"></script>
-<script src="tree_system.js"></script>
+<script src="registration_tree_engine.js"></script> <!-- ✅ FIXED -->
 <script src="activity_log.js"></script>
 
 <script>
@@ -88,6 +89,7 @@ if (typeof initCoreSystem === "function") {
   initCoreSystem();
 }
 
+// ================= REFERRAL =================
 let params = new URLSearchParams(window.location.search);
 let introducerId = params.get("ref") || "BWG000001";
 
@@ -103,6 +105,7 @@ if (!introUser) {
     "Introducer: " + introducerId;
 }
 
+// ================= HELPERS =================
 function encodePass(p){
   try { return btoa(p); } catch { return p; }
 }
@@ -111,6 +114,7 @@ function generateReferralLink(userId) {
   return location.origin + "/user_register.html?ref=" + userId;
 }
 
+// ================= REGISTER =================
 function registerUser() {
 
   let username = document.getElementById("username").value.trim();
@@ -146,50 +150,75 @@ function registerUser() {
     return;
   }
 
-  let userId = "BWG" + Date.now();
+  // ================= TREE REQUEST =================
+  let req = {
+    username,
+    password: encodePass(password),
+    mobile,
+    introducerId,
+    position: pos.value
+  };
 
- let newUser = {
-  userId,
-  username,
-  fullName: username,
-  email,
-  password: encodePass(password),
-  mobile,
-  introducerId,
-  sponsorId: introducerId,
-  position: pos.value,
-  joinDate: new Date().toISOString(),
+  try {
 
-  role: "user",          // ✅ REQUIRED
-  status: "active",      // ✅ REQUIRED (replace accountStatus)
+    // ✅ CREATE USER WITH TREE
+    let user = createUserWithTree(req);
 
-  accountStatus: "active", // (optional keep if used somewhere else)
+    if (!user || !user.userId) {
+      throw new Error("User creation failed");
+    }
 
-  walletBalance: 0,
-  totalIncome: 0
-};
+    // ================= UPDATE EXTRA FIELDS =================
+    let updatedUsers = getUsers();
+    let index = updatedUsers.findIndex(u => u.userId === user.userId);
 
-  users.push(newUser);
-  localStorage.setItem("users", JSON.stringify(users));
+    if (index !== -1) {
 
-  if (typeof logActivity === "function") {
-    logActivity(userId, "USER", "Registered", "REGISTRATION");
+      updatedUsers[index] = {
+        ...updatedUsers[index],
+
+        fullName: username,
+        email,
+        joinDate: new Date().toISOString(),
+
+        role: "user",
+        status: "active",
+        accountStatus: "active",
+
+        walletBalance: 0,
+        totalIncome: 0
+      };
+
+      // ✅ SAFE SAVE
+      if (typeof saveUsers === "function") {
+        saveUsers(updatedUsers);
+      }
+    }
+
+    // ================= LOG =================
+    if (typeof logActivity === "function") {
+      logActivity(user.userId, "USER", "Registered", "REGISTRATION");
+    }
+
+    // ================= SUCCESS =================
+    let refLink = generateReferralLink(user.userId);
+
+    document.getElementById("msg").innerHTML = `
+      <div class="success-box">
+        ✅ Registration Successful<br><br>
+        User ID: <b>${user.userId}</b><br><br>
+
+        <div class="link-box">${refLink}</div>
+
+        <a href="user_login.html">
+          <button>Login</button>
+        </a>
+      </div>
+    `;
+
+  } catch (e) {
+    alert(e.message);
   }
-
-  let refLink = generateReferralLink(userId);
-
-  document.getElementById("msg").innerHTML = `
-    <div class="success-box">
-      ✅ Registration Successful<br><br>
-      User ID: <b>${userId}</b><br><br>
-
-      <div class="link-box">${refLink}</div>
-
-      <a href="user_login.html">
-        <button>Login</button>
-      </a>
-    </div>
-  `;
 }
 
 </script>
