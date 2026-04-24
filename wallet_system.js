@@ -12,7 +12,7 @@
 ✔ Production ready
 */
 
-const TXN_LIMIT = 5000;
+var TXN_LIMIT = 5000;
 
 // ===================================
 // TRANSACTION STORAGE
