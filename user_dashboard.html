@@ -4,28 +4,35 @@
   <title>User Dashboard V8 FINAL LOCK</title>
   <link rel="icon" href="data:,">
 
-  <!-- ✅ FIX: safeClick available globally BEFORE buttons -->
+  <!-- ✅ safeClick GLOBAL (WORKING) -->
   <script>
-function safeClick(btn, fn) {
+    function safeClick(btn, fn) {
 
-  if (btn) {
-    document.querySelectorAll(".menu button")
-      .forEach(b => b.classList.remove("active"));
+      if (btn) {
+        document.querySelectorAll(".menu button")
+          .forEach(b => b.classList.remove("active"));
 
-    btn.classList.add("active");
-  }
+        btn.classList.add("active");
+      }
 
-  try {
-    if (typeof fn === "function") {
-      fn();
-    } else {
-      alert("Function missing");
+      try {
+        if (typeof fn === "function") {
+          fn();
+        } else {
+          alert("Function missing");
+        }
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
     }
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-}
-</script>
+  </script>
+
+  <!-- ✅ LOAD SYSTEM FILES (IMPORTANT — NO defer) -->
+  <script src="core_system.js"></script>
+  <script src="wallet_system.js"></script>
+  <script src="pin_master_system.js"></script>
+  <script src="activity_log.js"></script>
+  <script src="session_manager.js"></script>
 
   <style>
     body {
