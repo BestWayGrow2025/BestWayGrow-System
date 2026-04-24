@@ -148,21 +148,26 @@ function registerUser() {
 
   let userId = "BWG" + Date.now();
 
-  let newUser = {
-    userId,
-    username,
-    fullName: username,
-    email,
-    password: encodePass(password),
-    mobile,
-    introducerId,
-    sponsorId: introducerId,
-    position: pos.value,
-    joinDate: new Date().toISOString(),
-    accountStatus: "active",
-    walletBalance: 0,
-    totalIncome: 0
-  };
+ let newUser = {
+  userId,
+  username,
+  fullName: username,
+  email,
+  password: encodePass(password),
+  mobile,
+  introducerId,
+  sponsorId: introducerId,
+  position: pos.value,
+  joinDate: new Date().toISOString(),
+
+  role: "user",          // ✅ REQUIRED
+  status: "active",      // ✅ REQUIRED (replace accountStatus)
+
+  accountStatus: "active", // (optional keep if used somewhere else)
+
+  walletBalance: 0,
+  totalIncome: 0
+};
 
   users.push(newUser);
   localStorage.setItem("users", JSON.stringify(users));
