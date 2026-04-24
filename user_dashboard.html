@@ -187,14 +187,12 @@ let clickLock = false;
 // ================= SAFE USER ENGINE =================
 function getSafeUser() {
 
-  // ✅ SESSION CHECK
   if (!session || !session.userId) {
     alert("Session expired. Login again.");
     location.href = "user_login.html";
     return null;
   }
 
-  // ✅ FUNCTION SAFETY
   if (typeof getUserById !== "function") {
     alert("User system missing");
     return null;
@@ -202,7 +200,6 @@ function getSafeUser() {
 
   let u = getUserById(session.userId);
 
-  // ✅ USER VALIDATION
   if (!u) {
     if (typeof clearSession === "function") {
       clearSession();
@@ -215,11 +212,9 @@ function getSafeUser() {
   return u;
 }
 
-
 // ================= START DASHBOARD =================
 function startDashboard() {
 
-  // ================= SESSION CHECK =================
   if (typeof getSession !== "function") {
     alert("session_manager.js missing");
     location.href = "user_login.html";
@@ -228,17 +223,14 @@ function startDashboard() {
 
   session = getSession();
 
-  // ✅ STRICT ROLE CHECK
   if (!session || session.role !== "user" || !session.userId) {
     location.href = "user_login.html";
     return;
   }
 
-  // ================= USER LOAD =================
   user = getSafeUser();
   if (!user) return;
 
-  // ================= SYSTEM SETTINGS =================
   let settings = {};
 
   try {
@@ -246,7 +238,7 @@ function startDashboard() {
       settings = getSystemSettings() || {};
     }
   } catch (err) {
-    console.error("Settings error:", err);
+    console.error(err);
   }
 
   if (settings.lockMode === true) {
@@ -255,42 +247,35 @@ function startDashboard() {
     return;
   }
 
-  // ================= ACCOUNT STATUS =================
   if ((user.accountStatus || "active") !== "active") {
-
     if (typeof clearSession === "function") {
       clearSession();
     }
-
     alert("Account Inactive");
     location.href = "user_login.html";
     return;
   }
 
-  // ================= UI LOAD =================
   let welcomeEl = document.getElementById("welcome");
   if (welcomeEl) {
     welcomeEl.innerText = "Welcome (" + user.userId + ")";
   }
 
-  // ✅ SAFE ACTIVE BUTTON
   let firstBtn = document.querySelector(".menu button");
   if (firstBtn) {
     firstBtn.classList.add("active");
   }
 
-  // ✅ LOAD DEFAULT PAGE
   loadHome();
 }
 
-// ================= SAFE CLICK (FINAL STABLE CLEAN) =================
+// ================= SAFE CLICK =================
 function safeClick(btn, fn) {
 
   if (clickLock) return;
 
   clickLock = true;
 
-  // BUTTON UI
   if (btn) {
     document.querySelectorAll(".menu button")
       .forEach(b => b.classList.remove("active"));
@@ -300,7 +285,6 @@ function safeClick(btn, fn) {
 
   try {
 
-    // SESSION REFRESH
     if (typeof getSession === "function") {
       session = getSession();
     }
@@ -311,24 +295,19 @@ function safeClick(btn, fn) {
       return;
     }
 
-    // USER REFRESH
     user = getSafeUser();
     if (!user) return;
 
-    // FUNCTION CALL
     if (typeof fn === "function") {
       fn();
     } else {
       alert("Feature not available");
-      console.error("Invalid function");
     }
 
   } catch (err) {
-    console.error("Click Error:", err);
+    console.error(err);
     alert("Error: " + err.message);
   } finally {
-
-    // ALWAYS UNLOCK
     setTimeout(() => {
       clickLock = false;
     }, 200);
