@@ -1,14 +1,14 @@
 /*
 ========================================
-📜 ACTIVITY LOG SYSTEM V7 (MASTER LOG)
+📜 ACTIVITY LOG SYSTEM V7.1 (CLEAN LOCK)
 ========================================
-✔ Central logging system
-✔ Duplicate protection
+✔ Strong safeLoad validation
+✔ Duplicate protection optimized
 ✔ Limit controlled
 ✔ Critical + normal logs separated
 ✔ System lock safe
-✔ Source tagging added
-✔ Production ready
+✔ Source tagging
+✔ Clean + production stable
 ========================================
 */
 
@@ -23,7 +23,8 @@ const CRITICAL_KEY = "criticalLogs";
 // ===============================
 function safeLoad(key) {
   try {
-    return JSON.parse(localStorage.getItem(key)) || [];
+    let data = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(data) ? data : [];
   } catch {
     localStorage.setItem(key, "[]");
     return [];
@@ -41,7 +42,11 @@ function safeSave(key, data, limit = null) {
     data = data.slice(-limit);
   }
 
-  localStorage.setItem(key, JSON.stringify(data));
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.error("safeSave error:", e.message);
+  }
 }
 
 // ===============================
@@ -50,11 +55,12 @@ function safeSave(key, data, limit = null) {
 function isDuplicateLog(userId, action) {
 
   let logs = safeLoad(ACTIVITY_KEY);
+  let now = Date.now();
 
   return logs.some(l =>
     l.userId === userId &&
     l.action === action &&
-    (new Date() - new Date(l.time)) < 3000
+    (now - new Date(l.time).getTime()) < 3000
   );
 }
 
@@ -77,11 +83,11 @@ function logActivity(userId, role, action, source = "SYSTEM") {
   let logs = safeLoad(ACTIVITY_KEY);
 
   logs.push({
-   logId: "LOG_" + Date.now() + "_" + Math.floor(Math.random() * 100000),
+    logId: "LOG_" + Date.now() + "_" + Math.floor(Math.random() * 100000),
     userId,
     role,
     action,
-    source, // 🔥 NEW (which system triggered)
+    source,
     type: "NORMAL",
     time: new Date().toISOString()
   });
@@ -105,6 +111,7 @@ function clearActivityLogs(performedBy = "SYSTEM") {
 
   safeSave(ACTIVITY_KEY, []);
 
+  // log after clearing (fresh entry)
   logActivity(performedBy, "SYSTEM", "Activity logs cleared", "ADMIN");
 }
 
@@ -131,8 +138,9 @@ function filterLogsAdvanced({ userId, role, keyword, source }) {
   if (source) logs = logs.filter(l => l.source === source);
 
   if (keyword) {
+    let k = keyword.toLowerCase();
     logs = logs.filter(l =>
-      (l.action || "").toLowerCase().includes(keyword.toLowerCase())
+      (l.action || "").toLowerCase().includes(k)
     );
   }
 
@@ -168,4 +176,3 @@ function logCritical(message, userId = "SYSTEM", source = "SYSTEM") {
 function getCriticalLogs() {
   return safeLoad(CRITICAL_KEY);
 }
-
