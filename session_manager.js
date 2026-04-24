@@ -1,13 +1,13 @@
 /*
 ========================================
-SESSION MANAGER V8 FINAL LOCK
+SESSION MANAGER V8.1 CLEAN FINAL LOCK
 ========================================
 ✔ Multi-role session support
-✔ Backward compatible
-✔ Session migration safe
-✔ Invalid session cleanup
-✔ Page protection
-✔ Flexible redirect support
+✔ Conflict auto-cleanup
+✔ Strong validation
+✔ Legacy sync fixed
+✔ Safe parsing
+✔ Page protection improved
 ✔ Production ready
 ========================================
 */
@@ -21,6 +21,25 @@ const SESSION_KEYS = {
   legacy: "appSession"
 };
 
+// ================= SAFE PARSE =================
+function safeParse(raw) {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+// ================= GET KEY =================
+function getSessionKeyByRole(role) {
+  return SESSION_KEYS[role] || null;
+}
+
+// ================= CLEAR SESSION =================
+function clearSession() {
+  Object.values(SESSION_KEYS).forEach(k => localStorage.removeItem(k));
+}
+
 // ================= SAVE SESSION =================
 function setSession(user) {
 
@@ -29,93 +48,64 @@ function setSession(user) {
   clearSession();
 
   let key = getSessionKeyByRole(user.role);
-
   if (!key) return false;
 
   let sessionData = {
-  userId: user.userId,
-  username: user.username || "",
-  role: user.role,
-  loginTime: Date.now()
-};
-  
+    userId: user.userId,
+    username: user.username || "",
+    role: user.role,
+    loginTime: Date.now()
+  };
+
   localStorage.setItem(key, JSON.stringify(sessionData));
 
-  // legacy support
+  // legacy sync
   localStorage.setItem(SESSION_KEYS.legacy, JSON.stringify(sessionData));
 
   return true;
 }
 
-// ================= GET KEY =================
-function getSessionKeyByRole(role) {
-  if (role === "super_admin") return SESSION_KEYS.super_admin;
-  if (role === "system_admin") return SESSION_KEYS.system_admin;
-  if (role === "admin") return SESSION_KEYS.admin;
-  if (role === "user") return SESSION_KEYS.user;
-  return null;
-}
-
 // ================= GET ACTIVE SESSION =================
 function getSession() {
-  
-  let keys = [
-    SESSION_KEYS.super_admin,
-    SESSION_KEYS.system_admin,
-    SESSION_KEYS.admin,
-    SESSION_KEYS.user
-  ];
 
-  for (let key of keys) {
-    try {
-      let raw = localStorage.getItem(key);
-      if (!raw) continue;
+  let foundSession = null;
 
-      let session = JSON.parse(raw);
+  for (let role in SESSION_KEYS) {
 
-      if (
-        session &&
-        typeof session === "object" &&
-        session.userId &&
-        session.role
-      ) {
-        return session;
+    if (role === "legacy") continue;
+
+    let key = SESSION_KEYS[role];
+    let raw = localStorage.getItem(key);
+    if (!raw) continue;
+
+    let session = safeParse(raw);
+
+    if (
+      session &&
+      session.userId &&
+      session.role === role
+    ) {
+      // keep only one valid session
+      if (!foundSession) {
+        foundSession = session;
+      } else {
+        localStorage.removeItem(key); // remove duplicate session
       }
-    } catch (err) {
-      localStorage.removeItem(key);
+    } else {
+      localStorage.removeItem(key); // cleanup invalid
     }
   }
 
-  // legacy fallback only if no active role session found
-  try {
-    let legacyRaw = localStorage.getItem(SESSION_KEYS.legacy);
+  // fallback legacy
+  if (!foundSession) {
+    let legacy = safeParse(localStorage.getItem(SESSION_KEYS.legacy));
 
-    if (legacyRaw) {
-      let legacySession = JSON.parse(legacyRaw);
-
-      if (
-        legacySession &&
-        typeof legacySession === "object" &&
-        legacySession.userId &&
-        legacySession.role
-      ) {
-        return legacySession;
-      }
+    if (legacy && legacy.userId && legacy.role) {
+      return legacy;
     }
-  } catch (err) {
-    localStorage.removeItem(SESSION_KEYS.legacy);
   }
 
-  return null;
-}
-
-// ================= CLEAR SESSION =================
-function clearSession() {
-  localStorage.removeItem(SESSION_KEYS.super_admin);
-  localStorage.removeItem(SESSION_KEYS.system_admin);
-  localStorage.removeItem(SESSION_KEYS.admin);
-  localStorage.removeItem(SESSION_KEYS.user);
-  localStorage.removeItem(SESSION_KEYS.legacy);
+  return foundSession;
 }
 
 // ================= REDIRECT =================
@@ -134,9 +124,7 @@ function protectPage(config = {}) {
 
   if (!session) {
     alert("Login Required");
-
-    let fallback = config.redirect || "index.html";
-    window.location.href = fallback;
+    window.location.href = config.redirect || "index.html";
     return null;
   }
 
@@ -148,13 +136,11 @@ function protectPage(config = {}) {
 
   if (allowedRoles.length && !allowedRoles.includes(session.role)) {
     alert("Access Denied");
-
-    let redirectPage = getLoginRedirect(session.role);
-    window.location.href = redirectPage;
+    window.location.href = getLoginRedirect(session.role);
     return null;
   }
 
-  // optional live user validation
+  // 🔒 LIVE USER VALIDATION
   if (typeof getUserById === "function") {
     let user = getUserById(session.userId);
 
@@ -181,11 +167,9 @@ function hasRole(role) {
   let session = getSession();
   if (!session) return false;
 
-  if (Array.isArray(role)) {
-    return role.includes(session.role);
-  }
-
-  return session.role === role;
+  return Array.isArray(role)
+    ? role.includes(session.role)
+    : session.role === role;
 }
 
 // ================= LOGOUT =================
