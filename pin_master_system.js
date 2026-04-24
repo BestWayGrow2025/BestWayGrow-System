@@ -1,17 +1,16 @@
 /*
 ========================================
-PIN MASTER SYSTEM V7.4 (CLEAN FIXED)
+PIN MASTER SYSTEM V7.4 (CLEAN FINAL LOCK)
 ========================================
 ✔ Safe storage (safeGet / safeSet)
 ✔ System lock protected
 ✔ PIN config validation
 ✔ Duplicate-safe ID generation
-✔ Auto-unlock stuck pins (with save fix)
+✔ Auto-unlock stuck pins
+✔ Strong lock handling (fixed)
 ✔ Full audit logging
 ✔ Safe trigger system
 ✔ Dashboard compatible (getPins added)
-✔ FIXED: user save sync
-✔ FIXED: lock safety
 ✔ Production stable
 ========================================
 */
@@ -27,7 +26,6 @@ function loadPins() {
   let updated = false;
   let now = Date.now();
 
-  // AUTO-UNLOCK FIX
   pins.forEach(p => {
     let refTime = p.usedAt || p.assignedAt || p.createdAt || now;
 
@@ -47,14 +45,13 @@ function savePins(pins) {
   safeSet(PIN_STORAGE_KEY, pins);
 }
 
-// DASHBOARD SUPPORT
+// ================= DASHBOARD =================
 function getPins() {
   return loadPins();
 }
 
 // ================= LOG =================
 function logPinAction(data) {
-
   let logs = safeGet(PIN_LOG_KEY, []);
   if (!Array.isArray(logs)) logs = [];
 
@@ -82,10 +79,7 @@ function generatePinId(prefix = "PIN") {
 function createPin({ type="upgrade", bv=0, amount=0, gst=0, createdBy }) {
 
   if (typeof isSystemSafe === "function" && !isSystemSafe()) return null;
-
-  if (typeof isPinSystemSafe === "function") {
-    if (!isPinSystemSafe(type)) return null;
-  }
+  if (typeof isPinSystemSafe === "function" && !isPinSystemSafe(type)) return null;
 
   let pins = loadPins();
 
@@ -144,6 +138,7 @@ function assignPin(pinId, toId, toType, performedBy) {
   if (!pin || pin.lock || pin.status !== "active") return false;
 
   pin.lock = true;
+  savePins(pins);
 
   try {
 
@@ -153,33 +148,27 @@ function assignPin(pinId, toId, toType, performedBy) {
     pin.assignedAt = Date.now();
     pin.status = "assigned";
 
-    // ===== USER UPDATE FIX =====
+    // USER UPDATE
     if (toType === "user" && typeof getUserById === "function") {
-
       let user = getUserById(toId);
 
       if (user) {
-
         if (pin.type === "upgrade") {
-          user.availableUpgradePins =
-            Number(user.availableUpgradePins || 0) + 1;
+          user.availableUpgradePins = Number(user.availableUpgradePins || 0) + 1;
         }
 
         if (pin.type === "repurchase") {
-          user.availableRepurchasePins =
-            Number(user.availableRepurchasePins || 0) + 1;
+          user.availableRepurchasePins = Number(user.availableRepurchasePins || 0) + 1;
         }
 
         user.pinStatus = "active";
 
-        if (typeof getUsers === "function" && typeof saveUsers === "function") {
-          let users = getUsers() || [];
-          let index = users.findIndex(u => u.userId === user.userId);
+        let users = getUsers();
+        let index = users.findIndex(u => u.userId === user.userId);
 
-          if (index !== -1) {
-            users[index] = user;
-            saveUsers(users); // ✅ FIXED SAVE
-          }
+        if (index !== -1) {
+          users[index] = user;
+          saveUsers(users);
         }
       }
     }
@@ -213,16 +202,14 @@ function assignPin(pinId, toId, toType, performedBy) {
   }
 }
 
-// ================= USE PIN =================
+// ================= USE =================
 function usePin(pinId, userId, purpose) {
 
   if (typeof isSystemSafe === "function" && !isSystemSafe()) return null;
   if (!userId) return null;
 
-  if (typeof getUserById === "function") {
-    let user = getUserById(userId);
-    if (!user || (user.status && user.status !== "active")) return null;
-  }
+  let user = getUserById(userId);
+  if (!user || (user.status && user.status !== "active")) return null;
 
   let pins = loadPins();
   let pin = pins.find(p => p.pinId === pinId);
@@ -234,6 +221,7 @@ function usePin(pinId, userId, purpose) {
   }
 
   pin.lock = true;
+  savePins(pins);
 
   try {
 
@@ -241,40 +229,29 @@ function usePin(pinId, userId, purpose) {
     pin.usedBy = userId;
     pin.usedAt = Date.now();
 
-    // ===== USER UPDATE =====
-    let user = getUserById(userId);
+    // USER UPDATE
+    user.usedPinCount = Number(user.usedPinCount || 0) + 1;
 
-    if (user) {
+    if (pin.type === "upgrade") {
+      user.availableUpgradePins = Math.max(0, Number(user.availableUpgradePins || 0) - 1);
+    }
 
-      user.usedPinCount = Number(user.usedPinCount || 0) + 1;
+    if (pin.type === "repurchase") {
+      user.availableRepurchasePins = Math.max(0, Number(user.availableRepurchasePins || 0) - 1);
+    }
 
-      if (pin.type === "upgrade") {
-        user.availableUpgradePins = Math.max(
-          0,
-          Number(user.availableUpgradePins || 0) - 1
-        );
-      }
+    let totalPins =
+      Number(user.availableUpgradePins || 0) +
+      Number(user.availableRepurchasePins || 0);
 
-      if (pin.type === "repurchase") {
-        user.availableRepurchasePins = Math.max(
-          0,
-          Number(user.availableRepurchasePins || 0) - 1
-        );
-      }
+    user.pinStatus = totalPins > 0 ? "active" : "none";
 
-      let totalPins =
-        Number(user.availableUpgradePins || 0) +
-        Number(user.availableRepurchasePins || 0);
+    let users = getUsers();
+    let index = users.findIndex(u => u.userId === user.userId);
 
-      user.pinStatus = totalPins > 0 ? "active" : "none";
-
-      let users = getUsers();
-      let index = users.findIndex(u => u.userId === user.userId);
-
-      if (index !== -1) {
-        users[index] = user;
-        saveUsers(users);
-      }
+    if (index !== -1) {
+      users[index] = user;
+      saveUsers(users);
     }
 
     pin.lock = false;
@@ -307,4 +284,3 @@ function usePin(pinId, userId, purpose) {
     return null;
   }
 }
-
