@@ -5,21 +5,6 @@
   <link rel="icon" href="data:,">
 
   <!-- ✅ FIX: safeClick available globally BEFORE buttons -->
- <script>
-window.safeClick = function(btn, fn){
-  alert("CLICK WORKING");
-
-  if(btn){
-    document.querySelectorAll(".menu button")
-      .forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-  }
-
-  if(typeof fn === "function"){
-    fn();
-  }
-};
-</script>
 
   <style>
     body {
@@ -150,6 +135,11 @@ window.safeClick = function(btn, fn){
 </div>
 
 <div class="container">
+
+<button onclick="safeClick(this, function(){ alert('OK'); })">
+TEST
+</button>
+
   <div id="mainContent" class="card">Loading...</div>
 </div>
 
