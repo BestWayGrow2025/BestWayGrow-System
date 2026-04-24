@@ -27,13 +27,6 @@
     }
   </script>
 
-  <!-- ✅ LOAD SYSTEM FILES (IMPORTANT — NO defer) -->
-  <script src="core_system.js"></script>
-  <script src="wallet_system.js"></script>
-  <script src="pin_master_system.js"></script>
-  <script src="activity_log.js"></script>
-  <script src="session_manager.js"></script>
-
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -1542,12 +1535,12 @@ function copyReferralLink() {
 // ================= LOGOUT =================
 function logout() {
 
-  user = getSafeUser();   // ✅ FIX
-  if (!user) return;
-
   try {
-    if (typeof logActivity === "function") {
-      logActivity(user.userId, "USER", "Logout", "USER_DASHBOARD");
+    if (typeof getSafeUser === "function") {
+      let u = getSafeUser();
+      if (u && typeof logActivity === "function") {
+        logActivity(u.userId, "USER", "Logout", "USER_DASHBOARD");
+      }
     }
   } catch (err) {
     console.error(err);
@@ -1561,5 +1554,4 @@ function logout() {
 
   location.href = "user_login.html";
 }
-
 
