@@ -1,6 +1,6 @@
 /*
 ========================================
-REGISTRATION TREE ENGINE (FINAL v3 LOCK)
+REGISTRATION TREE ENGINE (FINAL v4 LOCK)
 ========================================
 ✔ Deep LEFT / RIGHT placement
 ✔ Parent-child linking (CRITICAL)
@@ -8,19 +8,21 @@ REGISTRATION TREE ENGINE (FINAL v3 LOCK)
 ✔ No BFS (directional depth)
 ✔ Data structure enforced
 ✔ Role + Status FIXED
+✔ Safe save (core aligned)
+✔ Duplicate + safety checks
 ✔ Production LOCKED
 ========================================
 */
 
 // ================= USER ID =================
 function generateUserId() {
-  return "BWG" + Math.random().toString(36).substring(2, 8);
+  return "BWG" + Date.now(); // ✅ more stable than random
 }
 
 // ================= FIND DEEP POSITION =================
 function findDeepPosition(introducerId, position) {
 
-  let users = getUsers();
+  let users = getUsers() || [];
 
   let current = users.find(u => u.userId === introducerId);
   if (!current) throw new Error("Invalid introducer");
@@ -51,7 +53,14 @@ function findDeepPosition(introducerId, position) {
 // ================= CREATE USER =================
 function createUserWithTree(req) {
 
-  let users = getUsers();
+  if (!req) throw new Error("Invalid request");
+
+  let users = getUsers() || [];
+
+  // 🔒 VALIDATION
+  if (!req.username || !req.mobile || !req.password) {
+    throw new Error("Missing required fields");
+  }
 
   // 🔒 DUPLICATE CHECK
   let exists = users.find(u => u.mobile === req.mobile);
@@ -78,9 +87,13 @@ function createUserWithTree(req) {
     leftChild: null,
     rightChild: null,
 
-    // ✅ CRITICAL FIX (MANDATORY)
+    // ✅ MANDATORY FIELDS (SYSTEM CRITICAL)
     role: "user",
     status: "active",
+
+    // ✅ SAFE DEFAULTS (avoid undefined anywhere)
+    walletBalance: 0,
+    totalIncome: 0,
 
     createdAt: Date.now()
   };
@@ -95,7 +108,6 @@ function createUserWithTree(req) {
   // ================= SAVE =================
   users.push(newUser);
 
-  // ✅ USE SAFE SAVE (important)
   if (typeof saveUsers === "function") {
     saveUsers(users);
   } else {
@@ -104,3 +116,7 @@ function createUserWithTree(req) {
 
   return newUser;
 }
+
+// ================= GLOBAL EXPORT (SAFE) =================
+window.createUserWithTree = createUserWithTree;
+window.findDeepPosition = findDeepPosition;
