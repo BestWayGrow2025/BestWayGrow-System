@@ -1,13 +1,14 @@
 /*
 ========================================
-REGISTRATION TREE ENGINE (FINAL v2)
+REGISTRATION TREE ENGINE (FINAL v3 LOCK)
 ========================================
 ✔ Deep LEFT / RIGHT placement
 ✔ Parent-child linking (CRITICAL)
 ✔ getChildren() compatible
 ✔ No BFS (directional depth)
 ✔ Data structure enforced
-✔ Production ready
+✔ Role + Status FIXED
+✔ Production LOCKED
 ========================================
 */
 
@@ -60,7 +61,6 @@ function createUserWithTree(req) {
 
   // 🔥 FIND POSITION
   let placement = findDeepPosition(req.introducerId, req.position || "L");
-
   let parent = placement.parent;
 
   // ================= NEW USER =================
@@ -75,8 +75,12 @@ function createUserWithTree(req) {
 
     position: placement.side,
 
-    leftChild: null,     // 🔥 REQUIRED
-    rightChild: null,    // 🔥 REQUIRED
+    leftChild: null,
+    rightChild: null,
+
+    // ✅ CRITICAL FIX (MANDATORY)
+    role: "user",
+    status: "active",
 
     createdAt: Date.now()
   };
@@ -90,37 +94,13 @@ function createUserWithTree(req) {
 
   // ================= SAVE =================
   users.push(newUser);
-  localStorage.setItem("users", JSON.stringify(users));
+
+  // ✅ USE SAFE SAVE (important)
+  if (typeof saveUsers === "function") {
+    saveUsers(users);
+  } else {
+    localStorage.setItem("users", JSON.stringify(users));
+  }
 
   return newUser;
 }
-
-
-🔗 ✅ CONNECT WITH QUEUE (FINAL STEP)
-👉 Open: registration_queue.js
-FIND:
-function processOneRegistration(req)
-
-
-❌ REMOVE OLD CODE
-✅ REPLACE WITH:
-function processOneRegistration(req) {
-
-  try {
-
-    createUserWithTree(req);
-
-    return true;
-
-  } catch (err) {
-
-    throw err;
-  }
-}
-
-
-📁 ✅ SCRIPT ORDER (VERY IMPORTANT)
-In user_register.html:
-<script src="core_system.js"></script>
-<script src="registration_tree_engine.js"></script>
-<script src="registration_queue.js"></script>
