@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User Register FINAL STABLE</title>
+  <title>User Register FINAL QUEUE</title>
   <link rel="icon" href="data:,">
 
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: Arial;
       background: #f4f7f9;
-      padding: 20px;
       text-align: center;
+      padding: 20px;
     }
 
     #formArea {
@@ -18,41 +18,26 @@
       margin: auto;
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }
 
     input {
       width: 90%;
       padding: 10px;
-      margin-bottom: 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      margin-bottom: 10px;
     }
 
     button {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 6px;
-      background: #007bff;
+      padding: 10px 15px;
+      background: blue;
       color: #fff;
-      cursor: pointer;
+      border: none;
     }
 
     .success-box {
-      background: #f0fff4;
-      border: 1px solid #b7ebc6;
+      margin-top: 20px;
+      background: #e6ffed;
       padding: 15px;
-      border-radius: 10px;
-      margin-top: 15px;
-    }
-
-    .link-box {
-      background: #f7f7f7;
-      border: 1px solid #ddd;
-      padding: 8px;
-      border-radius: 6px;
-      margin: 10px 0;
-      font-size: 13px;
+      border-radius: 8px;
     }
   </style>
 </head>
@@ -62,13 +47,12 @@
 <h2 id="introLabel">User Registration</h2>
 
 <div id="formArea">
-  <input type="text" id="username" placeholder="Name"><br>
-  <input type="text" id="email" placeholder="Email"><br>
-  <input type="text" id="mobile" placeholder="Mobile"><br>
-  <input type="password" id="password" placeholder="Password"><br>
+  <input id="username" placeholder="Name"><br>
+  <input id="email" placeholder="Email"><br>
+  <input id="mobile" placeholder="Mobile"><br>
+  <input id="password" type="password" placeholder="Password"><br>
 
   <label>Select Position:</label><br><br>
-
   <input type="radio" name="position" value="L"> LEFT
   <input type="radio" name="position" value="R"> RIGHT
   <br><br>
@@ -78,19 +62,21 @@
 
 <p id="msg"></p>
 
-<!-- ✅ CORRECT SCRIPT ORDER -->
+<!-- ✅ SCRIPT ORDER (FINAL) -->
 <script src="core_system.js"></script>
-<script src="registration_tree_engine.js"></script> <!-- ✅ FIXED -->
+<script src="registration_tree_engine.js"></script>
+<script src="registration_queue.js"></script>
 <script src="activity_log.js"></script>
 
 <script>
 
+// INIT
 if (typeof initCoreSystem === "function") {
   initCoreSystem();
 }
 
-// ================= REFERRAL =================
-let params = new URLSearchParams(window.location.search);
+// REFERRAL
+let params = new URLSearchParams(location.search);
 let introducerId = params.get("ref") || "BWG000001";
 
 let introUser = (typeof getUserById === "function")
@@ -105,16 +91,12 @@ if (!introUser) {
     "Introducer: " + introducerId;
 }
 
-// ================= HELPERS =================
+// HELPERS
 function encodePass(p){
   try { return btoa(p); } catch { return p; }
 }
 
-function generateReferralLink(userId) {
-  return location.origin + "/user_register.html?ref=" + userId;
-}
-
-// ================= REGISTER =================
+// REGISTER (QUEUE BASED)
 function registerUser() {
 
   let username = document.getElementById("username").value.trim();
@@ -150,80 +132,34 @@ function registerUser() {
     return;
   }
 
-  // ================= TREE REQUEST =================
-  let req = {
+  // ✅ QUEUE REQUEST
+  let added = addToRegistrationQueue({
     username,
     password: encodePass(password),
     mobile,
     introducerId,
     position: pos.value
-  };
+  });
 
-  try {
-
-    // ✅ CREATE USER WITH TREE
-    let user = createUserWithTree(req);
-
-    if (!user || !user.userId) {
-      throw new Error("User creation failed");
-    }
-
-    // ================= UPDATE EXTRA FIELDS =================
-    let updatedUsers = getUsers();
-    let index = updatedUsers.findIndex(u => u.userId === user.userId);
-
-    if (index !== -1) {
-
-      updatedUsers[index] = {
-        ...updatedUsers[index],
-
-        fullName: username,
-        email,
-        joinDate: new Date().toISOString(),
-
-        role: "user",
-        status: "active",
-        accountStatus: "active",
-
-        walletBalance: 0,
-        totalIncome: 0
-      };
-
-      // ✅ SAFE SAVE
-      if (typeof saveUsers === "function") {
-        saveUsers(updatedUsers);
-      }
-    }
-
-    // ================= LOG =================
-    if (typeof logActivity === "function") {
-      logActivity(user.userId, "USER", "Registered", "REGISTRATION");
-    }
-
-    // ================= SUCCESS =================
-    let refLink = generateReferralLink(user.userId);
-
-    document.getElementById("msg").innerHTML = `
-      <div class="success-box">
-        ✅ Registration Successful<br><br>
-        User ID: <b>${user.userId}</b><br><br>
-
-        <div class="link-box">${refLink}</div>
-
-        <a href="user_login.html">
-          <button>Login</button>
-        </a>
-      </div>
-    `;
-
-  } catch (e) {
-    alert(e.message);
+  if (!added) {
+    alert("Registration failed or duplicate");
+    return;
   }
+
+  // ✅ SUCCESS UI
+  document.getElementById("msg").innerHTML = `
+    <div class="success-box">
+      ✅ Registration Submitted<br><br>
+      Processing... Please login after few seconds<br><br>
+
+      <a href="user_login.html">
+        <button>Go to Login</button>
+      </a>
+    </div>
+  `;
 }
 
 </script>
 
 </body>
 </html>
-
-
