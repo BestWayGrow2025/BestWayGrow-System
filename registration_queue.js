@@ -1,20 +1,21 @@
- /*
+/*
 ========================================
-REGISTRATION QUEUE SYSTEM V9 (FINAL LOCK)
+REGISTRATION QUEUE SYSTEM v10 (FINAL LOCK)
 ========================================
-✔ Queue only
-✔ Safe lock
-✔ Duplicate protection
+✔ Queue only (UI never creates user directly)
+✔ Safe lock system
+✔ Duplicate protection (queue + users)
 ✔ Batch processing
 ✔ Multi-tab safe
-✔ Error visibility
-✔ Registration control
-✔ Production ready
+✔ Error handling + retry
+✔ Activity logging
+✔ Production LOCKED
 ========================================
 */
 
-const REG_QUEUE_KEY = "REG_QUEUE_DATA";
-const REG_LOCK_KEY = "REG_QUEUE_LOCK";
+// ================= CONSTANTS =================
+var REG_QUEUE_KEY = "REG_QUEUE_DATA";
+var REG_LOCK_KEY = "REG_QUEUE_LOCK";
 
 // ================= LOAD / SAVE =================
 function getRegQueue() {
@@ -43,6 +44,7 @@ function isRegLocked() {
 
   if (!lock) return false;
 
+  // auto unlock after 5 sec
   if (Date.now() - lock.time > 5000) {
     setRegLock(false);
     return false;
@@ -69,22 +71,22 @@ function addToRegistrationQueue(data) {
 
   let queue = getRegQueue();
 
+  // 🔒 QUEUE DUPLICATE CHECK
   let exists = queue.find(q =>
     q.mobile === data.mobile &&
     q.status !== "REJECTED" &&
     q.status !== "FAILED"
   );
-
   if (exists) return false;
 
+  // 🔒 USER DUPLICATE CHECK
   if (typeof getUsers === "function") {
     let users = getUsers() || [];
-
     let userExists = users.find(u => u.mobile === data.mobile);
-
     if (userExists) return false;
   }
 
+  // ✅ ADD REQUEST
   queue.push({
     ...data,
     requestTime: Date.now(),
@@ -97,75 +99,11 @@ function addToRegistrationQueue(data) {
 
   saveRegQueue(queue);
 
-  // 🔥 FORCE PROCESS IMMEDIATELY (IMPORTANT FIX)
+  // ✅ AUTO PROCESS
   try {
     processRegistrationQueue();
   } catch (e) {
-    console.warn("Force process failed:", e.message);
-  }
-
-  return true;
-}
-
-// ================= APPROVE =================
-function approveRegistration(mobile) {
-
-  if (!mobile) return false;
-
-  let queue = getRegQueue();
-  let req = queue.find(q => q.mobile === mobile);
-
-  if (!req) return false;
-  if (req.status !== "PENDING") return false;
-
-  try {
-
-    processOneRegistration(req);
-
-    req.status = "DONE";
-    req.approvedAt = Date.now();
-
-    saveRegQueue(queue);
-
-    if (typeof logActivity === "function") {
-      logActivity(req.mobile, "SYSTEM", "REG APPROVED");
-    }
-
-    return true;
-
-  } catch (err) {
-
-    req.retry = (req.retry || 0) + 1;
-    req.error = err.message;
-
-    if (req.retry >= 3) {
-      req.status = "FAILED";
-    }
-
-    saveRegQueue(queue);
-    return false;
-  }
-}
-
-// ================= REJECT =================
-function rejectRegistration(mobile, reason = "Rejected by admin") {
-
-  if (!mobile) return false;
-
-  let queue = getRegQueue();
-  let req = queue.find(q => q.mobile === mobile);
-
-  if (!req) return false;
-  if (req.status !== "PENDING") return false;
-
-  req.status = "REJECTED";
-  req.error = reason;
-  req.rejectedAt = Date.now();
-
-  saveRegQueue(queue);
-
-  if (typeof logActivity === "function") {
-    logActivity(req.mobile, "SYSTEM", "REG REJECTED");
+    console.warn("Process error:", e.message);
   }
 
   return true;
@@ -174,6 +112,8 @@ function rejectRegistration(mobile, reason = "Rejected by admin") {
 // ================= PROCESS ONE =================
 function processOneRegistration(req) {
 
+  if (!req) throw new Error("Invalid request");
+
   if (typeof createUserWithTree !== "function") {
     throw new Error("Tree system missing");
   }
@@ -181,29 +121,28 @@ function processOneRegistration(req) {
   if (typeof getUsers === "function") {
     let users = getUsers() || [];
 
-    if (!Array.isArray(users)) users = [];
-
     let exists = users.find(u => u.mobile === req.mobile);
-
     if (exists) {
       throw new Error("User already exists");
     }
   }
 
   if (!req.username || !req.mobile || !req.password) {
-    throw new Error("Missing required registration fields");
+    throw new Error("Missing required fields");
   }
 
+  // ✅ CREATE USER (ONLY HERE)
   createUserWithTree(req);
+
   return true;
 }
 
 // ================= MAIN PROCESS =================
 function processRegistrationQueue() {
 
+  // 🔒 SYSTEM CHECKS
   if (typeof getSystemSettings === "function") {
     let s = getSystemSettings();
-
     if (s && s.lockMode) return;
     if (s && s.registrationOpen === false) return;
   }
@@ -215,7 +154,6 @@ function processRegistrationQueue() {
   if (isRegLocked()) return;
 
   let queue = getRegQueue();
-
   if (!queue.length) return;
 
   setRegLock(true);
@@ -223,7 +161,7 @@ function processRegistrationQueue() {
   try {
 
     let processed = 0;
-    const MAX_BATCH = 5;
+    var MAX_BATCH = 5;
 
     for (let i = 0; i < queue.length; i++) {
 
@@ -248,7 +186,6 @@ function processRegistrationQueue() {
       } catch (err) {
 
         console.warn("REG ERROR:", err.message);
-        console.log("FAILED REQUEST:", req);
 
         req.retry = (req.retry || 0) + 1;
         req.error = err.message;
@@ -274,7 +211,6 @@ function processRegistrationQueue() {
 
 // ================= CLEANUP =================
 function clearCompletedRegistrations() {
-
   let queue = getRegQueue();
 
   queue = queue.filter(q =>
@@ -290,13 +226,12 @@ function startRegistrationQueue() {
   setInterval(processRegistrationQueue, 800);
 }
 
-// ================= GLOBAL ACCESS =================
+// ================= GLOBAL EXPORT =================
 window.getRegQueue = getRegQueue;
 window.saveRegQueue = saveRegQueue;
 window.addToRegistrationQueue = addToRegistrationQueue;
 window.processRegistrationQueue = processRegistrationQueue;
-window.approveRegistration = approveRegistration;
-window.rejectRegistration = rejectRegistration;
+window.processOneRegistration = processOneRegistration;
 window.clearCompletedRegistrations = clearCompletedRegistrations;
 
 // ================= MULTI TAB SAFE =================
@@ -304,5 +239,3 @@ if (!window.__REG_QUEUE_STARTED__) {
   window.__REG_QUEUE_STARTED__ = true;
   startRegistrationQueue();
 }
-
-
