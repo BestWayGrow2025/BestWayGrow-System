@@ -280,51 +280,6 @@ function startDashboard() {
   loadHome();
 }
 
-// ================= SAFE CLICK =================
-function safeClick(btn, fn) {
-
-  if (clickLock) return;
-
-  clickLock = true;
-
-  if (btn) {
-    document.querySelectorAll(".menu button")
-      .forEach(b => b.classList.remove("active"));
-
-    btn.classList.add("active");
-  }
-
-  try {
-
-    if (typeof getSession === "function") {
-      session = getSession();
-    }
-
-    if (!session || !session.userId) {
-      alert("Session expired. Login again.");
-      location.href = "user_login.html";
-      return;
-    }
-
-    user = getSafeUser();
-    if (!user) return;
-
-    if (typeof fn === "function") {
-      fn();
-    } else {
-      alert("Feature not available");
-    }
-
-  } catch (err) {
-    console.error(err);
-    alert("Error: " + err.message);
-  } finally {
-    setTimeout(() => {
-      clickLock = false;
-    }, 200);
-  }
-}
-
 // ================= REF LINK =================
 function generateRefLink(userId) {
 
