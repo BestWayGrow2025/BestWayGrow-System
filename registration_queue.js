@@ -223,7 +223,19 @@ function clearCompletedRegistrations() {
 
 // ================= AUTO RUN =================
 function startRegistrationQueue() {
-  setInterval(processRegistrationQueue, 800);
+
+  setInterval(() => {
+    try {
+      processRegistrationQueue();
+    } catch (e) {
+      console.error("QUEUE LOOP ERROR:", e);
+    }
+  }, 1000);
+
+  // 🔥 RUN IMMEDIATELY
+  setTimeout(() => {
+    processRegistrationQueue();
+  }, 100);
 }
 
 // ================= GLOBAL EXPORT =================
