@@ -5,6 +5,27 @@
   <link rel="icon" href="data:,">
 
   <!-- ✅ FIX: safeClick available globally BEFORE buttons -->
+  <script>
+function safeClick(btn, fn) {
+
+  if (btn) {
+    document.querySelectorAll(".menu button")
+      .forEach(b => b.classList.remove("active"));
+
+    btn.classList.add("active");
+  }
+
+  try {
+    if (typeof fn === "function") {
+      fn();
+    } else {
+      alert("Function missing");
+    }
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
+}
+</script>
 
   <style>
     body {
