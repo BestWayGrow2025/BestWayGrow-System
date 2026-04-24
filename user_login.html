@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User Login FINAL</title>
+  <title>User Login FINAL LOCK</title>
   <link rel="icon" href="data:,">
 
   <style>
@@ -60,7 +60,6 @@
   <input type="password" id="password" placeholder="Enter Password">
   <input type="checkbox" onchange="togglePassword()"> Show Password
 
-  <!-- ✅ FIXED BUTTON -->
   <button id="loginBtn" onclick="safeLogin()">Login</button>
 
   <div id="msg"></div>
@@ -86,6 +85,7 @@ window.addEventListener("load", function () {
     ? getSession()
     : null;
 
+  // ✅ AUTO REDIRECT ONLY IF VALID USER
   if (existing && existing.role === "user") {
     window.location.href = "user_dashboard.html";
   }
@@ -168,6 +168,19 @@ function login() {
     return;
   }
 
+  // ✅ CRITICAL CHECK (LOCKED STRUCTURE)
+  if (user.role !== "user") {
+    showMsg("Access denied");
+    resetLogin();
+    return;
+  }
+
+  if (user.status !== "active") {
+    showMsg("Account inactive");
+    resetLogin();
+    return;
+  }
+
   let stored = safeDecode(user.password || "");
 
   if (stored !== password) {
@@ -202,4 +215,3 @@ function login() {
 
 </body>
 </html>
-
