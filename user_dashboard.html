@@ -283,7 +283,7 @@ function startDashboard() {
   loadHome();
 }
 
-// ================= SAFE CLICK (FINAL STABLE) =================
+// ================= SAFE CLICK (FINAL STABLE CLEAN) =================
 function safeClick(btn, fn) {
 
   if (clickLock) return;
@@ -315,12 +315,12 @@ function safeClick(btn, fn) {
     user = getSafeUser();
     if (!user) return;
 
-    // CALL FUNCTION
+    // FUNCTION CALL
     if (typeof fn === "function") {
       fn();
     } else {
-      console.error("Invalid function");
       alert("Feature not available");
+      console.error("Invalid function");
     }
 
   } catch (err) {
@@ -328,6 +328,7 @@ function safeClick(btn, fn) {
     alert("Error: " + err.message);
   } finally {
 
+    // ALWAYS UNLOCK
     setTimeout(() => {
       clickLock = false;
     }, 200);
