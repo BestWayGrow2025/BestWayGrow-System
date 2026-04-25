@@ -861,11 +861,89 @@ function saveProfile() {
   }
 }
 
-// ================= PASSWORD =================
+// ================= CHANGE PASSWORD =================
 function loadChangePassword() {
-  document.getElementById("mainContent").innerHTML = "<h3>🔒 Change Password</h3>";
+  let user = getSafeUser();
+  if (!user) return;
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Change Password</div>
+
+    <div class="info-box">
+      <input type="password" id="oldPassword" class="ref-box" placeholder="Old Password"><br><br>
+      <input type="password" id="newPassword" class="ref-box" placeholder="New Password"><br><br>
+      <input type="password" id="confirmPassword" class="ref-box" placeholder="Confirm Password"><br><br>
+
+      <button class="action-btn" onclick="savePassword()">
+        Change Password
+      </button>
+    </div>
+  `;
 }
 
+// ================= PASSWORD ENCODE / DECODE =================
+function encode(p) {
+  return btoa(p);
+}
+
+function decode(p) {
+  try {
+    return atob(p);
+  } catch (e) {
+    return "";
+  }
+}
+
+// ================= CHANGE PASSWORD SAVE =================
+function savePassword() {
+  let user = getSafeUser();
+  if (!user) return;
+
+  let oldPassword = document.getElementById("oldPassword").value.trim();
+  let newPassword = document.getElementById("newPassword").value.trim();
+  let confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    alert("All Fields Required");
+    return;
+  }
+
+  if (decode(user.password || "") !== oldPassword) {
+    alert("Old Password Incorrect");
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    alert("Password Minimum 6 Characters");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    alert("Password Not Match");
+    return;
+  }
+
+  user.password = encode(newPassword);
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+
+  alert("Password Changed Successfully");
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "Password Changed",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
 
 // ================= ACTIVITY =================
 function loadActivityLogs() {
