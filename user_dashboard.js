@@ -29,8 +29,74 @@ function getSafeUser() {
 
 
 // ================= LOAD HOME =================
+// ================= HOME =================
 function loadHome() {
-  document.getElementById("mainContent").innerHTML = "<h3>🏠 Home Loaded</h3>";
+  let user = getSafeUser();
+  if (!user) return;
+
+  let main = document.getElementById("mainContent");
+  if (!main) {
+    console.error("mainContent missing");
+    return;
+  }
+
+  let refLink = generateRefLink(user.userId);
+  let directUsers = [];
+
+  try {
+    if (typeof getDirectUsers === "function") {
+      directUsers = getDirectUsers(user.userId) || [];
+    }
+  } catch (err) {
+    console.error("Direct users error:", err);
+  }
+
+  let leftCount = directUsers.filter(u => (u.position || "") === "L").length;
+  let rightCount = directUsers.filter(u => (u.position || "") === "R").length;
+
+  main.innerHTML = `
+    <div class="section-title">Dashboard Overview</div>
+
+    <div class="info-box">
+      <p><b>User ID:</b> ${user.userId || "N/A"}</p>
+      <p><b>Full Name:</b> ${user.fullName || user.username || "N/A"}</p>
+      <p><b>Mobile:</b> ${user.mobile || "N/A"}</p>
+      <p><b>Email:</b> ${user.email || "N/A"}</p>
+      <p><b>Sponsor ID:</b> ${user.sponsorId || "N/A"}</p>
+      <p><b>Join Date:</b> ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}</p>
+      <p><b>City:</b> ${user.city || "N/A"}</p>
+      <p><b>State:</b> ${user.state || "N/A"}</p>
+      <p><b>Country:</b> ${user.country || "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Wallet Balance:</b> ₹${Number(user.walletBalance || 0)}</p>
+      <p><b>Income Balance:</b> ₹${Number(user.incomeBalance || 0)}</p>
+      <p><b>Hold Income:</b> ₹${Number(user.holdIncome || 0)}</p>
+      <p><b>Total Credit:</b> ₹${Number(user.totalCredit || 0)}</p>
+      <p><b>Total Debit:</b> ₹${Number(user.totalDebit || 0)}</p>
+      <p><b>Total Income:</b> ₹${Number(user.totalIncome || 0)}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Total Pins:</b> ${user.totalPins || 0}</p>
+      <p><b>Used Pins:</b> ${user.usedPins || 0}</p>
+      <p><b>Available Pins:</b> ${user.availablePins || 0}</p>
+      <p><b>Last Pin Used:</b> ${user.lastPinUsedDate || "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Total Direct Team:</b> ${directUsers.length}</p>
+      <p><b>Left Team:</b> ${leftCount}</p>
+      <p><b>Right Team:</b> ${rightCount}</p>
+    </div>
+
+    <div class="section-title">Referral Link</div>
+
+    <input id="refLink" class="ref-box" value="${refLink}" readonly>
+    <button class="action-btn" onclick="copyRefLink()">Copy Link</button>
+    <p id="copyMsg"></p>
+  `;
 }
 
 
