@@ -93,13 +93,16 @@ if (!introUser) {
   document.getElementById("introLabel").innerText = "Invalid Referral Link";
   document.getElementById("formArea").style.display = "none";
 } else {
-  document.getElementById("introLabel").innerText =
-    "Introducer: " + introducerId;
+  document.getElementById("introLabel").innerText = "Introducer: " + introducerId;
 }
 
 // ================= HELPERS =================
-function encodePass(p){
-  try { return btoa(p); } catch { return p; }
+function encodePass(p) {
+  try {
+    return btoa(p);
+  } catch {
+    return p;
+  }
 }
 
 // ================= REGISTER (QUEUE ONLY) =================
@@ -141,10 +144,11 @@ function registerUser() {
 
   // ================= QUEUE REQUEST =================
   let added = addToRegistrationQueue({
-    username,
+    username: username,
+    email: email,
     password: encodePass(password),
-    mobile,
-    introducerId,
+    mobile: mobile,
+    introducerId: introducerId,
     position: pos.value
   });
 
@@ -158,12 +162,18 @@ function registerUser() {
     <div class="success-box">
       ✅ Registration Submitted<br><br>
       ⏳ Processing... Please wait a few seconds<br><br>
-
       <a href="user_login.html">
         <button>Go to Login</button>
       </a>
     </div>
   `;
+
+  // optional reset
+  document.getElementById("username").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("mobile").value = "";
+  document.getElementById("password").value = "";
+  document.querySelectorAll('input[name="position"]').forEach(r => r.checked = false);
 }
 
 </script>
