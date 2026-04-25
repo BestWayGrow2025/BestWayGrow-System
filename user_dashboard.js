@@ -721,6 +721,55 @@ function loadSupportTickets() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
+// ================= SUPPORT TICKET SAVE =================
+function submitSupportTicket() {
+  let user = getSafeUser();
+  if (!user) return;
+
+  let subject = document.getElementById("supportSubject").value.trim();
+  let message = document.getElementById("supportMessage").value.trim();
+
+  if (!subject || !message) {
+    alert("All Fields Required");
+    return;
+  }
+
+  if (!user.supportTickets) {
+    user.supportTickets = [];
+  }
+
+  user.supportTickets.push({
+    subject: subject,
+    message: message,
+    status: "pending",
+    date: new Date().toLocaleString()
+  });
+
+  user.supportTicketCount = user.supportTickets.length;
+  user.lastSupportDate = new Date().toLocaleString();
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+
+  alert("Support Ticket Submitted");
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "Support Ticket Submitted",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  loadSupportTickets();
+}
+
 // ================= EDIT PROFILE =================
 function loadEditProfile() {
   document.getElementById("mainContent").innerHTML = "<h3>✏️ Edit Profile</h3>";
