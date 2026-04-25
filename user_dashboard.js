@@ -626,11 +626,57 @@ function loadWithdrawHistory() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= NOTIFICATIONS =================
-function loadNotifications() {
-  document.getElementById("mainContent").innerHTML = "<h3>🔔 Notifications</h3>";
+// ================= NOTIFICATION ADD =================
+function addUserNotification(title, message) {
+  let user = getSafeUser();
+  if (!user) return;
+
+  if (!user.notifications) {
+    user.notifications = [];
+  }
+
+  user.notifications.push({
+    title: title,
+    message: message,
+    date: new Date().toLocaleString()
+  });
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
 }
 
+// ================= NOTIFICATIONS =================
+function loadNotifications() {
+  let user = getSafeUser();
+  if (!user) return;
+
+  let notifications = user.notifications || [];
+
+  let html = `
+    <div class="section-title">Notifications</div>
+  `;
+
+  if (!notifications.length) {
+    html += `
+      <div class="info-box">
+        <p>No New Notifications</p>
+      </div>
+    `;
+  }
+
+  notifications.slice(-20).reverse().forEach(item => {
+    html += `
+      <div class="info-box">
+        <p><b>${item.title || "Notification"}</b></p>
+        <p>${item.message || "N/A"}</p>
+        <p>${item.date || "N/A"}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("mainContent").innerHTML = html;
+}
 
 // ================= SUPPORT =================
 function loadSupportTickets() {
