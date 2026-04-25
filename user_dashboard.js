@@ -509,11 +509,90 @@ function loadIncomeHistory() {
   `;
 }
 
-// ================= WITHDRAW =================
+// ================= WITHDRAW REQUEST =================
 function loadWithdrawSection() {
-  document.getElementById("mainContent").innerHTML = "<h3>🏧 Withdraw</h3>";
+  let user = getSafeUser();
+  if (!user) return;
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Withdraw Request</div>
+
+    <div class="info-box">
+      <p><b>Available Balance:</b> ₹${Number(user.walletBalance || 0)}</p>
+
+      <input type="number" id="withdrawAmount" class="ref-box" placeholder="Enter Withdraw Amount">
+
+      <button class="action-btn" onclick="submitWithdrawRequest()">
+        Submit Withdraw
+      </button>
+    </div>
+  `;
 }
 
+function submitWithdrawRequest() {
+  let user = getSafeUser();
+  if (!user) return;
+
+  let amount = Number(document.getElementById("withdrawAmount").value);
+
+  if (!amount || amount <= 0 || amount > Number(user.walletBalance || 0)) {
+    alert("Enter Valid Amount");
+    return;
+  }
+
+  if (!user.withdrawRequests) {
+    user.withdrawRequests = [];
+  }
+
+  user.withdrawRequests.push({
+    amount: amount,
+    status: "pending",
+    date: new Date().toLocaleString()
+  });
+
+  user.walletBalance = Number(user.walletBalance || 0) - amount;
+  user.totalDebit = Number(user.totalDebit || 0) + amount;
+
+  if (!user.walletHistory) {
+    user.walletHistory = [];
+  }
+
+  user.walletHistory.push({
+    date: new Date().toLocaleString(),
+    type: "Debit",
+    amount: amount,
+    remark: "Withdraw Request"
+  });
+
+  if (!user.notifications) {
+    user.notifications = [];
+  }
+
+  user.notifications.push({
+    title: "Withdraw Request Submitted",
+    message: "₹" + amount + " withdraw request pending",
+    date: new Date().toLocaleString()
+  });
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+
+  alert("Withdraw Request Submitted");
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "Withdraw Request ₹" + amount,
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
 
 // ================= WITHDRAW HISTORY =================
 function loadWithdrawHistory() {
