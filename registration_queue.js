@@ -140,7 +140,6 @@ function processOneRegistration(req) {
 // ================= MAIN PROCESS =================
 function processRegistrationQueue() {
 
-  // 🔒 SYSTEM CHECKS
   if (typeof getSystemSettings === "function") {
     let s = getSystemSettings();
     if (s && s.lockMode) return;
@@ -165,34 +164,34 @@ function processRegistrationQueue() {
 
     for (let i = 0; i < queue.length; i++) {
 
-  if (processed >= MAX_BATCH) break;
+      if (processed >= MAX_BATCH) break;
 
-  if (queue[i].status !== "PENDING") continue;
+      if (queue[i].status !== "PENDING") continue;
 
-  try {
+      try {
 
-    processOneRegistration(queue[i]);
+        processOneRegistration(queue[i]);
 
-    queue[i].status = "DONE";
-    queue[i].completedAt = Date.now();
+        queue[i].status = "DONE";
+        queue[i].completedAt = Date.now();
         processed++;
 
         if (typeof logActivity === "function") {
-          logActivity(req.mobile, "SYSTEM", "REG SUCCESS");
+          logActivity(queue[i].mobile, "SYSTEM", "REG SUCCESS");
         }
 
       } catch (err) {
 
         console.warn("REG ERROR:", err.message);
 
-        req.retry = (req.retry || 0) + 1;
-        req.error = err.message;
+        queue[i].retry = (queue[i].retry || 0) + 1;
+        queue[i].error = err.message;
 
-        if (req.retry >= 3) {
-          req.status = "FAILED";
+        if (queue[i].retry >= 3) {
+          queue[i].status = "FAILED";
 
           if (typeof logActivity === "function") {
-            logActivity(req.mobile, "SYSTEM", "REG FAILED");
+            logActivity(queue[i].mobile, "SYSTEM", "REG FAILED");
           }
         }
       }
