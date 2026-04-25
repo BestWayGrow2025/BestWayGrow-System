@@ -13,7 +13,6 @@ REGISTRATION QUEUE SYSTEM v10 (FINAL LOCK)
 ========================================
 */
 
-// ================= CONSTANTS =================
 var REG_QUEUE_KEY = "REG_QUEUE_DATA";
 var REG_LOCK_KEY = "REG_QUEUE_LOCK";
 
@@ -44,7 +43,6 @@ function isRegLocked() {
 
   if (!lock) return false;
 
-  // auto unlock after 5 sec
   if (Date.now() - lock.time > 5000) {
     setRegLock(false);
     return false;
@@ -71,7 +69,6 @@ function addToRegistrationQueue(data) {
 
   let queue = getRegQueue();
 
-  // 🔒 QUEUE DUPLICATE CHECK
   let exists = queue.find(q =>
     q.mobile === data.mobile &&
     q.status !== "REJECTED" &&
@@ -79,14 +76,12 @@ function addToRegistrationQueue(data) {
   );
   if (exists) return false;
 
-  // 🔒 USER DUPLICATE CHECK
   if (typeof getUsers === "function") {
     let users = getUsers() || [];
     let userExists = users.find(u => u.mobile === data.mobile);
     if (userExists) return false;
   }
 
-  // ✅ ADD REQUEST
   queue.push({
     ...data,
     requestTime: Date.now(),
@@ -97,10 +92,8 @@ function addToRegistrationQueue(data) {
 
   queue.sort((a, b) => a.requestTime - b.requestTime);
 
- saveRegQueue(queue);
-clearCompletedRegistrations();
+  saveRegQueue(queue);
 
-  // ✅ AUTO PROCESS
   try {
     processRegistrationQueue();
   } catch (e) {
@@ -132,9 +125,7 @@ function processOneRegistration(req) {
     throw new Error("Missing required fields");
   }
 
-  // ✅ CREATE USER (ONLY HERE)
   createUserWithTree(req);
-
   return true;
 }
 
@@ -159,18 +150,15 @@ function processRegistrationQueue() {
   setRegLock(true);
 
   try {
-
     let processed = 0;
-    var MAX_BATCH = 5;
+    let MAX_BATCH = 5;
 
     for (let i = 0; i < queue.length; i++) {
 
       if (processed >= MAX_BATCH) break;
-
       if (queue[i].status !== "PENDING") continue;
 
       try {
-
         processOneRegistration(queue[i]);
 
         queue[i].status = "DONE";
@@ -182,7 +170,6 @@ function processRegistrationQueue() {
         }
 
       } catch (err) {
-
         console.warn("REG ERROR:", err.message);
 
         queue[i].retry = (queue[i].retry || 0) + 1;
@@ -199,6 +186,7 @@ function processRegistrationQueue() {
     }
 
     saveRegQueue(queue);
+    clearCompletedRegistrations();
 
   } catch (e) {
     console.error("Queue processing failed:", e);
@@ -212,8 +200,7 @@ function clearCompletedRegistrations() {
   let queue = getRegQueue();
 
   queue = queue.filter(q =>
-    q.status === "PENDING" ||
-    q.status === "FAILED"
+    q.status === "PENDING" || q.status === "FAILED"
   );
 
   saveRegQueue(queue);
@@ -221,7 +208,6 @@ function clearCompletedRegistrations() {
 
 // ================= AUTO RUN =================
 function startRegistrationQueue() {
-
   setInterval(() => {
     try {
       processRegistrationQueue();
@@ -230,7 +216,6 @@ function startRegistrationQueue() {
     }
   }, 1000);
 
-  // 🔥 RUN IMMEDIATELY
   setTimeout(() => {
     processRegistrationQueue();
   }, 100);
@@ -244,7 +229,7 @@ window.processRegistrationQueue = processRegistrationQueue;
 window.processOneRegistration = processOneRegistration;
 window.clearCompletedRegistrations = clearCompletedRegistrations;
 
-// ================= MULTI TAB SAFE =================
+// ================= START =================
 if (!window.__REG_QUEUE_STARTED__) {
   window.__REG_QUEUE_STARTED__ = true;
   startRegistrationQueue();
