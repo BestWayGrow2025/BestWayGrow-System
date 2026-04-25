@@ -471,6 +471,27 @@ function loadRepurchase() {
   location.href = "user_repurchase.html";
 }
 
+// ================= PIN REQUEST =================
+function requestPin() {
+  let user = getSafeUser();
+  if (!user) return;
+
+  alert("PIN Request Sent To Admin");
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "PIN Request",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 // ================= INCOME =================
 function loadIncomeHistory() {
   document.getElementById("mainContent").innerHTML = "<h3>💵 Income</h3>";
