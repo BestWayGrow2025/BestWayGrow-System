@@ -155,22 +155,494 @@ function logout() {
   window.location.href = "admin_login.html";
 }
 
-Block 4
- remaining UI functions
 // ================= USERS =================
-// paste full: loadUsers(), renderUsers(), filterUsers(), sortUsers()
+let currentPage = 1;
+let perPage = 10;
+let userSortType = "";
 
+function loadUsers() {
+  let html = `
+    <h3>User List</h3>
+
+    <input
+      type="text"
+      id="userSearch"
+      placeholder="Search User ID / Name"
+      onkeyup="filterUsers()"
+      style="
+        padding:10px;
+        width:100%;
+        margin-bottom:10px;
+        border:1px solid #ddd;
+        border-radius:8px;
+      "
+    >
+
+    <table>
+      <tr>
+        <th>User ID</th>
+        <th>Name</th>
+        <th onclick="sortUsers('wallet')" style="cursor:pointer;">
+          Wallet ⬍
+        </th>
+        <th onclick="sortUsers('status')" style="cursor:pointer;">
+          Status ⬍
+        </th>
+      </tr>
+
+      <tbody id="userTableBody"></tbody>
+    </table>
+
+    <div id="pagination" style="margin-top:15px;text-align:center;"></div>
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+
+  renderUsers(1);
+}
+
+function renderUsers(page = 1) {
+  currentPage = page;
+
+  let users = (typeof getUsers === "function") ? getUsers() : [];
+  users = users.filter(u => u.role === "user");
+
+  if (userSortType === "wallet") {
+    users.sort((a, b) => {
+      return Number(b.walletBalance || 0) - Number(a.walletBalance || 0);
+    });
+  }
+
+  if (userSortType === "status") {
+    users.sort((a, b) => {
+      let statusA = (a.accountStatus || "").toLowerCase();
+      let statusB = (b.accountStatus || "").toLowerCase();
+      return statusA.localeCompare(statusB);
+    });
+  }
+
+  let input = "";
+  let searchBox = document.getElementById("userSearch");
+
+  if (searchBox) {
+    input = searchBox.value.toLowerCase();
+
+    users = users.filter(u => {
+      let userId = (u.userId || "").toLowerCase();
+      let name = (u.fullName || u.username || "").toLowerCase();
+
+      return userId.includes(input) || name.includes(input);
+    });
+  }
+
+  let start = (page - 1) * perPage;
+  let end = start + perPage;
+  let paginatedUsers = users.slice(start, end);
+
+  let rows = "";
+
+  if (!paginatedUsers.length) {
+    rows = `
+      <tr>
+        <td colspan="4">No Users Found</td>
+      </tr>
+    `;
+  } else {
+    paginatedUsers.forEach(u => {
+      rows += `
+        <tr>
+          <td>${u.userId || "-"}</td>
+          <td>${u.fullName || u.username || "-"}</td>
+          <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
+          <td>${u.accountStatus || "active"}</td>
+        </tr>
+      `;
+    });
+  }
+
+  document.getElementById("userTableBody").innerHTML = rows;
+
+  let totalPages = Math.ceil(users.length / perPage);
+  let pageHtml = "";
+
+  for (let i = 1; i <= totalPages; i++) {
+    pageHtml += `
+      <button
+        onclick="renderUsers(${i})"
+        style="
+          margin:3px;
+          padding:6px 10px;
+          border:none;
+          border-radius:6px;
+          background:${i === page ? '#007bff' : '#ddd'};
+          color:${i === page ? '#fff' : '#000'};
+          cursor:pointer;
+        "
+      >
+        ${i}
+      </button>
+    `;
+  }
+
+  document.getElementById("pagination").innerHTML = pageHtml;
+}
+
+function filterUsers() {
+  renderUsers(1);
+}
+
+function sortUsers(type) {
+  userSortType = type;
+  renderUsers(1);
+}                       
 // ================= PIN =================
-// paste full: loadPinsUI(), renderPins(), filterPins()
+function loadPinsUI() {
+  let pins = (typeof loadPins === "function") ? loadPins() : [];
+
+  let html = `
+    <h3>PIN Control</h3>
+
+    <input
+      type="text"
+      id="pinSearch"
+      placeholder="Search PIN ID / Type"
+      onkeyup="filterPins()"
+      style="
+        padding:10px;
+        width:100%;
+        margin-bottom:10px;
+        border:1px solid #ddd;
+        border-radius:8px;
+      "
+    >
+
+    <table>
+      <tr>
+        <th>PIN ID</th>
+        <th>Type</th>
+        <th>Status</th>
+      </tr>
+
+      <tbody id="pinTableBody"></tbody>
+    </table>
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+
+  renderPins();
+}
+
+function renderPins() {
+  let pins = (typeof loadPins === "function") ? loadPins() : [];
+
+  let input = "";
+  let searchBox = document.getElementById("pinSearch");
+
+  if (searchBox) {
+    input = searchBox.value.toLowerCase();
+
+    pins = pins.filter(p => {
+      let pinId = (p.pinId || "").toLowerCase();
+      let type = (p.type || "").toLowerCase();
+
+      return pinId.includes(input) || type.includes(input);
+    });
+  }
+
+  let rows = "";
+
+  if (!pins.length) {
+    rows = `
+      <tr>
+        <td colspan="3">No PIN Available</td>
+      </tr>
+    `;
+  } else {
+    pins.slice(-50).reverse().forEach(p => {
+      rows += `
+        <tr>
+          <td>${p.pinId || "-"}</td>
+          <td>${p.type || "-"}</td>
+          <td>${p.status || "-"}</td>
+        </tr>
+      `;
+    });
+  }
+
+  document.getElementById("pinTableBody").innerHTML = rows;
+}
+
+function filterPins() {
+  renderPins();
+}
 
 // ================= WALLET =================
-// paste full: loadWallet()
+function loadWallet() {
+  let users = (typeof getUsers === "function") ? getUsers() : [];
+  users = users.filter(u => u.role === "user");
+
+  let totalBalance = 0;
+  let totalCredit = 0;
+  let totalDebit = 0;
+  let totalHoldIncome = 0;
+
+  users.forEach(u => {
+    totalBalance += Number(u.walletBalance || 0);
+    totalCredit += Number(u.totalCredit || 0);
+    totalDebit += Number(u.totalDebit || 0);
+    totalHoldIncome += Number(u.holdIncome || 0);
+  });
+
+  let html = `
+    <h3>Wallet Overview</h3>
+
+    <div class="grid">
+      <div class="miniCard">
+        <h4>Total Balance</h4>
+        <p>₹${totalBalance.toFixed(2)}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Total Credit</h4>
+        <p>₹${totalCredit.toFixed(2)}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Total Debit</h4>
+        <p>₹${totalDebit.toFixed(2)}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Total Hold Income</h4>
+        <p>₹${totalHoldIncome.toFixed(2)}</p>
+      </div>
+    </div>
+
+    <br>
+
+    <table>
+      <tr>
+        <th>User ID</th>
+        <th>Wallet</th>
+        <th>Total Credit</th>
+        <th>Total Debit</th>
+        <th>Hold Income</th>
+      </tr>
+  `;
+
+  if (!users.length) {
+    html += `
+      <tr>
+        <td colspan="5">No Users Found</td>
+      </tr>
+    `;
+  } else {
+    users.forEach(u => {
+      html += `
+        <tr>
+          <td>${u.userId || "-"}</td>
+          <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
+          <td>₹${Number(u.totalCredit || 0).toFixed(2)}</td>
+          <td>₹${Number(u.totalDebit || 0).toFixed(2)}</td>
+          <td>₹${Number(u.holdIncome || 0).toFixed(2)}</td>
+        </tr>
+      `;
+    });
+  }
+
+  html += `</table>`;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
 
 // ================= INCOME =================
-// paste full: loadIncome(), renderIncomeLogs(), filterIncomeLogs()
+function loadIncome() {
+  let logs = (typeof getIncomeLogs === "function") ? getIncomeLogs() : [];
+  let incomeSettings = (typeof getIncomeSettings === "function")
+    ? getIncomeSettings()
+    : {};
+
+  let html = `
+    <h3>Income Logs</h3>
+
+    <div class="grid">
+      <div class="miniCard">
+        <h4>Master Income</h4>
+        <p>${incomeSettings.incomeEnabled ? "ON" : "OFF"}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>UGLI</h4>
+        <p>${incomeSettings.ugli ? "ON" : "OFF"}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>RLI</h4>
+        <p>${incomeSettings.rli ? "ON" : "OFF"}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Binary</h4>
+        <p>${incomeSettings.binary ? "ON" : "OFF"}</p>
+      </div>
+    </div>
+
+    <br>
+
+    <input
+      type="text"
+      id="incomeSearch"
+      placeholder="Search User ID / Income Type"
+      onkeyup="filterIncomeLogs()"
+      style="
+        padding:10px;
+        width:100%;
+        margin-bottom:10px;
+        border:1px solid #ddd;
+        border-radius:8px;
+      "
+    >
+
+    <table>
+      <tr>
+        <th>User ID</th>
+        <th>Amount</th>
+        <th>Type</th>
+      </tr>
+
+      <tbody id="incomeTableBody"></tbody>
+    </table>
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+
+  renderIncomeLogs();
+}
+
+function renderIncomeLogs() {
+  let logs = (typeof getIncomeLogs === "function") ? getIncomeLogs() : [];
+
+  let input = "";
+  let searchBox = document.getElementById("incomeSearch");
+
+  if (searchBox) {
+    input = searchBox.value.toLowerCase();
+
+    logs = logs.filter(l => {
+      let userId = (l.userId || "").toLowerCase();
+      let type = (l.type || "").toLowerCase();
+
+      return userId.includes(input) || type.includes(input);
+    });
+  }
+
+  let rows = "";
+
+  if (!logs.length) {
+    rows = `
+      <tr>
+        <td colspan="3">No Income Logs</td>
+      </tr>
+    `;
+  } else {
+    logs.slice(-50).reverse().forEach(l => {
+      rows += `
+        <tr>
+          <td>${l.userId || "-"}</td>
+          <td>₹${Number(l.amount || 0).toFixed(2)}</td>
+          <td>${l.type || "-"}</td>
+        </tr>
+      `;
+    });
+  }
+
+  document.getElementById("incomeTableBody").innerHTML = rows;
+}
+
+function filterIncomeLogs() {
+  renderIncomeLogs();
+}
 
 // ================= SYSTEM =================
-// paste full: loadSystem()
+function loadSystem() {
+
+  let s = (typeof getSystemSettings === "function")
+    ? getSystemSettings()
+    : {};
+
+  let requests = (typeof getPinRequests === "function")
+    ? getPinRequests()
+    : [];
+
+  let regQueue = (typeof getRegQueue === "function")
+    ? getRegQueue()
+    : [];
+
+  let pendingPins = requests.filter(r => r.status === "PENDING").length;
+  let completedPins = requests.filter(r => r.status === "COMPLETED").length;
+  let failedPins = requests.filter(r => r.status === "FAILED").length;
+
+  let pendingReg = regQueue.filter(r => r.status === "PENDING").length;
+  let doneReg = regQueue.filter(r => r.status === "DONE").length;
+  let failedReg = regQueue.filter(r => r.status === "FAILED").length;
+
+  let html = `
+    <h3>System Control</h3>
+
+    <div class="grid">
+      <div class="miniCard"><h4>Registration</h4><p>${s.registrationOpen ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Upgrade</h4><p>${s.upgradesOpen ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Repurchase</h4><p>${s.repurchaseOpen ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Withdraw</h4><p>${s.withdrawOpen ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Admin Access</h4><p>${s.adminAccess ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Lock Mode</h4><p>${s.lockMode ? "ON" : "OFF"}</p></div>
+    </div>
+
+    <hr>
+
+    <h3>PIN Queue</h3>
+    <p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
+  `;
+
+  // ✅ FIXED: only admin can control queue
+  if (adminUser.role === "admin") {
+    html += `
+      <button class="on" onclick="toggleQueue(true)">ON</button>
+      <button class="off" onclick="toggleQueue(false)">OFF</button>
+    `;
+  }
+
+  html += `
+    <hr>
+
+    <h3>PIN Request Stats</h3>
+    <div class="grid">
+      <div class="miniCard"><h4>Pending</h4><p>${pendingPins}</p></div>
+      <div class="miniCard"><h4>Completed</h4><p>${completedPins}</p></div>
+      <div class="miniCard"><h4>Failed</h4><p>${failedPins}</p></div>
+    </div>
+
+    <hr>
+
+    <h3>Registration Queue Stats</h3>
+    <div class="grid">
+      <div class="miniCard"><h4>Pending</h4><p>${pendingReg}</p></div>
+      <div class="miniCard"><h4>Done</h4><p>${doneReg}</p></div>
+      <div class="miniCard"><h4>Failed</h4><p>${failedReg}</p></div>
+    </div>
+  `;
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+// ================= SAVE SETTINGS SAFE =================
+function saveSystemSettingsSafe(settings) {
+  if (typeof safeSet === "function") {
+    safeSet("systemSettings", settings);
+  } else {
+    localStorage.setItem("systemSettings", JSON.stringify(settings));
+  }
+}
 
 // ================= INIT =================
 window.addEventListener("load", function () {
