@@ -5,143 +5,29 @@
 </head>
 <body>
 
-<h2>Repurchase Page</h2>
+  <h2>Repurchase Page</h2>
 
-<p id="info"></p>
+  <p id="info"></p>
 
-<input type="text" id="pinInput" placeholder="Enter PIN"><br><br>
+  <input type="text" id="pinInput" placeholder="Enter PIN"><br><br>
 
-<button onclick="repurchase()">Repurchase</button>
+  <button onclick="submitRepurchase()">Repurchase</button>
 
-<!-- CORE -->
-<script src="core_system.js"></script>
+  <!-- CORE -->
+  <script src="core_system.js"></script>
 
-<!-- SYSTEM -->
-<script src="active_system.js"></script>
+  <!-- SYSTEM -->
+  <script src="active_system.js"></script>
 
-<!-- PIN -->
-<script src="pin_config_system.js"></script>
-<script src="pin_master_system.js"></script>
+  <!-- PIN -->
+  <script src="pin_config_system.js"></script>
+  <script src="pin_master_system.js"></script>
 
-<!-- ❤️ TRIGGER SYSTEM -->
-<script src="trigger_system.js"></script>
+  <!-- TRIGGER SYSTEM -->
+  <script src="trigger_system.js"></script>
 
-<script>
-
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
-
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
-
-  let session;
-  try {
-    session = JSON.parse(localStorage.getItem("loggedInUser"));
-  } catch {
-    session = null;
-  }
-
-  if (!session || !session.userId) {
-    alert("Login required");
-    window.location.href = "user_login.html";
-    throw new Error("STOP");
-  }
-
-  let user = typeof getUserById === "function"
-    ? getUserById(session.userId)
-    : null;
-
-  if (!user) {
-    alert("User not found");
-    localStorage.removeItem("loggedInUser");
-    window.location.href = "user_login.html";
-    throw new Error("STOP");
-  }
-
-  document.getElementById("info").innerText =
-    "User: " + user.username + " (" + user.userId + ")";
-
-  // AUTO PIN FILL
-  try {
-    let selected = JSON.parse(localStorage.getItem("selectedPin"));
-    if (selected && selected.type === "repurchase") {
-      document.getElementById("pinInput").value = selected.pinId || "";
-    }
-  } catch {}
-});
-
-// ================= VALIDATION =================
-function validatePinInput(pinId) {
-  if (!pinId) {
-    alert("Enter PIN");
-    return false;
-  }
-  if (pinId.length < 5) {
-    alert("Invalid PIN format");
-    return false;
-  }
-  return true;
-}
-
-// ================= REPURCHASE =================
-function repurchase() {
-
-  let session = JSON.parse(localStorage.getItem("loggedInUser"));
-  if (!session) return;
-
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  let u = users.find(x => x.userId === session.userId);
-
-  if (!u) {
-    alert("User not found");
-    return;
-  }
-
-  let pinId = document.getElementById("pinInput").value.trim();
-
-  if (!validatePinInput(pinId)) return;
-
-  try {
-
-    // 🔥 USE PIN (NO INCOME HERE)
-    let pin = usePin(pinId, u.userId, "repurchase");
-
-    if (!pin) {
-      alert("Invalid or unusable PIN");
-      return;
-    }
-
-    // ✅ TYPE SAFETY
-    if (pin.type !== "repurchase") {
-      throw new Error("Wrong PIN type");
-    }
-
-    // ❤️ TRIGGER INCOME (FINAL V7 FLOW)
-    if (typeof triggerRepurchaseIncome === "function") {
-      try {
-        triggerRepurchaseIncome(u.userId, Number(pin.bv || 0));
-      } catch (e) {
-        console.warn("Repurchase trigger failed:", e.message);
-      }
-    }
-
-    // ✅ CLEANUP
-    localStorage.removeItem("selectedPin");
-
-    alert("✅ Repurchase Successful");
-
-    window.location.href = "user_dashboard.html";
-
-  } catch (err) {
-
-    console.error("Repurchase Error:", err);
-
-    alert(err.message || "Repurchase failed");
-  }
-}
-
-</script>
+  <!-- PAGE JS -->
+  <script src="user_repurchase.js"></script>
 
 </body>
 </html>
