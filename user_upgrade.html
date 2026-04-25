@@ -5,153 +5,29 @@
 </head>
 <body>
 
-<h2>User Upgrade</h2>
+  <h2>User Upgrade</h2>
 
-<p id="info"></p>
+  <p id="info"></p>
 
-<input type="text" id="pinInput" placeholder="Enter PIN"><br><br>
+  <input type="text" id="pinInput" placeholder="Enter PIN"><br><br>
 
-<button onclick="upgradeNow()">Upgrade Now</button>
+  <button onclick="upgradeNow()">Upgrade Now</button>
 
-<!-- CORE -->
-<script src="core_system.js"></script>
+  <!-- CORE -->
+  <script src="core_system.js"></script>
 
-<!-- SYSTEM -->
-<script src="active_system.js"></script>
+  <!-- SYSTEM -->
+  <script src="active_system.js"></script>
 
-<!-- PIN -->
-<script src="pin_config_system.js"></script>
-<script src="pin_master_system.js"></script>
+  <!-- PIN -->
+  <script src="pin_config_system.js"></script>
+  <script src="pin_master_system.js"></script>
 
-<!-- ❤️ TRIGGER SYSTEM -->
-<script src="trigger_system.js"></script>
+  <!-- TRIGGER SYSTEM -->
+  <script src="trigger_system.js"></script>
 
-<script>
-
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
-
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
-
-  let session;
-  try {
-    session = JSON.parse(localStorage.getItem("loggedInUser"));
-  } catch {
-    session = null;
-  }
-
-  if (!session || !session.userId) {
-    alert("Login required");
-    window.location.href = "user_login.html";
-    throw new Error("STOP");
-  }
-
-  let user = typeof getUserById === "function"
-    ? getUserById(session.userId)
-    : null;
-
-  if (!user) {
-    alert("User not found");
-    localStorage.removeItem("loggedInUser");
-    window.location.href = "user_login.html";
-    throw new Error("STOP");
-  }
-
-  document.getElementById("info").innerText =
-    "User: " + user.username + " (" + user.userId + ")";
-
-  // AUTO PIN FILL
-  try {
-    let selected = JSON.parse(localStorage.getItem("selectedPin"));
-    if (selected && selected.type === "upgrade") {
-      document.getElementById("pinInput").value = selected.pinId || "";
-    }
-  } catch {}
-
-});
-
-// ================= CHECK =================
-function isAlreadyUpgraded(u) {
-  if (typeof isUserActive !== "function") return false;
-  return isUserActive(u.userId);
-}
-
-// ================= UPGRADE =================
-function upgradeNow() {
-
-  console.log("Upgrade button clicked");
-
-  let session = JSON.parse(localStorage.getItem("loggedInUser"));
-  if (!session) return;
-
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  let u = users.find(x => x.userId === session.userId);
-
-  if (!u) {
-    alert("User not found");
-    return;
-  }
-
-  // ✅ ALREADY ACTIVE BLOCK
-  if (isAlreadyUpgraded(u)) {
-    alert("Your ID is already active");
-    return;
-  }
-
-  let pinId = document.getElementById("pinInput").value.trim();
-
-  if (!pinId) {
-    alert("Enter PIN");
-    return;
-  }
-
-  try {
-
-    // 🔥 USE PIN (NO INCOME HERE)
-    let pin = usePin(pinId, u.userId, "upgrade");
-
-    if (!pin) {
-      alert("Invalid PIN");
-      return;
-    }
-
-    // ✅ ACTIVATE USER
-    if (typeof activateUser === "function") {
-      activateUser(u.userId);
-    } else {
-      throw new Error("Activation system missing");
-    }
-
-    // ❤️ TRIGGER INCOME (FINAL V7 FLOW)
-    if (typeof triggerUpgradeIncome === "function") {
-      try {
-        triggerUpgradeIncome(u.userId, Number(pin.bv || 0));
-      } catch (e) {
-        console.warn("Upgrade trigger failed:", e.message);
-      }
-    }
-
-    // ✅ CLEANUP
-    localStorage.removeItem("selectedPin");
-
-    alert("✅ Upgrade Successful");
-
-    window.location.href = "user_dashboard.html";
-
-  } catch (err) {
-
-    console.error("Upgrade Error:", err);
-
-    alert(err.message || "Upgrade failed");
-  }
-}
-
-</script>
+  <!-- PAGE JS -->
+  <script src="user_upgrade.js"></script>
 
 </body>
 </html>
-
-
-
