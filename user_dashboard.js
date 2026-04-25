@@ -242,7 +242,6 @@ function loadWallet() {
   `;
 }
 
-
 // ================= WALLET HISTORY =================
 function loadWalletHistory() {
   let user = getSafeUser();
@@ -299,11 +298,59 @@ function loadWalletHistory() {
   main.innerHTML = html;
 }
 
-// ================= TEAM =================
+// ================= DIRECT TEAM LIST =================
 function loadDirectTeam() {
-  document.getElementById("mainContent").innerHTML = "<h3>👥 Team</h3>";
-}
+  let user = getSafeUser();
+  if (!user) return;
 
+  let main = document.getElementById("mainContent");
+  if (!main) return;
+
+  let directUsers = [];
+
+  try {
+    if (typeof getDirectUsers === "function") {
+      directUsers = getDirectUsers(user.userId) || [];
+    }
+  } catch (err) {
+    console.error("Direct team error:", err);
+  }
+
+  let html = `
+    <div class="section-title">Direct Team List</div>
+
+    <table>
+      <tr>
+        <th>User ID</th>
+        <th>Name</th>
+        <th>Position</th>
+        <th>Status</th>
+      </tr>
+  `;
+
+  if (!directUsers.length) {
+    html += `
+      <tr>
+        <td colspan="4">No Direct Team Found</td>
+      </tr>
+    `;
+  }
+
+  directUsers.forEach(member => {
+    html += `
+      <tr>
+        <td>${member.userId || "N/A"}</td>
+        <td>${member.fullName || member.username || "N/A"}</td>
+        <td>${member.position || "N/A"}</td>
+        <td>${member.accountStatus || "active"}</td>
+      </tr>
+    `;
+  });
+
+  html += `</table>`;
+
+  main.innerHTML = html;
+}
 
 // ================= PROFILE =================
 function loadProfile() {
