@@ -97,7 +97,8 @@ function addToRegistrationQueue(data) {
 
   queue.sort((a, b) => a.requestTime - b.requestTime);
 
-  saveRegQueue(queue);
+ saveRegQueue(queue);
+clearCompletedRegistrations();
 
   // ✅ AUTO PROCESS
   try {
