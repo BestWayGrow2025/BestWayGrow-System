@@ -430,17 +430,46 @@ function loadProfile() {
   `;
 }
 
-// ================= UPGRADE =================
+// ================= UPGRADE STATUS CHECK =================
+function canUpgrade(user) {
+  if (!user) return false;
+
+  return (user.accountStatus || "active") === "active" &&
+         user.upgradeStatus !== "completed";
+}
+
+// ================= REPURCHASE STATUS CHECK =================
+function canRepurchase(user) {
+  if (!user) return false;
+
+  return (user.accountStatus || "active") === "active" &&
+         user.upgradeStatus === "completed";
+}
+
+// ================= PAGE NAVIGATION =================
 function loadUpgrade() {
-  document.getElementById("mainContent").innerHTML = "<h3>⬆️ Upgrade</h3>";
+  let user = getSafeUser();
+  if (!user) return;
+
+  if (!canUpgrade(user)) {
+    alert("Upgrade Not Allowed");
+    return;
+  }
+
+  location.href = "user_upgrade.html";
 }
 
-
-// ================= REPURCHASE =================
 function loadRepurchase() {
-  document.getElementById("mainContent").innerHTML = "<h3>🔁 Repurchase</h3>";
-}
+  let user = getSafeUser();
+  if (!user) return;
 
+  if (!canRepurchase(user)) {
+    alert("Repurchase Not Allowed");
+    return;
+  }
+
+  location.href = "user_repurchase.html";
+}
 
 // ================= INCOME =================
 function loadIncomeHistory() {
