@@ -1,18 +1,74 @@
-// ================= INIT =================
-window.addEventListener("load", function () {
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Login FINAL LOCK</title>
+  <link rel="icon" href="data:,">
 
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("core_system.js missing");
-    return;
-  }
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      background: #f4f7f9;
+    }
 
-  let existing = (typeof getSession === "function")
-    ? getSession()
-    : null;
+    .card {
+      background: #fff;
+      max-width: 380px;
+      margin: auto;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
 
-  if (existing && existing.role === "user") {
-    window.location.href = "user_dashboard.html";
-  }
-});
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: #fff;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:disabled {
+      background: #999;
+    }
+
+    #msg {
+      margin-top: 15px;
+      font-weight: bold;
+      min-height: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>USER LOGIN</h2>
+
+  <input type="text" id="userId" placeholder="Enter User ID">
+  <input type="password" id="password" placeholder="Enter Password">
+  <input type="checkbox" onchange="togglePassword()"> Show Password
+
+  <button id="loginBtn" onclick="safeLogin()">Login</button>
+
+  <div id="msg"></div>
+</div>
+
+<script src="core_system.js"></script>
+<script src="session_manager.js"></script>
+<script src="activity_log.js"></script>
+<script src="user_login.js"></script>
+
+</body>
+</html>
