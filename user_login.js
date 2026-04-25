@@ -79,3 +79,84 @@ function submitLogin() {
   }, 500);
 }
 
+// ================= LOGIN LOCK =================
+let loginLock = false;
+
+// ================= SAFE LOGIN =================
+function safeLogin() {
+
+  if (loginLock) return;
+
+  loginLock = true;
+
+  let btn = document.getElementById("loginBtn");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "Checking...";
+  }
+
+  try {
+    submitLogin();
+  } catch (err) {
+    console.error(err);
+    showMsg("❌ Login Error");
+    resetLogin();
+  }
+}
+
+// ================= RESET LOGIN =================
+function resetLogin() {
+  loginLock = false;
+
+  let btn = document.getElementById("loginBtn");
+  if (btn) {
+    btn.disabled = false;
+    btn.innerText = "Login";
+  }
+}
+
+// ================= PASSWORD TOGGLE =================
+function togglePassword() {
+  let pass = document.getElementById("password");
+  if (!pass) return;
+
+  pass.type = pass.type === "password" ? "text" : "password";
+}
+
+// ================= MESSAGE =================
+function showMsg(text, color = "red") {
+  let msg = document.getElementById("msg");
+  if (!msg) return;
+
+  msg.style.color = color;
+  msg.innerText = text;
+}
+
+// ================= SAFE DECODE =================
+function safeDecode(p) {
+  try {
+    return atob(p);
+  } catch {
+    return p || "";
+  }
+}
+
+// ================= INIT =================
+window.addEventListener("load", function () {
+
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  } else {
+    alert("core_system.js missing");
+    return;
+  }
+
+  let existing = (typeof getSession === "function")
+    ? getSession()
+    : null;
+
+  if (existing && existing.role === "user") {
+    window.location.href = "user_dashboard.html";
+  }
+});
+
