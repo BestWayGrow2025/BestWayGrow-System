@@ -1,85 +1,14 @@
-HTML
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Login V10 FINAL</title>
-  <link rel="icon" href="data:,">
-  <style>
-    body { 
-      font-family: Arial; 
-      padding: 20px; 
-      text-align:center;
-      background:#f4f7f9;
-    }
-    input { 
-      padding: 8px; 
-      width: 240px; 
-      margin-bottom: 10px;
-    }
-    button { 
-      padding: 8px 15px; 
-      cursor: pointer;
-    }
-    #msg {
-      margin-top:10px;
-      font-weight:bold;
-    }
-  </style>
-</head>
-<body>
 
-<h2>ADMIN LOGIN</h2>
-
-<input id="adminId" placeholder="Admin ID"><br>
-<input id="password" type="password" placeholder="Password"><br>
-
-<button id="loginBtn">Login</button>
-
-<p id="msg"></p>
-
-<script src="core_system.js"></script>
-<script src="activity_log.js"></script>
-
-<script>
-// ================= INIT =================
-window.addEventListener("load", function () {
-
-  if (typeof initCoreSystem !== "function") {
-    alert("❌ core_system.js not loaded");
-    return;
+// ================= LOAD ADMIN LOGIN PAGE =================
+function loadAdminLoginPage() {
+  let btn = document.getElementById("loginBtn");
+  if (btn) {
+    btn.addEventListener("click", submitAdminLogin);
   }
-
-  initCoreSystem();
-
-  document.getElementById("loginBtn")
-    .addEventListener("click", login);
-});
-
-// ================= SAFE DECODE =================
-function safeDecode(p) {
-  try { return atob(p); } catch { return p || ""; }
 }
 
-// ================= BUTTON LOCK =================
-function lockBtn() {
-  let btn = document.getElementById("loginBtn");
-  btn.disabled = true;
-  btn.innerText = "Checking...";
-}
-
-function unlockBtn() {
-  let btn = document.getElementById("loginBtn");
-  btn.disabled = false;
-  btn.innerText = "Login";
-}
-
-// ================= CLEAR OLD SESSION =================
-function logoutAll() {
-  localStorage.removeItem("loggedInAdmin");
-}
-
-// ================= LOGIN =================
-function login() {
+// ================= ADMIN LOGIN =================
+function submitAdminLogin() {
 
   lockBtn();
 
@@ -116,7 +45,6 @@ function login() {
     return;
   }
 
-  // extra role safety
   if (user.role !== "admin") {
     showMsg("❌ Invalid login");
     unlockBtn();
@@ -172,30 +100,28 @@ function login() {
     window.location.href = "admin_dashboard.html";
   }, 500);
 }
-  
-  // ================= SESSION FIXED =================
-  logoutAll();
 
-  localStorage.setItem("loggedInAdmin", JSON.stringify({
-    userId: user.userId,
-    role: user.role
-  }));
+// ================= SAFE DECODE =================
+function safeDecode(p) {
+  try { return atob(p); } catch { return p || ""; }
+}
 
-  if (!localStorage.getItem("loggedInAdmin")) {
-    alert("Session failed");
-    unlockBtn();
-    return;
-  }
+// ================= BUTTON LOCK =================
+function lockBtn() {
+  let btn = document.getElementById("loginBtn");
+  btn.disabled = true;
+  btn.innerText = "Checking...";
+}
 
-  if (typeof logActivity === "function") {
-    logActivity(user.userId, "ADMIN", "Login");
-  }
+function unlockBtn() {
+  let btn = document.getElementById("loginBtn");
+  btn.disabled = false;
+  btn.innerText = "Login";
+}
 
-  showMsg("✅ Login successful");
-
-  setTimeout(() => {
-    window.location.href = "admin_dashboard.html";
-  }, 500);
+// ================= CLEAR OLD SESSION =================
+function logoutAll() {
+  localStorage.removeItem("loggedInAdmin");
 }
 
 // ================= MESSAGE =================
@@ -203,7 +129,14 @@ function showMsg(text) {
   document.getElementById("msg").innerText = text;
 }
 
-</script>
+// ================= INIT =================
+window.addEventListener("load", function () {
 
-</body>
-</html>
+  if (typeof initCoreSystem !== "function") {
+    alert("❌ core_system.js not loaded");
+    return;
+  }
+
+  initCoreSystem();
+  loadAdminLoginPage();
+});
