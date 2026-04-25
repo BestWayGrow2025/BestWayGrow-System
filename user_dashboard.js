@@ -245,9 +245,59 @@ function loadWallet() {
 
 // ================= WALLET HISTORY =================
 function loadWalletHistory() {
-  document.getElementById("mainContent").innerHTML = "<h3>📜 Wallet History</h3>";
-}
+  let user = getSafeUser();
+  if (!user) return;
 
+  let main = document.getElementById("mainContent");
+  if (!main) return;
+
+  let history = [];
+
+  try {
+    if (typeof getWalletHistory === "function") {
+      history = getWalletHistory(user.userId) || [];
+    } else if (user.walletHistory) {
+      history = user.walletHistory;
+    }
+  } catch (err) {
+    console.error("Wallet history error:", err);
+  }
+
+  let html = `
+    <div class="section-title">Wallet Transaction History</div>
+
+    <table>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Remark</th>
+      </tr>
+  `;
+
+  if (!history.length) {
+    html += `
+      <tr>
+        <td colspan="4">No Wallet History Found</td>
+      </tr>
+    `;
+  }
+
+  history.slice(-20).reverse().forEach(item => {
+    html += `
+      <tr>
+        <td>${item.date || "N/A"}</td>
+        <td>${item.type || "N/A"}</td>
+        <td>₹${Number(item.amount || 0)}</td>
+        <td>${item.remark || "N/A"}</td>
+      </tr>
+    `;
+  });
+
+  html += `</table>`;
+
+  main.innerHTML = html;
+}
 
 // ================= TEAM =================
 function loadDirectTeam() {
