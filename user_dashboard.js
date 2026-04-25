@@ -678,11 +678,48 @@ function loadNotifications() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= SUPPORT =================
+// ================= SUPPORT TICKETS =================
 function loadSupportTickets() {
-  document.getElementById("mainContent").innerHTML = "<h3>🛠 Support</h3>";
-}
+  let user = getSafeUser();
+  if (!user) return;
 
+  let tickets = user.supportTickets || [];
+
+  let html = `
+    <div class="section-title">Support Tickets</div>
+
+    <div class="info-box">
+      <input type="text" id="supportSubject" class="ref-box" placeholder="Subject"><br><br>
+
+      <textarea id="supportMessage" class="ref-box" placeholder="Enter Message"></textarea><br><br>
+
+      <button class="action-btn" onclick="submitSupportTicket()">
+        Submit Ticket
+      </button>
+    </div>
+  `;
+
+  if (!tickets.length) {
+    html += `
+      <div class="info-box">
+        <p>No Support Tickets Found</p>
+      </div>
+    `;
+  }
+
+  tickets.slice(-20).reverse().forEach(item => {
+    html += `
+      <div class="info-box">
+        <p><b>${item.subject || "Support Ticket"}</b></p>
+        <p>${item.message || "N/A"}</p>
+        <p>Status: ${item.status || "pending"}</p>
+        <p>${item.date || "N/A"}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("mainContent").innerHTML = html;
+}
 
 // ================= EDIT PROFILE =================
 function loadEditProfile() {
