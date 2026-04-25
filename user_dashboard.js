@@ -596,9 +596,35 @@ function submitWithdrawRequest() {
 
 // ================= WITHDRAW HISTORY =================
 function loadWithdrawHistory() {
-  document.getElementById("mainContent").innerHTML = "<h3>📄 Withdraw History</h3>";
-}
+  let user = getSafeUser();
+  if (!user) return;
 
+  let requests = user.withdrawRequests || [];
+
+  let html = `
+    <div class="section-title">Withdraw History</div>
+  `;
+
+  if (!requests.length) {
+    html += `
+      <div class="info-box">
+        <p>No Withdraw History Found</p>
+      </div>
+    `;
+  }
+
+  requests.slice(-20).reverse().forEach(item => {
+    html += `
+      <div class="info-box">
+        <p><b>Amount:</b> ₹${Number(item.amount || 0)}</p>
+        <p><b>Status:</b> ${item.status || "pending"}</p>
+        <p><b>Date:</b> ${item.date || "N/A"}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("mainContent").innerHTML = html;
+}
 
 // ================= NOTIFICATIONS =================
 function loadNotifications() {
