@@ -160,8 +160,60 @@ function loadPinSection() {
 
 
 // ================= TREE =================
+// ================= TREE =================
 function loadTree() {
-  document.getElementById("mainContent").innerHTML = "<h3>🌳 Tree View</h3>";
+  let user = getSafeUser();
+  if (!user) return;
+
+  let main = document.getElementById("mainContent");
+  if (!main) return;
+
+  let allUsers = [];
+
+  try {
+    if (typeof getUsers === "function") {
+      allUsers = getUsers() || [];
+    }
+  } catch (err) {
+    console.error("Users error:", err);
+  }
+
+  function buildTree(parentId, level = 1) {
+    if (level > 10) return "";
+
+    let team = allUsers.filter(u => u.sponsorId === parentId);
+
+    if (!team.length) return "";
+
+    let html = "";
+
+    team.forEach(member => {
+      html += `
+        <div style="margin-left:${level * 20}px; padding:8px; border-left:3px solid #4a00e0; margin-bottom:8px;">
+          <p><b>${member.userId || "N/A"}</b> - ${member.fullName || member.username || "N/A"}</p>
+          <p>Position: ${member.position || "N/A"}</p>
+        </div>
+      `;
+
+      html += buildTree(member.userId, level + 1);
+    });
+
+    return html;
+  }
+
+  main.innerHTML = `
+    <div class="section-title">Full Team Tree</div>
+
+    <div class="info-box">
+      <p><b>My User ID:</b> ${user.userId || "N/A"}</p>
+      <p><b>My Name:</b> ${user.fullName || user.username || "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <h3>Complete Downline Tree</h3>
+      ${buildTree(user.userId) || "<p>No Team Found</p>"}
+    </div>
+  `;
 }
 
 
