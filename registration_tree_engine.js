@@ -16,7 +16,7 @@ REGISTRATION TREE ENGINE (FINAL v4 LOCK)
 
 // ================= USER ID =================
 function generateUserId() {
-  return "BWG" + Date.now(); // ✅ more stable than random
+  return "BWG" + Date.now();
 }
 
 // ================= FIND DEEP POSITION =================
@@ -57,25 +57,22 @@ function createUserWithTree(req) {
 
   let users = getUsers() || [];
 
-  // 🔒 VALIDATION
   if (!req.username || !req.mobile || !req.password) {
     throw new Error("Missing required fields");
   }
 
-  // 🔒 DUPLICATE CHECK
   let exists = users.find(u => u.mobile === req.mobile);
   if (exists) throw new Error("Mobile already exists");
 
   let userId = generateUserId();
 
-  // 🔥 FIND POSITION
   let placement = findDeepPosition(req.introducerId, req.position || "L");
   let parent = placement.parent;
 
-  // ================= NEW USER =================
   let newUser = {
-    userId,
+    userId: userId,
     username: req.username,
+    email: req.email || "",
     password: req.password,
     mobile: req.mobile,
 
@@ -87,25 +84,21 @@ function createUserWithTree(req) {
     leftChild: null,
     rightChild: null,
 
-    // ✅ MANDATORY FIELDS (SYSTEM CRITICAL)
     role: "user",
     status: "active",
 
-    // ✅ SAFE DEFAULTS (avoid undefined anywhere)
     walletBalance: 0,
     totalIncome: 0,
 
     createdAt: Date.now()
   };
 
-  // ================= LINK PARENT =================
   if (placement.side === "L") {
     parent.leftChild = userId;
   } else {
     parent.rightChild = userId;
   }
 
-  // ================= SAVE =================
   users.push(newUser);
 
   if (typeof saveUsers === "function") {
@@ -117,6 +110,6 @@ function createUserWithTree(req) {
   return newUser;
 }
 
-// ================= GLOBAL EXPORT (SAFE) =================
+// ================= EXPORT =================
 window.createUserWithTree = createUserWithTree;
 window.findDeepPosition = findDeepPosition;
