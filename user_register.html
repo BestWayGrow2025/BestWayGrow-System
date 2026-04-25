@@ -158,15 +158,15 @@ function registerUser() {
   }
 
   // ================= SUCCESS =================
-  document.getElementById("msg").innerHTML = `
-    <div class="success-box">
-      ✅ Registration Submitted<br><br>
-      ⏳ Processing... Please wait a few seconds<br><br>
-      <a href="user_login.html">
-        <button>Go to Login</button>
-      </a>
-    </div>
-  `;
+document.getElementById("msg").innerHTML = `
+  <div class="success-box">
+    ✅ Registration Complete<br><br>
+    User created successfully<br><br>
+    <a href="user_login.html">
+      <button>Go to Login</button>
+    </a>
+  </div>
+`;
 
   // optional reset
   document.getElementById("username").value = "";
