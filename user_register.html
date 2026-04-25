@@ -158,16 +158,19 @@ function registerUser() {
   }
 
   // ================= SUCCESS =================
+let latestUser = getUsers().slice(-1)[0];
+
 document.getElementById("msg").innerHTML = `
   <div class="success-box">
     ✅ Registration Complete<br><br>
+    User ID: <b>${latestUser.userId}</b><br><br>
     User created successfully<br><br>
     <a href="user_login.html">
       <button>Go to Login</button>
     </a>
   </div>
 `;
-
+  
   // optional reset
   document.getElementById("username").value = "";
   document.getElementById("email").value = "";
