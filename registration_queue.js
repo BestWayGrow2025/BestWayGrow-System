@@ -165,18 +165,16 @@ function processRegistrationQueue() {
 
     for (let i = 0; i < queue.length; i++) {
 
-      if (processed >= MAX_BATCH) break;
+  if (processed >= MAX_BATCH) break;
 
-      let req = queue[i];
+  if (queue[i].status !== "PENDING") continue;
 
-      if (req.status !== "PENDING") continue;
+  try {
 
-      try {
+    processOneRegistration(queue[i]);
 
-        processOneRegistration(req);
-
-        req.status = "DONE";
-        req.completedAt = Date.now();
+    queue[i].status = "DONE";
+    queue[i].completedAt = Date.now();
         processed++;
 
         if (typeof logActivity === "function") {
