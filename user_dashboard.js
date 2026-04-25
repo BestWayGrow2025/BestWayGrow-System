@@ -29,7 +29,6 @@ function getSafeUser() {
 
 
 // ================= LOAD HOME =================
-// ================= HOME =================
 function loadHome() {
   let user = getSafeUser();
   if (!user) return;
@@ -99,8 +98,6 @@ function loadHome() {
   `;
 }
 
-
-// ================= PIN =================
 // ================= PIN SECTION =================
 function loadPinSection() {
   let user = getSafeUser();
@@ -158,8 +155,6 @@ function loadPinSection() {
   main.innerHTML = html;
 }
 
-
-// ================= TREE =================
 // ================= TREE =================
 function loadTree() {
   let user = getSafeUser();
@@ -216,18 +211,35 @@ function loadTree() {
   `;
 }
 
-
 // ================= WALLET =================
 function loadWallet() {
   let user = getSafeUser();
   if (!user) return;
 
-  let balance = (typeof getWalletBalance === "function")
-    ? getWalletBalance(user.userId)
-    : 0;
+  let main = document.getElementById("mainContent");
+  if (!main) return;
 
-  document.getElementById("mainContent").innerHTML =
-    "<h3>💰 Wallet Balance: ₹" + balance + "</h3>";
+  let balance = 0;
+
+  try {
+    if (typeof getWalletBalance === "function") {
+      balance = getWalletBalance(user.userId);
+    } else {
+      balance = Number(user.wallet?.balance || 0);
+    }
+  } catch (err) {
+    console.error("Wallet error:", err);
+  }
+
+  main.innerHTML = `
+    <div class="section-title">Wallet Overview</div>
+
+    <div class="info-box">
+      <p><b>Current Balance:</b> ₹${balance}</p>
+      <p><b>Total Credit:</b> ₹${Number(user.wallet?.totalCredit || 0)}</p>
+      <p><b>Total Debit:</b> ₹${Number(user.wallet?.totalDebit || 0)}</p>
+    </div>
+  `;
 }
 
 
