@@ -492,11 +492,22 @@ function requestPin() {
   }
 }
 
-// ================= INCOME =================
+// ================= INCOME HISTORY =================
 function loadIncomeHistory() {
-  document.getElementById("mainContent").innerHTML = "<h3>💵 Income</h3>";
-}
+  let user = getSafeUser();
+  if (!user) return;
 
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Income History</div>
+
+    <div class="info-box">
+      <p><b>Total Income:</b> ₹${Number(user.totalIncome || 0)}</p>
+      <p><b>Direct Income:</b> ₹${Number(user.directIncome || 0)}</p>
+      <p><b>Level Income:</b> ₹${Number(user.levelIncome || 0)}</p>
+      <p><b>Reward Income:</b> ₹${Number(user.rewardIncome || 0)}</p>
+    </div>
+  `;
+}
 
 // ================= WITHDRAW =================
 function loadWithdrawSection() {
