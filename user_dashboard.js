@@ -772,9 +772,94 @@ function submitSupportTicket() {
 
 // ================= EDIT PROFILE =================
 function loadEditProfile() {
-  document.getElementById("mainContent").innerHTML = "<h3>✏️ Edit Profile</h3>";
+  let user = getSafeUser();
+  if (!user) return;
+
+  let main = document.getElementById("mainContent");
+  if (!main) return;
+
+  main.innerHTML = `
+    <div class="section-title">Edit Profile</div>
+
+    <div class="info-box">
+      <input type="text" id="editFullName" class="ref-box" value="${user.fullName || ""}" placeholder="Full Name"><br><br>
+
+      <input type="text" id="editMobile" class="ref-box" value="${user.mobile || ""}" placeholder="Mobile"><br><br>
+
+      <input type="email" id="editEmail" class="ref-box" value="${user.email || ""}" placeholder="Email"><br><br>
+
+      <button class="action-btn" onclick="saveProfile()">
+        Save Profile
+      </button>
+    </div>
+  `;
 }
 
+
+// ================= PROFILE VALIDATION =================
+function validateProfileBeforeSave(fullName, mobile, email) {
+  if (!fullName || fullName.length < 3) {
+    return "Full Name Required";
+  }
+
+  if (!mobile || mobile.length < 10) {
+    return "Valid Mobile Required";
+  }
+
+  if (!email || !email.includes("@")) {
+    return "Valid Email Required";
+  }
+
+  return "ok";
+}
+
+
+// ================= SAVE PROFILE =================
+function saveProfile() {
+  let user = getSafeUser();
+  if (!user) return;
+
+  let fullName = document.getElementById("editFullName")?.value.trim();
+  let mobile = document.getElementById("editMobile")?.value.trim();
+  let email = document.getElementById("editEmail")?.value.trim();
+
+  let validation = validateProfileBeforeSave(fullName, mobile, email);
+
+  if (validation !== "ok") {
+    alert(validation);
+    return;
+  }
+
+  user.fullName = fullName;
+  user.mobile = mobile;
+  user.email = email;
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+
+  alert("Profile Updated Successfully");
+
+  if (typeof addUserNotification === "function") {
+    addUserNotification(
+      "Profile Updated",
+      "Your profile updated successfully"
+    );
+  }
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "Profile Updated",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error("Profile update log error:", err);
+  }
+}
 
 // ================= PASSWORD =================
 function loadChangePassword() {
