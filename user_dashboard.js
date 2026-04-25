@@ -357,12 +357,78 @@ function loadProfile() {
   let user = getSafeUser();
   if (!user) return;
 
-  document.getElementById("mainContent").innerHTML =
-    "<h3>👤 Profile</h3>" +
-    "<p>Name: " + user.username + "</p>" +
-    "<p>User ID: " + user.userId + "</p>";
-}
+  let main = document.getElementById("mainContent");
+  if (!main) return;
 
+  let directUsers = [];
+
+  try {
+    if (typeof getDirectUsers === "function") {
+      directUsers = getDirectUsers(user.userId) || [];
+    }
+  } catch (err) {
+    console.error("Direct users error:", err);
+  }
+
+  try {
+    if (typeof calculateUserRank === "function") {
+      calculateUserRank();
+    }
+  } catch (err) {
+    console.error("Rank error:", err);
+  }
+
+  let leftCount = directUsers.filter(u => (u.position || "") === "L").length;
+  let rightCount = directUsers.filter(u => (u.position || "") === "R").length;
+
+  main.innerHTML = `
+    <div class="section-title">User Profile</div>
+
+    <div class="info-box">
+      <p><b>User ID:</b> ${user.userId || "N/A"}</p>
+      <p><b>Full Name:</b> ${user.fullName || user.username || "N/A"}</p>
+      <p><b>Mobile:</b> ${user.mobile || "N/A"}</p>
+      <p><b>Email:</b> ${user.email || "N/A"}</p>
+      <p><b>Introducer ID:</b> ${user.introducerId || "N/A"}</p>
+      <p><b>Sponsor ID:</b> ${user.sponsorId || "N/A"}</p>
+      <p><b>Position:</b> ${user.position || "L"}</p>
+      <p><b>Join Date:</b> ${user.joinDate ? new Date(user.joinDate).toLocaleString() : "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Account Status:</b> ${user.accountStatus || "active"}</p>
+      <p><b>KYC Status:</b> ${user.kycStatus || "pending"}</p>
+      <p><b>Upgrade Status:</b> ${user.upgradeStatus || "not_upgraded"}</p>
+      <p><b>Repurchase Status:</b> ${user.repurchaseStatus || "not_started"}</p>
+      <p><b>Block Status:</b> ${user.blockStatus || "unblocked"}</p>
+      <p><b>Current Rank:</b> ${user.rank || "Starter"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Total Direct Team:</b> ${directUsers.length}</p>
+      <p><b>Left Team:</b> ${leftCount}</p>
+      <p><b>Right Team:</b> ${rightCount}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Office Name:</b> ${user.officeName || "N/A"}</p>
+      <p><b>Office City:</b> ${user.officeCity || "N/A"}</p>
+      <p><b>Office Code:</b> ${user.officeCode || "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Department:</b> ${user.department || "N/A"}</p>
+      <p><b>Designation:</b> ${user.designation || "N/A"}</p>
+      <p><b>Reporting Admin:</b> ${user.reportingAdmin || "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Support Tickets:</b> ${user.supportTicketCount || 0}</p>
+      <p><b>Last Support Date:</b> ${user.lastSupportDate || "N/A"}</p>
+      <p><b>Remarks:</b> ${user.remarks || "N/A"}</p>
+    </div>
+  `;
+}
 
 // ================= UPGRADE =================
 function loadUpgrade() {
