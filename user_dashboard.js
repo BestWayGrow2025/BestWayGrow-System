@@ -101,8 +101,61 @@ function loadHome() {
 
 
 // ================= PIN =================
+// ================= PIN SECTION =================
 function loadPinSection() {
-  document.getElementById("mainContent").innerHTML = "<h3>📌 PIN Section</h3>";
+  let user = getSafeUser();
+  if (!user) return;
+
+  let main = document.getElementById("mainContent");
+  if (!main) return;
+
+  let pins = [];
+
+  try {
+    if (typeof loadPins === "function") {
+      let allPins = loadPins() || [];
+
+      pins = allPins.filter(pin =>
+        pin.ownerId === user.userId ||
+        pin.usedBy === user.userId
+      );
+    }
+  } catch (err) {
+    console.error("PIN error:", err);
+  }
+
+  let html = `
+    <div class="section-title">PIN Section</div>
+
+    <button class="action-btn" onclick="requestPin()">
+      Request PIN
+    </button>
+
+    <table>
+      <tr>
+        <th>PIN</th>
+        <th>Amount</th>
+        <th>Status</th>
+      </tr>
+  `;
+
+  if (!pins.length) {
+    html += `<tr><td colspan="3">No PIN Available</td></tr>`;
+  }
+
+  pins.slice(-20).reverse().forEach(pin => {
+    html += `
+      <tr>
+        <td>${pin.pinId || "N/A"}</td>
+        <td>₹${Number(pin.amount || 0)}</td>
+        <td>${pin.status || "unused"}</td>
+      </tr>
+    `;
+  });
+
+  html += `</table>`;
+
+  main.innerHTML = html;
 }
 
 
