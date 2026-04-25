@@ -945,53 +945,234 @@ function savePassword() {
   }
 }
 
-// ================= ACTIVITY =================
+// ================= ACTIVITY LOGS =================
 function loadActivityLogs() {
-  document.getElementById("mainContent").innerHTML = "<h3>📜 Activity Logs</h3>";
-}
+  let user = getSafeUser();
+  if (!user) return;
 
+  let logs = [];
+
+  try {
+    if (typeof getActivityLogs === "function") {
+      logs = getActivityLogs(user.userId) || [];
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  let html = `<div class="section-title">Recent Activity Logs</div>`;
+
+  if (!logs.length) {
+    html += `<div class="info-box"><p>No Activity Found</p></div>`;
+  }
+
+  logs.slice(-20).reverse().forEach(item => {
+    html += `
+      <div class="info-box">
+        <p><b>${item.action || "Activity"}</b></p>
+        <p>${item.module || "USER_DASHBOARD"}</p>
+        <p>${item.date || "N/A"}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("mainContent").innerHTML = html;
+}
 
 // ================= LOGIN HISTORY =================
 function loadLoginHistory() {
-  document.getElementById("mainContent").innerHTML = "<h3>🕓 Login History</h3>";
+  let user = getSafeUser();
+  if (!user) return;
+
+  let history = user.loginHistory || [];
+
+  let html = `
+    <div class="section-title">Login History</div>
+  `;
+
+  if (!history.length) {
+    html += `
+      <div class="info-box">
+        <p>No Login History Found</p>
+      </div>
+    `;
+  }
+
+  history.slice(-20).reverse().forEach(item => {
+    html += `
+      <div class="info-box">
+        <p><b>Date:</b> ${item.date || "N/A"}</p>
+        <p><b>Device:</b> ${item.device || "N/A"}</p>
+        <p><b>IP:</b> ${item.ip || "N/A"}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("mainContent").innerHTML = html;
 }
 
-
-// ================= KYC =================
+// ================= KYC SECTION =================
 function loadKYCSection() {
-  document.getElementById("mainContent").innerHTML = "<h3>🪪 KYC</h3>";
+  let user = getSafeUser();
+  if (!user) return;
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">KYC Upload</div>
+
+    <div class="info-box">
+      <input type="file" id="kycFile" class="ref-box"><br><br>
+
+      <button class="action-btn" onclick="saveKYC()">
+        Upload KYC
+      </button>
+    </div>
+  `;
 }
 
+// ================= SAVE KYC =================
+function saveKYC() {
+  let user = getSafeUser();
+  if (!user) return;
 
-// ================= RANK =================
+  let kycFile = document.getElementById("kycFile");
+
+  if (!kycFile || !kycFile.files.length) {
+    alert("Select KYC File");
+    return;
+  }
+
+  user.kycStatus = "submitted";
+  user.kycFileName = kycFile.files[0].name;
+  user.kycUploadDate = new Date().toLocaleString();
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+
+  alert("KYC Uploaded Successfully");
+
+  addUserNotification(
+    "KYC Uploaded",
+    "Your KYC submitted successfully"
+  );
+
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "KYC Uploaded",
+        "USER_DASHBOARD"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// ================= AUTO RANK CALCULATION =================
+function calculateUserRank() {
+  let user = getSafeUser();
+  if (!user) return;
+
+  let directCount = 0;
+
+  try {
+    if (typeof getDirectUsers === "function") {
+      directCount = (getDirectUsers(user.userId) || []).length;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (directCount >= 20) user.rank = "Diamond";
+  else if (directCount >= 10) user.rank = "Gold";
+  else if (directCount >= 5) user.rank = "Silver";
+  else if (directCount >= 2) user.rank = "Bronze";
+  else user.rank = "Starter";
+
+  if (typeof saveUsers === "function") {
+    saveUsers();
+  }
+}
+
+// ================= RANK / REWARD =================
 function loadRankReward() {
-  document.getElementById("mainContent").innerHTML = "<h3>🏆 Rank</h3>";
+  let user = getSafeUser();
+  if (!user) return;
+
+  calculateUserRank();
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Rank / Reward Status</div>
+
+    <div class="info-box">
+      <p><b>Current Rank:</b> ${user.rank || "Starter"}</p>
+      <p><b>Total Reward:</b> ₹${Number(user.rewardIncome || 0)}</p>
+    </div>
+  `;
 }
 
-
-// ================= REFERRAL =================
+// ================= REFERRAL LINK =================
 function loadReferralLink() {
   let user = getSafeUser();
   if (!user) return;
 
-  let link =
-    window.location.origin +
-    "/user_register.html?ref=" +
-    user.userId;
+  let referralLink = location.origin + "/register.html?ref=" + user.userId;
 
-  document.getElementById("mainContent").innerHTML =
-    "<h3>🔗 Referral Link</h3><p>" + link + "</p>";
+  document.getElementById("mainContent").innerHTML = `
+    <div class="section-title">Referral Link</div>
+
+    <div class="info-box">
+      <input type="text" id="referralLinkBox" class="ref-box" value="${referralLink}" readonly><br><br>
+
+      <button class="action-btn" onclick="copyReferralLink()">
+        Copy Referral Link
+      </button>
+    </div>
+  `;
 }
 
+// ================= COPY REFERRAL =================
+function copyReferralLink() {
+  let copyText = document.getElementById("referralLinkBox");
+  if (!copyText) return;
+
+  navigator.clipboard.writeText(copyText.value)
+    .then(() => alert("Referral Link Copied"))
+    .catch(() => alert("Copy Failed"));
+}
+
+// ================= LOGOUT =================
+function logout() {
+  try {
+    if (typeof getSafeUser === "function") {
+      let u = getSafeUser();
+      if (u && typeof logActivity === "function") {
+        logActivity(u.userId, "USER", "Logout", "USER_DASHBOARD");
+      }
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (typeof clearSession === "function") {
+    clearSession();
+  }
+
+  alert("Logout Successful");
+  location.href = "user_login.html";
+}
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
-
   let user = getSafeUser();
   if (!user) return;
 
-  document.getElementById("welcome").innerText =
-    "Welcome " + user.username + " (" + user.userId + ")";
+  let welcome = document.getElementById("welcome");
+  if (welcome) {
+    welcome.innerText = "Welcome " + (user.username || "User") + " (" + (user.userId || "N/A") + ")";
+  }
 
   loadHome();
 });
