@@ -2,79 +2,27 @@
 <html>
 <head>
   <title>Franchise Login</title>
-
-  <!-- ✅ FIX: remove favicon 404 -->
   <link rel="icon" href="data:,">
-
   <style>
     body { font-family: Arial; padding: 20px; }
-    input { padding: 6px; width: 220px; }
-    button { padding: 6px 12px; cursor: pointer; }
+    input { padding: 8px; width: 240px; margin: 6px 0; }
+    button { padding: 8px 14px; cursor: pointer; margin-top: 10px; }
+    #msg { margin-top: 12px; font-size: 14px; }
   </style>
 </head>
 <body>
 
-<h2>FRANCHISE LOGIN</h2>
+  <h2>FRANCHISE LOGIN</h2>
 
-<input id="userId" placeholder="Franchise ID"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
+  <input id="userId" placeholder="Franchise ID"><br>
+  <input id="password" type="password" placeholder="Password"><br>
 
-<button onclick="login()">Login</button>
+  <button id="loginBtn">Login</button>
 
-<p id="msg"></p>
+  <p id="msg"></p>
 
-<!-- ✅ CORE FIRST -->
-<script src="CORE_system.js"></script>
-
-<script>
-initCoreSystem();
-</script>
-
-<script>
-
-// ================= SAFE DECODE =================
-function safeDecode(p) {
-  try {
-    return atob(p);
-  } catch (e) {
-    return p;
-  }
-}
-
-// ================= LOGIN =================
-function login() {
-
-  let id = document.getElementById("userId").value.trim();
-  let pass = document.getElementById("password").value.trim();
-
-  if (!id || !pass) {
-    document.getElementById("msg").innerText = "⚠ Enter ID & Password";
-    return;
-  }
-
-  let users = getUsers();
-
-  let user = users.find(u =>
-    u.userId.toLowerCase() === id.toLowerCase() &&
-    u.role === "franchise" &&
-    (u.password === pass || safeDecode(u.password) === pass)
-  );
-
-  if (!user) {
-    document.getElementById("msg").innerText = "❌ Invalid Franchise Login";
-    return;
-  }
-
-  // ✅ CORRECT SESSION KEY
-  localStorage.setItem("loggedInFranchise", JSON.stringify({
-    userId: user.userId
-  }));
-
-  // ✅ REDIRECT
-  window.location.href = "franchise_dashboard.html";
-}
-
-</script>
-
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="franchise_login.js"></script>
 </body>
 </html>
