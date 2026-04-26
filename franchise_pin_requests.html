@@ -2,139 +2,36 @@
 <html>
 <head>
   <title>Franchise Pin Requests</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
-    button { padding: 6px 10px; margin: 5px; cursor: pointer; }
-    input { padding: 6px; margin: 5px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-  </style>
 </head>
 <body>
 
-<h2>📌 FRANCHISE PIN REQUEST SYSTEM</h2>
+  <h2>📌 FRANCHISE PIN REQUEST SYSTEM</h2>
 
-<button onclick="goBack()">⬅ Back to Dashboard</button>
+  <button id="backBtn">⬅ Back to Dashboard</button>
 
-<!-- ================= CREATE REQUEST ================= -->
-<div class="box">
-  <h3>Create PIN Request</h3>
-  <input id="quantity" type="number" placeholder="Enter quantity">
-  <button onclick="submitRequest()">Submit Request</button>
-</div>
+  <div class="box">
+    <h3>Create PIN Request</h3>
+    <input id="quantity" type="number" placeholder="Enter quantity">
+    <button id="submitBtn">Submit Request</button>
+  </div>
 
-<!-- ================= REQUEST LIST ================= -->
-<div class="box">
-  <h3>My Requests</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Request ID</th>
-        <th>Quantity</th>
-        <th>Status</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody id="requestTable"></tbody>
-  </table>
-</div>
+  <div class="box">
+    <h3>My Requests</h3>
+    <table border="1" width="100%">
+      <thead>
+        <tr>
+          <th>Request ID</th>
+          <th>Quantity</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="requestTable"></tbody>
+    </table>
+  </div>
 
-<!-- ✅ CORE FIRST -->
-<script src="CORE_system.js"></script>
-
-<script>
-initCoreSystem();
-</script>
-
-<script>
-
-// ================= AUTH =================
-let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
-
-if (!sessionUser) {
-  alert("Please login");
-  window.location.href = "franchise_login.html";
-}
-
-// ================= STORAGE =================
-function getRequests() {
-  return JSON.parse(localStorage.getItem("pinRequests") || "[]");
-}
-
-function saveRequests(data) {
-  localStorage.setItem("pinRequests", JSON.stringify(data));
-}
-
-// ================= SUBMIT REQUEST =================
-function submitRequest() {
-
-  let qty = parseInt(document.getElementById("quantity").value);
-
-  if (!qty || qty <= 0) {
-    alert("Enter valid quantity");
-    return;
-  }
-
-  let requests = getRequests();
-
-  let newRequest = {
-    requestId: "REQ" + Date.now(),
-    userId: sessionUser.userId,
-    quantity: qty,
-    status: "PENDING",
-    createdAt: new Date().toISOString()
-  };
-
-  requests.push(newRequest);
-  saveRequests(requests);
-
-  alert("✅ PIN Request Submitted");
-
-  document.getElementById("quantity").value = "";
-
-  loadRequests();
-}
-
-// ================= LOAD REQUESTS =================
-function loadRequests() {
-
-  let requests = getRequests();
-  let table = document.getElementById("requestTable");
-
-  table.innerHTML = "";
-
-  let myRequests = requests.filter(r => r.userId === sessionUser.userId);
-
-  if (myRequests.length === 0) {
-    table.innerHTML = "<tr><td colspan='4'>No requests</td></tr>";
-    return;
-  }
-
-  myRequests.slice().reverse().forEach(r => {
-
-    let row = `
-      <tr>
-        <td>${r.requestId}</td>
-        <td>${r.quantity}</td>
-        <td>${r.status}</td>
-        <td>${r.createdAt}</td>
-      </tr>
-    `;
-
-    table.innerHTML += row;
-  });
-}
-
-// ================= NAV =================
-function goBack() {
-  window.location.href = "franchise_dashboard.html";
-}
-
-// ================= INIT =================
-loadRequests();
-
-</script>
-
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="franchise_pin_requests.js"></script>
 </body>
 </html>
