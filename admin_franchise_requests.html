@@ -1,183 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin - Franchise Requests</title>
-
+  <title>Admin Franchise Requests</title>
   <link rel="icon" href="data:,">
-
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-    button { padding: 6px 10px; margin: 5px; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f7f9;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    h2, h3 {
+      margin-top: 0;
+    }
+
+    button {
+      padding: 10px 14px;
+      margin: 5px 5px 5px 0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #007bff;
+      color: #fff;
+    }
+
+    .approve-btn {
+      background: #28a745;
+    }
+
+    .reject-btn {
+      background: #dc3545;
+    }
+
+    .request-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .request-item:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 <body>
 
-<h2>ADMIN → FRANCHISE REQUESTS</h2>
+  <div class="card">
+    <h2>Admin Franchise Requests</h2>
+    <button id="refreshBtn">Refresh</button>
+    <button id="resetPasswordBtn">Reset User Password</button>
+  </div>
 
-<button onclick="goBack()">⬅ Back to Dashboard</button>
-<button onclick="loadRequests()">🔄 Refresh</button>
+  <div class="card">
+    <h3>All Franchise Requests</h3>
+    <div id="requestList"></div>
+  </div>
 
-<!-- PASSWORD RESET -->
-<button onclick="resetUserPassword()">🔑 Reset User Password</button>
-
-<div class="box">
-  <h3>All Franchise Requests</h3>
-  <div id="requestList"></div>
-</div>
-
-<!-- CORE -->
-<script src="CORE_system.js"></script>
-
-<script>
-
-// ================= INIT =================
-initCoreSystem();
-
-// 🔥 GLOBAL SECURITY
-let admin = protectPage({
-  role: "admin",
-  department: "franchise"
-});
-
-// ✅ HARD FAIL SAFETY
-if (!admin) {
-  throw new Error("Unauthorized access");
-}
-
-// ================= NAV =================
-function goBack() {
-  window.location.href = "admin_dashboard.html";
-}
-
-function logout() {
-  localStorage.removeItem("loggedInAdmin");
-  window.location.href = "admin_login.html";
-}
-
-// ================= REQUEST STORAGE =================
-function getRequests() {
-  return JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
-}
-
-function saveRequests(data) {
-  localStorage.setItem("franchiseRequests", JSON.stringify(data));
-}
-
-// ================= PASSWORD RESET =================
-function resetUserPassword() {
-
-  // 🔒 DEPARTMENT SECURITY
-  if (admin.type === "B" && !(admin.departments || []).includes("franchise")) {
-    alert("🚫 No permission");
-    return;
-  }
-
-  let userId = prompt("Enter User ID:");
-  if (!userId) return;
-
-  let newPass = prompt("Enter New Password:");
-  if (!newPass) return;
-
-  let users = getUsers();
-  let user = users.find(u => u.userId === userId);
-
-  if (!user) {
-    alert("User not found");
-    return;
-  }
-
-  user.password = btoa(newPass);
-
-  saveUsers(users);
-
-  alert("✅ Password reset successful for " + userId);
-}
-
-// ================= LOAD REQUESTS =================
-function loadRequests() {
-
-  let requests = getRequests();
-  let container = document.getElementById("requestList");
-
-  if (requests.length === 0) {
-    container.innerHTML = "No requests found";
-    return;
-  }
-
-  let html = "<ul>";
-
-  requests.slice().reverse().forEach(req => {
-
-    html += `
-      <li>
-        <b>ID:</b> ${req.requestId} <br>
-        <b>User:</b> ${req.userId} <br>
-        <b>Status:</b> ${req.status} <br><br>
-
-        ${req.status === "PENDING" ? `
-          <button onclick="approve('${req.requestId}', '${req.userId}')">Approve</button>
-          <button onclick="reject('${req.requestId}')">Reject</button>
-        ` : "✔ Processed"}
-
-        <hr>
-      </li>
-    `;
-  });
-
-  html += "</ul>";
-
-  container.innerHTML = html;
-}
-
-// ================= APPROVE =================
-function approve(requestId, userId) {
-
-  let requests = getRequests();
-  let users = getUsers();
-
-  let req = requests.find(r => r.requestId === requestId);
-  let user = users.find(u => u.userId === userId);
-
-  if (!req) return alert("Request not found");
-  if (!user) return alert("User not found");
-
-  req.status = "APPROVED";
-
-  user.role = "franchise";
-  user.status = "active";
-  user.isActive = true;
-
-  saveRequests(requests);
-  saveUsers(users);
-
-  alert("✅ Approved & User upgraded to Franchise");
-
-  loadRequests();
-}
-
-// ================= REJECT =================
-function reject(requestId) {
-
-  let requests = getRequests();
-
-  let req = requests.find(r => r.requestId === requestId);
-
-  if (!req) return alert("Request not found");
-
-  req.status = "REJECTED";
-
-  saveRequests(requests);
-
-  alert("❌ Request Rejected");
-
-  loadRequests();
-}
-
-// ================= INIT =================
-loadRequests();
-
-</script>
-
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="admin_franchise_requests.js"></script>
 </body>
 </html>
