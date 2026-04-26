@@ -2,8 +2,6 @@
 <html>
 <head>
   <title>Create System Admin</title>
-
-  <!-- ✅ remove favicon error -->
   <link rel="icon" href="data:,">
 
   <style>
@@ -26,6 +24,7 @@
       width: 100%;
       margin-bottom: 10px;
       padding: 8px;
+      box-sizing: border-box;
     }
 
     button {
@@ -45,89 +44,27 @@
     #msg {
       margin-top: 10px;
       text-align: center;
+      font-weight: bold;
     }
   </style>
 </head>
-
 <body>
 
-<h2 style="text-align:center;">CREATE SYSTEM ADMIN</h2>
+  <h2 style="text-align:center;">CREATE SYSTEM ADMIN</h2>
 
-<div class="box">
+  <div class="box">
+    <input id="sysId" placeholder="System Admin ID">
+    <input id="sysName" placeholder="Name">
+    <input id="sysPass" type="password" placeholder="Password">
 
-  <input id="sysId" placeholder="System Admin ID">
-  <input id="sysName" placeholder="Name">
-  <input id="sysPass" type="password" placeholder="Password">
+    <button id="createBtn">Create</button>
 
-  <button onclick="createSystemAdmin()">Create</button>
+    <p id="msg"></p>
+  </div>
 
-  <p id="msg"></p>
-
-</div>
-
-<!-- ✅ CORE -->
-<script src="CORE_system.js"></script>
-
-<script>
-initCoreSystem();
-
-// ================= AUTH =================
-let session = JSON.parse(localStorage.getItem("loggedInSuperAdmin"));
-
-if (!session) {
-  alert("Access denied");
-  window.location.href = "super_admin_login.html";
-}
-
-// ================= SAFE MESSAGE =================
-function showMsg(text) {
-  document.getElementById("msg").innerText = text;
-}
-
-// ================= CREATE SYSTEM ADMIN =================
-function createSystemAdmin() {
-
-  let id = document.getElementById("sysId").value.trim();
-  let name = document.getElementById("sysName").value.trim();
-  let pass = document.getElementById("sysPass").value.trim();
-
-  if (!id || !name || !pass) {
-    showMsg("❌ Fill all fields");
-    return;
-  }
-
-  let users = getUsers();
-
-  // ✅ CASE SAFE DUPLICATE CHECK
-  if (users.find(u => u.userId.toLowerCase() === id.toLowerCase())) {
-    showMsg("⚠️ ID already exists");
-    return;
-  }
-
-  // ✅ FINAL OBJECT (STANDARD FORMAT)
-  let newAdmin = {
-    userId: id,
-    username: name,
-    password: btoa(pass),
-    role: "system_admin",
-    status: "active",
-    createdAt: new Date().toISOString()
-  };
-
-  users.push(newAdmin);
-  saveUsers(users);
-
-  showMsg("✅ System Admin Created");
-
-  console.log("Created:", newAdmin);
-
-  // ✅ AUTO CLEAR FORM
-  document.getElementById("sysId").value = "";
-  document.getElementById("sysName").value = "";
-  document.getElementById("sysPass").value = "";
-}
-
-</script>
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="super_admin_create_system_admin.js"></script>
 
 </body>
 </html>
