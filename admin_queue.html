@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Queue Panel</title>
-
+  <title>Admin Queue</title>
+  <link rel="icon" href="data:,">
   <style>
     body {
       font-family: Arial;
@@ -41,99 +41,16 @@
     .refresh { background: #007bff; color: #fff; }
   </style>
 </head>
-
 <body>
 
 <div class="card">
   <h2>Registration Queue</h2>
-
   <div id="queueList"></div>
-
-  <button class="refresh" onclick="loadQueue()">🔄 Refresh</button>
+  <button id="refreshBtn" class="refresh">🔄 Refresh</button>
 </div>
 
-<!-- ================= REQUIRED SCRIPTS ================= -->
-<script src="registration_queue.js"></script>
-<script src="tree_system.js"></script>
 <script src="core_system.js"></script>
-<script src="activity_log.js"></script>
-
-<script>
-
-// ================= LOAD QUEUE =================
-function loadQueue() {
-
-  if (typeof getRegQueue !== "function") {
-    alert("Queue system missing");
-    return;
-  }
-
-  let queue = getRegQueue();
-  let container = document.getElementById("queueList");
-
-  if (!queue.length) {
-    container.innerHTML = "<p>No requests found</p>";
-    return;
-  }
-
-  container.innerHTML = queue.map(q => `
-    <div class="item">
-      <b>${q.username}</b><br>
-      Mobile: ${q.mobile}<br>
-      Status: ${q.status}<br><br>
-
-      ${q.status === "PENDING" ? `
-        <button class="approve" onclick="approve('${q.mobile}')">✅ Approve</button>
-        <button class="reject" onclick="reject('${q.mobile}')">❌ Reject</button>
-      ` : `
-        <small>${q.status}</small>
-      `}
-    </div>
-  `).join("");
-}
-
-// ================= APPROVE =================
-function approve(mobile) {
-
-  if (typeof approveRegistration !== "function") {
-    alert("Approve system missing");
-    return;
-  }
-
-  let ok = approveRegistration(mobile);
-
-  if (ok) {
-    alert("✅ Approved");
-    loadQueue();
-  } else {
-    alert("❌ Failed");
-  }
-}
-
-// ================= REJECT =================
-function reject(mobile) {
-
-  if (typeof rejectRegistration !== "function") {
-    alert("Reject system missing");
-    return;
-  }
-
-  let ok = rejectRegistration(mobile, "Rejected by admin");
-
-  if (ok) {
-    alert("❌ Rejected");
-    loadQueue();
-  } else {
-    alert("Error");
-  }
-}
-
-// ================= AUTO LOAD =================
-window.onload = function () {
-  loadQueue();
-};
-
-</script>
-
+<script src="session_manager.js"></script>
+<script src="admin_queue.js"></script>
 </body>
 </html>
