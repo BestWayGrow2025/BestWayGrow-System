@@ -1,174 +1,129 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>ADMIN INCOME LOGS</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
-    input, select { padding: 6px; margin: 5px; }
-    button { padding: 6px 12px; margin: 5px; cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f5f5f5; }
-  </style>
-</head>
-<body>
+let session = null;
+let currentUser = null;
+let lock = false;
 
-<h2>INCOME LOGS (ADMIN)</h2>
+document.addEventListener("DOMContentLoaded", function () {
+  initPage();
+  authPage();
+  bindEvents();
+  loadPage();
+});
 
-<!-- ================= FILTER ================= -->
-<div class="box">
-  <h3>Filter</h3>
+function initPage() {
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  } else {
+    alert("core_system.js missing");
+    throw new Error("STOP");
+  }
 
-  <input id="filterUser" placeholder="User ID">
-  
-  <select id="filterType">
-    <option value="">All Types</option>
-    <option value="upgrade">Upgrade</option>
-    <option value="repurchase">Repurchase</option>
-    <option value="hold">Hold</option>
-    <option value="binary">Binary</option>
-    <option value="ctor">CTOR</option> <!-- 🔥 ADDED -->
-  </select>
-
-  <button onclick="loadLogs()">Apply Filter</button>
-  <button onclick="clearLogs()">Clear All Logs</button>
-</div>
-
-<!-- ================= TABLE ================= -->
-<div class="box">
-  <h3>Logs</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Log ID</th>
-        <th>User</th>
-        <th>Type</th>
-        <th>Amount</th>
-        <th>Source</th>
-        <th>Note</th>
-        <th>Time</th>
-      </tr>
-    </thead>
-    <tbody id="logTable"></tbody>
-  </table>
-</div>
-
-<!-- CORE -->
-<script src="CORE_system.js"></script>
-
-<!-- SYSTEM -->
-<script src="income_log_system.js"></script>
-<script src="activity_log.js"></script>
-
-<script>
-
-// ================= INIT =================
-initCoreSystem();
-
-// ================= SECURITY =================
-let admin = protectPage({ role: "admin" });
-if (!admin) return;
-
-
-// ================= COLOR FUNCTION (NEW 🔥)
-// =================
-function getColor(type) {
-  if (type === "hold") return "red";
-  if (type === "upgrade" || type === "repurchase") return "green";
-  if (type === "ctor") return "blue";
-  return "black";
+  if (typeof initIncomeControl === "function") {
+    initIncomeControl();
+  } else {
+    alert("income control system missing");
+    throw new Error("STOP");
+  }
 }
 
+function authPage() {
+  session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
 
-// ================= LOAD LOGS =================
-function loadLogs() {
-
-  let logs = [];
-
-  // 🔒 SAFE FETCH
-  try {
-    logs = getIncomeLogs() || [];
-  } catch {
-    logs = [];
+  if (!session || !session.userId) {
+    window.location.href = "admin_login.html";
+    throw new Error("STOP");
   }
 
-  logs = logs.slice().reverse();
-
-  let userFilter = document.getElementById("filterUser").value.trim();
-  let typeFilter = document.getElementById("filterType").value;
-
-  if (userFilter) {
-    logs = logs.filter(l => l.userId === userFilter);
+  if (typeof getUserById !== "function") {
+    window.location.href = "admin_login.html";
+    throw new Error("STOP");
   }
 
-  if (typeFilter) {
-    logs = logs.filter(l => l.type === typeFilter);
+  currentUser = getUserById(session.userId);
+
+  if (!currentUser || currentUser.role !== "admin") {
+    localStorage.removeItem("loggedInAdmin");
+    window.location.href = "admin_login.html";
+    throw new Error("STOP");
   }
 
-  let table = document.getElementById("logTable");
-
-  if (!logs.length) {
-    table.innerHTML = "<tr><td colspan='7'>No logs found</td></tr>";
-    return;
+  if ((currentUser.status || "active") !== "active") {
+    localStorage.removeItem("loggedInAdmin");
+    alert("Account inactive");
+    window.location.href = "admin_login.html";
+    throw new Error("STOP");
   }
+}
 
-  let html = "";
-
-  logs.forEach((l, i) => {
-
-    let color = getColor(l.type);
-
-    html += `
-      <tr>
-        <td>${l.logId || i + 1}</td>
-        <td>${l.userId || "-"}</td>
-        <td style="color:${color}">${l.type || "-"}</td>
-        <td style="color:${color}">₹ ${l.amount || 0}</td>
-        <td>${l.sourceUser || "-"}</td>
-        <td>${l.note || "-"}</td>
-        <td>${l.time ? new Date(l.time).toLocaleString() : "-"}</td>
-      </tr>
-    `;
+function bindEvents() {
+  document.getElementById("ugliOnBtn").addEventListener("click", function () {
+    setUGLI(true);
   });
 
-  table.innerHTML = html;
+  document.getElementById("ugliOffBtn").addEventListener("click", function () {
+    setUGLI(false);
+  });
 
-  // 📜 LOG VIEW
-  if (typeof logActivity === "function") {
-    logActivity(admin.userId, "ADMIN", "Viewed income logs");
-  }
+  document.getElementById("rliOnBtn").addEventListener("click", function () {
+    setRLI(true);
+  });
+
+  document.getElementById("rliOffBtn").addEventListener("click", function () {
+    setRLI(false);
+  });
+
+  document.getElementById("binaryOnBtn").addEventListener("click", function () {
+    setBinary(true);
+  });
+
+  document.getElementById("binaryOffBtn").addEventListener("click", function () {
+    setBinary(false);
+  });
 }
 
+function loadPage() {
+  refreshStatus();
+}
 
-// ================= CLEAR LOGS =================
-function clearLogs() {
-
-  if (!confirm("Are you sure to delete all logs?")) return;
-
+function safeStatus(fn) {
   try {
-    clearIncomeLogs();
+    return typeof fn === "function" ? fn() : false;
   } catch {
-    alert("Error clearing logs");
-    return;
-  }
-
-  loadLogs();
-
-  alert("All logs cleared");
-
-  // 📜 LOG CLEAR
-  if (typeof logActivity === "function") {
-    logActivity(admin.userId, "ADMIN", "Cleared all income logs");
+    return false;
   }
 }
 
+function refreshStatus() {
+  document.getElementById("ugliStatus").innerText =
+    safeStatus(isUGLIEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
 
-// ================= INIT =================
-loadLogs();
+  document.getElementById("rliStatus").innerText =
+    safeStatus(isRLIEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
 
-</script>
+  document.getElementById("binaryStatus").innerText =
+    safeStatus(isBinaryEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
+}
 
-</body>
-</html>
+function setUGLI(state) {
+  let settings = getIncomeSettings() || {};
+  settings.ugli = state;
+  saveIncomeSettings(settings);
+  refreshStatus();
+  alert("UGLI " + (state ? "ENABLED" : "DISABLED"));
+}
+
+function setRLI(state) {
+  let settings = getIncomeSettings() || {};
+  settings.rli = state;
+  saveIncomeSettings(settings);
+  refreshStatus();
+  alert("RLI " + (state ? "ENABLED" : "DISABLED"));
+}
+
+function setBinary(state) {
+  let settings = getIncomeSettings() || {};
+  settings.binary = state;
+  saveIncomeSettings(settings);
+  refreshStatus();
+  alert("Binary " + (state ? "ENABLED" : "DISABLED"));
+}
 
