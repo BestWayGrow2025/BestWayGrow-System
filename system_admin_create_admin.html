@@ -2,14 +2,51 @@
 <html>
 <head>
   <title>Create Admin</title>
-
-  <!-- ✅ remove favicon error -->
   <link rel="icon" href="data:,">
 
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; }
-    button { padding: 8px; margin-top: 10px; cursor: pointer; }
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f4f7f9;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .box {
+      background: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      max-width: 420px;
+      margin: auto;
+      border-radius: 10px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background: #ff6600;
+      color: white;
+    }
+
+    #msg {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -17,124 +54,35 @@
 <h2>SYSTEM ADMIN → CREATE ADMIN</h2>
 
 <div class="box">
-  <label>Admin ID:</label><br>
-  <input id="adminId"><br><br>
+  <label>Admin ID:</label>
+  <input id="adminId">
 
-  <label>Name:</label><br>
-  <input id="name"><br><br>
+  <label>Name:</label>
+  <input id="name">
 
-  <label>Password:</label><br>
-  <input id="password" type="password"><br><br>
+  <label>Password:</label>
+  <input id="password" type="password">
 
-  <label>Type:</label><br>
-  <select id="type" onchange="toggleDepartments()">
+  <label>Type:</label>
+  <select id="type">
     <option value="A">All-in-One (Type A)</option>
     <option value="B">Department (Type B)</option>
-  </select><br><br>
+  </select>
 
   <div id="deptBox" style="display:none;">
-    <label>Select Departments:</label><br>
-    <input type="checkbox" value="finance"> Finance<br>
-    <input type="checkbox" value="franchisee"> Franchisee<br>
-    <input type="checkbox" value="kyc"> KYC<br>
+    <label><input type="checkbox" value="finance"> Finance</label><br>
+    <label><input type="checkbox" value="franchisee"> Franchisee</label><br>
+    <label><input type="checkbox" value="kyc"> KYC</label><br><br>
   </div>
 
-  <button onclick="createAdmin()">Create Admin</button>
+  <button id="createBtn">Create Admin</button>
+
+  <p id="msg"></p>
 </div>
 
-<p id="msg"></p>
-
-<!-- ✅ CORE -->
-<script src="CORE_system.js"></script>
-
-<script>
-initCoreSystem();
-
-// ================= AUTH =================
-let session = JSON.parse(localStorage.getItem("loggedInSystemAdmin"));
-
-if (!session) {
-  alert("Access denied");
-  window.location.href = "system_admin_login.html";
-}
-
-let user = getUserById(session.userId);
-
-if (!user || user.role !== "system_admin") {
-  alert("Invalid session");
-  localStorage.removeItem("loggedInSystemAdmin");
-  window.location.href = "system_admin_login.html";
-}
-
-// ================= TOGGLE =================
-function toggleDepartments() {
-  let type = document.getElementById("type").value;
-  document.getElementById("deptBox").style.display =
-    (type === "B") ? "block" : "none";
-}
-
-// ================= CREATE ADMIN =================
-function createAdmin() {
-
-  let adminId = document.getElementById("adminId").value.trim();
-  let name = document.getElementById("name").value.trim();
-  let password = document.getElementById("password").value.trim();
-  let type = document.getElementById("type").value;
-
-  if (!adminId || !name || !password) {
-    showMsg("❌ Fill all fields");
-    return;
-  }
-
-  let users = getUsers();
-
-  // ✅ DUPLICATE CHECK
-  if (users.find(u => u.userId === adminId)) {
-    showMsg("⚠️ Admin already exists");
-    return;
-  }
-
-  let departments = [];
-
-  if (type === "B") {
-    document.querySelectorAll("#deptBox input:checked").forEach(cb => {
-      departments.push(cb.value);
-    });
-
-    if (departments.length === 0) {
-      showMsg("⚠️ Select at least one department");
-      return;
-    }
-
-  } else {
-    departments = ["finance", "franchisee", "kyc"];
-  }
-
-  // ✅ FINAL OBJECT (CORE FORMAT)
-  let newAdmin = {
-    userId: adminId,
-    username: name,
-    password: btoa(password), // ✅ ENCODED
-    role: "admin",
-    type: type,
-    departments: departments,
-    status: "active",
-    createdAt: new Date().toISOString()
-  };
-
-  users.push(newAdmin);
-  saveUsers(users);
-
-  showMsg("✅ Admin created successfully");
-
-  console.log("Admin Created:", newAdmin);
-}
-
-// ================= MESSAGE =================
-function showMsg(msg) {
-  document.getElementById("msg").innerText = msg;
-}
-</script>
+<script src="core_system.js"></script>
+<script src="session_manager.js"></script>
+<script src="system_admin_create_admin.js"></script>
 
 </body>
 </html>
