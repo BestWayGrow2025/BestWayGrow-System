@@ -1,64 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ADMIN PIN CONTROL</title>
+  <title>Admin PIN Control</title>
+  <link rel="icon" href="data:,">
   <style>
-    body { font-family: Arial; padding: 20px; }
-    input, select { padding: 6px; margin: 5px 0; width: 220px; }
-    button { padding: 6px 12px; margin: 5px; cursor: pointer; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
-    table { margin-top: 10px; }
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f4f7f9;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .box {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      padding: 8px;
+      margin: 5px 0;
+      width: 240px;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #fff;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
 
 <h2>PIN CONTROL PANEL</h2>
 
-<!-- ================= UPGRADE ================= -->
 <div class="box">
   <h3>Upgrade PIN</h3>
-
   <input type="number" id="up_bv" placeholder="BV"><br>
   <input type="number" id="up_amount" placeholder="Amount"><br>
   <input type="number" id="up_gst" placeholder="GST"><br>
-
-  <label>Start Date:</label><br>
-  <input type="datetime-local" id="up_start"><br>
-
-  <label>End Date (Optional):</label><br>
-  <input type="datetime-local" id="up_end"><br>
-
-  <button onclick="startUpgrade()">START</button>
-  <button onclick="stopUpgrade()">STOP</button>
-
+  <button id="startUpgradeBtn">START</button>
+  <button id="stopUpgradeBtn">STOP</button>
   <p id="upgradeStatus"></p>
 </div>
 
-<!-- ================= REPURCHASE ================= -->
 <div class="box">
   <h3>Repurchase PIN</h3>
-
   <input type="number" id="re_bv" placeholder="BV"><br>
   <input type="number" id="re_amount" placeholder="Amount"><br>
   <input type="number" id="re_gst" placeholder="GST"><br>
-
-  <label>Start Date:</label><br>
-  <input type="datetime-local" id="re_start"><br>
-
-  <label>End Date (Optional):</label><br>
-  <input type="datetime-local" id="re_end"><br>
-
-  <button onclick="startRepurchase()">START</button>
-  <button onclick="stopRepurchase()">STOP</button>
-
+  <button id="startRepurchaseBtn">START</button>
+  <button id="stopRepurchaseBtn">STOP</button>
   <p id="repurchaseStatus"></p>
 </div>
 
-<!-- ================= REQUEST MANAGEMENT ================= -->
 <div class="box">
   <h3>PIN Requests</h3>
 
-  <select id="filter" onchange="loadRequests()">
+  <select id="filter">
     <option value="ALL">All</option>
     <option value="PENDING">Pending</option>
     <option value="PROCESSING">Processing</option>
@@ -67,7 +88,7 @@
     <option value="REJECTED">Rejected</option>
   </select>
 
-  <table border="1" width="100%">
+  <table>
     <thead>
       <tr>
         <th>ID</th>
@@ -83,416 +104,8 @@
   </table>
 </div>
 
-<!-- ================= SCRIPT ================= -->
-<script src="pin_config_system.js"></script>
-<script src="pin_master-system.js"></script> <!-- ✅ FIXED -->
-<script src="pin_request_system.js"></script>
-<script src="pin_request_queue_engine.js"></script>
-
-<script>
-
-// ================= SAFE GET =================
-function getSafeSettings() {
-  let s = getPinSettings() || {};
-  return {
-    upgrade: s.upgrade || {},
-    repurchase: s.repurchase || {}
-  };
-}
-
-// ================= STATUS =================
-function refreshStatus() {
-
-  let settings = getSafeSettings();
-
-  let up = settings.upgrade;
-  let re = settings.repurchase;
-
-  document.getElementById("upgradeStatus").innerText =
-    up.active
-      ? `🟢 ACTIVE | BV: ${up.bv || 0} | ₹${up.amount || 0}`
-      : "🔴 OFF";
-
-  document.getElementById("repurchaseStatus").innerText =
-    re.active
-      ? `🟢 ACTIVE | BV: ${re.bv || 0} | ₹${re.amount || 0}`
-      : "🔴 OFF";
-}
-
-// ================= VALIDATION =================
-function validateInput(bv, amount) {
-  if (bv <= 0 || amount <= 0) {
-    alert("BV and Amount must be greater than 0");
-    return false;
-  }
-  return true;
-}
-
-// ================= START / STOP =================
-function startUpgrade() {
-  let bv = Number(document.getElementById("up_bv").value);
-  let amount = Number(document.getElementById("up_amount").value);
-  if (!validateInput(bv, amount)) return;
-
-  enablePin("upgrade", {
-    bv, amount,
-    gst: Number(document.getElementById("up_gst").value || 0),
-    startDate: document.getElementById("up_start").value || new Date().toISOString(),
-    endDate: document.getElementById("up_end").value || null
-  });
-
-  refreshStatus();
-}
-
-function stopUpgrade() {
-  disablePin("upgrade");
-  refreshStatus();
-}
-
-function startRepurchase() {
-  let bv = Number(document.getElementById("re_bv").value);
-  let amount = Number(document.getElementById("re_amount").value);
-  if (!validateInput(bv, amount)) return;
-
-  enablePin("repurchase", {
-    bv, amount,
-    gst: Number(document.getElementById("re_gst").value || 0),
-    startDate: document.getElementById("re_start").value || new Date().toISOString(),
-    endDate: document.getElementById("re_end").value || null
-  });
-
-  refreshStatus();
-}
-
-function stopRepurchase() {
-  disablePin("repurchase");
-  refreshStatus();
-}
-
-// ================= LOAD REQUESTS =================
-function loadRequests() {
-
-  let filter = document.getElementById("filter").value;
-  let data = getPinRequests();
-
-  let table = document.getElementById("reqTable");
-  table.innerHTML = "";
-
-  if (!data.length) {
-    table.innerHTML = "<tr><td colspan='7'>No Requests</td></tr>";
-    return;
-  }
-
-  data.forEach(req => {
-
-    if (filter !== "ALL" && req.status !== filter) return;
-
-    let priority = req.priority || "YELLOW";
-    let qty = req.quantity || 1;
-
-    let color =
-      priority === "GREEN" ? "green" :
-      priority === "YELLOW" ? "orange" :
-      "red";
-
-    let action = "-";
-
-    if (req.status === "PENDING") {
-      action = `
-        <button onclick="approve('${req.requestId}')">Approve</button>
-        <button onclick="rejectReq('${req.requestId}')">Reject</button>
-      `;
-    }
-
-    table.innerHTML += `
-      <tr>
-        <td>${req.requestId}</td>
-        <td>${req.userId}</td>
-        <td>${req.type}</td>
-        <td>${qty}</td>
-        <td style="color:${color}">${priority}</td>
-        <td>${req.status}</td>
-        <td>${action}</td>
-      </tr>
-    `;
-  });
-}
-
-// ================= ACTION =================
-function approve(id) {
-  if (!confirm("Approve this request?")) return;
-  processPinRequestAuto(id);
-  loadRequests();
-}
-
-function rejectReq(id) {
-  if (!confirm("Reject this request?")) return;
-  rejectPinRequest(id);
-  loadRequests();
-<!DOCTYPE html>
-<html>
-<head>
-  <title>ADMIN PIN CONTROL</title>
-
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    input, select { padding: 6px; margin: 5px 0; width: 220px; }
-    button { padding: 6px 12px; margin: 5px; cursor: pointer; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
-    table { margin-top: 10px; width:100%; border-collapse: collapse; }
-    th, td { padding:8px; border:1px solid #ccc; text-align:center; }
-  </style>
-</head>
-
-<body>
-
-<h2>PIN CONTROL PANEL</h2>
-
-<!-- ================= UPGRADE ================= -->
-<div class="box">
-  <h3>Upgrade PIN</h3>
-
-  <input type="number" id="up_bv" placeholder="BV"><br>
-  <input type="number" id="up_amount" placeholder="Amount"><br>
-  <input type="number" id="up_gst" placeholder="GST"><br>
-
-  <button onclick="safeClick(startUpgrade)">START</button>
-  <button onclick="safeClick(stopUpgrade)">STOP</button>
-
-  <p id="upgradeStatus"></p>
-</div>
-
-<!-- ================= REPURCHASE ================= -->
-<div class="box">
-  <h3>Repurchase PIN</h3>
-
-  <input type="number" id="re_bv" placeholder="BV"><br>
-  <input type="number" id="re_amount" placeholder="Amount"><br>
-  <input type="number" id="re_gst" placeholder="GST"><br>
-
-  <button onclick="safeClick(startRepurchase)">START</button>
-  <button onclick="safeClick(stopRepurchase)">STOP</button>
-
-  <p id="repurchaseStatus"></p>
-</div>
-
-<!-- ================= REQUESTS ================= -->
-<div class="box">
-  <h3>PIN Requests</h3>
-
-  <select id="filter" onchange="loadRequests()">
-    <option value="ALL">All</option>
-    <option value="PENDING">Pending</option>
-    <option value="COMPLETED">Completed</option>
-    <option value="FAILED">Failed</option>
-  </select>
-
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>User</th>
-        <th>Type</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="reqTable"></tbody>
-  </table>
-</div>
-
-<!-- ================= SCRIPT ================= -->
 <script src="core_system.js"></script>
-<script src="pin_config_system.js"></script>
-<script src="pin_master_system.js"></script>
-<script src="pin_request_system.js"></script>
-
-<script>
-
-// ================= INIT =================
-if (typeof initCoreSystem === "function") initCoreSystem();
-
-// ================= AUTH =================
-let admin = protectPage({ role: "admin" });
-if (!admin) throw new Error("STOP");
-
-// ================= LOCK =================
-let lock = false;
-function safeClick(fn) {
-  if (lock) return;
-  lock = true;
-  fn();
-  setTimeout(() => lock = false, 500);
-}
-
-// ================= SYSTEM SAFETY =================
-function isSystemSafe() {
-  let s = getSystemSettings() || {};
-
-  if (s.adminAccess === false) {
-    alert("Admin access OFF");
-    return false;
-  }
-
-  if (s.lockMode === true) {
-    alert("System locked");
-    return false;
-  }
-
-  return true;
-}
-
-// ================= QUEUE CHECK =================
-function canManualProcess() {
-  let s = getSystemSettings() || {};
-  let q = s.pinQueue || { enabled: true };
-
-  return q.enabled === false;
-}
-
-// ================= STATUS =================
-function refreshStatus() {
-  let s = getPinSettings() || {};
-
-  document.getElementById("upgradeStatus").innerText =
-    s.upgrade?.active ? "🟢 ACTIVE" : "🔴 OFF";
-
-  document.getElementById("repurchaseStatus").innerText =
-    s.repurchase?.active ? "🟢 ACTIVE" : "🔴 OFF";
-}
-
-// ================= VALIDATION =================
-function validateInput(bv, amount) {
-  if (bv <= 0 || amount <= 0) {
-    alert("Invalid BV or Amount");
-    return false;
-  }
-  return true;
-}
-
-// ================= START / STOP =================
-function startUpgrade() {
-  if (!isSystemSafe()) return;
-
-  let bv = Number(document.getElementById("up_bv").value);
-  let amount = Number(document.getElementById("up_amount").value);
-  let gst = Number(document.getElementById("up_gst").value || 0);
-
-  if (!validateInput(bv, amount)) return;
-
-  enablePin("upgrade", { bv, amount, gst });
-  refreshStatus();
-}
-
-function stopUpgrade() {
-  disablePin("upgrade");
-  refreshStatus();
-}
-
-function startRepurchase() {
-  if (!isSystemSafe()) return;
-
-  let bv = Number(document.getElementById("re_bv").value);
-  let amount = Number(document.getElementById("re_amount").value);
-  let gst = Number(document.getElementById("re_gst").value || 0);
-
-  if (!validateInput(bv, amount)) return;
-
-  enablePin("repurchase", { bv, amount, gst });
-  refreshStatus();
-}
-
-function stopRepurchase() {
-  disablePin("repurchase");
-  refreshStatus();
-}
-
-// ================= LOAD REQUESTS =================
-function loadRequests() {
-
-  let filter = document.getElementById("filter").value;
-  let data = getPinRequests() || [];
-
-  let table = document.getElementById("reqTable");
-  table.innerHTML = "";
-
-  if (!data.length) {
-    table.innerHTML = "<tr><td colspan='5'>No Requests</td></tr>";
-    return;
-  }
-
-  data.forEach(req => {
-
-    if (filter !== "ALL" && req.status !== filter) return;
-
-    table.innerHTML += `
-      <tr onclick="viewDetails('${req.requestId}')">
-        <td>${req.requestId}</td>
-        <td>${req.userId}</td>
-        <td>${req.type}</td>
-        <td>${req.status}</td>
-        <td>
-          <button onclick="event.stopPropagation();safeClick(()=>approve('${req.requestId}'))">✔</button>
-          <button onclick="event.stopPropagation();safeClick(()=>rejectReq('${req.requestId}'))">✖</button>
-          <button onclick="event.stopPropagation();safeClick(()=>forceProcess('${req.requestId}'))">⚡</button>
-        </td>
-      </tr>
-    `;
-  });
-}
-
-// ================= ACTIONS =================
-function approve(id) {
-  if (!isSystemSafe()) return;
-
-  if (!canManualProcess()) {
-    alert("Queue is ON. Use auto processing.");
-    return;
-  }
-
-  processPinRequestAuto(id);
-  loadRequests();
-}
-
-function rejectReq(id) {
-  rejectPinRequest(id);
-  loadRequests();
-}
-
-// 🔥 FORCE OVERRIDE
-function forceProcess(id) {
-  if (!isSystemSafe()) return;
-
-  if (!confirm("Force process this request?")) return;
-
-  processPinRequestAuto(id);
-  loadRequests();
-}
-
-// 🔍 DETAILS VIEW
-function viewDetails(id) {
-  let req = getPinRequests().find(r => r.requestId === id);
-  if (!req) return;
-
-  alert(
-`ID: ${req.requestId}
-User: ${req.userId}
-Type: ${req.type}
-Status: ${req.status}
-Qty: ${req.quantity || 1}
-Priority: ${req.priority || "YELLOW"}
-Retry: ${req.retry || 0}`
-  );
-}
-
-// ================= AUTO REFRESH =================
-setInterval(loadRequests, 3000);
-
-// ================= INIT =================
-refreshStatus();
-loadRequests();
-
-</script>
-
+<script src="session_manager.js"></script>
+<script src="admin_pin_panel.js"></script>
 </body>
 </html>
