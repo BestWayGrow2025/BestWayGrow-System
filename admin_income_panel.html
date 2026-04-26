@@ -2,127 +2,124 @@
 <html>
 <head>
   <title>Admin Income Panel</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f7f9;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    h2, h3 {
+      margin-top: 0;
+    }
+
+    .summary {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .summary-box {
+      flex: 1;
+      min-width: 220px;
+      background: #eef6ff;
+      border-radius: 10px;
+      padding: 15px;
+    }
+
+    select, button {
+      padding: 10px;
+      margin: 5px 5px 5px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
 
-<h2>📊 Admin Income Panel</h2>
+  <div class="card">
+    <h2>📊 Admin Income Panel</h2>
+  </div>
 
-<hr>
+  <div class="card">
+    <h3>System Summary</h3>
+    <div class="summary">
+      <div class="summary-box">
+        <strong>Total Payout</strong>
+        <p>₹<span id="totalPayout">0.00</span></p>
+      </div>
+      <div class="summary-box">
+        <strong>Total Records</strong>
+        <p><span id="totalRecords">0</span></p>
+      </div>
+    </div>
+  </div>
 
-<!-- 🔹 SUMMARY -->
-<h3>System Summary</h3>
+  <div class="card">
+    <h3>Filter</h3>
+    <select id="filterType">
+      <option value="">All</option>
+      <option value="upgrade">Upgrade</option>
+      <option value="repurchase">Repurchase</option>
+      <option value="ctor">CTOR</option>
+    </select>
+    <button id="refreshBtn">Refresh</button>
+  </div>
 
-<p>Total Payout: ₹<span id="totalPayout">0.00</span></p>
-<p>Total Records: <span id="totalRecords">0</span></p>
+  <div class="card">
+    <h3>Income Logs</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>User</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>From</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody id="incomeTable"></tbody>
+    </table>
+  </div>
 
-<hr>
-
-<!-- 🔹 FILTER -->
-<h3>Filter</h3>
-
-<select id="filterType" onchange="loadAllIncome()">
-  <option value="">All</option>
-  <option value="upgrade">Upgrade</option>
-  <option value="repurchase">Repurchase</option>
-  <option value="ctor">CTOR</option>
-</select>
-
-<button onclick="loadAllIncome()">🔄 Refresh</button>
-
-<hr>
-
-<!-- 🔹 TABLE -->
-<h3>Income Logs</h3>
-
-<table border="1" width="100%">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>User</th>
-      <th>Type</th>
-      <th>Amount</th>
-      <th>From</th>
-      <th>Note</th>
-    </tr>
-  </thead>
-  <tbody id="incomeTable"></tbody>
-</table>
-
-<!-- 🔥 CORE -->
-<script src="core_system.js"></script>
-
-<!-- 🔥 INCOME LOG -->
-<script src="income_log_system.js"></script>
-
-<script>
-
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
-
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
-
-  loadAllIncome();
-});
-
-// ================= LOAD =================
-function loadAllIncome() {
-
-  let type = document.getElementById("filterType").value;
-
-  let logs = [];
-
-  try {
-    if (typeof getIncomeLogs === "function") {
-      logs = getIncomeLogs();
-    }
-  } catch (err) {
-    console.error("Load error:", err);
-    logs = [];
-  }
-
-  // ✅ FILTER
-  if (type) {
-    logs = logs.filter(l => l.type === type);
-  }
-
-  let table = document.getElementById("incomeTable");
-  table.innerHTML = "";
-
-  let total = 0;
-
-  if (!logs.length) {
-    table.innerHTML = "<tr><td colspan='6'>No Data</td></tr>";
-  }
-
-  // ✅ LATEST FIRST
-  logs.slice().reverse().forEach(log => {
-
-    let amount = Number(log.amount) || 0;
-    total += amount;
-
-    let row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${log.time ? new Date(log.time).toLocaleString() : "-"}</td>
-      <td>${log.userId || "-"}</td>
-      <td>${log.type || "-"}</td>
-      <td>₹${amount.toFixed(2)}</td>
-      <td>${log.sourceUser || "-"}</td>
-      <td>${log.note || ""}</td>
-    `;
-
-    table.appendChild(row);
-  });
-
-  // ✅ SUMMARY
-  document.getElementById("totalPayout").innerText = total.toFixed(2);
-  document.getElementById("totalRecords").innerText = logs.length;
-}
-
-</script>
-
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="admin_income_panel.js"></script>
 </body>
 </html>
 
