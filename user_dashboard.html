@@ -1,18 +1,15 @@
-<!-- user_dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User Dashboard</title>
-
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
 
   <div class="dashboard-layout">
 
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">User Panel</div>
 
@@ -38,7 +35,6 @@
       <button onclick="logout()">Logout</button>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-panel">
       <div id="welcome" class="welcome-bar">Welcome</div>
       <div id="mainContent"></div>
@@ -46,7 +42,8 @@
 
   </div>
 
-  <!-- JS only from external file -->
-  <script src="assets/js/user_dashboard.js"></script>
+  <script src="core_system.js"></script>
+  <script src="activity_log.js"></script>
+  <script src="user_dashboard.js"></script>
 </body>
 </html>
