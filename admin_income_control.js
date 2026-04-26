@@ -1,0 +1,128 @@
+let session = null;
+let currentUser = null;
+let lock = false;
+
+document.addEventListener("DOMContentLoaded", function () {
+  initPage();
+  authPage();
+  bindEvents();
+  loadPage();
+});
+
+function initPage() {
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  } else {
+    alert("core_system.js missing");
+    throw new Error("STOP");
+  }
+
+  if (typeof initIncomeControl === "function") {
+    initIncomeControl();
+  } else {
+    alert("income control system missing");
+    throw new Error("STOP");
+  }
+}
+
+function authPage() {
+  session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
+
+  if (!session || !session.userId) {
+    window.location.href = "admin_login.html";
+    throw new Error("STOP");
+  }
+
+  if (typeof getUserById !== "function") {
+    window.location.href = "admin_login.html";
+    throw new Error("STOP");
+  }
+
+  currentUser = getUserById(session.userId);
+
+  if (!currentUser || currentUser.role !== "admin") {
+    localStorage.removeItem("loggedInAdmin");
+    window.location.href = "admin_login.html";
+    throw new Error("STOP");
+  }
+
+  if ((currentUser.status || "active") !== "active") {
+    localStorage.removeItem("loggedInAdmin");
+    alert("Account inactive");
+    window.location.href = "admin_login.html";
+    throw new Error("STOP");
+  }
+}
+
+function bindEvents() {
+  document.getElementById("ugliOnBtn").addEventListener("click", function () {
+    setUGLI(true);
+  });
+
+  document.getElementById("ugliOffBtn").addEventListener("click", function () {
+    setUGLI(false);
+  });
+
+  document.getElementById("rliOnBtn").addEventListener("click", function () {
+    setRLI(true);
+  });
+
+  document.getElementById("rliOffBtn").addEventListener("click", function () {
+    setRLI(false);
+  });
+
+  document.getElementById("binaryOnBtn").addEventListener("click", function () {
+    setBinary(true);
+  });
+
+  document.getElementById("binaryOffBtn").addEventListener("click", function () {
+    setBinary(false);
+  });
+}
+
+function loadPage() {
+  refreshStatus();
+}
+
+function safeStatus(fn) {
+  try {
+    return typeof fn === "function" ? fn() : false;
+  } catch {
+    return false;
+  }
+}
+
+function refreshStatus() {
+  document.getElementById("ugliStatus").innerText =
+    safeStatus(isUGLIEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
+
+  document.getElementById("rliStatus").innerText =
+    safeStatus(isRLIEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
+
+  document.getElementById("binaryStatus").innerText =
+    safeStatus(isBinaryEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
+}
+
+function setUGLI(state) {
+  let settings = getIncomeSettings() || {};
+  settings.ugli = state;
+  saveIncomeSettings(settings);
+  refreshStatus();
+  alert("UGLI " + (state ? "ENABLED" : "DISABLED"));
+}
+
+function setRLI(state) {
+  let settings = getIncomeSettings() || {};
+  settings.rli = state;
+  saveIncomeSettings(settings);
+  refreshStatus();
+  alert("RLI " + (state ? "ENABLED" : "DISABLED"));
+}
+
+function setBinary(state) {
+  let settings = getIncomeSettings() || {};
+  settings.binary = state;
+  saveIncomeSettings(settings);
+  refreshStatus();
+  alert("Binary " + (state ? "ENABLED" : "DISABLED"));
+}
