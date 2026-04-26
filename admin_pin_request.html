@@ -3,25 +3,57 @@
 <head>
   <title>Admin PIN Requests</title>
   <link rel="icon" href="data:,">
-
   <style>
-    body { font-family: Arial; padding: 20px; background:#f4f7f9; text-align:center; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; background:#fff; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; font-size:13px; }
-    button { padding: 6px 10px; cursor: pointer; margin: 2px; }
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f4f7f9;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 15px;
+    }
+
+    .actions {
+      margin-bottom: 15px;
+    }
+
+    .actions button {
+      padding: 8px 12px;
+      margin: 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      font-size: 13px;
+    }
+
     .pending { color: orange; }
     .completed { color: green; }
     .failed { color: red; }
     .rejected { color: gray; }
   </style>
 </head>
-
 <body>
 
-<h2>📌 ADMIN PIN REQUEST PANEL (V6+++++)</h2>
+<h2>📌 ADMIN PIN REQUEST PANEL</h2>
 
-<button onclick="loadRequests()">🔄 Refresh</button>
-<button onclick="logout()">Logout</button>
+<div class="actions">
+  <button id="refreshBtn">🔄 Refresh</button>
+  <button id="logoutBtn">Logout</button>
+</div>
 
 <table>
   <thead>
@@ -38,141 +70,8 @@
   <tbody id="requestTable"></tbody>
 </table>
 
-<!-- CORE -->
 <script src="core_system.js"></script>
-
-<!-- PIN SYSTEM -->
-<script src="pin_request_system.js"></script>
-<script src="pin_master_system.js"></script>
-
-<script>
-
-// ================= INIT =================
-if (typeof initCoreSystem === "function") {
-  initCoreSystem();
-} else {
-  alert("❌ Core not loaded");
-  throw new Error("STOP");
-}
-
-// ================= AUTH =================
-let admin = typeof protectPage === "function"
-  ? protectPage({ role: "admin" })
-  : null;
-
-if (!admin) {
-  alert("Access denied");
-  throw new Error("STOP");
-}
-
-// ================= LOAD =================
-function loadRequests() {
-
-  let table = document.getElementById("requestTable");
-  table.innerHTML = "";
-
-  let requests = [];
-
-  try {
-    if (typeof getPinRequests === "function") {
-      requests = getPinRequests() || [];
-    }
-  } catch {
-    requests = [];
-  }
-
-  if (!requests.length) {
-    table.innerHTML = "<tr><td colspan='7'>No Requests</td></tr>";
-    return;
-  }
-
-  // latest first
-  requests.slice().reverse().forEach(r => {
-
-    let status = (r.status || "pending").toLowerCase();
-
-    let statusClass = "";
-    if (status === "pending") statusClass = "pending";
-    if (status === "completed") statusClass = "completed";
-    if (status === "failed") statusClass = "failed";
-    if (status === "rejected") statusClass = "rejected";
-
-    let actions = "-";
-
-    if (status === "pending") {
-      actions = `
-        <button onclick="autoProcess('${r.requestId}')">AUTO</button>
-        <button onclick="rejectReq('${r.requestId}')">REJECT</button>
-      `;
-    }
-
-    let row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${r.requestId}</td>
-      <td>${r.userId}</td>
-      <td>${r.type || "-"}</td>
-      <td>${r.quantity || 1}</td>
-      <td>₹${Number(r.amount || 0).toFixed(2)}</td>
-      <td class="${statusClass}">${status.toUpperCase()}</td>
-      <td>${actions}</td>
-    `;
-
-    table.appendChild(row);
-  });
-}
-
-// ================= AUTO PROCESS =================
-function autoProcess(id) {
-
-  if (typeof processPinRequestAuto !== "function") {
-    alert("Processing system missing");
-    return;
-  }
-
-  try {
-    processPinRequestAuto(id);
-    alert("✅ Auto processed");
-    loadRequests();
-  } catch (err) {
-    alert(err.message || "Processing failed");
-  }
-}
-
-// ================= REJECT =================
-function rejectReq(id) {
-
-  if (!confirm("Reject this request?")) return;
-
-  if (typeof rejectPinRequest !== "function") {
-    alert("Reject system missing");
-    return;
-  }
-
-  try {
-    rejectPinRequest(id, admin.userId);
-    alert("❌ Request Rejected");
-    loadRequests();
-  } catch (err) {
-    alert(err.message || "Reject failed");
-  }
-}
-
-// ================= LOGOUT =================
-function logout() {
-  localStorage.removeItem("loggedInAdmin");
-  window.location.href = "admin_login.html";
-}
-
-// ================= AUTO REFRESH =================
-setInterval(loadRequests, 3000);
-
-// INIT
-loadRequests();
-
-</script>
-
+<script src="session_manager.js"></script>
+<script src="admin_pin_request.js"></script>
 </body>
 </html>
-
-
