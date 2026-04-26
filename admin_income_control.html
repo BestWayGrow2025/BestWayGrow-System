@@ -1,106 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ADMIN INCOME CONTROL</title>                                       
+  <title>Admin Income Control</title>
+  <link rel="icon" href="data:,">
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
-    button { padding: 6px 12px; margin: 5px; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f7f9;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    h2, h3 {
+      margin-top: 0;
+    }
+
+    button {
+      padding: 10px 14px;
+      margin: 5px 5px 5px 0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .on-btn {
+      background: #28a745;
+    }
+
+    .off-btn {
+      background: #dc3545;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
 
-<h2>INCOME CONTROL PANEL</h2>
+  <div class="card">
+    <h2>Income Control Panel</h2>
+  </div>
 
-<!-- ================= UGLI ================= -->
-<div class="box">
-  <h3>UGLI (Upgrade Income)</h3>
+  <div class="card">
+    <h3>UGLI (Upgrade Income)</h3>
+    <button class="on-btn" id="ugliOnBtn">ON</button>
+    <button class="off-btn" id="ugliOffBtn">OFF</button>
+    <p class="status" id="ugliStatus"></p>
+  </div>
 
-  <button onclick="setUGLI(true)">ON</button>
-  <button onclick="setUGLI(false)">OFF</button>
+  <div class="card">
+    <h3>RLI (Repurchase Income)</h3>
+    <button class="on-btn" id="rliOnBtn">ON</button>
+    <button class="off-btn" id="rliOffBtn">OFF</button>
+    <p class="status" id="rliStatus"></p>
+  </div>
 
-  <p id="ugliStatus"></p>
-</div>
+  <div class="card">
+    <h3>Binary Income (Future)</h3>
+    <button class="on-btn" id="binaryOnBtn">ON</button>
+    <button class="off-btn" id="binaryOffBtn">OFF</button>
+    <p class="status" id="binaryStatus"></p>
+  </div>
 
-<!-- ================= RLI ================= -->
-<div class="box">
-  <h3>RLI (Repurchase Income)</h3>
-
-  <button onclick="setRLI(true)">ON</button>
-  <button onclick="setRLI(false)">OFF</button>
-
-  <p id="rliStatus"></p>
-</div>
-
-<!-- ================= BINARY ================= -->
-<div class="box">
-  <h3>Binary Income (Future)</h3>
-
-  <button onclick="setBinary(true)">ON</button>
-  <button onclick="setBinary(false)">OFF</button>
-
-  <p id="binaryStatus"></p>
-</div>
-
-<!-- ================= SCRIPT ================= -->
-<script src="income_control_system.js"></script>
-
-<script>
-
-// ================= SAFE INIT =================
-initIncomeControl();
-
-// ================= SAFE GET =================
-function safeStatus(fn) {
-  try {
-    return fn();
-  } catch {
-    return false;
-  }
-}
-
-// ================= REFRESH =================
-function refreshStatus() {
-
-  document.getElementById("ugliStatus").innerText =
-    safeStatus(isUGLIEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
-
-  document.getElementById("rliStatus").innerText =
-    safeStatus(isRLIEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
-
-  document.getElementById("binaryStatus").innerText =
-    safeStatus(isBinaryEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
-}
-
-// ================= SETTERS =================
-function setUGLI(state) {
-  let s = getIncomeSettings();
-  s.ugli = state;
-  saveIncomeSettings(s);
-  refreshStatus();
-  alert("UGLI " + (state ? "ENABLED" : "DISABLED"));
-}
-
-function setRLI(state) {
-  let s = getIncomeSettings();
-  s.rli = state;
-  saveIncomeSettings(s);
-  refreshStatus();
-  alert("RLI " + (state ? "ENABLED" : "DISABLED"));
-}
-
-function setBinary(state) {
-  let s = getIncomeSettings();
-  s.binary = state;
-  saveIncomeSettings(s);
-  refreshStatus();
-  alert("Binary " + (state ? "ENABLED" : "DISABLED"));
-}
-
-// ================= INIT =================
-refreshStatus();
-
-</script>
-
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="admin_income_control.js"></script>
 </body>
 </html>
