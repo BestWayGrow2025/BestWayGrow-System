@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin - KYC Panel</title>
-
+  <title>Admin KYC</title>
   <link rel="icon" href="data:,">
-
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
@@ -15,140 +13,16 @@
 
 <h2>ADMIN → KYC MANAGEMENT</h2>
 
-<button onclick="goBack()">⬅ Back to Dashboard</button>
-<button onclick="loadKYC()">🔄 Refresh</button>
+<button id="backBtn">⬅ Back to Dashboard</button>
+<button id="refreshBtn">🔄 Refresh</button>
 
 <div class="box">
   <h3>KYC Requests</h3>
   <div id="kycList"></div>
 </div>
 
-<!-- ✅ CORE SYSTEM -->
-<script src="CORE_system.js"></script>
-
-<!-- ✅ NEW: ACTIVITY LOG -->
-<script src="activity_log.js"></script>
-
-<script>
-
-// ================= INIT =================
-initCoreSystem();
-
-// 🔥 FINAL SECURITY (VERY IMPORTANT)
-let admin = protectPage({
-  role: "admin",
-  department: "kyc"
-});
-
-// ================= NAV =================
-function goBack() {
-  window.location.href = "admin_dashboard.html";
-}
-
-function logout() {
-  localStorage.removeItem("loggedInAdmin");
-  window.location.href = "admin_login.html";
-}
-
-// ================= STORAGE =================
-function getKYC() {
-  return JSON.parse(localStorage.getItem("kycRequests") || "[]");
-}
-
-function saveKYC(data) {
-  localStorage.setItem("kycRequests", JSON.stringify(data));
-}
-
-// ================= LOAD =================
-function loadKYC() {
-
-  let data = getKYC();
-  let container = document.getElementById("kycList");
-
-  if (data.length === 0) {
-    container.innerHTML = "No KYC requests found";
-    return;
-  }
-
-  let html = "<ul>";
-
-  data.slice().reverse().forEach(k => {
-
-    html += `
-      <li>
-        <b>User:</b> ${k.userId} <br>
-        <b>Status:</b> ${k.status} <br>
-        <b>Submitted:</b> ${k.time} <br><br>
-
-        ${k.status === "PENDING" ? `
-          <button onclick="approve('${k.requestId}', '${k.userId}')">Approve</button>
-          <button onclick="reject('${k.requestId}')">Reject</button>
-        ` : "✔ Processed"}
-
-        <hr>
-      </li>
-    `;
-  });
-
-  html += "</ul>";
-
-  container.innerHTML = html;
-}
-
-// ================= APPROVE =================
-function approve(requestId, userId) {
-
-  let data = getKYC();
-  let users = getUsers();
-
-  let req = data.find(k => k.requestId === requestId);
-  let user = users.find(u => u.userId === userId);
-
-  if (!req) return alert("Request not found");
-  if (!user) return alert("User not found");
-
-  req.status = "APPROVED";
-
-  // ✅ FINAL FIX
-  user.kycStatus = "VERIFIED";
-  user.kycApprovedTime = new Date().toISOString();
-
-  saveKYC(data);
-  saveUsers(users);
-
-  // ✅ ACTIVITY LOG
-  logActivity(admin.userId, "admin", "KYC approved: " + userId);
-
-  alert("✅ KYC Approved");
-
-  loadKYC();
-}
-
-// ================= REJECT =================
-function reject(requestId) {
-
-  let data = getKYC();
-
-  let req = data.find(k => k.requestId === requestId);
-
-  if (!req) return alert("Request not found");
-
-  req.status = "REJECTED";
-
-  saveKYC(data);
-
-  // ✅ ACTIVITY LOG
-  logActivity(admin.userId, "admin", "KYC rejected: " + requestId);
-
-  alert("❌ KYC Rejected");
-
-  loadKYC();
-}
-
-// ================= INIT =================
-loadKYC();
-
-</script>
-
+<script src="core_system.js"></script>
+<script src="session_manager.js"></script>
+<script src="admin_kyc.js"></script>
 </body>
 </html>
