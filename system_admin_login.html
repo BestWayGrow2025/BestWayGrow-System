@@ -5,21 +5,21 @@
   <link rel="icon" href="data:,">
 
   <style>
-    body { 
-      font-family: Arial; 
-      padding: 20px; 
+    body {
+      font-family: Arial;
+      padding: 20px;
       text-align: center;
       background: #f4f7f9;
     }
 
-    input { 
-      margin-bottom: 10px; 
-      padding: 8px; 
-      width: 240px; 
+    input {
+      margin-bottom: 10px;
+      padding: 8px;
+      width: 240px;
     }
 
-    button { 
-      padding: 8px 15px; 
+    button {
+      padding: 8px 15px;
       cursor: pointer;
     }
 
@@ -29,156 +29,21 @@
     }
   </style>
 </head>
-
 <body>
 
-<h2>SYSTEM ADMIN LOGIN</h2>
+  <h2>SYSTEM ADMIN LOGIN</h2>
 
-<input id="userId" placeholder="System Admin ID"><br>
-<input id="password" type="password" placeholder="Password"><br>
+  <input id="userId" placeholder="System Admin ID"><br>
+  <input id="password" type="password" placeholder="Password"><br>
 
-<button onclick="safeClick(login)">Login</button>
+  <button id="loginBtn">Login</button>
 
-<p id="msg"></p>
+  <p id="msg"></p>
 
-<script src="core_system.js"></script>
-<script src="activity_log.js"></script>
-
-<script>
-
-// ================= INIT =================
-if (typeof initCoreSystem === "function") {
-  initCoreSystem();
-} else {
-  alert("❌ core_system.js not loaded");
-  throw new Error("STOP");
-}
-
-// ================= LOCK BUTTON =================
-let lock = false;
-
-function safeClick(fn) {
-  if (lock) return;
-  lock = true;
-
-  try {
-    fn();
-  } catch (e) {
-    console.error(e);
-  }
-
-  setTimeout(() => {
-    lock = false;
-  }, 800);
-}
-
-// ================= GLOBAL LOGOUT =================
-function logoutAll() {
-  localStorage.removeItem("loggedInSuperAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInFranchise");
-  localStorage.removeItem("loggedInUser");
-}
-
-// ================= SAFE DECODE =================
-function safeDecode(p) {
-  try {
-    return atob(p);
-  } catch (e) {
-    return p;
-  }
-}
-
-// ================= SYSTEM CHECK =================
-function isSystemAllowed(user) {
-
-  if (typeof getSystemSettings !== "function") {
-    showMsg("❌ System settings missing");
-    return false;
-  }
-
-  let s = getSystemSettings() || {};
-
-  // system admin bypass lock mode
-  if (user.role === "system_admin" || user.role === "super_admin") {
-    return true;
-  }
-
-  if (s.lockMode === true) {
-    showMsg("🚫 System Locked");
-    return false;
-  }
-
-  if (s.adminAccess === false) {
-    showMsg("🚫 Admin Access OFF");
-    return false;
-  }
-
-  return true;
-}
-
-// ================= LOGIN =================
-function login() {
-
-  let userId = document.getElementById("userId").value.trim();
-  let password = document.getElementById("password").value.trim();
-
-  if (!userId || !password) {
-    showMsg("⚠️ Enter ID & Password");
-    return;
-  }
-
-  let users = typeof getUsers === "function" ? getUsers() : [];
-
-  let user = users.find(u =>
-    u.userId === userId &&
-    u.role === "system_admin"
-  );
-
-  if (!user) {
-    showMsg("❌ Invalid ID");
-    return;
-  }
-
-  if (!isSystemAllowed(user)) return;
-
-  if ((user.status || "active") !== "active") {
-    showMsg("🚫 Account inactive");
-    return;
-  }
-
-  let storedPass = safeDecode(user.password);
-
-  if (storedPass.trim() !== password) {
-    showMsg("❌ Wrong Password");
-    return;
-  }
-
-  logoutAll();
-
-  localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
-    userId: user.userId,
-    role: user.role
-  }));
-
-  if (typeof logActivity === "function") {
-    logActivity(user.userId, "SYSTEM_ADMIN", "Login");
-  }
-
-  showMsg("✅ Login successful");
-
-  setTimeout(() => {
-    window.location.href = "system_admin_dashboard.html";
-  }, 700);
-}
-
-// ================= MESSAGE =================
-function showMsg(text) {
-  document.getElementById("msg").innerText = text;
-}
-
-</script>
+  <script src="core_system.js"></script>
+  <script src="activity_log.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="system_admin_login.js"></script>
 
 </body>
 </html>
