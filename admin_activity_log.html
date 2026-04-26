@@ -1,28 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin - Activity Logs</title>
-
+  <title>Admin Activity Logs</title>
   <link rel="icon" href="data:,">
-
   <style>
-    body { font-family: Arial; padding: 20px; }
-
-    .box { border: 1px solid #ccc; padding: 15px; margin-top: 15px; }
-
-    input, select {
-      padding: 6px;
-      margin: 5px;
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f4f7f9;
     }
 
-    button {
-      padding: 6px 12px;
+    h2 {
+      text-align: center;
+    }
+
+    .actions {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .actions button {
+      padding: 8px 12px;
       margin: 5px;
       cursor: pointer;
+      border: none;
+      border-radius: 6px;
+    }
+
+    .box {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px auto;
+      border-radius: 10px;
+      max-width: 900px;
+    }
+
+    input, select {
+      padding: 8px;
+      margin: 5px;
     }
 
     .log {
-      padding: 8px;
+      padding: 10px;
       border-bottom: 1px solid #eee;
     }
 
@@ -35,136 +55,31 @@
 
 <h2>📜 ADMIN ACTIVITY LOGS</h2>
 
-<button onclick="goBack()">⬅ Back</button>
-<button onclick="loadLogs()">🔄 Refresh</button>
+<div class="actions">
+  <button id="backBtn">⬅ Back</button>
+  <button id="refreshBtn">🔄 Refresh</button>
+</div>
 
-<!-- 🔍 FILTER -->
 <div class="box">
   <h3>Filter</h3>
-
   <input id="filterUser" placeholder="User ID">
-
   <select id="filterRole">
     <option value="">All Roles</option>
     <option value="ADMIN">Admin</option>
     <option value="SYSTEM">System</option>
     <option value="USER">User</option>
   </select>
-
   <input id="filterKeyword" placeholder="Search action">
-
-  <button onclick="applyFilter()">Apply</button>
-  <button onclick="clearLogs()">Clear Logs</button>
+  <button id="applyBtn">Apply</button>
+  <button id="clearBtn">Clear Logs</button>
 </div>
 
-<!-- 📜 LOGS -->
 <div class="box">
   <div id="logs"></div>
 </div>
 
-<!-- CORE -->
-<script src="CORE_system.js"></script>
-
-<!-- SYSTEM -->
-<script src="activity_log.js"></script>
-
-<script>
-
-// ================= INIT =================
-initCoreSystem();
-
-// 🔐 SECURITY
-let admin = protectPage({
-  role: "admin",
-  department: "report"
-});
-
-if (!admin) {
-  throw new Error("Access Blocked");
-}
-
-
-// ================= NAV =================
-function goBack() {
-  window.location.href = "admin_dashboard.html";
-}
-
-
-// ================= COLOR =================
-function getRoleClass(role) {
-  if (role === "ADMIN") return "admin";
-  if (role === "SYSTEM") return "system";
-  return "";
-}
-
-
-// ================= LOAD =================
-function loadLogs(customLogs = null) {
-
-  let logs = customLogs || getActivityLogs();
-  let container = document.getElementById("logs");
-
-  if (!logs.length) {
-    container.innerHTML = "No activity logs found";
-    return;
-  }
-
-  let html = "";
-
-  logs.slice().reverse().forEach(l => {
-
-    let roleClass = getRoleClass(l.role);
-
-    html += `
-      <div class="log ${roleClass}">
-        <b>${l.role}</b> (${l.userId}) → ${l.action} <br>
-        <small>${l.time ? new Date(l.time).toLocaleString() : "-"}</small>
-      </div>
-    `;
-  });
-
-  container.innerHTML = html;
-
-  // 📜 VIEW LOG
-  if (typeof logActivity === "function") {
-    logActivity(admin.userId, "ADMIN", "Viewed activity logs");
-  }
-}
-
-
-// ================= FILTER =================
-function applyFilter() {
-
-  let userId = document.getElementById("filterUser").value.trim();
-  let role = document.getElementById("filterRole").value;
-  let keyword = document.getElementById("filterKeyword").value.trim();
-
-  let logs = filterLogsAdvanced({
-    userId,
-    role,
-    keyword
-  });
-
-  loadLogs(logs);
-}
-
-
-// ================= CLEAR =================
-function clearLogs() {
-
-  if (!confirm("Delete all activity logs?")) return;
-
-  clearActivityLogs();
-  loadLogs();
-
-  alert("Logs cleared");
-}
-
-
-// ================= INIT =================
-loadLogs();
-
-</script>
-
+<script src="core_system.js"></script>
+<script src="session_manager.js"></script>
+<script src="admin_activity_log.js"></script>
 </body>
 </html>
