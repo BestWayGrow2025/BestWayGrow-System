@@ -2,9 +2,7 @@
 <html>
 <head>
   <title>Admin Reports</title>
-
   <link rel="icon" href="data:,">
-
   <style>
     body { font-family: Arial; padding: 20px; }
     .box { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
@@ -15,7 +13,7 @@
 
 <h1>📊 SYSTEM REPORTS</h1>
 
-<button onclick="goBack()">⬅ Back</button>
+<button id="backBtn">⬅ Back</button>
 
 <div class="box">
   <h2>Total Users</h2>
@@ -41,7 +39,7 @@
   <h2>CTOR Pool</h2>
   <p id="ctor"></p>
   <br>
-  <button onclick="runCTOR()">Run CTOR Distribution</button>
+  <button id="ctorBtn">Run CTOR Distribution</button>
 </div>
 
 <div class="box">
@@ -59,186 +57,8 @@
   <div id="withdrawals"></div>
 </div>
 
-<!-- ✅ CORE -->
-<script src="CORE_system.js"></script>
-
-<!-- ✅ SYSTEM FILES -->
-<script src="wallet_system.js"></script>
-<script src="ctor_engine.js"></script>
-<script src="withdrawal_system.js"></script>
-
-<script>
-
-// ================= INIT =================
-initCoreSystem();
-
-// 🔥 FINAL SECURITY
-let admin = protectPage({
-  role: "admin",
-  department: "report"
-});
-
-// ❗ SAFETY
-if (!admin) return;
-
-// ================= NAV =================
-function goBack() {
-  window.location.href = "admin_dashboard.html";
-}
-
-// ================= USERS =================
-function loadUsers() {
-  let users = getUsers();
-  document.getElementById("users").innerText =
-    "Total Users: " + users.length;
-}
-
-// ================= PIN =================
-function loadPins() {
-  let pins = JSON.parse(localStorage.getItem("pins") || "[]");
-
-  let totalStock = 0;
-  let totalUsed = 0;
-
-  pins.forEach(p => {
-    totalStock += p.stock || 0;
-    totalUsed += p.used || 0;
-  });
-
-  document.getElementById("pins").innerHTML =
-    "Total Stock: " + totalStock + "<br>Total Used: " + totalUsed;
-}
-
-// ================= INCOME =================
-function loadIncome() {
-  let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-
-  let total = 0;
-  txns.forEach(t => total += t.amount || 0);
-
-  document.getElementById("income").innerText =
-    "Total Distributed: ₹ " + total;
-}
-
-// ================= HOLD =================
-function loadHold() {
-  let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
-
-  let total = 0;
-  holds.forEach(h => {
-    if (h.status === "HOLD") total += h.amount || 0;
-  });
-
-  document.getElementById("hold").innerText =
-    "Hold Amount: ₹ " + total;
-}
-
-// ================= CTOR =================
-function loadCTOR() {
-  let pool = JSON.parse(localStorage.getItem("ctorPool") || "0");
-
-  document.getElementById("ctor").innerText =
-    "CTOR Pool: ₹ " + pool;
-}
-
-function runCTOR() {
-  if (typeof runCTORDistribution === "function") {
-    runCTORDistribution();
-    alert("✅ CTOR Distributed");
-    loadCTOR();
-    loadTransactions();
-  } else {
-    alert("CTOR engine not loaded");
-  }
-}
-
-// ================= TRANSACTIONS =================
-function loadTransactions() {
-  let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-
-  if (txns.length === 0) {
-    document.getElementById("transactions").innerHTML = "No transactions";
-    return;
-  }
-
-  let html = "<ul>";
-
-  txns.slice().reverse().forEach(t => {
-    html += `
-      <li>
-        ${t.userId} → ₹${t.amount} (${t.reason}) <br>
-        <small>${t.time}</small>
-      </li><br>
-    `;
-  });
-
-  html += "</ul>";
-
-  document.getElementById("transactions").innerHTML = html;
-}
-
-// ================= PIN LOG =================
-function loadPinLogs() {
-  let logs = JSON.parse(localStorage.getItem("pinTransactions") || "[]");
-
-  if (logs.length === 0) {
-    document.getElementById("pinLogs").innerHTML = "No logs";
-    return;
-  }
-
-  let html = "<ul>";
-
-  logs.slice().reverse().forEach(l => {
-    html += `
-      <li>
-        ${l.userId} used ${l.pinId} (${l.type}) <br>
-        BV: ${l.bv} | ₹${l.amount} <br>
-        <small>${l.time}</small>
-      </li><br>
-    `;
-  });
-
-  html += "</ul>";
-
-  document.getElementById("pinLogs").innerHTML = html;
-}
-
-// ================= WITHDRAW =================
-function loadWithdrawals() {
-
-  let data = JSON.parse(localStorage.getItem("withdrawals") || "[]");
-
-  if (data.length === 0) {
-    document.getElementById("withdrawals").innerHTML = "No requests";
-    return;
-  }
-
-  let html = "<ul>";
-
-  data.slice().reverse().forEach(w => {
-    html += `
-      <li>
-        ${w.requestId} | ${w.userId} | ₹${w.amount} | ${w.status}
-      </li><br>
-    `;
-  });
-
-  html += "</ul>";
-
-  document.getElementById("withdrawals").innerHTML = html;
-}
-
-// ================= INIT LOAD =================
-loadUsers();
-loadPins();
-loadIncome();
-loadHold();
-loadCTOR();
-loadTransactions();
-loadPinLogs();
-loadWithdrawals();
-
-</script>
-
+<script src="core_system.js"></script>
+<script src="session_manager.js"></script>
+<script src="admin_reports.js"></script>
 </body>
 </html>
