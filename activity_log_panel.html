@@ -3,10 +3,9 @@
 <head>
   <title>Activity Log Panel</title>
   <link rel="icon" href="data:,">
-
   <style>
     body {
-      font-family: 'Segoe UI', Arial;
+      font-family: Arial, sans-serif;
       margin: 0;
       background: #eef2f7;
     }
@@ -66,187 +65,56 @@
     }
   </style>
 </head>
-
 <body>
 
-<header>
-  <h2>📜 Activity Log Panel</h2>
-  <p id="welcome"></p>
-</header>
+  <header>
+    <h2>📜 Activity Log Panel</h2>
+    <p id="welcome"></p>
+  </header>
 
-<div class="container">
-  <div class="card">
+  <div class="container">
+    <div class="card">
 
-    <h3>🔍 Filters</h3>
+      <h3>🔍 Filters</h3>
 
-    <input id="userId" placeholder="User ID">
-    
-    <select id="role">
-      <option value="">All Roles</option>
-      <option value="user">User</option>
-      <option value="admin">Admin</option>
-      <option value="system_admin">System Admin</option>
-      <option value="super_admin">Super Admin</option>
-    </select>
+      <input id="userId" placeholder="User ID">
 
-    <input id="keyword" placeholder="Keyword">
-    
-    <select id="source">
-      <option value="">All Source</option>
-      <option value="SYSTEM">SYSTEM</option>
-      <option value="ADMIN">ADMIN</option>
-    </select>
+      <select id="role">
+        <option value="">All Roles</option>
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+        <option value="system_admin">System Admin</option>
+        <option value="super_admin">Super Admin</option>
+      </select>
 
-    <br>
+      <input id="keyword" placeholder="Keyword">
 
-    <button onclick="safeClick(loadLogs)">Load Logs</button>
-    <button class="danger" onclick="safeClick(clearLogs)">Clear Logs</button>
+      <select id="source">
+        <option value="">All Source</option>
+        <option value="SYSTEM">SYSTEM</option>
+        <option value="ADMIN">ADMIN</option>
+      </select>
 
-    <div id="logTable"></div>
+      <br>
 
-    <hr>
+      <button id="loadLogsBtn">Load Logs</button>
+      <button id="clearLogsBtn" class="danger">Clear Logs</button>
 
-    <h3>⚠️ Critical Logs</h3>
-    <button onclick="safeClick(loadCritical)">Load Critical</button>
+      <div id="logTable"></div>
 
-    <div id="criticalTable"></div>
+      <hr>
 
+      <h3>⚠️ Critical Logs</h3>
+      <button id="loadCriticalBtn">Load Critical</button>
+
+      <div id="criticalTable"></div>
+
+    </div>
   </div>
-</div>
 
-<script src="core_system.js"></script>
-<script src="activity_log.js"></script>
-
-<script>
-
-// INIT
-if (typeof initCoreSystem === "function") initCoreSystem();
-else { alert("core_system.js missing"); throw new Error("STOP"); }
-
-// ================= AUTH (LOCAL STORAGE) =================
-let session =
-  JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null") ||
-  JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
-
-if (!session || !session.userId) {
-  location.href = "super_admin_login.html";
-  throw new Error("STOP");
-}
-
-let user = getUserById(session.userId);
-
-if (!user || (user.role !== "super_admin" && user.role !== "system_admin")) {
-  location.href = "super_admin_login.html";
-  throw new Error("STOP");
-}
-
-let currentUser = user;
-
-// WELCOME
-document.getElementById("welcome").innerText =
-  "Logged in: " + currentUser.userId + " (" + currentUser.role + ")";
-
-// LOCK SYSTEM
-let lock = false;
-function safeClick(fn) {
-  if (lock) return;
-  lock = true;
-
-  try { fn(); } catch(e){ console.error(e); }
-
-  setTimeout(()=> lock=false, 400);
-}
-
-// SYSTEM CHECK
-function isSystemSafe() {
-  let s = getSystemSettings() || {};
-  if (s.lockMode) {
-    alert("System Locked");
-    return false;
-  }
-  return true;
-}
-
-// LOAD LOGS
-function loadLogs() {
-
-  if (!isSystemSafe()) return;
-
-  let userId = document.getElementById("userId").value.trim();
-  let role = document.getElementById("role").value;
-  let keyword = document.getElementById("keyword").value.trim();
-  let source = document.getElementById("source").value;
-
-  let logs = filterLogsAdvanced({ userId, role, keyword, source });
-
-  let html = `<table>
-  <tr>
-    <th>ID</th><th>User</th><th>Role</th>
-    <th>Action</th><th>Source</th><th>Time</th>
-  </tr>`;
-
-  if (!logs.length) html += `<tr><td colspan="6">No Logs</td></tr>`;
-
-  logs.reverse().forEach(l => {
-    html += `<tr>
-      <td>${l.logId}</td>
-      <td>${l.userId}</td>
-      <td>${l.role}</td>
-      <td>${l.action}</td>
-      <td>${l.source}</td>
-      <td>${new Date(l.time).toLocaleString()}</td>
-    </tr>`;
-  });
-
-  html += `</table>`;
-
-  document.getElementById("logTable").innerHTML = html;
-}
-
-// CLEAR LOGS
-function clearLogs() {
-
-  if (!isSystemSafe()) return;
-
-  if (!confirm("Clear all logs?")) return;
-
-  clearActivityLogs(currentUser.userId);
-
-  if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, currentUser.role, "Cleared Activity Logs", "ADMIN");
-  }
-
-  loadLogs();
-}
-
-// LOAD CRITICAL
-function loadCritical() {
-
-  if (!isSystemSafe()) return;
-
-  let logs = getCriticalLogs();
-
-  let html = `<table>
-  <tr><th>ID</th><th>User</th><th>Message</th><th>Source</th><th>Time</th></tr>`;
-
-  if (!logs.length) html += `<tr><td colspan="5">No Critical Logs</td></tr>`;
-
-  logs.reverse().forEach(l => {
-    html += `<tr>
-      <td>${l.id}</td>
-      <td>${l.userId}</td>
-      <td>${l.message}</td>
-      <td>${l.source}</td>
-      <td>${new Date(l.time).toLocaleString()}</td>
-    </tr>`;
-  });
-
-  html += `</table>`;
-
-  document.getElementById("criticalTable").innerHTML = html;
-}
-
-</script>
-
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="activity_log.js"></script>
+  <script src="activity_log_panel.js"></script>
 </body>
 </html>
