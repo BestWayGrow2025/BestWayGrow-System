@@ -1,187 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User Register FINAL QUEUE LOCK</title>
+  <title>User Register</title>
   <link rel="icon" href="data:,">
-
-  <style>
-    body {
-      font-family: Arial;
-      background: #f4f7f9;
-      text-align: center;
-      padding: 20px;
-    }
-
-    #formArea {
-      background: #fff;
-      max-width: 500px;
-      margin: auto;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-
-    input {
-      width: 90%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    button {
-      padding: 10px 15px;
-      background: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .success-box {
-      margin-top: 20px;
-      background: #e6ffed;
-      padding: 15px;
-      border-radius: 8px;
-      border: 1px solid #b7ebc6;
-    }
-  </style>
 </head>
-
 <body>
 
-<h2 id="introLabel">User Registration</h2>
+  <h2 id="introLabel">User Registration</h2>
 
-<div id="formArea">
-  <input id="username" placeholder="Name"><br>
-  <input id="email" placeholder="Email"><br>
-  <input id="mobile" placeholder="Mobile"><br>
-  <input id="password" type="password" placeholder="Password"><br>
+  <div id="formArea">
+    <input id="username" type="text" placeholder="Name">
+    <input id="email" type="text" placeholder="Email">
+    <input id="mobile" type="text" placeholder="Mobile">
+    <input id="password" type="password" placeholder="Password">
 
-  <label>Select Position:</label><br><br>
-  <input type="radio" name="position" value="L"> LEFT
-  <input type="radio" name="position" value="R"> RIGHT
-  <br><br>
-
-  <button onclick="registerUser()">Register</button>
-</div>
-
-<p id="msg"></p>
-
-<!-- ✅ FINAL SCRIPT ORDER (LOCKED) -->
-<script src="core_system.js"></script>
-<script src="registration_tree_engine.js"></script>
-<script src="registration_queue.js"></script>
-<script src="activity_log.js"></script>
-
-<script>
-
-// ================= INIT =================
-if (typeof initCoreSystem === "function") {
-  initCoreSystem();
-}
-
-// ================= REFERRAL =================
-let params = new URLSearchParams(location.search);
-let introducerId = params.get("ref") || "BWG000001";
-
-let introUser = (typeof getUserById === "function")
-  ? getUserById(introducerId)
-  : null;
-
-if (!introUser) {
-  document.getElementById("introLabel").innerText = "Invalid Referral Link";
-  document.getElementById("formArea").style.display = "none";
-} else {
-  document.getElementById("introLabel").innerText = "Introducer: " + introducerId;
-}
-
-// ================= HELPERS =================
-function encodePass(p) {
-  try {
-    return btoa(p);
-  } catch {
-    return p;
-  }
-}
-
-// ================= REGISTER (QUEUE ONLY) =================
-function registerUser() {
-
-  let username = document.getElementById("username").value.trim();
-  let email = document.getElementById("email").value.trim();
-  let mobile = document.getElementById("mobile").value.trim();
-  let password = document.getElementById("password").value.trim();
-  let pos = document.querySelector('input[name="position"]:checked');
-
-  // 🔒 VALIDATION
-  if (!username || !email || !mobile || !password) {
-    alert("Fill all fields");
-    return;
-  }
-
-  if (!pos) {
-    alert("Select position");
-    return;
-  }
-
-  if (!/^[6-9]\d{9}$/.test(mobile)) {
-    alert("Invalid mobile");
-    return;
-  }
-
-  let users = (typeof getUsers === "function") ? getUsers() : [];
-
-  if (users.find(u => u.mobile === mobile)) {
-    alert("Mobile already exists");
-    return;
-  }
-
-  if (users.find(u => u.email === email)) {
-    alert("Email already exists");
-    return;
-  }
-
-  // ================= QUEUE REQUEST =================
-  let added = addToRegistrationQueue({
-    username: username,
-    email: email,
-    password: encodePass(password),
-    mobile: mobile,
-    introducerId: introducerId,
-    position: pos.value
-  });
-
-  if (!added) {
-    alert("Registration failed or duplicate request");
-    return;
-  }
-
-  // ================= SUCCESS =================
-setTimeout(() => {
-  let latestUser = getUsers().slice(-1)[0];
-
-  document.getElementById("msg").innerHTML = `
-    <div class="success-box">
-      ✅ Registration Complete<br><br>
-      User ID: <b>${latestUser ? latestUser.userId : "Not Found"}</b><br><br>
-      User created successfully<br><br>
-      <a href="user_login.html">
-        <button>Go to Login</button>
-      </a>
+    <label>Select Position:</label>
+    <div>
+      <label><input type="radio" name="position" value="L"> LEFT</label>
+      <label><input type="radio" name="position" value="R"> RIGHT</label>
     </div>
-  `;
-}, 500);
-  
-  // optional reset
-  document.getElementById("username").value = "";
-  document.getElementById("email").value = "";
-  document.getElementById("mobile").value = "";
-  document.getElementById("password").value = "";
-  document.querySelectorAll('input[name="position"]').forEach(r => r.checked = false);
-}
 
-</script>
+    <button id="registerBtn">Register</button>
+  </div>
 
+  <p id="msg"></p>
+
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="user_register.js"></script>
 </body>
 </html>
