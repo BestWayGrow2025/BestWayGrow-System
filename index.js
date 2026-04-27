@@ -30,7 +30,7 @@ function authPage() {
 function bindEvents() {
   document.addEventListener("click", function (e) {
     if (e.target && e.target.id === "logoutBtn") {
-      logout();
+      handleLogout();
     }
   });
 }
@@ -42,6 +42,8 @@ function loadPage() {
 
 function loadSystemStatus() {
   let box = document.getElementById("systemStatus");
+
+  if (!box) return;
 
   try {
     let settings = {};
@@ -69,10 +71,12 @@ function loadSystemStatus() {
 function loadLoginArea() {
   let loginArea = document.getElementById("loginArea");
 
+  if (!loginArea) return;
+
   if (!session) {
     loginArea.innerHTML = `
       <a href="user_login.html">
-        <button>Login</button>
+        <button type="button">Login</button>
       </a>
     `;
     return;
@@ -97,41 +101,29 @@ function loadLoginArea() {
   loginArea.innerHTML = `
     <span style="margin-right:10px;">Welcome ${displayName}</span>
     <a href="${dashboardLink}">
-      <button class="top-btn">Dashboard</button>
+      <button type="button" class="top-btn">Dashboard</button>
     </a>
-    <button class="top-btn" id="logoutBtn">Logout</button>
+    <button type="button" class="top-btn" id="logoutBtn">Logout</button>
   `;
 }
 
-function logout() {
+function handleLogout() {
   if (lock) return;
   lock = true;
 
   try {
-    let activeSession = null;
-
-    if (typeof getSession === "function") {
-      activeSession = getSession();
+    if (typeof logoutSession === "function") {
+      logoutSession();
+      return;
     }
 
-    if (activeSession && typeof logActivity === "function") {
-      logActivity(
-        activeSession.userId || "UNKNOWN",
-        "SYSTEM",
-        "Logout",
-        "INDEX_PAGE"
-      );
+    if (typeof clearSession === "function") {
+      clearSession();
     }
-  } catch (e) {}
 
-  if (typeof clearSession === "function") {
-    clearSession();
+    window.location.reload();
+  } catch (e) {
+    lock = false;
+    console.error("Logout failed:", e);
   }
-
-  localStorage.removeItem("loggedInUser");
-  localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInSuperAdmin");
-
-  window.location.reload();
 }
