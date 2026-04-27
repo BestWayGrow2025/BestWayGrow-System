@@ -4,7 +4,6 @@ let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
-  authPage();
   bindEvents();
   loadPage();
 });
@@ -15,13 +14,8 @@ function initPage() {
   }
 }
 
-function authPage() {
-  session = null;
-  currentUser = null;
-}
-
 function bindEvents() {
-  let initBtn = document.getElementById("initBtn");
+  const initBtn = document.getElementById("initBtn");
 
   if (initBtn) {
     initBtn.addEventListener("click", initSystem);
@@ -36,33 +30,35 @@ function initSystem() {
   if (lock) return;
   lock = true;
 
-  let systemSettings = {
+  const systemSettings = {
+    lockMode: false,
     adminAccess: true,
     franchiseeAccess: true,
     registrationOpen: true,
     upgradesOpen: true,
     repurchaseOpen: true,
+    withdrawOpen: true,
     finance: true,
     franchiseeDept: true,
     kyc: true
   };
 
-  let officeUsers = [
+  const officeUsers = [
     {
-      userId: "BWG000000",
+      userId: "SUPERADMIN",
       name: "SUPER ADMIN",
       password: "123",
       role: "super_admin"
     }
   ];
 
-  localStorage.setItem("systemSettings", JSON.stringify(systemSettings));
-  localStorage.setItem("officeUsers", JSON.stringify(officeUsers));
-
   localStorage.setItem("admins", "[]");
   localStorage.setItem("franchisees", "[]");
   localStorage.setItem("users", "[]");
   localStorage.setItem("payments", "[]");
+
+  localStorage.setItem("systemSettings", JSON.stringify(systemSettings));
+  localStorage.setItem("officeUsers", JSON.stringify(officeUsers));
 
   document.getElementById("msg").innerText =
     "✅ System Initialized Successfully";
