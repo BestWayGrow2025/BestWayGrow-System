@@ -2,99 +2,65 @@
 <html>
 <head>
   <title>User Withdraw</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7f9;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: #fff;
+      max-width: 420px;
+      margin: auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    #msg {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Withdraw Request</h2>
+  <div class="card">
+    <h2>Withdraw Request</h2>
 
-<p>User ID: <span id="userId"></span></p>
+    <p>User ID: <span id="userId"></span></p>
 
-<input type="number" id="amount" placeholder="Enter amount"><br><br>
+    <input type="number" id="amount" placeholder="Enter amount">
 
-<button onclick="submitWithdraw()">Submit Withdraw</button>
+    <br>
+    <button id="submitBtn">Submit Withdraw</button>
 
-<p id="msg"></p>
+    <p id="msg"></p>
+  </div>
 
-<!-- CORE -->
-<script src="CORE_system.js"></script>
-
-<!-- SYSTEM -->
-<script src="withdrawal_system.js"></script>
-
-<script>
-
-// ================= INIT =================
-initCoreSystem();
-
-// ================= AUTH (SAFE) =================
-let sessionUser = JSON.parse(localStorage.getItem("loggedInUser"));
-
-if (!sessionUser) {
-  alert("Login required");
-  window.location.href = "user_login.html";
-  throw new Error("STOP"); // 🔥 IMPORTANT FIX
-}
-
-let userId = sessionUser.userId;
-
-// ✅ SAFE ELEMENT CHECK
-let userIdEl = document.getElementById("userId");
-if (userIdEl) {
-  userIdEl.innerText = userId;
-}
-
-// ================= SUBMIT =================
-function submitWithdraw() {
-
-  let msgBox = document.getElementById("msg");
-  let amount = parseFloat(document.getElementById("amount").value);
-
-  if (!msgBox) return;
-
-  msgBox.innerText = "";
-
-  // 🔒 INPUT VALIDATION
-  if (isNaN(amount) || amount <= 0) {
-    msgBox.innerText = "❌ Invalid amount";
-    return;
-  }
-
-  // 🔒 SYSTEM SAFETY
-  if (typeof isWithdrawSystemSafe === "function") {
-    if (!isWithdrawSystemSafe()) {
-      msgBox.innerText = "⛔ Withdraw system disabled";
-      return;
-    }
-  }
-
-  // 🔒 FUNCTION CHECK
-  if (typeof requestWithdraw !== "function") {
-    msgBox.innerText = "❌ Withdraw system error";
-    return;
-  }
-
-  try {
-
-    // ✅ CALL SYSTEM
-    requestWithdraw(userId, amount);
-
-    msgBox.innerText = "✅ Withdraw request submitted";
-
-    document.getElementById("amount").value = "";
-
-    // ⏳ REDIRECT
-    setTimeout(() => {
-      window.location.href = "user_dashboard.html";
-    }, 1500);
-
-  } catch (err) {
-
-    console.error(err);
-    msgBox.innerText = "❌ Error processing request";
-  }
-}
-
-</script>
-
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="withdrawal_system.js"></script>
+  <script src="user_withdraw.js"></script>
 </body>
 </html>
