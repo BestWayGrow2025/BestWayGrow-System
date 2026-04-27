@@ -2,90 +2,54 @@
 <html>
 <head>
   <title>Check Status</title>
+  <link rel="icon" href="data:,">
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border:1px solid #ccc; padding:15px; border-radius:8px; max-width:400px; }
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f5f7fb;
+    }
+
+    .box {
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 420px;
+      background: #fff;
+      margin: auto;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 15px;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
 
-<div class="box">
-  <h2>Check Registration Status</h2>
+  <div class="box">
+    <h2>Check Registration Status</h2>
 
-  <input type="text" id="mobile" placeholder="Enter Mobile"><br><br>
-  <button onclick="checkStatus()">Check Status</button>
+    <input type="text" id="mobile" placeholder="Enter Mobile Number">
+    <button id="checkBtn">Check Status</button>
 
-  <hr>
-  <p id="result"></p>
-</div>
+    <div id="result"></div>
+  </div>
 
-<!-- CORE -->
-<script src="CORE_system.js"></script>
-
-<script>
-
-// ================= INIT =================
-initCoreSystem();
-
-// ================= GET QUEUE =================
-function getQueue() {
-  return JSON.parse(localStorage.getItem("regQueue") || "[]");
-}
-
-// ================= CHECK STATUS =================
-function checkStatus() {
-
-  let mobile = document.getElementById("mobile").value.trim();
-
-  if (!mobile) {
-    alert("Enter mobile number");
-    return;
-  }
-
-  let users = getUsers();
-  let queue = getQueue();
-
-  // ================= ✅ REGISTERED =================
-  let user = users.find(u => u.mobile === mobile);
-
-  if (user) {
-    document.getElementById("result").innerHTML = `
-      ✅ <b>Registered</b><br><br>
-      User ID: ${user.userId}<br>
-      Name: ${user.username}<br>
-      Status: ${user.status}<br>
-      Active: ${isUserActive(user.userId) ? "YES" : "NO"}
-    `;
-    return;
-  }
-
-  // ================= ⏳ PENDING =================
-  let pendingList = queue
-    .filter(q => q.status === "PENDING")
-    .sort((a, b) => new Date(a.queueTime) - new Date(b.queueTime));
-
-  let index = pendingList.findIndex(q => q.mobile === mobile);
-
-  if (index !== -1) {
-
-    let position = index + 1;
-    let total = pendingList.length;
-
-    document.getElementById("result").innerHTML = `
-      ⏳ <b>Pending</b><br><br>
-      Queue Position: ${position} / ${total}<br>
-      Status: Waiting for processing...
-    `;
-    return;
-  }
-
-  // ================= ❌ NOT FOUND =================
-  document.getElementById("result").innerHTML = `
-    ❌ No record found
-  `;
-}
-
-</script>
-
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="check_status.js"></script>
 </body>
 </html>
