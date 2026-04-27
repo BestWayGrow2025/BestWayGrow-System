@@ -1,29 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Register</title>
   <link rel="icon" href="data:,">
 </head>
 <body>
 
-  <h2 id="introLabel">User Registration</h2>
+  <div class="page">
+    <h2 id="introLabel">User Registration</h2>
 
-  <div id="formArea">
-    <input id="username" type="text" placeholder="Name">
-    <input id="email" type="text" placeholder="Email">
-    <input id="mobile" type="text" placeholder="Mobile">
-    <input id="password" type="password" placeholder="Password">
+    <div id="formArea">
+      <input id="username" type="text" placeholder="Name">
+      <input id="email" type="text" placeholder="Email">
+      <input id="mobile" type="text" placeholder="Mobile">
+      <input id="password" type="password" placeholder="Password">
 
-    <label>Select Position:</label>
-    <div>
-      <label><input type="radio" name="position" value="L"> LEFT</label>
-      <label><input type="radio" name="position" value="R"> RIGHT</label>
+      <label>Select Position:</label>
+      <div>
+        <label><input type="radio" name="position" value="L"> LEFT</label>
+        <label><input type="radio" name="position" value="R"> RIGHT</label>
+      </div>
+
+      <button id="registerBtn">Register</button>
     </div>
 
-    <button id="registerBtn">Register</button>
+    <p id="msg"></p>
   </div>
-
-  <p id="msg"></p>
 
   <script src="core_system.js"></script>
   <script src="session_manager.js"></script>
