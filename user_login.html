@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>User Login FINAL LOCK</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Login</title>
   <link rel="icon" href="data:,">
 
   <style>
@@ -50,25 +52,25 @@
     }
   </style>
 </head>
-
 <body>
 
-<div class="card">
-  <h2>USER LOGIN</h2>
+  <div class="card">
+    <h2>USER LOGIN</h2>
 
-  <input type="text" id="userId" placeholder="Enter User ID">
-  <input type="password" id="password" placeholder="Enter Password">
-  <input type="checkbox" onchange="togglePassword()"> Show Password
+    <input type="text" id="userId" placeholder="Enter User ID">
+    <input type="password" id="password" placeholder="Enter Password">
 
-  <button id="loginBtn" onclick="safeLogin()">Login</button>
+    <label>
+      <input type="checkbox" id="showPassword"> Show Password
+    </label>
 
-  <div id="msg"></div>
-</div>
+    <button id="loginBtn">Login</button>
 
-<script src="core_system.js"></script>
-<script src="session_manager.js"></script>
-<script src="activity_log.js"></script>
-<script src="user_login.js"></script>
+    <div id="msg"></div>
+  </div>
 
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="user_login.js"></script>
 </body>
 </html>
