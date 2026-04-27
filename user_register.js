@@ -1,7 +1,7 @@
 let session = null;
 let currentUser = null;
 let lock = false;
-let introducerId = "BWG000001";
+let introducerId = "BWG000000";
 
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
@@ -14,24 +14,26 @@ function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
+    throw new Error("core_system.js missing");
   }
 }
 
 function authPage() {
   const params = new URLSearchParams(window.location.search);
-  introducerId = params.get("ref") || "BWG000001";
+  introducerId = params.get("ref") || "BWG000000";
 }
 
 function bindEvents() {
-  document.getElementById("registerBtn").addEventListener("click", registerUser);
+  const registerBtn = document.getElementById("registerBtn");
+
+  if (registerBtn) {
+    registerBtn.addEventListener("click", registerUser);
+  }
 }
 
 function loadPage() {
-  const introUser = typeof getUserById === "function"
-    ? getUserById(introducerId)
-    : null;
+  const introUser =
+    typeof getUserById === "function" ? getUserById(introducerId) : null;
 
   if (!introUser) {
     document.getElementById("introLabel").innerText = "Invalid Referral Link";
@@ -54,26 +56,29 @@ function registerUser() {
   if (lock) return;
   lock = true;
 
+  const msg = document.getElementById("msg");
   const username = document.getElementById("username").value.trim();
   const email = document.getElementById("email").value.trim();
   const mobile = document.getElementById("mobile").value.trim();
   const password = document.getElementById("password").value.trim();
   const position = document.querySelector('input[name="position"]:checked');
 
+  msg.innerHTML = "";
+
   if (!username || !email || !mobile || !password) {
-    alert("Fill all fields");
+    msg.innerHTML = "⚠️ Fill all fields";
     lock = false;
     return;
   }
 
   if (!position) {
-    alert("Select position");
+    msg.innerHTML = "⚠️ Select position";
     lock = false;
     return;
   }
 
   if (!/^[6-9]\d{9}$/.test(mobile)) {
-    alert("Invalid mobile");
+    msg.innerHTML = "⚠️ Invalid mobile";
     lock = false;
     return;
   }
@@ -81,19 +86,19 @@ function registerUser() {
   const users = typeof getUsers === "function" ? getUsers() : [];
 
   if (users.find(user => user.mobile === mobile)) {
-    alert("Mobile already exists");
+    msg.innerHTML = "⚠️ Mobile already exists";
     lock = false;
     return;
   }
 
   if (users.find(user => user.email === email)) {
-    alert("Email already exists");
+    msg.innerHTML = "⚠️ Email already exists";
     lock = false;
     return;
   }
 
   if (typeof addToRegistrationQueue !== "function") {
-    alert("Registration queue missing");
+    msg.innerHTML = "⚠️ Registration queue unavailable";
     lock = false;
     return;
   }
@@ -108,28 +113,24 @@ function registerUser() {
   });
 
   if (!added) {
-    alert("Registration failed or duplicate request");
+    msg.innerHTML = "⚠️ Registration failed or duplicate request";
     lock = false;
     return;
   }
 
-  setTimeout(function () {
-    const latestUser = typeof getUsers === "function" ? getUsers().slice(-1)[0] : null;
+  msg.innerHTML = `
+    <div>
+      ✅ Registration Request Submitted<br><br>
+      Your request is in processing queue.<br><br>
+      Please check status after approval.<br><br>
+      <a href="check_status.html">
+        <button>Check Status</button>
+      </a>
+    </div>
+  `;
 
-    document.getElementById("msg").innerHTML = `
-      <div>
-        ✅ Registration Complete<br><br>
-        User ID: <b>${latestUser ? latestUser.userId : "Not Found"}</b><br><br>
-        User created successfully<br><br>
-        <a href="user_login.html">
-          <button>Go to Login</button>
-        </a>
-      </div>
-    `;
-
-    resetForm();
-    lock = false;
-  }, 500);
+  resetForm();
+  lock = false;
 }
 
 function resetForm() {
@@ -142,5 +143,3 @@ function resetForm() {
     radio.checked = false;
   });
 }
-
-
