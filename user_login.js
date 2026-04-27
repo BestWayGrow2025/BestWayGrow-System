@@ -1,25 +1,73 @@
-// ================= LOGIN PAGE =================
-function loadLoginPage() {
-  return `
-    <div class="card">
-      <h2>USER LOGIN</h2>
+let session = null;
+let currentUser = null;
+let lock = false;
 
-      <input type="text" id="userId" placeholder="Enter User ID">
-      <input type="password" id="password" placeholder="Enter Password">
-      <input type="checkbox" onchange="togglePassword()"> Show Password
+document.addEventListener("DOMContentLoaded", function () {
+  initPage();
+  authPage();
+  bindEvents();
+  loadPage();
+});
 
-      <button id="loginBtn" onclick="submitLogin()">Login</button>
-
-      <div id="msg"></div>
-    </div>
-  `;
+function initPage() {
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  } else {
+    throw new Error("core_system.js missing");
+  }
 }
 
-// ================= LOGIN FUNCTION =================
-function submitLogin() {
+function authPage() {
+  session = typeof getSession === "function" ? getSession() : null;
 
-  let userId = document.getElementById("userId").value.trim().toUpperCase();
-  let password = document.getElementById("password").value.trim();
+  if (session && session.role === "user") {
+    window.location.href = "user_dashboard.html";
+    return;
+  }
+
+  currentUser = null;
+}
+
+function bindEvents() {
+  const loginBtn = document.getElementById("loginBtn");
+  const showPassword = document.getElementById("showPassword");
+
+  if (loginBtn) {
+    loginBtn.addEventListener("click", safeLogin);
+  }
+
+  if (showPassword) {
+    showPassword.addEventListener("change", togglePassword);
+  }
+}
+
+function loadPage() {
+  showMsg("");
+}
+
+function safeLogin() {
+  if (lock) return;
+  lock = true;
+
+  const btn = document.getElementById("loginBtn");
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "Checking...";
+  }
+
+  try {
+    submitLogin();
+  } catch (err) {
+    console.error(err);
+    showMsg("❌ Login Error");
+    resetLogin();
+  }
+}
+
+function submitLogin() {
+  const userId = document.getElementById("userId").value.trim().toUpperCase();
+  const password = document.getElementById("password").value.trim();
 
   if (!userId || !password) {
     showMsg("Enter User ID & Password");
@@ -27,11 +75,9 @@ function submitLogin() {
     return;
   }
 
-  let users = (typeof getUsers === "function") ? getUsers() : [];
+  const users = typeof getUsers === "function" ? getUsers() : [];
 
-  let user = users.find(u =>
-    (u.userId || "").toUpperCase() === userId
-  );
+  const user = users.find(u => (u.userId || "").toUpperCase() === userId);
 
   if (!user) {
     showMsg("Invalid User ID");
@@ -51,7 +97,7 @@ function submitLogin() {
     return;
   }
 
-  let stored = safeDecode(user.password || "");
+  const stored = safeDecode(user.password || "");
 
   if (stored !== password) {
     showMsg("Wrong Password");
@@ -72,91 +118,45 @@ function submitLogin() {
 
   showMsg("Login Success", "green");
 
-  document.getElementById("loginBtn").innerText = "Redirecting...";
+  const btn = document.getElementById("loginBtn");
+  if (btn) {
+    btn.innerText = "Redirecting...";
+  }
 
-  setTimeout(() => {
+  setTimeout(function () {
     window.location.href = "user_dashboard.html";
   }, 500);
 }
 
-// ================= LOGIN LOCK =================
-let loginLock = false;
-
-// ================= SAFE LOGIN =================
-function safeLogin() {
-
-  if (loginLock) return;
-
-  loginLock = true;
-
-  let btn = document.getElementById("loginBtn");
-  if (btn) {
-    btn.disabled = true;
-    btn.innerText = "Checking...";
-  }
-
-  try {
-    submitLogin();
-  } catch (err) {
-    console.error(err);
-    showMsg("❌ Login Error");
-    resetLogin();
-  }
-}
-
-// ================= RESET LOGIN =================
 function resetLogin() {
-  loginLock = false;
+  lock = false;
 
-  let btn = document.getElementById("loginBtn");
+  const btn = document.getElementById("loginBtn");
   if (btn) {
     btn.disabled = false;
     btn.innerText = "Login";
   }
 }
 
-// ================= PASSWORD TOGGLE =================
 function togglePassword() {
-  let pass = document.getElementById("password");
+  const pass = document.getElementById("password");
   if (!pass) return;
 
   pass.type = pass.type === "password" ? "text" : "password";
 }
 
-// ================= MESSAGE =================
 function showMsg(text, color = "red") {
-  let msg = document.getElementById("msg");
+  const msg = document.getElementById("msg");
   if (!msg) return;
 
   msg.style.color = color;
   msg.innerText = text;
 }
 
-// ================= SAFE DECODE =================
-function safeDecode(p) {
+function safeDecode(value) {
   try {
-    return atob(p);
+    return atob(value);
   } catch {
-    return p || "";
+    return value || "";
   }
 }
-
-// ================= INIT =================
-window.addEventListener("load", function () {
-
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("core_system.js missing");
-    return;
-  }
-
-  let existing = (typeof getSession === "function")
-    ? getSession()
-    : null;
-
-  if (existing && existing.role === "user") {
-    window.location.href = "user_dashboard.html";
-  }
-});
-
