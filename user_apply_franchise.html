@@ -2,95 +2,70 @@
 <html>
 <head>
   <title>Apply Franchise</title>
-
   <link rel="icon" href="data:,">
-
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .box { border: 1px solid #ccc; padding: 15px; max-width: 400px; }
-    input { width: 100%; padding: 8px; margin: 8px 0; }
-    button { padding: 8px 15px; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f7f9;
+      text-align: center;
+    }
+
+    .box {
+      background: #fff;
+      max-width: 420px;
+      margin: auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-<h2>Apply for Franchise</h2>
+  <h2>Apply for Franchise</h2>
 
-<div class="box">
+  <div class="box">
+    <label>Name</label>
+    <input type="text" id="name">
 
-  <label>Name</label>
-  <input type="text" id="name">
+    <label>City</label>
+    <input type="text" id="city">
 
-  <label>City</label>
-  <input type="text" id="city">
+    <label>Amount</label>
+    <input type="number" id="amount">
 
-  <label>Amount</label>
-  <input type="number" id="amount">
+    <button id="applyBtn">Submit Request</button>
+  </div>
 
-  <button onclick="apply()">Submit Request</button>
-
-</div>
-
-<!-- ✅ CORE -->
-<script src="CORE_system.js"></script>
-
-<script>
-
-// ================= INIT =================
-initCoreSystem();
-
-// ================= USER SECURITY =================
-let user = protectPage({ role: "user" });
-if (!user) return;
-
-// ================= AUTO FILL =================
-document.getElementById("name").value = user.username || "";
-
-// ================= APPLY FUNCTION =================
-function apply() {
-
-  let name = document.getElementById("name").value.trim();
-  let city = document.getElementById("city").value.trim();
-  let amount = Number(document.getElementById("amount").value);
-
-  if (!name || !city || !amount) {
-    alert("Fill all fields");
-    return;
-  }
-
-  let data = JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
-
-  // ❗ PREVENT DUPLICATE REQUEST
-  let already = data.find(d => d.userId === user.userId && d.status === "PENDING");
-
-  if (already) {
-    alert("Already applied (Pending)");
-    return;
-  }
-
-  // ✅ CREATE REQUEST
-  let request = {
-    requestId: "FR-" + Date.now(),
-    userId: user.userId,
-    name: name,
-    city: city,
-    amount: amount,
-    status: "PENDING",
-    time: new Date().toLocaleString()
-  };
-
-  data.push(request);
-
-  localStorage.setItem("franchiseRequests", JSON.stringify(data));
-
-  alert("✅ Request Submitted");
-
-  // OPTIONAL RESET
-  document.getElementById("city").value = "";
-  document.getElementById("amount").value = "";
-}
-
-</script>
-
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="user_apply_franchise.js"></script>
 </body>
 </html>
