@@ -20,7 +20,6 @@ function safeGet(key, fallback) {
     let raw = localStorage.getItem(key);
 
     if (!raw) {
-      localStorage.setItem(key, JSON.stringify(fallback));
       return fallback;
     }
 
@@ -29,7 +28,6 @@ function safeGet(key, fallback) {
 
   } catch (e) {
     console.error("safeGet error:", e.message);
-    localStorage.setItem(key, JSON.stringify(fallback));
     return fallback;
   }
 }
@@ -49,13 +47,17 @@ function getUsers() {
 }
 
 function saveUsers(users) {
-  if (!Array.isArray(users)) users = [];
+  if (!Array.isArray(users)) {
+    console.error("saveUsers rejected: invalid users payload");
+    return false;
+  }
+
   safeSet("users", users);
+  return true;
 }
 
 // ================= SYSTEM SETTINGS =================
 function getSystemSettings() {
-
   let defaults = {
     lockMode: false,
     registrationOpen: true,
@@ -75,8 +77,6 @@ function getSystemSettings() {
 // ================= SYSTEM SAFE =================
 function isSystemSafe() {
   let s = getSystemSettings() || {};
-
-  // allow super admin to access system panel even if locked
   let session = null;
 
   try {
@@ -104,23 +104,25 @@ function getUserById(id) {
 }
 
 function getDirectUsers(userId) {
+  if (!userId) return [];
   return getUsers().filter(u => u.introducerId === userId);
 }
 
 function getChildren(userId) {
+  if (!userId) return [];
   return getUsers().filter(u => u.sponsorId === userId);
 }
 
 // ================= INIT =================
 function initCoreSystem() {
-
   try {
-
     let users = getUsers();
     let updated = false;
 
-    // ================= FIX OLD USERS DATA =================
     users.forEach(u => {
+      if (!u.status) u.status = "active";
+      if (!u.accountStatus) u.accountStatus = "active";
+      if (!u.blockStatus) u.blockStatus = "unblocked";
 
       if (u.userId === "BWG000000") {
         u.username = "User Root Admin";
@@ -130,14 +132,19 @@ function initCoreSystem() {
         u.officeType = "user_root_admin";
         u.accessType = "full_user_tree_control";
         u.status = "active";
+        u.accountStatus = "active";
+        u.blockStatus = "unblocked";
         u.visibleInTree = true;
         u.allowReferral = true;
         updated = true;
       }
 
       if (u.userId === "BWG000001") {
-        u.username = "Default System Admin";
+        u.username = "System Admin";
         u.role = "system_admin";
+        u.status = "active";
+        u.accountStatus = "active";
+        u.blockStatus = "unblocked";
         u.visibleInTree = false;
         u.hiddenAccount = true;
         updated = true;
@@ -151,13 +158,10 @@ function initCoreSystem() {
         u.hiddenAccount = true;
         updated = true;
       }
-
     });
 
-    // ensure settings
     getSystemSettings();
 
-    // ================= HIDDEN SUPER ADMIN =================
     if (!users.find(u => u.userId === "SUPERADMIN")) {
       users.push({
         userId: "SUPERADMIN",
@@ -165,19 +169,17 @@ function initCoreSystem() {
         password: btoa("123"),
         role: "super_admin",
         status: "active",
-
+        accountStatus: "active",
+        blockStatus: "unblocked",
         visibleInTree: false,
         allowReferral: false,
-
         officeType: "super_admin",
         accessType: "full",
-
         createdAt: Date.now()
       });
       updated = true;
     }
 
-    // ================= SYSTEM ADMIN =================
     if (!users.find(u => u.userId === "BWG000001")) {
       users.push({
         userId: "BWG000001",
@@ -185,77 +187,70 @@ function initCoreSystem() {
         password: btoa("123456"),
         role: "system_admin",
         status: "active",
-
+        accountStatus: "active",
+        blockStatus: "unblocked",
         visibleInTree: false,
         allowReferral: false,
-
         officeType: "system_admin",
         accessType: "full",
-
         createdBy: "SUPERADMIN",
         createdAt: Date.now()
       });
       updated = true;
     }
 
-   // ================= USER ROOT ADMIN =================
-if (!users.find(u => u.userId === "BWG000000")) {
-  users.push({
-    userId: "BWG000000",
-    username: "User Root Admin",
-    password: btoa("123456"),
-    role: "admin",
-    status: "active",
+    if (!users.find(u => u.userId === "BWG000000")) {
+      users.push({
+        userId: "BWG000000",
+        username: "User Root Admin",
+        password: btoa("123456"),
+        role: "admin",
+        status: "active",
+        accountStatus: "active",
+        blockStatus: "unblocked",
+        adminType: "user_root_admin",
+        tree: "field",
+        officeType: "user_root_admin",
+        accessType: "full_user_tree_control",
+        visibleInTree: true,
+        allowReferral: true,
+        leftChild: "",
+        rightChild: "",
+        parentId: "",
+        sponsorId: "",
+        introducerId: "",
+        position: "",
+        createdBy: "BWG000001",
+        createdAt: Date.now()
+      });
+      updated = true;
+    }
 
-    adminType: "user_root_admin",
-    tree: "field",
+    let filteredUsers = users.filter(u =>
+      u.userId !== "BWG000002" &&
+      u.userId !== "BWG000003"
+    );
 
-    officeType: "user_root_admin",
-    accessType: "full_user_tree_control",
+    if (filteredUsers.length !== users.length) {
+      users = filteredUsers;
+      updated = true;
+    }
 
-    visibleInTree: true,
-    allowReferral: true,
-
-    leftChild: "",
-    rightChild: "",
-
-    parentId: "",
-    sponsorId: "",
-    introducerId: "",
-
-    position: "",
-
-    createdBy: "BWG000001",
-    createdAt: Date.now()
-  });
-  updated = true;
-}
-
-    // ================= REMOVE OLD SYSTEM ADMIN / ADMIN =================
-users = users.filter(u =>
-  u.userId !== "BWG000002" &&
-  u.userId !== "BWG000003"
-);
-
-updated = true;
-
-    // ================= SYSTEM USER =================
     if (!users.find(u => u.userId === "SYSTEM")) {
       users.push({
         userId: "SYSTEM",
         username: "System Pool",
         role: "system",
         status: "active",
-
+        accountStatus: "active",
+        blockStatus: "unblocked",
         visibleInTree: false,
         allowReferral: false,
-
         wallet: {
           balance: 0,
           totalCredit: 0,
           totalDebit: 0
         },
-
         totalIncome: 0,
         createdAt: Date.now()
       });
@@ -275,7 +270,5 @@ updated = true;
 
 // ================= SAVE SETTINGS =================
 function saveSystemSettings(settings) {
-  localStorage.setItem("systemSettings", JSON.stringify(settings));
+  safeSet("systemSettings", settings);
 }
-
-
