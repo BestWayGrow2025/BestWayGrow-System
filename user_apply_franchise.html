@@ -45,6 +45,12 @@
       color: #fff;
       cursor: pointer;
     }
+
+    #msg {
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -52,20 +58,29 @@
   <h2>Apply for Franchise</h2>
 
   <div class="box">
+    <p>User ID: <span id="userId"></span></p>
+
     <label>Name</label>
-    <input type="text" id="name">
+    <input type="text" id="name" placeholder="Enter full name">
 
     <label>City</label>
-    <input type="text" id="city">
+    <input type="text" id="city" placeholder="Enter city">
 
     <label>Amount</label>
-    <input type="number" id="amount">
+    <input type="number" id="amount" placeholder="Enter amount" min="1">
 
     <button id="applyBtn">Submit Request</button>
+
+    <p id="msg"></p>
   </div>
 
+  <!-- CORE -->
   <script src="core_system.js"></script>
+
+  <!-- SESSION -->
   <script src="session_manager.js"></script>
+
+  <!-- PAGE -->
   <script src="user_apply_franchise.js"></script>
 </body>
 </html>
