@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Create Admin</title>
+  <title>System Admin Create Admin</title>
   <link rel="icon" href="data:,">
-
   <style>
     body {
       font-family: Arial;
@@ -16,15 +15,16 @@
     }
 
     .box {
-      background: white;
+      background: #fff;
       border: 1px solid #ccc;
       padding: 20px;
-      max-width: 420px;
+      max-width: 460px;
       margin: auto;
       border-radius: 10px;
     }
 
-    input, select {
+    input,
+    select {
       width: 100%;
       padding: 10px;
       margin-top: 5px;
@@ -35,11 +35,16 @@
     button {
       width: 100%;
       padding: 10px;
-      cursor: pointer;
       border: none;
       border-radius: 6px;
+      cursor: pointer;
       background: #ff6600;
-      color: white;
+      color: #fff;
+    }
+
+    #deptBox {
+      display: none;
+      margin-bottom: 15px;
     }
 
     #msg {
@@ -54,35 +59,38 @@
 <h2>SYSTEM ADMIN → CREATE ADMIN</h2>
 
 <div class="box">
-  <label>Admin ID:</label>
+  <label>Admin ID</label>
   <input id="adminId">
 
-  <label>Name:</label>
+  <label>Name</label>
   <input id="name">
 
-  <label>Password:</label>
+  <label>Password</label>
   <input id="password" type="password">
 
-  <label>Type:</label>
-  <select id="type">
-    <option value="A">All-in-One (Type A)</option>
-    <option value="B">Department (Type B)</option>
+  <label>Admin Type</label>
+  <select id="adminType">
+    <option value="root_admin">Root Admin (User Tree)</option>
+    <option value="admin_a">Admin A (Full Access)</option>
+    <option value="admin_b">Admin B (Department Access)</option>
   </select>
 
-  <div id="deptBox" style="display:none;">
+  <div id="deptBox">
     <label><input type="checkbox" value="finance"> Finance</label><br>
     <label><input type="checkbox" value="franchisee"> Franchisee</label><br>
-    <label><input type="checkbox" value="kyc"> KYC</label><br><br>
+    <label><input type="checkbox" value="kyc"> KYC</label><br>
   </div>
 
   <button id="createBtn">Create Admin</button>
-
   <p id="msg"></p>
 </div>
 
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
 <script src="system_admin_create_admin.js"></script>
-
 </body>
 </html>
+
+
+
+
