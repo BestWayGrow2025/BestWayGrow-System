@@ -1,196 +1,250 @@
-let session = null;
-let currentUser = null;
-let lock = false;
+let reportAdmin = null;
+let reportLock = false;
 
-document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  authPage();
-  bindEvents();
-  loadPage();
+// ================= INIT =================
+window.addEventListener("load", function () {
+  initAdminReportsPage();
 });
 
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
+function initAdminReportsPage() {
+  if (typeof initCoreSystem !== "function") {
+    alert("❌ core_system.js missing");
+    return;
+  }
+
+  initCoreSystem();
+
+  let session = null;
+
+  if (typeof getSession === "function") {
+    session = getSession();
   } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
+    try {
+      session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
+    } catch {
+      session = null;
+    }
+  }
+
+  if (!session || !session.userId || session.role !== "admin") {
+    clearAdminReportsSession();
+    window.location.href = "admin_login.html";
+    return;
+  }
+
+  if (typeof getUserById !== "function") {
+    alert("❌ User system missing");
+    clearAdminReportsSession();
+    window.location.href = "admin_login.html";
+    return;
+  }
+
+  reportAdmin = getUserById(session.userId);
+
+  if (!reportAdmin || reportAdmin.role !== "admin") {
+    clearAdminReportsSession();
+    window.location.href = "admin_login.html";
+    return;
+  }
+
+  if ((reportAdmin.accountStatus || reportAdmin.status || "active") !== "active") {
+    clearAdminReportsSession();
+    window.location.href = "admin_login.html";
+    return;
+  }
+
+  bindAdminReportsEvents();
+  loadAdminReportsPage();
+
+  if (typeof logActivity === "function") {
+    logActivity(reportAdmin.userId, "ADMIN", "Viewed Reports");
   }
 }
 
-function authPage() {
-  session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
+// ================= EVENTS =================
+function bindAdminReportsEvents() {
+  let backBtn = document.getElementById("backBtn");
+  let ctorBtn = document.getElementById("ctorBtn");
 
-  if (!session || !session.userId) {
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
-  }
-
-  if (typeof protectPage === "function") {
-    currentUser = protectPage({
-      role: "admin",
-      department: "report"
+  if (backBtn) {
+    backBtn.addEventListener("click", function () {
+      window.location.href = "admin_dashboard.html";
     });
   }
 
-  if (!currentUser) {
-    localStorage.removeItem("loggedInAdmin");
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
+  if (ctorBtn) {
+    ctorBtn.addEventListener("click", runAdminReportsCTOR);
   }
 }
 
-function bindEvents() {
-  document.getElementById("backBtn").addEventListener("click", goBack);
-  document.getElementById("ctorBtn").addEventListener("click", runCTOR);
+// ================= PAGE LOAD =================
+function loadAdminReportsPage() {
+  safeAdminReportsRender(loadAdminReportsUsers);
+  safeAdminReportsRender(loadAdminReportsPins);
+  safeAdminReportsRender(loadAdminReportsIncome);
+  safeAdminReportsRender(loadAdminReportsHold);
+  safeAdminReportsRender(loadAdminReportsCTOR);
+  safeAdminReportsRender(loadAdminReportsTransactions);
+  safeAdminReportsRender(loadAdminReportsPinLogs);
+  safeAdminReportsRender(loadAdminReportsWithdrawals);
 }
 
-function loadPage() {
-  loadUsers();
-  loadPins();
-  loadIncome();
-  loadHold();
-  loadCTOR();
-  loadTransactions();
-  loadPinLogs();
-  loadWithdrawals();
+function safeAdminReportsRender(fn) {
+  try {
+    fn();
+  } catch (e) {
+    console.error(e);
+  }
 }
 
-function goBack() {
-  window.location.href = "admin_dashboard.html";
+// ================= USERS =================
+function loadAdminReportsUsers() {
+  let users = typeof getUsers === "function" ? getUsers() : [];
+  let totalUsers = users.filter(u => u.role === "user").length;
+
+  document.getElementById("users").innerText =
+    "Total Users: " + totalUsers;
 }
 
-function loadUsers() {
-  let users = getUsers() || [];
-  document.getElementById("users").innerText = "Total Users: " + users.length;
-}
-
-function loadPins() {
-  let pins = JSON.parse(localStorage.getItem("pins") || "[]");
-  let totalStock = 0;
-  let totalUsed = 0;
-
-  pins.forEach(function (p) {
-    totalStock += Number(p.stock || 0);
-    totalUsed += Number(p.used || 0);
-  });
+// ================= PINS =================
+function loadAdminReportsPins() {
+  let pins = typeof loadPins === "function" ? loadPins() : [];
+  let totalStock = pins.length;
+  let totalUsed = pins.filter(p => (p.status || "").toUpperCase() === "USED").length;
 
   document.getElementById("pins").innerHTML =
     "Total Stock: " + totalStock + "<br>Total Used: " + totalUsed;
 }
 
-function loadIncome() {
-  let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-  let total = 0;
-
-  txns.forEach(function (t) {
-    total += Number(t.amount || 0);
-  });
+// ================= INCOME =================
+function loadAdminReportsIncome() {
+  let logs = typeof getIncomeLogs === "function" ? getIncomeLogs() : [];
+  let total = logs.reduce((sum, log) => sum + Number(log.amount || 0), 0);
 
   document.getElementById("income").innerText =
-    "Total Distributed: ₹ " + total;
+    "Total Distributed: ₹ " + total.toFixed(2);
 }
 
-function loadHold() {
-  let holds = JSON.parse(localStorage.getItem("holdIncome") || "[]");
+// ================= HOLD =================
+function loadAdminReportsHold() {
   let total = 0;
 
-  holds.forEach(function (h) {
-    if (h.status === "HOLD") {
-      total += Number(h.amount || 0);
-    }
+  let users = typeof getUsers === "function" ? getUsers() : [];
+  users.forEach(u => {
+    total += Number(u.holdIncome || 0);
   });
 
   document.getElementById("hold").innerText =
-    "Hold Amount: ₹ " + total;
+    "Hold Amount: ₹ " + total.toFixed(2);
 }
 
-function loadCTOR() {
-  let pool = JSON.parse(localStorage.getItem("ctorPool") || "0");
-  document.getElementById("ctor").innerText = "CTOR Pool: ₹ " + pool;
+// ================= CTOR =================
+function loadAdminReportsCTOR() {
+  let pool = 0;
+
+  if (typeof getCTORPool === "function") {
+    pool = Number(getCTORPool() || 0);
+  } else {
+    pool = 0;
+  }
+
+  document.getElementById("ctor").innerText =
+    "CTOR Pool: ₹ " + pool.toFixed(2);
 }
 
-function runCTOR() {
-  if (lock) return;
-  lock = true;
+function runAdminReportsCTOR() {
+  if (reportLock) return;
+  reportLock = true;
 
-  if (typeof runCTORDistribution === "function") {
+  try {
+    if (typeof runCTORDistribution !== "function") {
+      alert("CTOR engine not loaded");
+      return;
+    }
+
     runCTORDistribution();
     alert("✅ CTOR Distributed");
-    loadCTOR();
-    loadTransactions();
-  } else {
-    alert("CTOR engine not loaded");
-  }
 
-  lock = false;
+    loadAdminReportsCTOR();
+    loadAdminReportsTransactions();
+
+  } catch (e) {
+    console.error(e);
+    alert("CTOR Distribution Failed");
+  } finally {
+    reportLock = false;
+  }
 }
 
-function loadTransactions() {
-  let txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-
-  if (!txns.length) {
-    document.getElementById("transactions").innerHTML = "No transactions";
-    return;
-  }
-
-  let html = "<ul>";
-
-  txns.slice().reverse().forEach(function (t) {
-    html += `
-      <li>
-        ${t.userId} → ₹${t.amount} (${t.reason || "-"}) <br>
-        <small>${t.time || "-"}</small>
-      </li><br>
-    `;
-  });
-
-  html += "</ul>";
-  document.getElementById("transactions").innerHTML = html;
-}
-
-function loadPinLogs() {
-  let logs = JSON.parse(localStorage.getItem("pinTransactions") || "[]");
+// ================= TRANSACTIONS =================
+function loadAdminReportsTransactions() {
+  let logs = typeof getIncomeLogs === "function" ? getIncomeLogs() : [];
+  let box = document.getElementById("transactions");
 
   if (!logs.length) {
-    document.getElementById("pinLogs").innerHTML = "No logs";
+    box.innerHTML = "No transactions";
     return;
   }
 
-  let html = "<ul>";
-
-  logs.slice().reverse().forEach(function (l) {
-    html += `
-      <li>
-        ${l.userId} used ${l.pinId} (${l.type}) <br>
-        BV: ${l.bv} | ₹${l.amount} <br>
-        <small>${l.time || "-"}</small>
-      </li><br>
-    `;
-  });
-
-  html += "</ul>";
-  document.getElementById("pinLogs").innerHTML = html;
+  box.innerHTML = `
+    <ul>
+      ${logs.slice(-50).reverse().map(t => `
+        <li>
+          ${t.userId || "-"} → ₹${Number(t.amount || 0).toFixed(2)} (${t.type || "-"})<br>
+          <small>${t.time || "-"}</small>
+        </li>
+      `).join("")}
+    </ul>
+  `;
 }
 
-function loadWithdrawals() {
-  let data = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+// ================= PIN LOGS =================
+function loadAdminReportsPinLogs() {
+  let logs = typeof getPinTransactions === "function" ? getPinTransactions() : [];
+  let box = document.getElementById("pinLogs");
 
-  if (!data.length) {
-    document.getElementById("withdrawals").innerHTML = "No requests";
+  if (!logs.length) {
+    box.innerHTML = "No logs";
     return;
   }
 
-  let html = "<ul>";
+  box.innerHTML = `
+    <ul>
+      ${logs.slice(-50).reverse().map(l => `
+        <li>
+          ${l.userId || "-"} used ${l.pinId || "-"} (${l.type || "-"})<br>
+          BV: ${l.bv || 0} | ₹${Number(l.amount || 0).toFixed(2)}<br>
+          <small>${l.time || "-"}</small>
+        </li>
+      `).join("")}
+    </ul>
+  `;
+}
 
-  data.slice().reverse().forEach(function (w) {
-    html += `
-      <li>
-        ${w.requestId} | ${w.userId} | ₹${w.amount} | ${w.status}
-      </li><br>
-    `;
-  });
+// ================= WITHDRAWALS =================
+function loadAdminReportsWithdrawals() {
+  let data = typeof getWithdrawals === "function" ? getWithdrawals() : [];
+  let box = document.getElementById("withdrawals");
 
-  html += "</ul>";
-  document.getElementById("withdrawals").innerHTML = html;
+  if (!data.length) {
+    box.innerHTML = "No requests";
+    return;
+  }
+
+  box.innerHTML = `
+    <ul>
+      ${data.slice(-50).reverse().map(w => `
+        <li>
+          ${w.requestId || "-"} | ${w.userId || "-"} | ₹${Number(w.amount || 0).toFixed(2)} | ${w.status || "-"}
+        </li>
+      `).join("")}
+    </ul>
+  `;
+}
+
+// ================= SESSION =================
+function clearAdminReportsSession() {
+  localStorage.removeItem("loggedInAdmin");
+  localStorage.removeItem("loggedInSystemAdmin");
+  localStorage.removeItem("loggedInSuperAdmin");
 }
