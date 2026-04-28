@@ -1,11 +1,13 @@
 // ========================================
-// USER DASHBOARD FINAL LOCK (CORRECTED)
+// USER DASHBOARD FINAL LOCK (HARDENED)
 // ========================================
 // ✔ Single logout path
 // ✔ Safe user access
 // ✔ No silent save wipe
+// ✔ Safe password decode
 // ✔ Unified session usage
 // ✔ DOM guards added
+// ✔ Activity logging restored
 // ✔ Production safe
 // ========================================
 
@@ -21,13 +23,46 @@ function getSafeUser() {
   return user;
 }
 
+// ================= SAFE HELPERS =================
+function getMainContent() {
+  return document.getElementById("mainContent");
+}
+
+function getUserIndex(userId) {
+  let users = typeof getUsers === "function" ? getUsers() : [];
+  let index = users.findIndex(u => u.userId === userId);
+  return { users, index };
+}
+
+function safeDecodePassword(value) {
+  try {
+    return atob(value || "");
+  } catch {
+    return "";
+  }
+}
+
+function saveUserMutation(users) {
+  if (!Array.isArray(users) || typeof saveUsers !== "function") return false;
+  return saveUsers(users);
+}
+
+function logUserAction(userId, action) {
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(userId, "USER", action, "USER_DASHBOARD");
+    }
+  } catch (err) {
+    console.error("Activity log error:", err);
+  }
+}
+
 // ================= LOGOUT =================
 function logout() {
   try {
-    let user = getSafeUser();
-
-    if (user && typeof logActivity === "function") {
-      logActivity(user.userId, "USER", "Logout", "USER_DASHBOARD");
+    let session = typeof getSession === "function" ? getSession() : null;
+    if (session?.userId) {
+      logUserAction(session.userId, "Logout");
     }
   } catch (err) {
     console.error("Logout log error:", err);
@@ -41,7 +76,7 @@ function loadHome() {
   let user = getSafeUser();
   if (!user) return;
 
-  let main = document.getElementById("mainContent");
+  let main = getMainContent();
   if (!main) return;
 
   let refLink = typeof generateRefLink === "function"
@@ -100,7 +135,7 @@ function loadDirectTeam() {
   let user = getSafeUser();
   if (!user) return;
 
-  let main = document.getElementById("mainContent");
+  let main = getMainContent();
   if (!main) return;
 
   let directUsers = [];
@@ -146,17 +181,13 @@ function loadDirectTeam() {
 // ================= UPGRADE CHECK =================
 function canUpgrade(user) {
   if (!user) return false;
-
-  return user.status === "active" &&
-         user.upgradeStatus !== "completed";
+  return user.status === "active" && user.upgradeStatus !== "completed";
 }
 
 // ================= REPURCHASE CHECK =================
 function canRepurchase(user) {
   if (!user) return false;
-
-  return user.status === "active" &&
-         user.upgradeStatus === "completed";
+  return user.status === "active" && user.upgradeStatus === "completed";
 }
 
 // ================= NAVIGATION =================
@@ -193,12 +224,11 @@ function submitWithdrawRequest() {
   if (!input) return;
 
   let amount = Number(input.value);
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  let index = users.findIndex(u => u.userId === user.userId);
+  let { users, index } = getUserIndex(user.userId);
 
   if (index === -1) return;
 
-  if (!amount || amount <= 0 || amount > Number(user.walletBalance || 0)) {
+  if (!amount || amount <= 0 || amount > Number(users[index].walletBalance || 0)) {
     alert("Enter Valid Amount");
     return;
   }
@@ -229,7 +259,8 @@ function submitWithdrawRequest() {
     date: new Date().toLocaleString()
   });
 
-  saveUsers(users);
+  saveUserMutation(users);
+  logUserAction(user.userId, "Withdraw Request ₹" + amount);
 
   alert("Withdraw Request Submitted");
 }
@@ -247,9 +278,7 @@ function submitSupportTicket() {
     return;
   }
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  let index = users.findIndex(u => u.userId === user.userId);
-
+  let { users, index } = getUserIndex(user.userId);
   if (index === -1) return;
 
   if (!users[index].supportTickets) users[index].supportTickets = [];
@@ -264,10 +293,14 @@ function submitSupportTicket() {
   users[index].supportTicketCount = users[index].supportTickets.length;
   users[index].lastSupportDate = new Date().toLocaleString();
 
-  saveUsers(users);
+  saveUserMutation(users);
+  logUserAction(user.userId, "Support Ticket Submitted");
 
   alert("Support Ticket Submitted");
-  loadSupportTickets();
+
+  if (typeof loadSupportTickets === "function") {
+    loadSupportTickets();
+  }
 }
 
 // ================= PROFILE SAVE =================
@@ -294,16 +327,16 @@ function saveProfile() {
     return;
   }
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  let index = users.findIndex(u => u.userId === user.userId);
-
+  let { users, index } = getUserIndex(user.userId);
   if (index === -1) return;
 
   users[index].fullName = fullName;
   users[index].mobile = mobile;
   users[index].email = email;
 
-  saveUsers(users);
+  saveUserMutation(users);
+  logUserAction(user.userId, "Profile Updated");
+
   alert("Profile Updated Successfully");
 }
 
@@ -321,7 +354,7 @@ function savePassword() {
     return;
   }
 
-  if (atob(user.password || "") !== oldPassword) {
+  if (safeDecodePassword(user.password) !== oldPassword) {
     alert("Old Password Incorrect");
     return;
   }
@@ -336,14 +369,14 @@ function savePassword() {
     return;
   }
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  let index = users.findIndex(u => u.userId === user.userId);
-
+  let { users, index } = getUserIndex(user.userId);
   if (index === -1) return;
 
   users[index].password = btoa(newPassword);
 
-  saveUsers(users);
+  saveUserMutation(users);
+  logUserAction(user.userId, "Password Changed");
+
   alert("Password Changed Successfully");
 }
 
