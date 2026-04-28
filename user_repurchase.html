@@ -5,16 +5,20 @@
 </head>
 <body>
 
-  <h2>Repurchase Page</h2>
+  <h2>User Repurchase</h2>
 
   <p id="info"></p>
+  <p id="repurchaseStatus"></p>
 
   <input type="text" id="pinInput" placeholder="Enter PIN"><br><br>
 
-  <button onclick="submitRepurchase()">Repurchase</button>
+  <button type="button" onclick="submitRepurchase()">Repurchase Now</button>
 
   <!-- CORE -->
   <script src="core_system.js"></script>
+
+  <!-- SESSION -->
+  <script src="session_manager.js"></script>
 
   <!-- SYSTEM -->
   <script src="active_system.js"></script>
