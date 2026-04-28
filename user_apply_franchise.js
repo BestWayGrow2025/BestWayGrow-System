@@ -1,7 +1,9 @@
+// ================= SAFE STATE =================
 let session = null;
 let currentUser = null;
 let lock = false;
 
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
@@ -9,21 +11,26 @@ document.addEventListener("DOMContentLoaded", function () {
   loadPage();
 });
 
+// ================= CORE INIT =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   }
 }
 
+// ================= AUTH =================
 function authPage() {
-  if (typeof protectPage !== "function") {
-    window.location.href = "user_login.html";
-    return;
+  try {
+    if (typeof protectPage === "function") {
+      session = protectPage({ role: "user" });
+    } else {
+      session = JSON.parse(localStorage.getItem("loggedInUser"));
+    }
+  } catch (err) {
+    session = null;
   }
 
-  session = protectPage({ role: "user" });
-
-  if (!session) {
+  if (!session || !session.userId) {
     window.location.href = "user_login.html";
     return;
   }
@@ -31,6 +38,7 @@ function authPage() {
   currentUser = session;
 }
 
+// ================= EVENTS =================
 function bindEvents() {
   let applyBtn = document.getElementById("applyBtn");
 
@@ -39,27 +47,55 @@ function bindEvents() {
   }
 }
 
+// ================= LOAD PAGE =================
 function loadPage() {
   let nameInput = document.getElementById("name");
 
   if (nameInput && currentUser) {
-    nameInput.value = currentUser.username || "";
+    nameInput.value = currentUser.fullName || currentUser.username || "";
   }
 }
 
+// ================= APPLY =================
 function applyFranchise() {
   if (lock) return;
 
-  let name = document.getElementById("name").value.trim();
-  let city = document.getElementById("city").value.trim();
-  let amount = Number(document.getElementById("amount").value);
+  let nameEl = document.getElementById("name");
+  let cityEl = document.getElementById("city");
+  let amountEl = document.getElementById("amount");
 
-  if (!name || !city || !amount) {
-    alert("Fill all fields");
+  if (!nameEl || !cityEl || !amountEl) {
+    alert("Form error");
     return;
   }
 
-  let data = JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
+  let name = nameEl.value.trim();
+  let city = cityEl.value.trim();
+  let amount = Number(amountEl.value);
+
+  if (!name || name.length < 3) {
+    alert("Valid name required");
+    return;
+  }
+
+  if (!city || city.length < 2) {
+    alert("Valid city required");
+    return;
+  }
+
+  if (!amount || amount <= 0) {
+    alert("Valid amount required");
+    return;
+  }
+
+  let data = [];
+
+  try {
+    data = JSON.parse(localStorage.getItem("franchiseRequests") || "[]");
+    if (!Array.isArray(data)) data = [];
+  } catch (err) {
+    data = [];
+  }
 
   let already = data.find(item =>
     item.userId === currentUser.userId &&
@@ -73,23 +109,29 @@ function applyFranchise() {
 
   lock = true;
 
-  let request = {
-    requestId: "FR-" + Date.now(),
-    userId: currentUser.userId,
-    name: name,
-    city: city,
-    amount: amount,
-    status: "PENDING",
-    time: new Date().toLocaleString()
-  };
+  try {
+    let request = {
+      requestId: "FR-" + Date.now(),
+      userId: currentUser.userId,
+      name: name,
+      city: city,
+      amount: amount,
+      status: "PENDING",
+      time: new Date().toLocaleString()
+    };
 
-  data.push(request);
-  localStorage.setItem("franchiseRequests", JSON.stringify(data));
+    data.push(request);
+    localStorage.setItem("franchiseRequests", JSON.stringify(data));
 
-  alert("✅ Request Submitted");
+    alert("Request Submitted");
 
-  document.getElementById("city").value = "";
-  document.getElementById("amount").value = "";
+    cityEl.value = "";
+    amountEl.value = "";
 
-  lock = false;
+  } catch (err) {
+    console.error("Franchise request error:", err);
+    alert("Request failed");
+  } finally {
+    lock = false;
+  }
 }
