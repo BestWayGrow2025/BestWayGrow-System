@@ -1,142 +1,67 @@
 
-// ================= LOAD ADMIN LOGIN PAGE =================
-function loadAdminLoginPage() {
-  let btn = document.getElementById("loginBtn");
-  if (btn) {
-    btn.addEventListener("click", submitAdminLogin);
-  }
-}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7f9;
+      padding: 30px;
+      text-align: center;
+    }
 
-// ================= ADMIN LOGIN =================
-function submitAdminLogin() {
+    .box {
+      background: #fff;
+      max-width: 420px;
+      margin: 40px auto;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
 
-  lockBtn();
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
 
-  let id = document.getElementById("adminId").value.trim().toLowerCase();
-  let pass = document.getElementById("password").value.trim();
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
 
-  if (!id || !pass) {
-    showMsg("⚠ Enter ID & Password");
-    unlockBtn();
-    return;
-  }
+    #msg {
+      margin-top: 14px;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
 
-  if (typeof getUsers !== "function") {
-    alert("Core system not loaded");
-    unlockBtn();
-    return;
-  }
+  <div class="box">
+    <h2>ADMIN LOGIN</h2>
 
-  let users = getUsers() || [];
+    <input id="adminId" placeholder="Admin ID">
+    <input id="password" type="password" placeholder="Password">
 
-  let user = users.find(u => {
-    let storedPass = safeDecode(u.password);
+    <button id="loginBtn">Login</button>
 
-    return (
-      (u.userId || "").toLowerCase() === id &&
-      u.role === "admin" &&
-      storedPass === pass
-    );
-  });
+    <p id="msg"></p>
+  </div>
 
-  if (!user) {
-    showMsg("❌ Invalid login");
-    unlockBtn();
-    return;
-  }
-
-  if (user.role !== "admin") {
-    showMsg("❌ Invalid login");
-    unlockBtn();
-    return;
-  }
-
-  if (user.status && user.status !== "active") {
-    showMsg("🚫 Account inactive");
-    unlockBtn();
-    return;
-  }
-
-  if (typeof getSystemSettings !== "function") {
-    alert("System settings missing");
-    unlockBtn();
-    return;
-  }
-
-  let settings = getSystemSettings();
-
-  if (settings.adminAccess === false) {
-    showMsg("🚫 Admin access OFF");
-    unlockBtn();
-    return;
-  }
-
-  if (settings.lockMode === true) {
-    showMsg("🚫 System locked");
-    unlockBtn();
-    return;
-  }
-
-  logoutAll();
-
-  localStorage.setItem("loggedInAdmin", JSON.stringify({
-    userId: user.userId,
-    role: user.role
-  }));
-
-  if (!localStorage.getItem("loggedInAdmin")) {
-    alert("Session failed");
-    unlockBtn();
-    return;
-  }
-
-  if (typeof logActivity === "function") {
-    logActivity(user.userId, "ADMIN", "Login");
-  }
-
-  showMsg("✅ Login successful");
-
-  setTimeout(() => {
-    window.location.href = "admin_dashboard.html";
-  }, 500);
-}
-
-// ================= SAFE DECODE =================
-function safeDecode(p) {
-  try { return atob(p); } catch { return p || ""; }
-}
-
-// ================= BUTTON LOCK =================
-function lockBtn() {
-  let btn = document.getElementById("loginBtn");
-  btn.disabled = true;
-  btn.innerText = "Checking...";
-}
-
-function unlockBtn() {
-  let btn = document.getElementById("loginBtn");
-  btn.disabled = false;
-  btn.innerText = "Login";
-}
-
-// ================= CLEAR OLD SESSION =================
-function logoutAll() {
-  localStorage.removeItem("loggedInAdmin");
-}
-
-// ================= MESSAGE =================
-function showMsg(text) {
-  document.getElementById("msg").innerText = text;
-}
-
-// ================= INIT =================
-window.addEventListener("load", function () {
-
-  if (typeof initCoreSystem !== "function") {
-    alert("❌ core_system.js not loaded");
-    return;
-  }
-
-  initCoreSystem();
-  loadAdminLoginPage();
-});
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="admin_login.js"></script>
+</body>
+</html>
