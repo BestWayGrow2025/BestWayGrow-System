@@ -4,6 +4,7 @@ let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
+  checkAuth();
   bindEvents();
 });
 
@@ -14,22 +15,30 @@ function initPage() {
     alert("core_system.js missing");
     throw new Error("STOP");
   }
+}
 
-  try {
-    if (typeof getSession === "function") {
-      session = getSession();
-    }
-  } catch (e) {
-    console.error(e);
-  }
+function checkAuth() {
+  session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
 
-  if (!session || session.role !== "super_admin") {
-    alert("Access denied");
+  if (!session || !session.userId) {
     window.location.href = "super_admin_login.html";
     throw new Error("STOP");
   }
 
-  currentUser = session;
+  currentUser = getUserById(session.userId);
+
+  if (!currentUser || currentUser.role !== "super_admin") {
+    localStorage.removeItem("loggedInSuperAdmin");
+    window.location.href = "super_admin_login.html";
+    throw new Error("STOP");
+  }
+
+  if ((currentUser.status || "active") !== "active") {
+    localStorage.removeItem("loggedInSuperAdmin");
+    alert("Account inactive");
+    window.location.href = "super_admin_login.html";
+    throw new Error("STOP");
+  }
 }
 
 function bindEvents() {
@@ -40,7 +49,6 @@ function bindEvents() {
 
 function safeClick(fn) {
   if (lock) return;
-
   lock = true;
 
   try {
@@ -48,11 +56,11 @@ function safeClick(fn) {
   } catch (e) {
     console.error(e);
     showMsg("❌ System Error");
-  } finally {
-    setTimeout(() => {
-      lock = false;
-    }, 300);
   }
+
+  setTimeout(function () {
+    lock = false;
+  }, 300);
 }
 
 function showMsg(text) {
@@ -71,22 +79,30 @@ function createSystemAdmin() {
 
   let users = getUsers() || [];
 
-  if (users.find(u => u.userId.toLowerCase() === id.toLowerCase())) {
+  if (users.find(function (u) {
+    return u.userId.toLowerCase() === id.toLowerCase();
+  })) {
     showMsg("⚠️ ID already exists");
     return;
   }
 
-  let newAdmin = {
+  if (users.find(function (u) {
+    return u.role === "system_admin" && u.userId.toLowerCase() === id.toLowerCase();
+  })) {
+    showMsg("⚠️ System Admin already exists");
+    return;
+  }
+
+  users.push({
     userId: id,
     username: name,
     password: btoa(pass),
     role: "system_admin",
     status: "active",
-    createdAt: new Date().toISOString(),
-    createdBy: currentUser.userId
-  };
+    createdBy: currentUser.userId,
+    createdAt: Date.now()
+  });
 
-  users.push(newAdmin);
   saveUsers(users);
 
   showMsg("✅ System Admin Created");
