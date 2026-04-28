@@ -1,10 +1,10 @@
-let session = null;
-let currentUser = null;
 let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
+  authPage();
   bindEvents();
+  loadPage();
 });
 
 function initPage() {
@@ -16,10 +16,28 @@ function initPage() {
   }
 }
 
+function authPage() {
+  // login page only
+}
+
 function bindEvents() {
-  document.getElementById("loginBtn").addEventListener("click", function () {
-    safeClick(login);
-  });
+  let btn = document.getElementById("loginBtn");
+
+  if (btn) {
+    btn.addEventListener("click", function () {
+      safeClick(login);
+    });
+  }
+}
+
+function loadPage() {
+  let active =
+    JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null") ||
+    JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
+
+  if (active && active.userId) {
+    window.location.href = "system_admin_dashboard.html";
+  }
 }
 
 function safeClick(fn) {
@@ -29,16 +47,16 @@ function safeClick(fn) {
 
   try {
     fn();
-  } catch (e) {
-    console.error(e);
-  } finally {
-    setTimeout(function () {
-      lock = false;
-    }, 800);
+  } catch (err) {
+    console.error(err);
   }
+
+  setTimeout(function () {
+    lock = false;
+  }, 800);
 }
 
-function logoutAll() {
+function clearSessions() {
   localStorage.removeItem("loggedInSuperAdmin");
   localStorage.removeItem("loggedInSystemAdmin");
   localStorage.removeItem("loggedInAdmin");
@@ -46,37 +64,12 @@ function logoutAll() {
   localStorage.removeItem("loggedInUser");
 }
 
-function safeDecode(password) {
+function safeDecode(value) {
   try {
-    return atob(password);
-  } catch (e) {
-    return password;
+    return atob(value);
+  } catch {
+    return value || "";
   }
-}
-
-function isSystemAllowed(user) {
-  if (typeof getSystemSettings !== "function") {
-    showMsg("❌ System settings missing");
-    return false;
-  }
-
-  let settings = getSystemSettings() || {};
-
-  if (user.role === "system_admin" || user.role === "super_admin") {
-    return true;
-  }
-
-  if (settings.lockMode === true) {
-    showMsg("🚫 System Locked");
-    return false;
-  }
-
-  if (settings.adminAccess === false) {
-    showMsg("🚫 Admin Access OFF");
-    return false;
-  }
-
-  return true;
 }
 
 function login() {
@@ -91,15 +84,16 @@ function login() {
   let users = typeof getUsers === "function" ? getUsers() : [];
 
   let user = users.find(function (u) {
-    return u.userId === userId && u.role === "system_admin";
+    return (
+      String(u.userId || "") === userId &&
+      u.role === "system_admin"
+    );
   });
 
   if (!user) {
     showMsg("❌ Invalid ID");
     return;
   }
-
-  if (!isSystemAllowed(user)) return;
 
   if ((user.status || "active") !== "active") {
     showMsg("🚫 Account inactive");
@@ -113,22 +107,37 @@ function login() {
     return;
   }
 
-  logoutAll();
+  if (typeof getSystemSettings !== "function") {
+    showMsg("❌ System settings missing");
+    return;
+  }
 
-  if (typeof saveSession === "function") {
-    saveSession({
-      userId: user.userId,
-      role: user.role
-    });
-  } else {
-    localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
-      userId: user.userId,
-      role: user.role
-    }));
+  let settings = getSystemSettings() || {};
+
+  if (settings.lockMode === true) {
+    showMsg("🚫 System Locked");
+    return;
+  }
+
+  if (settings.adminAccess === false) {
+    showMsg("🚫 Admin Access OFF");
+    return;
+  }
+
+  clearSessions();
+
+  localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
+    userId: user.userId,
+    role: user.role
+  }));
+
+  if (!localStorage.getItem("loggedInSystemAdmin")) {
+    showMsg("❌ Session failed");
+    return;
   }
 
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "SYSTEM_ADMIN", "Login");
+    logActivity(user.userId, "system_admin", "Login", "ADMIN");
   }
 
   showMsg("✅ Login successful");
@@ -139,5 +148,9 @@ function login() {
 }
 
 function showMsg(text) {
-  document.getElementById("msg").innerText = text;
+  let msg = document.getElementById("msg");
+
+  if (msg) {
+    msg.innerText = text;
+  }
 }
