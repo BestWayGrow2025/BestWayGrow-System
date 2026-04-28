@@ -1,20 +1,25 @@
 /*
 ========================================
-PIN REQUEST QUEUE ENGINE (ENTERPRISE FINAL v8)
+PIN REQUEST QUEUE ENGINE V9.0 (FINAL PATCH LOCK)
 ========================================
-✔ Fully system aligned (core_system)
-✔ No direct localStorage
-✔ Safe lock system
-✔ Priority batch processing
-✔ Retry + fail-safe
-✔ System ON/OFF control
-✔ Dependency-safe (WAIT MODE)
-✔ Production ready
+✔ Dependency wait-safe
+✔ Queue lock hardened
+✔ Stale lock recovery
+✔ Duplicate runner blocked
+✔ Batch re-fetch safe
+✔ Retry / fail isolation
+✔ Queue race protected
+✔ Request mutation safe
+✔ Storage collision reduced
+✔ Production stable
 ========================================
 */
 
 // ================= CONFIG =================
-const RETRY_LIMIT = 3;
+const PIN_QUEUE_RETRY_LIMIT = 3;
+const PIN_QUEUE_STALE_MS = 10000;
+const PIN_QUEUE_TICK_MS = 3000;
+const PIN_QUEUE_BATCH_LIMIT = 6;
 
 // ================= DEPENDENCY CHECK =================
 function isDependencyReady() {
@@ -31,10 +36,12 @@ function isDependencyReady() {
 function getQueueSettings() {
   let settings = getSystemSettings() || {};
 
-  if (!settings.pinQueue) {
+  if (!settings.pinQueue || typeof settings.pinQueue !== "object") {
     settings.pinQueue = {
       enabled: true,
-      lock: false
+      lock: false,
+      lockTime: null,
+      updatedAt: Date.now()
     };
     saveSystemSettings(settings);
   }
@@ -42,10 +49,21 @@ function getQueueSettings() {
   return settings.pinQueue;
 }
 
-function updateQueueSettings(data) {
+function updateQueueSettings(data = {}) {
   let settings = getSystemSettings() || {};
-  settings.pinQueue = { ...settings.pinQueue, ...data };
+
+  settings.pinQueue = {
+    enabled: true,
+    lock: false,
+    lockTime: null,
+    updatedAt: Date.now(),
+    ...(settings.pinQueue || {}),
+    ...data,
+    updatedAt: Date.now()
+  };
+
   saveSystemSettings(settings);
+  return settings.pinQueue;
 }
 
 // ================= CONTROL =================
@@ -57,11 +75,20 @@ function isQueueAllowed() {
 // ================= LOCK =================
 function isQueueLocked() {
   let q = getQueueSettings();
+
+  if (q.lock === true && q.lockTime && (Date.now() - q.lockTime > PIN_QUEUE_STALE_MS)) {
+    updateQueueSettings({ lock: false, lockTime: null });
+    return false;
+  }
+
   return q.lock === true;
 }
 
 function setQueueLock(val) {
-  updateQueueSettings({ lock: val });
+  updateQueueSettings({
+    lock: !!val,
+    lockTime: val ? Date.now() : null
+  });
 }
 
 // ================= PRIORITY =================
@@ -73,10 +100,20 @@ const PRIORITY_WEIGHT = {
 
 // ================= REQUEST HELPERS =================
 function getPendingRequests() {
-  return getPinRequests().filter(r => r.status === "PENDING");
+  let list = getPinRequests();
+  if (!Array.isArray(list)) return [];
+
+  return list.filter(r =>
+    r &&
+    r.requestId &&
+    r.status === "PENDING" &&
+    r.queueLock !== true
+  );
 }
 
 function groupByPriority(requests) {
+  requests = Array.isArray(requests) ? requests : [];
+
   return {
     GREEN: requests.filter(r => (r.priority || "YELLOW") === "GREEN"),
     YELLOW: requests.filter(r => (r.priority || "YELLOW") === "YELLOW"),
@@ -91,77 +128,106 @@ function getNextBatch() {
     ...grouped.GREEN.slice(0, PRIORITY_WEIGHT.GREEN),
     ...grouped.YELLOW.slice(0, PRIORITY_WEIGHT.YELLOW),
     ...grouped.RED.slice(0, PRIORITY_WEIGHT.RED)
-  ];
+  ].slice(0, PIN_QUEUE_BATCH_LIMIT);
+}
+
+function lockRequest(req) {
+  req.queueLock = true;
+  req.queueLockTime = Date.now();
+}
+
+function unlockRequest(req) {
+  req.queueLock = false;
+  req.queueLockTime = null;
 }
 
 // ================= PROCESS =================
-let isRunning = false;
+let __PIN_QUEUE_RUNNING__ = false;
 
 function processPinQueue() {
-
-  // 🟡 WAIT MODE
-  if (!isDependencyReady()) {
-    console.warn("⏳ Waiting for dependencies...");
-    return;
-  }
-
+  if (!isDependencyReady()) return;
   if (!isQueueAllowed()) return;
-  if (isRunning) return;
+  if (__PIN_QUEUE_RUNNING__) return;
   if (isQueueLocked()) return;
 
   let batch = getNextBatch();
   if (!batch.length) return;
 
-  isRunning = true;
+  __PIN_QUEUE_RUNNING__ = true;
   setQueueLock(true);
 
   try {
-
     let allRequests = getPinRequests();
+    if (!Array.isArray(allRequests) || !allRequests.length) return;
 
-    batch.forEach(req => {
+    for (let i = 0; i < batch.length; i++) {
+      let req = batch[i];
+      if (!req || !req.requestId) continue;
 
       let realReq = allRequests.find(r => r.requestId === req.requestId);
-      if (!realReq) return;
+      if (!realReq) continue;
+      if (realReq.status !== "PENDING") continue;
+      if (realReq.queueLock === true) continue;
+
+      lockRequest(realReq);
+      savePinRequests(allRequests);
 
       try {
-
         processPinRequestAuto(realReq.requestId);
 
-      } catch (err) {
+        // re-fetch state after downstream mutation
+        allRequests = getPinRequests() || [];
+        realReq = allRequests.find(r => r.requestId === req.requestId);
 
-        console.warn("Queue Error:", err.message);
-
-        realReq.retry = Number(realReq.retry || 0) + 1;
-
-        if (realReq.retry >= RETRY_LIMIT) {
-          realReq.status = "FAILED";
-          realReq.failReason = err.message || "Unknown error";
+        if (realReq && realReq.status === "PENDING") {
+          realReq.status = "DONE";
           realReq.processedAt = Date.now();
+        }
+
+      } catch (err) {
+        allRequests = getPinRequests() || [];
+        realReq = allRequests.find(r => r.requestId === req.requestId);
+
+        if (realReq) {
+          realReq.retry = Number(realReq.retry || 0) + 1;
+          realReq.failReason = err.message || "Unknown error";
+
+          if (realReq.retry >= PIN_QUEUE_RETRY_LIMIT) {
+            realReq.status = "FAILED";
+            realReq.processedAt = Date.now();
+          }
         }
       }
 
-    });
+      allRequests = getPinRequests() || [];
+      realReq = allRequests.find(r => r.requestId === req.requestId);
 
-    savePinRequests(allRequests);
+      if (realReq) unlockRequest(realReq);
+
+      savePinRequests(allRequests);
+    }
 
   } catch (err) {
-
-    console.error("Queue Crash:", err);
-
+    console.error("PIN QUEUE CRASH:", err);
   } finally {
-
     setQueueLock(false);
-    isRunning = false;
+    __PIN_QUEUE_RUNNING__ = false;
   }
 }
 
 // ================= AUTO RUN =================
 function startPinQueueEngine() {
-  setInterval(processPinQueue, 3000);
+  if (window.__PIN_QUEUE_ENGINE_STARTED__) return;
+  window.__PIN_QUEUE_ENGINE_STARTED__ = true;
+
+  setInterval(() => {
+    try {
+      processPinQueue();
+    } catch (e) {
+      console.error("PIN QUEUE LOOP:", e);
+    }
+  }, PIN_QUEUE_TICK_MS);
 }
 
 // ================= START =================
 startPinQueueEngine();
-
-
