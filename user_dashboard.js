@@ -8,6 +8,7 @@
 // ✔ Unified session usage
 // ✔ DOM guards added
 // ✔ Activity logging restored
+// ✔ Strict save enforcement
 // ✔ Production safe
 // ========================================
 
@@ -43,8 +44,18 @@ function safeDecodePassword(value) {
 }
 
 function saveUserMutation(users) {
-  if (!Array.isArray(users) || typeof saveUsers !== "function") return false;
-  return saveUsers(users);
+  if (!Array.isArray(users) || typeof saveUsers !== "function") {
+    return false;
+  }
+
+  let result = saveUsers(users);
+
+  if (result !== true) {
+    console.error("User save failed");
+    return false;
+  }
+
+  return true;
 }
 
 function logUserAction(userId, action) {
@@ -259,9 +270,12 @@ function submitWithdrawRequest() {
     date: new Date().toLocaleString()
   });
 
-  saveUserMutation(users);
-  logUserAction(user.userId, "Withdraw Request ₹" + amount);
+  if (!saveUserMutation(users)) {
+    alert("Save Failed");
+    return;
+  }
 
+  logUserAction(user.userId, "Withdraw Request ₹" + amount);
   alert("Withdraw Request Submitted");
 }
 
@@ -293,9 +307,12 @@ function submitSupportTicket() {
   users[index].supportTicketCount = users[index].supportTickets.length;
   users[index].lastSupportDate = new Date().toLocaleString();
 
-  saveUserMutation(users);
-  logUserAction(user.userId, "Support Ticket Submitted");
+  if (!saveUserMutation(users)) {
+    alert("Save Failed");
+    return;
+  }
 
+  logUserAction(user.userId, "Support Ticket Submitted");
   alert("Support Ticket Submitted");
 
   if (typeof loadSupportTickets === "function") {
@@ -334,9 +351,12 @@ function saveProfile() {
   users[index].mobile = mobile;
   users[index].email = email;
 
-  saveUserMutation(users);
-  logUserAction(user.userId, "Profile Updated");
+  if (!saveUserMutation(users)) {
+    alert("Save Failed");
+    return;
+  }
 
+  logUserAction(user.userId, "Profile Updated");
   alert("Profile Updated Successfully");
 }
 
@@ -374,9 +394,12 @@ function savePassword() {
 
   users[index].password = btoa(newPassword);
 
-  saveUserMutation(users);
-  logUserAction(user.userId, "Password Changed");
+  if (!saveUserMutation(users)) {
+    alert("Save Failed");
+    return;
+  }
 
+  logUserAction(user.userId, "Password Changed");
   alert("Password Changed Successfully");
 }
 
