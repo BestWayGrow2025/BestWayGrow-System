@@ -24,7 +24,11 @@ function authPage() {
 }
 
 function bindEvents() {
-  document.getElementById("loginBtn").addEventListener("click", login);
+  let loginBtn = document.getElementById("loginBtn");
+
+  if (loginBtn) {
+    loginBtn.addEventListener("click", login);
+  }
 }
 
 function loadPage() {
@@ -38,34 +42,43 @@ function loadPage() {
 function safeDecode(value) {
   try {
     return atob(value);
-  } catch {
+  } catch (err) {
     return value;
   }
 }
 
 function login() {
   if (lock) return;
-  lock = true;
 
   let msg = document.getElementById("msg");
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value.trim();
 
+  if (!msg) return;
+
   msg.innerText = "";
 
   if (!userId || !password) {
     msg.innerText = "⚠ Enter ID & Password";
-    lock = false;
     return;
   }
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  if (typeof getUsers !== "function") {
+    msg.innerText = "❌ User system unavailable";
+    return;
+  }
 
-  let user = users.find(u =>
-    String(u.userId || "").toLowerCase() === userId.toLowerCase() &&
-    u.role === "franchise" &&
-    (u.password === password || safeDecode(u.password) === password)
-  );
+  lock = true;
+
+  let users = getUsers();
+
+  let user = users.find(function (u) {
+    return (
+      String(u.userId || "").toLowerCase() === userId.toLowerCase() &&
+      u.role === "franchise" &&
+      (u.password === password || safeDecode(u.password) === password)
+    );
+  });
 
   if (!user) {
     msg.innerText = "❌ Invalid Franchise Login";
@@ -79,9 +92,12 @@ function login() {
     return;
   }
 
-  localStorage.setItem("loggedInFranchise", JSON.stringify({
-    userId: user.userId
-  }));
+  localStorage.setItem(
+    "loggedInFranchise",
+    JSON.stringify({
+      userId: user.userId
+    })
+  );
 
   window.location.href = "franchise_dashboard.html";
 }
