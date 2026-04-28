@@ -169,4 +169,4 @@ function createUserWithTree(req) {
 
 // ================= EXPORT =================
 window.createUserWithTree = createUserWithTree;
-window.findDeepPosition =
+window.findDeepPosition = findDeepPosition;
