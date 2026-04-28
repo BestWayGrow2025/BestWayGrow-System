@@ -1,6 +1,6 @@
 /*
 ========================================
-💰 INCOME CONTROL SYSTEM V7 (FINAL LOCKED)
+INCOME CONTROL SYSTEM V8.0 (FINAL CORE PATCH)
 ========================================
 ✔ Core system aligned (safeGet / safeSet)
 ✔ Master income switch
@@ -9,17 +9,20 @@
 ✔ Self-healing storage
 ✔ Corruption-proof
 ✔ Strict structure validation
-✔ Production READY
+✔ Re-entrant safe init
+✔ Toggle write guard
+✔ Cross-engine safe checks
+✔ Production LOCKED
 ========================================
 */
 
 // =====================
-// 🔹 CONFIG
+// CONFIG
 // =====================
 const INCOME_SETTINGS_KEY = "incomeSettings";
 
 // =====================
-// 🔹 DEFAULT SETTINGS
+// DEFAULT SETTINGS
 // =====================
 function getDefaultIncomeSettings() {
   return {
@@ -38,62 +41,77 @@ function getDefaultIncomeSettings() {
 }
 
 // =====================
-// 🔹 GET SETTINGS (SAFE)
+// INTERNAL SANITIZER
 // =====================
-function getIncomeSettings() {
-
-  let stored = safeGet(INCOME_SETTINGS_KEY, {});
-  let merged = {
+function sanitizeIncomeSettings(data = {}) {
+  let clean = {
     ...getDefaultIncomeSettings(),
-    ...stored
+    ...(data && typeof data === "object" ? data : {})
   };
 
-  safeSet(INCOME_SETTINGS_KEY, merged);
-  return merged;
+  clean.incomeEnabled = clean.incomeEnabled === true;
+  clean.ugli = clean.ugli === true;
+  clean.rli = clean.rli === true;
+  clean.binary = clean.binary === true;
+
+  clean.incomeWalletEnabled = clean.incomeWalletEnabled !== false;
+  clean.holdWalletEnabled = clean.holdWalletEnabled !== false;
+  clean.totalIncomeTracking = clean.totalIncomeTracking !== false;
+
+  clean.initialized = clean.initialized === true;
+  clean.updatedAt = new Date().toISOString();
+
+  return clean;
 }
 
 // =====================
-// 🔹 SAVE SETTINGS (SAFE)
+// GET SETTINGS (SAFE)
+// =====================
+function getIncomeSettings() {
+  let stored = safeGet(INCOME_SETTINGS_KEY, {});
+  let clean = sanitizeIncomeSettings(stored);
+
+  safeSet(INCOME_SETTINGS_KEY, clean);
+  return clean;
+}
+
+// =====================
+// SAVE SETTINGS (SAFE)
 // =====================
 function saveIncomeSettings(data) {
-
   if (typeof getSystemSettings === "function") {
     let sys = getSystemSettings();
     if (sys && sys.lockMode) return false;
   }
 
-  let safe = {
-    ...getDefaultIncomeSettings(),
-    ...(data || {})
-  };
-
-  safe.updatedAt = new Date().toISOString();
-
+  let safe = sanitizeIncomeSettings(data);
   safeSet(INCOME_SETTINGS_KEY, safe);
 
   return true;
 }
 
 // =====================
-// 🔹 INIT
+// INIT
 // =====================
 function initIncomeControl() {
+  if (window.__INCOME_CONTROL_INIT__) return true;
+  window.__INCOME_CONTROL_INIT__ = true;
 
-  let settings = getIncomeSettings();
+  let settings = safeGet(INCOME_SETTINGS_KEY, null);
 
-  if (!settings.initialized) {
-
-    let clean = getDefaultIncomeSettings();
-    saveIncomeSettings(clean);
+  if (!settings || typeof settings !== "object" || settings.initialized !== true) {
+    saveIncomeSettings(getDefaultIncomeSettings());
 
     if (typeof logActivity === "function") {
       logActivity("SYSTEM", "SYSTEM", "Income control initialized");
     }
   }
+
+  return true;
 }
 
 // =====================
-// 🔹 SAFE GETTERS
+// SAFE GETTERS
 // =====================
 function isIncomeMasterEnabled() {
   return getIncomeSettings().incomeEnabled === true;
@@ -112,25 +130,24 @@ function isBinaryEnabled() {
 }
 
 function isIncomeWalletEnabled() {
-  return getIncomeSettings().incomeWalletEnabled !== false;
+  return getIncomeSettings().incomeWalletEnabled === true;
 }
 
 function isHoldWalletEnabled() {
-  return getIncomeSettings().holdWalletEnabled !== false;
+  return getIncomeSettings().holdWalletEnabled === true;
 }
 
 function isTotalIncomeTrackingEnabled() {
-  return getIncomeSettings().totalIncomeTracking !== false;
+  return getIncomeSettings().totalIncomeTracking === true;
 }
 
 // =====================
-// 🔥 TYPE NORMALIZER
+// TYPE NORMALIZER
 // =====================
 function normalizeIncomeType(type) {
-
   if (!type) return "";
 
-  type = String(type).toLowerCase();
+  type = String(type).trim().toLowerCase();
 
   if (type === "upgrade") return "ugli";
   if (type === "repurchase") return "rli";
@@ -139,23 +156,17 @@ function normalizeIncomeType(type) {
 }
 
 // =====================
-// 🔥 CORE GUARD
+// CORE GUARD
 // =====================
 function isIncomeAllowed(type) {
-
-  // 🔒 SYSTEM LOCK
   if (typeof getSystemSettings === "function") {
     let sys = getSystemSettings();
     if (sys && sys.lockMode) return false;
   }
 
-  // 🔒 MASTER SWITCH
   if (!isIncomeMasterEnabled()) return false;
-
-  // 🔒 SYSTEM SAFETY
   if (!isIncomeSystemSafe()) return false;
 
-  // 🔄 TYPE NORMALIZE
   let t = normalizeIncomeType(type);
 
   if (t === "ugli") return isUGLIEnabled();
@@ -166,137 +177,89 @@ function isIncomeAllowed(type) {
 }
 
 // =====================
-// 🔘 ADMIN CONTROL
+// TOGGLE HELPER
 // =====================
-function toggleMasterIncome(adminId = "ADMIN") {
-
+function toggleIncomeFlag(key, label, adminId = "ADMIN") {
   let s = getIncomeSettings();
-  s.incomeEnabled = !s.incomeEnabled;
 
-  saveIncomeSettings(s);
+  if (!(key in s)) return false;
+
+  s[key] = !s[key];
+
+  if (!saveIncomeSettings(s)) return false;
 
   if (typeof logActivity === "function") {
-    logActivity(adminId, "ADMIN", "MASTER INCOME → " + (s.incomeEnabled ? "ON" : "OFF"));
-  }
-}
-
-function toggleUGLI(adminId = "ADMIN") {
-
-  let s = getIncomeSettings();
-  s.ugli = !s.ugli;
-
-  saveIncomeSettings(s);
-
-  if (typeof logActivity === "function") {
-    logActivity(adminId, "ADMIN", "UGLI → " + (s.ugli ? "ON" : "OFF"));
-  }
-}
-
-function toggleRLI(adminId = "ADMIN") {
-
-  let s = getIncomeSettings();
-  s.rli = !s.rli;
-
-  saveIncomeSettings(s);
-
-  if (typeof logActivity === "function") {
-    logActivity(adminId, "ADMIN", "RLI → " + (s.rli ? "ON" : "OFF"));
-  }
-}
-
-function toggleBinary(adminId = "ADMIN") {
-
-  let s = getIncomeSettings();
-  s.binary = !s.binary;
-
-  saveIncomeSettings(s);
-
-  if (typeof logActivity === "function") {
-    logActivity(adminId, "ADMIN", "Binary → " + (s.binary ? "ON" : "OFF"));
-  }
-}
-
-function toggleIncomeWallet(adminId = "ADMIN") {
-
-  let s = getIncomeSettings();
-  s.incomeWalletEnabled = !s.incomeWalletEnabled;
-
-  saveIncomeSettings(s);
-
-  if (typeof logActivity === "function") {
-    logActivity(
-      adminId,
-      "ADMIN",
-      "Income Wallet → " + (s.incomeWalletEnabled ? "ON" : "OFF")
-    );
-  }
-}
-
-function toggleHoldWallet(adminId = "ADMIN") {
-
-  let s = getIncomeSettings();
-  s.holdWalletEnabled = !s.holdWalletEnabled;
-
-  saveIncomeSettings(s);
-
-  if (typeof logActivity === "function") {
-    logActivity(
-      adminId,
-      "ADMIN",
-      "Hold Wallet → " + (s.holdWalletEnabled ? "ON" : "OFF")
-    );
-  }
-}
-
-function toggleTotalIncomeTracking(adminId = "ADMIN") {
-
-  let s = getIncomeSettings();
-  s.totalIncomeTracking = !s.totalIncomeTracking;
-
-  saveIncomeSettings(s);
-
-  if (typeof logActivity === "function") {
-    logActivity(
-      adminId,
-      "ADMIN",
-      "Total Income Tracking → " + (s.totalIncomeTracking ? "ON" : "OFF")
-    );
-  }
-}
-
-// =====================
-// 🔒 HARD SAFETY
-// =====================
-function isIncomeSystemSafe() {
-
-  let s = getIncomeSettings();
-
-  if (!s || typeof s !== "object") return false;
-
-  if (
-    typeof s.ugli !== "boolean" ||
-    typeof s.rli !== "boolean" ||
-    typeof s.binary !== "boolean" ||
-    typeof s.incomeEnabled !== "boolean" ||
-    typeof s.incomeWalletEnabled !== "boolean" ||
-    typeof s.holdWalletEnabled !== "boolean" ||
-    typeof s.totalIncomeTracking !== "boolean"
-  ) {
-    console.warn("⚠ Corrupted income settings → auto fix");
-    saveIncomeSettings(getDefaultIncomeSettings());
-    return false;
-  }
-
-  if (!s.initialized) {
-    console.warn("⚠ Not initialized");
-    return false;
+    logActivity(adminId, "ADMIN", label + " → " + (s[key] ? "ON" : "OFF"));
   }
 
   return true;
 }
 
 // =====================
-// 🚀 INIT CALL
+// ADMIN CONTROL
+// =====================
+function toggleMasterIncome(adminId = "ADMIN") {
+  return toggleIncomeFlag("incomeEnabled", "MASTER INCOME", adminId);
+}
+
+function toggleUGLI(adminId = "ADMIN") {
+  return toggleIncomeFlag("ugli", "UGLI", adminId);
+}
+
+function toggleRLI(adminId = "ADMIN") {
+  return toggleIncomeFlag("rli", "RLI", adminId);
+}
+
+function toggleBinary(adminId = "ADMIN") {
+  return toggleIncomeFlag("binary", "Binary", adminId);
+}
+
+function toggleIncomeWallet(adminId = "ADMIN") {
+  return toggleIncomeFlag("incomeWalletEnabled", "Income Wallet", adminId);
+}
+
+function toggleHoldWallet(adminId = "ADMIN") {
+  return toggleIncomeFlag("holdWalletEnabled", "Hold Wallet", adminId);
+}
+
+function toggleTotalIncomeTracking(adminId = "ADMIN") {
+  return toggleIncomeFlag("totalIncomeTracking", "Total Income Tracking", adminId);
+}
+
+// =====================
+// HARD SAFETY
+// =====================
+function isIncomeSystemSafe() {
+  let s = safeGet(INCOME_SETTINGS_KEY, null);
+
+  if (!s || typeof s !== "object") {
+    saveIncomeSettings(getDefaultIncomeSettings());
+    return false;
+  }
+
+  let boolKeys = [
+    "incomeEnabled",
+    "ugli",
+    "rli",
+    "binary",
+    "incomeWalletEnabled",
+    "holdWalletEnabled",
+    "totalIncomeTracking",
+    "initialized"
+  ];
+
+  let corrupted = boolKeys.some(k => typeof s[k] !== "boolean");
+
+  if (corrupted) {
+    console.warn("Income settings corrupted → auto fix");
+    saveIncomeSettings(getDefaultIncomeSettings());
+    return false;
+  }
+
+  return s.initialized === true;
+}
+
+// =====================
+// INIT CALL
 // =====================
 initIncomeControl();
-
