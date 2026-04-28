@@ -46,6 +46,10 @@
       cursor: pointer;
     }
 
+    .menu button.active {
+      background: #cc5200;
+    }
+
     #mainContent {
       padding: 20px;
     }
@@ -80,15 +84,15 @@
 <header>
   <h2>SYSTEM ADMIN DASHBOARD</h2>
   <p id="welcome"></p>
-  <button onclick="logout()">Logout</button>
+  <button id="logoutBtn">Logout</button>
 </header>
 
 <div class="menu">
-  <button onclick="loadHome()">Home</button>
-  <button onclick="loadUsers()">Users</button>
-  <button onclick="loadCreateAdmin()">Create Admin</button>
-  <button onclick="loadPins()">Pins</button>
-  <button onclick="loadSettings()">Settings</button>
+  <button data-page="home">Home</button>
+  <button data-page="users">Users</button>
+  <button data-page="create">Create Admin</button>
+  <button data-page="pins">Pins</button>
+  <button data-page="settings">Settings</button>
 </div>
 
 <div id="mainContent"></div>
