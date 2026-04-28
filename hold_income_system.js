@@ -1,6 +1,6 @@
 /*
 ========================================
-HOLD INCOME SYSTEM V8.0 (FINAL CORE PATCH)
+HOLD INCOME SYSTEM V8.1 (FINAL CORE PATCH)
 ========================================
 ✔ Core system aligned (safeGet / safeSet)
 ✔ Duplicate hold guard
@@ -10,6 +10,8 @@ HOLD INCOME SYSTEM V8.0 (FINAL CORE PATCH)
 ✔ Expire / release consistency
 ✔ Batched user save
 ✔ Hold ledger safe
+✔ Release audit-safe
+✔ Expiry audit-safe
 ✔ Auto processor re-entry safe
 ✔ Production LOCKED
 ========================================
@@ -173,6 +175,23 @@ function releaseHoldIncome(userId) {
       let credited = safeWalletCredit(userId, h.amount, "Released: " + h.reason);
       if (!credited) return;
 
+      if (typeof addIncomeLog === "function") {
+        let logged = addIncomeLog({
+          userId,
+          type: "hold_release",
+          amount: h.amount,
+          sourceUser: "-",
+          note: h.reason
+        });
+
+        if (!logged) {
+          if (typeof debitWallet === "function") {
+            debitWallet(userId, h.amount, "Hold release rollback");
+          }
+          return;
+        }
+      }
+
       h.status = "RELEASED";
       h.releaseTime = new Date().toISOString();
 
@@ -236,6 +255,12 @@ function expireHoldIncome(days = 30) {
 
     h.status = "EXPIRED";
     h.expireTime = new Date().toISOString();
+
+    if (typeof addCriticalIncomeLog === "function") {
+      addCriticalIncomeLog(
+        `Hold expired: ${h.userId} | ${Number(h.amount).toFixed(2)} | ${h.reason || "-"}`
+      );
+    }
 
     let user = users.find(u => u.userId === h.userId);
     if (user) {
