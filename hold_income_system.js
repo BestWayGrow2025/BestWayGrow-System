@@ -1,29 +1,31 @@
 /*
 ========================================
-💰 HOLD INCOME SYSTEM V7 FINAL
+HOLD INCOME SYSTEM V8.0 (FINAL CORE PATCH)
 ========================================
 ✔ Core system aligned (safeGet / safeSet)
-✔ Duplicate safe
-✔ Wallet controlled (SAFE)
-✔ System lock protected
-✔ Auto processor protected
-✔ Expire + release logic
-✔ Structure validation
-✔ Production ready
+✔ Duplicate hold guard
+✔ Hold release lock
+✔ Double-release blocked
+✔ Wallet drift protection
+✔ Expire / release consistency
+✔ Batched user save
+✔ Hold ledger safe
+✔ Auto processor re-entry safe
+✔ Production LOCKED
 ========================================
 */
 
 // =====================
-// 🔹 CONFIG
+// CONFIG
 // =====================
 const HOLD_KEY = "holdIncome";
 const HOLD_LIMIT = 3000;
+const HOLD_LOCKS = {};
 
 // =====================
-// 🔹 GET / SAVE (SAFE)
+// GET / SAVE
 // =====================
 function getHoldIncome() {
-
   let data = safeGet(HOLD_KEY, []);
 
   if (!Array.isArray(data)) {
@@ -35,7 +37,6 @@ function getHoldIncome() {
 }
 
 function saveHoldIncome(data) {
-
   if (!Array.isArray(data)) data = [];
 
   if (data.length > HOLD_LIMIT) {
@@ -46,245 +47,220 @@ function saveHoldIncome(data) {
 }
 
 // =====================
-// 🔐 DUPLICATE CHECK
+// LOCK
+// =====================
+function isHoldLocked(userId) {
+  let t = HOLD_LOCKS[userId];
+  if (!t) return false;
+
+  if (Date.now() - t > 10000) {
+    delete HOLD_LOCKS[userId];
+    return false;
+  }
+
+  return true;
+}
+
+function setHoldLock(userId, val) {
+  if (val) HOLD_LOCKS[userId] = Date.now();
+  else delete HOLD_LOCKS[userId];
+}
+
+// =====================
+// DUPLICATE CHECK
 // =====================
 function isDuplicateHold(userId, amount, reason) {
-
   let holds = getHoldIncome();
 
   return holds.some(h =>
     h.userId === userId &&
     Number(h.amount) === Number(amount) &&
     h.reason === reason &&
+    h.status === "HOLD" &&
     (Date.now() - new Date(h.time).getTime()) < 5000
   );
 }
 
 // =====================
-// ➕ ADD HOLD
+// ADD HOLD
 // =====================
 function addHoldIncome(userId, amount, reason) {
-
-  // 🔒 SYSTEM LOCK
   if (typeof getSystemSettings === "function") {
     let s = getSystemSettings();
-    if (s && s.lockMode) return;
+    if (s && s.lockMode) return false;
   }
 
-  if (typeof isIncomeSystemSafe === "function") {
-    if (!isIncomeSystemSafe()) return;
+  if (typeof isIncomeSystemSafe === "function" && !isIncomeSystemSafe()) {
+    return false;
   }
 
   amount = Number(amount);
-
-
-  if (!userId || isNaN(amount) || amount <= 0) return;
-
-  if (isDuplicateHold(userId, amount, reason)) return;
+  if (!userId || isNaN(amount) || amount <= 0) return false;
+  if (isDuplicateHold(userId, amount, reason)) return false;
 
   let holds = getHoldIncome();
+  let users = getUsers() || [];
+  let user = users.find(u => u.userId === userId);
 
- holds.push({
-  id: "H" + Date.now(),
-  userId,
-  amount: parseFloat(amount.toFixed(2)),
-  reason: reason || "",
-  time: new Date().toISOString(),
-  status: "HOLD"
-});
+  holds.push({
+    id: "H" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+    userId,
+    amount: parseFloat(amount.toFixed(2)),
+    reason: reason || "",
+    time: new Date().toISOString(),
+    status: "HOLD",
+    releaseTime: null,
+    expireTime: null
+  });
 
-let users = getUsers() || [];
-let user = users.find(u => u.userId === userId);
+  if (user) {
+    if (!user.wallet || typeof user.wallet !== "object") user.wallet = {};
 
-if (user) {
-  if (!user.wallet) {
-    user.wallet = {};
+    user.wallet.holdIncome = parseFloat(
+      (Number(user.wallet.holdIncome || 0) + amount).toFixed(2)
+    );
+
+    saveUsers(users);
   }
 
-  user.wallet.holdIncome = Number(user.wallet.holdIncome || 0) + parseFloat(amount.toFixed(2));
-  saveUsers(users);
-}
-
-
   saveHoldIncome(holds);
+  return true;
 }
 
 // =====================
-// 🔒 SAFE WALLET CREDIT
+// SAFE WALLET CREDIT
 // =====================
 function safeWalletCredit(userId, amount, note) {
-
   try {
-
     if (typeof getSystemSettings === "function") {
       let s = getSystemSettings();
       if (s && s.lockMode) return false;
     }
 
-    if (typeof isIncomeSystemSafe === "function") {
-      if (!isIncomeSystemSafe()) return false;
+    if (typeof isIncomeSystemSafe === "function" && !isIncomeSystemSafe()) {
+      return false;
     }
 
-    if (typeof creditWallet === "function") {
-      return creditWallet(userId, amount, note);
-    }
-
-    return false;
+    return typeof creditWallet === "function"
+      ? creditWallet(userId, amount, note)
+      : false;
 
   } catch (err) {
-
     if (typeof logCritical === "function") {
       logCritical("Hold wallet error: " + err.message);
     }
-
+    return false;
   }
 }
 
 // =====================
-// 🔄 RELEASE USER
+// RELEASE USER
 // =====================
 function releaseHoldIncome(userId) {
+  if (!userId || isHoldLocked(userId)) return false;
+  setHoldLock(userId, true);
 
-  let holds = getHoldIncome();
-  let updated = false;
+  try {
+    let holds = getHoldIncome();
+    let users = getUsers() || [];
+    let user = users.find(u => u.userId === userId);
+    let updated = false;
 
-  holds.forEach(h => {
+    holds.forEach(h => {
+      if (h.userId !== userId || h.status !== "HOLD") return;
+      if (typeof isUserActive === "function" && !isUserActive(userId)) return;
 
-    if (h.userId === userId && h.status === "HOLD") {
+      let credited = safeWalletCredit(userId, h.amount, "Released: " + h.reason);
+      if (!credited) return;
 
-      if (typeof isUserActive === "function" && isUserActive(userId)) {
+      h.status = "RELEASED";
+      h.releaseTime = new Date().toISOString();
 
-        safeWalletCredit(userId, h.amount, "Released: " + h.reason);
-
-       h.status = "RELEASED";
-h.releaseTime = new Date().toISOString();
-
-let users = getUsers() || [];
-let user = users.find(u => u.userId === userId);
-
-if (user) {
-  if (!user.wallet) {
-    user.wallet = {};
-  }
-
-  user.wallet.holdIncome = Math.max(
-    0,
-    Number(user.wallet.holdIncome || 0) - Number(h.amount || 0)
-  );
-
-  saveUsers(users);
-}
-
-updated = true;
+      if (user) {
+        if (!user.wallet || typeof user.wallet !== "object") user.wallet = {};
+        user.wallet.holdIncome = Math.max(
+          0,
+          parseFloat((Number(user.wallet.holdIncome || 0) - Number(h.amount || 0)).toFixed(2))
+        );
       }
+
+      updated = true;
+    });
+
+    if (updated) {
+      saveUsers(users);
+      saveHoldIncome(holds);
     }
 
-  });
+    return updated;
 
-  if (updated) saveHoldIncome(holds);
+  } finally {
+    setHoldLock(userId, false);
+  }
 }
 
 // =====================
-// 🔄 RELEASE ALL
+// RELEASE ALL
 // =====================
 function releaseAllHoldIncome() {
-
-  // 🔒 SYSTEM LOCK
   if (typeof getSystemSettings === "function") {
     let s = getSystemSettings();
-    if (s && s.lockMode) return;
+    if (s && s.lockMode) return false;
   }
 
-  let holds = getHoldIncome();
-  let updated = false;
-
-  holds.forEach(h => {
-
-    if (h.status === "HOLD") {
-
-      if (typeof isUserActive === "function" && isUserActive(h.userId)) {
-
-        safeWalletCredit(h.userId, h.amount, "Released: " + h.reason);
-
-        h.status = "RELEASED";
-        h.releaseTime = new Date().toISOString();
-
-        let users = getUsers() || [];
-        let user = users.find(u => u.userId === h.userId);
-
-        if (user) {
-          if (!user.wallet) {
-            user.wallet = {};
-          }
-
-          user.wallet.holdIncome = Math.max(
-            0,
-            Number(user.wallet.holdIncome || 0) - Number(h.amount || 0)
-          );
-
-          saveUsers(users);
-        }
-
-        updated = true;
-      }
+  let processed = {};
+  getHoldIncome().forEach(h => {
+    if (h.status === "HOLD" && !processed[h.userId]) {
+      processed[h.userId] = true;
+      releaseHoldIncome(h.userId);
     }
-
   });
 
-  if (updated) saveHoldIncome(holds);
+  return true;
 }
 
-
 // =====================
-// ❌ EXPIRE
+// EXPIRE
 // =====================
 function expireHoldIncome(days = 30) {
-
   let holds = getHoldIncome();
+  let users = getUsers() || [];
   let now = Date.now();
   let updated = false;
 
   holds.forEach(h => {
+    if (h.status !== "HOLD") return;
 
-    if (h.status === "HOLD") {
+    let holdTime = new Date(h.time).getTime();
+    if ((now - holdTime) <= (days * 86400000)) return;
 
-      let holdTime = new Date(h.time).getTime();
+    h.status = "EXPIRED";
+    h.expireTime = new Date().toISOString();
 
-      if ((now - holdTime) > (days * 86400000)) {
-
-       h.status = "EXPIRED";
-h.expireTime = new Date().toISOString();
-
-let users = getUsers() || [];
-let user = users.find(u => u.userId === h.userId);
-
-if (user) {
-  if (!user.wallet) {
-    user.wallet = {};
-  }
-
-  user.wallet.holdIncome = Math.max(
-    0,
-    Number(user.wallet.holdIncome || 0) - Number(h.amount || 0)
-  );
-
-  saveUsers(users);
-}
-
-updated = true;
-      }
+    let user = users.find(u => u.userId === h.userId);
+    if (user) {
+      if (!user.wallet || typeof user.wallet !== "object") user.wallet = {};
+      user.wallet.holdIncome = Math.max(
+        0,
+        parseFloat((Number(user.wallet.holdIncome || 0) - Number(h.amount || 0)).toFixed(2))
+      );
     }
 
+    updated = true;
   });
 
-  if (updated) saveHoldIncome(holds);
+  if (updated) {
+    saveUsers(users);
+    saveHoldIncome(holds);
+  }
+
+  return updated;
 }
 
 // =====================
-// 📊 SUMMARY
+// SUMMARY
 // =====================
 function getUserHoldSummary(userId) {
-
   let holds = getHoldIncome();
 
   let totalHold = 0;
@@ -292,15 +268,11 @@ function getUserHoldSummary(userId) {
   let totalExpired = 0;
 
   holds.forEach(h => {
+    if (h.userId !== userId) return;
 
-    if (h.userId === userId) {
-
-      if (h.status === "HOLD") totalHold += Number(h.amount);
-      if (h.status === "RELEASED") totalReleased += Number(h.amount);
-      if (h.status === "EXPIRED") totalExpired += Number(h.amount);
-
-    }
-
+    if (h.status === "HOLD") totalHold += Number(h.amount);
+    if (h.status === "RELEASED") totalReleased += Number(h.amount);
+    if (h.status === "EXPIRED") totalExpired += Number(h.amount);
   });
 
   return {
@@ -311,19 +283,14 @@ function getUserHoldSummary(userId) {
 }
 
 // =====================
-// 🔄 AUTO PROCESSOR (SAFE)
+// AUTO PROCESSOR
 // =====================
 function startHoldProcessor() {
-
   if (window.__holdProcessorStarted) return;
-
   window.__holdProcessorStarted = true;
 
   setInterval(() => {
-
     try {
-
-      // 🔒 SYSTEM LOCK CHECK
       if (typeof getSystemSettings === "function") {
         let s = getSystemSettings();
         if (s && s.lockMode) return;
@@ -333,17 +300,14 @@ function startHoldProcessor() {
       expireHoldIncome(30);
 
     } catch (err) {
-
       if (typeof logCritical === "function") {
         logCritical("Hold processor error: " + err.message);
       }
-
     }
-
   }, 10000);
 }
 
 // =====================
-// 🚀 INIT
+// INIT
 // =====================
 startHoldProcessor();
