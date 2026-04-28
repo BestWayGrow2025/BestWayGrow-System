@@ -5,20 +5,39 @@
   <link rel="icon" href="data:,">
 
   <style>
-    body { font-family: Arial; padding: 20px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-    th { background: #f4f4f4; }
-    button { padding: 5px 10px; margin: 2px; cursor: pointer; }
+    body {
+      font-family: Arial;
+      padding: 20px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #f4f4f4;
+    }
+
+    button {
+      padding: 5px 10px;
+      margin: 2px;
+      cursor: pointer;
+    }
   </style>
 </head>
-
 <body>
 
 <h1>ADMIN WITHDRAWALS</h1>
 
-<button onclick="goBack()">⬅ Back</button>
-<button onclick="loadRequests()">🔄 Refresh</button>
+<button id="backBtn">⬅ Back</button>
+<button id="refreshBtn">🔄 Refresh</button>
 
 <p id="systemStatus"></p>
 
@@ -39,10 +58,11 @@
   <tbody id="withdrawTable"></tbody>
 </table>
 
-<script src="CORE_system.js"></script>
+<script src="core_system.js"></script>
+<script src="session_manager.js"></script>
 <script src="withdrawal_system.js"></script>
 <script src="activity_log.js"></script>
-<script src="admin_withdraw.js"></script>
+<script src="admin_withdrawals.js"></script>
 
 </body>
 </html>
