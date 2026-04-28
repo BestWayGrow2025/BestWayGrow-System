@@ -4,6 +4,7 @@ let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
+  checkAuth();
   bindEvents();
   loadStatus();
 });
@@ -15,22 +16,30 @@ function initPage() {
     alert("core_system.js missing");
     throw new Error("STOP");
   }
+}
 
-  try {
-    if (typeof getSession === "function") {
-      session = getSession();
-    }
-  } catch (e) {
-    console.error(e);
-  }
+function checkAuth() {
+  session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
 
-  if (!session || session.role !== "super_admin") {
-    alert("Access denied");
+  if (!session || !session.userId) {
     window.location.href = "super_admin_login.html";
     throw new Error("STOP");
   }
 
-  currentUser = session;
+  currentUser = getUserById(session.userId);
+
+  if (!currentUser || currentUser.role !== "super_admin") {
+    localStorage.removeItem("loggedInSuperAdmin");
+    window.location.href = "super_admin_login.html";
+    throw new Error("STOP");
+  }
+
+  if ((currentUser.status || "active") !== "active") {
+    localStorage.removeItem("loggedInSuperAdmin");
+    alert("Account inactive");
+    window.location.href = "super_admin_login.html";
+    throw new Error("STOP");
+  }
 }
 
 function bindEvents() {
@@ -54,10 +63,6 @@ function bindEvents() {
     safeClick(function () { toggle("registrationOpen"); });
   });
 
-  document.getElementById("resetBtn").addEventListener("click", function () {
-    safeClick(resetSystem);
-  });
-
   document.getElementById("clearLogsBtn").addEventListener("click", function () {
     safeClick(clearLogs);
   });
@@ -65,7 +70,6 @@ function bindEvents() {
 
 function safeClick(fn) {
   if (lock) return;
-
   lock = true;
 
   try {
@@ -73,11 +77,11 @@ function safeClick(fn) {
   } catch (e) {
     console.error(e);
     alert("System Error");
-  } finally {
-    setTimeout(function () {
-      lock = false;
-    }, 300);
   }
+
+  setTimeout(function () {
+    lock = false;
+  }, 300);
 }
 
 function loadStatus() {
@@ -99,19 +103,10 @@ function toggle(key) {
   saveSystemSettings(s);
 
   if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Toggled " + key);
+    logActivity(currentUser.userId, "SUPER_ADMIN", "Toggled " + key + " = " + s[key]);
   }
 
   loadStatus();
-}
-
-function resetSystem() {
-  if (!confirm("⚠️ FULL RESET?")) return;
-
-  localStorage.clear();
-
-  alert("🔥 System Reset Complete");
-  location.reload();
 }
 
 function clearLogs() {
@@ -120,9 +115,9 @@ function clearLogs() {
   localStorage.removeItem("activityLogs");
   localStorage.removeItem("incomeLogs");
 
-  alert("Logs cleared");
-
   if (typeof logActivity === "function") {
     logActivity(currentUser.userId, "SUPER_ADMIN", "Cleared All Logs");
   }
+
+  alert("Logs cleared");
 }
