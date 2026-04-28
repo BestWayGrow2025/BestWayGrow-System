@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User Withdraw</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="data:," />
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -48,14 +51,14 @@
   <div class="card">
     <h2>Withdraw Request</h2>
 
-    <p>User ID: <span id="userId"></span></p>
+    <p>User ID: <span id="userId">Loading...</span></p>
 
-    <input type="number" id="amount" placeholder="Enter amount">
+    <input type="number" id="amount" placeholder="Enter amount" />
 
-    <br>
+    <br />
     <button id="submitBtn">Submit Withdraw</button>
 
-    <p id="msg"></p>
+    <p id="msg">Ready</p>
   </div>
 
   <script src="core_system.js"></script>
