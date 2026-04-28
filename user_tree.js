@@ -1,22 +1,33 @@
+// ========================================
+// USER TREE FINAL LOCK
+// Status: FINAL
+// ========================================
+
+// ================= STATE =================
 let session = null;
 let currentUser = null;
-let lock = false;
 
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
-  bindEvents();
   loadPage();
 });
 
+// ================= INIT PAGE =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   }
 }
 
+// ================= AUTH =================
 function authPage() {
-  session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+  try {
+    session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+  } catch (err) {
+    session = null;
+  }
 
   if (!session || !session.userId) {
     alert("Login required");
@@ -25,6 +36,7 @@ function authPage() {
   }
 
   if (typeof getUserById !== "function") {
+    alert("System error");
     window.location.href = "user_login.html";
     return;
   }
@@ -33,31 +45,56 @@ function authPage() {
 
   if (!currentUser) {
     alert("User not found");
+    localStorage.removeItem("loggedInUser");
     window.location.href = "user_login.html";
+    return;
   }
 }
 
-function bindEvents() {
-  // no events required
-}
-
+// ================= LOAD PAGE =================
 function loadPage() {
   loadTree();
 }
 
-function createNode(user) {
-  if (!user) return null;
+// ================= SAFE TEXT =================
+function safeText(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// ================= CREATE NODE =================
+function createNode(user, visited = new Set(), depth = 0) {
+  if (!user || depth > 10) return null;
+
+  if (visited.has(user.userId)) {
+    return null;
+  }
+
+  visited.add(user.userId);
 
   let wrapper = document.createElement("div");
   wrapper.className = "node-wrap";
 
   let node = document.createElement("div");
   node.className = "node";
-  node.innerHTML = `
-    <b>${user.userId}</b><br>
-    ${user.username}<br>
-    ${user.mobile || ""}
-  `;
+
+  let idEl = document.createElement("b");
+  idEl.textContent = user.userId || "N/A";
+
+  let nameEl = document.createElement("div");
+  nameEl.textContent = user.username || user.fullName || "N/A";
+
+  let mobileEl = document.createElement("div");
+  mobileEl.textContent = user.mobile || "";
+
+  node.appendChild(idEl);
+  node.appendChild(document.createElement("br"));
+  node.appendChild(nameEl);
+  node.appendChild(mobileEl);
 
   wrapper.appendChild(node);
 
@@ -66,19 +103,27 @@ function createNode(user) {
 
   let hasChild = false;
 
-  if (user.leftChild) {
+  if (typeof getUserById === "function" && user.leftChild) {
     let leftUser = getUserById(user.leftChild);
+
     if (leftUser) {
-      children.appendChild(createNode(leftUser));
-      hasChild = true;
+      let leftNode = createNode(leftUser, new Set(visited), depth + 1);
+      if (leftNode) {
+        children.appendChild(leftNode);
+        hasChild = true;
+      }
     }
   }
 
-  if (user.rightChild) {
+  if (typeof getUserById === "function" && user.rightChild) {
     let rightUser = getUserById(user.rightChild);
+
     if (rightUser) {
-      children.appendChild(createNode(rightUser));
-      hasChild = true;
+      let rightNode = createNode(rightUser, new Set(visited), depth + 1);
+      if (rightNode) {
+        children.appendChild(rightNode);
+        hasChild = true;
+      }
     }
   }
 
@@ -92,6 +137,7 @@ function createNode(user) {
   return wrapper;
 }
 
+// ================= LOAD TREE =================
 function loadTree() {
   let container = document.getElementById("tree");
 
@@ -104,9 +150,14 @@ function loadTree() {
 
   let rootNode = createNode(currentUser);
 
-  if (rootNode) {
-    tree.appendChild(rootNode);
+  if (!rootNode) {
+    let emptyNode = document.createElement("div");
+    emptyNode.className = "node";
+    emptyNode.textContent = "Tree unavailable";
+    container.appendChild(emptyNode);
+    return;
   }
 
+  tree.appendChild(rootNode);
   container.appendChild(tree);
 }
