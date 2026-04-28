@@ -1,67 +1,95 @@
-// ================= INIT =================
-if (typeof initCoreSystem === "function") initCoreSystem();
-else { alert("core_system.js missing"); throw new Error("STOP"); }
-
-// ================= AUTH =================
 let session = null;
-
-try {
-  if (typeof getSession === "function") {
-    session = getSession();
-  }
-} catch (e) {
-  console.error(e);
-}
-
-if (!session || session.role !== "super_admin") {
-  location.href = "super_admin_login.html";
-  throw new Error("STOP");
-}
-
-let currentUser = session;
-
-// ================= WELCOME =================
-document.getElementById("welcome").innerText =
-  "Welcome SUPER ADMIN (" + currentUser.userId + ")";
-
-// ================= LOCK SYSTEM =================
+let currentUser = null;
 let lock = false;
+
+document.addEventListener("DOMContentLoaded", function () {
+  initPage();
+  checkAuth();
+  bindEvents();
+  loadHome();
+});
+
+function initPage() {
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  } else {
+    alert("core_system.js missing");
+    throw new Error("STOP");
+  }
+}
+
+function checkAuth() {
+  session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
+
+  if (!session || !session.userId) {
+    window.location.href = "super_admin_login.html";
+    throw new Error("STOP");
+  }
+
+  if (typeof getUserById !== "function") {
+    window.location.href = "super_admin_login.html";
+    throw new Error("STOP");
+  }
+
+  currentUser = getUserById(session.userId);
+
+  if (!currentUser || currentUser.role !== "super_admin") {
+    localStorage.removeItem("loggedInSuperAdmin");
+    window.location.href = "super_admin_login.html";
+    throw new Error("STOP");
+  }
+
+  if ((currentUser.status || "active") !== "active") {
+    localStorage.removeItem("loggedInSuperAdmin");
+    alert("Account inactive");
+    window.location.href = "super_admin_login.html";
+    throw new Error("STOP");
+  }
+
+  document.getElementById("welcome").innerText =
+    "Welcome SUPER ADMIN (" + currentUser.userId + ")";
+}
+
+function bindEvents() {
+  document.querySelectorAll(".menu button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".menu button").forEach(function (b) {
+        b.classList.remove("active");
+      });
+      btn.classList.add("active");
+    });
+  });
+}
 
 function safeClick(btn, fn) {
   if (lock) return;
 
   lock = true;
 
-  if (btn) {
-    document.querySelectorAll(".menu button")
-      .forEach(b => b.classList.remove("active"));
-
-    btn.classList.add("active");
-  }
-
   try {
+    if (btn) {
+      document.querySelectorAll(".menu button").forEach(function (b) {
+        b.classList.remove("active");
+      });
+      btn.classList.add("active");
+    }
+
     fn();
   } catch (e) {
     console.error(e);
-    alert("Error: " + e.message);
-  } finally {
-    setTimeout(() => {
-      lock = false;
-    }, 200);
+    alert("System Error");
   }
+
+  setTimeout(function () {
+    lock = false;
+  }, 250);
 }
 
-// ================= SYSTEM CHECK =================
 function isSystemSafe() {
   let s = getSystemSettings() || {};
-  if (s.lockMode) {
-    alert("System Locked");
-    return false;
-  }
-  return true;
+  return !s.lockMode;
 }
 
-// ================= HOME =================
 function loadHome() {
   let users = getUsers() || [];
 
@@ -87,36 +115,36 @@ function loadHome() {
         <h2>${sysAdmins}</h2>
       </div>
     </div>
-
-    <hr style="margin:20px 0;">
-    <p>✔ System running normally</p>
   `;
 }
 
-// ================= CREATE =================
 function loadCreate() {
   document.getElementById("mainContent").innerHTML = `
     <h3>Create System Admin</h3>
     <input id="id" placeholder="User ID"><br>
     <input id="name" placeholder="Name"><br>
-    <input id="pass" placeholder="Password"><br>
-    <button onclick="safeClick(null,create)">Create</button>
+    <input id="pass" type="password" placeholder="Password"><br>
+    <button onclick="createSystemAdmin()">Create</button>
   `;
 }
 
-function create() {
-  if (!isSystemSafe()) return;
-
+function createSystemAdmin() {
   let id = document.getElementById("id").value.trim();
   let name = document.getElementById("name").value.trim();
   let pass = document.getElementById("pass").value.trim();
 
-  if (!id || !name || !pass) return alert("Fill all fields");
+  if (!id || !name || !pass) {
+    return alert("Fill all fields");
+  }
 
   let users = getUsers() || [];
 
   if (users.find(u => u.userId.toLowerCase() === id.toLowerCase())) {
-    return alert("Already exists");
+    return alert("ID already exists");
+  }
+
+  if (users.some(u => u.role === "system_admin" && u.userId.toLowerCase() === id.toLowerCase())) {
+    return alert("System Admin already exists");
   }
 
   users.push({
@@ -125,21 +153,20 @@ function create() {
     password: btoa(pass),
     role: "system_admin",
     status: "active",
-    createdAt: Date.now(),
-    createdBy: currentUser.userId
+    createdBy: currentUser.userId,
+    createdAt: Date.now()
   });
 
   saveUsers(users);
 
   if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Create System Admin: " + id);
+    logActivity(currentUser.userId, "SUPER_ADMIN", "Created System Admin " + id);
   }
 
   alert("System Admin Created");
   loadUsers();
 }
 
-// ================= USERS =================
 function loadUsers() {
   let users = getUsers() || [];
 
@@ -149,24 +176,20 @@ function loadUsers() {
       <tr><th>ID</th><th>Name</th><th>Role</th></tr>
   `;
 
-  users
-    .filter(u => u.userId !== "BWG000000")
-    .forEach(u => {
-      html += `
-        <tr>
-          <td>${u.userId}</td>
-          <td>${u.username || ""}</td>
-          <td>${u.role}</td>
-        </tr>
-      `;
-    });
+  users.forEach(function (u) {
+    html += `
+      <tr>
+        <td>${u.userId}</td>
+        <td>${u.username || ""}</td>
+        <td>${u.role || ""}</td>
+      </tr>
+    `;
+  });
 
   html += `</table>`;
-
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= SYSTEM =================
 function loadSystem() {
   let s = getSystemSettings() || {
     lockMode: false,
@@ -179,92 +202,61 @@ function loadSystem() {
     <h3>System Control</h3>
 
     Lock Mode: ${s.lockMode ? "ON" : "OFF"}
-    <button onclick="safeClick(null,toggleLock)">Toggle</button><br><br>
+    <button onclick="toggleSystem('lockMode')">Toggle</button><br><br>
 
     Registration: ${s.registrationOpen ? "ON" : "OFF"}
-    <button onclick="safeClick(null,toggleRegistration)">Toggle</button><br><br>
+    <button onclick="toggleSystem('registrationOpen')">Toggle</button><br><br>
 
     Admin Access: ${s.adminAccess ? "ON" : "OFF"}
-    <button onclick="safeClick(null,toggleAdmin)">Toggle</button><br><br>
+    <button onclick="toggleSystem('adminAccess')">Toggle</button><br><br>
 
     Withdraw: ${s.withdrawOpen ? "ON" : "OFF"}
-    <button onclick="safeClick(null,toggleWithdraw)">Toggle</button>
+    <button onclick="toggleSystem('withdrawOpen')">Toggle</button>
   `;
 }
 
-function toggleLock() { toggle("lockMode"); }
-function toggleRegistration() { toggle("registrationOpen"); }
-function toggleAdmin() { toggle("adminAccess"); }
-function toggleWithdraw() { toggle("withdrawOpen"); }
-
-function toggle(key) {
+function toggleSystem(key) {
   let s = getSystemSettings() || {};
-
-  if (s.lockMode && currentUser.role !== "super_admin") {
-    alert("System Locked");
-    return;
-  }
-
   s[key] = !s[key];
   saveSystemSettings(s);
 
   if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Toggle " + key + ": " + s[key]);
+    logActivity(currentUser.userId, "SUPER_ADMIN", "Toggle " + key + " = " + s[key]);
   }
 
   loadSystem();
 }
 
-// ================= LOGOUT =================
-function logout() {
-  if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Logout");
-  }
-
-  if (typeof clearSession === "function") {
-    clearSession();
-  }
-
-  location.href = "super_admin_login.html";
-}
-
-// ================= RESET =================
 function loadResetPanel() {
   document.getElementById("mainContent").innerHTML = `
     <h3>⚠️ System Reset Control</h3>
     <p style="color:red;"><b>Danger Zone</b></p>
 
-    <button onclick="safeClick(null, resetUsers)">🗑 Delete All Users</button><br><br>
-    <button onclick="safeClick(null, resetSystem)">♻️ Full System Reset</button><br><br>
-    <button onclick="safeClick(null, resetPartial)">⚙️ Reset User Data Only</button>
+    <button onclick="resetUsers()">Delete All Users</button><br><br>
+    <button onclick="resetUserData()">Reset User Data Only</button>
   `;
 }
 
 function resetUsers() {
-  if (!confirm("Delete ALL users?")) return;
+  if (!confirm("Delete all users except protected accounts?")) return;
 
   let users = getUsers() || [];
-  users = users.filter(u => u.userId === "BWG000000");
+
+  users = users.filter(function (u) {
+    return ["BWG000000", "SUPERADMIN", "SYSTEM"].includes(u.userId);
+  });
 
   saveUsers(users);
-  alert("All users deleted (except root)");
+  alert("Users deleted safely");
   loadHome();
 }
 
-function resetSystem() {
-  if (!confirm("FULL SYSTEM RESET?")) return;
-
-  localStorage.clear();
-  alert("System reset done");
-  location.reload();
-}
-
-function resetPartial() {
-  if (!confirm("Reset user data only?")) return;
+function resetUserData() {
+  if (!confirm("Reset all user data?")) return;
 
   let users = getUsers() || [];
 
-  users.forEach(u => {
+  users.forEach(function (u) {
     if (u.role === "user") {
       u.wallet = {
         balance: 0,
@@ -273,9 +265,6 @@ function resetPartial() {
         totalCredit: 0,
         totalDebit: 0
       };
-
-      u.leftChild = null;
-      u.rightChild = null;
     }
   });
 
@@ -284,5 +273,11 @@ function resetPartial() {
   loadHome();
 }
 
-// ================= INIT =================
-loadHome();
+function logout() {
+  if (typeof logActivity === "function") {
+    logActivity(currentUser.userId, "SUPER_ADMIN", "Logout");
+  }
+
+  localStorage.removeItem("loggedInSuperAdmin");
+  window.location.href = "super_admin_login.html";
+}
