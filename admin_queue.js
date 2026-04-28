@@ -38,6 +38,12 @@ function authPage() {
     window.location.href = "admin_login.html";
     throw new Error("STOP");
   }
+
+  if ((currentUser.accountStatus || currentUser.status || "active") !== "active") {
+    localStorage.removeItem("loggedInAdmin");
+    window.location.href = "admin_login.html";
+    throw new Error("STOP");
+  }
 }
 
 function bindEvents() {
@@ -82,42 +88,44 @@ function approveQueue(mobile) {
   if (lock) return;
   lock = true;
 
-  if (typeof approveRegistration !== "function") {
+  try {
+    if (typeof approveRegistration !== "function") {
+      alert("Approve system missing");
+      return;
+    }
+
+    let ok = approveRegistration(mobile);
+
+    if (ok) {
+      alert("✅ Approved");
+      loadQueue();
+    } else {
+      alert("❌ Failed");
+    }
+  } finally {
     lock = false;
-    alert("Approve system missing");
-    return;
   }
-
-  let ok = approveRegistration(mobile);
-
-  if (ok) {
-    alert("✅ Approved");
-    loadQueue();
-  } else {
-    alert("❌ Failed");
-  }
-
-  lock = false;
 }
 
 function rejectQueue(mobile) {
   if (lock) return;
   lock = true;
 
-  if (typeof rejectRegistration !== "function") {
+  try {
+    if (typeof rejectRegistration !== "function") {
+      alert("Reject system missing");
+      return;
+    }
+
+    let ok = rejectRegistration(mobile, "Rejected by admin");
+
+    if (ok) {
+      alert("❌ Rejected");
+      loadQueue();
+    } else {
+      alert("Error");
+    }
+  } finally {
     lock = false;
-    alert("Reject system missing");
-    return;
   }
-
-  let ok = rejectRegistration(mobile, "Rejected by admin");
-
-  if (ok) {
-    alert("❌ Rejected");
-    loadQueue();
-  } else {
-    alert("Error");
-  }
-
-  lock = false;
 }
