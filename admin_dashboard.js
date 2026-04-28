@@ -1,33 +1,106 @@
-// ================= LOAD ADMIN DASHBOARD PAGE =================
+let adminUser = null;
+let clickLock = false;
+let queueBtnLock = false;
+let currentPage = 1;
+const perPage = 10;
+let userSortType = "";
+let dashboardAutoRefresh = null;
+
+// ================= INIT =================
+window.addEventListener("load", function () {
+  bootAdminDashboard();
+});
+
+function bootAdminDashboard() {
+  if (typeof initCoreSystem !== "function") {
+    alert("❌ core_system.js missing");
+    return;
+  }
+
+  initCoreSystem();
+
+  const session = typeof getSession === "function"
+    ? getSession()
+    : JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
+
+  if (!session || !session.userId || session.role !== "admin") {
+    alert("Login Required");
+    window.location.href = "admin_login.html";
+    return;
+  }
+
+  adminUser = typeof getUserById === "function" ? getUserById(session.userId) : null;
+
+  if (!adminUser || adminUser.role !== "admin") {
+    clearAdminSession();
+    alert("Access Denied");
+    window.location.href = "admin_login.html";
+    return;
+  }
+
+  if ((adminUser.accountStatus || adminUser.status || "active") !== "active") {
+    alert("Admin inactive");
+    logout();
+    return;
+  }
+
+  loadAdminDashboardPage();
+}
+
+// ================= PAGE LOAD =================
 function loadAdminDashboardPage() {
   document.getElementById("welcome").innerText =
     "Welcome " + (adminUser.username || adminUser.userId) +
     " (" + adminUser.userId + ")";
 
-  document.querySelector(".menu button").classList.add("active");
+  const firstBtn = document.querySelector(".menu button");
+  if (firstBtn) firstBtn.classList.add("active");
+
   loadHome();
 
-  setInterval(() => {
-    let currentBtn = document.querySelector(".menu button.active");
+  dashboardAutoRefresh = setInterval(() => {
+    const currentBtn = document.querySelector(".menu button.active");
+    if (!currentBtn) return;
 
-    if (currentBtn && currentBtn.innerText === "System") loadSystem();
-    if (currentBtn && currentBtn.innerText === "Users") renderUsers(currentPage);
-    if (currentBtn && currentBtn.innerText === "PIN") renderPins();
-    if (currentBtn && currentBtn.innerText === "Income") renderIncomeLogs();
+    const tab = currentBtn.innerText.trim();
+
+    if (tab === "System") loadSystem();
+    if (tab === "Users") renderUsers(currentPage);
+    if (tab === "PIN") renderPins();
+    if (tab === "Income") renderIncomeLogs();
   }, 5000);
+}
+
+// ================= SAFE CLICK =================
+function safeClick(btn, fn) {
+  if (clickLock) return;
+
+  clickLock = true;
+
+  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+
+  try {
+    fn();
+  } catch (err) {
+    console.error(err);
+    document.getElementById("mainContent").innerHTML =
+      `<p class="warn">Section failed to load</p>`;
+  }
+
+  setTimeout(() => {
+    clickLock = false;
+  }, 300);
 }
 
 // ================= HOME =================
 function loadHome() {
-
-  let users = (typeof getUsers === "function") ? getUsers() : [];
+  let users = typeof getUsers === "function" ? getUsers() : [];
   let allUsers = users.filter(u => u.role === "user");
-  let activeUsers = allUsers.filter(u => u.accountStatus === "active");
-  let blockedUsers = allUsers.filter(u => u.accountStatus !== "active");
+  let activeUsers = allUsers.filter(u => (u.accountStatus || "active") === "active");
+  let blockedUsers = allUsers.filter(u => (u.accountStatus || "active") !== "active");
 
-  let totalWallet = users.reduce((sum, u) => {
-    return sum + Number(u.walletBalance || 0);
-  }, 0);
+  let totalWallet = allUsers.reduce((sum, u) => sum + Number(u.walletBalance || 0), 0);
 
   document.getElementById("mainContent").innerHTML = `
     <h3>Dashboard Overview</h3>
@@ -48,155 +121,23 @@ function loadHome() {
   `;
 }
 
-// ================= INIT CORE =================
-if (typeof initCoreSystem === "function") {
-  initCoreSystem();
-} else {
-  alert("core_system.js missing");
-  throw new Error("STOP");
-}
-
-// ================= AUTH =================
-let adminSession = JSON.parse(localStorage.getItem("loggedInAdmin"));
-
-if (!adminSession || !adminSession.userId) {
-  alert("Login Required");
-  window.location.href = "admin_login.html";
-  throw new Error("STOP");
-}
-
-// ================= ADMIN USER =================
-let adminUser = null;
-
-if (typeof getUserById === "function") {
-  adminUser = getUserById(adminSession.userId);
-}
-
-if (!adminUser) {
-  alert("Admin not found");
-  localStorage.removeItem("loggedInAdmin");
-  window.location.href = "admin_login.html";
-  throw new Error("STOP");
-}
-
-if ((adminUser.accountStatus || adminUser.status || "active") !== "active") {
-  alert("Admin inactive");
-  logout();
-  throw new Error("STOP");
-}
-
-if (adminUser.role !== "admin") {
-  alert("Access Denied");
-  logout();
-  throw new Error("STOP");
-}
-
-// ================= BUTTON LOCK =================
-let clickLock = false;
-let queueBtnLock = false;
-let currentPage = 1;
-let perPage = 10;
-let userSortType = "";
-
-function safeClick(btn, fn) {
-  if (clickLock) return;
-
-  clickLock = true;
-
-  document.querySelectorAll(".menu button").forEach(b => {
-    b.classList.remove("active");
-  });
-
-  btn.classList.add("active");
-
-  try {
-    fn();
-  } catch (err) {
-    console.error(err);
-    document.getElementById("mainContent").innerHTML =
-      `<p class="warn">Section failed to load</p>`;
-  }
-
-  setTimeout(() => {
-    clickLock = false;
-  }, 300);
-}
-
-function saveSystemSettingsSafe(settings) {
-  if (typeof safeSet === "function") {
-    safeSet("systemSettings", settings);
-  } else {
-    localStorage.setItem("systemSettings", JSON.stringify(settings));
-  }
-}
-
-function toggleQueue(val) {
-  if (queueBtnLock) return;
-
-  queueBtnLock = true;
-
-  let s = getSystemSettings() || {};
-
-  if (!s.pinQueue) s.pinQueue = {};
-
-  s.pinQueue.enabled = val;
-  saveSystemSettingsSafe(s);
-
-  setTimeout(() => {
-    queueBtnLock = false;
-    loadSystem();
-  }, 300);
-}
-
-function logout() {
-  localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInSuperAdmin");
-  window.location.href = "admin_login.html";
-}
-
 // ================= USERS =================
-let currentPage = 1;
-let perPage = 10;
-let userSortType = "";
-
 function loadUsers() {
-  let html = `
+  document.getElementById("mainContent").innerHTML = `
     <h3>User List</h3>
-
-    <input
-      type="text"
-      id="userSearch"
-      placeholder="Search User ID / Name"
-      onkeyup="filterUsers()"
-      style="
-        padding:10px;
-        width:100%;
-        margin-bottom:10px;
-        border:1px solid #ddd;
-        border-radius:8px;
-      "
-    >
-
+    <input type="text" id="userSearch" placeholder="Search User ID / Name" onkeyup="filterUsers()"
+      style="padding:10px;width:100%;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;">
     <table>
       <tr>
         <th>User ID</th>
         <th>Name</th>
-        <th onclick="sortUsers('wallet')" style="cursor:pointer;">
-          Wallet ⬍
-        </th>
-        <th onclick="sortUsers('status')" style="cursor:pointer;">
-          Status ⬍
-        </th>
+        <th onclick="sortUsers('wallet')" style="cursor:pointer;">Wallet ⬍</th>
+        <th onclick="sortUsers('status')" style="cursor:pointer;">Status ⬍</th>
       </tr>
-
       <tbody id="userTableBody"></tbody>
     </table>
-
     <div id="pagination" style="margin-top:15px;text-align:center;"></div>
   `;
-
-  document.getElementById("mainContent").innerHTML = html;
 
   renderUsers(1);
 }
@@ -204,81 +145,47 @@ function loadUsers() {
 function renderUsers(page = 1) {
   currentPage = page;
 
-  let users = (typeof getUsers === "function") ? getUsers() : [];
-  users = users.filter(u => u.role === "user");
+  let users = (typeof getUsers === "function" ? getUsers() : []).filter(u => u.role === "user");
 
   if (userSortType === "wallet") {
-    users.sort((a, b) => {
-      return Number(b.walletBalance || 0) - Number(a.walletBalance || 0);
-    });
+    users.sort((a, b) => Number(b.walletBalance || 0) - Number(a.walletBalance || 0));
   }
 
   if (userSortType === "status") {
-    users.sort((a, b) => {
-      let statusA = (a.accountStatus || "").toLowerCase();
-      let statusB = (b.accountStatus || "").toLowerCase();
-      return statusA.localeCompare(statusB);
-    });
+    users.sort((a, b) =>
+      (a.accountStatus || "").localeCompare(b.accountStatus || "")
+    );
   }
 
-  let input = "";
-  let searchBox = document.getElementById("userSearch");
+  const input = (document.getElementById("userSearch")?.value || "").toLowerCase();
 
-  if (searchBox) {
-    input = searchBox.value.toLowerCase();
+  users = users.filter(u => {
+    const id = (u.userId || "").toLowerCase();
+    const name = (u.fullName || u.username || "").toLowerCase();
+    return id.includes(input) || name.includes(input);
+  });
 
-    users = users.filter(u => {
-      let userId = (u.userId || "").toLowerCase();
-      let name = (u.fullName || u.username || "").toLowerCase();
+  const start = (page - 1) * perPage;
+  const paginatedUsers = users.slice(start, start + perPage);
 
-      return userId.includes(input) || name.includes(input);
-    });
-  }
-
-  let start = (page - 1) * perPage;
-  let end = start + perPage;
-  let paginatedUsers = users.slice(start, end);
-
-  let rows = "";
-
-  if (!paginatedUsers.length) {
-    rows = `
+  document.getElementById("userTableBody").innerHTML = paginatedUsers.length
+    ? paginatedUsers.map(u => `
       <tr>
-        <td colspan="4">No Users Found</td>
+        <td>${u.userId || "-"}</td>
+        <td>${u.fullName || u.username || "-"}</td>
+        <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
+        <td>${u.accountStatus || "active"}</td>
       </tr>
-    `;
-  } else {
-    paginatedUsers.forEach(u => {
-      rows += `
-        <tr>
-          <td>${u.userId || "-"}</td>
-          <td>${u.fullName || u.username || "-"}</td>
-          <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
-          <td>${u.accountStatus || "active"}</td>
-        </tr>
-      `;
-    });
-  }
-
-  document.getElementById("userTableBody").innerHTML = rows;
+    `).join("")
+    : `<tr><td colspan="4">No Users Found</td></tr>`;
 
   let totalPages = Math.ceil(users.length / perPage);
   let pageHtml = "";
 
   for (let i = 1; i <= totalPages; i++) {
     pageHtml += `
-      <button
-        onclick="renderUsers(${i})"
-        style="
-          margin:3px;
-          padding:6px 10px;
-          border:none;
-          border-radius:6px;
-          background:${i === page ? '#007bff' : '#ddd'};
-          color:${i === page ? '#fff' : '#000'};
-          cursor:pointer;
-        "
-      >
+      <button onclick="renderUsers(${i})"
+        style="margin:3px;padding:6px 10px;border:none;border-radius:6px;background:${i === page ? "#007bff" : "#ddd"};color:${i === page ? "#fff" : "#000"};cursor:pointer;">
         ${i}
       </button>
     `;
@@ -294,82 +201,41 @@ function filterUsers() {
 function sortUsers(type) {
   userSortType = type;
   renderUsers(1);
-}                       
+}
+
 // ================= PIN =================
 function loadPinsUI() {
-  let pins = (typeof loadPins === "function") ? loadPins() : [];
-
-  let html = `
+  document.getElementById("mainContent").innerHTML = `
     <h3>PIN Control</h3>
-
-    <input
-      type="text"
-      id="pinSearch"
-      placeholder="Search PIN ID / Type"
-      onkeyup="filterPins()"
-      style="
-        padding:10px;
-        width:100%;
-        margin-bottom:10px;
-        border:1px solid #ddd;
-        border-radius:8px;
-      "
-    >
-
+    <input type="text" id="pinSearch" placeholder="Search PIN ID / Type" onkeyup="filterPins()"
+      style="padding:10px;width:100%;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;">
     <table>
-      <tr>
-        <th>PIN ID</th>
-        <th>Type</th>
-        <th>Status</th>
-      </tr>
-
+      <tr><th>PIN ID</th><th>Type</th><th>Status</th></tr>
       <tbody id="pinTableBody"></tbody>
     </table>
   `;
-
-  document.getElementById("mainContent").innerHTML = html;
 
   renderPins();
 }
 
 function renderPins() {
-  let pins = (typeof loadPins === "function") ? loadPins() : [];
+  let pins = typeof loadPins === "function" ? loadPins() : [];
+  const input = (document.getElementById("pinSearch")?.value || "").toLowerCase();
 
-  let input = "";
-  let searchBox = document.getElementById("pinSearch");
+  pins = pins.filter(p =>
+    (p.pinId || "").toLowerCase().includes(input) ||
+    (p.type || "").toLowerCase().includes(input)
+  );
 
-  if (searchBox) {
-    input = searchBox.value.toLowerCase();
-
-    pins = pins.filter(p => {
-      let pinId = (p.pinId || "").toLowerCase();
-      let type = (p.type || "").toLowerCase();
-
-      return pinId.includes(input) || type.includes(input);
-    });
-  }
-
-  let rows = "";
-
-  if (!pins.length) {
-    rows = `
+  document.getElementById("pinTableBody").innerHTML = pins.length
+    ? pins.slice(-50).reverse().map(p => `
       <tr>
-        <td colspan="3">No PIN Available</td>
+        <td>${p.pinId || "-"}</td>
+        <td>${p.type || "-"}</td>
+        <td>${p.status || "-"}</td>
       </tr>
-    `;
-  } else {
-    pins.slice(-50).reverse().forEach(p => {
-      rows += `
-        <tr>
-          <td>${p.pinId || "-"}</td>
-          <td>${p.type || "-"}</td>
-          <td>${p.status || "-"}</td>
-        </tr>
-      `;
-    });
-  }
-
-  document.getElementById("pinTableBody").innerHTML = rows;
+    `).join("")
+    : `<tr><td colspan="3">No PIN Available</td></tr>`;
 }
 
 function filterPins() {
@@ -378,13 +244,9 @@ function filterPins() {
 
 // ================= WALLET =================
 function loadWallet() {
-  let users = (typeof getUsers === "function") ? getUsers() : [];
-  users = users.filter(u => u.role === "user");
+  let users = (typeof getUsers === "function" ? getUsers() : []).filter(u => u.role === "user");
 
-  let totalBalance = 0;
-  let totalCredit = 0;
-  let totalDebit = 0;
-  let totalHoldIncome = 0;
+  let totalBalance = 0, totalCredit = 0, totalDebit = 0, totalHoldIncome = 0;
 
   users.forEach(u => {
     totalBalance += Number(u.walletBalance || 0);
@@ -395,168 +257,75 @@ function loadWallet() {
 
   let html = `
     <h3>Wallet Overview</h3>
-
     <div class="grid">
-      <div class="miniCard">
-        <h4>Total Balance</h4>
-        <p>₹${totalBalance.toFixed(2)}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Total Credit</h4>
-        <p>₹${totalCredit.toFixed(2)}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Total Debit</h4>
-        <p>₹${totalDebit.toFixed(2)}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Total Hold Income</h4>
-        <p>₹${totalHoldIncome.toFixed(2)}</p>
-      </div>
-    </div>
-
-    <br>
-
+      <div class="miniCard"><h4>Total Balance</h4><p>₹${totalBalance.toFixed(2)}</p></div>
+      <div class="miniCard"><h4>Total Credit</h4><p>₹${totalCredit.toFixed(2)}</p></div>
+      <div class="miniCard"><h4>Total Debit</h4><p>₹${totalDebit.toFixed(2)}</p></div>
+      <div class="miniCard"><h4>Total Hold Income</h4><p>₹${totalHoldIncome.toFixed(2)}</p></div>
+    </div><br>
     <table>
-      <tr>
-        <th>User ID</th>
-        <th>Wallet</th>
-        <th>Total Credit</th>
-        <th>Total Debit</th>
-        <th>Hold Income</th>
-      </tr>
+      <tr><th>User ID</th><th>Wallet</th><th>Total Credit</th><th>Total Debit</th><th>Hold Income</th></tr>
   `;
 
-  if (!users.length) {
-    html += `
+  html += users.length
+    ? users.map(u => `
       <tr>
-        <td colspan="5">No Users Found</td>
+        <td>${u.userId || "-"}</td>
+        <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
+        <td>₹${Number(u.totalCredit || 0).toFixed(2)}</td>
+        <td>₹${Number(u.totalDebit || 0).toFixed(2)}</td>
+        <td>₹${Number(u.holdIncome || 0).toFixed(2)}</td>
       </tr>
-    `;
-  } else {
-    users.forEach(u => {
-      html += `
-        <tr>
-          <td>${u.userId || "-"}</td>
-          <td>₹${Number(u.walletBalance || 0).toFixed(2)}</td>
-          <td>₹${Number(u.totalCredit || 0).toFixed(2)}</td>
-          <td>₹${Number(u.totalDebit || 0).toFixed(2)}</td>
-          <td>₹${Number(u.holdIncome || 0).toFixed(2)}</td>
-        </tr>
-      `;
-    });
-  }
+    `).join("")
+    : `<tr><td colspan="5">No Users Found</td></tr>`;
 
   html += `</table>`;
-
   document.getElementById("mainContent").innerHTML = html;
 }
 
 // ================= INCOME =================
 function loadIncome() {
-  let logs = (typeof getIncomeLogs === "function") ? getIncomeLogs() : [];
-  let incomeSettings = (typeof getIncomeSettings === "function")
-    ? getIncomeSettings()
-    : {};
+  const incomeSettings = typeof getIncomeSettings === "function" ? getIncomeSettings() : {};
 
-  let html = `
+  document.getElementById("mainContent").innerHTML = `
     <h3>Income Logs</h3>
-
     <div class="grid">
-      <div class="miniCard">
-        <h4>Master Income</h4>
-        <p>${incomeSettings.incomeEnabled ? "ON" : "OFF"}</p>
-      </div>
+      <div class="miniCard"><h4>Master Income</h4><p>${incomeSettings.incomeEnabled ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>UGLI</h4><p>${incomeSettings.ugli ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>RLI</h4><p>${incomeSettings.rli ? "ON" : "OFF"}</p></div>
+      <div class="miniCard"><h4>Binary</h4><p>${incomeSettings.binary ? "ON" : "OFF"}</p></div>
+    </div><br>
 
-      <div class="miniCard">
-        <h4>UGLI</h4>
-        <p>${incomeSettings.ugli ? "ON" : "OFF"}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>RLI</h4>
-        <p>${incomeSettings.rli ? "ON" : "OFF"}</p>
-      </div>
-
-      <div class="miniCard">
-        <h4>Binary</h4>
-        <p>${incomeSettings.binary ? "ON" : "OFF"}</p>
-      </div>
-    </div>
-
-    <br>
-
-    <input
-      type="text"
-      id="incomeSearch"
-      placeholder="Search User ID / Income Type"
-      onkeyup="filterIncomeLogs()"
-      style="
-        padding:10px;
-        width:100%;
-        margin-bottom:10px;
-        border:1px solid #ddd;
-        border-radius:8px;
-      "
-    >
+    <input type="text" id="incomeSearch" placeholder="Search User ID / Income Type" onkeyup="filterIncomeLogs()"
+      style="padding:10px;width:100%;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;">
 
     <table>
-      <tr>
-        <th>User ID</th>
-        <th>Amount</th>
-        <th>Type</th>
-      </tr>
-
+      <tr><th>User ID</th><th>Amount</th><th>Type</th></tr>
       <tbody id="incomeTableBody"></tbody>
     </table>
   `;
-
-  document.getElementById("mainContent").innerHTML = html;
 
   renderIncomeLogs();
 }
 
 function renderIncomeLogs() {
-  let logs = (typeof getIncomeLogs === "function") ? getIncomeLogs() : [];
+  let logs = typeof getIncomeLogs === "function" ? getIncomeLogs() : [];
+  const input = (document.getElementById("incomeSearch")?.value || "").toLowerCase();
 
-  let input = "";
-  let searchBox = document.getElementById("incomeSearch");
+  logs = logs.filter(l =>
+    (l.userId || "").toLowerCase().includes(input) ||
+    (l.type || "").toLowerCase().includes(input)
+  );
 
-  if (searchBox) {
-    input = searchBox.value.toLowerCase();
-
-    logs = logs.filter(l => {
-      let userId = (l.userId || "").toLowerCase();
-      let type = (l.type || "").toLowerCase();
-
-      return userId.includes(input) || type.includes(input);
-    });
-  }
-
-  let rows = "";
-
-  if (!logs.length) {
-    rows = `
+  document.getElementById("incomeTableBody").innerHTML = logs.length
+    ? logs.slice(-50).reverse().map(l => `
       <tr>
-        <td colspan="3">No Income Logs</td>
+        <td>${l.userId || "-"}</td>
+        <td>₹${Number(l.amount || 0).toFixed(2)}</td>
+        <td>${l.type || "-"}</td>
       </tr>
-    `;
-  } else {
-    logs.slice(-50).reverse().forEach(l => {
-      rows += `
-        <tr>
-          <td>${l.userId || "-"}</td>
-          <td>₹${Number(l.amount || 0).toFixed(2)}</td>
-          <td>${l.type || "-"}</td>
-        </tr>
-      `;
-    });
-  }
-
-  document.getElementById("incomeTableBody").innerHTML = rows;
+    `).join("")
+    : `<tr><td colspan="3">No Income Logs</td></tr>`;
 }
 
 function filterIncomeLogs() {
@@ -565,26 +334,17 @@ function filterIncomeLogs() {
 
 // ================= SYSTEM =================
 function loadSystem() {
+  const s = typeof getSystemSettings === "function" ? getSystemSettings() : {};
+  const requests = typeof getPinRequests === "function" ? getPinRequests() : [];
+  const regQueue = typeof getRegQueue === "function" ? getRegQueue() : [];
 
-  let s = (typeof getSystemSettings === "function")
-    ? getSystemSettings()
-    : {};
+  const pendingPins = requests.filter(r => r.status === "PENDING").length;
+  const completedPins = requests.filter(r => r.status === "COMPLETED").length;
+  const failedPins = requests.filter(r => r.status === "FAILED").length;
 
-  let requests = (typeof getPinRequests === "function")
-    ? getPinRequests()
-    : [];
-
-  let regQueue = (typeof getRegQueue === "function")
-    ? getRegQueue()
-    : [];
-
-  let pendingPins = requests.filter(r => r.status === "PENDING").length;
-  let completedPins = requests.filter(r => r.status === "COMPLETED").length;
-  let failedPins = requests.filter(r => r.status === "FAILED").length;
-
-  let pendingReg = regQueue.filter(r => r.status === "PENDING").length;
-  let doneReg = regQueue.filter(r => r.status === "DONE").length;
-  let failedReg = regQueue.filter(r => r.status === "FAILED").length;
+  const pendingReg = regQueue.filter(r => r.status === "PENDING").length;
+  const doneReg = regQueue.filter(r => r.status === "DONE").length;
+  const failedReg = regQueue.filter(r => r.status === "FAILED").length;
 
   let html = `
     <h3>System Control</h3>
@@ -599,20 +359,13 @@ function loadSystem() {
     </div>
 
     <hr>
-
     <h3>PIN Queue</h3>
     <p>Status: ${s.pinQueue?.enabled ? "🟢 RUNNING" : "🔴 STOPPED"}</p>
   `;
 
-  // ✅ FIXED: only admin can control queue
-  if (adminUser.role === "admin") {
-    html += `
-      <button class="on" onclick="toggleQueue(true)">ON</button>
-      <button class="off" onclick="toggleQueue(false)">OFF</button>
-    `;
-  }
-
   html += `
+    <button class="on" onclick="toggleQueue(true)">ON</button>
+    <button class="off" onclick="toggleQueue(false)">OFF</button>
     <hr>
 
     <h3>PIN Request Stats</h3>
@@ -635,7 +388,23 @@ function loadSystem() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= SAVE SETTINGS SAFE =================
+function toggleQueue(val) {
+  if (queueBtnLock) return;
+
+  queueBtnLock = true;
+
+  let s = typeof getSystemSettings === "function" ? getSystemSettings() : {};
+  if (!s.pinQueue) s.pinQueue = {};
+
+  s.pinQueue.enabled = val;
+  saveSystemSettingsSafe(s);
+
+  setTimeout(() => {
+    queueBtnLock = false;
+    loadSystem();
+  }, 300);
+}
+
 function saveSystemSettingsSafe(settings) {
   if (typeof safeSet === "function") {
     safeSet("systemSettings", settings);
@@ -644,13 +413,20 @@ function saveSystemSettingsSafe(settings) {
   }
 }
 
-// ================= INIT =================
-window.addEventListener("load", function () {
-  loadAdminDashboardPage();
-  console.log("Admin Dashboard Loaded Successfully");
-});
+// ================= LOGOUT =================
+function clearAdminSession() {
+  localStorage.removeItem("loggedInAdmin");
+  localStorage.removeItem("loggedInSystemAdmin");
+  localStorage.removeItem("loggedInSuperAdmin");
+}
 
-// ================= SAFE ERROR LOG =================
-window.addEventListener("error", function(e) {
+function logout() {
+  if (dashboardAutoRefresh) clearInterval(dashboardAutoRefresh);
+  clearAdminSession();
+  window.location.href = "admin_login.html";
+}
+
+// ================= SAFE ERROR =================
+window.addEventListener("error", function (e) {
   console.error("Dashboard Error:", e.message);
 });
