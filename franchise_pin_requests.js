@@ -27,6 +27,7 @@ function authPage() {
   }
 
   if (typeof getUserById !== "function") {
+    localStorage.removeItem("loggedInFranchise");
     window.location.href = "franchise_login.html";
     throw new Error("STOP");
   }
@@ -48,8 +49,16 @@ function authPage() {
 }
 
 function bindEvents() {
-  document.getElementById("backBtn").addEventListener("click", goBack);
-  document.getElementById("submitBtn").addEventListener("click", submitRequest);
+  let backBtn = document.getElementById("backBtn");
+  let submitBtn = document.getElementById("submitBtn");
+
+  if (backBtn) {
+    backBtn.addEventListener("click", goBack);
+  }
+
+  if (submitBtn) {
+    submitBtn.addEventListener("click", submitRequest);
+  }
 }
 
 function loadPage() {
@@ -66,15 +75,18 @@ function saveRequests(data) {
 
 function submitRequest() {
   if (lock) return;
-  lock = true;
 
-  let qty = parseInt(document.getElementById("quantity").value, 10);
+  let quantityInput = document.getElementById("quantity");
+  if (!quantityInput) return;
+
+  let qty = parseInt(quantityInput.value, 10);
 
   if (!qty || qty <= 0) {
     alert("Enter valid quantity");
-    lock = false;
     return;
   }
+
+  lock = true;
 
   let requests = getRequests();
 
@@ -89,21 +101,29 @@ function submitRequest() {
   requests.push(newRequest);
   saveRequests(requests);
 
+  if (typeof logActivity === "function") {
+    logActivity(currentUser.userId, "franchise", "Created PIN Request", "FRANCHISE");
+  }
+
   alert("✅ PIN Request Submitted");
 
-  document.getElementById("quantity").value = "";
+  quantityInput.value = "";
   loadRequests();
 
   lock = false;
 }
 
 function loadRequests() {
-  let requests = getRequests();
   let table = document.getElementById("requestTable");
+  if (!table) return;
+
+  let requests = getRequests();
+
+  let myRequests = requests.filter(function (request) {
+    return request.userId === currentUser.userId;
+  });
 
   table.innerHTML = "";
-
-  let myRequests = requests.filter(r => r.userId === currentUser.userId);
 
   if (!myRequests.length) {
     table.innerHTML = "<tr><td colspan='4'>No requests</td></tr>";
@@ -113,15 +133,14 @@ function loadRequests() {
   myRequests
     .slice()
     .reverse()
-    .forEach(r => {
+    .forEach(function (request) {
       let row = document.createElement("tr");
 
-      row.innerHTML = `
-        <td>${r.requestId || "-"}</td>
-        <td>${r.quantity || 0}</td>
-        <td>${r.status || "-"}</td>
-        <td>${r.createdAt ? new Date(r.createdAt).toLocaleString() : "-"}</td>
-      `;
+      row.innerHTML =
+        "<td>" + (request.requestId || "-") + "</td>" +
+        "<td>" + (request.quantity || 0) + "</td>" +
+        "<td>" + (request.status || "-") + "</td>" +
+        "<td>" + (request.createdAt ? new Date(request.createdAt).toLocaleString() : "-") + "</td>";
 
       table.appendChild(row);
     });
