@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Tree</title>
   <link rel="icon" href="data:,">
   <style>
@@ -9,17 +11,25 @@
       text-align: center;
       background: #f4f7f9;
       padding: 20px;
+      margin: 0;
     }
 
     h2 {
       margin-bottom: 20px;
+      color: #222;
+    }
+
+    #tree {
+      width: 100%;
+      overflow-x: auto;
+      padding: 10px 0;
     }
 
     .tree {
       display: flex;
       justify-content: center;
       margin-top: 20px;
-      overflow-x: auto;
+      min-width: max-content;
     }
 
     .node-wrap {
@@ -37,12 +47,14 @@
       min-width: 130px;
       text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-size: 14px;
     }
 
     .children {
       display: flex;
       justify-content: center;
       margin-top: 20px;
+      gap: 12px;
     }
 
     .line {
@@ -55,13 +67,20 @@
 </head>
 <body>
 
-  <h2>MY TREE</h2>
+  <h2>My Tree</h2>
 
   <div id="tree"></div>
 
+  <!-- CORE -->
   <script src="core_system.js"></script>
+
+  <!-- SESSION -->
   <script src="session_manager.js"></script>
+
+  <!-- TREE ENGINE -->
   <script src="tree_engine.js"></script>
+
+  <!-- PAGE JS -->
   <script src="user_tree.js"></script>
 </body>
 </html>
