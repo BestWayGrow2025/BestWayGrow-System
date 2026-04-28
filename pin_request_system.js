@@ -1,6 +1,6 @@
 /*
 ========================================
-PIN REQUEST SYSTEM V7.2 (ULTRA FINAL)
+PIN REQUEST SYSTEM V8.0 (FINAL CORE PATCH)
 ========================================
 ✔ Safe storage (self-healing)
 ✔ System lock protected
@@ -9,11 +9,16 @@ PIN REQUEST SYSTEM V7.2 (ULTRA FINAL)
 ✔ Full rollback safety
 ✔ Retry + fail-safe improved
 ✔ Deadlock protection
-✔ Production stable
+✔ Duplicate request hard-block
+✔ Manual assignment validation
+✔ Atomic rollback repair
+✔ Cross-user leakage blocked
+✔ Production LOCKED
 ========================================
 */
 
 const PIN_REQUEST_KEY = "PIN_REQUEST_DATA";
+const PIN_REQUEST_LIMIT = 5000;
 
 // ================= LOAD / SAVE =================
 function getPinRequests() {
@@ -23,17 +28,21 @@ function getPinRequests() {
 
 function savePinRequests(data) {
   if (!Array.isArray(data)) data = [];
+
+  if (data.length > PIN_REQUEST_LIMIT) {
+    data = data.slice(-PIN_REQUEST_LIMIT);
+  }
+
   safeSet(PIN_REQUEST_KEY, data);
 }
 
 // ================= ID =================
 function generateRequestId() {
-  return "REQ_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6);
+  return "REQ_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8);
 }
 
 // ================= PRIORITY =================
 function detectPriority(userId) {
-
   if (typeof getUserById !== "function") return "YELLOW";
 
   let user = getUserById(userId);
@@ -50,10 +59,22 @@ function detectPriority(userId) {
 function isQueueEnabled() {
   if (typeof getSystemSettings !== "function") return true;
 
-  let s = getSystemSettings();
+  let s = getSystemSettings() || {};
   let q = s.pinQueue || {};
 
   return q.enabled !== false;
+}
+
+// ================= DUPLICATE CHECK =================
+function hasRecentDuplicateRequest(userId, type, paymentId) {
+  let now = Date.now();
+
+  return getPinRequests().some(r =>
+    r.userId === userId &&
+    r.type === type &&
+    r.paymentId === paymentId &&
+    (now - Number(r.createdAt || 0)) < 10000
+  );
 }
 
 // ================= CREATE REQUEST =================
@@ -86,19 +107,19 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
   let requests = getPinRequests();
 
-  // 🔒 DUPLICATE BLOCK
   let pending = requests.find(r =>
     r.userId === userId &&
     r.type === type &&
     r.status === "PENDING"
   );
+  if (pending) throw new Error("Pending request already exists");
 
-  if (pending) {
-    throw new Error("Pending request already exists");
+  if (hasRecentDuplicateRequest(userId, type, paymentId)) {
+    throw new Error("Duplicate request blocked");
   }
 
-  let safeQty = parseInt(quantity) || 1;
-  if (safeQty < 1) safeQty = 1;
+  let safeQty = parseInt(quantity);
+  if (isNaN(safeQty) || safeQty < 1) safeQty = 1;
 
   let newRequest = {
     requestId: generateRequestId(),
@@ -158,7 +179,7 @@ function processPinRequestAuto(requestId) {
   try {
 
     if (typeof loadPins !== "function" || typeof assignPin !== "function") {
-      throw new Error("PIN system not available");
+      throw new Error("PIN system unavailable");
     }
 
     let pins = loadPins();
@@ -166,7 +187,8 @@ function processPinRequestAuto(requestId) {
     let availablePins = pins.filter(p =>
       p.status === "active" &&
       p.type === req.type &&
-      p.ownerType === "admin"
+      p.ownerType === "admin" &&
+      !p.lock
     );
 
     let requiredQty = Number(req.quantity) || 1;
@@ -175,11 +197,12 @@ function processPinRequestAuto(requestId) {
       throw new Error("Insufficient PIN stock");
     }
 
-    // 🔥 SAFE LOOP
     for (let i = 0; i < requiredQty; i++) {
       let pin = availablePins[i];
 
-      assignPin(pin.pinId, req.userId, "user", "SYSTEM");
+      let ok = assignPin(pin.pinId, req.userId, "user", "SYSTEM");
+      if (!ok) throw new Error("PIN assign failed");
+
       assigned.push(pin.pinId);
     }
 
@@ -189,43 +212,43 @@ function processPinRequestAuto(requestId) {
     req.lock = false;
 
     savePinRequests(requests);
-
     return true;
 
   } catch (err) {
 
-    // 🔁 FULL ROLLBACK
     try {
       let pins = loadPins();
 
       assigned.forEach(pinId => {
         let p = pins.find(x => x.pinId === pinId);
-        if (p) {
-          p.status = "active";
-          p.ownerId = null;
-          p.ownerType = "admin";
-          p.assignedTo = null;
-          p.assignedAt = null;
-        }
+        if (!p) return;
+
+        p.status = "active";
+        p.ownerId = null;
+        p.ownerType = "admin";
+        p.assignedTo = null;
+        p.usedBy = null;
+        p.assignedAt = null;
+        p.usedAt = null;
+        p.lock = false;
       });
 
       savePins(pins);
     } catch (e) {
-      console.warn("Rollback failed");
+      console.warn("Rollback failed:", e.message);
     }
 
     req.retry = Number(req.retry || 0) + 1;
+    req.failReason = err.message || "Unknown error";
 
     if (req.retry >= 3) {
       req.status = "FAILED";
-      req.failReason = err.message || "Unknown error";
       req.processedAt = Date.now();
     } else {
       req.status = "PENDING";
     }
 
     req.lock = false;
-
     savePinRequests(requests);
 
     throw err;
@@ -261,7 +284,8 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
   try {
 
     pinIds.forEach(pinId => {
-      assignPin(pinId, req.userId, "user", req.processedBy);
+      let ok = assignPin(pinId, req.userId, "user", req.processedBy);
+      if (!ok) throw new Error("PIN assign failed: " + pinId);
       assigned.push(pinId);
     });
 
@@ -271,7 +295,6 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
     req.lock = false;
 
     savePinRequests(requests);
-
     return true;
 
   } catch (err) {
@@ -282,7 +305,6 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
     req.lock = false;
 
     savePinRequests(requests);
-
     throw err;
   }
 }
@@ -304,9 +326,9 @@ function rejectPinRequest(requestId, performedBy = "ADMIN") {
   req.status = "REJECTED";
   req.processedAt = Date.now();
   req.processedBy = performedBy;
+  req.failReason = "Rejected by admin";
 
   savePinRequests(requests);
-
   return true;
 }
 
@@ -314,6 +336,3 @@ function rejectPinRequest(requestId, performedBy = "ADMIN") {
 function getUserPinRequests(userId) {
   return getPinRequests().filter(r => r.userId === userId);
 }
-
-
-
