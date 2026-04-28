@@ -1,18 +1,27 @@
 /*
 ========================================
-PIN CONFIG SYSTEM V7.4 (ABSOLUTE FINAL)
+PIN CONFIG SYSTEM V8 (FINAL PATCH)
 ========================================
 ✔ Core aligned
-✔ Full validation
-✔ LockMode protected
-✔ Mode-safe operations (AUTO / MANUAL / OFF)
-✔ Date safe
-✔ SystemControls standardized
-✔ Return-safe functions
-✔ Cross-file compatible
-✔ Production ready
+✔ Strict schema validation
+✔ Lock-safe
+✔ Mode-safe (AUTO / MANUAL / OFF)
+✔ Type-safe merge
+✔ Date-safe enforcement
+✔ Cross-file stable
+✔ Safe control normalization
+✔ No invalid state mutation
+✔ Production locked
 ========================================
 */
+
+// =====================
+// CONSTANTS
+// =====================
+const PIN_SETTINGS_KEY = "pinSettings";
+const SYSTEM_CONTROLS_KEY = "systemControls";
+const PIN_TYPES = ["upgrade", "repurchase"];
+const PIN_MODES = ["AUTO", "MANUAL", "OFF"];
 
 // =====================
 // DEFAULT PIN
@@ -34,7 +43,7 @@ function getDefaultPin() {
 // =====================
 function getDefaultControls() {
   return {
-    pinMode: "AUTO", // AUTO / MANUAL / OFF
+    pinMode: "AUTO",
     enablePinRefund: true,
     enableFranchiseSecurity: false,
     enableMinStockRule: false,
@@ -43,17 +52,76 @@ function getDefaultControls() {
 }
 
 // =====================
+// HELPERS
+// =====================
+function isValidPinType(type) {
+  return PIN_TYPES.includes(type);
+}
+
+function normalizeDate(value) {
+  if (!value) return null;
+  let d = new Date(value);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function normalizePinConfig(data) {
+  let base = {
+    ...getDefaultPin(),
+    ...(data || {})
+  };
+
+  base.active = base.active === true;
+  base.bv = Number(base.bv || 0);
+  base.amount = Number(base.amount || 0);
+  base.gst = Number(base.gst || 0);
+
+  if (isNaN(base.bv) || base.bv < 0) base.bv = 0;
+  if (isNaN(base.amount) || base.amount < 0) base.amount = 0;
+  if (isNaN(base.gst) || base.gst < 0) base.gst = 0;
+
+  base.startDate = normalizeDate(base.startDate);
+  base.endDate = normalizeDate(base.endDate);
+  base.updatedAt = normalizeDate(base.updatedAt) || new Date().toISOString();
+
+  if (base.startDate && base.endDate) {
+    if (new Date(base.endDate) < new Date(base.startDate)) {
+      base.endDate = null;
+    }
+  }
+
+  return base;
+}
+
+function normalizeControls(data) {
+  let safe = {
+    ...getDefaultControls(),
+    ...(data || {})
+  };
+
+  if (!PIN_MODES.includes(safe.pinMode)) {
+    safe.pinMode = "AUTO";
+  }
+
+  safe.enablePinRefund = safe.enablePinRefund !== false;
+  safe.enableFranchiseSecurity = safe.enableFranchiseSecurity === true;
+  safe.enableMinStockRule = safe.enableMinStockRule === true;
+  safe.enableDirectUserPayment = safe.enableDirectUserPayment !== false;
+
+  return safe;
+}
+
+// =====================
 // PIN SETTINGS
 // =====================
 function getPinSettings() {
-  let data = safeGet("pinSettings", {});
+  let raw = safeGet(PIN_SETTINGS_KEY, {});
 
   let merged = {
-    upgrade: { ...getDefaultPin(), ...(data.upgrade || {}) },
-    repurchase: { ...getDefaultPin(), ...(data.repurchase || {}) }
+    upgrade: normalizePinConfig(raw.upgrade),
+    repurchase: normalizePinConfig(raw.repurchase)
   };
 
-  safeSet("pinSettings", merged);
+  safeSet(PIN_SETTINGS_KEY, merged);
   return merged;
 }
 
@@ -61,11 +129,11 @@ function savePinSettings(data) {
   if (!data || typeof data !== "object") return false;
 
   let safeData = {
-    upgrade: { ...getDefaultPin(), ...(data.upgrade || {}) },
-    repurchase: { ...getDefaultPin(), ...(data.repurchase || {}) }
+    upgrade: normalizePinConfig(data.upgrade),
+    repurchase: normalizePinConfig(data.repurchase)
   };
 
-  safeSet("pinSettings", safeData);
+  safeSet(PIN_SETTINGS_KEY, safeData);
   return true;
 }
 
@@ -73,26 +141,17 @@ function savePinSettings(data) {
 // SYSTEM CONTROLS
 // =====================
 function getSystemControls() {
-  let stored = safeGet("systemControls", {});
+  let stored = safeGet(SYSTEM_CONTROLS_KEY, {});
+  let merged = normalizeControls(stored);
 
-  let merged = {
-    ...getDefaultControls(),
-    ...(typeof stored === "object" ? stored : {})
-  };
-
-  safeSet("systemControls", merged);
+  safeSet(SYSTEM_CONTROLS_KEY, merged);
   return merged;
 }
 
 function saveSystemControls(data) {
   if (!data || typeof data !== "object") return false;
 
-  let safeData = {
-    ...getDefaultControls(),
-    ...data
-  };
-
-  safeSet("systemControls", safeData);
+  safeSet(SYSTEM_CONTROLS_KEY, normalizeControls(data));
   return true;
 }
 
@@ -100,55 +159,41 @@ function saveSystemControls(data) {
 // PIN MODE
 // =====================
 function isPinMode(mode) {
-  return getSystemControls().pinMode === mode;
+  return PIN_MODES.includes(mode) && getSystemControls().pinMode === mode;
 }
 
 // =====================
-// ACTIVITY LOG
+// SAFE LOG
 // =====================
 function safeActivityLog(msg) {
   if (typeof logActivity === "function") {
-    logActivity("ADMIN", "PIN", msg);
+    logActivity("ADMIN", "PIN", msg, "PIN_CONFIG");
   }
-  console.log("PIN CONFIG:", msg);
 }
 
 // =====================
 // ENABLE PIN
 // =====================
 function enablePin(type, config) {
-
-  if (!config) return false;
-  if (!["upgrade", "repurchase"].includes(type)) return false;
-
-  // 🔒 SYSTEM LOCK
+  if (!isValidPinType(type) || !config || typeof config !== "object") return false;
   if (typeof isSystemSafe === "function" && !isSystemSafe()) return false;
-
-  // 🔒 MODE OFF BLOCK
   if (isPinMode("OFF")) return false;
 
-  let bv = Number(config.bv);
-  let amount = Number(config.amount);
-  let gst = Number(config.gst || 0);
+  let next = normalizePinConfig({
+    ...config,
+    active: true,
+    updatedAt: new Date().toISOString(),
+    startDate: config.startDate || new Date().toISOString()
+  });
 
-  if (isNaN(bv) || bv <= 0 || isNaN(amount) || amount <= 0) return false;
+  if (next.bv <= 0 || next.amount <= 0) return false;
 
   let settings = getPinSettings();
+  settings[type] = next;
 
-  settings[type] = {
-    active: true,
-    bv: bv,
-    amount: amount,
-    gst: isNaN(gst) ? 0 : gst,
-    startDate: config.startDate || new Date().toISOString(),
-    endDate: config.endDate || null,
-    updatedAt: new Date().toISOString()
-  };
-
-  savePinSettings(settings);
+  if (!savePinSettings(settings)) return false;
 
   safeActivityLog(type.toUpperCase() + " PIN ENABLED");
-
   return true;
 }
 
@@ -156,44 +201,34 @@ function enablePin(type, config) {
 // DISABLE PIN
 // =====================
 function disablePin(type) {
-
-  if (!["upgrade", "repurchase"].includes(type)) return false;
-
+  if (!isValidPinType(type)) return false;
   if (typeof isSystemSafe === "function" && !isSystemSafe()) return false;
 
   let settings = getPinSettings();
+  settings[type] = {
+    ...settings[type],
+    active: false,
+    updatedAt: new Date().toISOString()
+  };
 
-  settings[type].active = false;
-  settings[type].updatedAt = new Date().toISOString();
-
-  savePinSettings(settings);
+  if (!savePinSettings(settings)) return false;
 
   safeActivityLog(type.toUpperCase() + " PIN DISABLED");
-
   return true;
 }
 
 // =====================
-// SAFE DATE
-// =====================
-function safeDate(d) {
-  if (!d) return null;
-  let date = new Date(d);
-  return isNaN(date.getTime()) ? null : date;
-}
-
-// =====================
-// CHECK ACTIVE
+// ACTIVE CHECK
 // =====================
 function isPinActive(type) {
+  if (!isValidPinType(type)) return false;
 
   let pin = getPinSettings()[type];
-  if (!pin || !pin.active) return false;
+  if (!pin || pin.active !== true) return false;
 
-  let now = new Date();
-
-  let start = safeDate(pin.startDate);
-  let end = pin.endDate ? safeDate(pin.endDate) : null;
+  let now = Date.now();
+  let start = pin.startDate ? new Date(pin.startDate).getTime() : null;
+  let end = pin.endDate ? new Date(pin.endDate).getTime() : null;
 
   if (start && now < start) return false;
   if (end && now > end) return false;
@@ -205,48 +240,42 @@ function isPinActive(type) {
 // GET ACTIVE PIN
 // =====================
 function getActivePin(type) {
-
-  let pin = getPinSettings()[type];
-  if (!pin) return null;
-
-  if (!isPinActive(type)) return null;
-
-  return pin;
+  if (!isValidPinType(type)) return null;
+  return isPinActive(type) ? getPinSettings()[type] : null;
 }
 
 // =====================
 // SYSTEM SAFETY
 // =====================
 function isPinSystemSafe(type) {
-
+  if (!isValidPinType(type)) return false;
   if (typeof isSystemSafe === "function" && !isSystemSafe()) return false;
-
   if (isPinMode("OFF")) return false;
-
-  if (!["upgrade", "repurchase"].includes(type)) return false;
 
   let pin = getActivePin(type);
   if (!pin) return false;
 
-  if (isNaN(pin.bv) || pin.bv <= 0) return false;
-  if (isNaN(pin.amount) || pin.amount <= 0) return false;
-
-  return true;
+  return pin.bv > 0 && pin.amount > 0;
 }
 
 // =====================
-// USAGE RULE
+// PURPOSE RULE
 // =====================
 function isPinAllowedForPurpose(pinType, purpose) {
+  if (!isValidPinType(pinType)) return false;
   if (pinType === "upgrade") return true;
-  if (pinType === "repurchase" && purpose === "repurchase") return true;
-  return false;
+  return pinType === "repurchase" && purpose === "repurchase";
 }
 
 // =====================
 // GST HELPER
 // =====================
 function calculateTotalWithGST(amount, gst) {
+  amount = Number(amount || 0);
   gst = Number(gst || 0);
-  return amount + (amount * gst / 100);
+
+  if (isNaN(amount) || amount < 0) amount = 0;
+  if (isNaN(gst) || gst < 0) gst = 0;
+
+  return parseFloat((amount + ((amount * gst) / 100)).toFixed(2));
 }
