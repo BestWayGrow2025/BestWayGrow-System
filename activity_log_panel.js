@@ -35,7 +35,11 @@ function authPage() {
 
   currentUser = getUserById(session.userId);
 
-  if (!currentUser || (currentUser.role !== "super_admin" && currentUser.role !== "system_admin")) {
+  if (
+    !currentUser ||
+    (currentUser.role !== "super_admin" &&
+      currentUser.role !== "system_admin")
+  ) {
     window.location.href = "super_admin_login.html";
     throw new Error("STOP");
   }
@@ -77,6 +81,11 @@ function safeClick(fn) {
 }
 
 function isSystemSafe() {
+  if (typeof getSystemSettings !== "function") {
+    alert("System settings unavailable");
+    return false;
+  }
+
   let settings = getSystemSettings() || {};
 
   if (settings.lockMode) {
@@ -94,6 +103,11 @@ function loadLogs() {
   let role = document.getElementById("role").value;
   let keyword = document.getElementById("keyword").value.trim();
   let source = document.getElementById("source").value;
+
+  if (typeof filterLogsAdvanced !== "function") {
+    document.getElementById("logTable").innerHTML = "Log system unavailable";
+    return;
+  }
 
   let logs = filterLogsAdvanced({ userId, role, keyword, source });
 
@@ -113,15 +127,15 @@ function loadLogs() {
     html += `<tr><td colspan="6">No Logs</td></tr>`;
   }
 
-  logs.reverse().forEach(function (log) {
+  logs.slice().reverse().forEach(function (log) {
     html += `
       <tr>
-        <td>${log.logId}</td>
-        <td>${log.userId}</td>
-        <td>${log.role}</td>
-        <td>${log.action}</td>
-        <td>${log.source}</td>
-        <td>${new Date(log.time).toLocaleString()}</td>
+        <td>${log.logId || "-"}</td>
+        <td>${log.userId || "-"}</td>
+        <td>${log.role || "-"}</td>
+        <td>${log.action || "-"}</td>
+        <td>${log.source || "-"}</td>
+        <td>${log.time ? new Date(log.time).toLocaleString() : "-"}</td>
       </tr>
     `;
   });
@@ -136,10 +150,20 @@ function clearLogs() {
 
   if (!confirm("Clear all logs?")) return;
 
+  if (typeof clearActivityLogs !== "function") {
+    alert("Clear log system unavailable");
+    return;
+  }
+
   clearActivityLogs(currentUser.userId);
 
   if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, currentUser.role, "Cleared Activity Logs", "ADMIN");
+    logActivity(
+      currentUser.userId,
+      currentUser.role,
+      "Cleared Activity Logs",
+      "ADMIN"
+    );
   }
 
   loadLogs();
@@ -147,6 +171,11 @@ function clearLogs() {
 
 function loadCritical() {
   if (!isSystemSafe()) return;
+
+  if (typeof getCriticalLogs !== "function") {
+    document.getElementById("criticalTable").innerHTML = "Critical log system unavailable";
+    return;
+  }
 
   let logs = getCriticalLogs();
 
@@ -165,14 +194,14 @@ function loadCritical() {
     html += `<tr><td colspan="5">No Critical Logs</td></tr>`;
   }
 
-  logs.reverse().forEach(function (log) {
+  logs.slice().reverse().forEach(function (log) {
     html += `
       <tr>
-        <td>${log.id}</td>
-        <td>${log.userId}</td>
-        <td>${log.message}</td>
-        <td>${log.source}</td>
-        <td>${new Date(log.time).toLocaleString()}</td>
+        <td>${log.id || "-"}</td>
+        <td>${log.userId || "-"}</td>
+        <td>${log.message || "-"}</td>
+        <td>${log.source || "-"}</td>
+        <td>${log.time ? new Date(log.time).toLocaleString() : "-"}</td>
       </tr>
     `;
   });
