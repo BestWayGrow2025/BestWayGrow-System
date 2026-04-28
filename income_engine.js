@@ -1,6 +1,6 @@
 /*
 ========================================
-INCOME ENGINE V9.0 (FINAL CORE PATCH)
+INCOME ENGINE V9.1 (FINAL CORE PATCH)
 ========================================
 ✔ Duplicate payout guard
 ✔ Replay-safe income execution
@@ -9,7 +9,7 @@ INCOME ENGINE V9.0 (FINAL CORE PATCH)
 ✔ Hold-credit consistency
 ✔ CTOR safe traversal
 ✔ Tree payout duplication blocked
-✔ Ledger drift reduced
+✔ Ledger drift protected
 ✔ Cross-engine safe logging
 ✔ Production LOCKED
 ========================================
@@ -101,13 +101,20 @@ function safeIncome(data) {
     if (!success) return false;
 
     if (typeof addIncomeLog === "function") {
-      addIncomeLog({
+      let logged = addIncomeLog({
         userId: data.userId,
         type: data.type,
         amount,
         sourceUser: data.sourceUser || "-",
         note: data.note || ""
       });
+
+      if (!logged) {
+        if (typeof debitWallet === "function") {
+          debitWallet(data.userId, amount, "Income rollback");
+        }
+        return false;
+      }
     }
 
     return true;
@@ -244,7 +251,6 @@ function processRepurchaseIncome(userId, bv) {
   let ctorPool = calc(usableBV, 60);
   let perLevel = parseFloat((rliPool / INCOME_CONFIG.MAX_LEVELS).toFixed(2));
 
-  let users = getUsers() || [];
   let level = 1;
   let visited = new Set([userId]);
 
@@ -253,9 +259,6 @@ function processRepurchaseIncome(userId, bv) {
     if (!parent || visited.has(parent.userId)) break;
 
     visited.add(parent.userId);
-
-    let index = users.findIndex(u => u.userId === parent.userId);
-    if (index === -1) break;
 
     if (perLevel > 0) {
       if (Number(parent.monthlyPoints || 0) >= 1) {
@@ -267,9 +270,9 @@ function processRepurchaseIncome(userId, bv) {
           note: `RLI LEVEL ${level}`
         });
       } else {
-        users[index].rliHoldBalance = parseFloat(
-          (Number(users[index].rliHoldBalance || 0) + perLevel).toFixed(2)
-        );
+        if (typeof addHoldIncome === "function") {
+          addHoldIncome(parent.userId, perLevel, `RLI LEVEL ${level}`);
+        }
       }
     }
 
@@ -277,7 +280,6 @@ function processRepurchaseIncome(userId, bv) {
     level++;
   }
 
-  saveUsers(users);
   distributeCTOR(userId, ctorPool, "repurchase");
 
   return true;
