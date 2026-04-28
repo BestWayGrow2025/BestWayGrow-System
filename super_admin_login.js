@@ -1,30 +1,43 @@
-let session = null;
-let currentUser = null;
 let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
+  initPage();
+  authPage();
+  bindEvents();
+  loadPage();
+});
+
+function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   } else {
     alert("❌ core_system.js not loaded");
     throw new Error("STOP");
   }
+}
 
-  try {
-    if (typeof getSession === "function") {
-      session = getSession();
-    }
-  } catch (e) {
-    console.error(e);
+function authPage() {
+  // login page only
+}
+
+function bindEvents() {
+  let btn = document.getElementById("loginBtn");
+
+  if (btn) {
+    btn.addEventListener("click", function () {
+      safeClick(login);
+    });
   }
+}
 
-  if (session && session.role === "super_admin") {
+function loadPage() {
+  let active = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
+
+  if (active && active.userId && active.role === "super_admin") {
     window.location.href = "super_admin_dashboard.html";
-    return;
   }
-});
+}
 
-// ================= LOCK SYSTEM =================
 function safeClick(fn) {
   if (lock) return;
 
@@ -32,128 +45,104 @@ function safeClick(fn) {
 
   try {
     fn();
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
   }
 
-  setTimeout(() => {
+  setTimeout(function () {
     lock = false;
   }, 500);
 }
 
-// ================= LOGOUT ALL =================
-function logoutAll() {
-  try {
-    localStorage.removeItem("loggedInSuperAdmin");
-    localStorage.removeItem("loggedInSystemAdmin");
-    localStorage.removeItem("loggedInAdmin");
-    localStorage.removeItem("loggedInUser");
-  } catch (e) {
-    console.error(e);
-  }
+function clearSessions() {
+  localStorage.removeItem("loggedInSuperAdmin");
+  localStorage.removeItem("loggedInSystemAdmin");
+  localStorage.removeItem("loggedInAdmin");
+  localStorage.removeItem("loggedInFranchise");
+  localStorage.removeItem("loggedInUser");
 }
 
-// ================= SAFE DECODE =================
-function safeDecode(p) {
+function safeDecode(value) {
   try {
-    return atob(p);
+    return atob(value);
   } catch {
-    return p || "";
+    return value || "";
   }
 }
 
-// ================= SAFE USERS =================
 function getSafeUsers() {
   try {
-    return getUsers() || [];
-  } catch (e) {
-    console.error(e);
+    return typeof getUsers === "function" ? getUsers() : [];
+  } catch (err) {
+    console.error(err);
     showMsg("❌ System Error");
     return [];
   }
 }
 
-// ================= SAVE SESSION =================
-function saveSession(user) {
-  try {
-    if (typeof setSession === "function") {
-      setSession({
-        userId: user.userId,
-        role: user.role
-      });
-      return true;
-    }
-
-    let data = JSON.stringify({
-      userId: user.userId,
-      role: user.role
-    });
-
-    localStorage.setItem("loggedInSuperAdmin", data);
-    return true;
-
-  } catch (e) {
-    console.error(e);
-    showMsg("❌ Session Failed");
-    return false;
-  }
-}
-
-// ================= LOGIN =================
 function login() {
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value.trim();
 
   if (!userId || !password) {
-    return showMsg("⚠️ Enter ID & Password");
+    showMsg("⚠️ Enter ID & Password");
+    return;
   }
 
   let users = getSafeUsers();
 
-  let user = users.find(u => {
-    let inputId = userId.toLowerCase();
-
+  let user = users.find(function (u) {
     return (
-      inputId === "superadmin" &&
-      u.userId === "SUPERADMIN" &&
+      String(userId).toLowerCase() === "superadmin" &&
+      String(u.userId || "") === "SUPERADMIN" &&
       u.role === "super_admin"
     );
   });
 
   if (!user) {
-    return showMsg("❌ Invalid ID");
+    showMsg("❌ Invalid ID");
+    return;
   }
 
-  if (user.status && user.status !== "active") {
-    return showMsg("🚫 Account inactive");
+  if ((user.status || "active") !== "active") {
+    showMsg("🚫 Account inactive");
+    return;
   }
 
   let storedPass = safeDecode(user.password);
 
   if (storedPass.trim() !== password) {
-    return showMsg("❌ Wrong Password");
+    showMsg("❌ Wrong Password");
+    return;
   }
 
-  logoutAll();
+  clearSessions();
 
-  let ok = saveSession(user);
-  if (!ok) return;
+  localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
+    userId: user.userId,
+    role: user.role
+  }));
+
+  if (!localStorage.getItem("loggedInSuperAdmin")) {
+    showMsg("❌ Session Failed");
+    return;
+  }
 
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "SUPER_ADMIN", "Login");
+    logActivity(user.userId, "super_admin", "Login", "ADMIN");
   }
 
   showMsg("✅ Login successful");
 
-  setTimeout(() => {
+  setTimeout(function () {
     window.location.href = "super_admin_dashboard.html";
   }, 500);
 }
 
-// ================= MESSAGE =================
 function showMsg(text) {
   let msg = document.getElementById("msg");
-  if (!msg) return;
 
-  msg.innerText = text;
+  if (msg) {
+    msg.innerText = text;
+  }
 }
