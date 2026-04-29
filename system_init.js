@@ -52,13 +52,12 @@ function initSystem() {
     }
   ];
 
-  localStorage.setItem("admins", "[]");
-  localStorage.setItem("franchisees", "[]");
-  localStorage.setItem("users", "[]");
-  localStorage.setItem("payments", "[]");
-
-  localStorage.setItem("systemSettings", JSON.stringify(systemSettings));
-  localStorage.setItem("officeUsers", JSON.stringify(officeUsers));
+  safeSet("admins", []);
+  safeSet("franchisees", []);
+  saveUsers([]);
+  safeSet("payments", []);
+  saveSystemSettings(systemSettings);
+  safeSet("officeUsers", officeUsers);
 
   document.getElementById("msg").innerText =
     "✅ System Initialized Successfully";
