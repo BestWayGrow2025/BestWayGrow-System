@@ -15,16 +15,9 @@
 ========================================
 */
 
-// ===================================
-// STORAGE
-// ===================================
 const TRIGGER_STORE_KEY = "TRIGGER_SYSTEM_STORE";
 
-// ===================================
-// LOAD STORE
-// ===================================
 function getTriggerStore() {
-
   let store = {};
 
   try {
@@ -36,11 +29,7 @@ function getTriggerStore() {
   return (store && typeof store === "object") ? store : {};
 }
 
-// ===================================
-// SAVE STORE
-// ===================================
 function saveTriggerStore(store) {
-
   if (!store || typeof store !== "object") {
     store = {};
   }
@@ -48,11 +37,7 @@ function saveTriggerStore(store) {
   safeSet(TRIGGER_STORE_KEY, store);
 }
 
-// ===================================
-// DUPLICATE CHECK
-// ===================================
 function isRecentTrigger(key, delay = 3000) {
-
   let store = getTriggerStore();
   let last = Number(store[key] || 0);
 
@@ -62,18 +47,12 @@ function isRecentTrigger(key, delay = 3000) {
 }
 
 function setTrigger(key) {
-
   let store = getTriggerStore();
   store[key] = Date.now();
-
   saveTriggerStore(store);
 }
 
-// ===================================
-// CLEAN OLD STORE
-// ===================================
 function cleanTriggerStore() {
-
   let store = getTriggerStore();
   let changed = false;
 
@@ -89,13 +68,8 @@ function cleanTriggerStore() {
   }
 }
 
-// ===================================
-// SYSTEM VALIDATION
-// ===================================
 function canRunTrigger(type) {
-
   try {
-
     if (typeof isSystemSafe === "function") {
       if (!isSystemSafe()) return false;
     }
@@ -109,17 +83,9 @@ function canRunTrigger(type) {
     if (settings.lockMode === true) return false;
     if (settings.queueStop === true) return false;
 
-    if (type === "upgrade" && settings.upgradesOpen === false) {
-      return false;
-    }
-
-    if (type === "repurchase" && settings.repurchaseOpen === false) {
-      return false;
-    }
-
-    if (type === "registration" && settings.registrationOpen === false) {
-      return false;
-    }
+    if (type === "upgrade" && settings.upgradesOpen === false) return false;
+    if (type === "repurchase" && settings.repurchaseOpen === false) return false;
+    if (type === "registration" && settings.registrationOpen === false) return false;
 
     return true;
 
@@ -129,36 +95,21 @@ function canRunTrigger(type) {
   }
 }
 
-// ===================================
-// COMMON PROCESSOR
-// ===================================
 function runIncomeTrigger(type, userId, bv, source, uniqueKey) {
+  if (!userId || !type) return false;
+  if (!canRunTrigger(type)) return false;
 
-     if (!canRunTrigger(type)) return false;
+  if (typeof isIncomeAllowed === "function") {
+    if (!isIncomeAllowed(type)) return false;
+  }
 
-    if (typeof isIncomeAllowed === "function") {
-      if (!isIncomeAllowed(type)) return false;
-    }
+  if (typeof processIncome !== "function") {
+    console.warn("processIncome missing");
+    return false;
+  }
 
-    if (typeof processIncome !== "function") {
-      console.warn("processIncome missing");
-      return false;
-    }
-  
   try {
-
-    if (!userId || !type) return false;
-
-    if (!canRunTrigger(type)) return false;
-
-    if (typeof processIncome !== "function") {
-      console.warn("processIncome missing");
-      return false;
-    }
-
-    let triggerKey = uniqueKey || (
-      "TRG_" + type + "_" + userId + "_" + bv
-    );
+    let triggerKey = uniqueKey || ("TRG_" + type + "_" + userId + "_" + Number(bv || 0));
 
     if (isRecentTrigger(triggerKey)) {
       return false;
@@ -167,7 +118,6 @@ function runIncomeTrigger(type, userId, bv, source, uniqueKey) {
     setTrigger(triggerKey);
 
     bv = Number(bv || 0);
-
     if (isNaN(bv) || bv < 0) {
       bv = 0;
     }
@@ -186,7 +136,6 @@ function runIncomeTrigger(type, userId, bv, source, uniqueKey) {
     return true;
 
   } catch (err) {
-
     console.error("Trigger error:", err.message);
 
     if (typeof logCritical === "function") {
@@ -200,20 +149,12 @@ function runIncomeTrigger(type, userId, bv, source, uniqueKey) {
   }
 }
 
-// ===================================
-// PIN USE TRIGGER
-// ===================================
 function triggerPinUseIncome(userId, pin) {
-
   if (!userId || !pin) return false;
 
-  let triggerType = pin.type || "upgrade";
+  let triggerType = String(pin.type || "upgrade").toLowerCase();
   let bv = Number(pin.bv || 0);
 
-  triggerType = String(triggerType).toLowerCase();
-
-
-  // fallback from config
   if (!bv && typeof getUpgradeBV === "function") {
     if (triggerType === "upgrade") {
       bv = getUpgradeBV();
@@ -239,11 +180,7 @@ function triggerPinUseIncome(userId, pin) {
   );
 }
 
-// ===================================
-// UPGRADE TRIGGER
-// ===================================
 function triggerUpgradeIncome(userId, bv = null) {
-
   if (!userId) return false;
 
   if (!bv && typeof getUpgradeBV === "function") {
@@ -264,11 +201,7 @@ function triggerUpgradeIncome(userId, bv = null) {
   );
 }
 
-// ===================================
-// REPURCHASE TRIGGER
-// ===================================
 function triggerRepurchaseIncome(userId, bv = null) {
-
   if (!userId) return false;
 
   if (!bv && typeof getRepurchaseBV === "function") {
@@ -289,16 +222,10 @@ function triggerRepurchaseIncome(userId, bv = null) {
   );
 }
 
-// ===================================
-// REGISTRATION TRIGGER
-// ===================================
 function triggerRegistrationIncome(userId, bv = 0) {
-
   if (!userId) return false;
 
-  let uniqueKey =
-    "REGISTRATION_" +
-    userId;
+  let uniqueKey = "REGISTRATION_" + userId;
 
   return runIncomeTrigger(
     "registration",
@@ -309,20 +236,12 @@ function triggerRegistrationIncome(userId, bv = 0) {
   );
 }
 
-// ===================================
-// CLEAR TEST TRIGGERS
-// ===================================
 function clearTriggerStore() {
-
   safeSet(TRIGGER_STORE_KEY, {});
   return true;
 }
 
-// ===================================
-// AUTO CLEANUP
-// ===================================
 if (!window.__TRIGGER_CLEANER_STARTED__) {
-
   window.__TRIGGER_CLEANER_STARTED__ = true;
 
   setInterval(() => {
