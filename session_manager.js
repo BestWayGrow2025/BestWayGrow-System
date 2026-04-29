@@ -1,20 +1,5 @@
-/*
-========================================
-SESSION MANAGER FINAL LOCK (QUEUE ALIGNED)
-========================================
-✔ Single source of truth
-✔ Role + Status validation
-✔ Dashboard safe access
-✔ Multi-tab safe
-✔ Clean + minimal (NO mismatch)
-✔ Production LOCKED
-========================================
-*/
-
-// ================= SESSION KEY =================
 const SESSION_KEY = "APP_SESSION";
 
-// ================= SAFE PARSE =================
 function safeParse(raw) {
   try {
     return JSON.parse(raw);
@@ -23,14 +8,11 @@ function safeParse(raw) {
   }
 }
 
-// ================= CLEAR =================
 function clearSession() {
   localStorage.removeItem(SESSION_KEY);
 }
 
-// ================= SET SESSION =================
 function setSession(user) {
-
   if (!user || !user.userId || !user.role) return false;
 
   let sessionData = {
@@ -39,18 +21,12 @@ function setSession(user) {
     loginTime: Date.now()
   };
 
-  localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-
+  safeSet(SESSION_KEY, sessionData);
   return true;
 }
 
-// ================= GET SESSION =================
 function getSession() {
-
-  let raw = localStorage.getItem(SESSION_KEY);
-  if (!raw) return null;
-
-  let session = safeParse(raw);
+  let session = safeGet(SESSION_KEY, null);
 
   if (!session || !session.userId || !session.role) {
     clearSession();
@@ -60,9 +36,7 @@ function getSession() {
   return session;
 }
 
-// ================= GET CURRENT USER =================
 function getCurrentUser() {
-
   let session = getSession();
   if (!session) return null;
 
@@ -70,7 +44,6 @@ function getCurrentUser() {
 
   let user = getUserById(session.userId);
 
-  // 🔒 STRICT VALIDATION (FINAL RULE)
   if (!user) {
     clearSession();
     return null;
@@ -89,9 +62,7 @@ function getCurrentUser() {
   return user;
 }
 
-// ================= PROTECT PAGE =================
 function protectUserPage() {
-
   let user = getCurrentUser();
 
   if (!user) {
@@ -103,7 +74,6 @@ function protectUserPage() {
   return user;
 }
 
-// ================= LOGOUT =================
 function logoutSession() {
   clearSession();
   window.location.href = "user_login.html";
