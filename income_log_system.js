@@ -1,16 +1,16 @@
 /*
 ========================================
-INCOME LOG SYSTEM V8.0 (FINAL CORE PATCH)
+INCOME LOG SYSTEM V8.1 (FINAL CLOSE)
 ========================================
 ✔ Core aligned (safeGet / safeSet)
 ✔ Time-window duplicate protection
 ✔ Replay-safe logging
-✔ Hold recursion blocked
-✔ Synthetic payout skip guard
+✔ Hold sync duplication blocked
+✔ Collision-safe log IDs
 ✔ Critical log crash guard
 ✔ Memory safe (auto trim)
 ✔ Error safe (no crash)
-✔ Production LOCKED
+✔ Production LOCKED / FINAL CLOSE
 ========================================
 */
 
@@ -101,6 +101,8 @@ function addIncomeLog(data) {
     // HOLD SYNC (OPTIONAL / SAFE)
     // ===============================
     try {
+      if (data.skipHoldSync === true) return true;
+
       const HOLD_SKIP_TYPES = ["hold_release", "ctor"];
 
       if (
