@@ -1,16 +1,3 @@
-/* WALLET SYSTEM V7.4 (PATCHED FINAL)
-✔ Cross-tab wallet lock
-✔ Atomic wallet commit
-✔ Deterministic txn reference
-✔ Post-save verification
-✔ Snapshot rollback safe
-✔ Atomic transfer commit
-✔ Wallet/txn paired integrity
-✔ Ledger normalization
-✔ Self-transfer blocked
-✔ Production patched
-*/
-
 var TXN_LIMIT = 5000;
 var WALLET_LOCK_KEY = "WALLET_LOCKS";
 
@@ -124,7 +111,8 @@ function generateTxnRef(prefix = "TXN") {
 }
 
 function isDuplicateTxnRef(ref) {
-  return getTransactions().some(t => t.ref === ref);
+  if (!ref) return false;
+  return getTransactions().some(t => (t.ref || "") === ref);
 }
 
 function logTransaction(userId, amount, type, reason, ref) {
@@ -199,6 +187,7 @@ function commitWalletUpdate(userId, mutateFn, type, reason, amount, ref) {
 // ===================================
 function creditWallet(userId, amount, reason = "SYSTEM", ref = null) {
   if (!userId) return false;
+
   if (typeof getSystemSettings === "function") {
     let s = getSystemSettings();
     if (s && s.lockMode) return false;
@@ -235,6 +224,7 @@ function creditWallet(userId, amount, reason = "SYSTEM", ref = null) {
 // ===================================
 function debitWallet(userId, amount, reason = "SYSTEM", ref = null) {
   if (!userId) return false;
+
   if (typeof getSystemSettings === "function") {
     let s = getSystemSettings();
     if (s && s.lockMode) return false;
@@ -287,16 +277,17 @@ function transferWallet(fromId, toId, amount, reason = "TRANSFER") {
   setUserLock(toId, true);
 
   try {
-    let debitOk = debitWallet(fromId, amount, reason + "_OUT", ref + "_D");
+    let debitOk = debitWallet(fromId, amount, reason, ref);
     if (!debitOk) throw new Error("Debit failed");
 
-    let creditOk = creditWallet(toId, amount, reason + "_IN", ref + "_C");
+    let creditOk = creditWallet(toId, amount, reason, ref);
     if (!creditOk) throw new Error("Credit failed");
 
     return true;
 
   } catch (e) {
     return false;
+
   } finally {
     setUserLock(fromId, false);
     setUserLock(toId, false);
