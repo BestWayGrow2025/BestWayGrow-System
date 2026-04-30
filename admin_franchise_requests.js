@@ -48,8 +48,11 @@ function authPage() {
 }
 
 function bindEvents() {
-  document.getElementById("refreshBtn").addEventListener("click", loadPage);
-  document.getElementById("resetPasswordBtn").addEventListener("click", resetUserPassword);
+  let refreshBtn = document.getElementById("refreshBtn");
+  if (refreshBtn) refreshBtn.addEventListener("click", loadPage);
+
+  let resetBtn = document.getElementById("resetPasswordBtn");
+  if (resetBtn) resetBtn.addEventListener("click", resetUserPassword);
 }
 
 function loadPage() {
@@ -91,14 +94,18 @@ function loadRequests() {
   let requests = getRequests();
   let container = document.getElementById("requestList");
 
-  if (!requests.length) {
+  if (!container) return;
+
+  if (!Array.isArray(requests) || requests.length === 0) {
     container.innerHTML = "No requests found";
     return;
   }
 
   let html = "";
 
-  requests.slice().reverse().forEach(function (req) {
+  let list = requests.slice().reverse();
+
+  list.forEach(function (req) {
     let actions = "✔ Processed";
 
     if (req.status === "PENDING") {
@@ -147,6 +154,10 @@ function approveRequest(requestId, userId) {
   user.role = "franchise";
   user.status = "active";
   user.isActive = true;
+
+  if (typeof initWallet === "function") {
+    initWallet(user);
+  }
 
   saveRequests(requests);
   saveUsers(users);
