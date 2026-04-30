@@ -1,81 +1,116 @@
 let session = null;
 let currentUser = null;
+let refreshInterval = null;
 
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
   bindEvents();
   loadPage();
+
+  // optional auto-refresh every 10s
+  startAutoRefresh();
 });
 
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
+  if (typeof initCoreSystem !== "function") {
     alert("core_system.js missing");
-    throw new Error("STOP");
+    return;
   }
+  initCoreSystem();
+}
+
+function forceLogout() {
+  localStorage.removeItem("loggedInAdmin");
+  window.location.href = "admin_login.html";
 }
 
 function authPage() {
   session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
 
-  if (!session || !session.userId) {
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
-  }
-
-  if (typeof getUserById !== "function") {
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
-  }
+  if (!session || !session.userId) return forceLogout();
+  if (typeof getUserById !== "function") return forceLogout();
 
   currentUser = getUserById(session.userId);
 
-  if (!currentUser || currentUser.role !== "admin") {
-    localStorage.removeItem("loggedInAdmin");
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
-  }
+  if (!currentUser || currentUser.role !== "admin") return forceLogout();
 
-  if ((currentUser.accountStatus || currentUser.status || "active") !== "active") {
-    localStorage.removeItem("loggedInAdmin");
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
-  }
+  const status = currentUser.accountStatus || currentUser.status || "active";
+  if (status !== "active") return forceLogout();
 }
 
 function bindEvents() {
-  document.getElementById("refreshBtn").addEventListener("click", loadQueue);
+  const refreshBtn = document.getElementById("refreshBtn");
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", loadQueue);
+  }
 }
 
 function loadPage() {
   loadQueue();
 }
 
+function escapeHtml(str = "") {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function loadQueue() {
   if (typeof getRegQueue !== "function") {
-    alert("Queue system missing");
+    console.warn("Queue system missing");
     return;
   }
 
-  let queue = getRegQueue() || [];
-  let container = document.getElementById("queueList");
+  const container = document.getElementById("queueList");
+  if (!container) return;
 
-  if (!queue.length) {
-    container.innerHTML = "<p>No requests found</p>";
+  const queue = getRegQueue() || [];
+
+  if (queue.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">No registration requests found</div>
+    `;
     return;
   }
 
-  container.innerHTML = queue.map(function (q) {
+  container.innerHTML = queue.map(q => {
+    const time = q.requestTime ? new Date(q.requestTime) : null;
+    const formattedTime =
+      time && !isNaN(time) ? time.toLocaleString() : "N/A";
+
     return `
       <div class="item">
-        <b>${q.username}</b><br>
-        Mobile: ${q.mobile}<br>
-        Status: ${q.status}<br>
-        Request Time: ${q.requestTime ? new Date(q.requestTime).toLocaleString() : "N/A"}<br>
-        ${q.error ? `Error: ${q.error}<br>` : ""}
+        <b>${escapeHtml(q.username)}</b><br>
+        Mobile: ${escapeHtml(q.mobile)}<br>
+        Status: ${escapeHtml(q.status)}<br>
+        Request Time: ${formattedTime}<br>
+
+        ${q.error ? `Error: ${escapeHtml(q.error)}<br>` : ""}
+
+        <div style="margin-top:8px;">
+          <button onclick="approveUser('${q.id}')">Approve</button>
+          <button onclick="rejectUser('${q.id}')">Reject</button>
+        </div>
       </div>
     `;
   }).join("");
+}
+
+function startAutoRefresh() {
+  refreshInterval = setInterval(() => {
+    loadQueue();
+  }, 10000); // 10 seconds
+}
+
+// hooks (you connect backend later)
+function approveUser(id) {
+  console.log("Approve:", id);
+}
+
+function rejectUser(id) {
+  console.log("Reject:", id);
 }
