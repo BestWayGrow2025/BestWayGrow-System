@@ -7,8 +7,6 @@ document.addEventListener("DOMContentLoaded", function () {
   authPage();
   bindEvents();
   loadPage();
-
-  // optional auto-refresh every 10s
   startAutoRefresh();
 });
 
@@ -68,32 +66,31 @@ function loadQueue() {
   const container = document.getElementById("queueList");
   if (!container) return;
 
-  const queue = getRegQueue() || [];
+  const queue = (getRegQueue() || []).filter(Boolean);
 
   if (queue.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">No registration requests found</div>
-    `;
+    container.innerHTML = `<div class="empty-state">No registration requests found</div>`;
     return;
   }
 
   container.innerHTML = queue.map(q => {
     const time = q.requestTime ? new Date(q.requestTime) : null;
-    const formattedTime =
-      time && !isNaN(time) ? time.toLocaleString() : "N/A";
+    const formattedTime = time && !isNaN(time) ? time.toLocaleString() : "N/A";
+
+    const fp = q.fingerprint || "";
 
     return `
       <div class="item">
-        <b>${escapeHtml(q.username)}</b><br>
-        Mobile: ${escapeHtml(q.mobile)}<br>
-        Status: ${escapeHtml(q.status)}<br>
+        <b>${escapeHtml(q.username || "")}</b><br>
+        Mobile: ${escapeHtml(q.mobile || "")}<br>
+        Status: ${escapeHtml(q.status || "UNKNOWN")}<br>
         Request Time: ${formattedTime}<br>
 
         ${q.error ? `Error: ${escapeHtml(q.error)}<br>` : ""}
 
         <div style="margin-top:8px;">
-          <button onclick="approveUser('${q.id}')">Approve</button>
-          <button onclick="rejectUser('${q.id}')">Reject</button>
+          <button onclick="approveUser('${fp}')">Approve</button>
+          <button onclick="rejectUser('${fp}')">Reject</button>
         </div>
       </div>
     `;
@@ -101,16 +98,16 @@ function loadQueue() {
 }
 
 function startAutoRefresh() {
-  refreshInterval = setInterval(() => {
-    loadQueue();
-  }, 10000); // 10 seconds
+  refreshInterval = setInterval(loadQueue, 10000);
 }
 
-// hooks (you connect backend later)
-function approveUser(id) {
-  console.log("Approve:", id);
+// hooks (future backend integration)
+function approveUser(fp) {
+  if (!fp) return console.warn("Missing fingerprint");
+  console.log("Approve:", fp);
 }
 
-function rejectUser(id) {
-  console.log("Reject:", id);
+function rejectUser(fp) {
+  if (!fp) return console.warn("Missing fingerprint");
+  console.log("Reject:", fp);
 }
