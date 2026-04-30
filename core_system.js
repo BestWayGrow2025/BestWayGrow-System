@@ -1,16 +1,6 @@
 /*
 ========================================
-CORE SYSTEM V8 (FINAL STABLE LOCK)
-========================================
-✔ Safe storage
-✔ User management
-✔ System settings
-✔ SYSTEM user
-✔ SYSTEM ADMIN reserved
-✔ No syntax error
-✔ No dependency break
-✔ Login compatible
-✔ Production safe
+CORE SYSTEM V8 (FINAL STABLE LOCK - FIXED)
 ========================================
 */
 
@@ -19,9 +9,7 @@ function safeGet(key, fallback) {
   try {
     let raw = localStorage.getItem(key);
 
-    if (!raw) {
-      return fallback;
-    }
+    if (!raw) return fallback;
 
     let data = JSON.parse(raw);
     return (data !== null && data !== undefined) ? data : fallback;
@@ -47,11 +35,7 @@ function getUsers() {
 }
 
 function saveUsers(users) {
-  if (!Array.isArray(users)) {
-    console.error("saveUsers rejected: invalid users payload");
-    return false;
-  }
-
+  if (!Array.isArray(users)) return false;
   safeSet("users", users);
   return true;
 }
@@ -70,7 +54,7 @@ function getSystemSettings() {
   let stored = safeGet("systemSettings", {});
   let merged = { ...defaults, ...stored };
 
-  safeSet("systemSettings", merged);
+  // ❌ FIX: DO NOT auto-save every read (was unsafe)
   return merged;
 }
 
@@ -129,11 +113,7 @@ function initCoreSystem() {
         u.role = "admin";
         u.adminType = "user_root_admin";
         u.tree = "field";
-        u.officeType = "user_root_admin";
         u.accessType = "full_user_tree_control";
-        u.status = "active";
-        u.accountStatus = "active";
-        u.blockStatus = "unblocked";
         u.visibleInTree = true;
         u.allowReferral = true;
         updated = true;
@@ -142,10 +122,6 @@ function initCoreSystem() {
       if (u.userId === "BWG000001") {
         u.username = "System Admin";
         u.role = "system_admin";
-        u.status = "active";
-        u.accountStatus = "active";
-        u.blockStatus = "unblocked";
-        u.visibleInTree = false;
         u.hiddenAccount = true;
         updated = true;
       }
@@ -156,12 +132,10 @@ function initCoreSystem() {
         u.userId === "SYSTEM"
       ) {
         u.hiddenAccount = true;
-        updated = true;
       }
     });
 
-    getSystemSettings();
-
+    // SYSTEM USERS
     if (!users.find(u => u.userId === "SUPERADMIN")) {
       users.push({
         userId: "SUPERADMIN",
@@ -169,15 +143,8 @@ function initCoreSystem() {
         password: btoa("123"),
         role: "super_admin",
         status: "active",
-        accountStatus: "active",
-        blockStatus: "unblocked",
-        visibleInTree: false,
-        allowReferral: false,
-        officeType: "super_admin",
-        accessType: "full",
         createdAt: Date.now()
       });
-      updated = true;
     }
 
     if (!users.find(u => u.userId === "BWG000001")) {
@@ -187,16 +154,8 @@ function initCoreSystem() {
         password: btoa("123456"),
         role: "system_admin",
         status: "active",
-        accountStatus: "active",
-        blockStatus: "unblocked",
-        visibleInTree: false,
-        allowReferral: false,
-        officeType: "system_admin",
-        accessType: "full",
-        createdBy: "SUPERADMIN",
         createdAt: Date.now()
       });
-      updated = true;
     }
 
     if (!users.find(u => u.userId === "BWG000000")) {
@@ -206,34 +165,10 @@ function initCoreSystem() {
         password: btoa("123456"),
         role: "admin",
         status: "active",
-        accountStatus: "active",
-        blockStatus: "unblocked",
-        adminType: "user_root_admin",
-        tree: "field",
-        officeType: "user_root_admin",
-        accessType: "full_user_tree_control",
-        visibleInTree: true,
-        allowReferral: true,
-        leftChild: "",
-        rightChild: "",
-        parentId: "",
-        sponsorId: "",
         introducerId: "",
-        position: "",
-        createdBy: "BWG000001",
+        sponsorId: "",
         createdAt: Date.now()
       });
-      updated = true;
-    }
-
-    let filteredUsers = users.filter(u =>
-      u.userId !== "BWG000002" &&
-      u.userId !== "BWG000003"
-    );
-
-    if (filteredUsers.length !== users.length) {
-      users = filteredUsers;
-      updated = true;
     }
 
     if (!users.find(u => u.userId === "SYSTEM")) {
@@ -242,19 +177,13 @@ function initCoreSystem() {
         username: "System Pool",
         role: "system",
         status: "active",
-        accountStatus: "active",
-        blockStatus: "unblocked",
-        visibleInTree: false,
-        allowReferral: false,
         wallet: {
           balance: 0,
           totalCredit: 0,
           totalDebit: 0
         },
-        totalIncome: 0,
         createdAt: Date.now()
       });
-      updated = true;
     }
 
     if (updated) {
@@ -271,4 +200,5 @@ function initCoreSystem() {
 // ================= SAVE SETTINGS =================
 function saveSystemSettings(settings) {
   safeSet("systemSettings", settings);
+}
 }
