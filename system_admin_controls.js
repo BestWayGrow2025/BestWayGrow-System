@@ -59,39 +59,36 @@ function loadSystemStatus() {
   let settings = getSystemSettings() || {};
 
   document.getElementById("systemStatus").innerHTML = `
-    Withdraw System: ${settings.withdrawStop ? "STOPPED 🔴" : "RUNNING 🟢"}<br>
-    Registration System: ${settings.registrationStop ? "STOPPED 🔴" : "RUNNING 🟢"}
+    Withdraw System: ${settings.withdrawOpen ? "RUNNING 🟢" : "STOPPED 🔴"}<br>
+    Registration System: ${settings.registrationOpen ? "RUNNING 🟢" : "STOPPED 🔴"}
   `;
 }
 
 function loadAdmins() {
   let users = getUsers() || [];
-  let admins = users.filter(function (u) {
-    return u.role === "admin";
-  });
+  let admins = users.filter(u => u.role === "admin");
 
   let table = document.getElementById("adminTable");
+  if (!table) return;
 
   if (!admins.length) {
     table.innerHTML = "<tr><td colspan='7'>No admins found</td></tr>";
     return;
   }
 
-  table.innerHTML = admins.map(function (u) {
-    return `
-      <tr>
-        <td>${u.userId}</td>
-        <td>${u.username || "-"}</td>
-        <td>${u.role}</td>
-        <td>${u.adminType || "-"}</td>
-        <td>${u.tree || "-"}</td>
-        <td>${u.status || "active"}</td>
-        <td>
-          <button onclick="toggleAdminStatus('${u.userId}')" class="warn">Toggle</button>
-        </td>
-      </tr>
-    `;
-  }).join("");
+  table.innerHTML = admins.map(u => `
+    <tr>
+      <td>${u.userId}</td>
+      <td>${u.username || "-"}</td>
+      <td>${u.role}</td>
+      <td>${u.adminType || "-"}</td>
+      <td>${u.tree || "-"}</td>
+      <td>${u.status || "active"}</td>
+      <td>
+        <button onclick="toggleAdminStatus('${u.userId}')" class="warn">Toggle</button>
+      </td>
+    </tr>
+  `).join("");
 }
 
 function toggleWithdrawSystem() {
@@ -99,7 +96,7 @@ function toggleWithdrawSystem() {
   lock = true;
 
   let settings = getSystemSettings() || {};
-  settings.withdrawStop = !settings.withdrawStop;
+  settings.withdrawOpen = !settings.withdrawOpen;
   saveSystemSettings(settings);
 
   logAction("Toggled withdraw system");
@@ -112,7 +109,7 @@ function toggleRegisterSystem() {
   lock = true;
 
   let settings = getSystemSettings() || {};
-  settings.registrationStop = !settings.registrationStop;
+  settings.registrationOpen = !settings.registrationOpen;
   saveSystemSettings(settings);
 
   logAction("Toggled registration system");
@@ -125,9 +122,7 @@ function toggleAdminStatus(userId) {
   lock = true;
 
   let users = getUsers() || [];
-  let user = users.find(function (u) {
-    return u.userId === userId;
-  });
+  let user = users.find(u => u.userId === userId);
 
   if (!user) {
     lock = false;
@@ -155,4 +150,3 @@ function logAction(action) {
     logActivity(currentUser.userId, "SYSTEM_ADMIN", action);
   }
 }
-
