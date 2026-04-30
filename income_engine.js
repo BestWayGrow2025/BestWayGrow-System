@@ -1,20 +1,3 @@
-/*
-========================================
-INCOME ENGINE V9.1 (FINAL CORE PATCH)
-========================================
-✔ Duplicate payout guard
-✔ Replay-safe income execution
-✔ Re-entrant lock protection
-✔ Wallet mutation safety
-✔ Hold-credit consistency
-✔ CTOR safe traversal
-✔ Tree payout duplication blocked
-✔ Ledger drift protected
-✔ Cross-engine safe logging
-✔ Production LOCKED
-========================================
-*/
-
 const INCOME_CONFIG = {
   UGLI_LEVEL_1: 23.81,
   UGLI_LEVEL_OTHERS: 1.19,
@@ -60,6 +43,7 @@ function canRunIncome(type) {
   try {
     let s = getSystemSettings();
     if (!s || typeof s !== "object") return false;
+
     if (s.lockMode === true) return false;
     if (type === "upgrade" && s.upgradesOpen === false) return false;
     if (type === "repurchase" && s.repurchaseOpen === false) return false;
@@ -281,7 +265,6 @@ function processRepurchaseIncome(userId, bv) {
   }
 
   distributeCTOR(userId, ctorPool, "repurchase");
-
   return true;
 }
 
@@ -314,4 +297,5 @@ function processIncome(type, userId, bv) {
   } finally {
     setIncomeLock(execKey, false);
   }
+}
 }
