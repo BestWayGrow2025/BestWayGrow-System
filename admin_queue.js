@@ -1,6 +1,5 @@
 let session = null;
 let currentUser = null;
-let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
@@ -73,59 +72,10 @@ function loadQueue() {
       <div class="item">
         <b>${q.username}</b><br>
         Mobile: ${q.mobile}<br>
-        Status: ${q.status}<br><br>
-
-        ${q.status === "PENDING"
-          ? `<button class="approve" onclick="approveQueue('${q.mobile}')">✅ Approve</button>
-             <button class="reject" onclick="rejectQueue('${q.mobile}')">❌ Reject</button>`
-          : `<small>${q.status}</small>`}
+        Status: ${q.status}<br>
+        Request Time: ${q.requestTime ? new Date(q.requestTime).toLocaleString() : "N/A"}<br>
+        ${q.error ? `Error: ${q.error}<br>` : ""}
       </div>
     `;
   }).join("");
-}
-
-function approveQueue(mobile) {
-  if (lock) return;
-  lock = true;
-
-  try {
-    if (typeof approveRegistration !== "function") {
-      alert("Approve system missing");
-      return;
-    }
-
-    let ok = approveRegistration(mobile);
-
-    if (ok) {
-      alert("✅ Approved");
-      loadQueue();
-    } else {
-      alert("❌ Failed");
-    }
-  } finally {
-    lock = false;
-  }
-}
-
-function rejectQueue(mobile) {
-  if (lock) return;
-  lock = true;
-
-  try {
-    if (typeof rejectRegistration !== "function") {
-      alert("Reject system missing");
-      return;
-    }
-
-    let ok = rejectRegistration(mobile, "Rejected by admin");
-
-    if (ok) {
-      alert("❌ Rejected");
-      loadQueue();
-    } else {
-      alert("Error");
-    }
-  } finally {
-    lock = false;
-  }
 }
