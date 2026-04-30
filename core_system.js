@@ -201,4 +201,3 @@ function initCoreSystem() {
 function saveSystemSettings(settings) {
   safeSet("systemSettings", settings);
 }
-}
