@@ -101,9 +101,9 @@ function checkStatus() {
       return;
     }
 
-    const pendingList = queue
-      .filter(q => q.status === "PENDING")
-      .sort((a, b) => new Date(a.requestTime || 0) - new Date(b.requestTime || 0));
+   const pendingList = queue
+  .filter(q => q.status === "PENDING")
+  .sort((a, b) => (a.requestTime || 0) - (b.requestTime || 0));
 
     const index = pendingList.findIndex(q => q.mobile === mobile);
 
