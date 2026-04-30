@@ -89,12 +89,11 @@ function login() {
     return;
   }
 
-  let users = getSafeUsers();
+  let users = typeof getSafeUsers === "function" ? getSafeUsers() : getUsers();
 
   let user = users.find(function (u) {
     return (
-      String(userId).toLowerCase() === "superadmin" &&
-      String(u.userId || "") === "SUPERADMIN" &&
+      String(u.userId || "").toUpperCase() === "SUPERADMIN" &&
       u.role === "super_admin"
     );
   });
@@ -109,15 +108,28 @@ function login() {
     return;
   }
 
-  let storedPass = safeDecode(user.password);
+  // SAFE PASSWORD CHECK
+  let storedPass = "";
 
-  if (storedPass.trim() !== password) {
+  try {
+    storedPass = typeof safeDecode === "function"
+      ? safeDecode(user.password)
+      : atob(user.password);
+  } catch (e) {
+    showMsg("❌ Password system error");
+    return;
+  }
+
+  if (String(storedPass).trim() !== String(password).trim()) {
     showMsg("❌ Wrong Password");
     return;
   }
 
-  clearSessions();
+  if (typeof clearSessions === "function") {
+    clearSessions();
+  }
 
+  // FIXED SESSION KEY CONSISTENCY
   localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
     userId: user.userId,
     role: user.role
@@ -139,10 +151,15 @@ function login() {
   }, 500);
 }
 
+// =====================
+// MESSAGE HANDLER (FIXED)
+// =====================
 function showMsg(text) {
   let msg = document.getElementById("msg");
 
   if (msg) {
     msg.innerText = text;
+  } else {
+    alert(text);
   }
 }
