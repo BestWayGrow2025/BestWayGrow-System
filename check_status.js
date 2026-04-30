@@ -51,13 +51,18 @@ function bindEvents() {
 // SAFE READ
 // =====================
 function getQueue() {
+  if (typeof getRegQueue === "function") {
+    let data = getRegQueue();
+    return Array.isArray(data) ? data : [];
+  }
+
   if (typeof safeGet === "function") {
-    let data = safeGet("regQueue", []);
+    let data = safeGet("REG_QUEUE_DATA", []);
     return Array.isArray(data) ? data : [];
   }
 
   try {
-    let data = JSON.parse(localStorage.getItem("regQueue") || "[]");
+    let data = JSON.parse(localStorage.getItem("REG_QUEUE_DATA") || "[]");
     return Array.isArray(data) ? data : [];
   } catch {
     return [];
@@ -98,7 +103,7 @@ function checkStatus() {
 
     const pendingList = queue
       .filter(q => q.status === "PENDING")
-      .sort((a, b) => new Date(a.queueTime) - new Date(b.queueTime));
+      .sort((a, b) => new Date(a.requestTime || 0) - new Date(b.requestTime || 0));
 
     const index = pendingList.findIndex(q => q.mobile === mobile);
 
