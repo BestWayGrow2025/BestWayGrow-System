@@ -1,6 +1,7 @@
 <script>
+
 // =====================
-// GET USERS
+// GET USERS (SAFE ALIGNED)
 // =====================
 function getUsers() {
   return JSON.parse(localStorage.getItem("users") || "[]");
@@ -11,18 +12,23 @@ function saveUsers(users) {
 }
 
 // =====================
-// GET CTOR POOL
+// GET CTOR POOL (FIXED)
 // =====================
 function getCTORPool() {
-  return JSON.parse(localStorage.getItem("ctorPool") || "0");
+  let pool = JSON.parse(localStorage.getItem("ctorPool") || "0");
+  pool = Number(pool);
+  return isNaN(pool) ? 0 : pool;
 }
 
+// =====================
+// RESET CTOR POOL
+// =====================
 function resetCTORPool() {
   localStorage.setItem("ctorPool", JSON.stringify(0));
 }
 
 // =====================
-// PIN SHARE CONFIG (EASY FUTURE CHANGE)
+// PIN SHARE CONFIG
 // =====================
 const PIN_SHARE = {
   PIN1: 1,
@@ -32,18 +38,18 @@ const PIN_SHARE = {
 };
 
 // =====================
-// GET USER SHARE
+// USER SHARE
 // =====================
 function getUserShare(user) {
-  if (!user.pin) return 0;
+  if (!user || !user.pin) return 0;
   return PIN_SHARE[user.pin] || 0;
 }
 
 // =====================
-// CHECK ACTIVE
+// ACTIVE CHECK
 // =====================
 function isUserActive(user) {
-  return user.isActive === true;
+  return user && user.isActive === true;
 }
 
 // =====================
@@ -54,13 +60,13 @@ function distributeCTOR() {
   let users = getUsers();
   let pool = getCTORPool();
 
-  if (pool <= 0) {
+  if (!pool || pool <= 0) {
     alert("No CTOR pool available");
     return;
   }
 
   // =====================
-  // CALCULATE TOTAL SHARE
+  // TOTAL SHARE CALCULATION
   // =====================
   let totalShare = 0;
 
@@ -70,13 +76,13 @@ function distributeCTOR() {
     }
   });
 
-  if (totalShare === 0) {
+  if (totalShare <= 0) {
     alert("No eligible users for CTOR");
     return;
   }
 
   // =====================
-  // DISTRIBUTE INCOME
+  // DISTRIBUTION
   // =====================
   users.forEach(u => {
 
@@ -90,7 +96,7 @@ function distributeCTOR() {
     if (income > 0 && typeof creditWallet === "function") {
       creditWallet(
         u.userId,
-        income,
+        Number(income.toFixed(2)),
         "CTOR Monthly Income"
       );
     }
@@ -98,11 +104,11 @@ function distributeCTOR() {
   });
 
   // =====================
-  // RESET POOL AFTER PAY
+  // RESET POOL
   // =====================
   resetCTORPool();
 
   alert("CTOR Distributed Successfully");
-
 }
+
 </script>
