@@ -52,6 +52,11 @@ function encodePass(password) {
   }
 }
 
+function generateShareLink(userId, position) {
+  const base = window.location.origin || "";
+  return `${base}/user_register.html?ref=${userId}&pos=${position}`;
+}
+
 function registerUser() {
   if (lock) return;
   lock = true;
@@ -103,6 +108,10 @@ function registerUser() {
     return;
   }
 
+  // TEMP ID (UI PURPOSE ONLY)
+  const tempUserId = "BWG" + Date.now() + Math.floor(Math.random() * 1000);
+  const shareLink = generateShareLink(tempUserId, position.value);
+
   const added = addToRegistrationQueue({
     username: username,
     email: email,
@@ -121,8 +130,20 @@ function registerUser() {
   msg.innerHTML = `
     <div>
       ✅ Registration Request Submitted<br><br>
+
+      <b>Your Temporary ID:</b> ${tempUserId}<br><br>
+
+      <b>Share Link:</b><br>
+      <input type="text" value="${shareLink}" readonly style="width:100%"><br><br>
+
+      <button onclick="navigator.clipboard.writeText('${shareLink}')">
+        Copy Link
+      </button><br><br>
+
       Your request is in processing queue.<br><br>
-      Please check status after approval.<br><br>
+
+      Please check status shortly.<br><br>
+
       <a href="check_status.html">
         <button>Check Status</button>
       </a>
