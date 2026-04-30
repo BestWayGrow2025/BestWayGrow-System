@@ -152,7 +152,12 @@ function createUserWithTree(req) {
       logActivity(userId, "SYSTEM", "TREE USER CREATED");
     }
 
-    return savedUser;
+   return {
+  user: savedUser,
+  userId: savedUser.userId,
+  introducerId: req.introducerId,
+  position: placement.side
+};
 
   } catch (e) {
     // ================= ROLLBACK =================
