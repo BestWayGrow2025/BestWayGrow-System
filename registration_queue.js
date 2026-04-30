@@ -1,6 +1,6 @@
 /*
 ========================================
-REGISTRATION QUEUE SYSTEM v10.1 (PATCHED FINAL)
+REGISTRATION QUEUE SYSTEM v10.1 (FINAL FIXED)
 ========================================
 ✔ Queue-only registration flow
 ✔ UI never creates user directly
@@ -12,7 +12,7 @@ REGISTRATION QUEUE SYSTEM v10.1 (PATCHED FINAL)
 ✔ Failed retention cleanup
 ✔ Safe retry handling
 ✔ Activity logging
-✔ Production patched
+✔ Production stable
 ========================================
 */
 
@@ -22,8 +22,8 @@ var REG_LOCK_KEY = "REG_QUEUE_LOCK";
 var REG_LOCK_OWNER = "TAB_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 
 var REG_MAX_BATCH = 5;
-var REG_FAILED_TTL = 24 * 60 * 60 * 1000;      // 24h
-var REG_DONE_TTL = 6 * 60 * 60 * 1000;         // 6h
+var REG_FAILED_TTL = 24 * 60 * 60 * 1000;
+var REG_DONE_TTL = 6 * 60 * 60 * 1000;
 var REG_ACTIVE_TIMER = null;
 
 // ================= LOAD / SAVE =================
@@ -122,8 +122,7 @@ function isValidQueueRow(row) {
     typeof row === "object" &&
     row.mobile &&
     row.username &&
-    row.password &&
-    row.status
+    row.password
   );
 }
 
@@ -136,8 +135,7 @@ function addToRegistrationQueue(data) {
   let fingerprint = makeRegFingerprint(data);
 
   let exists = queue.find(q =>
-    q.fingerprint === fingerprint &&
-    q.status !== "FAILED"
+    q.fingerprint === fingerprint && q.status !== "FAILED"
   );
 
   if (exists) return false;
@@ -147,15 +145,14 @@ function addToRegistrationQueue(data) {
 
   if (typeof getUsers === "function") {
     let users = getUsers() || [];
-    let userExists = users.find(u => u.mobile === data.mobile);
-    if (userExists) return false;
+    if (users.find(u => u.mobile === data.mobile)) return false;
   }
 
   queue.push({
     ...data,
     fingerprint: fingerprint,
     requestTime: Date.now(),
-    status: "PENDING",
+    status: data.status || "PENDING",
     retry: 0,
     error: ""
   });
@@ -174,24 +171,24 @@ function addToRegistrationQueue(data) {
 
 // ================= PROCESS ONE =================
 function processOneRegistration(req) {
-  if (!req) throw new Error("Invalid request");
+  if (!req || !req.mobile) throw new Error("Invalid request");
+
   if (typeof createUserWithTree !== "function") {
-    throw new Error("Tree system missing");
+    throw new Error("createUserWithTree missing");
   }
 
-  let beforeUsers = typeof getUsers === "function" ? (getUsers() || []) : [];
+  let users = typeof getUsers === "function" ? getUsers() : [];
 
-  if (beforeUsers.find(u => u.mobile === req.mobile)) {
+  if (users.find(u => u.mobile === req.mobile)) {
     throw new Error("User already exists");
   }
 
   createUserWithTree(req);
 
-  let afterUsers = typeof getUsers === "function" ? (getUsers() || []) : [];
-  let created = afterUsers.find(u => u.mobile === req.mobile);
+  let created = users.find(u => u.mobile === req.mobile);
 
   if (!created || !created.userId) {
-    throw new Error("Post-create verification failed");
+    throw new Error("User creation failed");
   }
 
   return true;
@@ -251,7 +248,7 @@ function processRegistrationQueue() {
     cleanupRegistrationQueue();
 
   } catch (e) {
-    console.error("Queue processing failed:", e);
+    console.error("Queue error:", e);
   } finally {
     setRegLock(false);
     scheduleRegistrationQueue();
@@ -276,14 +273,13 @@ function cleanupRegistrationQueue() {
     }
 
     if (row.status === "FAILED" && row.failedAt && (now - row.failedAt > REG_FAILED_TTL)) {
-      archive.push({ ...row, archivedAt: now, archivedReason: "FAILED_TTL" });
+      archive.push(row);
       continue;
     }
 
     keep.push(row);
   }
 
-  archive = archive.filter(a => !a.completedAt || (now - a.completedAt < REG_DONE_TTL));
   saveRegArchive(archive);
   saveRegQueue(keep);
 }
@@ -293,22 +289,15 @@ function scheduleRegistrationQueue() {
   if (REG_ACTIVE_TIMER) clearTimeout(REG_ACTIVE_TIMER);
 
   let queue = getRegQueue();
-  let hasPending = queue.some(q => q && q.status === "PENDING");
+  let hasPending = queue.some(q => q.status === "PENDING");
 
-  REG_ACTIVE_TIMER = setTimeout(function () {
-    try {
-      processRegistrationQueue();
-    } catch (e) {
-      console.error("QUEUE LOOP ERROR:", e);
-      scheduleRegistrationQueue();
-    }
+  REG_ACTIVE_TIMER = setTimeout(() => {
+    processRegistrationQueue();
   }, hasPending ? 1000 : 8000);
 }
 
 function startRegistrationQueue() {
-  setTimeout(function () {
-    processRegistrationQueue();
-  }, 150);
+  setTimeout(() => processRegistrationQueue(), 150);
 }
 
 // ================= GLOBAL EXPORT =================
@@ -320,6 +309,7 @@ window.addToRegistrationQueue = addToRegistrationQueue;
 window.processRegistrationQueue = processRegistrationQueue;
 window.processOneRegistration = processOneRegistration;
 window.cleanupRegistrationQueue = cleanupRegistrationQueue;
+window.startRegistrationQueue = startRegistrationQueue;
 
 // ================= START =================
 if (!window.__REG_QUEUE_STARTED__) {
