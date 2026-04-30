@@ -5,6 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Register</title>
   <link rel="icon" href="data:,">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7f9;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .page {
+      background: #fff;
+      max-width: 520px;
+      margin: auto;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    .radio-group {
+      margin: 10px 0;
+    }
+
+    .radio-group label {
+      display: inline-block;
+      margin: 0 10px;
+      font-weight: normal;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    #msg {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
@@ -18,7 +80,7 @@
       <input id="password" type="password" placeholder="Password">
 
       <label>Select Position:</label>
-      <div>
+      <div class="radio-group">
         <label><input type="radio" name="position" value="L"> LEFT</label>
         <label><input type="radio" name="position" value="R"> RIGHT</label>
       </div>
@@ -30,8 +92,8 @@
   </div>
 
   <script src="core_system.js"></script>
-<script src="session_manager.js"></script>
-<script src="registration_queue.js"></script>
-<script src="user_register.js"></script>
+  <script src="session_manager.js"></script>
+  <script src="registration_queue.js"></script>
+  <script src="user_register.js"></script>
 </body>
 </html>
