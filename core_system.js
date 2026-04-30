@@ -54,7 +54,7 @@ function getSystemSettings() {
   let stored = safeGet("systemSettings", {});
   let merged = { ...defaults, ...stored };
 
-  // ❌ FIX: DO NOT auto-save every read (was unsafe)
+  safeSet("systemSettings", merged);
   return merged;
 }
 
