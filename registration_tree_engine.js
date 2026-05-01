@@ -1,18 +1,15 @@
 /*
 ========================================
-REGISTRATION TREE ENGINE v4.1 (PATCHED FINAL)
+REGISTRATION TREE ENGINE v4.2 (FINAL STABLE FIX)
 ========================================
 ✔ Collision-safe userId
-✔ Directional LEFT / RIGHT deep placement
-✔ Cycle-safe traversal
-✔ Atomic parent-child commit
-✔ Parent rollback protection
+✔ Safe LEFT / RIGHT deep traversal
+✔ Cycle protection
+✔ Broken-node protection
+✔ Safe parent resolution
+✔ Queue-safe execution
 ✔ Post-save integrity verification
-✔ Root / self-link protection
-✔ Distinct introducer / parent / sponsor
-✔ Safe storage commit
-✔ Activity logging
-✔ Production patched
+✔ Production stable
 ========================================
 */
 
@@ -37,6 +34,7 @@ function generateUserId() {
 // ================= FIND DEEP POSITION =================
 function findDeepPosition(introducerId, position) {
   let users = getUsers() || [];
+
   let current = users.find(u => u.userId === introducerId);
 
   if (!current) throw new Error("Invalid introducer");
@@ -44,30 +42,37 @@ function findDeepPosition(introducerId, position) {
   let visited = new Set();
 
   while (true) {
+
+    if (!current) {
+      throw new Error("Tree broken (null node)");
+    }
+
     if (visited.has(current.userId)) {
       throw new Error("Tree cycle detected");
     }
+
     visited.add(current.userId);
 
     if (position === "L") {
-      if (!current.leftChild) return { parent: current, side: "L" };
 
-      if (current.leftChild === current.userId) {
-        throw new Error("Self-link detected");
+      if (!current.leftChild) {
+        return { parent: current, side: "L" };
       }
 
       current = users.find(u => u.userId === current.leftChild);
-    } else {
-      if (!current.rightChild) return { parent: current, side: "R" };
 
-      if (current.rightChild === current.userId) {
-        throw new Error("Self-link detected");
+    } else {
+
+      if (!current.rightChild) {
+        return { parent: current, side: "R" };
       }
 
       current = users.find(u => u.userId === current.rightChild);
     }
 
-    if (!current) throw new Error("Tree broken");
+    if (!current) {
+      throw new Error("Tree broken during traversal");
+    }
   }
 }
 
@@ -85,11 +90,18 @@ function createUserWithTree(req) {
   if (exists) throw new Error("Mobile already exists");
 
   let userId = generateUserId();
+
   let placement = findDeepPosition(req.introducerId, req.position || "L");
+
+  if (!placement || !placement.parent) {
+    throw new Error("Invalid tree placement");
+  }
+
   let parent = placement.parent;
 
-  if (!parent || !parent.userId) throw new Error("Invalid parent");
-  if (parent.userId === userId) throw new Error("Invalid self parent");
+  if (!parent.userId) {
+    throw new Error("Invalid parent node");
+  }
 
   let originalLeft = parent.leftChild;
   let originalRight = parent.rightChild;
@@ -101,9 +113,9 @@ function createUserWithTree(req) {
     password: req.password,
     mobile: req.mobile,
 
-    introducerId: req.introducerId,      // who referred
-    sponsorId: req.introducerId,         // sponsor / referral source
-    parentId: parent.userId,             // actual tree placement parent
+    introducerId: req.introducerId,
+    sponsorId: req.introducerId,
+    parentId: parent.userId,
 
     position: placement.side,
 
@@ -120,6 +132,8 @@ function createUserWithTree(req) {
   };
 
   try {
+
+    // ================= LINK TREE =================
     if (placement.side === "L") {
       parent.leftChild = userId;
     } else {
@@ -134,8 +148,9 @@ function createUserWithTree(req) {
       localStorage.setItem("users", JSON.stringify(users));
     }
 
-    // ================= POST-SAVE VERIFY =================
+    // ================= VERIFY =================
     let savedUsers = getUsers() || [];
+
     let savedUser = savedUsers.find(u => u.userId === userId);
     let savedParent = savedUsers.find(u => u.userId === parent.userId);
 
@@ -146,20 +161,21 @@ function createUserWithTree(req) {
       (placement.side === "L" && savedParent.leftChild === userId) ||
       (placement.side === "R" && savedParent.rightChild === userId);
 
-    if (!linked) throw new Error("Parent-child link verification failed");
+    if (!linked) throw new Error("Tree link verification failed");
 
     if (typeof logActivity === "function") {
       logActivity(userId, "SYSTEM", "TREE USER CREATED");
     }
 
-   return {
-  user: savedUser,
-  userId: savedUser.userId,
-  introducerId: req.introducerId,
-  position: placement.side
-};
+    return {
+      user: savedUser,
+      userId: savedUser.userId,
+      introducerId: req.introducerId,
+      position: placement.side
+    };
 
   } catch (e) {
+
     // ================= ROLLBACK =================
     parent.leftChild = originalLeft;
     parent.rightChild = originalRight;
