@@ -1,13 +1,13 @@
 /*
 ========================================
-USER REGISTER v4.6 (FINAL COPY BUTTON FIX)
+USER REGISTER v4.7 (FINAL OPEN LINK BUTTON)
 ========================================
 ✔ Queue-only registration
 ✔ Live post-submit watcher
 ✔ Temporary ID → Real ID replacement
 ✔ Real referral link update
 ✔ GitHub Pages repo path safe link
-✔ Stable copy button (dynamic render safe)
+✔ Fast open referral link button
 ✔ Duplicate mobile check
 ✔ Duplicate email check
 ✔ Queue-safe submit
@@ -26,9 +26,9 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener("click", function (e) {
-  if (e.target.classList.contains("copy-link-btn")) {
+  if (e.target.classList.contains("open-link-btn")) {
     const link = e.target.getAttribute("data-link") || "";
-    navigator.clipboard.writeText(link);
+    if (link) window.open(link, "_blank");
   }
 });
 
@@ -101,8 +101,8 @@ function watchRegistrationStatus(mobile, tempId, tempLink, position) {
         <b>Share Link:</b><br>
         <input value="${realLink}" readonly style="width:100%"><br><br>
 
-        <button type="button" class="copy-link-btn" data-link="${realLink}">
-          Copy Link
+        <button type="button" class="open-link-btn" data-link="${realLink}">
+          Open Referral Link
         </button><br><br>
 
         Status: Completed
@@ -133,8 +133,8 @@ function watchRegistrationStatus(mobile, tempId, tempLink, position) {
         <b>Share Link:</b><br>
         <input value="${tempLink}" readonly style="width:100%"><br><br>
 
-        <button type="button" class="copy-link-btn" data-link="${tempLink}">
-          Copy Link
+        <button type="button" class="open-link-btn" data-link="${tempLink}">
+          Open Referral Link
         </button><br><br>
 
         Status: Still processing...
@@ -221,8 +221,8 @@ function registerUser() {
     <b>Share Link:</b><br>
     <input value="${tempLink}" readonly style="width:100%"><br><br>
 
-    <button type="button" class="copy-link-btn" data-link="${tempLink}">
-      Copy Link
+    <button type="button" class="open-link-btn" data-link="${tempLink}">
+      Open Referral Link
     </button><br><br>
 
     Status: Processing Queue...
