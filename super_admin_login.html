@@ -3,19 +3,28 @@
 <head>
   <title>Super Admin Login</title>
   <meta charset="UTF-8">
+
+  <!-- basic safety -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
 
   <div style="width:320px;margin:80px auto;text-align:center;">
-    
+
     <h2>SUPER ADMIN LOGIN</h2>
 
-    <input id="userId" placeholder="User ID" style="width:100%;padding:10px;margin:8px 0;">
-    
-    <input id="password" type="password" placeholder="Password" style="width:100%;padding:10px;margin:8px 0;">
+    <input id="userId"
+           placeholder="User ID"
+           style="width:100%;padding:10px;margin:8px 0;">
 
-    <button onclick="login()" style="width:100%;padding:10px;">
+    <input id="password"
+           type="password"
+           placeholder="Password"
+           style="width:100%;padding:10px;margin:8px 0;">
+
+    <button id="loginBtn"
+            style="width:100%;padding:10px;">
       Login
     </button>
 
@@ -23,17 +32,29 @@
 
   </div>
 
-  <!-- ✅ IMPORTANT: LOAD CORE FIRST -->
+  <!-- ================= CORE SYSTEM (MUST FIRST) ================= -->
   <script src="core_system.js"></script>
 
-  <!-- (optional if you use it) -->
+  <!-- ================= OPTIONAL SYSTEMS ================= -->
   <script src="activity_log.js"></script>
-
-  <!-- session helper if you have -->
   <script src="session_manager.js"></script>
 
-  <!-- login logic -->
+  <!-- ================= LOGIN LOGIC ================= -->
   <script src="super_admin_login.js"></script>
+
+  <!-- ================= SAFETY INIT ================= -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // auto-bind login safely (prevents undefined click issues)
+      const btn = document.getElementById("loginBtn");
+
+      if (btn && typeof login === "function") {
+        btn.addEventListener("click", function () {
+          login();
+        });
+      }
+    });
+  </script>
 
 </body>
 </html>
