@@ -1,16 +1,16 @@
 /*
 ========================================
-USER REGISTER v4.5 (FINAL LIVE STATUS + GITHUB LINK FIX)
+USER REGISTER v4.6 (FINAL COPY BUTTON FIX)
 ========================================
 ✔ Queue-only registration
 ✔ Live post-submit watcher
 ✔ Temporary ID → Real ID replacement
 ✔ Real referral link update
 ✔ GitHub Pages repo path safe link
+✔ Stable copy button (dynamic render safe)
 ✔ Duplicate mobile check
 ✔ Duplicate email check
 ✔ Queue-safe submit
-✔ Stable UI refresh
 ========================================
 */
 
@@ -23,6 +23,13 @@ document.addEventListener("DOMContentLoaded", function () {
   authPage();
   bindEvents();
   loadPage();
+});
+
+document.addEventListener("click", function (e) {
+  if (e.target.classList.contains("copy-link-btn")) {
+    const link = e.target.getAttribute("data-link") || "";
+    navigator.clipboard.writeText(link);
+  }
 });
 
 function initPage() {
@@ -94,7 +101,7 @@ function watchRegistrationStatus(mobile, tempId, tempLink, position) {
         <b>Share Link:</b><br>
         <input value="${realLink}" readonly style="width:100%"><br><br>
 
-        <button onclick="navigator.clipboard.writeText('${realLink}')">
+        <button type="button" class="copy-link-btn" data-link="${realLink}">
           Copy Link
         </button><br><br>
 
@@ -126,7 +133,7 @@ function watchRegistrationStatus(mobile, tempId, tempLink, position) {
         <b>Share Link:</b><br>
         <input value="${tempLink}" readonly style="width:100%"><br><br>
 
-        <button onclick="navigator.clipboard.writeText('${tempLink}')">
+        <button type="button" class="copy-link-btn" data-link="${tempLink}">
           Copy Link
         </button><br><br>
 
@@ -214,7 +221,7 @@ function registerUser() {
     <b>Share Link:</b><br>
     <input value="${tempLink}" readonly style="width:100%"><br><br>
 
-    <button onclick="navigator.clipboard.writeText('${tempLink}')">
+    <button type="button" class="copy-link-btn" data-link="${tempLink}">
       Copy Link
     </button><br><br>
 
@@ -225,4 +232,3 @@ function registerUser() {
 
   lock = false;
 }
-
