@@ -1,16 +1,3 @@
-/*
-========================================
-USER TREE JS (INTRODUCER TREE ONLY)
-FINAL LOCKED VERSION
-========================================
-✔ Uses ONLY introducer tree (visible tree)
-✔ Sponsor tree completely ignored in UI
-✔ Safe recursion + cycle protection
-✔ Works with tree_system.js V13
-========================================
-*/
-
-// ================= STATE =================
 let session = null;
 let currentUser = null;
 
@@ -18,10 +5,10 @@ let currentUser = null;
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
-  renderPage();
+  renderUI();
 });
 
-// ================= CORE INIT =================
+// ================= INIT CORE =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
@@ -50,87 +37,113 @@ function authPage() {
   }
 }
 
-// ================= RENDER ENTRY =================
-function renderPage() {
+// ================= RENDER UI =================
+function renderUI() {
   const container = document.getElementById("tree");
-  if (!container || !currentUser) return;
+  if (!container) return;
 
   container.innerHTML = "";
 
-  const tree = renderIntroducerTree(currentUser.userId);
+  // HEADER
+  const title = document.createElement("h2");
+  title.innerText = "My Team Tree";
+  container.appendChild(title);
 
-  if (tree) {
-    container.appendChild(tree);
+  // LEVEL SELECTOR
+  const select = document.createElement("select");
+  select.id = "levelSelect";
+
+  for (let i = 1; i <= 30; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.innerText = "L" + i;
+    select.appendChild(opt);
   }
+
+  select.addEventListener("change", function () {
+    renderLevelTable(parseInt(this.value));
+  });
+
+  container.appendChild(select);
+
+  // TABLE WRAPPER
+  const table = document.createElement("table");
+  table.id = "treeTable";
+  table.border = "1";
+  table.style.width = "100%";
+  table.style.marginTop = "15px";
+
+  container.appendChild(table);
+
+  // DEFAULT LOAD L1
+  renderLevelTable(1);
 }
 
-// ================= INTRODUCER TREE NODE =================
-function createNodeByIntroducer(user, depth = 0, visited = new Set()) {
-  if (!user || depth > 12) return null;
+// ================= GET LEVEL USERS =================
+function getUsersByLevel(rootUserId, targetLevel) {
+  const users = typeof getUsers === "function" ? getUsers() : [];
+  const result = [];
 
-  if (visited.has(user.userId)) return null;
-  visited.add(user.userId);
+  let queue = [{ id: rootUserId, level: 0 }];
 
-  const node = document.createElement("div");
-  node.className = "mlm-node";
+  while (queue.length > 0) {
+    const current = queue.shift();
 
-  node.innerHTML = `
-    <div class="mlm-card">
-      <div class="uid">👤 ${user.userId}</div>
-      <div class="name">${user.username || user.fullName || "N/A"}</div>
-      <div class="mobile">${user.mobile || ""}</div>
-    </div>
+    if (current.level === targetLevel) {
+      const user = users.find(u => u.userId === current.id);
+      if (user) result.push(user);
+    }
+
+    if (current.level < targetLevel) {
+      const user = users.find(u => u.userId === current.id);
+      if (!user) continue;
+
+      if (user.leftChild) {
+        queue.push({ id: user.leftChild, level: current.level + 1 });
+      }
+
+      if (user.rightChild) {
+        queue.push({ id: user.rightChild, level: current.level + 1 });
+      }
+    }
+  }
+
+  return result;
+}
+
+// ================= RENDER TABLE =================
+function renderLevelTable(level) {
+  const table = document.getElementById("treeTable");
+  if (!table) return;
+
+  const users = getUsersByLevel(currentUser.userId, level);
+
+  let html = `
+    <tr>
+      <th>S.No</th>
+      <th>User Name</th>
+      <th>Mobile</th>
+    </tr>
   `;
 
-  const children = document.createElement("div");
-  children.className = "mlm-children";
+  users.forEach((u, index) => {
+    html += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${u.username || u.name || u.userId}</td>
+        <td>${u.mobile || "-"}</td>
+      </tr>
+    `;
+  });
 
-  const leftWrap = document.createElement("div");
-  leftWrap.className = "mlm-left";
-
-  const rightWrap = document.createElement("div");
-  rightWrap.className = "mlm-right";
-
-  // ================= INTRODUCER-BASED CHILDREN =================
-  // IMPORTANT: ONLY introducerId is used here
-
-  const users = (typeof getUsers === "function") ? getUsers() : [];
-
-  const leftChild = users.find(
-    u => u.introducerId === user.userId && u.position === "L"
-  );
-
-  const rightChild = users.find(
-    u => u.introducerId === user.userId && u.position === "R"
-  );
-
-  if (leftChild) {
-    const leftNode = createNodeByIntroducer(leftChild, depth + 1, visited);
-    if (leftNode) leftWrap.appendChild(leftNode);
+  if (users.length === 0) {
+    html += `
+      <tr>
+        <td colspan="3">No users found in L${level}</td>
+      </tr>
+    `;
   }
 
-  if (rightChild) {
-    const rightNode = createNodeByIntroducer(rightChild, depth + 1, visited);
-    if (rightNode) rightWrap.appendChild(rightNode);
-  }
-
-  children.appendChild(leftWrap);
-  children.appendChild(rightWrap);
-
-  node.appendChild(children);
-
-  return node;
+  table.innerHTML = html;
 }
 
-// ================= MAIN RENDER =================
-function renderIntroducerTree(rootUserId) {
-  const rootUser = getUserById(rootUserId);
-  if (!rootUser) return null;
-
-  const root = document.createElement("div");
-  root.className = "mlm-tree";
-
-  root.appendChild(createNodeByIntroducer(rootUser));
-
-  return root;
-}
