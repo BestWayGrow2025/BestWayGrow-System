@@ -224,3 +224,4 @@ function registerUser() {
 
   lock = false;
 }
+
