@@ -1,28 +1,34 @@
 /*
 ========================================
-USER TREE JS (STANDARD 2 - BINANCE STYLE)
+USER TREE JS (INTRODUCER TREE ONLY)
+FINAL LOCKED VERSION
 ========================================
-✔ Logic only (NO CSS)
+✔ Uses ONLY introducer tree (visible tree)
+✔ Sponsor tree completely ignored in UI
 ✔ Safe recursion + cycle protection
 ✔ Works with tree_system.js V13
 ========================================
 */
 
+// ================= STATE =================
+let session = null;
+let currentUser = null;
+
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
   renderPage();
 });
 
+// ================= CORE INIT =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   }
 }
 
-let session = null;
-let currentUser = null;
-
+// ================= AUTH =================
 function authPage() {
   try {
     session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
@@ -44,11 +50,22 @@ function authPage() {
   }
 }
 
+// ================= RENDER ENTRY =================
 function renderPage() {
-  renderUserTree(currentUser.userId);
+  const container = document.getElementById("tree");
+  if (!container || !currentUser) return;
+
+  container.innerHTML = "";
+
+  const tree = renderIntroducerTree(currentUser.userId);
+
+  if (tree) {
+    container.appendChild(tree);
+  }
 }
 
-function createTreeNode(user, depth = 0, visited = new Set()) {
+// ================= INTRODUCER TREE NODE =================
+function createNodeByIntroducer(user, depth = 0, visited = new Set()) {
   if (!user || depth > 12) return null;
 
   if (visited.has(user.userId)) return null;
@@ -71,23 +88,30 @@ function createTreeNode(user, depth = 0, visited = new Set()) {
   const leftWrap = document.createElement("div");
   leftWrap.className = "mlm-left";
 
-  if (user.leftChild) {
-    const leftUser = getUserById(user.leftChild);
-    if (leftUser) {
-      const leftNode = createTreeNode(leftUser, depth + 1, visited);
-      if (leftNode) leftWrap.appendChild(leftNode);
-    }
-  }
-
   const rightWrap = document.createElement("div");
   rightWrap.className = "mlm-right";
 
-  if (user.rightChild) {
-    const rightUser = getUserById(user.rightChild);
-    if (rightUser) {
-      const rightNode = createTreeNode(rightUser, depth + 1, visited);
-      if (rightNode) rightWrap.appendChild(rightNode);
-    }
+  // ================= INTRODUCER-BASED CHILDREN =================
+  // IMPORTANT: ONLY introducerId is used here
+
+  const users = (typeof getUsers === "function") ? getUsers() : [];
+
+  const leftChild = users.find(
+    u => u.introducerId === user.userId && u.position === "L"
+  );
+
+  const rightChild = users.find(
+    u => u.introducerId === user.userId && u.position === "R"
+  );
+
+  if (leftChild) {
+    const leftNode = createNodeByIntroducer(leftChild, depth + 1, visited);
+    if (leftNode) leftWrap.appendChild(leftNode);
+  }
+
+  if (rightChild) {
+    const rightNode = createNodeByIntroducer(rightChild, depth + 1, visited);
+    if (rightNode) rightWrap.appendChild(rightNode);
   }
 
   children.appendChild(leftWrap);
@@ -98,24 +122,15 @@ function createTreeNode(user, depth = 0, visited = new Set()) {
   return node;
 }
 
-function renderUserTree(rootUserId) {
-  const container = document.getElementById("tree");
-  if (!container) return;
-
+// ================= MAIN RENDER =================
+function renderIntroducerTree(rootUserId) {
   const rootUser = getUserById(rootUserId);
-
-  if (!rootUser) {
-    container.innerHTML = "<div class='mlm-card'>Tree not found</div>";
-    return;
-  }
-
-  container.innerHTML = "";
+  if (!rootUser) return null;
 
   const root = document.createElement("div");
   root.className = "mlm-tree";
 
-  root.appendChild(createTreeNode(rootUser));
+  root.appendChild(createNodeByIntroducer(rootUser));
 
-  container.appendChild(root);
+  return root;
 }
-
