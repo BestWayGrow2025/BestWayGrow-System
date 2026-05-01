@@ -7,14 +7,12 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
-
 <body>
 
   <div class="dashboard-layout">
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
-
       <div class="logo">User Panel</div>
 
       <button onclick="loadHome()">Home</button>
@@ -36,34 +34,30 @@
       <button onclick="loadKYCSection()">KYC Upload</button>
       <button onclick="loadRankReward()">Rank / Reward</button>
       <button onclick="loadReferralLink()">Referral Link</button>
-
       <button id="logoutBtn">Logout</button>
 
     </aside>
 
     <!-- MAIN PANEL -->
     <main class="main-panel">
-
       <div id="welcome" class="welcome-bar">Welcome</div>
-
       <div id="mainContent">Loading...</div>
-
     </main>
 
   </div>
 
-  <!-- CORE SYSTEM -->
+  <!-- CORE SYSTEM (ONLY HERE) -->
   <script src="core_system.js"></script>
   <script src="session_manager.js"></script>
+
   <script src="tree_system.js"></script>
   <script src="activity_log.js"></script>
-
-  <!-- TREE UI -->
   <script src="user_tree.js"></script>
 
-  <!-- DASHBOARD LOGIC -->
   <script src="user_dashboard.js"></script>
 
 </body>
 </html>
+
+
 
