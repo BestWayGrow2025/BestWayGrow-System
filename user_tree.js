@@ -1,103 +1,121 @@
-/* =========================
-   TREE CONTAINER
-========================= */
-#tree {
-  width: 100%;
-  overflow-x: auto;
-  padding: 20px;
-  font-family: Arial, sans-serif;
+/*
+========================================
+USER TREE JS (STANDARD 2 - BINANCE STYLE)
+========================================
+✔ Logic only (NO CSS)
+✔ Safe recursion + cycle protection
+✔ Works with tree_system.js V13
+========================================
+*/
+
+document.addEventListener("DOMContentLoaded", function () {
+  initPage();
+  authPage();
+  renderPage();
+});
+
+function initPage() {
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
 }
 
-/* =========================
-   ROOT TREE WRAPPER
-========================= */
-.tree-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
+let session = null;
+let currentUser = null;
+
+function authPage() {
+  try {
+    session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+  } catch {
+    session = null;
+  }
+
+  if (!session || !session.userId) {
+    window.location.href = "user_login.html";
+    return;
+  }
+
+  currentUser = getUserById(session.userId);
+
+  if (!currentUser) {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "user_login.html";
+    return;
+  }
 }
 
-/* =========================
-   USER CARD (NODE)
-========================= */
-.tree-card {
-  background: #0f172a;
-  color: #ffffff;
-  padding: 12px 16px;
-  border-radius: 12px;
-  min-width: 150px;
-  text-align: center;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-  border: 1px solid rgba(255,255,255,0.08);
-  transition: 0.2s ease;
+function renderPage() {
+  renderUserTree(currentUser.userId);
 }
 
-.tree-card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+function createTreeNode(user, depth = 0, visited = new Set()) {
+  if (!user || depth > 12) return null;
+
+  if (visited.has(user.userId)) return null;
+  visited.add(user.userId);
+
+  const node = document.createElement("div");
+  node.className = "mlm-node";
+
+  node.innerHTML = `
+    <div class="mlm-card">
+      <div class="uid">👤 ${user.userId}</div>
+      <div class="name">${user.username || user.fullName || "N/A"}</div>
+      <div class="mobile">${user.mobile || ""}</div>
+    </div>
+  `;
+
+  const children = document.createElement("div");
+  children.className = "mlm-children";
+
+  const leftWrap = document.createElement("div");
+  leftWrap.className = "mlm-left";
+
+  if (user.leftChild) {
+    const leftUser = getUserById(user.leftChild);
+    if (leftUser) {
+      const leftNode = createTreeNode(leftUser, depth + 1, visited);
+      if (leftNode) leftWrap.appendChild(leftNode);
+    }
+  }
+
+  const rightWrap = document.createElement("div");
+  rightWrap.className = "mlm-right";
+
+  if (user.rightChild) {
+    const rightUser = getUserById(user.rightChild);
+    if (rightUser) {
+      const rightNode = createTreeNode(rightUser, depth + 1, visited);
+      if (rightNode) rightWrap.appendChild(rightNode);
+    }
+  }
+
+  children.appendChild(leftWrap);
+  children.appendChild(rightWrap);
+
+  node.appendChild(children);
+
+  return node;
 }
 
-/* =========================
-   TEXT STYLES
-========================= */
-.tree-card div:first-child {
-  font-weight: bold;
-  font-size: 14px;
-}
+function renderUserTree(rootUserId) {
+  const container = document.getElementById("tree");
+  if (!container) return;
 
-.tree-card div:nth-child(2) {
-  font-size: 12px;
-  opacity: 0.85;
-  margin-top: 4px;
-}
+  const rootUser = getUserById(rootUserId);
 
-.tree-card div:nth-child(3) {
-  font-size: 11px;
-  opacity: 0.6;
-}
+  if (!rootUser) {
+    container.innerHTML = "<div class='mlm-card'>Tree not found</div>";
+    return;
+  }
 
-/* =========================
-   CHILD CONTAINER (LEFT / RIGHT)
-========================= */
-.tree-children {
-  display: flex;
-  justify-content: space-between;
-  gap: 60px;
-  margin-top: 25px;
-  position: relative;
-}
+  container.innerHTML = "";
 
-/* =========================
-   LINES (VISUAL CONNECTOR)
-========================= */
-.tree-children::before {
-  content: "";
-  position: absolute;
-  top: -15px;
-  left: 50%;
-  width: 2px;
-  height: 15px;
-  background: #94a3b8;
-}
+  const root = document.createElement("div");
+  root.className = "mlm-tree";
 
-/* =========================
-   LEFT / RIGHT BRANCHES
-========================= */
-.tree-children > div {
-  display: flex;
-  flex: 1;
-  justify-content: center;
-  position: relative;
-}
+  root.appendChild(createTreeNode(rootUser));
 
-/* horizontal connectors */
-.tree-children > div::before {
-  content: "";
-  position: absolute;
-  top: -15px;
-  width: 100%;
-  height: 2px;
-  background: #94a3b8;
+  container.appendChild(root);
 }
 
