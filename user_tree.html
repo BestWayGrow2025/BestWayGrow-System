@@ -4,86 +4,68 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Tree</title>
-  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="user_tree.css">
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f4f7f9;
-      padding: 20px;
       margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0a0f1c;
+      color: #fff;
+      text-align: center;
     }
 
     h2 {
-      margin-bottom: 20px;
-      color: #222;
+      margin: 20px 0;
     }
 
     #tree {
       width: 100%;
       overflow-x: auto;
-      padding: 10px 0;
-    }
-
-    .tree {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-      min-width: max-content;
-    }
-
-    .node-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 10px;
-    }
-
-    .node {
-      border: 1px solid #333;
-      padding: 10px;
-      border-radius: 8px;
-      background: #fff;
-      min-width: 130px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      font-size: 14px;
-    }
-
-    .children {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-      gap: 12px;
-    }
-
-    .line {
-      width: 2px;
-      height: 20px;
-      background: #333;
-      margin-top: 5px;
+      padding: 20px;
     }
   </style>
 </head>
+
 <body>
 
-  <h2>My Tree</h2>
+  <h2>🌳 My Tree</h2>
+  <div id="tree">Loading tree...</div>
 
-  <div id="tree"></div>
+  <!-- AUTO DEPENDENCY LOADER -->
+  <script>
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("Failed: " + src));
+        document.head.appendChild(s);
+      });
+    }
 
-  <!-- CORE -->
-  <script src="core_system.js"></script>
+    async function loadSystem() {
+      try {
+        // CORE LAYER
+        await loadScript("core_system.js");
+        await loadScript("session_manager.js");
 
-  <!-- SESSION -->
-  <script src="session_manager.js"></script>
+        // TREE ENGINE (DATA LOGIC)
+        await loadScript("tree_system.js");
 
-  <!-- TREE ENGINE -->
-  <script src="tree_engine.js"></script>
+        // UI LAYER
+        await loadScript("user_tree.js");
 
-  <!-- PAGE JS -->
-  <script src="user_tree.js"></script>
+        console.log("✅ All systems loaded successfully");
+      } catch (err) {
+        console.error("❌ Load error:", err);
+        document.getElementById("tree").innerHTML =
+          "<div style='color:red'>System failed to load</div>";
+      }
+    }
+
+    loadSystem();
+  </script>
+
 </body>
 </html>
-
-
-
