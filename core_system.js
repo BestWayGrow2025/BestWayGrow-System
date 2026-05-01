@@ -2,13 +2,20 @@
 ========================================
 CORE SYSTEM V8 (FINAL STABLE LOCK - FIXED)
 ========================================
+✔ Safe storage
+✔ User management
+✔ System settings
+✔ SYSTEM user
+✔ SUPERADMIN safe
+✔ No auto-overwrite bugs
+✔ Production safe
+========================================
 */
 
 // ================= SAFE STORAGE =================
 function safeGet(key, fallback) {
   try {
     let raw = localStorage.getItem(key);
-
     if (!raw) return fallback;
 
     let data = JSON.parse(raw);
@@ -52,13 +59,16 @@ function getSystemSettings() {
   };
 
   let stored = safeGet("systemSettings", {});
-  let merged = { ...defaults, ...stored };
 
-  safeSet("systemSettings", merged);
-  return merged;
+  // FIX: DO NOT overwrite storage on read
+  return { ...defaults, ...stored };
 }
 
-// ================= SYSTEM SAFE =================
+function saveSystemSettings(settings) {
+  safeSet("systemSettings", settings);
+}
+
+// ================= SYSTEM SAFE CHECK =================
 function isSystemSafe() {
   let s = getSystemSettings() || {};
   let session = null;
@@ -97,7 +107,7 @@ function getChildren(userId) {
   return getUsers().filter(u => u.sponsorId === userId);
 }
 
-// ================= INIT =================
+// ================= INIT CORE SYSTEM =================
 function initCoreSystem() {
   try {
     let users = getUsers();
@@ -135,7 +145,8 @@ function initCoreSystem() {
       }
     });
 
-    // SYSTEM USERS
+    // ================= DEFAULT USERS =================
+
     if (!users.find(u => u.userId === "SUPERADMIN")) {
       users.push({
         userId: "SUPERADMIN",
@@ -195,9 +206,4 @@ function initCoreSystem() {
   } catch (e) {
     console.error("❌ initCoreSystem failed:", e.message);
   }
-}
-
-// ================= SAVE SETTINGS =================
-function saveSystemSettings(settings) {
-  safeSet("systemSettings", settings);
 }
