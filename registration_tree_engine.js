@@ -1,3 +1,5 @@
+console.log("TREE ENGINE LOADED");
+
 /*
 ========================================
 REGISTRATION TREE ENGINE v4.2 (FINAL STABLE FIX)
@@ -190,4 +192,5 @@ function createUserWithTree(req) {
 
 // ================= EXPORT =================
 window.createUserWithTree = createUserWithTree;
+window.findDeepPosition = findDeepPosition;
 window.findDeepPosition = findDeepPosition;
