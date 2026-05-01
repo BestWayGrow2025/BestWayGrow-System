@@ -1,5 +1,3 @@
-console.log("TREE ENGINE LOADED");
-
 /*
 ========================================
 REGISTRATION TREE ENGINE v4.2 (FINAL STABLE FIX)
