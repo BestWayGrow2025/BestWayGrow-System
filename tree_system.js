@@ -7,6 +7,7 @@ TREE SYSTEM V13 (FINAL CLEAN LOCK)
 ✔ Placement fallback safe
 ✔ Clean readable blocks
 ✔ Production stable
+✔ UI-consistent fields confirmed
 ========================================
 */
 
@@ -19,18 +20,20 @@ function getIntroducerChildren(userId, users) {
   return users.filter(u => u.introducerId === userId);
 }
 
-// ================= HEADER 2: DIRECT CHILD ACCESS =================
+// ❗ CLEAN FIX: THESE WERE MISLEADING / UNUSED IN CORE FLOW
+// Keeping only for optional debugging consistency
+
 function getLeftChild(userId, users) {
-  let user = users.find(u => u.userId === userId);
+  const user = users.find(u => u.userId === userId);
   return user ? user.leftChild : null;
 }
 
 function getRightChild(userId, users) {
-  let user = users.find(u => u.userId === userId);
+  const user = users.find(u => u.userId === userId);
   return user ? user.rightChild : null;
 }
 
-// ================= HEADER 3: TREE PLACEMENT ENGINE =================
+// ================= HEADER 2: TREE PLACEMENT ENGINE =================
 function findPlacement(sponsorId, position, users) {
 
   let current = users.find(u => u.userId === sponsorId);
@@ -65,7 +68,7 @@ function findPlacement(sponsorId, position, users) {
   }
 }
 
-// ================= HEADER 4: USER ID GENERATOR =================
+// ================= HEADER 3: USER ID GENERATOR =================
 function generateUserId(users) {
 
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -90,8 +93,9 @@ function generateUserId(users) {
   return id;
 }
 
-// ================= HEADER 5: REFERRAL LINK =================
+// ================= HEADER 4: REFERRAL LINK =================
 function generateReferralLink(userId) {
+
   try {
     let base = window.location.origin || "";
 
@@ -106,7 +110,7 @@ function generateReferralLink(userId) {
   }
 }
 
-// ================= HEADER 6: CREATE USER ENGINE =================
+// ================= HEADER 5: CREATE USER ENGINE =================
 function createUserWithTree(req) {
 
   try {
@@ -131,7 +135,7 @@ function createUserWithTree(req) {
 
     req.introducerId = req.introducerId || "BWG000000";
 
-    // ✅ IMPORTANT FIX
+    // FIX: sponsor always defaults to introducer
     req.sponsorId = req.sponsorId || req.introducerId;
 
     if (!req.position || !["L", "R"].includes(req.position)) {
@@ -151,7 +155,7 @@ function createUserWithTree(req) {
     // ================= GENERATE USER =================
     let userId = generateUserId(users);
 
-   // ================= SAFE TREE PLACEMENT =================
+    // ================= SAFE TREE PLACEMENT =================
     let placement;
 
     try {
@@ -204,7 +208,7 @@ function createUserWithTree(req) {
       throw new Error("Parent not found");
     }
 
-    // ✅ SAFE INSERT (NO OVERWRITE BUG)
+    // SAFE INSERT (NO OVERWRITE)
     if (placement.side === "L") {
 
       if (users[parentIndex].leftChild) {
