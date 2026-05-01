@@ -1,5 +1,22 @@
+JavaScript
+/*
+========================================
+USER REGISTER v4.4 (FINAL LIVE STATUS FIX)
+========================================
+✔ Queue-only registration
+✔ Live post-submit watcher
+✔ Temporary ID → Real ID replacement
+✔ Real referral link update
+✔ Duplicate mobile check
+✔ Duplicate email check
+✔ Queue-safe submit
+✔ Stable UI refresh
+========================================
+*/
+
 let lock = false;
 let introducerId = "BWG000000";
+let statusWatcher = null;
 
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
@@ -25,9 +42,7 @@ function authPage() {
 function bindEvents() {
   let btn = document.getElementById("registerBtn");
   if (btn) {
-    btn.addEventListener("click", function () {
-      registerUser();
-    });
+    btn.addEventListener("click", registerUser);
   }
 }
 
@@ -50,6 +65,75 @@ function encodePass(p) {
 function generateShareLink(id, pos) {
   const base = window.location.origin || "";
   return `${base}/user_register.html?ref=${id}&pos=${pos}`;
+}
+
+function watchRegistrationStatus(mobile, tempId, tempLink, position) {
+  if (statusWatcher) clearInterval(statusWatcher);
+
+  const msg = document.getElementById("msg");
+  let tries = 0;
+
+  statusWatcher = setInterval(function () {
+    tries++;
+
+    let users = typeof getUsers === "function" ? getUsers() : [];
+    let created = users.find(u => u.mobile === mobile);
+
+    if (created && created.userId) {
+      clearInterval(statusWatcher);
+      statusWatcher = null;
+
+      let realLink = generateShareLink(created.userId, position);
+
+      msg.innerHTML = `
+        ✅ Registration Complete<br><br>
+
+        <b>User ID:</b> ${created.userId}<br><br>
+
+        <b>Share Link:</b><br>
+        <input value="${realLink}" readonly style="width:100%"><br><br>
+
+        <button onclick="navigator.clipboard.writeText('${realLink}')">
+          Copy Link
+        </button><br><br>
+
+        Status: Completed
+      `;
+      return;
+    }
+
+    let queue = typeof getRegQueue === "function" ? getRegQueue() : [];
+    let pending = queue.find(q => q.mobile === mobile);
+
+    if (pending && pending.status === "FAILED") {
+      clearInterval(statusWatcher);
+      statusWatcher = null;
+
+      msg.innerHTML = `❌ Registration Failed<br><br>${pending.error || "Unknown error"}`;
+      return;
+    }
+
+    if (tries >= 20) {
+      clearInterval(statusWatcher);
+      statusWatcher = null;
+
+      msg.innerHTML = `
+        ⏳ Registration Submitted<br><br>
+
+        <b>Temporary ID:</b> ${tempId}<br><br>
+
+        <b>Share Link:</b><br>
+        <input value="${tempLink}" readonly style="width:100%"><br><br>
+
+        <button onclick="navigator.clipboard.writeText('${tempLink}')">
+          Copy Link
+        </button><br><br>
+
+        Status: Still processing...
+      `;
+    }
+
+  }, 1000);
 }
 
 function registerUser() {
@@ -90,6 +174,12 @@ function registerUser() {
     return;
   }
 
+  if (users.find(u => (u.email || "").toLowerCase() === email.toLowerCase())) {
+    msg.innerText = "Email already exists";
+    lock = false;
+    return;
+  }
+
   if (typeof addToRegistrationQueue !== "function") {
     msg.innerText = "Queue system not loaded";
     lock = false;
@@ -97,7 +187,7 @@ function registerUser() {
   }
 
   let tempId = "BWG" + Date.now();
-  let shareLink = generateShareLink(tempId, position.value);
+  let tempLink = generateShareLink(tempId, position.value);
 
   let added = addToRegistrationQueue({
     username,
@@ -121,14 +211,16 @@ function registerUser() {
     <b>Temporary ID:</b> ${tempId}<br><br>
 
     <b>Share Link:</b><br>
-    <input value="${shareLink}" readonly style="width:100%"><br><br>
+    <input value="${tempLink}" readonly style="width:100%"><br><br>
 
-    <button onclick="navigator.clipboard.writeText('${shareLink}')">
+    <button onclick="navigator.clipboard.writeText('${tempLink}')">
       Copy Link
     </button><br><br>
 
     Status: Processing Queue...
   `;
+
+  watchRegistrationStatus(mobile, tempId, tempLink, position.value);
 
   lock = false;
 }
