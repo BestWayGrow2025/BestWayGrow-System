@@ -1,5 +1,17 @@
+/*
+========================================
+SESSION MANAGER V2 (STABLE FIXED)
+========================================
+✔ No redirect loops
+✔ Safe session handling
+✔ No aggressive logout
+✔ Dashboard stable support
+========================================
+*/
+
 const SESSION_KEY = "APP_SESSION";
 
+// ================= SAFE PARSE =================
 function safeParse(raw) {
   try {
     return JSON.parse(raw);
@@ -8,16 +20,17 @@ function safeParse(raw) {
   }
 }
 
+// ================= STORAGE HELPERS =================
 function clearSession() {
   localStorage.removeItem(SESSION_KEY);
 }
 
 function setSession(user) {
-  if (!user || !user.userId || !user.role) return false;
+  if (!user || !user.userId) return false;
 
   let sessionData = {
     userId: user.userId,
-    role: user.role,
+    role: user.role || "user",
     loginTime: Date.now()
   };
 
@@ -28,45 +41,47 @@ function setSession(user) {
 function getSession() {
   let session = safeGet(SESSION_KEY, null);
 
-  if (!session || !session.userId || !session.role) {
-    clearSession();
+  if (!session || !session.userId) {
     return null;
   }
 
   return session;
 }
 
-function getCurrentUser() {
-  let session = getSession();
-  if (!session) return null;
+// ================= GLOBAL LOCK =================
+let SESSION_CHECK_LOCK = false;
 
-  if (typeof getUserById !== "function") return null;
+// ================= CURRENT USER =================
+function getCurrentUser() {
+
+  if (SESSION_CHECK_LOCK) return null;
+  SESSION_CHECK_LOCK = true;
+
+  let session = getSession();
+
+  if (!session) {
+    SESSION_CHECK_LOCK = false;
+    return null;
+  }
+
+  if (typeof getUserById !== "function") {
+    SESSION_CHECK_LOCK = false;
+    return null;
+  }
 
   let user = getUserById(session.userId);
 
-  if (!user) {
-    clearSession();
-    return null;
-  }
+  SESSION_CHECK_LOCK = false;
 
-  if (user.role !== "user") {
-    clearSession();
-    return null;
-  }
-
-  if (user.status !== "active") {
-    clearSession();
-    return null;
-  }
-
-  return user;
+  return user || null;
 }
 
+// ================= PAGE PROTECTION =================
 function protectUserPage() {
   let user = getCurrentUser();
 
   if (!user) {
-    alert("Login Required");
+    console.warn("Login required");
     window.location.href = "user_login.html";
     return null;
   }
@@ -74,7 +89,9 @@ function protectUserPage() {
   return user;
 }
 
+// ================= LOGOUT =================
 function logoutSession() {
   clearSession();
   window.location.href = "user_login.html";
 }
+
