@@ -1,16 +1,17 @@
 /*
 ========================================
-CORE SYSTEM V8 (FINAL STABLE LOCK - FIXED)
+CORE SYSTEM V8.1 (FINAL STABLE LOCK FIXED)
 ========================================
 ✔ Safe storage
-✔ User management
-✔ System settings
-✔ SYSTEM user
-✔ SUPERADMIN safe
-✔ No auto-overwrite bugs
+✔ Single initialization lock
+✔ No repeated mutation loop
+✔ Stable admin/system seeding
 ✔ Production safe
 ========================================
 */
+
+// ================= INIT LOCK =================
+let CORE_INIT_DONE = false;
 
 // ================= SAFE STORAGE =================
 function safeGet(key, fallback) {
@@ -59,8 +60,6 @@ function getSystemSettings() {
   };
 
   let stored = safeGet("systemSettings", {});
-
-  // FIX: DO NOT overwrite storage on read
   return { ...defaults, ...stored };
 }
 
@@ -109,43 +108,25 @@ function getChildren(userId) {
 
 // ================= INIT CORE SYSTEM =================
 function initCoreSystem() {
-  try {
-    let users = getUsers();
-    let updated = false;
 
+  // 🔒 INIT GUARD (PREVENT LOOP)
+  if (CORE_INIT_DONE) return;
+  CORE_INIT_DONE = true;
+
+  try {
+
+    let users = getUsers();
+
+    // ================= CLEAN USER NORMALIZATION =================
     users.forEach(u => {
+
       if (!u.status) u.status = "active";
       if (!u.accountStatus) u.accountStatus = "active";
       if (!u.blockStatus) u.blockStatus = "unblocked";
 
-      if (u.userId === "BWG000000") {
-        u.username = "User Root Admin";
-        u.role = "admin";
-        u.adminType = "user_root_admin";
-        u.tree = "field";
-        u.accessType = "full_user_tree_control";
-        u.visibleInTree = true;
-        u.allowReferral = true;
-        updated = true;
-      }
-
-      if (u.userId === "BWG000001") {
-        u.username = "System Admin";
-        u.role = "system_admin";
-        u.hiddenAccount = true;
-        updated = true;
-      }
-
-      if (
-        u.userId === "SUPERADMIN" ||
-        u.userId === "BWG000001" ||
-        u.userId === "SYSTEM"
-      ) {
-        u.hiddenAccount = true;
-      }
     });
 
-    // ================= DEFAULT USERS =================
+    // ================= DEFAULT SYSTEM USERS (ONE TIME SAFE) =================
 
     if (!users.find(u => u.userId === "SUPERADMIN")) {
       users.push({
@@ -197,11 +178,10 @@ function initCoreSystem() {
       });
     }
 
-    if (updated) {
-      saveUsers(users);
-    }
+    // ================= SAVE ONCE =================
+    saveUsers(users);
 
-    console.log("✅ Core system initialized");
+    console.log("✅ Core system initialized (V8.1 stable)");
 
   } catch (e) {
     console.error("❌ initCoreSystem failed:", e.message);
