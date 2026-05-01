@@ -1,17 +1,6 @@
 /*
 ========================================
-🔎 CHECK STATUS V4.1 (FINAL SAFE PATCH)
-========================================
-✔ Core boot aligned
-✔ Read-only diagnostic only
-✔ safeGet aligned
-✔ No hidden writes
-✔ No queue mutation
-✔ No user mutation
-✔ No payout mutation
-✔ No auto-fix side effects
-✔ UI-only status reporting
-✔ Production locked
+🔎 CHECK STATUS V4.1 (PATCH FIX ONLY)
 ========================================
 */
 
@@ -23,18 +12,12 @@ let lock = false;
 // BOOT
 // =====================
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  bindEvents();
-});
-
-// =====================
-// INIT
-// =====================
-function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   }
-}
+
+  bindEvents();
+});
 
 // =====================
 // EVENTS
@@ -48,29 +31,26 @@ function bindEvents() {
 }
 
 // =====================
-// SAFE READ
+// SAFE QUEUE FETCH (PATCHED ONLY)
 // =====================
 function getQueue() {
-  if (typeof getRegQueue === "function") {
-    let data = getRegQueue();
-    return Array.isArray(data) ? data : [];
-  }
-
-  if (typeof safeGet === "function") {
-    let data = safeGet("REG_QUEUE_DATA", []);
-    return Array.isArray(data) ? data : [];
-  }
-
   try {
-    let data = JSON.parse(localStorage.getItem("REG_QUEUE_DATA") || "[]");
-    return Array.isArray(data) ? data : [];
-  } catch {
+    if (typeof getRegQueue === "function") {
+      const q = getRegQueue();
+      return Array.isArray(q) ? q : [];
+    }
+
+    const raw = localStorage.getItem("REG_QUEUE_DATA");
+    const parsed = JSON.parse(raw || "[]");
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
     return [];
   }
 }
 
 // =====================
-// CHECK
+// CHECK STATUS
 // =====================
 function checkStatus() {
   if (lock) return;
@@ -88,34 +68,36 @@ function checkStatus() {
     const users = typeof getUsers === "function" ? getUsers() : [];
     const queue = getQueue();
 
+    // ================= REGISTERED =================
     const user = users.find(u => u.mobile === mobile);
 
     if (user) {
       resultBox.innerHTML = `
         ✅ <b>Registered</b><br><br>
-        User ID: ${user.userId}<br>
-        Name: ${user.username}<br>
-        Status: ${user.status || "N/A"}<br>
-        Active: ${typeof isUserActive === "function" && isUserActive(user.userId) ? "YES" : "NO"}
+        User ID: ${user.userId || "N/A"}<br>
+        Name: ${user.username || "N/A"}<br>
+        Status: ${user.status || "active"}<br>
       `;
       return;
     }
 
-   const pendingList = queue
-  .filter(q => q.status === "PENDING")
-  .sort((a, b) => (a.requestTime || 0) - (b.requestTime || 0));
+    // ================= PENDING =================
+    const pendingList = queue
+      .filter(q => q && q.status === "PENDING")
+      .sort((a, b) => (a.requestTime || 0) - (b.requestTime || 0));
 
     const index = pendingList.findIndex(q => q.mobile === mobile);
 
     if (index !== -1) {
       resultBox.innerHTML = `
         ⏳ <b>Pending</b><br><br>
-        Queue Position: ${index + 1} / ${pendingList.length}<br>
+        Queue Position: ${index + 1} / ${pendingList.length || 1}<br>
         Status: Waiting for processing...
       `;
       return;
     }
 
+    // ================= NOT FOUND =================
     resultBox.innerHTML = "❌ No record found";
 
   } finally {
