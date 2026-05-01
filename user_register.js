@@ -1,4 +1,3 @@
-JavaScript
 /*
 ========================================
 USER REGISTER v4.4 (FINAL LIVE STATUS FIX)
