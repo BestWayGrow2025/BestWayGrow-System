@@ -1,163 +1,103 @@
-// ========================================
-// USER TREE FINAL LOCK
-// Status: FINAL
-// ========================================
-
-// ================= STATE =================
-let session = null;
-let currentUser = null;
-
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  authPage();
-  loadPage();
-});
-
-// ================= INIT PAGE =================
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
+/* =========================
+   TREE CONTAINER
+========================= */
+#tree {
+  width: 100%;
+  overflow-x: auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
 }
 
-// ================= AUTH =================
-function authPage() {
-  try {
-    session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
-  } catch (err) {
-    session = null;
-  }
-
-  if (!session || !session.userId) {
-    alert("Login required");
-    window.location.href = "user_login.html";
-    return;
-  }
-
-  if (typeof getUserById !== "function") {
-    alert("System error");
-    window.location.href = "user_login.html";
-    return;
-  }
-
-  currentUser = getUserById(session.userId);
-
-  if (!currentUser) {
-    alert("User not found");
-    localStorage.removeItem("loggedInUser");
-    window.location.href = "user_login.html";
-    return;
-  }
+/* =========================
+   ROOT TREE WRAPPER
+========================= */
+.tree-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
 }
 
-// ================= LOAD PAGE =================
-function loadPage() {
-  loadTree();
+/* =========================
+   USER CARD (NODE)
+========================= */
+.tree-card {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  min-width: 150px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: 0.2s ease;
 }
 
-// ================= SAFE TEXT =================
-function safeText(value) {
-  return String(value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+.tree-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.35);
 }
 
-// ================= CREATE NODE =================
-function createNode(user, visited = new Set(), depth = 0) {
-  if (!user || depth > 10) return null;
-
-  if (visited.has(user.userId)) {
-    return null;
-  }
-
-  visited.add(user.userId);
-
-  let wrapper = document.createElement("div");
-  wrapper.className = "node-wrap";
-
-  let node = document.createElement("div");
-  node.className = "node";
-
-  let idEl = document.createElement("b");
-  idEl.textContent = user.userId || "N/A";
-
-  let nameEl = document.createElement("div");
-  nameEl.textContent = user.username || user.fullName || "N/A";
-
-  let mobileEl = document.createElement("div");
-  mobileEl.textContent = user.mobile || "";
-
-  node.appendChild(idEl);
-  node.appendChild(document.createElement("br"));
-  node.appendChild(nameEl);
-  node.appendChild(mobileEl);
-
-  wrapper.appendChild(node);
-
-  let children = document.createElement("div");
-  children.className = "children";
-
-  let hasChild = false;
-
-  if (typeof getUserById === "function" && user.leftChild) {
-    let leftUser = getUserById(user.leftChild);
-
-    if (leftUser) {
-      let leftNode = createNode(leftUser, new Set(visited), depth + 1);
-      if (leftNode) {
-        children.appendChild(leftNode);
-        hasChild = true;
-      }
-    }
-  }
-
-  if (typeof getUserById === "function" && user.rightChild) {
-    let rightUser = getUserById(user.rightChild);
-
-    if (rightUser) {
-      let rightNode = createNode(rightUser, new Set(visited), depth + 1);
-      if (rightNode) {
-        children.appendChild(rightNode);
-        hasChild = true;
-      }
-    }
-  }
-
-  if (hasChild) {
-    let line = document.createElement("div");
-    line.className = "line";
-    wrapper.appendChild(line);
-    wrapper.appendChild(children);
-  }
-
-  return wrapper;
+/* =========================
+   TEXT STYLES
+========================= */
+.tree-card div:first-child {
+  font-weight: bold;
+  font-size: 14px;
 }
 
-// ================= LOAD TREE =================
-function loadTree() {
-  let container = document.getElementById("tree");
-
-  if (!container || !currentUser) return;
-
-  container.innerHTML = "";
-
-  let tree = document.createElement("div");
-  tree.className = "tree";
-
-  let rootNode = createNode(currentUser);
-
-  if (!rootNode) {
-    let emptyNode = document.createElement("div");
-    emptyNode.className = "node";
-    emptyNode.textContent = "Tree unavailable";
-    container.appendChild(emptyNode);
-    return;
-  }
-
-  tree.appendChild(rootNode);
-  container.appendChild(tree);
+.tree-card div:nth-child(2) {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 4px;
 }
+
+.tree-card div:nth-child(3) {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+/* =========================
+   CHILD CONTAINER (LEFT / RIGHT)
+========================= */
+.tree-children {
+  display: flex;
+  justify-content: space-between;
+  gap: 60px;
+  margin-top: 25px;
+  position: relative;
+}
+
+/* =========================
+   LINES (VISUAL CONNECTOR)
+========================= */
+.tree-children::before {
+  content: "";
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  width: 2px;
+  height: 15px;
+  background: #94a3b8;
+}
+
+/* =========================
+   LEFT / RIGHT BRANCHES
+========================= */
+.tree-children > div {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  position: relative;
+}
+
+/* horizontal connectors */
+.tree-children > div::before {
+  content: "";
+  position: absolute;
+  top: -15px;
+  width: 100%;
+  height: 2px;
+  background: #94a3b8;
+}
+
