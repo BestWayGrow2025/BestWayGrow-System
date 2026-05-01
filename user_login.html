@@ -8,7 +8,7 @@
 
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: Arial;
       text-align: center;
       padding: 30px;
       background: #f4f7f9;
@@ -36,22 +36,18 @@
       border: none;
       border-radius: 6px;
       background: #007bff;
-      color: #fff;
+      color: white;
       cursor: pointer;
       margin-top: 10px;
-    }
-
-    button:disabled {
-      background: #999;
     }
 
     #msg {
       margin-top: 15px;
       font-weight: bold;
-      min-height: 20px;
     }
   </style>
 </head>
+
 <body>
 
   <div class="card">
@@ -69,8 +65,9 @@
     <div id="msg"></div>
   </div>
 
-  <script src="core_system.js"></script>
+  <!-- IMPORTANT: NO core_system.js here -->
   <script src="session_manager.js"></script>
   <script src="user_login.js"></script>
+
 </body>
 </html>
