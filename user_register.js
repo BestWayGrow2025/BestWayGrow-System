@@ -1,11 +1,12 @@
 /*
 ========================================
-USER REGISTER v4.4 (FINAL LIVE STATUS FIX)
+USER REGISTER v4.5 (FINAL LIVE STATUS + GITHUB LINK FIX)
 ========================================
 ✔ Queue-only registration
 ✔ Live post-submit watcher
 ✔ Temporary ID → Real ID replacement
 ✔ Real referral link update
+✔ GitHub Pages repo path safe link
 ✔ Duplicate mobile check
 ✔ Duplicate email check
 ✔ Queue-safe submit
@@ -62,8 +63,9 @@ function encodePass(p) {
 }
 
 function generateShareLink(id, pos) {
-  const base = window.location.origin || "";
-  return `${base}/user_register.html?ref=${id}&pos=${pos}`;
+  const origin = window.location.origin;
+  const path = window.location.pathname.split("/").slice(0, -1).join("/");
+  return `${origin}${path}/user_register.html?ref=${id}&pos=${pos}`;
 }
 
 function watchRegistrationStatus(mobile, tempId, tempLink, position) {
@@ -223,3 +225,4 @@ function registerUser() {
 
   lock = false;
 }
+
