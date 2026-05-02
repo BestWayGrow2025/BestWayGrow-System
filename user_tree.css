@@ -2,6 +2,11 @@
 ========================================
 USER TREE CSS (STANDARD 2 - BINANCE STYLE)
 ========================================
+✔ Clean Binance dark theme
+✔ Responsive layout
+✔ Smooth spacing
+✔ Mobile safe
+========================================
 */
 
 .mlm-tree {
@@ -20,27 +25,30 @@ USER TREE CSS (STANDARD 2 - BINANCE STYLE)
 
 .mlm-card {
   background: #0b1220;
-  color: #fff;
+  color: #ffffff;
   padding: 12px 16px;
   border-radius: 12px;
   min-width: 150px;
   text-align: center;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .mlm-card .uid {
   font-weight: bold;
+  font-size: 14px;
 }
 
 .mlm-card .name {
   font-size: 12px;
   opacity: 0.85;
+  margin-top: 4px;
 }
 
 .mlm-card .mobile {
   font-size: 11px;
   opacity: 0.6;
+  margin-top: 2px;
 }
 
 .mlm-children {
