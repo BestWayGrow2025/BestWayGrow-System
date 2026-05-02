@@ -1,63 +1,215 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User Dashboard</title>
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="assets/css/style.css" />
-</head>
-<body>
+/*
+========================================
+USER DASHBOARD FINAL LOCK (TEST SAFE)
+========================================
+✔ Single dashboard init
+✔ No startup redirect loop
+✔ Passive session protection
+✔ Stable UI render
+✔ Logout bind fixed
+✔ Production safe
+========================================
+*/
 
-  <div class="dashboard-layout">
+// ================= SAFE USER =================
+function getSafeUser() {
+  const user = getCurrentUser();
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="logo">User Panel</div>
+  if (!user) {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = "<div class='info-box'>Login Required</div>";
+    }
+    return null;
+  }
 
-      <button onclick="loadHome()">Home</button>
-      <button onclick="loadPinSection()">Pin Section</button>
-      <button onclick="loadTree()">My Tree</button>
-      <button onclick="loadWallet()">Wallet</button>
-      <button onclick="loadWalletHistory()">Wallet History</button>
-      <button onclick="loadDirectTeam()">Direct Team</button>
-      <button onclick="loadProfile()">Profile</button>
-      <button onclick="loadIncomeHistory()">Income History</button>
-      <button onclick="loadWithdrawSection()">Withdraw</button>
-      <button onclick="loadWithdrawHistory()">Withdraw History</button>
-      <button onclick="loadNotifications()">Notifications</button>
-      <button onclick="loadSupportTickets()">Support Tickets</button>
-      <button onclick="loadEditProfile()">Edit Profile</button>
-      <button onclick="loadChangePassword()">Change Password</button>
-      <button onclick="loadActivityLogs()">Activity Logs</button>
-      <button onclick="loadLoginHistory()">Login History</button>
-      <button onclick="loadKYCSection()">KYC Upload</button>
-      <button onclick="loadRankReward()">Rank / Reward</button>
-      <button onclick="loadReferralLink()">Referral Link</button>
-      <button id="logoutBtn">Logout</button>
+  return user;
+}
 
-    </aside>
+// ================= SAFE HELPERS =================
+function getMainContent() {
+  return document.getElementById("mainContent");
+}
 
-    <!-- MAIN PANEL -->
-    <main class="main-panel">
-      <div id="welcome" class="welcome-bar">Welcome</div>
-      <div id="mainContent">Loading...</div>
-    </main>
+function getUserIndex(userId) {
+  let users = typeof getUsers === "function" ? getUsers() : [];
+  let index = users.findIndex(u => u.userId === userId);
+  return { users, index };
+}
 
-  </div>
+function safeDecodePassword(value) {
+  try {
+    return atob(value || "");
+  } catch {
+    return "";
+  }
+}
 
-  <!-- CORE SYSTEM (ONLY HERE) -->
-  <script src="core_system.js"></script>
-  <script src="session_manager.js"></script>
+function saveUserMutation(users) {
+  if (!Array.isArray(users) || typeof saveUsers !== "function") {
+    return false;
+  }
 
-  <script src="tree_system.js"></script>
-  <script src="activity_log.js"></script>
-  <script src="user_tree.js"></script>
+  return saveUsers(users) === true;
+}
 
-  <script src="user_dashboard.js"></script>
+function logUserAction(userId, action) {
+  try {
+    if (typeof logActivity === "function") {
+      logActivity(userId, "USER", action, "USER_DASHBOARD");
+    }
+  } catch (err) {
+    console.error("Activity log error:", err);
+  }
+}
 
-</body>
-</html>
+// ================= LOGOUT =================
+function logout() {
+  try {
+    let session = typeof getSession === "function" ? getSession() : null;
+    if (session?.userId) {
+      logUserAction(session.userId, "Logout");
+    }
+  } catch (err) {
+    console.error("Logout log error:", err);
+  }
+
+  logoutSession();
+}
+
+// ================= LOAD HOME =================
+function loadHome() {
+  let user = getSafeUser();
+  if (!user) return;
+
+  let main = getMainContent();
+  if (!main) return;
+
+  let refLink = typeof generateReferralLink === "function"
+    ? generateReferralLink(user.userId)
+    : "";
+
+  let directUsers = [];
+  try {
+    if (typeof getDirectUsers === "function") {
+      directUsers = getDirectUsers(user.userId) || [];
+    }
+  } catch (err) {
+    console.error("Direct users error:", err);
+  }
+
+  let leftCount = directUsers.filter(u => (u.position || "") === "L").length;
+  let rightCount = directUsers.filter(u => (u.position || "") === "R").length;
+
+  main.innerHTML = `
+    <div class="section-title">Dashboard Overview</div>
+
+    <div class="info-box">
+      <p><b>User ID:</b> ${user.userId || "N/A"}</p>
+      <p><b>Full Name:</b> ${user.fullName || user.username || "N/A"}</p>
+      <p><b>Mobile:</b> ${user.mobile || "N/A"}</p>
+      <p><b>Email:</b> ${user.email || "N/A"}</p>
+      <p><b>Sponsor ID:</b> ${user.sponsorId || "N/A"}</p>
+      <p><b>Join Date:</b> ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}</p>
+      <p><b>City:</b> ${user.city || "N/A"}</p>
+      <p><b>State:</b> ${user.state || "N/A"}</p>
+      <p><b>Country:</b> ${user.country || "N/A"}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Wallet Balance:</b> ₹${Number(user.wallet?.balance || 0)}</p>
+      <p><b>Total Credit:</b> ₹${Number(user.wallet?.totalCredit || 0)}</p>
+      <p><b>Total Debit:</b> ₹${Number(user.wallet?.totalDebit || 0)}</p>
+      <p><b>Total Income:</b> ₹${Number(user.totalIncome || 0)}</p>
+    </div>
+
+    <div class="info-box">
+      <p><b>Total Direct Team:</b> ${directUsers.length}</p>
+      <p><b>Left Team:</b> ${leftCount}</p>
+      <p><b>Right Team:</b> ${rightCount}</p>
+    </div>
+
+    <div class="section-title">Referral Link</div>
+    <input id="referralLinkBox" class="ref-box" value="${refLink}" readonly>
+    <button class="action-btn" onclick="copyReferralLink()">Copy Link</button>
+  `;
+}
+
+// ================= DIRECT TEAM =================
+function loadDirectTeam() {
+  let user = getSafeUser();
+  if (!user) return;
+
+  let main = getMainContent();
+  if (!main) return;
+
+  let directUsers = typeof getDirectUsers === "function"
+    ? getDirectUsers(user.userId) || []
+    : [];
+
+  let html = `
+    <div class="section-title">Direct Team List</div>
+    <table>
+      <tr>
+        <th>User ID</th>
+        <th>Name</th>
+        <th>Position</th>
+        <th>Status</th>
+      </tr>
+  `;
+
+  if (!directUsers.length) {
+    html += `<tr><td colspan="4">No Direct Team Found</td></tr>`;
+  }
+
+  directUsers.forEach(member => {
+    html += `
+      <tr>
+        <td>${member.userId || "N/A"}</td>
+        <td>${member.fullName || member.username || "N/A"}</td>
+        <td>${member.position || "N/A"}</td>
+        <td>${member.status || "active"}</td>
+      </tr>
+    `;
+  });
+
+  html += `</table>`;
+  main.innerHTML = html;
+}
+
+// ================= COPY REFERRAL =================
+function copyReferralLink() {
+  let copyText = document.getElementById("referralLinkBox");
+  if (!copyText) return;
+
+  navigator.clipboard.writeText(copyText.value)
+    .then(() => alert("Referral Link Copied"))
+    .catch(() => alert("Copy Failed"));
+}
+
+// ================= INIT =================
+let DASHBOARD_INIT = false;
+
+document.addEventListener("DOMContentLoaded", function () {
+  if (DASHBOARD_INIT) return;
+  DASHBOARD_INIT = true;
+
+  const user = getSafeUser();
+  if (!user) return;
+
+  const welcome = document.getElementById("welcome");
+  if (welcome) {
+    welcome.innerText =
+      "Welcome " + (user.username || "User") + " (" + (user.userId || "N/A") + ")";
+  }
+
+  loadHome();
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.onclick = logout;
+  }
+});
 
 
 
