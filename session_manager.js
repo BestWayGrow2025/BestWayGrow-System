@@ -1,11 +1,13 @@
 /*
 ========================================
 SESSION MANAGER V2 (STABLE FIXED)
+TEST SAFE FINAL
 ========================================
 ✔ No redirect loops
 ✔ Safe session handling
 ✔ No aggressive logout
 ✔ Dashboard stable support
+✔ Test mode safe
 ========================================
 */
 
@@ -53,7 +55,6 @@ let SESSION_CHECK_LOCK = false;
 
 // ================= CURRENT USER =================
 function getCurrentUser() {
-
   if (SESSION_CHECK_LOCK) return null;
   SESSION_CHECK_LOCK = true;
 
@@ -80,9 +81,18 @@ function getCurrentUser() {
 function protectUserPage() {
   let user = getCurrentUser();
 
+  // TEST MODE SAFE:
+  // keep redirect logic
+  // prevent self-loop if already on login page
   if (!user) {
     console.warn("Login required");
-    window.location.href = "user_login.html";
+
+    let currentPage = (window.location.pathname || "").toLowerCase();
+
+    if (!currentPage.includes("user_login.html")) {
+      window.location.href = "user_login.html";
+    }
+
     return null;
   }
 
@@ -92,6 +102,10 @@ function protectUserPage() {
 // ================= LOGOUT =================
 function logoutSession() {
   clearSession();
-  window.location.href = "user_login.html";
-}
 
+  let currentPage = (window.location.pathname || "").toLowerCase();
+
+  if (!currentPage.includes("user_login.html")) {
+    window.location.href = "user_login.html";
+  }
+}
