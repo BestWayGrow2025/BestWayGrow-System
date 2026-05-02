@@ -7,7 +7,7 @@ USER DASHBOARD FINAL FIXED (TREE ALIGNED)
 ✔ No fake direct sponsor dependency
 ✔ No startup redirect loop
 ✔ Works with tree_system.js V13
-✔ Safe global function binding (FIXED)
+✔ Safe global function binding (CRASH PROOF)
 ========================================
 */
 
@@ -184,31 +184,39 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+// ================= SAFE GLOBAL EXPORT (CRASH PROOF) =================
+function safeBind(name, message) {
+  if (typeof window[name] === "function") {
+    return window[name];
+  }
 
-// ================= SAFE GLOBAL EXPORT (FIXED) =================
-function safeFn(fn) {
-  return typeof fn === "function" ? fn : function () {
-    console.warn("Function not implemented");
+  return function () {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `<div class="info-box">${message}</div>`;
+    }
   };
 }
 
 window.loadHome = loadHome;
-window.loadPinSection = safeFn(loadPinSection);
-window.loadTree = safeFn(loadTree);
-window.loadWallet = safeFn(loadWallet);
-window.loadWalletHistory = safeFn(loadWalletHistory);
+window.loadPinSection = safeBind("loadPinSection", "Pin Section Not Ready");
+window.loadTree = safeBind("loadTree", "Tree Module Not Ready");
+window.loadWallet = safeBind("loadWallet", "Wallet Not Ready");
+window.loadWalletHistory = safeBind("loadWalletHistory", "Wallet History Not Ready");
 window.loadDirectTeam = loadDirectTeam;
-window.loadProfile = safeFn(loadProfile);
-window.loadIncomeHistory = safeFn(loadIncomeHistory);
-window.loadWithdrawSection = safeFn(loadWithdrawSection);
-window.loadWithdrawHistory = safeFn(loadWithdrawHistory);
-window.loadNotifications = safeFn(loadNotifications);
-window.loadSupportTickets = safeFn(loadSupportTickets);
-window.loadEditProfile = safeFn(loadEditProfile);
-window.loadChangePassword = safeFn(loadChangePassword);
-window.loadActivityLogs = safeFn(loadActivityLogs);
-window.loadLoginHistory = safeFn(loadLoginHistory);
-window.loadKYCSection = safeFn(loadKYCSection);
-window.loadRankReward = safeFn(loadRankReward);
-window.loadReferralLink = safeFn(loadReferralLink);
+window.loadProfile = safeBind("loadProfile", "Profile Not Ready");
+window.loadIncomeHistory = safeBind("loadIncomeHistory", "Income History Not Ready");
+window.loadWithdrawSection = safeBind("loadWithdrawSection", "Withdraw Not Ready");
+window.loadWithdrawHistory = safeBind("loadWithdrawHistory", "Withdraw History Not Ready");
+window.loadNotifications = safeBind("loadNotifications", "Notifications Not Ready");
+window.loadSupportTickets = safeBind("loadSupportTickets", "Support Not Ready");
+window.loadEditProfile = safeBind("loadEditProfile", "Edit Profile Not Ready");
+window.loadChangePassword = safeBind("loadChangePassword", "Change Password Not Ready");
+window.loadActivityLogs = safeBind("loadActivityLogs", "Activity Logs Not Ready");
+window.loadLoginHistory = safeBind("loadLoginHistory", "Login History Not Ready");
+window.loadKYCSection = safeBind("loadKYCSection", "KYC Not Ready");
+window.loadRankReward = safeBind("loadRankReward", "Rank Reward Not Ready");
+window.loadReferralLink = safeBind("loadReferralLink", "Referral Not Ready");
 window.logout = logout;
+
+
