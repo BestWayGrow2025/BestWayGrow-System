@@ -171,10 +171,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let welcome = document.getElementById("welcome");
   if (welcome) {
-    welcome.innerText = "Welcome " + (user.username || "User") + " (" + user.userId + ")";
+    welcome.innerText =
+      "Welcome " + (user.username || "User") + " (" + user.userId + ")";
   }
 
   loadHome();
 
   let logoutBtn = document.getElementById("logoutBtn");
-  if
+  if (logoutBtn) {
+    logoutBtn.onclick = logout;
+  }
+});
