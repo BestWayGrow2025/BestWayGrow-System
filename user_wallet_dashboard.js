@@ -1,21 +1,26 @@
 /*
 ========================================
-WALLET SYSTEM (UI LAYER V1)
+WALLET SYSTEM (UI + SAFE LAYER V2 FIXED)
 ========================================
-✔ Balance display
-✔ Credit / Debit view
 ✔ Safe user load
-✔ Clean dashboard UI
+✔ Consistent wallet structure
+✔ Fallback history support
+✔ No crash if data missing
+✔ Compatible with PIN system
 ========================================
 */
 
 // ================= SAFE USER =================
 function getSafeUser() {
-  const user = getCurrentUser();
+  const user = typeof getCurrentUser === "function"
+    ? getCurrentUser()
+    : null;
 
   if (!user) {
-    document.getElementById("mainContent").innerHTML =
-      "<div class='info-box'>Login Required</div>";
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = "<div class='info-box'>Login Required</div>";
+    }
     return null;
   }
 
@@ -44,7 +49,7 @@ function loadWallet() {
   `;
 }
 
-// ================= WALLET HISTORY (BASIC) =================
+// ================= WALLET HISTORY (SAFE FIXED) =================
 function loadWalletHistory() {
   const user = getSafeUser();
   if (!user) return;
@@ -52,10 +57,15 @@ function loadWalletHistory() {
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  const history = user.walletHistory || [];
+  // 🔥 FIX: unified fallback sources
+  const history =
+    user.walletHistory ||
+    user.wallet?.history ||
+    [];
 
   let html = `
     <div class="section-title">Wallet History</div>
+
     <table border="1" width="100%">
       <tr>
         <th>Date</th>
@@ -64,19 +74,19 @@ function loadWalletHistory() {
       </tr>
   `;
 
-  if (history.length === 0) {
-    html += `<tr><td colspan="3">No Transactions</td></tr>`;
+  if (!Array.isArray(history) || history.length === 0) {
+    html += `<tr><td colspan="3">No Transactions Found</td></tr>`;
+  } else {
+    history.forEach(h => {
+      html += `
+        <tr>
+          <td>${h.date || "-"}</td>
+          <td>${h.type || "-"}</td>
+          <td>₹${h.amount || 0}</td>
+        </tr>
+      `;
+    });
   }
-
-  history.forEach(h => {
-    html += `
-      <tr>
-        <td>${h.date || "-"}</td>
-        <td>${h.type || "-"}</td>
-        <td>${h.amount || 0}</td>
-      </tr>
-    `;
-  });
 
   html += `</table>`;
 
@@ -86,4 +96,3 @@ function loadWalletHistory() {
 // ================= EXPORT =================
 window.loadWallet = loadWallet;
 window.loadWalletHistory = loadWalletHistory;
-
