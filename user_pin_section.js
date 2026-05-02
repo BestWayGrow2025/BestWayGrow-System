@@ -1,26 +1,33 @@
 /*
 ========================================
-PIN SECTION SYSTEM (V1)
+PIN SECTION SYSTEM (V2 - FINAL SAFE)
 ========================================
-✔ Pin activation system
-✔ Wallet deduction
-✔ Safe session check
-✔ Activity logging
+✔ No duplicate helper conflicts
+✔ Safe dependency checks
+✔ Wallet deduction safe
+✔ No crash if system modules missing
+✔ Stable export for dashboard
 ========================================
 */
 
 // ================= SAFE USER =================
 function getSafeUser() {
-  const user = getCurrentUser();
+  const user = typeof getCurrentUser === "function"
+    ? getCurrentUser()
+    : null;
+
   if (!user) {
-    document.getElementById("mainContent").innerHTML =
-      "<div class='info-box'>Login Required</div>";
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = "<div class='info-box'>Login Required</div>";
+    }
     return null;
   }
+
   return user;
 }
 
-// ================= LOAD PIN UI =================
+// ================= LOAD PIN SECTION =================
 function loadPinSection() {
   const user = getSafeUser();
   if (!user) return;
@@ -32,13 +39,13 @@ function loadPinSection() {
     <div class="section-title">PIN SECTION</div>
 
     <div class="info-box">
-      <p><b>Available PIN:</b> 1 PIN = ₹100</p>
-      <p><b>Status:</b> Ready to Activate</p>
+      <p><b>PIN Value:</b> ₹100 per PIN</p>
+      <p><b>Status:</b> Ready for Activation</p>
     </div>
 
     <div class="info-box">
       <label>Enter PIN Code</label>
-      <input id="pinInput" placeholder="Enter PIN">
+      <input id="pinInput" placeholder="Enter PIN Code">
       <button class="action-btn" onclick="activatePin()">Activate PIN</button>
     </div>
   `;
@@ -49,49 +56,59 @@ function activatePin() {
   const user = getSafeUser();
   if (!user) return;
 
-  const pin = document.getElementById("pinInput").value.trim();
+  const pin = document.getElementById("pinInput")?.value.trim();
 
   if (!pin) {
     alert("Enter PIN");
     return;
   }
 
-  // Example rule
   const PIN_COST = 100;
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  let index = users.findIndex(u => u.userId === user.userId);
+  const users = typeof getUsers === "function" ? getUsers() : [];
+  const index = users.findIndex(u => u.userId === user.userId);
 
-  if (index === -1) return;
+  if (index === -1) {
+    alert("User not found");
+    return;
+  }
 
-  if ((users[index].wallet?.balance || 0) < PIN_COST) {
+  // ================= BALANCE CHECK =================
+  const wallet = users[index].wallet || {};
+
+  if ((wallet.balance || 0) < PIN_COST) {
     alert("Insufficient Wallet Balance");
     return;
   }
 
-  // Deduct wallet
-  users[index].wallet.balance -= PIN_COST;
-  users[index].wallet.totalDebit =
-    (users[index].wallet.totalDebit || 0) + PIN_COST;
+  // ================= DEDUCT WALLET =================
+  wallet.balance = (wallet.balance || 0) - PIN_COST;
+  wallet.totalDebit = (wallet.totalDebit || 0) + PIN_COST;
+  users[index].wallet = wallet;
 
-  // Save activated pin
+  // ================= SAVE PIN =================
   if (!users[index].activatedPins) {
     users[index].activatedPins = [];
   }
 
   users[index].activatedPins.push({
-    pin,
+    pin: pin,
     date: new Date().toISOString()
   });
 
-  // Save users
+  // ================= SAVE USERS =================
   if (typeof saveUsers === "function") {
     saveUsers(users);
   }
 
-  // Activity log
+  // ================= LOG ACTIVITY =================
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "USER", "PIN ACTIVATED", "PIN_SECTION");
+    logActivity(
+      user.userId,
+      "USER",
+      "PIN ACTIVATED",
+      "PIN_SECTION"
+    );
   }
 
   alert("PIN Activated Successfully");
@@ -99,6 +116,6 @@ function activatePin() {
   loadPinSection();
 }
 
-// ================= EXPORT =================
+// ================= GLOBAL EXPORT =================
 window.loadPinSection = loadPinSection;
 window.activatePin = activatePin;
