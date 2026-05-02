@@ -5,6 +5,7 @@ USER DASHBOARD FINAL FIXED (TREE ALIGNED)
 ✔ Real binary tree counting
 ✔ Left / Right / Total team correct
 ✔ No fake direct sponsor dependency
+✔ No startup redirect loop
 ✔ Works with tree_system.js V13
 ========================================
 */
@@ -14,7 +15,10 @@ function getSafeUser() {
   let user = getCurrentUser();
 
   if (!user) {
-    window.location.href = "user_login.html";
+    let main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = "<div class='info-box'>Login Required</div>";
+    }
     return null;
   }
 
@@ -28,17 +32,16 @@ function getAllUsers() {
 
 // ================= TREE COUNT ENGINE =================
 function countTree(userId, users) {
-
   let user = users.find(u => u.userId === userId);
   if (!user) return { left: 0, right: 0, total: 0 };
 
   function traverse(nodeId) {
+    if (!nodeId) return 0;
+
     let node = users.find(u => u.userId === nodeId);
     if (!node) return 0;
 
-    return 1 +
-      traverse(node.leftChild) +
-      traverse(node.rightChild);
+    return 1 + traverse(node.leftChild) + traverse(node.rightChild);
   }
 
   let leftCount = traverse(user.leftChild);
@@ -53,7 +56,6 @@ function countTree(userId, users) {
 
 // ================= MAIN DASHBOARD =================
 function loadHome() {
-
   let user = getSafeUser();
   if (!user) return;
 
@@ -63,8 +65,8 @@ function loadHome() {
   let users = getAllUsers();
   let tree = countTree(user.userId, users);
 
-  let refLink = typeof generateRefLink === "function"
-    ? generateRefLink(user.userId)
+  let refLink = typeof generateReferralLink === "function"
+    ? generateReferralLink(user.userId)
     : "";
 
   main.innerHTML = `
@@ -101,9 +103,8 @@ function loadHome() {
   `;
 }
 
-// ================= DIRECT TEAM (OPTIONAL VIEW) =================
+// ================= DIRECT TEAM =================
 function loadDirectTeam() {
-
   let user = getSafeUser();
   if (!user) return;
 
@@ -111,7 +112,6 @@ function loadDirectTeam() {
   if (!main) return;
 
   let users = getAllUsers();
-
   let directUsers = users.filter(u => u.introducerId === user.userId);
 
   let html = `
@@ -129,11 +129,11 @@ function loadDirectTeam() {
     html += `<tr><td colspan="4">No Direct Team Found</td></tr>`;
   }
 
-  directUsers.forEach((u, i) => {
+  directUsers.forEach(u => {
     html += `
       <tr>
-        <td>${u.userId}</td>
-        <td>${u.fullName || u.username}</td>
+        <td>${u.userId || "-"}</td>
+        <td>${u.fullName || u.username || "-"}</td>
         <td>${u.mobile || "-"}</td>
         <td>${u.position || "-"}</td>
       </tr>
@@ -141,7 +141,6 @@ function loadDirectTeam() {
   });
 
   html += `</table>`;
-
   main.innerHTML = html;
 }
 
@@ -155,17 +154,27 @@ function copyReferralLink() {
     .catch(() => alert("Copy Failed"));
 }
 
+// ================= LOGOUT =================
+function logout() {
+  logoutSession();
+}
+
 // ================= INIT =================
+let DASHBOARD_INIT = false;
+
 document.addEventListener("DOMContentLoaded", function () {
+  if (DASHBOARD_INIT) return;
+  DASHBOARD_INIT = true;
+
   let user = getSafeUser();
   if (!user) return;
 
   let welcome = document.getElementById("welcome");
-
   if (welcome) {
-    welcome.innerText =
-      "Welcome " + (user.username || "User") + " (" + user.userId + ")";
+    welcome.innerText = "Welcome " + (user.username || "User") + " (" + user.userId + ")";
   }
 
   loadHome();
-});
+
+  let logoutBtn = document.getElementById("logoutBtn");
+  if
