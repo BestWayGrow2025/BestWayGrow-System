@@ -1,14 +1,14 @@
 /*
 ========================================
-DASHBOARD MENU SAFETY WRAPPER (FIXED V2)
+DASHBOARD MENU SAFETY WRAPPER (FIXED V3)
 ========================================
-✔ No crash even if module missing
-✔ Works with late-loaded scripts
-✔ Stable window binding
+✔ Force-safe binding for ALL menu buttons
+✔ No undefined function crash ever
+✔ Consistent fallback UI
 ========================================
 */
 
-// ================= SAFE CALL =================
+// ================= SAFE PAGE =================
 function safePage(name) {
   return function () {
     const main = document.getElementById("mainContent");
@@ -17,44 +17,47 @@ function safePage(name) {
       main.innerHTML = `
         <div class="info-box">
           <h3>${name}</h3>
-          <p>Module not loaded or not implemented yet.</p>
+          <p>Module not loaded or under development.</p>
         </div>
       `;
     }
   };
 }
 
-// ================= CORE MENU BINDING =================
-function bindMenu() {
-  const map = {
-    loadHome: "Home",
-    loadPinSection: "Pin Section",
-    loadTree: "Tree",
-    loadWallet: "Wallet",
-    loadWalletHistory: "Wallet History",
-    loadDirectTeam: "Direct Team",
-    loadProfile: "Profile",
-    loadIncomeHistory: "Income History",
-    loadWithdrawSection: "Withdraw",
-    loadWithdrawHistory: "Withdraw History",
-    loadNotifications: "Notifications",
-    loadSupportTickets: "Support Tickets",
-    loadEditProfile: "Edit Profile",
-    loadChangePassword: "Change Password",
-    loadActivityLogs: "Activity Logs",
-    loadLoginHistory: "Login History",
-    loadKYCSection: "KYC Upload",
-    loadRankReward: "Rank / Reward",
-    loadReferralLink: "Referral Link"
-  };
+// ================= MENU MAP =================
+const MENU_MAP = {
+  loadHome: "Home",
+  loadPinSection: "Pin Section",
+  loadTree: "My Tree",
+  loadWallet: "Wallet",
+  loadWalletHistory: "Wallet History",
+  loadDirectTeam: "Direct Team",
+  loadProfile: "Profile",
+  loadIncomeHistory: "Income History",
+  loadWithdrawSection: "Withdraw",
+  loadWithdrawHistory: "Withdraw History",
+  loadNotifications: "Notifications",
+  loadSupportTickets: "Support Tickets",
+  loadEditProfile: "Edit Profile",
+  loadChangePassword: "Change Password",
+  loadActivityLogs: "Activity Logs",
+  loadLoginHistory: "Login History",
+  loadKYCSection: "KYC Upload",
+  loadRankReward: "Rank / Reward",
+  loadReferralLink: "Referral Link"
+};
 
-  Object.keys(map).forEach(fn => {
-    if (typeof window[fn] !== "function") {
-      window[fn] = safePage(map[fn]);
+// ================= FORCE SAFE BIND =================
+function bindMenu() {
+  Object.keys(MENU_MAP).forEach(fnName => {
+    const label = MENU_MAP[fnName];
+
+    // ALWAYS ensure function exists (override if needed)
+    if (typeof window[fnName] !== "function") {
+      window[fnName] = safePage(label);
     }
   });
 }
 
-// Run after load
-document.addEventListener("DOMContentLoaded", bindMenu);
-
+// ================= AUTO INIT (SAFE DELAY) =================
+setTimeout(bindMenu, 50);
