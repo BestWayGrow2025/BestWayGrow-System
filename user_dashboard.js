@@ -7,6 +7,7 @@ USER DASHBOARD FINAL FIXED (TREE ALIGNED)
 ✔ No fake direct sponsor dependency
 ✔ No startup redirect loop
 ✔ Works with tree_system.js V13
+✔ Safe global function binding (FIXED)
 ========================================
 */
 
@@ -183,24 +184,31 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// ================= GLOBAL EXPORT FIX =================
+
+// ================= SAFE GLOBAL EXPORT (FIXED) =================
+function safeFn(fn) {
+  return typeof fn === "function" ? fn : function () {
+    console.warn("Function not implemented");
+  };
+}
+
 window.loadHome = loadHome;
-window.loadPinSection = loadPinSection || function(){};
-window.loadTree = loadTree || function(){};
-window.loadWallet = loadWallet || function(){};
-window.loadWalletHistory = loadWalletHistory || function(){};
+window.loadPinSection = safeFn(loadPinSection);
+window.loadTree = safeFn(loadTree);
+window.loadWallet = safeFn(loadWallet);
+window.loadWalletHistory = safeFn(loadWalletHistory);
 window.loadDirectTeam = loadDirectTeam;
-window.loadProfile = loadProfile || function(){};
-window.loadIncomeHistory = loadIncomeHistory || function(){};
-window.loadWithdrawSection = loadWithdrawSection || function(){};
-window.loadWithdrawHistory = loadWithdrawHistory || function(){};
-window.loadNotifications = loadNotifications || function(){};
-window.loadSupportTickets = loadSupportTickets || function(){};
-window.loadEditProfile = loadEditProfile || function(){};
-window.loadChangePassword = loadChangePassword || function(){};
-window.loadActivityLogs = loadActivityLogs || function(){};
-window.loadLoginHistory = loadLoginHistory || function(){};
-window.loadKYCSection = loadKYCSection || function(){};
-window.loadRankReward = loadRankReward || function(){};
-window.loadReferralLink = loadReferralLink || function(){};
+window.loadProfile = safeFn(loadProfile);
+window.loadIncomeHistory = safeFn(loadIncomeHistory);
+window.loadWithdrawSection = safeFn(loadWithdrawSection);
+window.loadWithdrawHistory = safeFn(loadWithdrawHistory);
+window.loadNotifications = safeFn(loadNotifications);
+window.loadSupportTickets = safeFn(loadSupportTickets);
+window.loadEditProfile = safeFn(loadEditProfile);
+window.loadChangePassword = safeFn(loadChangePassword);
+window.loadActivityLogs = safeFn(loadActivityLogs);
+window.loadLoginHistory = safeFn(loadLoginHistory);
+window.loadKYCSection = safeFn(loadKYCSection);
+window.loadRankReward = safeFn(loadRankReward);
+window.loadReferralLink = safeFn(loadReferralLink);
 window.logout = logout;
