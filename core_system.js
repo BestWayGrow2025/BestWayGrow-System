@@ -7,6 +7,7 @@ CORE SYSTEM V8.1 (FINAL STABLE LOCK FIXED)
 ✔ No repeated mutation loop
 ✔ Stable admin/system seeding
 ✔ Production safe
+✔ FIXED: getCurrentUser() added (CRITICAL)
 ========================================
 */
 
@@ -106,10 +107,27 @@ function getChildren(userId) {
   return getUsers().filter(u => u.sponsorId === userId);
 }
 
+// ================= 🔥 CRITICAL FIX =================
+// SESSION → USER BRIDGE (MISSING BEFORE)
+function getCurrentUser() {
+  try {
+    const session = typeof getSession === "function"
+      ? getSession()
+      : JSON.parse(localStorage.getItem("session"));
+
+    if (!session || !session.userId) return null;
+
+    return getUserById(session.userId);
+  } catch (e) {
+    console.error("getCurrentUser error:", e.message);
+    return null;
+  }
+}
+
 // ================= INIT CORE SYSTEM =================
 function initCoreSystem() {
 
-  // 🔒 INIT GUARD (PREVENT LOOP)
+  // 🔒 INIT GUARD
   if (CORE_INIT_DONE) return;
   CORE_INIT_DONE = true;
 
@@ -119,14 +137,12 @@ function initCoreSystem() {
 
     // ================= CLEAN USER NORMALIZATION =================
     users.forEach(u => {
-
       if (!u.status) u.status = "active";
       if (!u.accountStatus) u.accountStatus = "active";
       if (!u.blockStatus) u.blockStatus = "unblocked";
-
     });
 
-    // ================= DEFAULT SYSTEM USERS (ONE TIME SAFE) =================
+    // ================= DEFAULT SYSTEM USERS =================
 
     if (!users.find(u => u.userId === "SUPERADMIN")) {
       users.push({
@@ -178,7 +194,6 @@ function initCoreSystem() {
       });
     }
 
-    // ================= SAVE ONCE =================
     saveUsers(users);
 
     console.log("✅ Core system initialized (V8.1 stable)");
@@ -187,4 +202,3 @@ function initCoreSystem() {
     console.error("❌ initCoreSystem failed:", e.message);
   }
 }
-
