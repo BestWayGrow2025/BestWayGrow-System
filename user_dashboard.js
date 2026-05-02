@@ -182,3 +182,25 @@ document.addEventListener("DOMContentLoaded", function () {
     logoutBtn.onclick = logout;
   }
 });
+
+// ================= GLOBAL EXPORT FIX =================
+window.loadHome = loadHome;
+window.loadPinSection = loadPinSection || function(){};
+window.loadTree = loadTree || function(){};
+window.loadWallet = loadWallet || function(){};
+window.loadWalletHistory = loadWalletHistory || function(){};
+window.loadDirectTeam = loadDirectTeam;
+window.loadProfile = loadProfile || function(){};
+window.loadIncomeHistory = loadIncomeHistory || function(){};
+window.loadWithdrawSection = loadWithdrawSection || function(){};
+window.loadWithdrawHistory = loadWithdrawHistory || function(){};
+window.loadNotifications = loadNotifications || function(){};
+window.loadSupportTickets = loadSupportTickets || function(){};
+window.loadEditProfile = loadEditProfile || function(){};
+window.loadChangePassword = loadChangePassword || function(){};
+window.loadActivityLogs = loadActivityLogs || function(){};
+window.loadLoginHistory = loadLoginHistory || function(){};
+window.loadKYCSection = loadKYCSection || function(){};
+window.loadRankReward = loadRankReward || function(){};
+window.loadReferralLink = loadReferralLink || function(){};
+window.logout = logout;
