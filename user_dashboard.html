@@ -46,14 +46,35 @@
 
   </div>
 
-  <!-- CORE SCRIPTS -->
-<script src="core_system.js"></script>
-<script src="session_manager.js"></script>
-<script src="tree_system.js"></script>
-<script src="activity_log.js"></script>
-<script src="user_tree.js"></script>
-<script src="dashboard_menu.js"></script>
-<script src="user_dashboard.js"></script>
+  <!-- ================= CORE SYSTEM ================= -->
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+
+  <!-- ================= DATA ENGINE ================= -->
+  <script src="tree_system.js"></script>
+  <script src="activity_log.js"></script>
+
+  <!-- ================= FEATURE MODULES ================= -->
+  <script src="user_tree.js"></script>
+
+  <!-- IMPORTANT: ALL FEATURE MODULES MUST LOAD BEFORE DASHBOARD -->
+  <script src="pin_section.js"></script>
+  <script src="wallet.js"></script>
+  <script src="wallet_history.js"></script>
+  <script src="profile.js"></script>
+  <script src="income_history.js"></script>
+  <script src="withdraw.js"></script>
+  <script src="notifications.js"></script>
+  <script src="support_ticket.js"></script>
+  <script src="login_history.js"></script>
+  <script src="kyc_upload.js"></script>
+  <script src="rank_reward.js"></script>
+
+  <!-- ================= SAFETY WRAPPER ================= -->
+  <script src="dashboard_menu.js"></script>
+
+  <!-- ================= MAIN DASHBOARD ================= -->
+  <script src="user_dashboard.js"></script>
 
 </body>
 </html>
