@@ -1,11 +1,15 @@
 let currentUser = null;
 let clickLock = false;
+let SYSTEM_READY = false;
 
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  authPage();
-  bindEvents();
-  loadHome();
+  setTimeout(() => {
+    initPage();
+    authPage();
+    bindEvents();
+    loadHome();
+    SYSTEM_READY = true;
+  }, 50);
 });
 
 // ================= INIT =================
@@ -20,6 +24,10 @@ function initPage() {
 
 // ================= AUTH =================
 function authPage() {
+  if (!SYSTEM_READY && SYSTEM_READY !== false) {
+    return;
+  }
+
   if (typeof protectPage !== "function") {
     window.location.href = "system_admin_login.html";
     throw new Error("STOP");
