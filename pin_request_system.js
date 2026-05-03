@@ -1,6 +1,6 @@
 /*
 ========================================
-PIN REQUEST SYSTEM V8.0 (FINAL CORE PATCH)
+PIN REQUEST SYSTEM V8.1 (FINAL CLEAN PATCH)
 ========================================
 ✔ Safe storage (self-healing)
 ✔ System lock protected
@@ -38,7 +38,7 @@ function savePinRequests(data) {
 
 // ================= ID =================
 function generateRequestId() {
-  return "REQ_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8);
+  return "REQ_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
 // ================= PRIORITY =================
@@ -79,7 +79,6 @@ function hasRecentDuplicateRequest(userId, type, paymentId) {
 
 // ================= CREATE REQUEST =================
 function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
-
   if (typeof isSystemSafe === "function" && !isSystemSafe()) {
     throw new Error("System locked");
   }
@@ -112,6 +111,7 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
     r.type === type &&
     r.status === "PENDING"
   );
+
   if (pending) throw new Error("Pending request already exists");
 
   if (hasRecentDuplicateRequest(userId, type, paymentId)) {
@@ -152,7 +152,6 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
 // ================= AUTO PROCESS =================
 function processPinRequestAuto(requestId) {
-
   if (typeof isSystemSafe === "function" && !isSystemSafe()) {
     throw new Error("System locked");
   }
@@ -177,7 +176,6 @@ function processPinRequestAuto(requestId) {
   let assigned = [];
 
   try {
-
     if (typeof loadPins !== "function" || typeof assignPin !== "function") {
       throw new Error("PIN system unavailable");
     }
@@ -215,7 +213,6 @@ function processPinRequestAuto(requestId) {
     return true;
 
   } catch (err) {
-
     try {
       let pins = loadPins();
 
@@ -256,8 +253,7 @@ function processPinRequestAuto(requestId) {
 }
 
 // ================= MANUAL PROCESS =================
-function processPinRequestManual(requestId, pinIds = [], performedBy) {
-
+function processPinRequestManual(requestId, pinIds = [], performedBy = "ADMIN") {
   if (typeof isSystemSafe === "function" && !isSystemSafe()) {
     throw new Error("System locked");
   }
@@ -275,16 +271,15 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
 
   req.lock = true;
   req.status = "PROCESSING";
-  req.processedBy = performedBy || "ADMIN";
+  req.processedBy = performedBy;
 
   savePinRequests(requests);
 
   let assigned = [];
 
   try {
-
     pinIds.forEach(pinId => {
-      let ok = assignPin(pinId, req.userId, "user", req.processedBy);
+      let ok = assignPin(pinId, req.userId, "user", performedBy);
       if (!ok) throw new Error("PIN assign failed: " + pinId);
       assigned.push(pinId);
     });
@@ -298,7 +293,6 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
     return true;
 
   } catch (err) {
-
     req.status = "FAILED";
     req.failReason = err.message || "Unknown error";
     req.processedAt = Date.now();
@@ -311,7 +305,6 @@ function processPinRequestManual(requestId, pinIds = [], performedBy) {
 
 // ================= REJECT =================
 function rejectPinRequest(requestId, performedBy = "ADMIN") {
-
   if (typeof isSystemSafe === "function" && !isSystemSafe()) {
     throw new Error("System locked");
   }
