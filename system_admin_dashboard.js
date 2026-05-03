@@ -1,52 +1,34 @@
 let currentUser = null;
 let clickLock = false;
 
+// ================= BOOT =================
 document.addEventListener("DOMContentLoaded", function () {
+  if (!safeAuthGate()) {
+    window.location.href = "system_admin_login.html";
+    return;
+  }
+
   bootSystem();
 });
 
-// ================= BOOT =================
-async function bootSystem() {
-  let ok = await waitForSession();
-  if (!ok) return;
-
+function bootSystem() {
   initPage();
   authPage();
   bindEvents();
   loadHome();
 }
 
-// ================= SESSION WAIT (FIXED - NO LOOP FREEZE) =================
-function waitForSession() {
-  if (typeof getSession !== "function") {
-    window.location.href = "system_admin_login.html";
-    return Promise.resolve(false);
-  }
+// ================= SAFE AUTH GATE (FIXED ROOT CAUSE) =================
+function safeAuthGate() {
+  if (typeof getSession !== "function") return false;
 
-  return new Promise((resolve) => {
-    let tries = 0;
+  const session = getSession();
 
-    function check() {
-      let session = getSession();
+  if (!session || !session.role) return false;
 
-      if (session && session.role) {
-        resolve(true);
-        return;
-      }
+  if (session.role !== "system_admin") return false;
 
-      tries++;
-
-      if (tries >= 10) {
-        window.location.href = "system_admin_login.html";
-        resolve(false);
-        return;
-      }
-
-      setTimeout(check, 50);
-    }
-
-    check();
-  });
+  return true;
 }
 
 // ================= INIT =================
