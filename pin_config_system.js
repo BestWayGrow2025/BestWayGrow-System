@@ -1,6 +1,6 @@
 /*
 ========================================
-PIN CONFIG SYSTEM V8 (FINAL PATCH)
+PIN CONFIG SYSTEM V8.1 (FINAL CLEAN PATCH)
 ========================================
 ✔ Core aligned
 ✔ Strict schema validation
@@ -20,6 +20,7 @@ PIN CONFIG SYSTEM V8 (FINAL PATCH)
 // =====================
 const PIN_SETTINGS_KEY = "pinSettings";
 const SYSTEM_CONTROLS_KEY = "systemControls";
+
 const PIN_TYPES = ["upgrade", "repurchase"];
 const PIN_MODES = ["AUTO", "MANUAL", "OFF"];
 
@@ -45,6 +46,7 @@ function getDefaultControls() {
   return {
     pinMode: "AUTO",
     enablePinRefund: true,
+    enablePinTransfer: true,
     enableFranchiseSecurity: false,
     enableMinStockRule: false,
     enableDirectUserPayment: true
@@ -60,6 +62,7 @@ function isValidPinType(type) {
 
 function normalizeDate(value) {
   if (!value) return null;
+
   let d = new Date(value);
   return isNaN(d.getTime()) ? null : d.toISOString();
 }
@@ -71,6 +74,7 @@ function normalizePinConfig(data) {
   };
 
   base.active = base.active === true;
+
   base.bv = Number(base.bv || 0);
   base.amount = Number(base.amount || 0);
   base.gst = Number(base.gst || 0);
@@ -103,6 +107,7 @@ function normalizeControls(data) {
   }
 
   safe.enablePinRefund = safe.enablePinRefund !== false;
+  safe.enablePinTransfer = safe.enablePinTransfer !== false;
   safe.enableFranchiseSecurity = safe.enableFranchiseSecurity === true;
   safe.enableMinStockRule = safe.enableMinStockRule === true;
   safe.enableDirectUserPayment = safe.enableDirectUserPayment !== false;
@@ -205,6 +210,7 @@ function disablePin(type) {
   if (typeof isSystemSafe === "function" && !isSystemSafe()) return false;
 
   let settings = getPinSettings();
+
   settings[type] = {
     ...settings[type],
     active: false,
@@ -263,6 +269,7 @@ function isPinSystemSafe(type) {
 // =====================
 function isPinAllowedForPurpose(pinType, purpose) {
   if (!isValidPinType(pinType)) return false;
+
   if (pinType === "upgrade") return true;
   return pinType === "repurchase" && purpose === "repurchase";
 }
