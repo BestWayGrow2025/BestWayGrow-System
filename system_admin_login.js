@@ -47,7 +47,7 @@ function login() {
     return;
   }
 
-  // ================= UNIFIED SESSION (UPGRADE) =================
+  // ================= UNIFIED SESSION =================
   if (typeof setSession === "function") {
     setSession({
       userId: user.userId,
@@ -55,12 +55,17 @@ function login() {
     });
   }
 
-  // Activity log
+  // Activity log (safe)
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "SYSTEM_ADMIN", "Login", "ADMIN");
+    try {
+      logActivity(user.userId, "SYSTEM_ADMIN", "Login", "ADMIN");
+    } catch (e) {}
   }
 
   showMsg("✅ Login successful");
+
+  // 🔥 IMPORTANT FIX: prevent instant re-trigger redirect loop
+  sessionStorage.setItem("SYS_ADMIN_LOGIN_DONE", "1");
 
   setTimeout(() => {
     window.location.href = "system_admin_dashboard.html";
@@ -95,7 +100,19 @@ function bindEvents() {
 function loadPage() {
   let session = typeof getSession === "function" ? getSession() : null;
 
-  if (session && session.role === "system_admin") {
+  // 🔥 FIX: prevent redirect loop
+  let alreadyLogin = sessionStorage.getItem("SYS_ADMIN_LOGIN_DONE");
+
+  if (session && session.role === "system_admin" && alreadyLogin !== "1") {
     window.location.href = "system_admin_dashboard.html";
   }
+
+  // reset flag after landing
+  setTimeout(() => {
+    sessionStorage.removeItem("SYS_ADMIN_LOGIN_DONE");
+  }, 2000);
 }
+
+
+
+
