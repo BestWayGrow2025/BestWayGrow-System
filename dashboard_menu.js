@@ -1,14 +1,3 @@
-/*
-========================================
-DASHBOARD MENU SAFETY WRAPPER (FIXED V3)
-========================================
-✔ Force-safe binding for ALL menu buttons
-✔ No undefined function crash ever
-✔ Consistent fallback UI
-========================================
-*/
-
-// ================= SAFE PAGE =================
 function safePage(name) {
   return function () {
     const main = document.getElementById("mainContent");
@@ -24,7 +13,6 @@ function safePage(name) {
   };
 }
 
-// ================= MENU MAP =================
 const MENU_MAP = {
   loadHome: "Home",
   loadPinSection: "Pin Section",
@@ -47,17 +35,25 @@ const MENU_MAP = {
   loadReferralLink: "Referral Link"
 };
 
-// ================= FORCE SAFE BIND =================
-function bindMenu() {
+// ================= SAFE BIND (NON-DESTRUCTIVE) =================
+function bindMenuSafe() {
   Object.keys(MENU_MAP).forEach(fnName => {
-    const label = MENU_MAP[fnName];
 
-    // ALWAYS ensure function exists (override if needed)
+    // ONLY assign fallback if truly missing
     if (typeof window[fnName] !== "function") {
-      window[fnName] = safePage(label);
+      window[fnName] = safePage(MENU_MAP[fnName]);
     }
+
   });
 }
 
-// ================= AUTO INIT (SAFE DELAY) =================
-setTimeout(bindMenu, 50);
+// ================= STABILITY HOOK =================
+function initMenuBinding() {
+  bindMenuSafe();
+
+  // second pass after full system load
+  setTimeout(bindMenuSafe, 500);
+}
+
+// run after DOM ready
+document.addEventListener("DOMContentLoaded", initMenuBinding);
