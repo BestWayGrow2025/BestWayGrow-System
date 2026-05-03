@@ -1,156 +1,101 @@
 let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  authPage();
+  initCoreSystem();
   bindEvents();
   loadPage();
 });
 
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("core_system.js not loaded");
-    throw new Error("STOP");
-  }
-}
-
-function authPage() {
-  // login page only
-}
-
-function bindEvents() {
-  let btn = document.getElementById("loginBtn");
-
-  if (btn) {
-    btn.addEventListener("click", function () {
-      safeClick(login);
-    });
-  }
-}
-
-function loadPage() {
-  let active =
-    JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null") ||
-    JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
-
-  if (active && active.userId) {
-    window.location.href = "system_admin_dashboard.html";
-  }
-}
-
-function safeClick(fn) {
+// ================= LOGIN =================
+function login() {
   if (lock) return;
-
   lock = true;
 
-  try {
-    fn();
-  } catch (err) {
-    console.error(err);
-  }
-
-  setTimeout(function () {
-    lock = false;
-  }, 800);
-}
-
-function clearSessions() {
-  localStorage.removeItem("loggedInSuperAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInFranchise");
-  localStorage.removeItem("loggedInUser");
-}
-
-function safeDecode(value) {
-  try {
-    return atob(value);
-  } catch {
-    return value || "";
-  }
-}
-
-function login() {
-  let userId = document.getElementById("userId").value.trim();
+  let userId = document.getElementById("userId").value.trim().toUpperCase();
   let password = document.getElementById("password").value.trim();
 
   if (!userId || !password) {
     showMsg("⚠️ Enter ID & Password");
+    lock = false;
     return;
   }
 
   let users = typeof getUsers === "function" ? getUsers() : [];
 
-  let user = users.find(function (u) {
-    return (
-      String(u.userId || "") === userId &&
-      u.role === "system_admin"
-    );
-  });
+  let user = users.find(u =>
+    (u.userId || "").toUpperCase() === userId &&
+    u.role === "system_admin"
+  );
 
   if (!user) {
     showMsg("❌ Invalid ID");
+    lock = false;
     return;
   }
 
   if ((user.status || "active") !== "active") {
     showMsg("🚫 Account inactive");
+    lock = false;
     return;
   }
 
-  let storedPass = safeDecode(user.password);
+  let storedPass = safeDecode(user.password || "");
 
-  if (storedPass.trim() !== password) {
+  if (storedPass !== password) {
     showMsg("❌ Wrong Password");
+    lock = false;
     return;
   }
 
-  if (typeof getSystemSettings !== "function") {
-    showMsg("❌ System settings missing");
-    return;
+  // ================= UNIFIED SESSION (UPGRADE) =================
+  if (typeof setSession === "function") {
+    setSession({
+      userId: user.userId,
+      role: user.role
+    });
   }
 
-  let settings = getSystemSettings() || {};
-
-  if (settings.lockMode === true) {
-    showMsg("🚫 System Locked");
-    return;
-  }
-
-  if (settings.adminAccess === false) {
-    showMsg("🚫 Admin Access OFF");
-    return;
-  }
-
-  clearSessions();
-
-  localStorage.setItem("loggedInSystemAdmin", JSON.stringify({
-    userId: user.userId,
-    role: user.role
-  }));
-
-  if (!localStorage.getItem("loggedInSystemAdmin")) {
-    showMsg("❌ Session failed");
-    return;
-  }
-
+  // Activity log
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "system_admin", "Login", "ADMIN");
+    logActivity(user.userId, "SYSTEM_ADMIN", "Login", "ADMIN");
   }
 
   showMsg("✅ Login successful");
 
-  setTimeout(function () {
+  setTimeout(() => {
     window.location.href = "system_admin_dashboard.html";
-  }, 700);
+  }, 400);
+
+  setTimeout(() => {
+    lock = false;
+  }, 600);
 }
 
-function showMsg(text) {
-  let msg = document.getElementById("msg");
+// ================= MESSAGE =================
+function showMsg(msg) {
+  let el = document.getElementById("msg");
+  if (el) el.innerText = msg;
+}
 
-  if (msg) {
-    msg.innerText = text;
+// ================= SAFE DECODE =================
+function safeDecode(val) {
+  try {
+    return atob(val || "");
+  } catch {
+    return val || "";
+  }
+}
+
+// ================= EVENTS =================
+function bindEvents() {
+  document.getElementById("loginBtn").addEventListener("click", login);
+}
+
+// ================= AUTO REDIRECT =================
+function loadPage() {
+  let session = typeof getSession === "function" ? getSession() : null;
+
+  if (session && session.role === "system_admin") {
+    window.location.href = "system_admin_dashboard.html";
   }
 }
