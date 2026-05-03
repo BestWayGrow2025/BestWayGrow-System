@@ -6,8 +6,9 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ================= BOOT =================
-function bootSystem() {
-  if (!waitForSession()) return;
+async function bootSystem() {
+  let ok = await waitForSession();
+  if (!ok) return;
 
   initPage();
   authPage();
@@ -15,28 +16,37 @@ function bootSystem() {
   loadHome();
 }
 
-// ================= SESSION WAIT (SAFE FIX) =================
+// ================= SESSION WAIT (FIXED - NO LOOP FREEZE) =================
 function waitForSession() {
   if (typeof getSession !== "function") {
     window.location.href = "system_admin_login.html";
-    return false;
+    return Promise.resolve(false);
   }
 
-  let tries = 0;
+  return new Promise((resolve) => {
+    let tries = 0;
 
-  while (tries < 5) {
-    let session = getSession();
+    function check() {
+      let session = getSession();
 
-    if (session && session.role) {
-      return true;
+      if (session && session.role) {
+        resolve(true);
+        return;
+      }
+
+      tries++;
+
+      if (tries >= 10) {
+        window.location.href = "system_admin_login.html";
+        resolve(false);
+        return;
+      }
+
+      setTimeout(check, 50);
     }
 
-    tries++;
-  }
-
-  // if session not ready → redirect safely
-  window.location.href = "system_admin_login.html";
-  return false;
+    check();
+  });
 }
 
 // ================= INIT =================
