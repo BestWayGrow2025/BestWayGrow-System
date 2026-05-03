@@ -3,32 +3,18 @@ let clickLock = false;
 
 // ================= BOOT =================
 document.addEventListener("DOMContentLoaded", function () {
-  if (!safeAuthGate()) {
-    window.location.href = "system_admin_login.html";
-    return;
-  }
-
   bootSystem();
 });
 
+// ================= BOOT SYSTEM =================
 function bootSystem() {
   initPage();
+
+  // ❗ FIX: ONLY ONE AUTH FLOW (remove duplicate early gate conflict)
   authPage();
+
   bindEvents();
   loadHome();
-}
-
-// ================= SAFE AUTH GATE (FIXED ROOT CAUSE) =================
-function safeAuthGate() {
-  if (typeof getSession !== "function") return false;
-
-  const session = getSession();
-
-  if (!session || !session.role) return false;
-
-  if (session.role !== "system_admin") return false;
-
-  return true;
 }
 
 // ================= INIT =================
@@ -252,5 +238,7 @@ function logout() {
     clearSession();
   }
 
+  window.location.href = "system_admin_login.html";
+}
   window.location.href = "system_admin_login.html";
 }
