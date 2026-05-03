@@ -1,11 +1,13 @@
 /*
 ========================================
-PIN SECTION SYSTEM (V2 - FINAL SAFE)
+USER PIN SECTION V3 (FINAL SAFE FLOW)
 ========================================
-✔ No duplicate helper conflicts
+✔ UI only layer
+✔ No direct wallet mutation
+✔ No direct PIN activation
+✔ Request-based flow
 ✔ Safe dependency checks
-✔ Wallet deduction safe
-✔ No crash if system modules missing
+✔ Auto / Manual mode aware
 ✔ Stable export for dashboard
 ========================================
 */
@@ -35,87 +37,118 @@ function loadPinSection() {
   const main = document.getElementById("mainContent");
   if (!main) return;
 
+  const controls =
+    typeof getSystemControls === "function"
+      ? getSystemControls()
+      : { pinMode: "AUTO", enablePinTransfer: true };
+
+  const settings =
+    typeof getPinSettings === "function"
+      ? getPinSettings()
+      : {};
+
+  const upgrade = settings.upgrade || {};
+  const repurchase = settings.repurchase || {};
+
   main.innerHTML = `
     <div class="section-title">PIN SECTION</div>
 
     <div class="info-box">
-      <p><b>PIN Value:</b> ₹100 per PIN</p>
-      <p><b>Status:</b> Ready for Activation</p>
+      <p><b>PIN Mode:</b> ${controls.pinMode || "AUTO"}</p>
+      <p><b>PIN Transfer:</b> ${controls.enablePinTransfer ? "ON" : "OFF"}</p>
     </div>
 
     <div class="info-box">
-      <label>Enter PIN Code</label>
-      <input id="pinInput" placeholder="Enter PIN Code">
-      <button class="action-btn" onclick="activatePin()">Activate PIN</button>
+      <p><b>Upgrade PIN:</b> ₹${upgrade.amount || 0} | BV ${upgrade.bv || 0}</p>
+      <p><b>Repurchase PIN:</b> ₹${repurchase.amount || 0} | BV ${repurchase.bv || 0}</p>
+    </div>
+
+    <div class="info-box">
+      <label>PIN Type</label>
+      <select id="pinType">
+        <option value="upgrade">Upgrade PIN</option>
+        <option value="repurchase">Repurchase PIN</option>
+      </select>
+
+      <label>Quantity</label>
+      <input id="pinQty" type="number" min="1" value="1" placeholder="Enter Quantity">
+
+      <label>Payment Ref / Txn ID</label>
+      <input id="pinPaymentId" placeholder="Enter Payment Reference">
+
+      <button class="action-btn" onclick="submitPinRequest()">Request PIN</button>
     </div>
   `;
 }
 
-// ================= ACTIVATE PIN =================
-function activatePin() {
+// ================= SUBMIT PIN REQUEST =================
+function submitPinRequest() {
   const user = getSafeUser();
   if (!user) return;
 
-  const pin = document.getElementById("pinInput")?.value.trim();
-
-  if (!pin) {
-    alert("Enter PIN");
+  if (typeof createPinRequest !== "function") {
+    alert("PIN request system unavailable");
     return;
   }
 
-  const PIN_COST = 100;
+  const type = document.getElementById("pinType")?.value;
+  const qty = parseInt(document.getElementById("pinQty")?.value || "1");
+  const paymentId = document.getElementById("pinPaymentId")?.value.trim();
 
-  const users = typeof getUsers === "function" ? getUsers() : [];
-  const index = users.findIndex(u => u.userId === user.userId);
-
-  if (index === -1) {
-    alert("User not found");
+  if (!type || !["upgrade", "repurchase"].includes(type)) {
+    alert("Invalid PIN type");
     return;
   }
 
-  // ================= BALANCE CHECK =================
-  const wallet = users[index].wallet || {};
-
-  if ((wallet.balance || 0) < PIN_COST) {
-    alert("Insufficient Wallet Balance");
+  if (!paymentId) {
+    alert("Enter Payment Reference");
     return;
   }
 
-  // ================= DEDUCT WALLET =================
-  wallet.balance = (wallet.balance || 0) - PIN_COST;
-  wallet.totalDebit = (wallet.totalDebit || 0) + PIN_COST;
-  users[index].wallet = wallet;
+  const config =
+    typeof getActivePin === "function"
+      ? getActivePin(type)
+      : null;
 
-  // ================= SAVE PIN =================
-  if (!users[index].activatedPins) {
-    users[index].activatedPins = [];
+  if (!config) {
+    alert("PIN currently unavailable");
+    return;
   }
 
-  users[index].activatedPins.push({
-    pin: pin,
-    date: new Date().toISOString()
-  });
+  const safeQty = isNaN(qty) || qty < 1 ? 1 : qty;
+  const amount = Number(config.amount || 0) * safeQty;
 
-  // ================= SAVE USERS =================
-  if (typeof saveUsers === "function") {
-    saveUsers(users);
+  try {
+    const req = createPinRequest({
+      userId: user.userId,
+      type,
+      amount,
+      paymentId,
+      quantity: safeQty
+    });
+
+    if (!req) {
+      alert("PIN request failed");
+      return;
+    }
+
+    if (typeof logActivity === "function") {
+      logActivity(
+        user.userId,
+        "USER",
+        "PIN REQUEST CREATED",
+        "USER_PIN_SECTION"
+      );
+    }
+
+    alert("PIN Request Submitted Successfully");
+    loadPinSection();
+
+  } catch (err) {
+    alert(err.message || "PIN request failed");
   }
-
-  // ================= LOG ACTIVITY =================
-  if (typeof logActivity === "function") {
-    logActivity(
-      user.userId,
-      "USER",
-      "PIN ACTIVATED",
-      "PIN_SECTION"
-    );
-  }
-
-  alert("PIN Activated Successfully");
-
-  loadPinSection();
 }
 
 // ================= GLOBAL EXPORT =================
 window.loadPinSection = loadPinSection;
-window.activatePin = activatePin;
+window.submitPinRequest = submitPinRequest;
