@@ -3,6 +3,7 @@
 <head>
   <title>Admin PIN Control</title>
   <link rel="icon" href="data:,">
+
   <style>
     body {
       font-family: Arial;
@@ -52,6 +53,7 @@
     }
   </style>
 </head>
+
 <body>
 
 <h2>PIN CONTROL PANEL</h2>
@@ -104,8 +106,23 @@
   </table>
 </div>
 
+<!-- ================= CORE SYSTEM ================= -->
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
+
+<!-- ================= PIN CONTROL LAYER (IMPORTANT ORDER) ================= -->
+<script src="pin_action_control.js"></script>
+<script src="pin_master_system.js"></script>
+<script src="pin_request_system.js"></script>
+<script src="pin_config_system.js"></script>
+
+<!-- ================= STOCK + ROLE CONTROL ================= -->
+<script src="admin_pin_stock.js"></script>
+<script src="system_admin_pin_control.js"></script>
+<script src="super_admin_pin_control.js"></script>
+
+<!-- ================= UI PANEL ================= -->
 <script src="admin_pin_panel.js"></script>
+
 </body>
 </html>
