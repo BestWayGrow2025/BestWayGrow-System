@@ -1,16 +1,43 @@
 let currentUser = null;
 let clickLock = false;
-let SYSTEM_READY = false;
 
 document.addEventListener("DOMContentLoaded", function () {
-  setTimeout(() => {
-    initPage();
-    authPage();
-    bindEvents();
-    loadHome();
-    SYSTEM_READY = true;
-  }, 50);
+  bootSystem();
 });
+
+// ================= BOOT =================
+function bootSystem() {
+  if (!waitForSession()) return;
+
+  initPage();
+  authPage();
+  bindEvents();
+  loadHome();
+}
+
+// ================= SESSION WAIT (SAFE FIX) =================
+function waitForSession() {
+  if (typeof getSession !== "function") {
+    window.location.href = "system_admin_login.html";
+    return false;
+  }
+
+  let tries = 0;
+
+  while (tries < 5) {
+    let session = getSession();
+
+    if (session && session.role) {
+      return true;
+    }
+
+    tries++;
+  }
+
+  // if session not ready → redirect safely
+  window.location.href = "system_admin_login.html";
+  return false;
+}
 
 // ================= INIT =================
 function initPage() {
@@ -24,10 +51,6 @@ function initPage() {
 
 // ================= AUTH =================
 function authPage() {
-  if (!SYSTEM_READY && SYSTEM_READY !== false) {
-    return;
-  }
-
   if (typeof protectPage !== "function") {
     window.location.href = "system_admin_login.html";
     throw new Error("STOP");
