@@ -64,9 +64,6 @@ function login() {
 
   showMsg("✅ Login successful");
 
-  // 🔥 IMPORTANT FIX: prevent instant re-trigger redirect loop
-  sessionStorage.setItem("SYS_ADMIN_LOGIN_DONE", "1");
-
   setTimeout(() => {
     window.location.href = "system_admin_dashboard.html";
   }, 400);
@@ -100,19 +97,10 @@ function bindEvents() {
 function loadPage() {
   let session = typeof getSession === "function" ? getSession() : null;
 
-  // 🔥 FIX: prevent redirect loop
-  let alreadyLogin = sessionStorage.getItem("SYS_ADMIN_LOGIN_DONE");
-
-  if (session && session.role === "system_admin" && alreadyLogin !== "1") {
+  if (session && session.role === "system_admin") {
     window.location.href = "system_admin_dashboard.html";
   }
-
-  // reset flag after landing
-  setTimeout(() => {
-    sessionStorage.removeItem("SYS_ADMIN_LOGIN_DONE");
-  }, 2000);
 }
-
 
 
 
