@@ -240,5 +240,4 @@ function logout() {
 
   window.location.href = "system_admin_login.html";
 }
-  window.location.href = "system_admin_login.html";
-}
+
