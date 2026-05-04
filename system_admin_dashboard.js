@@ -1,3 +1,10 @@
+/*
+========================================
+SYSTEM ADMIN DASHBOARD (FINAL STABLE)
+ONE AUTH ENGINE ONLY (session_manager.js)
+========================================
+*/
+
 let currentUser = null;
 let clickLock = false;
 
@@ -8,15 +15,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // ================= BOOT SYSTEM =================
 function bootSystem() {
-  try {
-    initPage();
-    authPage();
-    bindEvents();
-    loadHome();
-  } catch (e) {
-    console.error("BOOT ERROR:", e);
+  initPage();
+
+  if (!authPage()) {
     window.location.href = "system_admin_login.html";
+    return;
   }
+
+  bindEvents();
+  loadHome();
 }
 
 // ================= INIT =================
@@ -24,53 +31,55 @@ function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   } else {
-    throw new Error("core_system.js missing");
+    alert("core_system.js missing");
+    throw new Error("STOP");
   }
 }
 
-// ================= AUTH =================
+// ================= AUTH (ONLY SESSION ENGINE) =================
 function authPage() {
-  if (typeof protectPage !== "function") {
-    window.location.href = "system_admin_login.html";
-    throw new Error("protectPage missing");
+  const session = typeof getSession === "function" ? getSession() : null;
+
+  if (!session || session.role !== "system_admin") {
+    return false;
   }
 
-  currentUser = protectPage({
-    role: "system_admin"
-  });
-
-  if (!currentUser) {
-    window.location.href = "system_admin_login.html";
-    throw new Error("No session");
+  if (typeof getUserById === "function") {
+    currentUser = getUserById(session.userId);
+  } else {
+    currentUser = session;
   }
+
+  if (!currentUser) return false;
 
   if ((currentUser.status || currentUser.accountStatus || "active") !== "active") {
     if (typeof clearSession === "function") {
       clearSession();
     }
-
-    window.location.href = "system_admin_login.html";
-    throw new Error("Inactive account");
+    return false;
   }
 
   const el = document.getElementById("welcome");
   if (el) {
     el.innerText =
-      "Welcome " + (currentUser.username || currentUser.userId) +
-      " (" + currentUser.userId + ")";
+      "Welcome " +
+      (currentUser.username || currentUser.userId) +
+      " (" +
+      currentUser.userId +
+      ")";
   }
+
+  return true;
 }
 
 // ================= EVENTS =================
 function bindEvents() {
   const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", logout);
-  }
+  if (logoutBtn) logoutBtn.addEventListener("click", logout);
 
   const buttons = document.querySelectorAll(".menu button");
 
-  buttons.forEach(function (btn) {
+  buttons.forEach(btn => {
     btn.addEventListener("click", function () {
       if (clickLock) return;
 
