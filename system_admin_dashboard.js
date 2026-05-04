@@ -8,13 +8,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // ================= BOOT SYSTEM =================
 function bootSystem() {
-  initPage();
-
-  // ❗ FIX: ONLY ONE AUTH FLOW (remove duplicate early gate conflict)
-  authPage();
-
-  bindEvents();
-  loadHome();
+  try {
+    initPage();
+    authPage();
+    bindEvents();
+    loadHome();
+  } catch (e) {
+    console.error("BOOT ERROR:", e);
+    window.location.href = "system_admin_login.html";
+  }
 }
 
 // ================= INIT =================
@@ -22,8 +24,7 @@ function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
+    throw new Error("core_system.js missing");
   }
 }
 
@@ -31,7 +32,7 @@ function initPage() {
 function authPage() {
   if (typeof protectPage !== "function") {
     window.location.href = "system_admin_login.html";
-    throw new Error("STOP");
+    throw new Error("protectPage missing");
   }
 
   currentUser = protectPage({
@@ -40,7 +41,7 @@ function authPage() {
 
   if (!currentUser) {
     window.location.href = "system_admin_login.html";
-    throw new Error("STOP");
+    throw new Error("No session");
   }
 
   if ((currentUser.status || currentUser.accountStatus || "active") !== "active") {
@@ -49,32 +50,37 @@ function authPage() {
     }
 
     window.location.href = "system_admin_login.html";
-    throw new Error("STOP");
+    throw new Error("Inactive account");
   }
 
-  document.getElementById("welcome").innerText =
-    "Welcome " + (currentUser.username || currentUser.userId) +
-    " (" + currentUser.userId + ")";
+  const el = document.getElementById("welcome");
+  if (el) {
+    el.innerText =
+      "Welcome " + (currentUser.username || currentUser.userId) +
+      " (" + currentUser.userId + ")";
+  }
 }
 
 // ================= EVENTS =================
 function bindEvents() {
-  document.getElementById("logoutBtn").addEventListener("click", logout);
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", logout);
+  }
 
-  document.querySelectorAll(".menu button").forEach(function (btn) {
+  const buttons = document.querySelectorAll(".menu button");
+
+  buttons.forEach(function (btn) {
     btn.addEventListener("click", function () {
       if (clickLock) return;
 
       clickLock = true;
 
-      document.querySelectorAll(".menu button").forEach(function (b) {
-        b.classList.remove("active");
-      });
-
+      buttons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
 
       try {
-        let page = btn.dataset.page;
+        const page = btn.dataset.page;
 
         if (page === "home") loadHome();
         if (page === "users") loadUsers();
@@ -84,12 +90,13 @@ function bindEvents() {
       } finally {
         setTimeout(() => {
           clickLock = false;
-        }, 300);
+        }, 250);
       }
     });
   });
 
-  document.querySelector('.menu button[data-page="home"]').classList.add("active");
+  const homeBtn = document.querySelector('.menu button[data-page="home"]');
+  if (homeBtn) homeBtn.classList.add("active");
 }
 
 // ================= PROTECTION =================
@@ -112,23 +119,27 @@ function safeSaveUsers(users) {
 
 // ================= HOME =================
 function loadHome() {
-  let users = (typeof getUsers === "function") ? getUsers() : [];
+  const users = typeof getUsers === "function" ? getUsers() : [];
 
-  let officeUsers = users.filter(u => u.tree === "office" && u.role === "user");
-  let officeAdmins = users.filter(u => u.tree === "office" && u.role === "admin");
+  const officeUsers = users.filter(u => u.tree === "office" && u.role === "user");
+  const officeAdmins = users.filter(u => u.tree === "office" && u.role === "admin");
 
-  let fieldUsers = users.filter(u => u.tree === "field" && u.role === "user");
-  let fieldAdmins = users.filter(u => u.tree === "field" && u.role === "admin");
+  const fieldUsers = users.filter(u => u.tree === "field" && u.role === "user");
+  const fieldAdmins = users.filter(u => u.tree === "field" && u.role === "admin");
 
-  let rootAdmin = users.filter(u =>
+  const rootAdmin = users.filter(u =>
     u.role === "admin" &&
     u.adminType === "root_admin" &&
     u.tree === "field"
   );
 
-  document.getElementById("mainContent").innerHTML = `
+  const main = document.getElementById("mainContent");
+  if (!main) return;
+
+  main.innerHTML = `
     <div class="card">
       <h3>Dashboard Overview</h3>
+
       <div style="display:flex; flex-wrap:wrap; gap:15px;">
         <div style="flex:1; min-width:250px; background:#4CAF50; color:#fff; padding:20px; border-radius:10px;">
           <h4>🏢 Office Tree</h4>
@@ -149,7 +160,7 @@ function loadHome() {
 
 // ================= USERS =================
 function loadUsers() {
-  let users = (typeof getUsers === "function")
+  const users = typeof getUsers === "function"
     ? getUsers().filter(u => !u.hiddenAccount)
     : [];
 
@@ -169,8 +180,8 @@ function loadUsers() {
         </tr>
   `;
 
-  users.forEach(function (u) {
-    let blocked = isProtectedTarget(u);
+  users.forEach(u => {
+    const blocked = isProtectedTarget(u);
 
     let accessLabel = "-";
     if (u.role === "admin" && u.adminType === "root_admin") accessLabel = "Root";
@@ -205,8 +216,8 @@ function toggleUserStatus(userId) {
   clickLock = true;
 
   try {
-    let users = (typeof getUsers === "function") ? getUsers() : [];
-    let user = users.find(u => u.userId === userId);
+    const users = typeof getUsers === "function" ? getUsers() : [];
+    const user = users.find(u => u.userId === userId);
 
     if (!user || isProtectedTarget(user)) {
       alert("Protected account");
@@ -228,7 +239,7 @@ function toggleUserStatus(userId) {
   } finally {
     setTimeout(() => {
       clickLock = false;
-    }, 300);
+    }, 250);
   }
 }
 
@@ -237,7 +248,5 @@ function logout() {
   if (typeof clearSession === "function") {
     clearSession();
   }
-
   window.location.href = "system_admin_login.html";
 }
-
