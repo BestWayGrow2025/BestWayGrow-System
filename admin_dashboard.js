@@ -430,3 +430,4 @@ function logout() {
 window.addEventListener("error", function (e) {
   console.error("Dashboard Error:", e.message);
 });
+
