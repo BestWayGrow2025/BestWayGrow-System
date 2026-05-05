@@ -140,6 +140,62 @@
 
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
+
+<script src="activity_log.js"></script>
+<script src="wallet_system.js"></script>
+<script src="registration_queue.js"></script>
+<script src="system_config.js"></script>
+<script src="trigger_system.js"></script>
+
+<script src="hold_income_system.js"></script>
+<script src="income_control_system.js"></script>
+<script src="income_log_system.js"></script>
+<script src="income_engine.js"></script>
+
+<script src="pin_product_master.js"></script>
+<script src="pin_master_system.js"></script>
+<script src="pin_request_system.js"></script>
+
+<script src="admin_dashboard.js"></script>
+
+</body>
+</html>    .off{
+      background:#dc3545;
+      color:#fff;
+      border:none;
+      padding:8px 12px;
+      border-radius:6px;
+      cursor:pointer;
+    }
+    .warn{
+      color:#dc3545;
+      font-weight:bold;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h2>👨‍💼 ADMIN DASHBOARD</h2>
+  <p id="welcome"></p>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="menu">
+  <button onclick="safeClick(this, loadHome)">Home</button>
+  <button onclick="safeClick(this, loadUsers)">Users</button>
+  <button onclick="safeClick(this, loadPinsUI)">PIN</button>
+  <button onclick="safeClick(this, loadWallet)">Wallet</button>
+  <button onclick="safeClick(this, loadIncome)">Income</button>
+  <button onclick="safeClick(this, loadSystem)">System</button>
+</div>
+
+<div class="container">
+  <div id="mainContent" class="card">Loading...</div>
+</div>
+
+<script src="core_system.js"></script>
+<script src="session_manager.js"></script>
 <script src="activity_log.js"></script>
 <script src="wallet_system.js"></script>
 <script src="registration_queue.js"></script>
