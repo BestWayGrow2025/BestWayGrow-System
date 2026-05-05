@@ -1,109 +1,213 @@
-let session = null;
-let currentUser = null;
-let lock = false;
-let refreshTimer = null;
+/*
+========================================
+ADMIN PIN PANEL V2.0 (LIVE REQUEST CONTROL)
+========================================
+✔ Admin PIN request control panel
+✔ Reads from pin_product_master.js
+✔ Reads from pin_request_system.js
+✔ Queue aware
+✔ Auto / force / reject handling
+✔ Product-safe status rendering
+✔ No auth duplication
+✔ One session flow only
+========================================
+*/
 
+let pinAdminLock = false;
+let pinRefreshTimer = null;
+
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  authPage();
-  bindEvents();
-  refreshStatus();
-  loadRequests();
-  startAutoRefresh();
+  initAdminPinPanel();
 });
 
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
-  }
-}
+function initAdminPinPanel() {
+  if (typeof initCoreSystem === "function") initCoreSystem();
 
-function authPage() {
-  currentUser = typeof protectPage === "function"
+  const user = typeof protectPage === "function"
     ? protectPage({ role: "admin" })
     : null;
 
-  if (!currentUser) {
+  if (!user) {
     window.location.href = "admin_login.html";
-    throw new Error("STOP");
+    return;
   }
 
-  session = {
-    userId: currentUser.userId,
-    role: currentUser.role
-  };
+  bindPinPanelEvents();
+  refreshPinPanelStatus();
+  loadPinRequests();
+  startPinPanelAutoRefresh();
 }
 
-function bindEvents() {
-  document.getElementById("startUpgradeBtn").addEventListener("click", function () {
-    safeClick(startUpgrade);
-  });
+// ================= EVENTS =================
+function bindPinPanelEvents() {
+  const filter = document.getElementById("filter");
 
-  document.getElementById("stopUpgradeBtn").addEventListener("click", function () {
-    safeClick(stopUpgrade);
-  });
-
-  document.getElementById("startRepurchaseBtn").addEventListener("click", function () {
-    safeClick(startRepurchase);
-  });
-
-  document.getElementById("stopRepurchaseBtn").addEventListener("click", function () {
-    safeClick(stopRepurchase);
-  });
-
-  document.getElementById("filter").addEventListener("change", loadRequests);
+  if (filter) {
+    filter.addEventListener("change", loadPinRequests);
+  }
 }
 
-function safeClick(fn) {
-  if (lock) return;
-  lock = true;
+function safePinClick(fn) {
+  if (pinAdminLock) return;
+  pinAdminLock = true;
 
   try {
     fn();
   } catch (err) {
-    console.error(err);
+    console.error("admin_pin_panel:", err);
+    alert(err.message || "Action failed");
   }
 
   setTimeout(function () {
-    lock = false;
+    pinAdminLock = false;
   }, 500);
 }
 
-function isSystemSafe() {
-  let settings = typeof getSystemSettings === "function"
-    ? (getSystemSettings() || {})
-    : {};
+// ================= STATUS =================
+function refreshPinPanelStatus() {
+  const up = document.getElementById("upgradeStatus");
+  const rp = document.getElementById("repurchaseStatus");
 
-  if (settings.adminAccess === false) {
-    alert("Admin access OFF");
-    return false;
+  const upgrade = typeof getActivePinProducts === "function"
+    ? getActivePinProducts("upgrade")
+    : [];
+
+  const repurchase = typeof getActivePinProducts === "function"
+    ? getActivePinProducts("repurchase")
+    : [];
+
+  if (up) {
+    up.innerText = upgrade.length
+      ? `🟢 ACTIVE | ${upgrade.length} Product(s)`
+      : "🔴 OFF";
   }
 
-  if (settings.lockMode === true) {
-    alert("System locked");
-    return false;
+  if (rp) {
+    rp.innerText = repurchase.length
+      ? `🟢 ACTIVE | ${repurchase.length} Product(s)`
+      : "🔴 OFF";
+  }
+}
+
+// ================= REQUEST TABLE =================
+function loadPinRequests() {
+  const filterEl = document.getElementById("filter");
+  const table = document.getElementById("reqTable");
+
+  if (!table) return;
+
+  const filter = filterEl ? filterEl.value : "ALL";
+  const rows = typeof getPinRequests === "function" ? getPinRequests() : [];
+
+  table.innerHTML = "";
+
+  if (!rows.length) {
+    table.innerHTML = "<tr><td colspan='8'>No Requests</td></tr>";
+    return;
   }
 
-  return true;
+  rows.forEach(function (req) {
+    if (filter !== "ALL" && req.status !== filter) return;
+
+    const priority = req.priority || "YELLOW";
+    const qty = Number(req.quantity || 1);
+
+    const color =
+      priority === "GREEN" ? "green" :
+      priority === "RED" ? "red" : "orange";
+
+    let actions = "-";
+
+    if (req.status === "PENDING") {
+      actions = `
+        <button onclick="event.stopPropagation(); approvePinRequest('${req.requestId}')">✔</button>
+        <button onclick="event.stopPropagation(); rejectAdminPinRequest('${req.requestId}')">✖</button>
+        <button onclick="event.stopPropagation(); forcePinRequest('${req.requestId}')">⚡</button>
+      `;
+    }
+
+    table.innerHTML += `
+      <tr onclick="viewPinRequestDetails('${req.requestId}')">
+        <td>${req.requestId}</td>
+        <td>${req.userId}</td>
+        <td>${req.type}</td>
+        <td>${qty}</td>
+        <td style="color:${color}">${priority}</td>
+        <td>${req.status}</td>
+        <td>${req.paymentId || "-"}</td>
+        <td>${actions}</td>
+      </tr>
+    `;
+  });
 }
 
-function canManualProcess() {
-  let settings = typeof getSystemSettings === "function"
-    ? (getSystemSettings() || {})
-    : {};
+// ================= ACTIONS =================
+function approvePinRequest(requestId) {
+  safePinClick(function () {
+    if (typeof processPinRequestAuto !== "function") {
+      throw new Error("PIN request engine missing");
+    }
 
-  let queue = settings.pinQueue || { enabled: true };
-  return queue.enabled === false;
+    processPinRequestAuto(requestId);
+    loadPinRequests();
+  });
 }
 
-function getPinSafeSettings() {
-  let settings = typeof getPinSettings === "function"
-    ? (getPinSettings() || {})
-    : {};
+function rejectAdminPinRequest(requestId) {
+  safePinClick(function () {
+    if (!confirm("Reject this request?")) return;
 
+    if (typeof rejectPinRequest !== "function") {
+      throw new Error("Reject engine missing");
+    }
+
+    rejectPinRequest(requestId, "ADMIN");
+    loadPinRequests();
+  });
+}
+
+function forcePinRequest(requestId) {
+  safePinClick(function () {
+    if (!confirm("Force process this request?")) return;
+
+    if (typeof processPinRequestAuto !== "function") {
+      throw new Error("PIN request engine missing");
+    }
+
+    processPinRequestAuto(requestId);
+    loadPinRequests();
+  });
+}
+
+// ================= DETAILS =================
+function viewPinRequestDetails(requestId) {
+  const rows = typeof getPinRequests === "function" ? getPinRequests() : [];
+  const req = rows.find(r => r.requestId === requestId);
+
+  if (!req) return;
+
+  alert(
+`ID: ${req.requestId}
+User: ${req.userId}
+Type: ${req.type}
+Qty: ${req.quantity || 1}
+Amount: ${req.amount || 0}
+Payment Ref: ${req.paymentId || "-"}
+Priority: ${req.priority || "YELLOW"}
+Status: ${req.status}
+Retry: ${req.retry || 0}`
+  );
+}
+
+// ================= AUTO REFRESH =================
+function startPinPanelAutoRefresh() {
+  if (pinRefreshTimer) clearInterval(pinRefreshTimer);
+
+  pinRefreshTimer = setInterval(function () {
+    loadPinRequests();
+  }, 3000);
+}
   return {
     upgrade: settings.upgrade || {},
     repurchase: settings.repurchase || {}
