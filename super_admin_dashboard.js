@@ -281,3 +281,4 @@ function logout() {
   localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
 }
+
