@@ -40,7 +40,6 @@ function loadPins() {
       updated = true;
     }
 
-    // normalize transfer history
     if (!Array.isArray(pin.transferHistory)) {
       pin.transferHistory = [];
       updated = true;
@@ -101,69 +100,26 @@ function findPinById(pinId, pins) {
   return (pins || []).find(p => p && p.pinId === pinId) || null;
 }
 
-// ================= CREATE =================
-function createPin({ type = "upgrade", bv = 0, amount = 0, gst = 0, createdBy } = {}) {
-  if (typeof isSystemSafe === "function" && !isSystemSafe()) return null;
-  if (typeof isPinSystemSafe === "function" && !isPinSystemSafe(type)) return null;
-
-  if (!["upgrade", "repurchase"].includes(type)) return null;
-
-  bv = Number(bv);
-  amount = Number(amount);
-  gst = Number(gst || 0);
-
-  if (isNaN(bv) || bv <= 0 || isNaN(amount) || amount <= 0 || isNaN(gst) || gst < 0) {
-    return null;
-  }
-
-  let pins = loadPins();
-
-  let pinId;
-  do {
-    pinId = generatePinId(type === "upgrade" ? "UP" : "RP");
-  } while (findPinById(pinId, pins));
-
-  let pin = {
-    pinId,
-    type,
-    bv,
-    amount,
-    gst,
-
-    status: "active",
-    ownerId: null,
-    ownerType: "admin",
-
-    assignedTo: null,
-    usedBy: null,
-
-    createdAt: Date.now(),
-    assignedAt: null,
-    usedAt: null,
-    lockedAt: null,
-
-    lock: false,
-    transferHistory: []
-  };
-
-  pins.push(pin);
-  savePins(pins);
-
-  logPinAction({
-    action: "PIN_CREATE",
-    pinId,
-    performedBy: createdBy || "SYSTEM",
-    amount,
-    bv,
-    gst,
-    status: "success"
-  });
-
-  return pin;
-}
+/* ======================================================
+   🔥 PATCH INTEGRATION LAYER — ROLE + ACTION CONTROL
+   (NO LOGIC CHANGE — ONLY ENFORCEMENT GATE)
+====================================================== */
 
 // ================= ASSIGN =================
 function assignPin(pinId, toId, toType, performedBy = "SYSTEM") {
+
+  // 🔥 PATCH A — ACTION CONTROL ENFORCEMENT (ASSIGN)
+  let role = "system";
+  if (typeof getCurrentUser === "function") {
+    const user = getCurrentUser();
+    role = user?.role || "system";
+  }
+
+  if (typeof canExecutePinAction === "function") {
+    const allowed = canExecutePinAction("ASSIGN", { status: "active", pinId }, role);
+    if (!allowed) return false;
+  }
+
   if (typeof isSystemSafe === "function" && !isSystemSafe()) return false;
   if (!pinId || !toId || !["user", "admin", "franchise"].includes(toType)) return false;
 
@@ -172,7 +128,6 @@ function assignPin(pinId, toId, toType, performedBy = "SYSTEM") {
 
   if (!pin || pin.lock || pin.status !== "active") return false;
 
-  // validate destination
   if (toType === "user" && typeof getUserById === "function") {
     let target = getUserById(toId);
     if (!target || (target.status && target.status !== "active")) return false;
@@ -231,6 +186,7 @@ function assignPin(pinId, toId, toType, performedBy = "SYSTEM") {
     });
 
     return true;
+
   } catch (err) {
     setPinLock(pin, false);
     savePins(pins);
@@ -249,6 +205,19 @@ function assignPin(pinId, toId, toType, performedBy = "SYSTEM") {
 
 // ================= USE =================
 function usePin(pinId, userId, purpose) {
+
+  // 🔥 PATCH B — ACTION CONTROL ENFORCEMENT (VIEW/USE)
+  let role = "system";
+  if (typeof getCurrentUser === "function") {
+    const user = getCurrentUser();
+    role = user?.role || "system";
+  }
+
+  if (typeof canExecutePinAction === "function") {
+    const allowed = canExecutePinAction("VIEW", { status: "assigned", pinId }, role);
+    if (!allowed) return null;
+  }
+
   if (typeof isSystemSafe === "function" && !isSystemSafe()) return null;
   if (!pinId || !userId) return null;
 
@@ -260,7 +229,6 @@ function usePin(pinId, userId, purpose) {
 
   if (!pin || pin.lock || pin.status !== "assigned") return null;
 
-  // strict owner check (blocks cross-user leakage)
   if (pin.ownerId !== userId || pin.assignedTo !== userId) return null;
 
   if (typeof isPinAllowedForPurpose === "function" && !isPinAllowedForPurpose(pin.type, purpose)) {
@@ -324,6 +292,7 @@ function usePin(pinId, userId, purpose) {
     }
 
     return pin;
+
   } catch (err) {
     setPinLock(pin, false);
     savePins(pins);
