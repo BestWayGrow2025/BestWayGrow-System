@@ -121,6 +121,23 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
   let safeQty = parseInt(quantity);
   if (isNaN(safeQty) || safeQty < 1) safeQty = 1;
 
+  // ================= SAFE POLICY GATE (REQUEST LAYER ONLY) =================
+  let role = null;
+
+  if (typeof getCurrentUser === "function") {
+    const user = getCurrentUser();
+    role = user?.role || "user";
+  }
+
+  // ONLY REQUEST-LEVEL CHECK (NO ASSIGN RULES HERE)
+  if (typeof canExecutePinAction === "function") {
+    const allowed = canExecutePinAction("VIEW", { status: "pending" }, role);
+
+    if (!allowed) {
+      throw new Error("Request blocked by policy");
+    }
+  }
+
   let newRequest = {
     requestId: generateRequestId(),
     userId,
