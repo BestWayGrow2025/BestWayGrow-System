@@ -1,15 +1,12 @@
 /*
 ========================================
-ADMIN PIN PANEL V2.0 (LIVE REQUEST CONTROL)
+ADMIN PIN PANEL V2.1 (FLOW INTEGRATED)
 ========================================
 ✔ Admin PIN request control panel
-✔ Reads from pin_product_master.js
-✔ Reads from pin_request_system.js
-✔ Queue aware
-✔ Auto / force / reject handling
-✔ Product-safe status rendering
-✔ No auth duplication
-✔ One session flow only
+✔ Uses unified executePinFlow engine
+✔ Fully aligned with PIN_ACTION system
+✔ No direct engine calls
+✔ Clean orchestration only
 ========================================
 */
 
@@ -59,7 +56,7 @@ function safePinClick(fn) {
     alert(err.message || "Action failed");
   }
 
-  setTimeout(function () {
+  setTimeout(() => {
     pinAdminLock = false;
   }, 500);
 }
@@ -107,7 +104,7 @@ function loadPinRequests() {
     return;
   }
 
-  rows.forEach(function (req) {
+  rows.forEach(req => {
     if (filter !== "ALL" && req.status !== filter) return;
 
     const priority = req.priority || "YELLOW";
@@ -121,14 +118,14 @@ function loadPinRequests() {
 
     if (req.status === "PENDING") {
       actions = `
-        <button onclick="event.stopPropagation(); approvePinRequest('${req.requestId}')">✔</button>
-        <button onclick="event.stopPropagation(); rejectAdminPinRequest('${req.requestId}')">✖</button>
-        <button onclick="event.stopPropagation(); forcePinRequest('${req.requestId}')">⚡</button>
+        <button onclick="approvePinRequest('${req.requestId}')">✔</button>
+        <button onclick="rejectAdminPinRequest('${req.requestId}')">✖</button>
+        <button onclick="forcePinRequest('${req.requestId}')">⚡</button>
       `;
     }
 
     table.innerHTML += `
-      <tr onclick="viewPinRequestDetails('${req.requestId}')">
+      <tr>
         <td>${req.requestId}</td>
         <td>${req.userId}</td>
         <td>${req.type}</td>
@@ -142,40 +139,55 @@ function loadPinRequests() {
   });
 }
 
-// ================= ACTIONS =================
+// ================= ACTIONS (FLOW CONTROLLED) =================
+
+// APPROVE
 function approvePinRequest(requestId) {
-  safePinClick(function () {
-    if (typeof processPinRequestAuto !== "function") {
-      throw new Error("PIN request engine missing");
+  safePinClick(() => {
+    if (typeof executePinFlow !== "function") {
+      throw new Error("Flow engine missing");
     }
 
-    processPinRequestAuto(requestId);
+    executePinFlow("PROCESS_REQUEST", {
+      requestId,
+      mode: "APPROVE"
+    });
+
     loadPinRequests();
   });
 }
 
+// REJECT
 function rejectAdminPinRequest(requestId) {
-  safePinClick(function () {
+  safePinClick(() => {
     if (!confirm("Reject this request?")) return;
 
-    if (typeof rejectPinRequest !== "function") {
-      throw new Error("Reject engine missing");
+    if (typeof executePinFlow !== "function") {
+      throw new Error("Flow engine missing");
     }
 
-    rejectPinRequest(requestId, "ADMIN");
+    executePinFlow("REJECT_REQUEST", {
+      requestId
+    });
+
     loadPinRequests();
   });
 }
 
+// FORCE PROCESS
 function forcePinRequest(requestId) {
-  safePinClick(function () {
+  safePinClick(() => {
     if (!confirm("Force process this request?")) return;
 
-    if (typeof processPinRequestAuto !== "function") {
-      throw new Error("PIN request engine missing");
+    if (typeof executePinFlow !== "function") {
+      throw new Error("Flow engine missing");
     }
 
-    processPinRequestAuto(requestId);
+    executePinFlow("PROCESS_REQUEST", {
+      requestId,
+      force: true
+    });
+
     loadPinRequests();
   });
 }
@@ -204,172 +216,5 @@ Retry: ${req.retry || 0}`
 function startPinPanelAutoRefresh() {
   if (pinRefreshTimer) clearInterval(pinRefreshTimer);
 
-  pinRefreshTimer = setInterval(function () {
-    loadPinRequests();
-  }, 3000);
-}
-  return {
-    upgrade: settings.upgrade || {},
-    repurchase: settings.repurchase || {}
-  };
-}
-
-function refreshStatus() {
-  let settings = getPinSafeSettings();
-
-  document.getElementById("upgradeStatus").innerText =
-    settings.upgrade.active
-      ? `🟢 ACTIVE | BV: ${settings.upgrade.bv || 0} | ₹${settings.upgrade.amount || 0}`
-      : "🔴 OFF";
-
-  document.getElementById("repurchaseStatus").innerText =
-    settings.repurchase.active
-      ? `🟢 ACTIVE | BV: ${settings.repurchase.bv || 0} | ₹${settings.repurchase.amount || 0}`
-      : "🔴 OFF";
-}
-
-function validateInput(bv, amount) {
-  if (bv <= 0 || amount <= 0) {
-    alert("Invalid BV or Amount");
-    return false;
-  }
-  return true;
-}
-
-function startUpgrade() {
-  if (!isSystemSafe()) return;
-
-  let bv = Number(document.getElementById("up_bv").value);
-  let amount = Number(document.getElementById("up_amount").value);
-  let gst = Number(document.getElementById("up_gst").value || 0);
-
-  if (!validateInput(bv, amount)) return;
-
-  enablePin("upgrade", { bv, amount, gst });
-  refreshStatus();
-}
-
-function stopUpgrade() {
-  disablePin("upgrade");
-  refreshStatus();
-}
-
-function startRepurchase() {
-  if (!isSystemSafe()) return;
-
-  let bv = Number(document.getElementById("re_bv").value);
-  let amount = Number(document.getElementById("re_amount").value);
-  let gst = Number(document.getElementById("re_gst").value || 0);
-
-  if (!validateInput(bv, amount)) return;
-
-  enablePin("repurchase", { bv, amount, gst });
-  refreshStatus();
-}
-
-function stopRepurchase() {
-  disablePin("repurchase");
-  refreshStatus();
-}
-
-function loadRequests() {
-  let filter = document.getElementById("filter").value;
-  let data = typeof getPinRequests === "function" ? (getPinRequests() || []) : [];
-  let table = document.getElementById("reqTable");
-
-  table.innerHTML = "";
-
-  if (!data.length) {
-    table.innerHTML = "<tr><td colspan='7'>No Requests</td></tr>";
-    return;
-  }
-
-  data.forEach(function (req) {
-    if (filter !== "ALL" && req.status !== filter) return;
-
-    let priority = req.priority || "YELLOW";
-    let qty = req.quantity || 1;
-    let color =
-      priority === "GREEN" ? "green" :
-      priority === "YELLOW" ? "orange" : "red";
-
-    let actions = "-";
-
-    if (req.status === "PENDING") {
-      actions = `
-        <button onclick="event.stopPropagation(); approve('${req.requestId}')">✔</button>
-        <button onclick="event.stopPropagation(); rejectReq('${req.requestId}')">✖</button>
-        <button onclick="event.stopPropagation(); forceProcess('${req.requestId}')">⚡</button>
-      `;
-    }
-
-    table.innerHTML += `
-      <tr onclick="viewDetails('${req.requestId}')">
-        <td>${req.requestId}</td>
-        <td>${req.userId}</td>
-        <td>${req.type}</td>
-        <td>${qty}</td>
-        <td style="color:${color}">${priority}</td>
-        <td>${req.status}</td>
-        <td>${actions}</td>
-      </tr>
-    `;
-  });
-}
-
-function approve(id) {
-  safeClick(function () {
-    if (!isSystemSafe()) return;
-
-    if (!canManualProcess()) {
-      alert("Queue is ON. Use auto processing.");
-      return;
-    }
-
-    processPinRequestAuto(id);
-    loadRequests();
-  });
-}
-
-function rejectReq(id) {
-  safeClick(function () {
-    if (!confirm("Reject this request?")) return;
-    rejectPinRequest(id);
-    loadRequests();
-  });
-}
-
-function forceProcess(id) {
-  safeClick(function () {
-    if (!isSystemSafe()) return;
-    if (!confirm("Force process this request?")) return;
-
-    processPinRequestAuto(id);
-    loadRequests();
-  });
-}
-
-function viewDetails(id) {
-  let requests = typeof getPinRequests === "function" ? (getPinRequests() || []) : [];
-  let req = requests.find(function (item) {
-    return item.requestId === id;
-  });
-
-  if (!req) return;
-
-  alert(
-`ID: ${req.requestId}
-User: ${req.userId}
-Type: ${req.type}
-Status: ${req.status}
-Qty: ${req.quantity || 1}
-Priority: ${req.priority || "YELLOW"}
-Retry: ${req.retry || 0}`
-  );
-}
-
-function startAutoRefresh() {
-  refreshTimer = setInterval(function () {
-    loadRequests();
-  }, 3000);
+  pinRefreshTimer = setInterval(loadPinRequests, 3000);
 }
