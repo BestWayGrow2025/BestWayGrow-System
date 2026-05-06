@@ -154,62 +154,21 @@ function submitPinRequest() {
   const safeQty = isNaN(qty) || qty < 1 ? 1 : qty;
   const amount = Number(product.amount || 0) * safeQty;
 
-  try {
-    const req = createPinRequest({
-      userId: user.userId,
-      type: product.pinType,
-      amount,
-      paymentId,
-      quantity: safeQty
-    });
+  // ================= PATCH 3 — UI PERMISSION GATE =================
+  if (typeof canExecutePinAction === "function") {
+    const role = user?.role || "user";
 
-    if (!req) {
-      alert("PIN request failed");
+    const allowed = canExecutePinAction(
+      "APPROVE",
+      { status: "pending" },
+      role
+    );
+
+    if (!allowed) {
+      alert("You are not allowed to perform this action");
       return;
     }
-
-    if (typeof logActivity === "function") {
-      logActivity(user.userId, "USER", "PIN REQUEST CREATED", "USER_PIN_SECTION");
-    }
-
-    alert("PIN Request Submitted Successfully");
-    loadPinSection();
-
-  } catch (err) {
-    alert(err.message || "PIN request failed");
   }
-}
-
-// ================= EXPORT =================
-window.loadPinSection = loadPinSection;
-window.previewPinProduct = previewPinProduct;
-window.submitPinRequest = submitPinRequest;
-  const productId = document.getElementById("pinProductSelect")?.value;
-  const qty = parseInt(document.getElementById("pinQty")?.value || "1");
-  const paymentId = document.getElementById("pinPaymentId")?.value.trim();
-
-  if (!productId) {
-    alert("Select PIN Product");
-    return;
-  }
-
-  if (!paymentId) {
-    alert("Enter Payment Reference");
-    return;
-  }
-
-  const product =
-    typeof getPinProductById === "function"
-      ? getPinProductById(productId)
-      : null;
-
-  if (!product || product.status !== "active") {
-    alert("PIN currently unavailable");
-    return;
-  }
-
-  const safeQty = isNaN(qty) || qty < 1 ? 1 : qty;
-  const amount = Number(product.amount || 0) * safeQty;
 
   try {
     const req = createPinRequest({
