@@ -33,7 +33,6 @@ function loadPins() {
 
     let refTime = Number(pin.lockedAt || pin.usedAt || pin.assignedAt || pin.createdAt || now);
 
-    // auto recover stale locks
     if (pin.lock === true && (now - refTime > 10000)) {
       pin.lock = false;
       pin.lockedAt = null;
@@ -100,15 +99,9 @@ function findPinById(pinId, pins) {
   return (pins || []).find(p => p && p.pinId === pinId) || null;
 }
 
-/* ======================================================
-   🔥 PATCH INTEGRATION LAYER — ROLE + ACTION CONTROL
-   (NO LOGIC CHANGE — ONLY ENFORCEMENT GATE)
-====================================================== */
-
-// ================= ASSIGN =================
+// ================= ASSIGN (PATCHED) =================
 function assignPin(pinId, toId, toType, performedBy = "SYSTEM") {
 
-  // 🔥 PATCH A — ACTION CONTROL ENFORCEMENT (ASSIGN)
   let role = "system";
   if (typeof getCurrentUser === "function") {
     const user = getCurrentUser();
@@ -203,10 +196,9 @@ function assignPin(pinId, toId, toType, performedBy = "SYSTEM") {
   }
 }
 
-// ================= USE =================
+// ================= USE (PATCHED) =================
 function usePin(pinId, userId, purpose) {
 
-  // 🔥 PATCH B — ACTION CONTROL ENFORCEMENT (VIEW/USE)
   let role = "system";
   if (typeof getCurrentUser === "function") {
     const user = getCurrentUser();
