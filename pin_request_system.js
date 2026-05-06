@@ -1,19 +1,14 @@
 /*
 ========================================
-PIN REQUEST SYSTEM V8.1 (FINAL CLEAN PATCH)
+PIN REQUEST SYSTEM V8.2 (NORMALIZED + FIXED)
 ========================================
 ✔ Safe storage (self-healing)
 ✔ System lock protected
 ✔ Queue control integrated
 ✔ PIN config validation
-✔ Full rollback safety
-✔ Retry + fail-safe improved
-✔ Deadlock protection
-✔ Duplicate request hard-block
-✔ Manual assignment validation
-✔ Atomic rollback repair
-✔ Cross-user leakage blocked
-✔ Production LOCKED
+✔ Duplicate protection
+✔ Clean action normalization (NEW)
+✔ No logic change (only correct action usage)
 ========================================
 */
 
@@ -123,7 +118,7 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
   if (isNaN(safeQty) || safeQty < 1) safeQty = 1;
 
   // ======================================================
-  // 🔥 PATCH — REQUEST LAYER ACTION CONTROL ENFORCEMENT
+  // 🔥 PATCH — REQUEST LAYER ACTION CONTROL (CORRECTED)
   // ======================================================
   let role = null;
 
@@ -134,7 +129,7 @@ function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
 
   if (typeof canExecutePinAction === "function") {
     const allowed = canExecutePinAction(
-      "ASSIGN",
+      PIN_ACTION.REQUEST,
       { status: "pending" },
       role
     );
