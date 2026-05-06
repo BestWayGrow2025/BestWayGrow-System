@@ -1,15 +1,16 @@
 /*
 ========================================
-PIN ACTION CONTROL V1.1 (NORMALIZED)
+PIN ACTION CONTROL V1.1 (NORMALIZED - FIXED)
 ========================================
 ✔ Central action permission control
 ✔ Unified action dictionary (pin_action_types.js)
 ✔ Role-safe + status-safe validation
 ✔ No logic change (only normalization)
+✔ INVALID ACTIONS REMOVED (VIEW, HOLD)
 ========================================
 */
 
-// ================= ACTIONS (NOW GLOBAL SOURCE) =================
+// ================= ACTIONS =================
 const PIN_ACTIONS = Object.values(PIN_ACTION);
 
 // ================= HELPERS =================
@@ -34,29 +35,29 @@ function canRoleAccessPinAction(role, action) {
   if (!isValidPinAction(action)) return false;
 
   const access = {
-    user: [PIN_ACTION.VIEW],
+    user: [PIN_ACTION.REQUEST],
+
     admin: [
-      PIN_ACTION.VIEW,
+      PIN_ACTION.REQUEST,
       PIN_ACTION.APPROVE,
       PIN_ACTION.REJECT,
-      PIN_ACTION.ASSIGN,
-      PIN_ACTION.HOLD
+      PIN_ACTION.ASSIGN
     ],
+
     system_admin: [
-      PIN_ACTION.VIEW,
+      PIN_ACTION.REQUEST,
       PIN_ACTION.APPROVE,
       PIN_ACTION.REJECT,
       PIN_ACTION.ASSIGN,
-      PIN_ACTION.TRANSFER,
-      PIN_ACTION.HOLD
+      PIN_ACTION.TRANSFER
     ],
+
     super_admin: [
-      PIN_ACTION.VIEW,
+      PIN_ACTION.REQUEST,
       PIN_ACTION.APPROVE,
       PIN_ACTION.REJECT,
       PIN_ACTION.ASSIGN,
       PIN_ACTION.TRANSFER,
-      PIN_ACTION.HOLD,
       PIN_ACTION.DELETE,
       PIN_ACTION.OVERRIDE
     ]
@@ -70,14 +71,16 @@ function canActionRunByStatus(action, status) {
   status = normalizePinStatus(status);
 
   const rules = {
-    [PIN_ACTION.VIEW]: ["active", "assigned", "used", "hold", "deleted"],
+    [PIN_ACTION.REQUEST]: ["pending"],
+
     [PIN_ACTION.APPROVE]: ["pending"],
     [PIN_ACTION.REJECT]: ["pending"],
+
     [PIN_ACTION.ASSIGN]: ["active", "pending"],
     [PIN_ACTION.TRANSFER]: ["assigned"],
-    [PIN_ACTION.HOLD]: ["pending", "active", "assigned"],
-    [PIN_ACTION.DELETE]: ["active", "hold"],
-    [PIN_ACTION.OVERRIDE]: ["pending", "active", "assigned", "used", "hold"]
+
+    [PIN_ACTION.DELETE]: ["active"],
+    [PIN_ACTION.OVERRIDE]: ["pending", "active", "assigned", "used"]
   };
 
   return (rules[action] || []).includes(status);
@@ -88,7 +91,6 @@ function requiresPinActionConfirm(action) {
   return [
     PIN_ACTION.REJECT,
     PIN_ACTION.TRANSFER,
-    PIN_ACTION.HOLD,
     PIN_ACTION.DELETE,
     PIN_ACTION.OVERRIDE
   ].includes(action);
@@ -131,7 +133,7 @@ function canExecutePinAction(action, pin = {}, role = null) {
   return true;
 }
 
-// ================= AUDIT PAYLOAD =================
+// ================= AUDIT =================
 function buildPinActionAudit(action, pin, performedBy, note = "") {
   return {
     action,
