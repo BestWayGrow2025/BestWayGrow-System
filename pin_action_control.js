@@ -1,170 +1,144 @@
 /*
 ========================================
-PIN REQUEST SYSTEM V8.1 (FINAL CLEAN PATCH + ACTION GATE)
+PIN ACTION CONTROL V1.1 (NORMALIZED)
 ========================================
-✔ Safe storage (self-healing)
-✔ System lock protected
-✔ Queue control integrated
-✔ PIN config validation
-✔ Duplicate protection
-✔ Rollback safety
-✔ DEADLOCK protection
-✔ CROSS USER leakage blocked
-✔ ACTION CONTROL ENFORCED (NEW)
+✔ Central action permission control
+✔ Unified action dictionary (pin_action_types.js)
+✔ Role-safe + status-safe validation
+✔ No logic change (only normalization)
 ========================================
 */
 
-const PIN_REQUEST_KEY = "PIN_REQUEST_DATA";
-const PIN_REQUEST_LIMIT = 5000;
+// ================= ACTIONS (NOW GLOBAL SOURCE) =================
+const PIN_ACTIONS = Object.values(PIN_ACTION);
 
-// ================= LOAD / SAVE =================
-function getPinRequests() {
-  let data = safeGet(PIN_REQUEST_KEY, []);
-  return Array.isArray(data) ? data : [];
+// ================= HELPERS =================
+function getSafeRole() {
+  if (typeof getCurrentUser !== "function") return null;
+  const user = getCurrentUser();
+  return user?.role || null;
 }
 
-function savePinRequests(data) {
-  if (!Array.isArray(data)) data = [];
-
-  if (data.length > PIN_REQUEST_LIMIT) {
-    data = data.slice(-PIN_REQUEST_LIMIT);
-  }
-
-  safeSet(PIN_REQUEST_KEY, data);
+function isValidPinAction(action) {
+  return PIN_ACTIONS.includes(action);
 }
 
-// ================= ID =================
-function generateRequestId() {
-  return "REQ_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8).toUpperCase();
+function normalizePinStatus(status) {
+  return String(status || "").toLowerCase();
 }
 
-// ================= PRIORITY =================
-function detectPriority(userId) {
-  if (typeof getUserById !== "function") return "YELLOW";
+// ================= ROLE ACCESS =================
+function canRoleAccessPinAction(role, action) {
+  role = String(role || "").toLowerCase();
 
-  let user = getUserById(userId);
-  if (!user) return "YELLOW";
+  if (!isValidPinAction(action)) return false;
 
-  let points = Number(user.activePoints || 0);
-
-  if (points >= 5) return "GREEN";
-  if (points >= 2) return "YELLOW";
-  return "RED";
-}
-
-// ================= QUEUE CHECK =================
-function isQueueEnabled() {
-  if (typeof getSystemSettings !== "function") return true;
-
-  let s = getSystemSettings() || {};
-  let q = s.pinQueue || {};
-
-  return q.enabled !== false;
-}
-
-// ================= DUPLICATE CHECK =================
-function hasRecentDuplicateRequest(userId, type, paymentId) {
-  let now = Date.now();
-
-  return getPinRequests().some(r =>
-    r.userId === userId &&
-    r.type === type &&
-    r.paymentId === paymentId &&
-    (now - Number(r.createdAt || 0)) < 10000
-  );
-}
-
-// ================= CREATE REQUEST =================
-function createPinRequest({ userId, type, amount, paymentId, quantity = 1 }) {
-
-  // ================= ACTION CONTROL GATE (NEW PATCH) =================
-  if (typeof canExecutePinAction === "function") {
-    const role = typeof getCurrentUser === "function"
-      ? (getCurrentUser()?.role || "user")
-      : "user";
-
-    const allowed = canExecutePinAction(
+  const access = {
+    user: [PIN_ACTION.VIEW],
+    admin: [
+      PIN_ACTION.VIEW,
+      PIN_ACTION.APPROVE,
+      PIN_ACTION.REJECT,
       PIN_ACTION.ASSIGN,
-      { status: "pending" },
-      role
-    );
-
-    if (!allowed) {
-      throw new Error("Permission denied by action control");
-    }
-  }
-
-  // ================= SYSTEM CHECKS =================
-  if (typeof isSystemSafe === "function" && !isSystemSafe()) {
-    throw new Error("System locked");
-  }
-
-  if (!isQueueEnabled()) {
-    throw new Error("Queue OFF");
-  }
-
-  if (typeof isPinSystemSafe === "function" && !isPinSystemSafe(type)) {
-    throw new Error("PIN system disabled");
-  }
-
-  if (!userId || !type || !paymentId) {
-    throw new Error("Invalid request data");
-  }
-
-  if (!["upgrade", "repurchase"].includes(type)) {
-    throw new Error("Invalid PIN type");
-  }
-
-  amount = Number(amount);
-  if (isNaN(amount) || amount <= 0) {
-    throw new Error("Invalid amount");
-  }
-
-  let requests = getPinRequests();
-
-  let pending = requests.find(r =>
-    r.userId === userId &&
-    r.type === type &&
-    r.status === "PENDING"
-  );
-
-  if (pending) throw new Error("Pending request already exists");
-
-  if (hasRecentDuplicateRequest(userId, type, paymentId)) {
-    throw new Error("Duplicate request blocked");
-  }
-
-  let safeQty = parseInt(quantity);
-  if (isNaN(safeQty) || safeQty < 1) safeQty = 1;
-
-  let newRequest = {
-    requestId: generateRequestId(),
-    userId,
-    type,
-    amount,
-    paymentId,
-    quantity: safeQty,
-
-    status: "PENDING",
-    lock: false,
-
-    assignedPins: [],
-    priority: detectPriority(userId),
-
-    retry: 0,
-    createdAt: Date.now(),
-    processedAt: null,
-    processedBy: null,
-    failReason: null
+      PIN_ACTION.HOLD
+    ],
+    system_admin: [
+      PIN_ACTION.VIEW,
+      PIN_ACTION.APPROVE,
+      PIN_ACTION.REJECT,
+      PIN_ACTION.ASSIGN,
+      PIN_ACTION.TRANSFER,
+      PIN_ACTION.HOLD
+    ],
+    super_admin: [
+      PIN_ACTION.VIEW,
+      PIN_ACTION.APPROVE,
+      PIN_ACTION.REJECT,
+      PIN_ACTION.ASSIGN,
+      PIN_ACTION.TRANSFER,
+      PIN_ACTION.HOLD,
+      PIN_ACTION.DELETE,
+      PIN_ACTION.OVERRIDE
+    ]
   };
 
-  requests.push(newRequest);
-  savePinRequests(requests);
-
-  return newRequest;
+  return (access[role] || []).includes(action);
 }
 
-// ================= USER VIEW =================
-function getUserPinRequests(userId) {
-  return getPinRequests().filter(r => r.userId === userId);
+// ================= STATUS ACCESS =================
+function canActionRunByStatus(action, status) {
+  status = normalizePinStatus(status);
+
+  const rules = {
+    [PIN_ACTION.VIEW]: ["active", "assigned", "used", "hold", "deleted"],
+    [PIN_ACTION.APPROVE]: ["pending"],
+    [PIN_ACTION.REJECT]: ["pending"],
+    [PIN_ACTION.ASSIGN]: ["active", "pending"],
+    [PIN_ACTION.TRANSFER]: ["assigned"],
+    [PIN_ACTION.HOLD]: ["pending", "active", "assigned"],
+    [PIN_ACTION.DELETE]: ["active", "hold"],
+    [PIN_ACTION.OVERRIDE]: ["pending", "active", "assigned", "used", "hold"]
+  };
+
+  return (rules[action] || []).includes(status);
+}
+
+// ================= CONFIRM RULE =================
+function requiresPinActionConfirm(action) {
+  return [
+    PIN_ACTION.REJECT,
+    PIN_ACTION.TRANSFER,
+    PIN_ACTION.HOLD,
+    PIN_ACTION.DELETE,
+    PIN_ACTION.OVERRIDE
+  ].includes(action);
+}
+
+// ================= DELETE SAFETY =================
+function canDeletePin(pin, role) {
+  if (!pin || typeof pin !== "object") return false;
+  if (String(role || "").toLowerCase() !== "super_admin") return false;
+
+  return (
+    normalizePinStatus(pin.status) === "active" &&
+    !pin.ownerId &&
+    !pin.assignedTo &&
+    !pin.usedBy
+  );
+}
+
+// ================= OVERRIDE SAFETY =================
+function canOverridePin(role) {
+  return String(role || "").toLowerCase() === "super_admin";
+}
+
+// ================= MAIN GUARD =================
+function canExecutePinAction(action, pin = {}, role = null) {
+  const safeRole = role || getSafeRole();
+  if (!safeRole) return false;
+
+  if (!canRoleAccessPinAction(safeRole, action)) return false;
+  if (!canActionRunByStatus(action, pin.status || "pending")) return false;
+
+  if (action === PIN_ACTION.DELETE) {
+    return canDeletePin(pin, safeRole);
+  }
+
+  if (action === PIN_ACTION.OVERRIDE) {
+    return canOverridePin(safeRole);
+  }
+
+  return true;
+}
+
+// ================= AUDIT PAYLOAD =================
+function buildPinActionAudit(action, pin, performedBy, note = "") {
+  return {
+    action,
+    pinId: pin?.pinId || "-",
+    status: pin?.status || "-",
+    performedBy: performedBy || "SYSTEM",
+    note: note || "",
+    time: new Date().toISOString()
+  };
 }
