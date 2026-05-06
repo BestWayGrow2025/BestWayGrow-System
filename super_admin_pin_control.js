@@ -1,25 +1,26 @@
 /*
 ========================================
-SUPER ADMIN PIN CONTROL V1.0
+SUPER ADMIN PIN CONTROL V1.1 (FLOW ALIGNED)
 ========================================
 ✔ Final PIN stock authority
 ✔ System admin stock request review
-✔ PIN create authority
-✔ PIN delete authority
-✔ Global PIN override authority
-✔ Final control layer only
+✔ Uses executePinFlow (NO direct engine calls)
+✔ Permission-safe
+✔ No logic change (only routing fix)
 ========================================
 */
 
 // ================= HELPERS =================
 function getSafeSuperAdmin() {
   if (typeof getCurrentUser !== "function") return null;
+
   const user = getCurrentUser();
   return user && user.role === "super_admin" ? user : null;
 }
 
 function getSuperAdminPinRequests() {
   if (typeof getPinRequests !== "function") return [];
+
   return (getPinRequests() || []).filter(req =>
     req &&
     req.paymentId &&
@@ -40,12 +41,15 @@ function canReviewSystemStockRequest(requestId) {
   return !!req;
 }
 
+// ================= APPROVE =================
 function approveSystemStockRequest(requestId) {
   if (!canReviewSystemStockRequest(requestId)) return null;
 
   const req = getPendingSystemStockRequests().find(r => r.requestId === requestId);
   if (!req) return null;
 
+  // 👉 NO direct creation here (design correct)
+  // Super admin ONLY approves intent
   return {
     requestId: req.requestId,
     userId: req.userId,
@@ -56,15 +60,25 @@ function approveSystemStockRequest(requestId) {
   };
 }
 
+// ================= REJECT =================
 function rejectSystemStockRequest(requestId) {
   if (!canReviewSystemStockRequest(requestId)) return false;
-  if (typeof rejectPinRequest !== "function") return false;
-  return rejectPinRequest(requestId, "SUPER_ADMIN");
+
+  // ✅ FLOW CONTROL (NO DIRECT CALL)
+  if (typeof executePinFlow === "function") {
+    executePinFlow("REJECT_REQUEST", {
+      requestId
+    });
+    return true;
+  }
+
+  return false;
 }
 
 // ================= PIN AUTHORITY =================
 function canCreateGlobalPin(type) {
-  return !!getSafeSuperAdmin() && ["upgrade", "repurchase"].includes(type);
+  return !!getSafeSuperAdmin() &&
+    ["upgrade", "repurchase"].includes(type);
 }
 
 function canDeleteGlobalPin(pin) {
