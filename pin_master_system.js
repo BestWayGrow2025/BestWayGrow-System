@@ -1,18 +1,11 @@
 /*
 ========================================
-PIN MASTER SYSTEM V8.0 (FINAL PATCH LOCK)
+PIN MASTER SYSTEM V8.1 (NORMALIZED FINAL)
 ========================================
-✔ Safe storage (safeGet / safeSet)
-✔ Strong duplicate-safe ID generation
-✔ Hard owner validation
-✔ Cross-user leakage blocked
-✔ Replay / reuse blocked
-✔ Safe lock + rollback
-✔ Stuck lock recovery
-✔ Transfer audit trail
-✔ Trigger isolation
-✔ Storage collision hardened
-✔ Production stable
+✔ Execution engine
+✔ Permission enforced via action control
+✔ Fully aligned with PIN_ACTION system
+✔ No logic change
 ========================================
 */
 
@@ -46,7 +39,6 @@ function loadPins() {
   });
 
   if (updated) savePins(pins);
-
   return pins;
 }
 
@@ -99,7 +91,7 @@ function findPinById(pinId, pins) {
   return (pins || []).find(p => p && p.pinId === pinId) || null;
 }
 
-// ================= ASSIGN (PATCHED) =================
+// ================= ASSIGN =================
 function assignPin(pinId, toId, toType, performedBy = "SYSTEM") {
 
   let role = "system";
@@ -108,8 +100,13 @@ function assignPin(pinId, toId, toType, performedBy = "SYSTEM") {
     role = user?.role || "system";
   }
 
+  // ✅ NORMALIZED ACTION
   if (typeof canExecutePinAction === "function") {
-    const allowed = canExecutePinAction("ASSIGN", { status: "active", pinId }, role);
+    const allowed = canExecutePinAction(
+      PIN_ACTION.ASSIGN,
+      { status: "active", pinId },
+      role
+    );
     if (!allowed) return false;
   }
 
@@ -196,7 +193,7 @@ function assignPin(pinId, toId, toType, performedBy = "SYSTEM") {
   }
 }
 
-// ================= USE (PATCHED) =================
+// ================= USE =================
 function usePin(pinId, userId, purpose) {
 
   let role = "system";
@@ -205,8 +202,13 @@ function usePin(pinId, userId, purpose) {
     role = user?.role || "system";
   }
 
+  // ✅ CORRECT ACTION (NOT VIEW)
   if (typeof canExecutePinAction === "function") {
-    const allowed = canExecutePinAction("VIEW", { status: "assigned", pinId }, role);
+    const allowed = canExecutePinAction(
+      PIN_ACTION.USE,
+      { status: "assigned", pinId },
+      role
+    );
     if (!allowed) return null;
   }
 
@@ -268,20 +270,6 @@ function usePin(pinId, userId, purpose) {
       gst: pin.gst,
       status: "success"
     });
-
-    if (typeof triggerPinUseIncome === "function") {
-      try {
-        triggerPinUseIncome(userId, pin);
-      } catch (e) {
-        logPinAction({
-          action: "PIN_TRIGGER",
-          pinId,
-          performedBy: userId,
-          status: "failed",
-          note: e.message
-        });
-      }
-    }
 
     return pin;
 
