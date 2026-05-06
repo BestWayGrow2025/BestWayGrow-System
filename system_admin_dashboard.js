@@ -1,7 +1,8 @@
 /*
 ========================================
-SYSTEM ADMIN DASHBOARD (FINAL STABLE)
+SYSTEM ADMIN DASHBOARD (FINAL V8.2)
 ONE AUTH ENGINE ONLY (session_manager.js)
+FLOW SAFE + CLEAN
 ========================================
 */
 
@@ -31,31 +32,36 @@ function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   } else {
-    alert("core_system.js missing");
+    alert("❌ core_system.js missing");
     throw new Error("STOP");
   }
 }
 
-// ================= AUTH (ONLY SESSION ENGINE) =================
+// ================= AUTH (STRICT SESSION ENGINE) =================
 function authPage() {
-  const session = typeof getSession === "function" ? getSession() : null;
+  const session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
 
   if (!session || session.role !== "system_admin") {
     return false;
   }
 
-  if (typeof getUserById === "function") {
-    currentUser = getUserById(session.userId);
-  } else {
-    currentUser = session;
-  }
+  currentUser =
+    typeof getUserById === "function"
+      ? getUserById(session.userId)
+      : session;
 
   if (!currentUser) return false;
 
-  if ((currentUser.status || currentUser.accountStatus || "active") !== "active") {
-    if (typeof clearSession === "function") {
-      clearSession();
-    }
+  const status =
+    currentUser.status ||
+    currentUser.accountStatus ||
+    "active";
+
+  if (status !== "active") {
+    if (typeof clearSession === "function") clearSession();
     return false;
   }
 
@@ -94,13 +100,17 @@ function bindEvents() {
         if (page === "home") loadHome();
         if (page === "users") loadUsers();
         if (page === "create") loadCreateAdmin();
-        if (page === "pins") loadPins();
+        if (page === "pins") loadPins(); // UI only
         if (page === "settings") loadSettings();
-      } finally {
-        setTimeout(() => {
-          clickLock = false;
-        }, 250);
+      } catch (err) {
+        console.error("Dashboard error:", err);
+        document.getElementById("mainContent").innerHTML =
+          `<p style="color:red;">Failed to load section</p>`;
       }
+
+      setTimeout(() => {
+        clickLock = false;
+      }, 250);
     });
   });
 
@@ -119,7 +129,7 @@ function isProtectedTarget(user) {
   return ["SUPERADMIN", "SYSTEM", "BWG000000", "BWG000001"].includes(user.userId);
 }
 
-// ================= SAVE =================
+// ================= SAFE SAVE =================
 function safeSaveUsers(users) {
   if (typeof saveUsers !== "function") return false;
   saveUsers(users);
@@ -169,9 +179,10 @@ function loadHome() {
 
 // ================= USERS =================
 function loadUsers() {
-  const users = typeof getUsers === "function"
-    ? getUsers().filter(u => !u.hiddenAccount)
-    : [];
+  const users =
+    typeof getUsers === "function"
+      ? getUsers().filter(u => !u.hiddenAccount)
+      : [];
 
   let html = `
     <div class="card">
