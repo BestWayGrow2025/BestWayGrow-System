@@ -1,23 +1,33 @@
+
 /*
 ========================================
-SUPER ADMIN PIN CONTROL V1.1 (FLOW ALIGNED)
+SUPER ADMIN PIN CONTROL (FINAL)
 ========================================
-✔ Final PIN stock authority
-✔ System admin stock request review
-✔ Uses executePinFlow (NO direct engine calls)
-✔ Permission-safe
-✔ No logic change (only routing fix)
+✔ Final PIN authority layer
+✔ Uses executePinFlow ONLY
+✔ No direct engine calls
+✔ No duplicate auth
+✔ System-level request control
+✔ Global override authority
 ========================================
 */
 
-// ================= HELPERS =================
+// ================= SAFE SUPER ADMIN =================
 function getSafeSuperAdmin() {
-  if (typeof getCurrentUser !== "function") return null;
+  if (typeof getSession !== "function") return null;
 
-  const user = getCurrentUser();
-  return user && user.role === "super_admin" ? user : null;
+  const session = getSession();
+
+  if (!session || session.role !== "super_admin") return null;
+
+  if (typeof getUserById === "function") {
+    return getUserById(session.userId);
+  }
+
+  return session;
 }
 
+// ================= REQUEST FILTER =================
 function getSuperAdminPinRequests() {
   if (typeof getPinRequests !== "function") return [];
 
@@ -32,59 +42,58 @@ function getPendingSystemStockRequests() {
   return getSuperAdminPinRequests().filter(req => req.status === "PENDING");
 }
 
-// ================= REVIEW =================
+// ================= VALIDATION =================
 function canReviewSystemStockRequest(requestId) {
   const admin = getSafeSuperAdmin();
   if (!admin) return false;
 
-  const req = getPendingSystemStockRequests().find(r => r.requestId === requestId);
+  const requests = getPendingSystemStockRequests();
+  const req = requests.find(r => r.requestId === requestId);
+
   return !!req;
 }
 
 // ================= APPROVE =================
 function approveSystemStockRequest(requestId) {
-  if (!canReviewSystemStockRequest(requestId)) return null;
+  if (!canReviewSystemStockRequest(requestId)) {
+    alert("Invalid or unauthorized request");
+    return;
+  }
 
-  const req = getPendingSystemStockRequests().find(r => r.requestId === requestId);
-  if (!req) return null;
+  if (typeof executePinFlow !== "function") {
+    throw new Error("PIN Flow Controller missing");
+  }
 
-  // 👉 NO direct creation here (design correct)
-  // Super admin ONLY approves intent
-  return {
-    requestId: req.requestId,
-    userId: req.userId,
-    type: req.type,
-    quantity: Number(req.quantity || 1),
-    status: req.status,
-    route: "SUPER_ADMIN_PIN_CREATE_REQUIRED"
-  };
+  return executePinFlow("PROCESS_REQUEST", {
+    requestId: requestId
+  });
 }
 
 // ================= REJECT =================
 function rejectSystemStockRequest(requestId) {
-  if (!canReviewSystemStockRequest(requestId)) return false;
-
-  // ✅ FLOW CONTROL (NO DIRECT CALL)
-  if (typeof executePinFlow === "function") {
-    executePinFlow("REJECT_REQUEST", {
-      requestId
-    });
-    return true;
+  if (!canReviewSystemStockRequest(requestId)) {
+    alert("Invalid or unauthorized request");
+    return;
   }
 
-  return false;
+  if (typeof executePinFlow !== "function") {
+    throw new Error("PIN Flow Controller missing");
+  }
+
+  return executePinFlow("REJECT_REQUEST", {
+    requestId: requestId
+  });
 }
 
-// ================= PIN AUTHORITY =================
+// ================= GLOBAL PIN AUTH =================
 function canCreateGlobalPin(type) {
-  return !!getSafeSuperAdmin() &&
-    ["upgrade", "repurchase"].includes(type);
+  const admin = getSafeSuperAdmin();
+  return !!admin && ["upgrade", "repurchase"].includes(type);
 }
 
 function canDeleteGlobalPin(pin) {
-  return typeof canDeletePin === "function"
-    ? canDeletePin(pin, "super_admin")
-    : false;
+  if (typeof canDeletePin !== "function") return false;
+  return canDeletePin(pin, "super_admin");
 }
 
 function canOverrideGlobalPin() {
