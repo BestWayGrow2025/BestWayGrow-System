@@ -1,14 +1,32 @@
-let session = null;
+/*
+========================================
+SUPER ADMIN DASHBOARD (FINAL FIXED)
+ONE AUTH ENGINE ONLY (session_manager.js)
+========================================
+*/
+
 let currentUser = null;
 let lock = false;
 
+// ================= BOOT =================
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  checkAuth();
-  bindEvents();
-  loadHome();
+  bootSuperAdmin();
 });
 
+// ================= BOOT =================
+function bootSuperAdmin() {
+  initPage();
+
+  if (!authPage()) {
+    window.location.href = "super_admin_login.html";
+    return;
+  }
+
+  bindEvents();
+  loadHome();
+}
+
+// ================= INIT =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
@@ -18,80 +36,75 @@ function initPage() {
   }
 }
 
-function checkAuth() {
-  session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
+// ================= AUTH (SESSION ENGINE ONLY) =================
+function authPage() {
+  const session = typeof getSession === "function" ? getSession() : null;
 
-  if (!session || !session.userId) {
-    window.location.href = "super_admin_login.html";
-    throw new Error("STOP");
+  if (!session || session.role !== "super_admin") {
+    return false;
   }
 
-  if (typeof getUserById !== "function") {
-    window.location.href = "super_admin_login.html";
-    throw new Error("STOP");
+  if (typeof getUserById === "function") {
+    currentUser = getUserById(session.userId);
+  } else {
+    currentUser = session;
   }
 
-  currentUser = getUserById(session.userId);
-
-  if (!currentUser || currentUser.role !== "super_admin") {
-    localStorage.removeItem("loggedInSuperAdmin");
-    window.location.href = "super_admin_login.html";
-    throw new Error("STOP");
-  }
+  if (!currentUser) return false;
 
   if ((currentUser.status || "active") !== "active") {
-    localStorage.removeItem("loggedInSuperAdmin");
-    alert("Account inactive");
-    window.location.href = "super_admin_login.html";
-    throw new Error("STOP");
+    if (typeof clearSession === "function") {
+      clearSession();
+    }
+    return false;
   }
 
-  document.getElementById("welcome").innerText =
-    "Welcome SUPER ADMIN (" + currentUser.userId + ")";
+  const el = document.getElementById("welcome");
+  if (el) {
+    el.innerText =
+      "Welcome SUPER ADMIN (" + currentUser.userId + ")";
+  }
+
+  return true;
 }
 
+// ================= EVENTS =================
 function bindEvents() {
   document.querySelectorAll(".menu button").forEach(function (btn) {
     btn.addEventListener("click", function () {
+      if (lock) return;
+
+      lock = true;
+
       document.querySelectorAll(".menu button").forEach(function (b) {
         b.classList.remove("active");
       });
+
       btn.classList.add("active");
+
+      try {
+        const page = btn.dataset.page;
+
+        if (page === "home") loadHome();
+        if (page === "create") loadCreate();
+        if (page === "users") loadUsers();
+        if (page === "system") loadSystem();
+        if (page === "reset") loadResetPanel();
+      } finally {
+        setTimeout(() => {
+          lock = false;
+        }, 250);
+      }
     });
   });
+
+  const homeBtn = document.querySelector('.menu button[data-page="home"]');
+  if (homeBtn) homeBtn.classList.add("active");
 }
 
-function safeClick(btn, fn) {
-  if (lock) return;
-
-  lock = true;
-
-  try {
-    if (btn) {
-      document.querySelectorAll(".menu button").forEach(function (b) {
-        b.classList.remove("active");
-      });
-      btn.classList.add("active");
-    }
-
-    fn();
-  } catch (e) {
-    console.error(e);
-    alert("System Error");
-  }
-
-  setTimeout(function () {
-    lock = false;
-  }, 250);
-}
-
-function isSystemSafe() {
-  let s = getSystemSettings() || {};
-  return !s.lockMode;
-}
-
+// ================= HOME =================
 function loadHome() {
-  let users = getUsers() || [];
+  let users = typeof getUsers === "function" ? getUsers() : [];
 
   let totalUsers = users.filter(u => u.role === "user").length;
   let admins = users.filter(u => u.role === "admin").length;
@@ -99,6 +112,7 @@ function loadHome() {
 
   document.getElementById("mainContent").innerHTML = `
     <h3>📊 Dashboard Overview</h3>
+
     <div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:15px;">
       <div style="flex:1; min-width:200px; background:#4CAF50; color:#fff; padding:20px; border-radius:10px;">
         <h4>👤 Users</h4>
@@ -118,6 +132,7 @@ function loadHome() {
   `;
 }
 
+// ================= CREATE SYSTEM ADMIN =================
 function loadCreate() {
   document.getElementById("mainContent").innerHTML = `
     <h3>Create System Admin</h3>
@@ -137,14 +152,10 @@ function createSystemAdmin() {
     return alert("Fill all fields");
   }
 
-  let users = getUsers() || [];
+  let users = typeof getUsers === "function" ? getUsers() : [];
 
   if (users.find(u => u.userId.toLowerCase() === id.toLowerCase())) {
     return alert("ID already exists");
-  }
-
-  if (users.some(u => u.role === "system_admin" && u.userId.toLowerCase() === id.toLowerCase())) {
-    return alert("System Admin already exists");
   }
 
   users.push({
@@ -157,7 +168,7 @@ function createSystemAdmin() {
     createdAt: Date.now()
   });
 
-  saveUsers(users);
+  if (typeof saveUsers === "function") saveUsers(users);
 
   if (typeof logActivity === "function") {
     logActivity(currentUser.userId, "SUPER_ADMIN", "Created System Admin " + id);
@@ -167,8 +178,9 @@ function createSystemAdmin() {
   loadUsers();
 }
 
+// ================= USERS =================
 function loadUsers() {
-  let users = getUsers() || [];
+  let users = typeof getUsers === "function" ? getUsers() : [];
 
   let html = `
     <h3>All Users</h3>
@@ -190,13 +202,9 @@ function loadUsers() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
+// ================= SYSTEM =================
 function loadSystem() {
-  let s = getSystemSettings() || {
-    lockMode: false,
-    registrationOpen: true,
-    adminAccess: true,
-    withdrawOpen: true
-  };
+  let s = typeof getSystemSettings === "function" ? getSystemSettings() : {};
 
   document.getElementById("mainContent").innerHTML = `
     <h3>System Control</h3>
@@ -216,45 +224,48 @@ function loadSystem() {
 }
 
 function toggleSystem(key) {
-  let s = getSystemSettings() || {};
+  let s = typeof getSystemSettings === "function" ? getSystemSettings() : {};
   s[key] = !s[key];
-  saveSystemSettings(s);
+
+  if (typeof saveSystemSettings === "function") {
+    saveSystemSettings(s);
+  }
 
   if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Toggle " + key + " = " + s[key]);
+    logActivity(currentUser.userId, "SUPER_ADMIN", "Toggle " + key);
   }
 
   loadSystem();
 }
 
+// ================= RESET =================
 function loadResetPanel() {
   document.getElementById("mainContent").innerHTML = `
-    <h3>⚠️ System Reset Control</h3>
-    <p style="color:red;"><b>Danger Zone</b></p>
-
-    <button onclick="resetUsers()">Delete All Users</button><br><br>
-    <button onclick="resetUserData()">Reset User Data Only</button>
+    <h3>⚠️ System Reset</h3>
+    <button onclick="resetUsers()">Delete Users</button><br><br>
+    <button onclick="resetUserData()">Reset Data</button>
   `;
 }
 
 function resetUsers() {
-  if (!confirm("Delete all users except protected accounts?")) return;
+  if (!confirm("Delete users?")) return;
 
-  let users = getUsers() || [];
+  let users = typeof getUsers === "function" ? getUsers() : [];
 
-  users = users.filter(function (u) {
-    return ["BWG000000", "SUPERADMIN", "SYSTEM"].includes(u.userId);
-  });
+  users = users.filter(u =>
+    ["BWG000000", "SUPERADMIN", "SYSTEM"].includes(u.userId)
+  );
 
-  saveUsers(users);
-  alert("Users deleted safely");
+  if (typeof saveUsers === "function") saveUsers(users);
+
+  alert("Users cleaned");
   loadHome();
 }
 
 function resetUserData() {
-  if (!confirm("Reset all user data?")) return;
+  if (!confirm("Reset data?")) return;
 
-  let users = getUsers() || [];
+  let users = typeof getUsers === "function" ? getUsers() : [];
 
   users.forEach(function (u) {
     if (u.role === "user") {
@@ -268,17 +279,17 @@ function resetUserData() {
     }
   });
 
-  saveUsers(users);
-  alert("User data reset");
+  if (typeof saveUsers === "function") saveUsers(users);
+
+  alert("Data reset");
   loadHome();
 }
 
+// ================= LOGOUT =================
 function logout() {
-  if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Logout");
+  if (typeof clearSession === "function") {
+    clearSession();
   }
 
-  localStorage.removeItem("loggedInSuperAdmin");
   window.location.href = "super_admin_login.html";
 }
-
