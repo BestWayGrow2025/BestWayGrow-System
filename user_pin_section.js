@@ -10,6 +10,7 @@ USER PIN SECTION V4 (PRODUCT LINKED FLOW)
 ✔ Request-only safe flow
 ✔ Product / GST / BV visible to user
 ✔ One request engine only
+✔ UI-level permission pre-check added
 ========================================
 */
 
@@ -154,7 +155,7 @@ function submitPinRequest() {
   const safeQty = isNaN(qty) || qty < 1 ? 1 : qty;
   const amount = Number(product.amount || 0) * safeQty;
 
-  // ================= PATCH 3 — UI PERMISSION GATE =================
+  // ================= UI PRE-CHECK GATE (PATCH 3) =================
   if (typeof canExecutePinAction === "function") {
     const role = user?.role || "user";
 
