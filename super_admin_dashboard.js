@@ -1,23 +1,36 @@
 /*
 ========================================
 SUPER ADMIN DASHBOARD
-STABILIZED FINAL VERSION
+STABLE FINAL EXECUTION VERSION
 ONE AUTH ENGINE ONLY
 ========================================
 */
 
 let currentUser = null;
 let clickLock = false;
+let menuBound = false;
 
-// ================= BOOT =================
-document.addEventListener("DOMContentLoaded", bootSuperAdmin);
+// ================= SAFE BOOT =================
+(function () {
+
+  // prevent duplicate script execution
+  if (window.__SUPER_ADMIN_RUNNING__) {
+    console.warn("Super Admin Dashboard already initialized");
+    return;
+  }
+
+  window.__SUPER_ADMIN_RUNNING__ = true;
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootSuperAdmin, { once: true });
+  } else {
+    bootSuperAdmin();
+  }
+
+})();
 
 // ================= BOOT =================
 function bootSuperAdmin() {
-
-  // prevent double boot
-  if (window.__superAdminBooted) return;
-  window.__superAdminBooted = true;
 
   initPage();
 
@@ -27,6 +40,7 @@ function bootSuperAdmin() {
   }
 
   bindEvents();
+
   loadHome();
 }
 
@@ -38,7 +52,13 @@ function initPage() {
     throw new Error("STOP");
   }
 
-  initCoreSystem();
+  // prevent repeated core init
+  if (!window.__CORE_INITIALIZED__) {
+
+    initCoreSystem();
+
+    window.__CORE_INITIALIZED__ = true;
+  }
 }
 
 // ================= AUTH =================
@@ -58,7 +78,9 @@ function authPage() {
       ? getUserById(session.userId)
       : session;
 
-  if (!currentUser) return false;
+  if (!currentUser) {
+    return false;
+  }
 
   if ((currentUser.status || "active") !== "active") {
 
@@ -69,11 +91,14 @@ function authPage() {
     return false;
   }
 
-  const welcome = document.getElementById("welcome");
+  const welcome =
+    document.getElementById("welcome");
 
   if (welcome) {
     welcome.innerText =
-      "Welcome SUPER ADMIN (" + currentUser.userId + ")";
+      "Welcome SUPER ADMIN (" +
+      currentUser.userId +
+      ")";
   }
 
   return true;
@@ -81,6 +106,11 @@ function authPage() {
 
 // ================= EVENTS =================
 function bindEvents() {
+
+  // prevent duplicate event binding
+  if (menuBound) return;
+
+  menuBound = true;
 
   document.querySelectorAll(".menu button")
     .forEach(btn => {
@@ -91,6 +121,10 @@ function bindEvents() {
 
         clickLock = true;
 
+        setTimeout(() => {
+          clickLock = false;
+        }, 250);
+
         document.querySelectorAll(".menu button")
           .forEach(b => b.classList.remove("active"));
 
@@ -98,30 +132,36 @@ function bindEvents() {
 
         const page = btn.dataset.page;
 
-        try {
+        if (page === "home") {
+          loadHome();
+        }
 
-          if (page === "home") loadHome();
+        else if (page === "create") {
+          loadCreate();
+        }
 
-          else if (page === "create") loadCreate();
+        else if (page === "users") {
+          loadUsers();
+        }
 
-          else if (page === "users") loadUsers();
+        else if (page === "system") {
+          loadSystem();
+        }
 
-          else if (page === "system") loadSystem();
-
-          else if (page === "reset") loadResetPanel();
-
-        } finally {
-
-          setTimeout(() => {
-            clickLock = false;
-          }, 250);
+        else if (page === "reset") {
+          loadResetPanel();
         }
       });
+
     });
 
-  const logoutBtn = document.getElementById("logoutBtn");
+  const logoutBtn =
+    document.getElementById("logoutBtn");
 
-  if (logoutBtn) {
+  if (logoutBtn && !logoutBtn.dataset.bound) {
+
+    logoutBtn.dataset.bound = "true";
+
     logoutBtn.addEventListener("click", logout);
   }
 
@@ -174,7 +214,7 @@ function loadHome() {
   `;
 }
 
-// ================= CREATE SYS ADMIN =================
+// ================= CREATE SYSTEM ADMIN =================
 function loadCreate() {
 
   document.getElementById("mainContent").innerHTML = `
@@ -186,10 +226,17 @@ function loadCreate() {
 
     <input id="pass" type="password" placeholder="Password">
 
-    <button onclick="createSystemAdmin()">
+    <button id="createSystemAdminBtn">
       Create
     </button>
   `;
+
+  const btn =
+    document.getElementById("createSystemAdminBtn");
+
+  if (btn) {
+    btn.addEventListener("click", createSystemAdmin);
+  }
 }
 
 function createSystemAdmin() {
@@ -298,35 +345,28 @@ function loadSystem() {
       </tr>
 
       ${systemRow("Registration", "registrationOpen", s.registrationOpen)}
-
       ${systemRow("Upgrade", "upgradesOpen", s.upgradesOpen)}
-
       ${systemRow("Repurchase", "repurchaseOpen", s.repurchaseOpen)}
-
       ${systemRow("Withdraw", "withdrawOpen", s.withdrawOpen)}
-
       ${systemRow("Admin Access", "adminAccess", s.adminAccess)}
-
       ${systemRow("Lock Mode", "lockMode", s.lockMode)}
-
       ${systemRow("PIN Creation", "pinCreateOpen", s.pinCreateOpen)}
-
       ${systemRow("Payout", "payoutOpen", s.payoutOpen)}
-
       ${systemRow("Income Calculation", "incomeOpen", s.incomeOpen)}
-
       ${systemRow("Auto Run", "autoRun", s.autoRun)}
-
       ${systemRow("Manual Run", "manualRun", s.manualRun)}
 
     </table>
   `;
+
+  bindSystemButtons();
 }
 
 function systemRow(label, key, value) {
 
   return `
     <tr>
+
       <td>${label}</td>
 
       <td>
@@ -336,18 +376,33 @@ function systemRow(label, key, value) {
       <td>
         <button
           class="${value ? "offBtn" : "onBtn"}"
-          onclick="toggleSystem('${key}')"
+          data-key="${key}"
         >
           ${value ? "OFF" : "ON"}
         </button>
       </td>
+
     </tr>
   `;
 }
 
+function bindSystemButtons() {
+
+  document.querySelectorAll("[data-key]")
+    .forEach(btn => {
+
+      btn.addEventListener("click", function () {
+
+        const key = btn.dataset.key;
+
+        toggleSystem(key);
+      });
+
+    });
+}
+
 function toggleSystem(key) {
 
-  // prevent rapid multi-click
   if (clickLock) return;
 
   clickLock = true;
@@ -376,22 +431,34 @@ function loadResetPanel() {
   document.getElementById("mainContent").innerHTML = `
     <h3>⚠️ System Reset</h3>
 
-    <button onclick="resetUsers()">
+    <button id="deleteUsersBtn">
       Delete Users
     </button>
 
     <br><br>
 
-    <button onclick="resetUserData()">
+    <button id="resetDataBtn">
       Reset User Data
     </button>
 
     <br><br>
 
-    <button onclick="restartSystem()">
+    <button id="restartBtn">
       Restart System
     </button>
   `;
+
+  document
+    .getElementById("deleteUsersBtn")
+    .addEventListener("click", resetUsers);
+
+  document
+    .getElementById("resetDataBtn")
+    .addEventListener("click", resetUserData);
+
+  document
+    .getElementById("restartBtn")
+    .addEventListener("click", restartSystem);
 }
 
 function resetUsers() {
@@ -456,7 +523,6 @@ function restartSystem() {
 
   alert("System Restarted");
 
-  // NO FULL PAGE RELOAD
   loadHome();
 }
 
