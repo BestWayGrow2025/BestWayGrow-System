@@ -1,20 +1,20 @@
 /*
 ========================================
-SUPER ADMIN DASHBOARD (FINAL FIXED)
-ONE AUTH ENGINE ONLY (session_manager.js)
+SUPER ADMIN DASHBOARD
+STABILIZED FINAL VERSION
+ONE AUTH ENGINE ONLY
 ========================================
 */
 
 let currentUser = null;
-let lock = false;
+let clickLock = false;
 
 // ================= BOOT =================
-document.addEventListener("DOMContentLoaded", function () {
-  bootSuperAdmin();
-});
+document.addEventListener("DOMContentLoaded", bootSuperAdmin);
 
 // ================= BOOT =================
 function bootSuperAdmin() {
+
   initPage();
 
   if (!authPage()) {
@@ -28,40 +28,47 @@ function bootSuperAdmin() {
 
 // ================= INIT =================
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
+
+  if (typeof initCoreSystem !== "function") {
     alert("core_system.js missing");
     throw new Error("STOP");
   }
+
+  initCoreSystem();
 }
 
-// ================= AUTH (SESSION ENGINE ONLY) =================
+// ================= AUTH =================
 function authPage() {
-  const session = typeof getSession === "function" ? getSession() : null;
+
+  const session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
 
   if (!session || session.role !== "super_admin") {
     return false;
   }
 
-  if (typeof getUserById === "function") {
-    currentUser = getUserById(session.userId);
-  } else {
-    currentUser = session;
-  }
+  currentUser =
+    typeof getUserById === "function"
+      ? getUserById(session.userId)
+      : session;
 
   if (!currentUser) return false;
 
   if ((currentUser.status || "active") !== "active") {
+
     if (typeof clearSession === "function") {
       clearSession();
     }
+
     return false;
   }
 
-  const el = document.getElementById("welcome");
-  if (el) {
-    el.innerText =
+  const welcome = document.getElementById("welcome");
+
+  if (welcome) {
+    welcome.innerText =
       "Welcome SUPER ADMIN (" + currentUser.userId + ")";
   }
 
@@ -70,91 +77,142 @@ function authPage() {
 
 // ================= EVENTS =================
 function bindEvents() {
-  document.querySelectorAll(".menu button").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      if (lock) return;
 
-      lock = true;
+  document.querySelectorAll(".menu button")
+    .forEach(btn => {
 
-      document.querySelectorAll(".menu button").forEach(function (b) {
-        b.classList.remove("active");
-      });
+      btn.addEventListener("click", function () {
 
-      btn.classList.add("active");
+        if (clickLock) return;
 
-      try {
+        clickLock = true;
+
+        document.querySelectorAll(".menu button")
+          .forEach(b => b.classList.remove("active"));
+
+        btn.classList.add("active");
+
         const page = btn.dataset.page;
 
-        if (page === "home") loadHome();
-        if (page === "create") loadCreate();
-        if (page === "users") loadUsers();
-        if (page === "system") loadSystem();
-        if (page === "reset") loadResetPanel();
-      } finally {
-        setTimeout(() => {
-          lock = false;
-        }, 250);
-      }
-    });
-  });
+        try {
 
-  const homeBtn = document.querySelector('.menu button[data-page="home"]');
-  if (homeBtn) homeBtn.classList.add("active");
+          if (page === "home") loadHome();
+
+          else if (page === "create") loadCreate();
+
+          else if (page === "users") loadUsers();
+
+          else if (page === "system") loadSystem();
+
+          else if (page === "reset") loadResetPanel();
+
+        } finally {
+
+          setTimeout(() => {
+            clickLock = false;
+          }, 250);
+        }
+      });
+    });
+
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", logout);
+  }
+
+  const homeBtn =
+    document.querySelector('.menu button[data-page="home"]');
+
+  if (homeBtn) {
+    homeBtn.classList.add("active");
+  }
 }
 
 // ================= HOME =================
 function loadHome() {
-  let users = typeof getUsers === "function" ? getUsers() : [];
 
-  let totalUsers = users.filter(u => u.role === "user").length;
-  let admins = users.filter(u => u.role === "admin").length;
-  let sysAdmins = users.filter(u => u.role === "system_admin").length;
+  let users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
+
+  const totalUsers =
+    users.filter(u => u.role === "user").length;
+
+  const admins =
+    users.filter(u => u.role === "admin").length;
+
+  const sysAdmins =
+    users.filter(u => u.role === "system_admin").length;
 
   document.getElementById("mainContent").innerHTML = `
     <h3>📊 Dashboard Overview</h3>
 
-    <div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:15px;">
-      <div style="flex:1; min-width:200px; background:#4CAF50; color:#fff; padding:20px; border-radius:10px;">
+    <div style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;">
+
+      <div style="flex:1;min-width:220px;background:#4CAF50;color:#fff;padding:20px;border-radius:10px;">
         <h4>👤 Users</h4>
         <h2>${totalUsers}</h2>
       </div>
 
-      <div style="flex:1; min-width:200px; background:#2196F3; color:#fff; padding:20px; border-radius:10px;">
+      <div style="flex:1;min-width:220px;background:#2196F3;color:#fff;padding:20px;border-radius:10px;">
         <h4>🛠 Admins</h4>
         <h2>${admins}</h2>
       </div>
 
-      <div style="flex:1; min-width:200px; background:#ff9800; color:#fff; padding:20px; border-radius:10px;">
+      <div style="flex:1;min-width:220px;background:#ff9800;color:#fff;padding:20px;border-radius:10px;">
         <h4>👑 System Admins</h4>
         <h2>${sysAdmins}</h2>
       </div>
+
     </div>
   `;
 }
 
-// ================= CREATE SYSTEM ADMIN =================
+// ================= CREATE SYS ADMIN =================
 function loadCreate() {
+
   document.getElementById("mainContent").innerHTML = `
     <h3>Create System Admin</h3>
-    <input id="id" placeholder="User ID"><br>
-    <input id="name" placeholder="Name"><br>
-    <input id="pass" type="password" placeholder="Password"><br>
-    <button onclick="createSystemAdmin()">Create</button>
+
+    <input id="id" placeholder="System Admin ID">
+
+    <input id="name" placeholder="Name">
+
+    <input id="pass" type="password" placeholder="Password">
+
+    <button onclick="createSystemAdmin()">
+      Create
+    </button>
   `;
 }
 
 function createSystemAdmin() {
-  let id = document.getElementById("id").value.trim();
-  let name = document.getElementById("name").value.trim();
-  let pass = document.getElementById("pass").value.trim();
+
+  const id =
+    document.getElementById("id").value.trim();
+
+  const name =
+    document.getElementById("name").value.trim();
+
+  const pass =
+    document.getElementById("pass").value.trim();
 
   if (!id || !name || !pass) {
     return alert("Fill all fields");
   }
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  let users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
-  if (users.find(u => u.userId.toLowerCase() === id.toLowerCase())) {
+  if (
+    users.find(
+      u => u.userId.toLowerCase() === id.toLowerCase()
+    )
+  ) {
     return alert("ID already exists");
   }
 
@@ -168,71 +226,132 @@ function createSystemAdmin() {
     createdAt: Date.now()
   });
 
-  if (typeof saveUsers === "function") saveUsers(users);
-
-  if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Created System Admin " + id);
+  if (typeof saveUsers === "function") {
+    saveUsers(users);
   }
 
   alert("System Admin Created");
+
   loadUsers();
 }
 
 // ================= USERS =================
 function loadUsers() {
-  let users = typeof getUsers === "function" ? getUsers() : [];
+
+  let users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
   let html = `
     <h3>All Users</h3>
+
     <table>
-      <tr><th>ID</th><th>Name</th><th>Role</th></tr>
+
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Role</th>
+        <th>Status</th>
+      </tr>
   `;
 
-  users.forEach(function (u) {
+  users.forEach(u => {
+
     html += `
       <tr>
         <td>${u.userId}</td>
         <td>${u.username || ""}</td>
         <td>${u.role || ""}</td>
+        <td>${u.status || "active"}</td>
       </tr>
     `;
   });
 
   html += `</table>`;
+
   document.getElementById("mainContent").innerHTML = html;
 }
 
 // ================= SYSTEM =================
 function loadSystem() {
-  let s = typeof getSystemSettings === "function" ? getSystemSettings() : {};
+
+  let s =
+    typeof getSystemSettings === "function"
+      ? getSystemSettings()
+      : {};
 
   document.getElementById("mainContent").innerHTML = `
-    <h3>System Control</h3>
 
-    Lock Mode: ${s.lockMode ? "ON" : "OFF"}
-    <button onclick="toggleSystem('lockMode')">Toggle</button><br><br>
+    <h3>⚙️ System Control</h3>
 
-    Registration: ${s.registrationOpen ? "ON" : "OFF"}
-    <button onclick="toggleSystem('registrationOpen')">Toggle</button><br><br>
+    <table>
 
-    Admin Access: ${s.adminAccess ? "ON" : "OFF"}
-    <button onclick="toggleSystem('adminAccess')">Toggle</button><br><br>
+      <tr>
+        <th>Control</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
 
-    Withdraw: ${s.withdrawOpen ? "ON" : "OFF"}
-    <button onclick="toggleSystem('withdrawOpen')">Toggle</button>
+      ${systemRow("Registration", "registrationOpen", s.registrationOpen)}
+
+      ${systemRow("Upgrade", "upgradesOpen", s.upgradesOpen)}
+
+      ${systemRow("Repurchase", "repurchaseOpen", s.repurchaseOpen)}
+
+      ${systemRow("Withdraw", "withdrawOpen", s.withdrawOpen)}
+
+      ${systemRow("Admin Access", "adminAccess", s.adminAccess)}
+
+      ${systemRow("Lock Mode", "lockMode", s.lockMode)}
+
+      ${systemRow("PIN Creation", "pinCreateOpen", s.pinCreateOpen)}
+
+      ${systemRow("Payout", "payoutOpen", s.payoutOpen)}
+
+      ${systemRow("Income Calculation", "incomeOpen", s.incomeOpen)}
+
+      ${systemRow("Auto Run", "autoRun", s.autoRun)}
+
+      ${systemRow("Manual Run", "manualRun", s.manualRun)}
+
+    </table>
+  `;
+}
+
+function systemRow(label, key, value) {
+
+  return `
+    <tr>
+      <td>${label}</td>
+
+      <td>
+        ${value ? "🟢 ON" : "🔴 OFF"}
+      </td>
+
+      <td>
+        <button
+          class="${value ? "offBtn" : "onBtn"}"
+          onclick="toggleSystem('${key}')"
+        >
+          ${value ? "OFF" : "ON"}
+        </button>
+      </td>
+    </tr>
   `;
 }
 
 function toggleSystem(key) {
-  let s = typeof getSystemSettings === "function" ? getSystemSettings() : {};
+
+  let s =
+    typeof getSystemSettings === "function"
+      ? getSystemSettings()
+      : {};
+
   s[key] = !s[key];
 
   if (typeof saveSystemSettings === "function") {
     saveSystemSettings(s);
-  }
-
-  if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Toggle " + key);
   }
 
   loadSystem();
@@ -240,35 +359,67 @@ function toggleSystem(key) {
 
 // ================= RESET =================
 function loadResetPanel() {
+
   document.getElementById("mainContent").innerHTML = `
     <h3>⚠️ System Reset</h3>
-    <button onclick="resetUsers()">Delete Users</button><br><br>
-    <button onclick="resetUserData()">Reset Data</button>
+
+    <button onclick="resetUsers()">
+      Delete Users
+    </button>
+
+    <br><br>
+
+    <button onclick="resetUserData()">
+      Reset User Data
+    </button>
+
+    <br><br>
+
+    <button onclick="restartSystem()">
+      Restart System
+    </button>
   `;
 }
 
 function resetUsers() {
+
   if (!confirm("Delete users?")) return;
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  let users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
   users = users.filter(u =>
-    ["BWG000000", "SUPERADMIN", "SYSTEM"].includes(u.userId)
+    [
+      "BWG000000",
+      "SUPERADMIN",
+      "SYSTEM"
+    ].includes(u.userId)
   );
 
-  if (typeof saveUsers === "function") saveUsers(users);
+  if (typeof saveUsers === "function") {
+    saveUsers(users);
+  }
 
   alert("Users cleaned");
+
   loadHome();
 }
 
 function resetUserData() {
+
   if (!confirm("Reset data?")) return;
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  let users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
-  users.forEach(function (u) {
+  users.forEach(u => {
+
     if (u.role === "user") {
+
       u.wallet = {
         balance: 0,
         incomeBalance: 0,
@@ -279,17 +430,29 @@ function resetUserData() {
     }
   });
 
-  if (typeof saveUsers === "function") saveUsers(users);
+  if (typeof saveUsers === "function") {
+    saveUsers(users);
+  }
 
   alert("Data reset");
+
   loadHome();
+}
+
+function restartSystem() {
+
+  alert("System Restarted");
+
+  window.location.reload();
 }
 
 // ================= LOGOUT =================
 function logout() {
+
   if (typeof clearSession === "function") {
     clearSession();
   }
 
-  window.location.href = "super_admin_login.html";
+  window.location.href =
+    "super_admin_login.html";
 }
