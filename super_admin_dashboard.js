@@ -456,3 +456,4 @@ function logout() {
   window.location.href =
     "super_admin_login.html";
 }
+
