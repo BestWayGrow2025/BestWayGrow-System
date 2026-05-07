@@ -1,106 +1,116 @@
 /*
 ========================================
-SESSION MANAGER V2
-STABLE FINAL FIXED
-PRODUCTION SAFE
+SESSION MANAGER V3 (HARDENED)
+STEP 6 SECURITY UPGRADE
 ========================================
 */
 
 const SESSION_KEY = "APP_SESSION";
 
-// ================= STORAGE HELPERS =================
+// ================= CONFIG =================
+const SESSION_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+
+// ================= STORAGE =================
 function clearSession() {
   localStorage.removeItem(SESSION_KEY);
+  sessionStorage.clear();
 }
 
+// ================= SET SESSION =================
 function setSession(user) {
 
-  if (!user || !user.userId) {
+  if (!user || !user.userId || !user.role) {
     return false;
   }
 
-  let sessionData = {
+  const sessionData = {
     userId: user.userId,
-    role: user.role || "user",
-    loginTime: Date.now()
+    role: user.role,
+    loginTime: Date.now(),
+    token: generateSimpleToken(user.userId)
   };
 
-  safeSet(SESSION_KEY, sessionData);
+  localStorage.setItem(
+    SESSION_KEY,
+    JSON.stringify(sessionData)
+  );
 
   return true;
 }
 
+// ================= GET SESSION (HARD VALIDATION) =================
 function getSession() {
 
-  let session =
-    safeGet(SESSION_KEY, null);
+  let raw = localStorage.getItem(SESSION_KEY);
 
-  if (!session || !session.userId) {
-    return null;
-  }
-
-  return session;
-}
-
-// ================= SESSION LOCK =================
-let SESSION_CHECK_LOCK = false;
-
-// ================= CURRENT USER =================
-function getCurrentUser() {
-
-  if (SESSION_CHECK_LOCK) {
-    return null;
-  }
-
-  SESSION_CHECK_LOCK = true;
+  if (!raw) return null;
 
   try {
 
-    let session = getSession();
+    let session = JSON.parse(raw);
 
-    if (!session) {
+    if (!session.userId || !session.role) {
+      clearSession();
       return null;
     }
 
-    if (typeof getUserById !== "function") {
+    // EXPIRY CHECK
+    if (
+      Date.now() - session.loginTime > SESSION_EXPIRY
+    ) {
+      clearSession();
       return null;
     }
 
-    return getUserById(session.userId);
+    // TOKEN CHECK (basic tamper protection)
+    if (
+      session.token !== generateSimpleToken(session.userId)
+    ) {
+      clearSession();
+      return null;
+    }
+
+    return session;
 
   } catch (e) {
 
-    console.error(
-      "getCurrentUser error:",
-      e.message
-    );
+    console.error("Session parse error:", e);
+
+    clearSession();
 
     return null;
-
-  } finally {
-
-    SESSION_CHECK_LOCK = false;
   }
 }
 
-// ================= PAGE PROTECTION =================
+// ================= USER =================
+function getCurrentUser() {
+
+  let session = getSession();
+
+  if (!session) return null;
+
+  if (typeof getUserById !== "function") {
+    return null;
+  }
+
+  let user = getUserById(session.userId);
+
+  if (!user || user.role !== session.role) {
+    clearSession();
+    return null;
+  }
+
+  return user;
+}
+
+// ================= PROTECTION =================
 function protectUserPage() {
 
   let user = getCurrentUser();
 
   if (!user) {
 
-    let currentPage =
-      (window.location.pathname || "")
-      .toLowerCase();
-
-    if (
-      !currentPage.includes("user_login.html")
-    ) {
-
-      window.location.href =
-        "user_login.html";
-    }
+    window.location.replace("user_login.html");
 
     return null;
   }
@@ -113,15 +123,13 @@ function logoutSession() {
 
   clearSession();
 
-  let currentPage =
-    (window.location.pathname || "")
-    .toLowerCase();
+  window.location.replace("user_login.html");
+}
 
-  if (
-    !currentPage.includes("user_login.html")
-  ) {
+// ================= SIMPLE TOKEN =================
+function generateSimpleToken(userId) {
 
-    window.location.href =
-      "user_login.html";
-  }
+  return btoa(
+    userId + "_SECURE_" + navigator.userAgent.length
+  );
 }
