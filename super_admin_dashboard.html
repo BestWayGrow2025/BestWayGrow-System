@@ -30,22 +30,20 @@
 
     .menu {
       display: flex;
-      flex-wrap: wrap;
       gap: 10px;
       background: #fff;
       padding: 10px;
       justify-content: center;
+      flex-wrap: wrap;
     }
 
     .menu button {
-      margin: 5px;
       padding: 10px 15px;
       border: none;
       border-radius: 20px;
       background: #ff944d;
       color: #fff;
       cursor: pointer;
-      white-space: nowrap;
     }
 
     .menu button.active {
@@ -62,34 +60,6 @@
       border-radius: 10px;
       max-width: 1100px;
       margin: auto;
-    }
-
-    input, select {
-      padding: 10px;
-      margin: 5px;
-      width: 90%;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-
-    .onBtn {
-      background: green;
-      color: #fff;
-    }
-
-    .offBtn {
-      background: red;
-      color: #fff;
     }
   </style>
 </head>
@@ -114,16 +84,24 @@
   <div id="mainContent" class="card"></div>
 </div>
 
+<!-- ================= CORE ================= -->
 <script src="core_system.js"></script>
-<script src="activity_log.js"></script>
 <script src="session_manager.js"></script>
 
+<!-- ================= SECURITY GATE ================= -->
+<script src="route_guard.js"></script>
+<script>
+  requireAuth(["super_admin"]);
+</script>
+
+<!-- ================= SYSTEM ================= -->
+<script src="activity_log.js"></script>
 <script src="pin_product_master.js"></script>
 <script src="pin_master_system.js"></script>
 <script src="pin_request_system.js"></script>
 
+<!-- ================= LOGIC ================= -->
 <script src="super_admin_dashboard.js"></script>
 
 </body>
 </html>
-
