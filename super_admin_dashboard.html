@@ -5,7 +5,11 @@
   <link rel="icon" href="data:,">
 
   <style>
-    body { font-family: 'Segoe UI'; margin: 0; background: #eef2f7; }
+    body {
+      font-family: 'Segoe UI';
+      margin: 0;
+      background: #eef2f7;
+    }
 
     header {
       background: #ff6600;
@@ -56,11 +60,11 @@
       background: #fff;
       padding: 20px;
       border-radius: 10px;
-      max-width: 1000px;
+      max-width: 1100px;
       margin: auto;
     }
 
-    input {
+    input, select {
       padding: 10px;
       margin: 5px;
       width: 90%;
@@ -75,23 +79,35 @@
     th, td {
       border: 1px solid #ddd;
       padding: 8px;
+      text-align: center;
+    }
+
+    .onBtn {
+      background: green;
+      color: #fff;
+    }
+
+    .offBtn {
+      background: red;
+      color: #fff;
     }
   </style>
 </head>
+
 <body>
 
 <header>
   <h2>👑 SUPER ADMIN MASTER CONTROL</h2>
   <p id="welcome"></p>
-  <button onclick="safeClick(null, logout)">Logout</button>
+  <button id="logoutBtn">Logout</button>
 </header>
 
 <div class="menu">
-  <button onclick="safeClick(this, loadHome)">Home</button>
-  <button onclick="safeClick(this, loadCreate)">Create Sys Admin</button>
-  <button onclick="safeClick(this, loadUsers)">Users</button>
-  <button onclick="safeClick(this, loadSystem)">System</button>
-  <button onclick="safeClick(this, loadResetPanel)">Reset</button>
+  <button data-page="home">Home</button>
+  <button data-page="create">Create Sys Admin</button>
+  <button data-page="users">Users</button>
+  <button data-page="system">System</button>
+  <button data-page="reset">Reset</button>
 </div>
 
 <div class="container">
