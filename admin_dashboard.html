@@ -1,3 +1,9 @@
+/*
+========================================
+ADMIN DASHBOARD (CLEAN FIXED VERSION)
+========================================
+*/
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,12 +16,14 @@
       margin:0;
       background:linear-gradient(135deg,#eef2f7,#e6ecf5);
     }
+
     header{
       background:linear-gradient(135deg,#000,#434343);
       color:#fff;
       padding:18px;
       text-align:center;
     }
+
     header button{
       margin-top:10px;
       padding:6px 12px;
@@ -25,6 +33,7 @@
       color:#fff;
       cursor:pointer;
     }
+
     .menu{
       display:flex;
       overflow-x:auto;
@@ -32,6 +41,7 @@
       padding:10px;
       box-shadow:0 2px 8px rgba(0,0,0,0.08);
     }
+
     .menu button{
       margin:5px;
       padding:10px 14px;
@@ -42,12 +52,15 @@
       cursor:pointer;
       white-space:nowrap;
     }
+
     .menu button.active{
       background:linear-gradient(135deg,#003f88,#0059b3);
     }
+
     .container{
       padding:20px;
     }
+
     .card{
       background:#fff;
       padding:20px;
@@ -56,12 +69,14 @@
       margin:auto;
       box-shadow:0 3px 12px rgba(0,0,0,0.08);
     }
+
     .grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
       gap:15px;
       margin-top:15px;
     }
+
     .miniCard{
       background:#f8fafc;
       border:1px solid #e5e7eb;
@@ -69,31 +84,37 @@
       padding:15px;
       text-align:center;
     }
+
     .miniCard h4{
       margin:0 0 8px;
       font-size:14px;
       color:#555;
     }
+
     .miniCard p{
       margin:0;
       font-size:18px;
       font-weight:bold;
       color:#111;
     }
+
     table{
       width:100%;
       border-collapse:collapse;
       margin-top:10px;
       font-size:13px;
     }
+
     th,td{
       border:1px solid #eee;
       padding:10px;
       text-align:center;
     }
+
     th{
       background:#f1f4f8;
     }
+
     .on{
       background:#28a745;
       color:#fff;
@@ -101,8 +122,8 @@
       padding:8px 12px;
       border-radius:6px;
       cursor:pointer;
-      margin-right:5px;
     }
+
     .off{
       background:#dc3545;
       color:#fff;
@@ -111,12 +132,14 @@
       border-radius:6px;
       cursor:pointer;
     }
+
     .warn{
       color:#dc3545;
       font-weight:bold;
     }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -138,14 +161,17 @@
   <div id="mainContent" class="card">Loading...</div>
 </div>
 
+<!-- CORE SYSTEM -->
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
 
+<!-- ROUTE GUARD -->
 <script src="route_guard.js"></script>
 <script>
   requireAuth(["admin", "system_admin", "super_admin"]);
 </script>
 
+<!-- MODULES -->
 <script src="activity_log.js"></script>
 <script src="wallet_system.js"></script>
 <script src="registration_queue.js"></script>
@@ -161,57 +187,6 @@
 <script src="pin_master_system.js"></script>
 <script src="pin_request_system.js"></script>
 
-<script src="admin_dashboard.js"></script>
-
-</body>
-</html>    .off{
-      background:#dc3545;
-      color:#fff;
-      border:none;
-      padding:8px 12px;
-      border-radius:6px;
-      cursor:pointer;
-    }
-    .warn{
-      color:#dc3545;
-      font-weight:bold;
-    }
-  </style>
-</head>
-<body>
-
-<header>
-  <h2>👨‍💼 ADMIN DASHBOARD</h2>
-  <p id="welcome"></p>
-  <button onclick="logout()">Logout</button>
-</header>
-
-<div class="menu">
-  <button onclick="safeClick(this, loadHome)">Home</button>
-  <button onclick="safeClick(this, loadUsers)">Users</button>
-  <button onclick="safeClick(this, loadPinsUI)">PIN</button>
-  <button onclick="safeClick(this, loadWallet)">Wallet</button>
-  <button onclick="safeClick(this, loadIncome)">Income</button>
-  <button onclick="safeClick(this, loadSystem)">System</button>
-</div>
-
-<div class="container">
-  <div id="mainContent" class="card">Loading...</div>
-</div>
-
-<script src="core_system.js"></script>
-<script src="session_manager.js"></script>
-<script src="activity_log.js"></script>
-<script src="wallet_system.js"></script>
-<script src="registration_queue.js"></script>
-<script src="system_config.js"></script>
-<script src="trigger_system.js"></script>
-<script src="hold_income_system.js"></script>
-<script src="income_control_system.js"></script>
-<script src="income_log_system.js"></script>
-<script src="income_engine.js"></script>
-<script src="pin_master_system.js"></script>
-<script src="pin_request_system.js"></script>
 <script src="admin_dashboard.js"></script>
 
 </body>
