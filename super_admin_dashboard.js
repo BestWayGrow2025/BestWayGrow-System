@@ -6,6 +6,8 @@ ONE AUTH ENGINE ONLY
 ========================================
 */
 
+"use strict";
+
 let currentUser = null;
 let clickLock = false;
 let menuBound = false;
@@ -22,7 +24,11 @@ let menuBound = false;
   window.__SUPER_ADMIN_RUNNING__ = true;
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootSuperAdmin, { once: true });
+    document.addEventListener(
+      "DOMContentLoaded",
+      bootSuperAdmin,
+      { once: true }
+    );
   } else {
     bootSuperAdmin();
   }
@@ -32,24 +38,35 @@ let menuBound = false;
 // ================= BOOT =================
 function bootSuperAdmin() {
 
-  initPage();
+  try {
 
-  if (!authPage()) {
-    window.location.href = "super_admin_login.html";
-    return;
+    initPage();
+
+    if (!authPage()) {
+      window.location.href = "super_admin_login.html";
+      return;
+    }
+
+    bindEvents();
+
+    loadHome();
+
+  } catch (err) {
+
+    console.error("BOOT ERROR:", err);
+
+    document.getElementById("mainContent").innerHTML = `
+      <h3>Dashboard Error</h3>
+      <p>${err.message}</p>
+    `;
   }
-
-  bindEvents();
-
-  loadHome();
 }
 
 // ================= INIT =================
 function initPage() {
 
   if (typeof initCoreSystem !== "function") {
-    alert("core_system.js missing");
-    throw new Error("STOP");
+    throw new Error("core_system.js missing");
   }
 
   // prevent repeated core init
@@ -132,24 +149,27 @@ function bindEvents() {
 
         const page = btn.dataset.page;
 
-        if (page === "home") {
-          loadHome();
-        }
+        switch (page) {
 
-        else if (page === "create") {
-          loadCreate();
-        }
+          case "home":
+            loadHome();
+            break;
 
-        else if (page === "users") {
-          loadUsers();
-        }
+          case "create":
+            loadCreate();
+            break;
 
-        else if (page === "system") {
-          loadSystem();
-        }
+          case "users":
+            loadUsers();
+            break;
 
-        else if (page === "reset") {
-          loadResetPanel();
+          case "system":
+            loadSystem();
+            break;
+
+          case "reset":
+            loadResetPanel();
+            break;
         }
       });
 
@@ -390,6 +410,10 @@ function bindSystemButtons() {
 
   document.querySelectorAll("[data-key]")
     .forEach(btn => {
+
+      if (btn.dataset.bound) return;
+
+      btn.dataset.bound = "true";
 
       btn.addEventListener("click", function () {
 
