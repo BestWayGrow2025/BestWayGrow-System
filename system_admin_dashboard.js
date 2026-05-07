@@ -37,28 +37,21 @@ function initPage() {
   }
 }
 
-// ================= AUTH (STRICT SESSION ENGINE) =================
+// ================= AUTH =================
 function authPage() {
-  const session =
-    typeof getSession === "function"
-      ? getSession()
-      : null;
+  const session = typeof getSession === "function" ? getSession() : null;
 
   if (!session || session.role !== "system_admin") {
     return false;
   }
 
-  currentUser =
-    typeof getUserById === "function"
-      ? getUserById(session.userId)
-      : session;
+  currentUser = typeof getUserById === "function"
+    ? getUserById(session.userId)
+    : session;
 
   if (!currentUser) return false;
 
-  const status =
-    currentUser.status ||
-    currentUser.accountStatus ||
-    "active";
+  const status = currentUser.status || currentUser.accountStatus || "active";
 
   if (status !== "active") {
     if (typeof clearSession === "function") clearSession();
@@ -100,10 +93,9 @@ function bindEvents() {
         if (page === "home") loadHome();
         if (page === "users") loadUsers();
         if (page === "create") loadCreateAdmin();
-        if (page === "pins") loadPins(); // UI only
+        if (page === "pins") loadPins();
         if (page === "settings") loadSettings();
       } catch (err) {
-        console.error("Dashboard error:", err);
         document.getElementById("mainContent").innerHTML =
           `<p style="color:red;">Failed to load section</p>`;
       }
@@ -113,27 +105,6 @@ function bindEvents() {
       }, 250);
     });
   });
-
-  const homeBtn = document.querySelector('.menu button[data-page="home"]');
-  if (homeBtn) homeBtn.classList.add("active");
-}
-
-// ================= PROTECTION =================
-function isProtectedTarget(user) {
-  if (!user) return true;
-  if (user.userId === currentUser.userId) return true;
-
-  if (user.role === "super_admin") return true;
-  if (user.role === "system_admin") return true;
-
-  return ["SUPERADMIN", "SYSTEM", "BWG000000", "BWG000001"].includes(user.userId);
-}
-
-// ================= SAFE SAVE =================
-function safeSaveUsers(users) {
-  if (typeof saveUsers !== "function") return false;
-  saveUsers(users);
-  return true;
 }
 
 // ================= HOME =================
@@ -152,25 +123,22 @@ function loadHome() {
     u.tree === "field"
   );
 
-  const main = document.getElementById("mainContent");
-  if (!main) return;
-
-  main.innerHTML = `
+  document.getElementById("mainContent").innerHTML = `
     <div class="card">
       <h3>Dashboard Overview</h3>
 
-      <div style="display:flex; flex-wrap:wrap; gap:15px;">
-        <div style="flex:1; min-width:250px; background:#4CAF50; color:#fff; padding:20px; border-radius:10px;">
-          <h4>🏢 Office Tree</h4>
-          <p>Total Office Users: ${officeUsers.length}</p>
-          <p>Total Office Admins: ${officeAdmins.length}</p>
+      <div style="display:flex; gap:15px;">
+        <div>
+          <h4>Office</h4>
+          <p>Users: ${officeUsers.length}</p>
+          <p>Admins: ${officeAdmins.length}</p>
         </div>
 
-        <div style="flex:1; min-width:250px; background:#2196F3; color:#fff; padding:20px; border-radius:10px;">
-          <h4>🌐 User Tree</h4>
-          <p>Total Field Users: ${fieldUsers.length}</p>
-          <p>Total Field Admins: ${fieldAdmins.length}</p>
-          <p>Root Admin (Field): ${rootAdmin.length}</p>
+        <div>
+          <h4>Field</h4>
+          <p>Users: ${fieldUsers.length}</p>
+          <p>Admins: ${fieldAdmins.length}</p>
+          <p>Root Admin: ${rootAdmin.length}</p>
         </div>
       </div>
     </div>
@@ -179,35 +147,16 @@ function loadHome() {
 
 // ================= USERS =================
 function loadUsers() {
-  const users =
-    typeof getUsers === "function"
-      ? getUsers().filter(u => !u.hiddenAccount)
-      : [];
+  const users = typeof getUsers === "function"
+    ? getUsers().filter(u => !u.hiddenAccount)
+    : [];
 
-  let html = `
-    <div class="card">
-      <h3>All Users</h3>
-      <table>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Role</th>
-          <th>Admin Type</th>
-          <th>Tree</th>
-          <th>Status</th>
-          <th>Access</th>
-          <th>Action</th>
-        </tr>
-  `;
+  let html = `<div class="card"><h3>All Users</h3><table>
+  <tr>
+    <th>ID</th><th>Name</th><th>Role</th><th>Type</th><th>Tree</th><th>Status</th><th>Action</th>
+  </tr>`;
 
   users.forEach(u => {
-    const blocked = isProtectedTarget(u);
-
-    let accessLabel = "-";
-    if (u.role === "admin" && u.adminType === "root_admin") accessLabel = "Root";
-    if (u.role === "admin" && u.adminType === "admin_a") accessLabel = "Full";
-    if (u.role === "admin" && u.adminType === "admin_b") accessLabel = "Department";
-
     html += `
       <tr>
         <td>${u.userId || "-"}</td>
@@ -216,12 +165,7 @@ function loadUsers() {
         <td>${u.adminType || "-"}</td>
         <td>${u.tree || "-"}</td>
         <td>${u.status || "active"}</td>
-        <td>${accessLabel}</td>
-        <td>
-          ${blocked
-            ? `<small>Protected</small>`
-            : `<button onclick="toggleUserStatus('${u.userId}')">Toggle</button>`}
-        </td>
+        <td>Protected</td>
       </tr>
     `;
   });
@@ -230,43 +174,8 @@ function loadUsers() {
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= TOGGLE =================
-function toggleUserStatus(userId) {
-  if (clickLock) return;
-  clickLock = true;
-
-  try {
-    const users = typeof getUsers === "function" ? getUsers() : [];
-    const user = users.find(u => u.userId === userId);
-
-    if (!user || isProtectedTarget(user)) {
-      alert("Protected account");
-      return;
-    }
-
-    user.status = user.status === "inactive" ? "active" : "inactive";
-
-    if (!safeSaveUsers(users)) {
-      alert("Save failed");
-      return;
-    }
-
-    if (typeof logActivity === "function") {
-      logActivity(currentUser.userId, "SYSTEM_ADMIN", "Toggled user " + user.userId);
-    }
-
-    loadUsers();
-  } finally {
-    setTimeout(() => {
-      clickLock = false;
-    }, 250);
-  }
-}
-
 // ================= LOGOUT =================
 function logout() {
-  if (typeof clearSession === "function") {
-    clearSession();
-  }
+  if (typeof clearSession === "function") clearSession();
   window.location.href = "system_admin_login.html";
 }
