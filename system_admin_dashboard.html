@@ -65,18 +65,6 @@
       padding: 10px;
       text-align: center;
     }
-
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-    }
-
-    input, select {
-      padding: 10px;
-      width: 250px;
-      margin-bottom: 10px;
-    }
   </style>
 </head>
 
@@ -98,25 +86,21 @@
 
 <div id="mainContent"></div>
 
-<!-- ================= CORE SYSTEM ================= -->
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
 
-<!-- ================= SECURITY GATE (IMPORTANT) ================= -->
+<!-- SECURITY GATE -->
 <script src="route_guard.js"></script>
 <script>
   requireAuth(["system_admin", "super_admin"]);
 </script>
 
-<!-- ================= SYSTEM MODULES ================= -->
 <script src="activity_log.js"></script>
 <script src="pin_product_master.js"></script>
 <script src="pin_master_system.js"></script>
 <script src="pin_request_system.js"></script>
 
-<!-- ================= DASHBOARD LOGIC ================= -->
 <script src="system_admin_dashboard.js"></script>
 
 </body>
 </html>
-
