@@ -10,9 +10,13 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
+  setTimeout(() => {
+    if (typeof initCoreSystem === "function") {
+      initCoreSystem();
+    } else {
+      console.error("Core system not loaded");
+    }
+  }, 0);
 }
 
 function authPage() {
