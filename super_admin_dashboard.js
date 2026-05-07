@@ -15,6 +15,10 @@ document.addEventListener("DOMContentLoaded", bootSuperAdmin);
 // ================= BOOT =================
 function bootSuperAdmin() {
 
+  // prevent double boot
+  if (window.__superAdminBooted) return;
+  window.__superAdminBooted = true;
+
   initPage();
 
   if (!authPage()) {
@@ -343,6 +347,15 @@ function systemRow(label, key, value) {
 
 function toggleSystem(key) {
 
+  // prevent rapid multi-click
+  if (clickLock) return;
+
+  clickLock = true;
+
+  setTimeout(() => {
+    clickLock = false;
+  }, 300);
+
   let s =
     typeof getSystemSettings === "function"
       ? getSystemSettings()
@@ -443,7 +456,8 @@ function restartSystem() {
 
   alert("System Restarted");
 
-  window.location.reload();
+  // NO FULL PAGE RELOAD
+  loadHome();
 }
 
 // ================= LOGOUT =================
@@ -456,4 +470,3 @@ function logout() {
   window.location.href =
     "super_admin_login.html";
 }
-
