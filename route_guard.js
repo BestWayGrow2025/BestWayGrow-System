@@ -5,6 +5,9 @@ FULL ACCESS CONTROL + EXECUTION BLOCK
 ========================================
 */
 
+"use strict";
+
+// ================= ROUTE PROTECTION =================
 function requireAuth(allowedRoles = []) {
 
   try {
@@ -16,12 +19,14 @@ function requireAuth(allowedRoles = []) {
     // GLOBAL FAIL FLAG
     window.__AUTH_FAILED__ = false;
 
+    // ❌ No session
     if (!session || !session.userId) {
       window.__AUTH_FAILED__ = true;
       window.location.replace("user_login.html");
       return false;
     }
 
+    // ❌ Role mismatch
     if (
       allowedRoles.length > 0 &&
       !allowedRoles.includes(session.role)
@@ -29,7 +34,7 @@ function requireAuth(allowedRoles = []) {
       window.__AUTH_FAILED__ = true;
       alert("Access Denied");
 
-      // role-based redirect
+      // Role-based redirect
       if (session.role === "admin") {
         window.location.replace("admin_login.html");
       } else if (session.role === "system_admin") {
@@ -43,8 +48,11 @@ function requireAuth(allowedRoles = []) {
       return false;
     }
 
-    // EXTRA SECURITY: session integrity check
-    if (typeof session.status !== "undefined" && session.status !== "active") {
+    // ❌ Account status check
+    if (
+      typeof session.status !== "undefined" &&
+      session.status !== "active"
+    ) {
       window.__AUTH_FAILED__ = true;
       window.location.replace("user_login.html");
       return false;
@@ -64,12 +72,7 @@ function requireAuth(allowedRoles = []) {
   }
 }
 
-/*
-========================================
-GLOBAL EXECUTION BLOCK HELPER
-(Add in dashboard JS files)
-========================================
-*/
+// ================= GLOBAL EXECUTION BLOCK =================
 function isAuthBlocked() {
   return window.__AUTH_FAILED__ === true;
 }
