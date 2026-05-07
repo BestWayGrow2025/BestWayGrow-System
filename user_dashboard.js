@@ -1,12 +1,13 @@
 /*
 ========================================
-USER DASHBOARD FINAL V8.2 (FLOW CONNECTED)
+USER DASHBOARD FINAL V8.2 (FLOW CONNECTED + FIXED)
 ========================================
 ✔ Tree correct
-✔ Wallet correct
+✔ Wallet safe mapping FIXED
 ✔ Session safe
-✔ PIN FLOW CONNECTED (CRITICAL FIX)
-✔ Uses executePinFlow
+✔ PIN FLOW CONNECTED
+✔ Route guard compatible
+✔ Logout fixed
 ✔ No duplicate logic
 ========================================
 */
@@ -74,8 +75,8 @@ function loadHome() {
     </div>
 
     <div class="info-box">
-      <p><b>Wallet:</b> ₹${Number(user.walletBalance || 0)}</p>
-      <p><b>Income:</b> ₹${Number(user.incomeBalance || 0)}</p>
+      <p><b>Wallet:</b> ₹${Number(user.wallet?.balance || 0)}</p>
+      <p><b>Income:</b> ₹${Number(user.wallet?.incomeBalance || 0)}</p>
     </div>
 
     <div class="info-box">
@@ -90,7 +91,7 @@ function loadHome() {
   `;
 }
 
-// ================= PIN SECTION (🔥 REAL FIX) =================
+// ================= PIN SECTION =================
 function loadPinSection() {
   const user = getSafeUser();
   if (!user) return;
@@ -163,13 +164,26 @@ function copyReferralLink() {
     .then(() => alert("Copied"));
 }
 
-// ================= LOGOUT =================
+// ================= LOGOUT FIXED =================
 function logout() {
   if (typeof clearSession === "function") clearSession();
+  window.location.href = "user_login.html";
 }
 
-// ================= INIT =================
+// ================= INIT (PROTECTED) =================
 document.addEventListener("DOMContentLoaded", function () {
+
+  if (typeof requireAuth === "function") {
+    const ok = requireAuth([
+      "user",
+      "admin",
+      "system_admin",
+      "super_admin"
+    ]);
+
+    if (ok === false) return;
+  }
+
   const user = getSafeUser();
   if (!user) return;
 
