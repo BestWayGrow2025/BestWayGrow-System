@@ -248,4 +248,3 @@ function initCoreSystem() {
     window.__CORE_STATE__.initialized = false;
   }
 }
-}
