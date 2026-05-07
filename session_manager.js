@@ -5,6 +5,8 @@ STEP 6 SECURITY UPGRADE
 ========================================
 */
 
+"use strict";
+
 const SESSION_KEY = "APP_SESSION";
 
 // ================= CONFIG =================
@@ -16,12 +18,15 @@ function clearSession() {
   sessionStorage.clear();
 }
 
+// ================= TOKEN =================
+function generateSimpleToken(userId) {
+  return btoa(userId + "_SECURE_" + navigator.userAgent.length);
+}
+
 // ================= SET SESSION =================
 function setSession(user) {
 
-  if (!user || !user.userId || !user.role) {
-    return false;
-  }
+  if (!user || !user.userId || !user.role) return false;
 
   const sessionData = {
     userId: user.userId,
@@ -30,42 +35,33 @@ function setSession(user) {
     token: generateSimpleToken(user.userId)
   };
 
-  localStorage.setItem(
-    SESSION_KEY,
-    JSON.stringify(sessionData)
-  );
-
+  localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
   return true;
 }
 
-// ================= GET SESSION (HARD VALIDATION) =================
+// ================= GET SESSION =================
 function getSession() {
 
-  let raw = localStorage.getItem(SESSION_KEY);
-
+  const raw = localStorage.getItem(SESSION_KEY);
   if (!raw) return null;
 
   try {
 
-    let session = JSON.parse(raw);
+    const session = JSON.parse(raw);
 
     if (!session.userId || !session.role) {
       clearSession();
       return null;
     }
 
-    // EXPIRY CHECK
-    if (
-      Date.now() - session.loginTime > SESSION_EXPIRY
-    ) {
+    // expiry check
+    if (Date.now() - session.loginTime > SESSION_EXPIRY) {
       clearSession();
       return null;
     }
 
-    // TOKEN CHECK (basic tamper protection)
-    if (
-      session.token !== generateSimpleToken(session.userId)
-    ) {
+    // token validation
+    if (session.token !== generateSimpleToken(session.userId)) {
       clearSession();
       return null;
     }
@@ -75,25 +71,20 @@ function getSession() {
   } catch (e) {
 
     console.error("Session parse error:", e);
-
     clearSession();
-
     return null;
   }
 }
 
-// ================= USER =================
+// ================= CURRENT USER =================
 function getCurrentUser() {
 
-  let session = getSession();
-
+  const session = getSession();
   if (!session) return null;
 
-  if (typeof getUserById !== "function") {
-    return null;
-  }
+  if (typeof getUserById !== "function") return null;
 
-  let user = getUserById(session.userId);
+  const user = getUserById(session.userId);
 
   if (!user || user.role !== session.role) {
     clearSession();
@@ -103,15 +94,13 @@ function getCurrentUser() {
   return user;
 }
 
-// ================= PROTECTION =================
+// ================= PAGE PROTECTION =================
 function protectUserPage() {
 
-  let user = getCurrentUser();
+  const user = getCurrentUser();
 
   if (!user) {
-
     window.location.replace("user_login.html");
-
     return null;
   }
 
@@ -120,16 +109,6 @@ function protectUserPage() {
 
 // ================= LOGOUT =================
 function logoutSession() {
-
   clearSession();
-
   window.location.replace("user_login.html");
-}
-
-// ================= SIMPLE TOKEN =================
-function generateSimpleToken(userId) {
-
-  return btoa(
-    userId + "_SECURE_" + navigator.userAgent.length
-  );
 }
