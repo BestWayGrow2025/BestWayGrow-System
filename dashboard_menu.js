@@ -1,18 +1,38 @@
+/*
+========================================
+MENU SYSTEM SAFE BIND V1.0
+PROTECTED + STABLE + NON-DESTRUCTIVE
+========================================
+*/
+
 function safePage(name) {
+
   return function () {
+
+    const session = typeof getSession === "function"
+      ? getSession()
+      : null;
+
     const main = document.getElementById("mainContent");
 
-    if (main) {
-      main.innerHTML = `
-        <div class="info-box">
-          <h3>${name}</h3>
-          <p>Module not loaded or under development.</p>
-        </div>
-      `;
+    if (!main) return;
+
+    // ================= SECURITY CHECK =================
+    if (!session || !session.userId) {
+      window.location.href = "user_login.html";
+      return;
     }
+
+    main.innerHTML = `
+      <div class="info-box">
+        <h3>${name}</h3>
+        <p>Module not loaded or under development.</p>
+      </div>
+    `;
   };
 }
 
+// ================= MENU MAP =================
 const MENU_MAP = {
   loadHome: "Home",
   loadPinSection: "Pin Section",
@@ -35,11 +55,11 @@ const MENU_MAP = {
   loadReferralLink: "Referral Link"
 };
 
-// ================= SAFE BIND (NON-DESTRUCTIVE) =================
+// ================= SAFE BIND =================
 function bindMenuSafe() {
+
   Object.keys(MENU_MAP).forEach(fnName => {
 
-    // ONLY assign fallback if truly missing
     if (typeof window[fnName] !== "function") {
       window[fnName] = safePage(MENU_MAP[fnName]);
     }
@@ -47,13 +67,16 @@ function bindMenuSafe() {
   });
 }
 
-// ================= STABILITY HOOK =================
+// ================= INIT CONTROLLER =================
 function initMenuBinding() {
+
   bindMenuSafe();
 
-  // second pass after full system load
-  setTimeout(bindMenuSafe, 500);
+  // safe second pass (avoids duplicate overwrite)
+  requestAnimationFrame(() => {
+    bindMenuSafe();
+  });
 }
 
-// run after DOM ready
+// ================= BOOT =================
 document.addEventListener("DOMContentLoaded", initMenuBinding);
