@@ -125,4 +125,3 @@ function logoutSession() {
       "user_login.html";
   }
 }
-}
