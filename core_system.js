@@ -207,42 +207,6 @@ function getChildren(userId) {
   );
 }
 
-// ================= SESSION → USER BRIDGE =================
-function getCurrentUser() {
-
-  try {
-
-    const session =
-      typeof getSession === "function"
-        ? getSession()
-        : JSON.parse(
-            localStorage.getItem(
-              "session"
-            )
-          );
-
-    if (
-      !session ||
-      !session.userId
-    ) {
-      return null;
-    }
-
-    return getUserById(
-      session.userId
-    );
-
-  } catch (e) {
-
-    console.error(
-      "getCurrentUser error:",
-      e.message
-    );
-
-    return null;
-  }
-}
-
 // ================= CORE INIT =================
 function initCoreSystem() {
 
