@@ -3,12 +3,10 @@
 CORE SYSTEM V9.1 (FINAL STABLE SAFE)
 ========================================
 ✔ Safe storage
-✔ Safe initialization commit
-✔ Version controlled system
-✔ Stable normalization
-✔ Full wallet normalization FIXED
-✔ Consistent seed timestamps FIXED
-✔ No false initialization state
+✔ User normalization
+✔ System seeding
+✔ Wallet protection fix
+✔ Single initialization lock
 ========================================
 */
 
@@ -80,25 +78,6 @@ function saveSystemSettings(settings) {
   return safeSet("systemSettings", settings);
 }
 
-// ================= SYSTEM SAFE CHECK =================
-function isSystemSafe() {
-  const s = getSystemSettings() || {};
-  let session = null;
-
-  try {
-    if (typeof getSession === "function") {
-      session = getSession();
-    }
-  } catch (e) {}
-
-  if (s.lockMode === true && session && session.role !== "super_admin") {
-    alert("System Locked");
-    return false;
-  }
-
-  return true;
-}
-
 // ================= HELPERS =================
 function getUserById(id) {
   if (!id) return null;
@@ -115,7 +94,7 @@ function getChildren(userId) {
   return getUsers().filter(u => u.sponsorId === userId);
 }
 
-// ================= SEED DATA =================
+// ================= SEED SYSTEM =================
 function seedSystemUsers(users) {
 
   let changed = false;
@@ -140,12 +119,10 @@ function seedSystemUsers(users) {
     },
     {
       userId: "BWG000000",
-      username: "User Root Admin",
+      username: "Root Admin",
       password: btoa("123456"),
       role: "admin",
       status: "active",
-      introducerId: "",
-      sponsorId: "",
       createdAt: now
     },
     {
@@ -198,17 +175,11 @@ function initCoreSystem() {
         changed = true;
       }
 
-      if (!u.blockStatus) {
-        u.blockStatus = "unblocked";
-        changed = true;
-      }
-
-      // ================= WALLET SAFE NORMALIZATION =================
       if (!u.wallet) {
         u.wallet = {};
       }
 
-      const defaultWallet = {
+      const defaults = {
         balance: 0,
         incomeBalance: 0,
         holdIncome: 0,
@@ -216,9 +187,9 @@ function initCoreSystem() {
         totalDebit: 0
       };
 
-      Object.keys(defaultWallet).forEach(k => {
-        if (u.wallet[k] === undefined || u.wallet[k] === null) {
-          u.wallet[k] = defaultWallet[k];
+      Object.keys(defaults).forEach(k => {
+        if (u.wallet[k] === undefined) {
+          u.wallet[k] = defaults[k];
           changed = true;
         }
       });
@@ -230,21 +201,18 @@ function initCoreSystem() {
       changed = true;
     }
 
-    // ================= COMMIT =================
+    // ================= SAVE =================
     if (changed) {
-      const ok = saveUsers(users);
-      if (!ok) throw new Error("Failed to save users");
+      saveUsers(users);
     }
 
-    // ================= FINAL INIT COMMIT =================
+    // ================= FINAL LOCK =================
     window.__CORE_STATE__.initialized = true;
 
-    console.log("✅ Core system initialized (V9.1 FINAL STABLE)");
+    console.log("Core System Initialized V9.1");
 
   } catch (e) {
-
-    console.error("❌ initCoreSystem failed:", e.message);
-
+    console.error("Core init failed:", e.message);
     window.__CORE_STATE__.initialized = false;
   }
 }
