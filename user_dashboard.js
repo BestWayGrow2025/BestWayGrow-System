@@ -1,24 +1,24 @@
 /*
 ========================================
-USER DASHBOARD FINAL V8.2 (FLOW CONNECTED + FIXED)
-========================================
-✔ Tree correct
-✔ Wallet safe mapping FIXED
-✔ Session safe
-✔ PIN FLOW CONNECTED
-✔ Route guard compatible
-✔ Logout fixed
-✔ No duplicate logic
+USER DASHBOARD FINAL V8.3 (STABILITY PATCH)
 ========================================
 */
 
-// ================= SAFE USER =================
 function getSafeUser() {
-  const user = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+
+  const user =
+    typeof getCurrentUser === "function"
+      ? getCurrentUser()
+      : null;
+
+  const main = document.getElementById("mainContent");
 
   if (!user) {
-    const main = document.getElementById("mainContent");
-    if (main) main.innerHTML = "<div class='info-box'>Login Required</div>";
+
+    if (main) {
+      main.innerHTML = "<div class='info-box'>Login Required</div>";
+    }
+
     return null;
   }
 
@@ -32,11 +32,13 @@ function getAllUsers() {
 
 // ================= TREE =================
 function countTree(userId, users) {
+
   let user = users.find(u => u.userId === userId);
   if (!user) return { left: 0, right: 0, total: 0 };
 
   function traverse(id) {
     if (!id) return 0;
+
     let node = users.find(u => u.userId === id);
     if (!node) return 0;
 
@@ -51,6 +53,7 @@ function countTree(userId, users) {
 
 // ================= HOME =================
 function loadHome() {
+
   const user = getSafeUser();
   if (!user) return;
 
@@ -93,6 +96,7 @@ function loadHome() {
 
 // ================= PIN SECTION =================
 function loadPinSection() {
+
   const user = getSafeUser();
   if (!user) return;
 
@@ -111,6 +115,7 @@ function loadPinSection() {
 
 // ================= REQUEST PIN =================
 function requestPin() {
+
   const user = getSafeUser();
   if (!user) return;
 
@@ -118,6 +123,7 @@ function requestPin() {
   const paymentId = document.getElementById("pinPaymentId").value;
 
   try {
+
     if (typeof executePinFlow !== "function") {
       throw new Error("Flow engine missing");
     }
@@ -137,12 +143,14 @@ function requestPin() {
 
 // ================= DIRECT TEAM =================
 function loadDirectTeam() {
+
   const user = getSafeUser();
   if (!user) return;
 
   const main = document.getElementById("mainContent");
-  const users = getAllUsers();
+  if (!main) return;
 
+  const users = getAllUsers();
   const list = users.filter(u => u.introducerId === user.userId);
 
   let html = `<h3>Direct Team</h3><table><tr><th>ID</th><th>Name</th></tr>`;
@@ -157,6 +165,7 @@ function loadDirectTeam() {
 
 // ================= COPY =================
 function copyReferralLink() {
+
   const box = document.getElementById("referralLinkBox");
   if (!box) return;
 
@@ -166,20 +175,24 @@ function copyReferralLink() {
 
 // ================= LOGOUT FIXED =================
 function logout() {
-  if (typeof clearSession === "function") clearSession();
-  window.location.href = "user_login.html";
+
+  // FIX: unified session system
+  if (typeof logoutSession === "function") {
+    logoutSession();
+  } else if (typeof destroySession === "function") {
+    destroySession();
+  }
+
+  window.location.replace("user_login.html");
 }
 
-// ================= INIT (PROTECTED) =================
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
 
   if (typeof requireAuth === "function") {
-    const ok = requireAuth([
-      "user",
-      "admin",
-      "system_admin",
-      "super_admin"
-    ]);
+
+    // FIX: tighten role to actual dashboard ownership
+    const ok = requireAuth(["user"]);
 
     if (ok === false) return;
   }
