@@ -1,15 +1,3 @@
-/*
-========================================
-SUPER ADMIN LOGIN v3 (FINAL FIXED)
-========================================
-✔ Multi-user safe login
-✔ Core system compatible
-✔ Clean password decode
-✔ No undefined errors
-✔ Stable session handling
-========================================
-*/
-
 let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -41,9 +29,9 @@ function bindEvents() {
 
 // ================= AUTO REDIRECT =================
 function loadPage() {
-  let active = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
+  let session = typeof getSession === "function" ? getSession() : null;
 
-  if (active && active.userId && active.role === "super_admin") {
+  if (session && session.role === "super_admin") {
     window.location.href = "super_admin_dashboard.html";
   }
 }
@@ -62,15 +50,6 @@ function safeClick(fn) {
   setTimeout(() => {
     lock = false;
   }, 500);
-}
-
-// ================= SESSION CLEAR =================
-function clearSessions() {
-  localStorage.removeItem("loggedInSuperAdmin");
-  localStorage.removeItem("loggedInSystemAdmin");
-  localStorage.removeItem("loggedInAdmin");
-  localStorage.removeItem("loggedInFranchise");
-  localStorage.removeItem("loggedInUser");
 }
 
 // ================= SAFE DECODE =================
@@ -103,7 +82,6 @@ function login() {
 
   let users = getSafeUsers();
 
-  // ✅ FIXED: proper user match
   let user = users.find(u =>
     String(u.userId || "").toUpperCase() === userId.toUpperCase()
   );
@@ -125,12 +103,16 @@ function login() {
     return;
   }
 
-  clearSessions();
+  // ================= UNIFIED SESSION ONLY =================
+  if (typeof setSession !== "function") {
+    alert("Session system missing");
+    return;
+  }
 
-  localStorage.setItem("loggedInSuperAdmin", JSON.stringify({
+  setSession({
     userId: user.userId,
     role: user.role
-  }));
+  });
 
   if (typeof logActivity === "function") {
     logActivity(user.userId, "super_admin", "Login", "ADMIN");
