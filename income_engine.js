@@ -1,3 +1,21 @@
+/*
+========================================
+INCOME ENGINE V9.0 (FINAL HARDENED)
+========================================
+✔ Recursive loop protection
+✔ Transaction idempotency
+✔ Execution lock safety
+✔ Immutable income execution
+✔ Safe rollback handling
+✔ Duplicate payout prevention
+✔ Sponsor cycle protection
+✔ Hold income isolation
+✔ Safe CTOR distribution
+✔ Verified income execution
+✔ Production LOCKED
+========================================
+*/
+
 "use strict";
 
 const INCOME_CONFIG = {
@@ -10,17 +28,27 @@ const INCOME_CONFIG = {
 const INCOME_EXEC_LOCK = {};
 const INCOME_EXEC_TTL = 10000;
 
-// ================= GLOBAL TRANSACTION TRACK =================
 const INCOME_TX_KEY = "INCOME_TX_LOG";
 
-// ================= SAFE TX STORE =================
+// ===================================
+// SAFE TX STORAGE
+// ===================================
 function getTxLog() {
 
   try {
 
-    return JSON.parse(
-      localStorage.getItem(INCOME_TX_KEY)
-    ) || {};
+    const raw = localStorage.getItem(INCOME_TX_KEY);
+
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw);
+
+    return (
+      parsed &&
+      typeof parsed === "object"
+    ) ? parsed : {};
 
   } catch {
 
@@ -30,13 +58,35 @@ function getTxLog() {
 
 function saveTxLog(log) {
 
-  localStorage.setItem(
-    INCOME_TX_KEY,
-    JSON.stringify(log)
-  );
+  try {
+
+    return localStorage.setItem(
+      INCOME_TX_KEY,
+      JSON.stringify(
+        log && typeof log === "object"
+          ? log
+          : {}
+      )
+    );
+
+  } catch (e) {
+
+    if (typeof logCritical === "function") {
+
+      logCritical(
+        "TX_LOG_SAVE_FAILED: " + e.message
+      );
+    }
+
+    return false;
+  }
 }
 
 function isTxUsed(txId) {
+
+  if (!txId) {
+    return false;
+  }
 
   const log = getTxLog();
 
@@ -45,19 +95,23 @@ function isTxUsed(txId) {
 
 function markTxUsed(txId) {
 
-  if (!txId) return false;
+  if (!txId) {
+    return false;
+  }
 
   const log = getTxLog();
 
-  // cleanup old entries (24h)
   const now = Date.now();
 
   Object.keys(log).forEach(key => {
 
-    if (now - log[key] > 86400000) {
+    if (
+      now - Number(log[key] || 0)
+      > 86400000
+    ) {
+
       delete log[key];
     }
-
   });
 
   log[txId] = now;
@@ -67,21 +121,37 @@ function markTxUsed(txId) {
   return true;
 }
 
-// ================= CALC =================
+// ===================================
+// CALC
+// ===================================
 function calc(bv, percent) {
 
   let result =
     (Number(bv) * Number(percent)) / 100;
 
-  return parseFloat(result.toFixed(2));
+  if (
+    isNaN(result) ||
+    result <= 0
+  ) {
+
+    return 0;
+  }
+
+  return parseFloat(
+    result.toFixed(2)
+  );
 }
 
-// ================= EXEC LOCK =================
+// ===================================
+// EXEC LOCK
+// ===================================
 function isIncomeLocked(key) {
 
   let t = INCOME_EXEC_LOCK[key];
 
-  if (!t) return false;
+  if (!t) {
+    return false;
+  }
 
   if (
     Date.now() - t >
@@ -98,39 +168,71 @@ function isIncomeLocked(key) {
 
 function setIncomeLock(key, val) {
 
+  if (!key) {
+    return false;
+  }
+
   if (val) {
-    INCOME_EXEC_LOCK[key] = Date.now();
+
+    INCOME_EXEC_LOCK[key] =
+      Date.now();
+
   } else {
+
     delete INCOME_EXEC_LOCK[key];
   }
+
+  return true;
 }
 
-// ================= VALIDATION =================
+// ===================================
+// SYSTEM VALIDATION
+// ===================================
 function canRunIncome(type) {
 
   try {
 
-    let s = getSystemSettings();
+    if (
+      typeof isSystemSafe ===
+      "function"
+    ) {
 
-    if (!s || typeof s !== "object") {
+      if (!isSystemSafe()) {
+        return false;
+      }
+    }
+
+    let settings =
+      getSystemSettings();
+
+    if (
+      !settings ||
+      typeof settings !== "object"
+    ) {
+
       return false;
     }
 
-    if (s.lockMode === true) {
+    if (
+      settings.lockMode === true
+    ) {
+
       return false;
     }
 
     if (
       type === "upgrade" &&
-      s.upgradesOpen === false
+      settings.upgradesOpen === false
     ) {
+
       return false;
     }
 
     if (
       type === "repurchase" &&
-      s.repurchaseOpen === false
+      settings.repurchaseOpen === false
     ) {
+
       return false;
     }
 
@@ -139,7 +241,10 @@ function canRunIncome(type) {
       "function"
     ) {
 
-      if (!isIncomeAllowed(type)) {
+      if (
+        !isIncomeAllowed(type)
+      ) {
+
         return false;
       }
     }
@@ -152,17 +257,52 @@ function canRunIncome(type) {
   }
 }
 
-// ================= SAFE INCOME =================
-function safeIncome(data) {
+// ===================================
+// USER HELPERS
+// ===================================
+function getUser(userId) {
+
+  return (
+    typeof getUserById ===
+    "function"
+  )
+    ? getUserById(userId)
+    : null;
+}
+
+function getIntroducer(user) {
+
+  if (
+    !user ||
+    !user.introducerId
+  ) {
+
+    return null;
+  }
+
+  return getUser(
+    user.introducerId
+  );
+}
+
+// ===================================
+// SAFE INCOME
+// ===================================
+function safeIncome(data = {}) {
 
   try {
 
-    if (!data || !data.userId) {
+    if (
+      !data ||
+      !data.userId
+    ) {
+
       return false;
     }
 
-    const amount =
-      Number(data.amount);
+    const amount = Number(
+      data.amount
+    );
 
     if (
       isNaN(amount) ||
@@ -180,11 +320,28 @@ function safeIncome(data) {
       return false;
     }
 
-    const success = creditWallet(
-      data.userId,
-      amount,
-      `${String(data.type || "income").toUpperCase()} - ${data.note || ""}`
-    );
+    const ref =
+      data.ref ||
+      (
+        "INC_" +
+        Date.now() + "_" +
+        Math.random()
+          .toString(36)
+          .slice(2, 8)
+      );
+
+    const success =
+      creditWallet(
+        data.userId,
+        amount,
+        `${String(
+          data.type || "income"
+        ).toUpperCase()} - ${
+          data.note || ""
+        }`,
+        ref,
+        true
+      );
 
     if (!success) {
       return false;
@@ -195,15 +352,24 @@ function safeIncome(data) {
       "function"
     ) {
 
-      let logged = addIncomeLog({
-        userId: data.userId,
-        type: data.type,
-        amount,
-        sourceUser:
-          data.sourceUser || "-",
-        note:
-          data.note || ""
-      });
+      const logged =
+        addIncomeLog({
+          userId:
+            data.userId,
+
+          type:
+            data.type,
+
+          amount,
+
+          sourceUser:
+            data.sourceUser || "-",
+
+          note:
+            data.note || "",
+
+          ref
+        });
 
       if (!logged) {
 
@@ -216,21 +382,21 @@ function safeIncome(data) {
             debitWallet(
               data.userId,
               amount,
-              "Income rollback"
+              "INCOME_ROLLBACK",
+              "ROLLBACK_" + ref,
+              true
             );
 
-          if (!rollbackOk) {
+          if (
+            !rollbackOk &&
+            typeof logCritical ===
+            "function"
+          ) {
 
-            if (
-              typeof logCritical ===
-              "function"
-            ) {
-
-              logCritical(
-                "ROLLBACK FAILED: " +
-                data.userId
-              );
-            }
+            logCritical(
+              "ROLLBACK_FAILED: " +
+              data.userId
+            );
           }
         }
 
@@ -257,34 +423,14 @@ function safeIncome(data) {
   }
 }
 
-// ================= HELPERS =================
-function getUser(userId) {
-
-  return typeof getUserById ===
-    "function"
-    ? getUserById(userId)
-    : null;
-}
-
-function getIntroducer(user) {
-
-  if (
-    !user ||
-    !user.introducerId
-  ) {
-
-    return null;
-  }
-
-  return getUser(
-    user.introducerId
-  );
-}
-
-// ================= CTOR =================
+// ===================================
+// CTOR QUALIFICATION
+// ===================================
 function isCTORQualified(user) {
 
-  if (!user) return false;
+  if (!user) {
+    return false;
+  }
 
   if (
     user.status !== "active"
@@ -295,18 +441,22 @@ function isCTORQualified(user) {
 
   if (
     !user.rankLevel ||
-    user.rankLevel <= 0
+    Number(user.rankLevel) <= 0
   ) {
 
     return false;
   }
 
-  return Number(
-    user.monthlyPoints || 0
-  ) >= 1;
+  return (
+    Number(
+      user.monthlyPoints || 0
+    ) >= 1
+  );
 }
 
-// ================= CTOR DISTRIBUTION =================
+// ===================================
+// CTOR DISTRIBUTION
+// ===================================
 function distributeCTOR(
   userId,
   totalCTOR,
@@ -331,15 +481,21 @@ function distributeCTOR(
     Number(totalCTOR).toFixed(2)
   );
 
-  if (totalCTOR <= 0) {
+  if (
+    isNaN(totalCTOR) ||
+    totalCTOR <= 0
+  ) {
+
     return false;
   }
 
-  let current = getUser(userId);
+  let current =
+    getUser(userId);
 
   let level = 1;
 
-  const visited = new Set();
+  const visited =
+    new Set();
 
   for (
     let i = 0;
@@ -355,9 +511,11 @@ function distributeCTOR(
       break;
     }
 
-    visited.add(current.userId);
+    visited.add(
+      current.userId
+    );
 
-    let parent =
+    const parent =
       getIntroducer(current);
 
     if (
@@ -368,10 +526,11 @@ function distributeCTOR(
       break;
     }
 
-    let amount = calc(
-      totalCTOR,
-      CTOR_SPLIT[i]
-    );
+    const amount =
+      calc(
+        totalCTOR,
+        CTOR_SPLIT[i]
+      );
 
     if (amount > 0) {
 
@@ -385,12 +544,16 @@ function distributeCTOR(
 
         amount,
 
-        sourceUser: userId,
+        sourceUser:
+          userId,
 
         note:
           isCTORQualified(parent)
             ? `${type.toUpperCase()} CTOR LEVEL ${level}`
-            : `MISS CTOR L${level}`
+            : `MISS CTOR L${level}`,
+
+        ref:
+          `CTOR_${type}_${userId}_${level}`
       });
     }
 
@@ -402,7 +565,9 @@ function distributeCTOR(
   return true;
 }
 
-// ================= UGLI =================
+// ===================================
+// UPGRADE INCOME
+// ===================================
 function processUpgradeIncome(
   userId,
   bv
@@ -420,7 +585,8 @@ function processUpgradeIncome(
     );
   }
 
-  let current = getUser(userId);
+  let current =
+    getUser(userId);
 
   if (!current) {
     return false;
@@ -428,16 +594,15 @@ function processUpgradeIncome(
 
   let level = 1;
 
-  let visited = new Set([
-    userId
-  ]);
+  const visited =
+    new Set([userId]);
 
   while (
     level <=
     INCOME_CONFIG.MAX_LEVELS
   ) {
 
-    let parent =
+    const parent =
       getIntroducer(current);
 
     if (
@@ -448,28 +613,38 @@ function processUpgradeIncome(
       break;
     }
 
-    visited.add(parent.userId);
+    visited.add(
+      parent.userId
+    );
 
-    let percent =
+    const percent =
       level === 1
         ? INCOME_CONFIG.UGLI_LEVEL_1
         : INCOME_CONFIG.UGLI_LEVEL_OTHERS;
 
-    let income =
+    const income =
       calc(bv, percent);
 
     if (income > 0) {
 
       safeIncome({
-        userId: parent.userId,
+        userId:
+          parent.userId,
 
-        type: "upgrade",
+        type:
+          "upgrade",
 
-        amount: income,
+        amount:
+          income,
 
-        sourceUser: userId,
+        sourceUser:
+          userId,
 
-        note: `LEVEL ${level}`
+        note:
+          `LEVEL ${level}`,
+
+        ref:
+          `UPGRADE_${userId}_${level}_${bv}`
       });
     }
 
@@ -490,7 +665,9 @@ function processUpgradeIncome(
   return true;
 }
 
-// ================= REPURCHASE =================
+// ===================================
+// REPURCHASE INCOME
+// ===================================
 function processRepurchaseIncome(
   userId,
   bv
@@ -508,22 +685,23 @@ function processRepurchaseIncome(
     );
   }
 
-  let current = getUser(userId);
+  let current =
+    getUser(userId);
 
   if (!current) {
     return false;
   }
 
-  let usableBV =
+  const usableBV =
     calc(bv, 50);
 
-  let rliPool =
+  const rliPool =
     calc(usableBV, 40);
 
-  let ctorPool =
+  const ctorPool =
     calc(usableBV, 60);
 
-  let perLevel =
+  const perLevel =
     parseFloat(
       (
         rliPool /
@@ -533,16 +711,15 @@ function processRepurchaseIncome(
 
   let level = 1;
 
-  let visited = new Set([
-    userId
-  ]);
+  const visited =
+    new Set([userId]);
 
   while (
     level <=
     INCOME_CONFIG.MAX_LEVELS
   ) {
 
-    let parent =
+    const parent =
       getIntroducer(current);
 
     if (
@@ -553,7 +730,9 @@ function processRepurchaseIncome(
       break;
     }
 
-    visited.add(parent.userId);
+    visited.add(
+      parent.userId
+    );
 
     if (perLevel > 0) {
 
@@ -577,7 +756,10 @@ function processRepurchaseIncome(
             userId,
 
           note:
-            `RLI LEVEL ${level}`
+            `RLI LEVEL ${level}`,
+
+          ref:
+            `REPURCHASE_${userId}_${level}_${bv}`
         });
 
       } else {
@@ -610,7 +792,9 @@ function processRepurchaseIncome(
   return true;
 }
 
-// ================= MAIN =================
+// ===================================
+// MAIN EXECUTION
+// ===================================
 function processIncome(
   type,
   userId,
@@ -618,7 +802,7 @@ function processIncome(
   sourceId = ""
 ) {
 
-  let execKey =
+  const execKey =
     `${type}_${userId}_${Number(bv)}_${sourceId}`;
 
   try {
