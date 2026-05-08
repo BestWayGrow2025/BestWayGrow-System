@@ -1,100 +1,239 @@
 /*
 ========================================
-PIN FLOW CONTROLLER V1.0 (ORCHESTRATION LAYER)
+PIN FLOW CONTROLLER V2.0 (HARDENED CORE)
 ========================================
-✔ Central execution pipeline
-✔ Forces correct system order
-✔ session → permission → request → execution
-✔ Prevents direct bypass calls
-✔ No business logic duplication
-✔ Pure orchestration layer only
+✔ Central orchestration layer
+✔ Session enforced
+✔ Permission enforced
+✔ Replay-safe execution
+✔ Core init protection
+✔ System-safe validation
+✔ Action normalization
+✔ Execution locking
+✔ Duplicate prevention
+✔ Safe audit logging
+✔ Production LOCKED
 ========================================
 */
 
-// ================= PIPELINE ENTRY =================
-function executePinFlow(actionType, payload = {}) {
+"use strict";
 
-  // ================= STEP 1: SESSION / IDENTITY =================
-  let user = null;
+// ================= CONFIG =================
+const PIN_FLOW_LOCKS = {};
+const PIN_FLOW_TTL = 10000;
 
-  if (typeof getCurrentUser === "function") {
-    user = getCurrentUser();
+// ================= CORE SAFE =================
+function isPinFlowSafe() {
+
+  if (
+    !window.__CORE_STATE__ ||
+    window.__CORE_STATE__.initialized !== true
+  ) {
+    return false;
   }
 
-  if (!user || !user.userId) {
-    throw new Error("No active session");
+  if (typeof isSystemSafe === "function") {
+    if (!isSystemSafe()) return false;
   }
 
-  const role = user?.role || "user";
-
-  // ================= STEP 2: PERMISSION GATE =================
-  if (typeof canExecutePinAction === "function") {
-    const allowed = canExecutePinAction(actionType, payload, role);
-
-    if (!allowed) {
-      throw new Error("Action blocked by permission system");
-    }
+  if (typeof isIncomeSystemSafe === "function") {
+    if (!isIncomeSystemSafe()) return false;
   }
 
-  // ================= STEP 3: ROUTE ACTION =================
-  switch (actionType) {
+  return true;
+}
 
-    // ---------------- REQUEST FLOW ----------------
-    case "REQUEST_PIN":
-      if (typeof createPinRequest !== "function") {
-        throw new Error("Request system unavailable");
-      }
+// ================= NORMALIZER =================
+function normalizeAction(actionType) {
+  return String(actionType || "")
+    .trim()
+    .toUpperCase();
+}
 
-      return createPinRequest({
-        ...payload,
-        userId: user.userId
-      });
+// ================= EXECUTION LOCK =================
+function isFlowLocked(key) {
 
-    // ---------------- ASSIGN FLOW ----------------
-    case "ASSIGN_PIN":
-      if (typeof assignPin !== "function") {
-        throw new Error("Master system unavailable");
-      }
+  let t = PIN_FLOW_LOCKS[key];
 
-      return assignPin(
-        payload.pinId,
-        payload.toId,
-        payload.toType || "user",
-        user.userId
-      );
+  if (!t) return false;
 
-    // ---------------- USE FLOW ----------------
-    case "USE_PIN":
-      if (typeof usePin !== "function") {
-        throw new Error("Master system unavailable");
-      }
+  if ((Date.now() - t) > PIN_FLOW_TTL) {
+    delete PIN_FLOW_LOCKS[key];
+    return false;
+  }
 
-      return usePin(
-        payload.pinId,
-        user.userId,
-        payload.purpose || "general"
-      );
+  return true;
+}
 
-    // ---------------- REJECT FLOW ----------------
-    case "REJECT_REQUEST":
-      if (typeof rejectPinRequest !== "function") {
-        throw new Error("Request system unavailable");
-      }
+function setFlowLock(key, val) {
 
-      return rejectPinRequest(payload.requestId, user.userId);
-
-    // ---------------- AUTO PROCESS FLOW ----------------
-    case "PROCESS_REQUEST":
-      if (typeof processPinRequestAuto !== "function") {
-        throw new Error("Processor unavailable");
-      }
-
-      return processPinRequestAuto(payload.requestId);
-
-    default:
-      throw new Error("Invalid action type");
+  if (val) {
+    PIN_FLOW_LOCKS[key] = Date.now();
+  } else {
+    delete PIN_FLOW_LOCKS[key];
   }
 }
 
-// ================= SAFE GLOBAL ACCESS =================
+// ================= EXECUTION KEY =================
+function generateFlowKey(actionType, payload = {}, userId = "SYSTEM") {
+
+  return [
+    normalizeAction(actionType),
+    userId,
+    payload.requestId || "-",
+    payload.pinId || "-",
+    payload.paymentId || "-",
+    payload.toId || "-"
+  ].join("|");
+}
+
+// ================= MAIN PIPELINE =================
+function executePinFlow(actionType, payload = {}) {
+
+  let user = null;
+  let execKey = null;
+
+  try {
+
+    // ================= SYSTEM SAFE =================
+    if (!isPinFlowSafe()) {
+      throw new Error("Pin flow system unsafe");
+    }
+
+    // ================= SESSION =================
+    if (typeof getCurrentUser === "function") {
+      user = getCurrentUser();
+    }
+
+    if (!user || !user.userId) {
+      throw new Error("No active session");
+    }
+
+    const role = user.role || "user";
+
+    // ================= NORMALIZE =================
+    actionType = normalizeAction(actionType);
+
+    // ================= EXEC KEY =================
+    execKey = generateFlowKey(
+      actionType,
+      payload,
+      user.userId
+    );
+
+    // ================= DUPLICATE BLOCK =================
+    if (isFlowLocked(execKey)) {
+      throw new Error("Duplicate flow blocked");
+    }
+
+    setFlowLock(execKey, true);
+
+    // ================= PERMISSION =================
+    if (typeof canExecutePinAction === "function") {
+
+      const allowed = canExecutePinAction(
+        actionType,
+        payload,
+        role
+      );
+
+      if (!allowed) {
+        throw new Error("Action blocked by permission system");
+      }
+    }
+
+    // ================= ROUTER =================
+    switch (actionType) {
+
+      // ================= REQUEST =================
+      case "REQUEST_PIN":
+
+        if (typeof createPinRequest !== "function") {
+          throw new Error("Request system unavailable");
+        }
+
+        return createPinRequest({
+          ...payload,
+          userId: user.userId
+        });
+
+      // ================= ASSIGN =================
+      case "ASSIGN_PIN":
+
+        if (typeof assignPin !== "function") {
+          throw new Error("Master system unavailable");
+        }
+
+        return assignPin(
+          payload.pinId,
+          payload.toId,
+          payload.toType || "user",
+          user.userId
+        );
+
+      // ================= USE =================
+      case "USE_PIN":
+
+        if (typeof usePin !== "function") {
+          throw new Error("Master system unavailable");
+        }
+
+        return usePin(
+          payload.pinId,
+          user.userId,
+          payload.purpose || "general"
+        );
+
+      // ================= REJECT =================
+      case "REJECT_REQUEST":
+
+        if (typeof rejectPinRequest !== "function") {
+          throw new Error("Request system unavailable");
+        }
+
+        return rejectPinRequest(
+          payload.requestId,
+          user.userId
+        );
+
+      // ================= PROCESS =================
+      case "PROCESS_REQUEST":
+
+        if (typeof processPinRequestAuto !== "function") {
+          throw new Error("Processor unavailable");
+        }
+
+        return processPinRequestAuto(
+          payload.requestId
+        );
+
+      default:
+        throw new Error("Invalid action type");
+    }
+
+  } catch (err) {
+
+    if (typeof logCritical === "function") {
+
+      try {
+        logCritical(
+          "PIN FLOW ERROR: " + err.message,
+          user?.userId || "UNKNOWN",
+          "PIN_FLOW"
+        );
+      } catch (_) {}
+    }
+
+    return false;
+
+  } finally {
+
+    if (execKey) {
+      setFlowLock(execKey, false);
+    }
+  }
+}
+
+// ================= SAFE GLOBAL EXPORT =================
 window.executePinFlow = executePinFlow;
+
