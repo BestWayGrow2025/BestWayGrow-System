@@ -1,12 +1,18 @@
 /*
 ========================================
-CORE SYSTEM V9.1 (FINAL STABLE SAFE)
+CORE SYSTEM V10.1 (FINAL HARDENED CORE)
 ========================================
-✔ Safe storage
-✔ User normalization
-✔ System seeding
-✔ Wallet protection fix
+✔ Safe storage recovery
+✔ Immutable normalization
+✔ Verified writes
+✔ Duplicate cleanup
+✔ System settings normalization
 ✔ Single initialization lock
+✔ Core health tracking
+✔ Authoritative safety layer
+✔ Storage availability validation
+✔ No recursive safety instability
+✔ Production LOCKED
 ========================================
 */
 
@@ -15,47 +21,208 @@ CORE SYSTEM V9.1 (FINAL STABLE SAFE)
 // ================= GLOBAL STATE =================
 window.__CORE_STATE__ = window.__CORE_STATE__ || {
   initialized: false,
-  version: "9.1"
+  initializing: false,
+  corrupted: false,
+  storageAvailable: true,
+  version: "10.1",
+  initTime: null,
+  lastError: null
 };
+
+// ================= STORAGE TEST =================
+function isStorageAvailable() {
+
+  try {
+
+    const testKey = "__storage_test__";
+
+    localStorage.setItem(testKey, "1");
+    localStorage.removeItem(testKey);
+
+    return true;
+
+  } catch (e) {
+
+    console.error("Storage unavailable:", e.message);
+
+    window.__CORE_STATE__.storageAvailable = false;
+    window.__CORE_STATE__.lastError = e.message;
+
+    return false;
+  }
+}
 
 // ================= SAFE STORAGE =================
 function safeGet(key, fallback) {
+
   try {
+
     const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
+
+    if (raw === null || raw === undefined || raw === "") {
+      return fallback;
+    }
 
     const data = JSON.parse(raw);
-    return (data !== null && data !== undefined) ? data : fallback;
+
+    if (data === null || data === undefined) {
+      return fallback;
+    }
+
+    return data;
 
   } catch (e) {
-    console.error("safeGet error:", e.message);
+
+    console.error("safeGet error:", key, e.message);
+
+    window.__CORE_STATE__.lastError = e.message;
+
     return fallback;
   }
 }
 
 function safeSet(key, value) {
+
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+
+    const encoded = JSON.stringify(value);
+
+    localStorage.setItem(key, encoded);
+
+    // ================= VERIFY WRITE =================
+    const verify = localStorage.getItem(key);
+
+    if (verify !== encoded) {
+      throw new Error("Storage verification failed");
+    }
+
     return true;
+
   } catch (e) {
-    console.error("safeSet error:", e.message);
+
+    console.error("safeSet error:", key, e.message);
+
+    window.__CORE_STATE__.corrupted = true;
+    window.__CORE_STATE__.lastError = e.message;
+
     return false;
   }
 }
 
+// ================= USER NORMALIZER =================
+function normalizeUser(user = {}) {
+
+  if (!user || typeof user !== "object") {
+    return null;
+  }
+
+  if (!user.userId) {
+    return null;
+  }
+
+  // IMMUTABLE COPY
+  const safeUser = {
+    ...user
+  };
+
+  safeUser.status = safeUser.status || "active";
+  safeUser.accountStatus = safeUser.accountStatus || "active";
+  safeUser.role = safeUser.role || "user";
+
+  if (!safeUser.wallet || typeof safeUser.wallet !== "object") {
+    safeUser.wallet = {};
+  }
+
+  const walletDefaults = {
+    balance: 0,
+    incomeBalance: 0,
+    holdIncome: 0,
+    totalCredit: 0,
+    totalDebit: 0
+  };
+
+  const cleanWallet = {};
+
+  Object.keys(walletDefaults).forEach(k => {
+
+    let val = Number(safeUser.wallet[k]);
+
+    if (isNaN(val) || val < 0) {
+      val = 0;
+    }
+
+    cleanWallet[k] = parseFloat(val.toFixed(2));
+  });
+
+  safeUser.wallet = cleanWallet;
+
+  safeUser.directIds = Array.isArray(safeUser.directIds)
+    ? [...safeUser.directIds]
+    : [];
+
+  safeUser.children = Array.isArray(safeUser.children)
+    ? [...safeUser.children]
+    : [];
+
+  return safeUser;
+}
+
 // ================= USERS =================
 function getUsers() {
-  const users = safeGet("users", []);
-  return Array.isArray(users) ? users : [];
+
+  let users = safeGet("users", []);
+
+  if (!Array.isArray(users)) {
+    users = [];
+  }
+
+  let clean = [];
+  let ids = new Set();
+
+  users.forEach(user => {
+
+    const normalized = normalizeUser(user);
+
+    if (!normalized) return;
+
+    if (ids.has(normalized.userId)) return;
+
+    ids.add(normalized.userId);
+
+    clean.push(normalized);
+  });
+
+  return clean;
 }
 
 function saveUsers(users) {
-  if (!Array.isArray(users)) return false;
-  return safeSet("users", users);
+
+  if (!Array.isArray(users)) {
+    return false;
+  }
+
+  let clean = [];
+  let ids = new Set();
+
+  users.forEach(user => {
+
+    const normalized = normalizeUser(user);
+
+    if (!normalized) return;
+
+    if (ids.has(normalized.userId)) return;
+
+    ids.add(normalized.userId);
+
+    clean.push(normalized);
+  });
+
+  return safeSet("users", clean);
 }
 
-// ================= SYSTEM SETTINGS =================
-function getSystemSettings() {
+// ================= SETTINGS =================
+function normalizeSystemSettings(settings = {}) {
+
   const defaults = {
     lockMode: false,
     registrationOpen: true,
@@ -67,37 +234,90 @@ function getSystemSettings() {
     payoutOpen: true,
     incomeOpen: true,
     autoRun: false,
-    manualRun: true
+    manualRun: true,
+    queueStop: false,
+    initialized: true,
+    updatedAt: new Date().toISOString()
   };
 
+  const safe = {
+    ...defaults,
+    ...(settings && typeof settings === "object"
+      ? settings
+      : {})
+  };
+
+  Object.keys(defaults).forEach(k => {
+
+    if (typeof defaults[k] === "boolean") {
+      safe[k] = safe[k] === true;
+    }
+  });
+
+  safe.updatedAt = new Date().toISOString();
+
+  return safe;
+}
+
+function getSystemSettings() {
+
   const stored = safeGet("systemSettings", {});
-  return { ...defaults, ...stored };
+
+  return normalizeSystemSettings(stored);
 }
 
 function saveSystemSettings(settings) {
-  return safeSet("systemSettings", settings);
+
+  const clean = normalizeSystemSettings(settings);
+
+  return safeSet("systemSettings", clean);
 }
 
 // ================= HELPERS =================
 function getUserById(id) {
+
   if (!id) return null;
+
   return getUsers().find(u => u.userId === id) || null;
 }
 
 function getDirectUsers(userId) {
+
   if (!userId) return [];
+
   return getUsers().filter(u => u.introducerId === userId);
 }
 
 function getChildren(userId) {
+
   if (!userId) return [];
+
   return getUsers().filter(u => u.sponsorId === userId);
+}
+
+// ================= SYSTEM SAFETY =================
+function isSystemSafe() {
+
+  const state = window.__CORE_STATE__;
+
+  if (!state) return false;
+
+  if (state.initializing) return false;
+
+  if (state.corrupted) return false;
+
+  if (!state.storageAvailable) return false;
+
+  if (!state.initialized) return false;
+
+  return true;
 }
 
 // ================= SEED SYSTEM =================
 function seedSystemUsers(users) {
 
   let changed = false;
+
   const now = Date.now();
 
   const seeds = [
@@ -132,6 +352,8 @@ function seedSystemUsers(users) {
       status: "active",
       wallet: {
         balance: 0,
+        incomeBalance: 0,
+        holdIncome: 0,
         totalCredit: 0,
         totalDebit: 0
       },
@@ -139,9 +361,14 @@ function seedSystemUsers(users) {
     }
   ];
 
+  const ids = new Set(users.map(u => u.userId));
+
   seeds.forEach(seed => {
-    if (!users.find(u => u.userId === seed.userId)) {
-      users.push(seed);
+
+    if (!ids.has(seed.userId)) {
+
+      users.push(normalizeUser(seed));
+
       changed = true;
     }
   });
@@ -153,66 +380,68 @@ function seedSystemUsers(users) {
 function initCoreSystem() {
 
   if (window.__CORE_STATE__.initialized) {
-    console.log("Core already initialized");
-    return;
+    return true;
   }
+
+  if (window.__CORE_STATE__.initializing) {
+    return false;
+  }
+
+  window.__CORE_STATE__.initializing = true;
 
   try {
 
+    if (!isStorageAvailable()) {
+      throw new Error("Storage unavailable");
+    }
+
     let users = getUsers();
+
     let changed = false;
 
-    // ================= NORMALIZATION =================
-    users.forEach(u => {
-
-      if (!u.status) {
-        u.status = "active";
-        changed = true;
-      }
-
-      if (!u.accountStatus) {
-        u.accountStatus = "active";
-        changed = true;
-      }
-
-      if (!u.wallet) {
-        u.wallet = {};
-      }
-
-      const defaults = {
-        balance: 0,
-        incomeBalance: 0,
-        holdIncome: 0,
-        totalCredit: 0,
-        totalDebit: 0
-      };
-
-      Object.keys(defaults).forEach(k => {
-        if (u.wallet[k] === undefined) {
-          u.wallet[k] = defaults[k];
-          changed = true;
-        }
-      });
-
-    });
-
-    // ================= SEEDING =================
     if (seedSystemUsers(users)) {
       changed = true;
     }
 
-    // ================= SAVE =================
     if (changed) {
-      saveUsers(users);
+
+      const saved = saveUsers(users);
+
+      if (!saved) {
+        throw new Error("User save failed");
+      }
     }
 
-    // ================= FINAL LOCK =================
-    window.__CORE_STATE__.initialized = true;
+    // SETTINGS SELF-HEAL
+    const settings = getSystemSettings();
 
-    console.log("Core System Initialized V9.1");
+    if (!safeSet("systemSettings", settings)) {
+      throw new Error("Settings save failed");
+    }
+
+    window.__CORE_STATE__.initialized = true;
+    window.__CORE_STATE__.initializing = false;
+    window.__CORE_STATE__.corrupted = false;
+    window.__CORE_STATE__.storageAvailable = true;
+    window.__CORE_STATE__.initTime = Date.now();
+    window.__CORE_STATE__.lastError = null;
+
+    console.log("Core System Initialized V10.1");
+
+    return true;
 
   } catch (e) {
+
     console.error("Core init failed:", e.message);
+
     window.__CORE_STATE__.initialized = false;
+    window.__CORE_STATE__.initializing = false;
+    window.__CORE_STATE__.corrupted = true;
+    window.__CORE_STATE__.lastError = e.message;
+
+    return false;
   }
 }
+
+// ================= AUTO INIT =================
+initCoreSystem();
