@@ -48,14 +48,18 @@ function login() {
   }
 
   // ================= UNIFIED SESSION =================
-  if (typeof setSession === "function") {
-    setSession({
-      userId: user.userId,
-      role: user.role
-    });
+  if (typeof setSession !== "function") {
+    alert("Session system missing");
+    lock = false;
+    return;
   }
 
-  // Activity log (safe)
+  setSession({
+    userId: user.userId,
+    role: user.role
+  });
+
+  // ================= ACTIVITY LOG =================
   if (typeof logActivity === "function") {
     try {
       logActivity(user.userId, "SYSTEM_ADMIN", "Login", "ADMIN");
@@ -90,7 +94,10 @@ function safeDecode(val) {
 
 // ================= EVENTS =================
 function bindEvents() {
-  document.getElementById("loginBtn").addEventListener("click", login);
+  const btn = document.getElementById("loginBtn");
+  if (btn) {
+    btn.addEventListener("click", login);
+  }
 }
 
 // ================= AUTO REDIRECT =================
@@ -101,4 +108,3 @@ function loadPage() {
     window.location.href = "system_admin_dashboard.html";
   }
 }
-
