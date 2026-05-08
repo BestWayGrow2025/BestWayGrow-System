@@ -1,166 +1,467 @@
+"use strict";
+
 /*
 ========================================
-🔥 TRIGGER SYSTEM V8 FINAL LOCK
+TRIGGER SYSTEM V9.0 (FINAL HARDENED)
 ========================================
 ✔ Core aligned
-✔ Safe trigger storage
+✔ Session-manager protected
 ✔ Duplicate trigger protection
+✔ Replay-safe trigger control
 ✔ Upgrade / Repurchase / PIN support
 ✔ Queue-safe validation
-✔ Admin control aware
-✔ Config-aware BV fallback
+✔ Income-control integrated
+✔ Recursive execution blocked
+✔ Safe trigger cleanup
+✔ Trigger lock protection
 ✔ Detailed logging
-✔ Error safe
-✔ Production ready
+✔ Production FINAL
 ========================================
 */
 
+// =====================
+// CONFIG
+// =====================
 const TRIGGER_STORE_KEY = "TRIGGER_SYSTEM_STORE";
 
-function getTriggerStore() {
-  let store = {};
+const TRIGGER_LOCKS = {};
+const TRIGGER_LOCK_TTL = 10000;
+
+// =====================
+// CORE SAFETY
+// =====================
+function isTriggerSystemSafe() {
 
   try {
-    store = safeGet(TRIGGER_STORE_KEY, {});
-  } catch (e) {
-    store = {};
-  }
 
-  return (store && typeof store === "object") ? store : {};
+    if (
+      typeof window.__CORE_STATE__ !== "undefined" &&
+      window.__CORE_STATE__ &&
+      window.__CORE_STATE__.initialized !== true
+    ) {
+      return false;
+    }
+
+    if (typeof getSession === "function") {
+
+      let session = getSession();
+
+      if (!session || !session.userId) {
+        return false;
+      }
+    }
+
+    return true;
+
+  } catch {
+
+    return false;
+  }
+}
+
+// =====================
+// STORE
+// =====================
+function getTriggerStore() {
+
+  try {
+
+    let store = safeGet(
+      TRIGGER_STORE_KEY,
+      {}
+    );
+
+    return (
+      store &&
+      typeof store === "object"
+    )
+      ? store
+      : {};
+
+  } catch {
+
+    return {};
+  }
 }
 
 function saveTriggerStore(store) {
-  if (!store || typeof store !== "object") {
-    store = {};
-  }
 
-  safeSet(TRIGGER_STORE_KEY, store);
+  try {
+
+    if (
+      !store ||
+      typeof store !== "object"
+    ) {
+      store = {};
+    }
+
+    safeSet(
+      TRIGGER_STORE_KEY,
+      store
+    );
+
+    return true;
+
+  } catch {
+
+    return false;
+  }
 }
 
-function isRecentTrigger(key, delay = 3000) {
+// =====================
+// LOCK
+// =====================
+function isTriggerLocked(key) {
+
+  let lock = TRIGGER_LOCKS[key];
+
+  if (!lock) {
+    return false;
+  }
+
+  if (
+    Date.now() - lock >
+    TRIGGER_LOCK_TTL
+  ) {
+
+    delete TRIGGER_LOCKS[key];
+
+    return false;
+  }
+
+  return true;
+}
+
+function setTriggerLock(key, val) {
+
+  if (val) {
+    TRIGGER_LOCKS[key] = Date.now();
+  } else {
+    delete TRIGGER_LOCKS[key];
+  }
+}
+
+// =====================
+// DUPLICATE CHECK
+// =====================
+function isRecentTrigger(
+  key,
+  delay = 3000
+) {
+
   let store = getTriggerStore();
-  let last = Number(store[key] || 0);
 
-  if (!last) return false;
+  let last = Number(
+    store[key] || 0
+  );
 
-  return (Date.now() - last) < delay;
+  if (!last) {
+    return false;
+  }
+
+  return (
+    Date.now() - last
+  ) < delay;
 }
 
 function setTrigger(key) {
+
   let store = getTriggerStore();
+
   store[key] = Date.now();
+
   saveTriggerStore(store);
 }
 
+// =====================
+// CLEANUP
+// =====================
 function cleanTriggerStore() {
-  let store = getTriggerStore();
-  let changed = false;
 
-  Object.keys(store).forEach(key => {
-    if ((Date.now() - Number(store[key])) > 86400000) {
-      delete store[key];
-      changed = true;
+  try {
+
+    let store = getTriggerStore();
+
+    let changed = false;
+
+    Object.keys(store).forEach(key => {
+
+      if (
+        (
+          Date.now() -
+          Number(store[key])
+        ) > 86400000
+      ) {
+
+        delete store[key];
+
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      saveTriggerStore(store);
     }
-  });
 
-  if (changed) {
-    saveTriggerStore(store);
+    return true;
+
+  } catch {
+
+    return false;
   }
 }
 
+// =====================
+// VALIDATION
+// =====================
 function canRunTrigger(type) {
+
   try {
-    if (typeof isSystemSafe === "function") {
-      if (!isSystemSafe()) return false;
+
+    if (!isTriggerSystemSafe()) {
+      return false;
+    }
+
+    if (
+      typeof isSystemSafe === "function" &&
+      !isSystemSafe()
+    ) {
+      return false;
     }
 
     let settings = {};
 
-    if (typeof getSystemSettings === "function") {
-      settings = getSystemSettings() || {};
+    if (
+      typeof getSystemSettings === "function"
+    ) {
+
+      settings =
+        getSystemSettings() || {};
     }
 
-    if (settings.lockMode === true) return false;
-    if (settings.queueStop === true) return false;
+    if (
+      settings.lockMode === true
+    ) {
+      return false;
+    }
 
-    if (type === "upgrade" && settings.upgradesOpen === false) return false;
-    if (type === "repurchase" && settings.repurchaseOpen === false) return false;
-    if (type === "registration" && settings.registrationOpen === false) return false;
+    if (
+      settings.queueStop === true
+    ) {
+      return false;
+    }
+
+    if (
+      type === "upgrade" &&
+      settings.upgradesOpen === false
+    ) {
+      return false;
+    }
+
+    if (
+      type === "repurchase" &&
+      settings.repurchaseOpen === false
+    ) {
+      return false;
+    }
+
+    if (
+      type === "registration" &&
+      settings.registrationOpen === false
+    ) {
+      return false;
+    }
+
+    if (
+      typeof isIncomeAllowed === "function"
+    ) {
+
+      if (!isIncomeAllowed(type)) {
+        return false;
+      }
+    }
 
     return true;
 
   } catch (err) {
-    console.error("Trigger validation error:", err.message);
+
+    if (
+      typeof logCritical === "function"
+    ) {
+
+      logCritical(
+        "Trigger validation error: " +
+        err.message
+      );
+    }
+
     return false;
   }
 }
 
-function runIncomeTrigger(type, userId, bv, source, uniqueKey) {
-  if (!userId || !type) return false;
-  if (!canRunTrigger(type)) return false;
+// =====================
+// MAIN TRIGGER
+// =====================
+function runIncomeTrigger(
+  type,
+  userId,
+  bv,
+  source,
+  uniqueKey
+) {
 
-  if (typeof isIncomeAllowed === "function") {
-    if (!isIncomeAllowed(type)) return false;
-  }
-
-  if (typeof processIncome !== "function") {
-    console.warn("processIncome missing");
+  if (!userId || !type) {
     return false;
   }
 
-  try {
-    let triggerKey = uniqueKey || ("TRG_" + type + "_" + userId + "_" + Number(bv || 0));
+  if (!canRunTrigger(type)) {
+    return false;
+  }
 
-    if (isRecentTrigger(triggerKey)) {
-      return false;
-    }
+  if (
+    typeof processIncome !== "function"
+  ) {
+
+    console.warn(
+      "processIncome missing"
+    );
+
+    return false;
+  }
+
+  let triggerKey =
+    uniqueKey ||
+    (
+      "TRG_" +
+      type + "_" +
+      userId + "_" +
+      Number(bv || 0)
+    );
+
+  if (
+    isRecentTrigger(triggerKey)
+  ) {
+    return false;
+  }
+
+  if (
+    isTriggerLocked(triggerKey)
+  ) {
+    return false;
+  }
+
+  setTriggerLock(triggerKey, true);
+
+  try {
 
     setTrigger(triggerKey);
 
     bv = Number(bv || 0);
-    if (isNaN(bv) || bv < 0) {
+
+    if (
+      isNaN(bv) ||
+      bv < 0
+    ) {
       bv = 0;
     }
 
-    processIncome(type, userId, bv);
+    let success = processIncome(
+      type,
+      userId,
+      bv
+    );
 
-    if (typeof logActivity === "function") {
+    if (!success) {
+      return false;
+    }
+
+    if (
+      typeof logActivity === "function"
+    ) {
+
       logActivity(
         userId,
         "SYSTEM",
-        "TRIGGER " + type.toUpperCase(),
-        source || "TRIGGER_SYSTEM"
+        "TRIGGER " +
+        String(type)
+          .toUpperCase(),
+        source ||
+        "TRIGGER_SYSTEM"
       );
     }
 
     return true;
 
   } catch (err) {
-    console.error("Trigger error:", err.message);
 
-    if (typeof logCritical === "function") {
+    console.error(
+      "Trigger error:",
+      err.message
+    );
+
+    if (
+      typeof logCritical === "function"
+    ) {
+
       logCritical(
-        "Trigger failure [" + type + "] : " + err.message,
+        "Trigger failure [" +
+        type +
+        "] : " +
+        err.message,
         userId
       );
     }
 
     return false;
+
+  } finally {
+
+    setTriggerLock(
+      triggerKey,
+      false
+    );
   }
 }
 
-function triggerPinUseIncome(userId, pin) {
-  if (!userId || !pin) return false;
+// =====================
+// PIN TRIGGER
+// =====================
+function triggerPinUseIncome(
+  userId,
+  pin
+) {
 
-  let triggerType = String(pin.type || "upgrade").toLowerCase();
-  let bv = Number(pin.bv || 0);
+  if (!userId || !pin) {
+    return false;
+  }
 
-  if (!bv && typeof getUpgradeBV === "function") {
-    if (triggerType === "upgrade") {
+  let triggerType = String(
+    pin.type || "upgrade"
+  )
+    .trim()
+    .toLowerCase();
+
+  let bv = Number(
+    pin.bv || 0
+  );
+
+  if (
+    !bv &&
+    typeof getUpgradeBV === "function"
+  ) {
+
+    if (
+      triggerType === "upgrade"
+    ) {
+
       bv = getUpgradeBV();
     }
 
-    if (triggerType === "repurchase" && typeof getRepurchaseBV === "function") {
+    if (
+      triggerType === "repurchase" &&
+      typeof getRepurchaseBV === "function"
+    ) {
+
       bv = getRepurchaseBV();
     }
   }
@@ -180,10 +481,23 @@ function triggerPinUseIncome(userId, pin) {
   );
 }
 
-function triggerUpgradeIncome(userId, bv = null) {
-  if (!userId) return false;
+// =====================
+// UPGRADE
+// =====================
+function triggerUpgradeIncome(
+  userId,
+  bv = null
+) {
 
-  if (!bv && typeof getUpgradeBV === "function") {
+  if (!userId) {
+    return false;
+  }
+
+  if (
+    !bv &&
+    typeof getUpgradeBV === "function"
+  ) {
+
     bv = getUpgradeBV();
   }
 
@@ -201,10 +515,23 @@ function triggerUpgradeIncome(userId, bv = null) {
   );
 }
 
-function triggerRepurchaseIncome(userId, bv = null) {
-  if (!userId) return false;
+// =====================
+// REPURCHASE
+// =====================
+function triggerRepurchaseIncome(
+  userId,
+  bv = null
+) {
 
-  if (!bv && typeof getRepurchaseBV === "function") {
+  if (!userId) {
+    return false;
+  }
+
+  if (
+    !bv &&
+    typeof getRepurchaseBV === "function"
+  ) {
+
     bv = getRepurchaseBV();
   }
 
@@ -222,10 +549,21 @@ function triggerRepurchaseIncome(userId, bv = null) {
   );
 }
 
-function triggerRegistrationIncome(userId, bv = 0) {
-  if (!userId) return false;
+// =====================
+// REGISTRATION
+// =====================
+function triggerRegistrationIncome(
+  userId,
+  bv = 0
+) {
 
-  let uniqueKey = "REGISTRATION_" + userId;
+  if (!userId) {
+    return false;
+  }
+
+  let uniqueKey =
+    "REGISTRATION_" +
+    userId;
 
   return runIncomeTrigger(
     "registration",
@@ -236,19 +574,54 @@ function triggerRegistrationIncome(userId, bv = 0) {
   );
 }
 
+// =====================
+// CLEAR
+// =====================
 function clearTriggerStore() {
-  safeSet(TRIGGER_STORE_KEY, {});
-  return true;
+
+  try {
+
+    safeSet(
+      TRIGGER_STORE_KEY,
+      {}
+    );
+
+    return true;
+
+  } catch {
+
+    return false;
+  }
 }
 
-if (!window.__TRIGGER_CLEANER_STARTED__) {
-  window.__TRIGGER_CLEANER_STARTED__ = true;
+// =====================
+// CLEANER
+// =====================
+if (
+  !window.__TRIGGER_CLEANER_STARTED__
+) {
+
+  window.__TRIGGER_CLEANER_STARTED__ =
+    true;
 
   setInterval(() => {
+
     try {
+
       cleanTriggerStore();
-    } catch (e) {
-      console.error("Trigger cleanup failed:", e.message);
+
+    } catch (err) {
+
+      if (
+        typeof logCritical === "function"
+      ) {
+
+        logCritical(
+          "Trigger cleanup failed: " +
+          err.message
+        );
+      }
     }
+
   }, 60000);
 }
