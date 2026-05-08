@@ -1,8 +1,17 @@
+"use strict";
+
 var TXN_LIMIT = 5000;
 var WALLET_LOCK_KEY = "WALLET_LOCKS";
 
 // ===================================
-// TRANSACTION STORAGE
+// SYSTEM SAFETY CHECK
+// ===================================
+function isCoreReady() {
+  return window.__CORE_STATE__ && window.__CORE_STATE__.initialized;
+}
+
+// ===================================
+// TRANSACTIONS
 // ===================================
 function getTransactions() {
   let txns = safeGet("transactions", []);
@@ -16,7 +25,7 @@ function saveTransactions(txns) {
 }
 
 // ===================================
-// WALLET LOCK (CROSS TAB SAFE)
+// WALLET LOCK SYSTEM
 // ===================================
 function getWalletLocks() {
   let data = safeGet(WALLET_LOCK_KEY, {});
@@ -63,30 +72,24 @@ function setUserLock(userId, val) {
 function normalizeWallet(wallet) {
   if (!wallet || typeof wallet !== "object") wallet = {};
 
-  wallet.balance = Math.max(0, Number((wallet.balance || 0).toFixed(2)));
-  wallet.incomeBalance = Math.max(0, Number((wallet.incomeBalance || 0).toFixed(2)));
-  wallet.holdIncome = Math.max(0, Number((wallet.holdIncome || 0).toFixed(2)));
-  wallet.totalCredit = Math.max(0, Number((wallet.totalCredit || 0).toFixed(2)));
-  wallet.totalDebit = Math.max(0, Number((wallet.totalDebit || 0).toFixed(2)));
+  const n = v => Number((Number(v || 0)).toFixed(2));
+
+  wallet.balance = Math.max(0, n(wallet.balance));
+  wallet.incomeBalance = Math.max(0, n(wallet.incomeBalance));
+  wallet.holdIncome = Math.max(0, n(wallet.holdIncome));
+  wallet.totalCredit = Math.max(0, n(wallet.totalCredit));
+  wallet.totalDebit = Math.max(0, n(wallet.totalDebit));
 
   return wallet;
 }
 
+// ===================================
+// INIT WALLET
+// ===================================
 function initWallet(user) {
   if (!user) return false;
 
   let changed = false;
-
-  if (typeof user.wallet === "number") {
-    user.wallet = {
-      balance: user.wallet,
-      incomeBalance: 0,
-      holdIncome: 0,
-      totalCredit: user.wallet,
-      totalDebit: 0
-    };
-    changed = true;
-  }
 
   if (!user.wallet || typeof user.wallet !== "object") {
     user.wallet = {
@@ -94,6 +97,17 @@ function initWallet(user) {
       incomeBalance: 0,
       holdIncome: 0,
       totalCredit: 0,
+      totalDebit: 0
+    };
+    changed = true;
+  }
+
+  if (typeof user.wallet === "number") {
+    user.wallet = {
+      balance: user.wallet,
+      incomeBalance: 0,
+      holdIncome: 0,
+      totalCredit: user.wallet,
       totalDebit: 0
     };
     changed = true;
@@ -110,17 +124,23 @@ function generateTxnRef(prefix = "TXN") {
   return prefix + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 }
 
-function isDuplicateTxnRef(ref) {
-  if (!ref) return false;
-  return getTransactions().some(t => (t.ref || "") === ref);
+function isDuplicateTxnRef(ref, userId) {
+  if (!ref || !userId) return false;
+
+  return getTransactions().some(
+    t => t.ref === ref && t.userId === userId
+  );
 }
 
+// ===================================
+// LOG TXN
+// ===================================
 function logTransaction(userId, amount, type, reason, ref) {
   let txns = getTransactions();
 
   txns.push({
     txnId: generateTxnRef("TXNLOG"),
-    ref: ref,
+    ref,
     userId,
     amount: Number(amount),
     type,
@@ -129,15 +149,17 @@ function logTransaction(userId, amount, type, reason, ref) {
   });
 
   saveTransactions(txns);
-
-  return getTransactions().some(t => t.ref === ref && t.userId === userId);
+  return true;
 }
 
 // ===================================
-// CORE COMMIT
+// CORE WALLET COMMIT
 // ===================================
 function commitWalletUpdate(userId, mutateFn, type, reason, amount, ref) {
-  let users = getUsers() || [];
+
+  if (!isCoreReady()) return false;
+
+  let users = getUsers();
   let user = users.find(u => u.userId === userId);
 
   if (!user) return false;
@@ -145,37 +167,35 @@ function commitWalletUpdate(userId, mutateFn, type, reason, amount, ref) {
 
   initWallet(user);
 
-  let snapshot = JSON.parse(JSON.stringify(user.wallet));
+  let backup = JSON.parse(JSON.stringify(user.wallet));
 
   try {
+
     mutateFn(user.wallet);
     user.wallet = normalizeWallet(user.wallet);
 
     saveUsers(users);
 
-    let verifyUsers = getUsers() || [];
-    let savedUser = verifyUsers.find(u => u.userId === userId);
+    let verify = getUsers().find(u => u.userId === userId);
+    if (!verify) throw new Error("SAVE FAILED");
 
-    if (!savedUser) throw new Error("Wallet save failed");
+    initWallet(verify);
 
-    initWallet(savedUser);
-
-    if (savedUser.wallet.balance !== user.wallet.balance) {
-      throw new Error("Wallet verify mismatch");
+    if (verify.wallet.balance !== user.wallet.balance) {
+      throw new Error("VERIFY FAILED");
     }
 
-    if (!logTransaction(userId, amount, type, reason, ref)) {
-      throw new Error("Txn log failed");
-    }
+    logTransaction(userId, amount, type, reason, ref);
 
     return true;
 
   } catch (e) {
-    user.wallet = snapshot;
+
+    user.wallet = backup;
     saveUsers(users);
 
     if (typeof logCritical === "function") {
-      logCritical("Wallet commit failed: " + e.message, userId, "WALLET");
+      logCritical("Wallet error: " + e.message, userId);
     }
 
     return false;
@@ -186,111 +206,118 @@ function commitWalletUpdate(userId, mutateFn, type, reason, amount, ref) {
 // CREDIT
 // ===================================
 function creditWallet(userId, amount, reason = "SYSTEM", ref = null) {
-  if (!userId) return false;
 
-  if (typeof getSystemSettings === "function") {
-    let s = getSystemSettings();
-    if (s && s.lockMode) return false;
-  }
+  if (!userId || !isCoreReady()) return false;
+
+  const session = typeof getSession === "function" ? getSession() : null;
+  if (!session) return false;
 
   amount = Number(amount);
   if (isNaN(amount) || amount <= 0) return false;
 
   ref = ref || generateTxnRef("CREDIT");
-  if (isDuplicateTxnRef(ref)) return false;
+  if (isDuplicateTxnRef(ref, userId)) return false;
   if (isUserLocked(userId)) return false;
 
   setUserLock(userId, true);
 
-  let ok = commitWalletUpdate(
-    userId,
-    function (wallet) {
-      wallet.balance += amount;
-      wallet.incomeBalance += amount;
-      wallet.totalCredit += amount;
-    },
-    "CREDIT",
-    reason,
-    amount,
-    ref
-  );
-
-  setUserLock(userId, false);
-  return ok;
+  try {
+    return commitWalletUpdate(
+      userId,
+      w => {
+        w.balance += amount;
+        w.incomeBalance += amount;
+        w.totalCredit += amount;
+      },
+      "CREDIT",
+      reason,
+      amount,
+      ref
+    );
+  } finally {
+    setUserLock(userId, false);
+  }
 }
 
 // ===================================
 // DEBIT
 // ===================================
 function debitWallet(userId, amount, reason = "SYSTEM", ref = null) {
-  if (!userId) return false;
 
-  if (typeof getSystemSettings === "function") {
-    let s = getSystemSettings();
-    if (s && s.lockMode) return false;
-  }
+  if (!userId || !isCoreReady()) return false;
+
+  const session = typeof getSession === "function" ? getSession() : null;
+  if (!session) return false;
 
   amount = Number(amount);
   if (isNaN(amount) || amount <= 0) return false;
 
   ref = ref || generateTxnRef("DEBIT");
-  if (isDuplicateTxnRef(ref)) return false;
+  if (isDuplicateTxnRef(ref, userId)) return false;
   if (isUserLocked(userId)) return false;
 
   setUserLock(userId, true);
 
-  let ok = commitWalletUpdate(
-    userId,
-    function (wallet) {
-      if (wallet.balance < amount) throw new Error("Insufficient balance");
+  try {
+    return commitWalletUpdate(
+      userId,
+      w => {
+        if (w.balance < amount) throw new Error("INSUFFICIENT");
 
-      wallet.balance -= amount;
-      wallet.totalDebit += amount;
+        w.balance -= amount;
+        w.totalDebit += amount;
 
-      let incomeUsed = Math.min(wallet.incomeBalance, amount);
-      wallet.incomeBalance -= incomeUsed;
-    },
-    "DEBIT",
-    reason,
-    amount,
-    ref
-  );
-
-  setUserLock(userId, false);
-  return ok;
+        let used = Math.min(w.incomeBalance, amount);
+        w.incomeBalance -= used;
+      },
+      "DEBIT",
+      reason,
+      amount,
+      ref
+    );
+  } finally {
+    setUserLock(userId, false);
+  }
 }
 
 // ===================================
-// TRANSFER (ATOMIC)
+// TRANSFER (FINAL SAFE)
 // ===================================
 function transferWallet(fromId, toId, amount, reason = "TRANSFER") {
+
   if (!fromId || !toId || fromId === toId) return false;
 
   amount = Number(amount);
   if (isNaN(amount) || amount <= 0) return false;
 
-  if (isUserLocked(fromId) || isUserLocked(toId)) return false;
-
   let ref = generateTxnRef("TRANSFER");
 
-  setUserLock(fromId, true);
-  setUserLock(toId, true);
+  let debitDone = false;
 
   try {
-    let debitOk = debitWallet(fromId, amount, reason, ref);
-    if (!debitOk) throw new Error("Debit failed");
 
-    let creditOk = creditWallet(toId, amount, reason, ref);
-    if (!creditOk) throw new Error("Credit failed");
+    debitDone = debitWallet(fromId, amount, reason, ref);
+    if (!debitDone) return false;
+
+    let creditDone = creditWallet(toId, amount, reason, ref);
+
+    if (!creditDone) {
+
+      // rollback
+      creditWallet(fromId, amount, "ROLLBACK", ref);
+
+      return false;
+    }
 
     return true;
 
   } catch (e) {
-    return false;
 
-  } finally {
-    setUserLock(fromId, false);
-    setUserLock(toId, false);
+    if (debitDone) {
+      creditWallet(fromId, amount, "ROLLBACK", ref);
+    }
+
+    return false;
   }
 }
 
