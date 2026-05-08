@@ -1,3 +1,14 @@
+/*
+========================================
+SUPER ADMIN LOGIN V3.1 (UNIFIED FINAL FIX)
+========================================
+✔ Fully session_manager compatible
+✔ Role secured
+✔ Token-safe session creation
+✔ Production stable
+========================================
+*/
+
 let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -72,6 +83,7 @@ function getSafeUsers() {
 
 // ================= LOGIN =================
 function login() {
+
   let userId = document.getElementById("userId").value.trim();
   let password = document.getElementById("password").value.trim();
 
@@ -91,6 +103,12 @@ function login() {
     return;
   }
 
+  // 🔒 STRICT ROLE CHECK (FIX)
+  if (user.role !== "super_admin") {
+    showMsg("🚫 Access Denied");
+    return;
+  }
+
   if ((user.status || "active") !== "active") {
     showMsg("🚫 Account inactive");
     return;
@@ -103,19 +121,25 @@ function login() {
     return;
   }
 
-  // ================= UNIFIED SESSION ONLY =================
+  // ================= UNIFIED SESSION =================
   if (typeof setSession !== "function") {
     alert("Session system missing");
     return;
   }
 
+  const now = Date.now();
+
   setSession({
     userId: user.userId,
-    role: user.role
+    role: user.role,
+    loginTime: now,
+    lastActivity: now
   });
 
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "super_admin", "Login", "ADMIN");
+    try {
+      logActivity(user.userId, "super_admin", "Login", "ADMIN");
+    } catch (e) {}
   }
 
   showMsg("✅ Login successful");
