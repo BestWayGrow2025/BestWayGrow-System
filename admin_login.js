@@ -30,8 +30,7 @@ function bindEvents() {
 }
 
 function loadPage() {
-  // ❌ REMOVED LEGACY CHECK
-  // now session_manager handles auth globally
+  // CLEAN — session_manager handles auth globally
 }
 
 function submitAdminLogin() {
@@ -106,17 +105,20 @@ function submitAdminLogin() {
     return;
   }
 
-  // ❌ REMOVED:
-  // clearAdminSession();
-  // localStorage.setItem("loggedInAdmin"...)
-
-  // ✅ NEW AUTH SYSTEM
-  if (typeof setSession === "function") {
-    setSession({
-      userId: user.userId,
-      role: user.role
-    });
+  // =========================
+  // ✅ FINAL AUTH STANDARD
+  // =========================
+  if (typeof setSession !== "function") {
+    alert("Session system missing");
+    unlockBtn();
+    lock = false;
+    return;
   }
+
+  setSession({
+    userId: user.userId,
+    role: user.role
+  });
 
   if (typeof logActivity === "function") {
     logActivity(user.userId, "admin", "Login", "ADMIN");
