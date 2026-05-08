@@ -2,7 +2,7 @@
 
 /*
 ========================================
-TRIGGER SYSTEM V9.0 (FINAL HARDENED)
+TRIGGER SYSTEM V9.1 (FINAL HARDENED)
 ========================================
 ✔ Core aligned
 ✔ Session-manager protected
@@ -14,6 +14,8 @@ TRIGGER SYSTEM V9.0 (FINAL HARDENED)
 ✔ Recursive execution blocked
 ✔ Safe trigger cleanup
 ✔ Trigger lock protection
+✔ Income-engine idempotency aligned
+✔ Zero-BV execution blocked
 ✔ Detailed logging
 ✔ Production FINAL
 ========================================
@@ -354,21 +356,22 @@ function runIncomeTrigger(
 
   try {
 
-    setTrigger(triggerKey);
-
     bv = Number(bv || 0);
 
     if (
       isNaN(bv) ||
-      bv < 0
+      bv <= 0
     ) {
-      bv = 0;
+      return false;
     }
+
+    setTrigger(triggerKey);
 
     let success = processIncome(
       type,
       userId,
-      bv
+      bv,
+      triggerKey
     );
 
     if (!success) {
