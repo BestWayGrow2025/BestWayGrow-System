@@ -1,4 +1,15 @@
 
+/*
+========================================
+ADMIN LOGIN FINAL (UNIFIED SESSION)
+========================================
+✔ Fully aligned with session_manager.js
+✔ No legacy storage usage
+✔ Safe role validation preserved
+✔ Production stable
+========================================
+*/
+
 let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -8,6 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
   loadPage();
 });
 
+// ================= INIT =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
@@ -21,26 +33,30 @@ function authPage() {
   // login page only
 }
 
+// ================= EVENTS =================
 function bindEvents() {
-  let btn = document.getElementById("loginBtn");
+  const btn = document.getElementById("loginBtn");
 
   if (btn) {
     btn.addEventListener("click", submitAdminLogin);
   }
 }
 
+// ================= LOAD PAGE =================
 function loadPage() {
-  // CLEAN — session_manager handles auth globally
+  // handled by route_guard / session_manager
 }
 
+// ================= LOGIN =================
 function submitAdminLogin() {
-  if (lock) return;
 
+  if (lock) return;
   lock = true;
+
   lockBtn();
 
-  let id = document.getElementById("adminId").value.trim().toLowerCase();
-  let pass = document.getElementById("password").value.trim();
+  const id = document.getElementById("adminId").value.trim().toLowerCase();
+  const pass = document.getElementById("password").value.trim();
 
   if (!id || !pass) {
     showMsg("⚠ Enter ID & Password");
@@ -56,10 +72,10 @@ function submitAdminLogin() {
     return;
   }
 
-  let users = getUsers() || [];
+  const users = getUsers() || [];
 
-  let user = users.find(function (u) {
-    let storedPass = safeDecode(u.password);
+  const user = users.find(u => {
+    const storedPass = safeDecode(u.password);
 
     return (
       String(u.userId || "").toLowerCase() === id &&
@@ -89,7 +105,7 @@ function submitAdminLogin() {
     return;
   }
 
-  let settings = getSystemSettings() || {};
+  const settings = getSystemSettings() || {};
 
   if (settings.adminAccess === false) {
     showMsg("🚫 Admin access OFF");
@@ -105,9 +121,7 @@ function submitAdminLogin() {
     return;
   }
 
-  // =========================
-  // ✅ FINAL AUTH STANDARD
-  // =========================
+  // ================= UNIFIED SESSION ONLY =================
   if (typeof setSession !== "function") {
     alert("Session system missing");
     unlockBtn();
@@ -115,22 +129,35 @@ function submitAdminLogin() {
     return;
   }
 
+  const now = Date.now();
+
   setSession({
     userId: user.userId,
-    role: user.role
+    role: user.role,
+    loginTime: now,
+    lastActivity: now
   });
 
   if (typeof logActivity === "function") {
-    logActivity(user.userId, "admin", "Login", "ADMIN");
+    try {
+      logActivity(user.userId, "admin", "Login", "ADMIN");
+    } catch (e) {
+      console.warn("Activity log failed");
+    }
   }
 
   showMsg("✅ Login successful");
 
-  setTimeout(function () {
+  setTimeout(() => {
     window.location.href = "admin_dashboard.html";
   }, 500);
+
+  setTimeout(() => {
+    lock = false;
+  }, 600);
 }
 
+// ================= HELPERS =================
 function safeDecode(value) {
   try {
     return atob(value);
@@ -140,7 +167,7 @@ function safeDecode(value) {
 }
 
 function lockBtn() {
-  let btn = document.getElementById("loginBtn");
+  const btn = document.getElementById("loginBtn");
 
   if (btn) {
     btn.disabled = true;
@@ -149,7 +176,7 @@ function lockBtn() {
 }
 
 function unlockBtn() {
-  let btn = document.getElementById("loginBtn");
+  const btn = document.getElementById("loginBtn");
 
   if (btn) {
     btn.disabled = false;
@@ -158,7 +185,7 @@ function unlockBtn() {
 }
 
 function showMsg(text) {
-  let msg = document.getElementById("msg");
+  const msg = document.getElementById("msg");
 
   if (msg) {
     msg.innerText = text;
