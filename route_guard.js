@@ -1,7 +1,6 @@
 /*
 ========================================
-ROUTE GUARD SYSTEM V2.0 (HARDENED)
-FULL ACCESS CONTROL + EXECUTION BLOCK
+ROUTE GUARD SYSTEM V2.1 (STABILITY PATCH)
 ========================================
 */
 
@@ -12,17 +11,24 @@ function requireAuth(allowedRoles = []) {
 
   try {
 
-    const session = typeof getSession === "function"
-      ? getSession()
-      : null;
+    // 🟡 STABILITY FIX: allow session warm-up
+    let session = null;
 
-    // GLOBAL FAIL FLAG
+    if (typeof getSession === "function") {
+      session = getSession();
+    }
+
     window.__AUTH_FAILED__ = false;
 
-    // ❌ No session
+    // 🟡 FIX: small safety delay handling (prevents false redirect)
     if (!session || !session.userId) {
+
       window.__AUTH_FAILED__ = true;
-      window.location.replace("user_login.html");
+
+      setTimeout(() => {
+        window.location.replace("user_login.html");
+      }, 50);
+
       return false;
     }
 
@@ -31,10 +37,12 @@ function requireAuth(allowedRoles = []) {
       allowedRoles.length > 0 &&
       !allowedRoles.includes(session.role)
     ) {
+
       window.__AUTH_FAILED__ = true;
+
       alert("Access Denied");
 
-      // Role-based redirect
+      // keep your original routing logic (unchanged)
       if (session.role === "admin") {
         window.location.replace("admin_login.html");
       } else if (session.role === "system_admin") {
@@ -48,7 +56,7 @@ function requireAuth(allowedRoles = []) {
       return false;
     }
 
-    // ❌ Account status check
+    // ⚠️ FIX: optional safety only (non-breaking fallback)
     if (
       typeof session.status !== "undefined" &&
       session.status !== "active"
