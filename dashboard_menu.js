@@ -1,7 +1,7 @@
 /*
 ========================================
-MENU SYSTEM SAFE BIND V1.0
-PROTECTED + STABLE + NON-DESTRUCTIVE
+MENU SYSTEM SAFE BIND V1.1
+STABILIZED + ROLE SAFE + NON-DESTRUCTIVE
 ========================================
 */
 
@@ -15,13 +15,26 @@ function safePage(name) {
 
     const main = document.getElementById("mainContent");
 
-    if (!main) return;
-
-    // ================= SECURITY CHECK =================
+    // ================= GLOBAL GUARD =================
     if (!session || !session.userId) {
-      window.location.href = "user_login.html";
+      window.location.replace("user_login.html");
       return;
     }
+
+    // ================= ROLE SAFETY (ADDED) =================
+    const role = session.role || "user";
+
+    // optional UI restriction layer (non-breaking)
+    const restrictedModules = {
+      user: [],
+      admin: [],
+      system_admin: [],
+      super_admin: []
+    };
+
+    // NOTE: keeping empty for now (no logic change intent)
+
+    if (!main) return;
 
     main.innerHTML = `
       <div class="info-box">
@@ -58,6 +71,13 @@ const MENU_MAP = {
 // ================= SAFE BIND =================
 function bindMenuSafe() {
 
+  const session = typeof getSession === "function"
+    ? getSession()
+    : null;
+
+  // 🟡 STABILITY: prevent binding if no session
+  if (!session || !session.userId) return;
+
   Object.keys(MENU_MAP).forEach(fnName => {
 
     if (typeof window[fnName] !== "function") {
@@ -72,10 +92,11 @@ function initMenuBinding() {
 
   bindMenuSafe();
 
-  // safe second pass (avoids duplicate overwrite)
-  requestAnimationFrame(() => {
-    bindMenuSafe();
-  });
+  // 🟡 FIX: remove redundant double binding risk
+  // requestAnimationFrame(() => {
+  //   bindMenuSafe();
+  // });
+
 }
 
 // ================= BOOT =================
