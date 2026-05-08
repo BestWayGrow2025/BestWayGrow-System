@@ -30,11 +30,8 @@ function bindEvents() {
 }
 
 function loadPage() {
-  let active = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
-
-  if (active && active.userId) {
-    window.location.href = "admin_dashboard.html";
-  }
+  // ❌ REMOVED LEGACY CHECK
+  // now session_manager handles auth globally
 }
 
 function submitAdminLogin() {
@@ -109,18 +106,16 @@ function submitAdminLogin() {
     return;
   }
 
-  clearAdminSession();
+  // ❌ REMOVED:
+  // clearAdminSession();
+  // localStorage.setItem("loggedInAdmin"...)
 
-  localStorage.setItem("loggedInAdmin", JSON.stringify({
-    userId: user.userId,
-    role: user.role
-  }));
-
-  if (!localStorage.getItem("loggedInAdmin")) {
-    alert("Session failed");
-    unlockBtn();
-    lock = false;
-    return;
+  // ✅ NEW AUTH SYSTEM
+  if (typeof setSession === "function") {
+    setSession({
+      userId: user.userId,
+      role: user.role
+    });
   }
 
   if (typeof logActivity === "function") {
@@ -158,10 +153,6 @@ function unlockBtn() {
     btn.disabled = false;
     btn.innerText = "Login";
   }
-}
-
-function clearAdminSession() {
-  localStorage.removeItem("loggedInAdmin");
 }
 
 function showMsg(text) {
