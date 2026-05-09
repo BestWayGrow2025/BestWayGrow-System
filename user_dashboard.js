@@ -215,4 +215,5 @@ document.addEventListener("DOMContentLoaded", function () {
 window.loadHome = loadHome;
 window.loadPinSection = loadPinSection;
 window.loadDirectTeam = loadDirectTeam;
+
 window.logout = logout;
