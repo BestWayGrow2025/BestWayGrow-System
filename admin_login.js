@@ -1,17 +1,24 @@
 
 /*
 ========================================
-ADMIN LOGIN FINAL (UNIFIED SESSION)
+ADMIN LOGIN FINAL V2.0 (UNIFIED SESSION)
 ========================================
 ✔ Fully aligned with session_manager.js
-✔ No legacy storage usage
-✔ Safe role validation preserved
-✔ Production stable
+✔ No legacy localStorage usage
+✔ Strict admin role validation
+✔ System settings validation
+✔ Safe password decoding
+✔ Single submit lock
+✔ Auto redirect if already logged in
+✔ Production LOCKED
 ========================================
 */
 
+"use strict";
+
 let lock = false;
 
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
@@ -19,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
   loadPage();
 });
 
-// ================= INIT =================
+// ================= INIT PAGE =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
@@ -29,8 +36,9 @@ function initPage() {
   }
 }
 
+// ================= AUTH PAGE =================
 function authPage() {
-  // login page only
+  // Login page only
 }
 
 // ================= EVENTS =================
@@ -44,7 +52,15 @@ function bindEvents() {
 
 // ================= LOAD PAGE =================
 function loadPage() {
-  // handled by route_guard / session_manager
+  // Auto redirect if already authenticated as admin
+  const session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
+
+  if (session && session.userId && session.role === "admin") {
+    window.location.replace("admin_dashboard.html");
+  }
 }
 
 // ================= LOGIN =================
@@ -55,53 +71,61 @@ function submitAdminLogin() {
 
   lockBtn();
 
-  const id = document.getElementById("adminId").value.trim().toLowerCase();
-  const pass = document.getElementById("password").value.trim();
+  const id = document
+    .getElementById("adminId")
+    .value
+    .trim()
+    .toLowerCase();
 
+  const pass = document
+    .getElementById("password")
+    .value
+    .trim();
+
+  // ================= INPUT VALIDATION =================
   if (!id || !pass) {
     showMsg("⚠ Enter ID & Password");
-    unlockBtn();
-    lock = false;
+    resetLogin();
     return;
   }
 
+  // ================= CORE VALIDATION =================
   if (typeof getUsers !== "function") {
     alert("Core system not loaded");
-    unlockBtn();
-    lock = false;
+    resetLogin();
     return;
   }
 
+  // ================= USER SEARCH =================
   const users = getUsers() || [];
 
-  const user = users.find(u => {
+  const user = users.find(function (u) {
     const storedPass = safeDecode(u.password);
 
     return (
       String(u.userId || "").toLowerCase() === id &&
-      u.role === "admin" &&
+      String(u.role || "").toLowerCase() === "admin" &&
       storedPass === pass
     );
   });
 
+  // ================= USER VALIDATION =================
   if (!user) {
     showMsg("❌ Invalid login");
-    unlockBtn();
-    lock = false;
+    resetLogin();
     return;
   }
 
   if ((user.status || "active") !== "active") {
     showMsg("🚫 Account inactive");
-    unlockBtn();
-    lock = false;
+    resetLogin();
     return;
   }
 
+  // ================= SYSTEM SETTINGS CHECK =================
   if (typeof getSystemSettings !== "function") {
     alert("System settings missing");
-    unlockBtn();
-    lock = false;
+    resetLogin();
     return;
   }
 
@@ -109,63 +133,72 @@ function submitAdminLogin() {
 
   if (settings.adminAccess === false) {
     showMsg("🚫 Admin access OFF");
-    unlockBtn();
-    lock = false;
+    resetLogin();
     return;
   }
 
   if (settings.lockMode === true) {
     showMsg("🚫 System locked");
-    unlockBtn();
-    lock = false;
+    resetLogin();
     return;
   }
 
-  // ================= UNIFIED SESSION ONLY =================
+  // ================= SESSION SYSTEM CHECK =================
   if (typeof setSession !== "function") {
     alert("Session system missing");
-    unlockBtn();
-    lock = false;
+    resetLogin();
     return;
   }
 
-  const now = Date.now();
-
-  setSession({
+  // ================= CREATE SESSION =================
+  const success = setSession({
     userId: user.userId,
-    role: user.role,
-    loginTime: now,
-    lastActivity: now
+    role: user.role
   });
 
+  if (!success) {
+    showMsg("❌ Session creation failed");
+    resetLogin();
+    return;
+  }
+
+  // ================= ACTIVITY LOG =================
   if (typeof logActivity === "function") {
     try {
-      logActivity(user.userId, "admin", "Login", "ADMIN");
+      logActivity(
+        user.userId,
+        "admin",
+        "Login",
+        "ADMIN"
+      );
     } catch (e) {
       console.warn("Activity log failed");
     }
   }
 
+  // ================= SUCCESS =================
   showMsg("✅ Login successful");
 
-  setTimeout(() => {
-    window.location.href = "admin_dashboard.html";
+  setTimeout(function () {
+    window.location.replace("admin_dashboard.html");
   }, 500);
 
-  setTimeout(() => {
+  // Safety unlock (normally page redirects before this)
+  setTimeout(function () {
     lock = false;
   }, 600);
 }
 
-// ================= HELPERS =================
+// ================= SAFE DECODE =================
 function safeDecode(value) {
   try {
-    return atob(value);
+    return atob(value || "");
   } catch {
     return value || "";
   }
 }
 
+// ================= BUTTON LOCK =================
 function lockBtn() {
   const btn = document.getElementById("loginBtn");
 
@@ -175,6 +208,7 @@ function lockBtn() {
   }
 }
 
+// ================= BUTTON UNLOCK =================
 function unlockBtn() {
   const btn = document.getElementById("loginBtn");
 
@@ -184,10 +218,19 @@ function unlockBtn() {
   }
 }
 
+// ================= RESET LOGIN =================
+function resetLogin() {
+  unlockBtn();
+  lock = false;
+}
+
+// ================= MESSAGE =================
 function showMsg(text) {
   const msg = document.getElementById("msg");
 
   if (msg) {
     msg.innerText = text;
+  } else {
+    alert(text);
   }
 }
