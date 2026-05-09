@@ -1,37 +1,18 @@
-/*
-========================================
-UPGRADE ENGINE V1.0 (CENTRALIZED CORE)
-========================================
-✔ Single upgrade execution engine
-✔ Session enforced
-✔ Duplicate prevention
-✔ Execution locking
-✔ Upgrade validation
-✔ BV processing
-✔ Income trigger integration
-✔ Audit logging
-✔ Production foundation
-========================================
-*/
-
 "use strict";
 
-// ================= CONFIG =================
 const UPGRADE_LOCKS = {};
 const UPGRADE_LOCK_TTL = 10000;
 
-// ================= NORMALIZER =================
 function normalizeUpgradeAction(actionType) {
   return String(actionType || "").trim().toUpperCase();
 }
 
-// ================= LOCK CHECK =================
 function isUpgradeLocked(key) {
   const ts = UPGRADE_LOCKS[key];
 
   if (!ts) return false;
 
-  if ((Date.now() - ts) > UPGRADE_LOCK_TTL) {
+  if (Date.now() - ts > UPGRADE_LOCK_TTL) {
     delete UPGRADE_LOCKS[key];
     return false;
   }
@@ -47,7 +28,6 @@ function setUpgradeLock(key, state) {
   }
 }
 
-// ================= EXECUTION KEY =================
 function generateUpgradeKey(actionType, payload = {}, userId = "SYSTEM") {
   return [
     normalizeUpgradeAction(actionType),
@@ -61,10 +41,12 @@ function generateUpgradeKey(actionType, payload = {}, userId = "SYSTEM") {
 
 // ================= MAIN ENGINE =================
 function executeUpgrade(actionType, payload = {}) {
+
   let user = null;
   let execKey = null;
 
   try {
+
     if (typeof getCurrentUser === "function") {
       user = getCurrentUser();
     }
@@ -87,38 +69,35 @@ function executeUpgrade(actionType, payload = {}) {
 
     setUpgradeLock(execKey, true);
 
-    switch (actionType) {
-      case "USER_UPGRADE":
-      case "REPURCHASE":
-      case "PIN_ACTIVATION":
-      case "ADMIN_UPGRADE":
-      case "SYSTEM_UPGRADE":
-        // Full execution logic will be added in next phase
-        return true;
-
-      default:
-        throw new Error("Invalid upgrade action");
+    // 🔥 ONLY ROUTE TO CENTRAL ENGINE
+    if (typeof executeFinancialCore !== "function") {
+      throw new Error("Core engine missing");
     }
 
+    return executeFinancialCore({
+      type: actionType,
+      userId: user.userId,
+      ...payload
+    });
+
   } catch (err) {
+
     if (typeof logCritical === "function") {
-      try {
-        logCritical(
-          "UPGRADE ENGINE ERROR: " + err.message,
-          user?.userId || "UNKNOWN",
-          "UPGRADE_ENGINE"
-        );
-      } catch (_) {}
+      logCritical(
+        "UPGRADE ENGINE ERROR: " + err.message,
+        user?.userId || "UNKNOWN",
+        "UPGRADE_ENGINE"
+      );
     }
 
     return false;
 
   } finally {
+
     if (execKey) {
       setUpgradeLock(execKey, false);
     }
   }
 }
 
-// ================= GLOBAL EXPORT =================
 window.executeUpgrade = executeUpgrade;
