@@ -19,13 +19,15 @@ CORE FINANCIAL ENGINE V1.0 (CENTRALIZED BRAIN)
 // CORE ENTRY
 // ===============================
 function executeFinancialCore({
-  type,        // upgrade | repurchase | registration | pin_use
+  type,
   userId,
   pin,
   bv,
   source = "SYSTEM",
   ref = null
 } = {}) {
+
+  let execRef = null;
 
   try {
 
@@ -35,7 +37,7 @@ function executeFinancialCore({
     }
 
     // ================= SESSION CHECK =================
-    let session = typeof getSession === "function" ? getSession() : null;
+    const session = typeof getSession === "function" ? getSession() : null;
 
     if (!session || !session.userId) {
       return false;
@@ -61,7 +63,7 @@ function executeFinancialCore({
     // ================= PIN VALIDATION =================
     if (pin && typeof usePin === "function") {
 
-      let used = usePin(pin.pinId, userId, type);
+      const used = usePin(pin.pinId, userId, type);
 
       if (!used) {
         return false;
@@ -76,13 +78,18 @@ function executeFinancialCore({
     }
 
     // ================= UNIQUE REF =================
-    let execRef = ref || `${type}_${userId}_${Date.now()}`;
+    execRef = ref || `${type}_${userId}_${Date.now()}`;
 
     // ================= TRIGGER LAYER =================
-    if (typeof isRecentTrigger === "function" &&
-        typeof isTriggerLocked === "function") {
+    if (
+      typeof isRecentTrigger === "function" &&
+      typeof isTriggerLocked === "function"
+    ) {
 
-      if (isRecentTrigger(execRef) || isTriggerLocked(execRef)) {
+      if (
+        isRecentTrigger(execRef) ||
+        isTriggerLocked(execRef)
+      ) {
         return false;
       }
 
@@ -101,25 +108,19 @@ function executeFinancialCore({
       return false;
     }
 
-    // ================= WALLET FINAL CREDIT =================
-    if (typeof creditWallet === "function") {
+    // ================= WALLET BONUS (OPTIONAL) =================
+    if (typeof getSystemBonus === "function") {
 
-      // optional system reward or fallback credit
-      // (only if system defines extra bonus logic)
+      const bonus = getSystemBonus(type, bv);
 
-      if (typeof getSystemBonus === "function") {
-
-        let bonus = getSystemBonus(type, bv);
-
-        if (bonus > 0) {
-          creditWallet(
-            userId,
-            bonus,
-            "SYSTEM_BONUS",
-            "BONUS_" + execRef,
-            true
-          );
-        }
+      if (bonus > 0 && typeof creditWallet === "function") {
+        creditWallet(
+          userId,
+          bonus,
+          "SYSTEM_BONUS",
+          "BONUS_" + execRef,
+          true
+        );
       }
     }
 
@@ -128,7 +129,7 @@ function executeFinancialCore({
       logActivity(
         userId,
         "SYSTEM",
-        `FINANCIAL ${type.toUpperCase()} EXECUTED`,
+        `FINANCIAL ${String(type).toUpperCase()} EXECUTED`,
         source
       );
     }
@@ -150,7 +151,7 @@ function executeFinancialCore({
   } finally {
 
     // ================= CLEAN LOCK =================
-    if (typeof setTriggerLock === "function") {
+    if (execRef && typeof setTriggerLock === "function") {
       setTriggerLock(execRef, false);
     }
   }
