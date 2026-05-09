@@ -6,14 +6,16 @@ SYSTEM ADMIN LOGIN FINAL (UNIFIED AUTH)
 ✔ No legacy localStorage usage
 ✔ Safe role validation
 ✔ Stable redirect flow
-✔ Production ready
+✔ Production LOCKED
 ========================================
 */
+
+"use strict";
 
 let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
-  initCoreSystem();
+  initPage();
   bindEvents();
   loadPage();
 });
@@ -39,10 +41,13 @@ function bindEvents() {
 
 // ================= AUTO REDIRECT =================
 function loadPage() {
-  const session = typeof getSession === "function" ? getSession() : null;
+  const session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
 
   if (session && session.role === "system_admin") {
-    window.location.href = "system_admin_dashboard.html";
+    window.location.replace("system_admin_dashboard.html");
   }
 }
 
@@ -52,8 +57,16 @@ function login() {
   if (lock) return;
   lock = true;
 
-  const userId = document.getElementById("userId").value.trim().toUpperCase();
-  const password = document.getElementById("password").value.trim();
+  const userId = document
+    .getElementById("userId")
+    .value
+    .trim()
+    .toUpperCase();
+
+  const password = document
+    .getElementById("password")
+    .value
+    .trim();
 
   if (!userId || !password) {
     showMsg("⚠️ Enter ID & Password");
@@ -61,12 +74,17 @@ function login() {
     return;
   }
 
-  const users = typeof getUsers === "function" ? getUsers() : [];
+  const users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
-  const user = users.find(u =>
-    (u.userId || "").toUpperCase() === userId &&
-    u.role === "system_admin"
-  );
+  const user = users.find(function (u) {
+    return (
+      String(u.userId || "").toUpperCase() === userId &&
+      String(u.role || "") === "system_admin"
+    );
+  });
 
   if (!user) {
     showMsg("❌ Invalid ID");
@@ -95,19 +113,26 @@ function login() {
     return;
   }
 
-  const now = Date.now();
-
-  setSession({
+  const success = setSession({
     userId: user.userId,
-    role: user.role,
-    loginTime: now,
-    lastActivity: now
+    role: user.role
   });
+
+  if (success !== true) {
+    showMsg("❌ Session creation failed");
+    lock = false;
+    return;
+  }
 
   // ================= ACTIVITY LOG =================
   if (typeof logActivity === "function") {
     try {
-      logActivity(user.userId, "system_admin", "Login", "ADMIN");
+      logActivity(
+        user.userId,
+        "system_admin",
+        "Login",
+        "ADMIN"
+      );
     } catch (e) {
       console.warn("Activity log failed");
     }
@@ -115,11 +140,13 @@ function login() {
 
   showMsg("✅ Login successful");
 
-  setTimeout(() => {
-    window.location.href = "system_admin_dashboard.html";
+  setTimeout(function () {
+    window.location.replace(
+      "system_admin_dashboard.html"
+    );
   }, 400);
 
-  setTimeout(() => {
+  setTimeout(function () {
     lock = false;
   }, 600);
 }
@@ -127,7 +154,10 @@ function login() {
 // ================= MESSAGE =================
 function showMsg(msg) {
   const el = document.getElementById("msg");
-  if (el) el.innerText = msg;
+
+  if (el) {
+    el.innerText = msg;
+  }
 }
 
 // ================= SAFE DECODE =================
