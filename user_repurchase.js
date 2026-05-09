@@ -1,12 +1,33 @@
+/*
+========================================
+USER REPURCHASE V2.0 (UPGRADE ENGINE INTEGRATED)
+========================================
+✔ Unified authentication via getCurrentUser()
+✔ Auto PIN prefill preserved
+✔ Repurchase eligibility checks preserved
+✔ All repurchase execution delegated to upgrade_engine.js
+✔ No direct usePin() logic
+✔ No direct triggerRepurchaseIncome() logic
+✔ Production-safe UI layer only
+========================================
+*/
+
+"use strict";
+
 let currentUser = null;
 
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
   authPage();
   loadRepurchasePage();
 });
 
+// ================= AUTH =================
 function authPage() {
-  currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+  currentUser =
+    typeof getCurrentUser === "function"
+      ? getCurrentUser()
+      : null;
 
   if (!currentUser || !currentUser.userId) {
     alert("Login required");
@@ -15,14 +36,23 @@ function authPage() {
   }
 }
 
+// ================= PAGE LOAD =================
 function loadRepurchasePage() {
   if (!currentUser) return;
 
-  const infoBox = document.getElementById("info");
-  const statusBox = document.getElementById("repurchaseStatus");
+  const infoBox =
+    document.getElementById("info");
+
+  const statusBox =
+    document.getElementById("repurchaseStatus");
 
   if (infoBox) {
-    infoBox.innerText = "User: " + (currentUser.username || "User") + " (" + (currentUser.userId || "N/A") + ")";
+    infoBox.innerText =
+      "User: " +
+      (currentUser.username || "User") +
+      " (" +
+      (currentUser.userId || "N/A") +
+      ")";
   }
 
   if (statusBox) {
@@ -32,78 +62,116 @@ function loadRepurchasePage() {
         : "Upgrade required before repurchase";
   }
 
+  // ================= AUTO PIN FILL =================
   try {
-    const selected = JSON.parse(localStorage.getItem("selectedPin"));
+    const selected = JSON.parse(
+      localStorage.getItem("selectedPin")
+    );
 
-    if (selected && selected.type === "repurchase") {
-      const pinInput = document.getElementById("pinInput");
+    if (
+      selected &&
+      selected.type === "repurchase"
+    ) {
+      const pinInput =
+        document.getElementById("pinInput");
+
       if (pinInput) {
-        pinInput.value = selected.pinId || "";
+        pinInput.value =
+          selected.pinId || "";
       }
     }
   } catch (err) {
-    console.warn("Auto pin fill skipped");
+    console.warn(
+      "Auto pin fill skipped"
+    );
   }
 }
 
+// ================= SUBMIT =================
 function submitRepurchase() {
-  if (!currentUser || !currentUser.userId) {
+  if (
+    !currentUser ||
+    !currentUser.userId
+  ) {
     alert("Login required");
-    window.location.href = "user_login.html";
+    window.location.href =
+      "user_login.html";
     return;
   }
 
-  if (currentUser.status !== "active" || currentUser.upgradeStatus !== "completed") {
+  if (
+    currentUser.status !== "active" ||
+    currentUser.upgradeStatus !==
+      "completed"
+  ) {
     alert("Repurchase not allowed");
     return;
   }
 
-  const users = typeof getUsers === "function" ? getUsers() : [];
-  const user = users.find(item => item.userId === currentUser.userId);
+  const pinInput =
+    document.getElementById("pinInput");
 
-  if (!user) {
-    alert("User not found");
+  const pinId = pinInput
+    ? pinInput.value.trim()
+    : "";
+
+  if (!validatePinInput(pinId)) {
     return;
   }
 
-  const pinInput = document.getElementById("pinInput");
-  const pinId = pinInput ? pinInput.value.trim() : "";
-
-  if (!validatePinInput(pinId)) return;
-
   try {
-    const pin = usePin(pinId, user.userId, "repurchase");
-
-    if (!pin) {
-      alert("Invalid or unusable PIN");
-      return;
+    // ================= ENGINE CHECK =================
+    if (
+      typeof executeUpgrade !==
+      "function"
+    ) {
+      throw new Error(
+        "Upgrade engine missing"
+      );
     }
 
-    if (pin.type !== "repurchase") {
-      throw new Error("Wrong PIN type");
+    // ================= CENTRALIZED EXECUTION =================
+    const result =
+      executeUpgrade(
+        "REPURCHASE",
+        {
+          pinId: pinId,
+          purpose: "repurchase"
+        }
+      );
+
+    if (!result) {
+      throw new Error(
+        "Repurchase failed"
+      );
     }
 
-    if (typeof triggerRepurchaseIncome === "function") {
-      triggerRepurchaseIncome(user.userId, Number(pin.bv || 0));
-    }
+    // ================= CLEANUP =================
+    localStorage.removeItem(
+      "selectedPin"
+    );
 
-    const updatedUser =
-      typeof getUserById === "function" ? getUserById(user.userId) : null;
+    alert(
+      "Repurchase Successful"
+    );
 
-    if (!updatedUser || updatedUser.repurchaseStatus !== "completed") {
-      throw new Error("Repurchase save failed");
-    }
+    window.location.href =
+      "user_dashboard.html";
 
-    localStorage.removeItem("selectedPin");
-
-    alert("Repurchase Successful");
-    window.location.href = "user_dashboard.html";
   } catch (err) {
-    console.error("Repurchase Error:", err);
-    alert(err.message || "Repurchase failed");
+    console.error(
+      "Repurchase Error:",
+      err
+    );
+
+    alert(
+      err.message ||
+        "Repurchase failed"
+    );
   }
 }
 
+// ================= VALIDATION =================
 function validatePinInput(pinId) {
   if (!pinId) {
     alert("Enter PIN");
@@ -117,3 +185,7 @@ function validatePinInput(pinId) {
 
   return true;
 }
+
+// ================= GLOBAL EXPORT =================
+window.submitRepurchase =
+  submitRepurchase;
