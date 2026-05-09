@@ -1,10 +1,20 @@
 /*
 ========================================
-MENU SYSTEM SAFE BIND V1.1
-STABILIZED + ROLE SAFE + NON-DESTRUCTIVE
+MENU SYSTEM SAFE BIND V2.0 (FINAL LOCKED)
+========================================
+✔ Session-based protection
+✔ Non-destructive fallback loader
+✔ No duplicate binding
+✔ Works with unified session_manager.js
+✔ Route guard compatible
+✔ Safe for all dashboards
+✔ Production LOCKED
 ========================================
 */
 
+"use strict";
+
+// ================= SAFE PAGE FALLBACK =================
 function safePage(name) {
 
   return function () {
@@ -15,27 +25,16 @@ function safePage(name) {
 
     const main = document.getElementById("mainContent");
 
-    // ================= GLOBAL GUARD =================
+    // ================= AUTH CHECK =================
     if (!session || !session.userId) {
       window.location.replace("user_login.html");
       return;
     }
 
-    // ================= ROLE SAFETY (ADDED) =================
-    const role = session.role || "user";
-
-    // optional UI restriction layer (non-breaking)
-    const restrictedModules = {
-      user: [],
-      admin: [],
-      system_admin: [],
-      super_admin: []
-    };
-
-    // NOTE: keeping empty for now (no logic change intent)
-
+    // ================= TARGET CHECK =================
     if (!main) return;
 
+    // ================= FALLBACK CONTENT =================
     main.innerHTML = `
       <div class="info-box">
         <h3>${name}</h3>
@@ -71,14 +70,7 @@ const MENU_MAP = {
 // ================= SAFE BIND =================
 function bindMenuSafe() {
 
-  const session = typeof getSession === "function"
-    ? getSession()
-    : null;
-
-  // 🟡 STABILITY: prevent binding if no session
-  if (!session || !session.userId) return;
-
-  Object.keys(MENU_MAP).forEach(fnName => {
+  Object.keys(MENU_MAP).forEach(function (fnName) {
 
     if (typeof window[fnName] !== "function") {
       window[fnName] = safePage(MENU_MAP[fnName]);
@@ -90,14 +82,20 @@ function bindMenuSafe() {
 // ================= INIT CONTROLLER =================
 function initMenuBinding() {
 
+  // If route_guard already blocked page, do nothing
+  if (
+    typeof isAuthBlocked === "function" &&
+    isAuthBlocked()
+  ) {
+    return;
+  }
+
   bindMenuSafe();
-
-  // 🟡 FIX: remove redundant double binding risk
-  // requestAnimationFrame(() => {
-  //   bindMenuSafe();
-  // });
-
 }
 
 // ================= BOOT =================
 document.addEventListener("DOMContentLoaded", initMenuBinding);
+
+// ================= GLOBAL EXPORT =================
+window.bindMenuSafe = bindMenuSafe;
+window.initMenuBinding = initMenuBinding;
