@@ -1,6 +1,16 @@
 /*
 ========================================
-ROUTE GUARD SYSTEM V2.1 (STABILITY PATCH)
+ROUTE GUARD SYSTEM V3.0 (UNIFIED FINAL)
+SINGLE ACCESS CONTROL AUTHORITY
+========================================
+✔ Single authentication guard
+✔ Uses session_manager.js only
+✔ Role-based access validation
+✔ Role-specific login redirects
+✔ Global auth failure flag
+✔ Safe execution blocking
+✔ No duplicate auth layers
+✔ Production LOCKED
 ========================================
 */
 
@@ -11,29 +21,28 @@ function requireAuth(allowedRoles = []) {
 
   try {
 
-    // 🟡 STABILITY FIX: allow session warm-up
-    let session = null;
-
-    if (typeof getSession === "function") {
-      session = getSession();
-    }
-
+    // Reset global auth failure flag
     window.__AUTH_FAILED__ = false;
 
-    // 🟡 FIX: small safety delay handling (prevents false redirect)
+    // Get validated session from session_manager.js
+    const session =
+      typeof getSession === "function"
+        ? getSession()
+        : null;
+
+    // ================= NO SESSION =================
     if (!session || !session.userId) {
 
       window.__AUTH_FAILED__ = true;
 
-      setTimeout(() => {
-        window.location.replace("user_login.html");
-      }, 50);
+      window.location.replace("user_login.html");
 
       return false;
     }
 
-    // ❌ Role mismatch
+    // ================= ROLE VALIDATION =================
     if (
+      Array.isArray(allowedRoles) &&
       allowedRoles.length > 0 &&
       !allowedRoles.includes(session.role)
     ) {
@@ -42,7 +51,7 @@ function requireAuth(allowedRoles = []) {
 
       alert("Access Denied");
 
-      // keep your original routing logic (unchanged)
+      // Redirect to role-specific login page
       if (session.role === "admin") {
         window.location.replace("admin_login.html");
       } else if (session.role === "system_admin") {
@@ -56,16 +65,22 @@ function requireAuth(allowedRoles = []) {
       return false;
     }
 
-    // ⚠️ FIX: optional safety only (non-breaking fallback)
+    // ================= OPTIONAL STATUS CHECK =================
+    // session_manager.js already validates active status.
+    // This remains as a non-breaking defensive check.
     if (
       typeof session.status !== "undefined" &&
       session.status !== "active"
     ) {
+
       window.__AUTH_FAILED__ = true;
+
       window.location.replace("user_login.html");
+
       return false;
     }
 
+    // ================= AUTH PASSED =================
     return true;
 
   } catch (e) {
@@ -84,3 +99,7 @@ function requireAuth(allowedRoles = []) {
 function isAuthBlocked() {
   return window.__AUTH_FAILED__ === true;
 }
+
+// ================= SAFE EXPORT =================
+window.requireAuth = requireAuth;
+window.isAuthBlocked = isAuthBlocked;
