@@ -197,3 +197,4 @@ window.getRankById = getRankById;
 window.getRankByCode = getRankByCode;
 window.getHighestRank = getHighestRank;
 window.isCTORRank = isCTORRank;
+
