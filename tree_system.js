@@ -3,31 +3,29 @@
 
 /*
 ========================================
-TREE SYSTEM V13 (FINAL PRODUCTION LOCK + VIEW FIX)
+TREE SYSTEM V13 (FINAL PRODUCTION LOCK)
 ========================================
-✔ Sponsor Tree = hidden placement engine (SYSTEM USE ONLY)
-✔ Introducer Tree = UI filtered view support
-✔ Safe binary placement (L / R)
+✔ Sponsor Tree = hidden placement engine
+✔ Introducer Tree = UI filtered support only
+✔ Safe L/R placement
 ✔ Cycle protection
 ✔ Broken-node protection
-✔ FULL TREE READ SUPPORT
-✔ ROLE READY STRUCTURE (USER / ADMIN / SUPER ADMIN)
+✔ Full read support
+✔ Production stable
 ========================================
 */
 
-/* ================= TREE HELPERS ================= */
+/* ================= CHILD HELPERS ================= */
 
-// Get direct sponsor children (SYSTEM TREE)
 function getChildren(userId, users) {
   return users.filter(u => u.sponsorId === userId);
 }
 
-// Get introducer-based children (UI TREE LOGIC)
 function getIntroducerChildren(userId, users) {
   return users.filter(u => u.introducerId === userId);
 }
 
-/* ================= DIRECT NODE ACCESS ================= */
+/* ================= DIRECT ACCESS (DEBUG SAFE) ================= */
 
 function getLeftChild(userId, users) {
   const user = users.find(u => u.userId === userId);
@@ -39,9 +37,11 @@ function getRightChild(userId, users) {
   return user ? user.rightChild : null;
 }
 
-/* ================= SAFE TREE PLACEMENT ================= */
+/* ================= TREE PLACEMENT ENGINE ================= */
 
 function findPlacement(sponsorId, position, users) {
+
+  if (!Array.isArray(users)) throw new Error("Invalid users list");
 
   let current = users.find(u => u.userId === sponsorId);
   if (!current) throw new Error("Invalid sponsor");
@@ -78,7 +78,7 @@ function findPlacement(sponsorId, position, users) {
     }
 
     if (!current) {
-      throw new Error("Tree structure broken during traversal");
+      throw new Error("Tree broken during traversal");
     }
   }
 }
@@ -88,6 +88,7 @@ function findPlacement(sponsorId, position, users) {
 function generateUserId(users) {
 
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
   let id;
   let safety = 0;
 
@@ -112,33 +113,31 @@ function generateUserId(users) {
 
 function generateReferralLink(userId) {
 
-  try {
-    const base = (window.location && window.location.origin)
+  const base =
+    (window.location && window.location.origin)
       ? window.location.origin
       : "https://yourdomain.com";
 
-    return base + "/register.html?ref=" + encodeURIComponent(userId);
-
-  } catch (e) {
-    return "https://yourdomain.com/register.html?ref=" + encodeURIComponent(userId);
-  }
+  return base + "/register.html?ref=" + encodeURIComponent(userId);
 }
 
-/* ================= TREE VIEW BUILDER (IMPORTANT FIX) =================
-   USER / ADMIN / SUPER ADMIN ALL DEPEND ON THIS
-*/
+/* ================= TREE VIEW ENGINE ================= */
 
 function getUserTree(userId) {
 
-  let users = (typeof getUsers === "function") ? getUsers() : [];
+  let users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
+
   if (!Array.isArray(users)) return null;
 
-  let root = users.find(u => u.userId === userId);
+  const root = users.find(u => u.userId === userId);
   if (!root) return null;
 
   function build(nodeId) {
 
-    let node = users.find(u => u.userId === nodeId);
+    const node = users.find(u => u.userId === nodeId);
     if (!node) return null;
 
     return {
@@ -152,23 +151,30 @@ function getUserTree(userId) {
   return build(userId);
 }
 
-/* ================= CORE USER CREATION ENGINE ================= */
+/* ================= CREATE USER ENGINE ================= */
 
 function createUserWithTree(req) {
 
   try {
 
-    let sys = (typeof getSystemSettings === "function")
-      ? getSystemSettings()
-      : {};
+    let sys =
+      typeof getSystemSettings === "function"
+        ? getSystemSettings()
+        : {};
 
     if (sys.lockMode) throw new Error("System Locked");
     if (sys.registrationOpen === false) throw new Error("Registration Closed");
 
-    let users = (typeof getUsers === "function") ? getUsers() : [];
+    let users =
+      typeof getUsers === "function"
+        ? getUsers()
+        : [];
+
     if (!Array.isArray(users)) users = [];
 
-    if (!req || !req.mobile) throw new Error("Invalid request");
+    if (!req || !req.mobile) {
+      throw new Error("Invalid request");
+    }
 
     req.introducerId = req.introducerId || "BWG000000";
     req.sponsorId = req.sponsorId || req.introducerId;
@@ -181,16 +187,23 @@ function createUserWithTree(req) {
       throw new Error("Mobile already exists");
     }
 
-    let userId = generateUserId(users);
+    const userId = generateUserId(users);
 
-    let placement = findPlacement(req.sponsorId, req.position, users);
+    const placement = findPlacement(
+      req.sponsorId,
+      req.position,
+      users
+    );
 
-    let parent = users.find(u => u.userId === placement.parentId);
+    const parent = users.find(
+      u => u.userId === placement.parentId
+    );
+
     if (!parent) throw new Error("Parent not found");
 
-    let newUser = {
-
+    const newUser = {
       userId,
+
       username: req.username || "",
       password: req.password || "",
       name: req.name || "",
@@ -222,12 +235,18 @@ function createUserWithTree(req) {
     // LINK TREE
     if (placement.side === "L") {
 
-      if (parent.leftChild) throw new Error("Left already occupied");
+      if (parent.leftChild) {
+        throw new Error("Left already occupied");
+      }
+
       parent.leftChild = userId;
 
     } else {
 
-      if (parent.rightChild) throw new Error("Right already occupied");
+      if (parent.rightChild) {
+        throw new Error("Right already occupied");
+      }
+
       parent.rightChild = userId;
     }
 
@@ -238,14 +257,14 @@ function createUserWithTree(req) {
     }
 
     if (typeof logActivity === "function") {
-      logActivity(userId, "USER", "Created");
+      logActivity(userId, "USER", "CREATED");
     }
 
     return newUser;
 
   } catch (err) {
 
-    console.error("Tree creation failed:", err.message);
+    console.error("Tree system error:", err.message);
     throw err;
   }
 }
@@ -255,5 +274,3 @@ function createUserWithTree(req) {
 window.createUserWithTree = createUserWithTree;
 window.findPlacement = findPlacement;
 window.getUserTree = getUserTree;
-window.getChildren = getChildren;
-window.getIntroducerChildren = getIntroducerChildren;
