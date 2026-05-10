@@ -1,38 +1,43 @@
-
 "use strict";
 
 /*
 ========================================
 USER TREE FINAL SIMPLE (L1 TO L30)
 ========================================
-✔ Level-based view only (L1–L30)
-✔ Introducer-based traversal
+✔ Level-based introducer tree view
 ✔ Session protected
-✔ Safe fallback handling
+✔ Safe BFS traversal
 ✔ UI stable rendering
+✔ READY FOR dashboard_engine integration
 ========================================
 */
 
 let session = null;
 let currentUser = null;
 
-// ================= INIT =================
+/* ================= INIT ================= */
+
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
   renderUI();
 });
 
-// ================= INIT CORE =================
+/* ================= INIT CORE ================= */
+
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   }
 }
 
-// ================= AUTH =================
+/* ================= AUTH ================= */
+
 function authPage() {
-  session = typeof getSession === "function" ? getSession() : null;
+
+  session = typeof getSession === "function"
+    ? getSession()
+    : null;
 
   const container = document.getElementById("tree");
 
@@ -52,8 +57,10 @@ function authPage() {
   }
 }
 
-// ================= RENDER UI =================
+/* ================= RENDER UI ================= */
+
 function renderUI() {
+
   const container = document.getElementById("tree");
 
   if (!container) return;
@@ -63,7 +70,7 @@ function renderUI() {
 
   // TITLE
   const title = document.createElement("h2");
-  title.innerText = "My Team Tree";
+  title.innerText = "My Team Tree (L1 - L30)";
   container.appendChild(title);
 
   // LEVEL SELECT
@@ -95,22 +102,24 @@ function renderUI() {
 
   container.appendChild(table);
 
-  // DEFAULT VIEW
   renderLevelTable(1);
 }
 
-// ================= LEVEL FETCH =================
+/* ================= LEVEL FETCH (FIXED SAFE BFS) ================= */
+
 function getUsersByLevel(rootUserId, targetLevel) {
 
-  const users = typeof getUsers === "function" ? getUsers() : [];
+  const users = typeof getUsers === "function"
+    ? getUsers()
+    : [];
+
   if (!Array.isArray(users)) return [];
 
   const result = [];
+  const queue = [{ id: rootUserId, level: 0 }];
+  const visited = new Set();
 
-  let queue = [{ id: rootUserId, level: 0 }];
-  let visited = new Set();
-
-  while (queue.length > 0) {
+  while (queue.length) {
 
     const current = queue.shift();
     if (!current || visited.has(current.id)) continue;
@@ -128,11 +137,17 @@ function getUsersByLevel(rootUserId, targetLevel) {
     if (current.level < targetLevel) {
 
       if (user.leftChild) {
-        queue.push({ id: user.leftChild, level: current.level + 1 });
+        queue.push({
+          id: user.leftChild,
+          level: current.level + 1
+        });
       }
 
       if (user.rightChild) {
-        queue.push({ id: user.rightChild, level: current.level + 1 });
+        queue.push({
+          id: user.rightChild,
+          level: current.level + 1
+        });
       }
     }
   }
@@ -140,10 +155,12 @@ function getUsersByLevel(rootUserId, targetLevel) {
   return result;
 }
 
-// ================= RENDER TABLE =================
+/* ================= TABLE RENDER ================= */
+
 function renderLevelTable(level) {
 
   const table = document.getElementById("treeTable");
+
   if (!table || !currentUser) return;
 
   const users = getUsersByLevel(currentUser.userId, level);
@@ -156,7 +173,7 @@ function renderLevelTable(level) {
     </tr>
   `;
 
-  if (!users || users.length === 0) {
+  if (!users.length) {
 
     html += `
       <tr>
@@ -186,3 +203,8 @@ function renderLevelTable(level) {
 
   table.innerHTML = html;
 }
+
+/* ================= EXPORT (FOR DEBUG / EXTENSION) ================= */
+
+window.getUsersByLevel = getUsersByLevel;
+window.renderLevelTable = renderLevelTable;
