@@ -1,21 +1,21 @@
+"use strict";
+
 /*
 ========================================
 SUPER ADMIN DASHBOARD
-STABLE FINAL EXECUTION VERSION
+STABLE FINAL EXECUTION VERSION + TREE VIEW INTEGRATION
 ONE AUTH ENGINE ONLY
 ========================================
 */
-
-"use strict";
 
 let currentUser = null;
 let clickLock = false;
 let menuBound = false;
 
-// ================= SAFE BOOT =================
+/* ================= SAFE BOOT ================= */
+
 (function () {
 
-  // prevent duplicate script execution
   if (window.__SUPER_ADMIN_RUNNING__) {
     console.warn("Super Admin Dashboard already initialized");
     return;
@@ -24,31 +24,24 @@ let menuBound = false;
   window.__SUPER_ADMIN_RUNNING__ = true;
 
   if (document.readyState === "loading") {
-    document.addEventListener(
-      "DOMContentLoaded",
-      bootSuperAdmin,
-      { once: true }
-    );
+    document.addEventListener("DOMContentLoaded", bootSuperAdmin, { once: true });
   } else {
     bootSuperAdmin();
   }
 
 })();
 
-// ================= BOOT =================
+/* ================= BOOT ================= */
+
 function bootSuperAdmin() {
 
   try {
 
-    // ✅ REQUIRED AUTH GUARD (FIX ADDED)
     if (typeof requireAuth === "function") {
       requireAuth(["super_admin"]);
     }
 
-    const session =
-      typeof getSession === "function"
-        ? getSession()
-        : null;
+    const session = typeof getSession === "function" ? getSession() : null;
 
     if (!session || session.role !== "super_admin") {
       window.location.href = "super_admin_login.html";
@@ -79,7 +72,8 @@ function bootSuperAdmin() {
   }
 }
 
-// ================= INIT =================
+/* ================= INIT ================= */
+
 function initPage() {
 
   if (typeof initCoreSystem !== "function") {
@@ -92,17 +86,13 @@ function initPage() {
   }
 }
 
-// ================= AUTH =================
+/* ================= AUTH ================= */
+
 function authPage() {
 
-  const session =
-    typeof getSession === "function"
-      ? getSession()
-      : null;
+  const session = typeof getSession === "function" ? getSession() : null;
 
-  if (!session || session.role !== "super_admin") {
-    return false;
-  }
+  if (!session || session.role !== "super_admin") return false;
 
   currentUser =
     typeof getUserById === "function"
@@ -130,7 +120,8 @@ function authPage() {
   return true;
 }
 
-// ================= EVENTS =================
+/* ================= EVENTS ================= */
+
 function bindEvents() {
 
   if (menuBound) return;
@@ -144,9 +135,7 @@ function bindEvents() {
         if (clickLock) return;
         clickLock = true;
 
-        setTimeout(() => {
-          clickLock = false;
-        }, 250);
+        setTimeout(() => clickLock = false, 250);
 
         document.querySelectorAll(".menu button")
           .forEach(b => b.classList.remove("active"));
@@ -173,6 +162,10 @@ function bindEvents() {
             loadSystem();
             break;
 
+          case "tree":
+            loadTreeView(); // 🔥 TREE INTEGRATION
+            break;
+
           case "reset":
             loadResetPanel();
             break;
@@ -194,13 +187,11 @@ function bindEvents() {
   if (homeBtn) homeBtn.classList.add("active");
 }
 
-// ================= HOME =================
+/* ================= HOME ================= */
+
 function loadHome() {
 
-  let users =
-    typeof getUsers === "function"
-      ? getUsers()
-      : [];
+  let users = typeof getUsers === "function" ? getUsers() : [];
 
   const totalUsers = users.filter(u => u.role === "user").length;
   const admins = users.filter(u => u.role === "admin").length;
@@ -227,62 +218,15 @@ function loadHome() {
       </div>
 
     </div>
+
+    <br>
+
+    <button onclick="loadTreeView()">🌳 View Full Tree</button>
   `;
 }
 
-// ================= CREATE =================
-function loadCreate() {
+/* ================= USERS ================= */
 
-  document.getElementById("mainContent").innerHTML = `
-    <h3>Create System Admin</h3>
-
-    <input id="id" placeholder="System Admin ID">
-    <input id="name" placeholder="Name">
-    <input id="pass" type="password" placeholder="Password">
-
-    <button id="createSystemAdminBtn">Create</button>
-  `;
-
-  document
-    .getElementById("createSystemAdminBtn")
-    .addEventListener("click", createSystemAdmin);
-}
-
-function createSystemAdmin() {
-
-  const id = document.getElementById("id").value.trim();
-  const name = document.getElementById("name").value.trim();
-  const pass = document.getElementById("pass").value.trim();
-
-  if (!id || !name || !pass) {
-    return alert("Fill all fields");
-  }
-
-  let users = typeof getUsers === "function" ? getUsers() : [];
-
-  if (users.find(u => u.userId.toLowerCase() === id.toLowerCase())) {
-    return alert("ID already exists");
-  }
-
-  users.push({
-    userId: id,
-    username: name,
-    password: btoa(pass),
-    role: "system_admin",
-    status: "active",
-    createdBy: currentUser.userId,
-    createdAt: Date.now()
-  });
-
-  if (typeof saveUsers === "function") {
-    saveUsers(users);
-  }
-
-  alert("System Admin Created");
-  loadUsers();
-}
-
-// ================= USERS =================
 function loadUsers() {
 
   let users = typeof getUsers === "function" ? getUsers() : [];
@@ -310,10 +254,12 @@ function loadUsers() {
   });
 
   html += `</table>`;
+
   document.getElementById("mainContent").innerHTML = html;
 }
 
-// ================= SYSTEM =================
+/* ================= SYSTEM ================= */
+
 function loadSystem() {
 
   let s = typeof getSystemSettings === "function"
@@ -328,7 +274,57 @@ function loadSystem() {
   `;
 }
 
-// ================= RESET =================
+/* ================= 🌳 TREE VIEW (FINAL FIX) ================= */
+
+function loadTreeView() {
+
+  const main = document.getElementById("mainContent");
+  if (!main) return;
+
+  let users = typeof getUsers === "function" ? getUsers() : [];
+
+  if (!Array.isArray(users)) {
+    main.innerHTML = "<p>Tree data not available</p>";
+    return;
+  }
+
+  let html = `
+    <h3>🌳 FULL SYSTEM TREE VIEW (SUPER ADMIN)</h3>
+    <button onclick="showFullTreeConsole()">Debug Console</button>
+    <div style="margin-top:20px;">
+  `;
+
+  users.forEach(u => {
+
+    html += `
+      <div style="padding:10px;border:1px solid #ddd;margin:5px;">
+        <b>${u.userId}</b> (${u.username || "No Name"})<br>
+        L: ${u.leftChild || "-"} | R: ${u.rightChild || "-"}
+      </div>
+    `;
+  });
+
+  html += "</div>";
+
+  main.innerHTML = html;
+}
+
+/* ================= DEBUG TREE ================= */
+
+function showFullTreeConsole() {
+
+  let users = typeof getUsers === "function" ? getUsers() : [];
+
+  console.log("🌳 SUPER ADMIN FULL TREE DUMP:");
+  console.log(users);
+
+  if (typeof getUserTree === "function") {
+    console.log("SAMPLE TREE:", getUserTree(users[0]?.userId));
+  }
+}
+
+/* ================= RESET ================= */
+
 function loadResetPanel() {
 
   document.getElementById("mainContent").innerHTML = `
@@ -346,7 +342,8 @@ function restartSystem() {
   alert("System Restarted");
 }
 
-// ================= LOGOUT =================
+/* ================= LOGOUT ================= */
+
 function logout() {
 
   if (typeof clearSession === "function") {
