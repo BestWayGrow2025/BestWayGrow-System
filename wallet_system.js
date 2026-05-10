@@ -698,3 +698,4 @@ function getWalletBalance(userId) {
     Number(user.wallet.balance || 0).toFixed(2)
   );
 }
+
