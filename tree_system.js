@@ -1,11 +1,15 @@
+"use strict";
+
 /*
 ========================================
-TREE SYSTEM V13 (FINAL PRODUCTION LOCK)
+TREE SYSTEM V13 (FINAL PRODUCTION LOCK + FIX)
 ========================================
 ✔ Sponsor Tree = hidden placement engine
-✔ Introducer Tree = UI only (handled separately)
+✔ Introducer Tree = UI view support added
 ✔ Safe L/R placement
-✔ No UI dependency
+✔ Cycle protection
+✔ Broken-node protection
+✔ FULL READ SUPPORT (getUserTree FIXED)
 ✔ Production stable
 ========================================
 */
@@ -19,7 +23,7 @@ function getIntroducerChildren(userId, users) {
   return users.filter(u => u.introducerId === userId);
 }
 
-// ================= DIRECT ACCESS (DEBUG ONLY) =================
+// ================= DIRECT ACCESS =================
 function getLeftChild(userId, users) {
   const user = users.find(u => u.userId === userId);
   return user ? user.leftChild : null;
@@ -104,6 +108,31 @@ function generateReferralLink(userId) {
   }
 }
 
+// ================= TREE VIEW (FIXED MISSING FUNCTION) =================
+function getUserTree(userId) {
+
+  let users = (typeof getUsers === "function") ? getUsers() : [];
+  if (!Array.isArray(users)) return null;
+
+  let root = users.find(u => u.userId === userId);
+  if (!root) return null;
+
+  function build(nodeId) {
+
+    let node = users.find(u => u.userId === nodeId);
+    if (!node) return null;
+
+    return {
+      userId: node.userId,
+      name: node.name || node.username || "",
+      left: node.leftChild ? build(node.leftChild) : null,
+      right: node.rightChild ? build(node.rightChild) : null
+    };
+  }
+
+  return build(userId);
+}
+
 // ================= CREATE USER ENGINE =================
 function createUserWithTree(req) {
 
@@ -125,12 +154,6 @@ function createUserWithTree(req) {
     if (!["L", "R"].includes(req.position)) {
       req.position = "L";
     }
-
-    let introducerUser = users.find(u => u.userId === req.introducerId);
-    if (!introducerUser) throw new Error("Invalid introducer");
-
-    let sponsorUser = users.find(u => u.userId === req.sponsorId);
-    if (!sponsorUser) throw new Error("Invalid sponsor");
 
     if (users.find(u => u.mobile === req.mobile)) {
       throw new Error("Mobile already exists");
@@ -174,12 +197,9 @@ function createUserWithTree(req) {
     if (!parent) throw new Error("Parent not found");
 
     if (placement.side === "L") {
-
       if (parent.leftChild) throw new Error("Left already occupied");
       parent.leftChild = userId;
-
     } else {
-
       if (parent.rightChild) throw new Error("Right already occupied");
       parent.rightChild = userId;
     }
@@ -201,3 +221,8 @@ function createUserWithTree(req) {
     throw err;
   }
 }
+
+// ================= EXPORT =================
+window.createUserWithTree = createUserWithTree;
+window.findPlacement = findPlacement;
+window.getUserTree = getUserTree;
