@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 ========================================
 ROUTE GUARD SYSTEM V3.0 (UNIFIED FINAL)
@@ -14,17 +16,15 @@ SINGLE ACCESS CONTROL AUTHORITY
 ========================================
 */
 
-"use strict";
-
 // ================= ROUTE PROTECTION =================
 function requireAuth(allowedRoles = []) {
 
   try {
 
-    // Reset global auth failure flag
+    // reset auth state
     window.__AUTH_FAILED__ = false;
 
-    // Get validated session from session_manager.js
+    // get session
     const session =
       typeof getSession === "function"
         ? getSession()
@@ -34,13 +34,11 @@ function requireAuth(allowedRoles = []) {
     if (!session || !session.userId) {
 
       window.__AUTH_FAILED__ = true;
-
       window.location.replace("user_login.html");
-
       return false;
     }
 
-    // ================= ROLE VALIDATION =================
+    // ================= ROLE CHECK =================
     if (
       Array.isArray(allowedRoles) &&
       allowedRoles.length > 0 &&
@@ -51,55 +49,58 @@ function requireAuth(allowedRoles = []) {
 
       alert("Access Denied");
 
-      // Redirect to role-specific login page
-      if (session.role === "admin") {
-        window.location.replace("admin_login.html");
-      } else if (session.role === "system_admin") {
-        window.location.replace("system_admin_login.html");
-      } else if (session.role === "super_admin") {
-        window.location.replace("super_admin_login.html");
-      } else {
-        window.location.replace("user_login.html");
+      // role-based redirect
+      switch (session.role) {
+
+        case "admin":
+          window.location.replace("admin_login.html");
+          break;
+
+        case "system_admin":
+          window.location.replace("system_admin_login.html");
+          break;
+
+        case "super_admin":
+          window.location.replace("super_admin_login.html");
+          break;
+
+        default:
+          window.location.replace("user_login.html");
       }
 
       return false;
     }
 
-    // ================= OPTIONAL STATUS CHECK =================
-    // session_manager.js already validates active status.
-    // This remains as a non-breaking defensive check.
+    // ================= STATUS CHECK =================
     if (
       typeof session.status !== "undefined" &&
       session.status !== "active"
     ) {
 
       window.__AUTH_FAILED__ = true;
-
       window.location.replace("user_login.html");
-
       return false;
     }
 
     // ================= AUTH PASSED =================
     return true;
 
-  } catch (e) {
+  } catch (err) {
 
-    console.error("Route guard error:", e);
+    console.error("Route guard error:", err);
 
     window.__AUTH_FAILED__ = true;
-
     window.location.replace("user_login.html");
 
     return false;
   }
 }
 
-// ================= GLOBAL EXECUTION BLOCK =================
+// ================= AUTH STATE CHECK =================
 function isAuthBlocked() {
   return window.__AUTH_FAILED__ === true;
 }
 
-// ================= SAFE EXPORT =================
+// ================= EXPORT =================
 window.requireAuth = requireAuth;
 window.isAuthBlocked = isAuthBlocked;
