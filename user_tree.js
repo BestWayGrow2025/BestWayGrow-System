@@ -1,14 +1,15 @@
+
+"use strict";
+
 /*
 ========================================
 USER TREE FINAL SIMPLE (L1 TO L30)
 ========================================
-✔ Simple level-based team view
-✔ No full tree expansion
-✔ Fast load
-✔ L1 to L30 dropdown view
-✔ Binary tree based
-✔ Safe session check
-✔ Clean user team table
+✔ Level-based view only (L1–L30)
+✔ Introducer-based traversal
+✔ Session protected
+✔ Safe fallback handling
+✔ UI stable rendering
 ========================================
 */
 
@@ -33,8 +34,9 @@ function initPage() {
 function authPage() {
   session = typeof getSession === "function" ? getSession() : null;
 
+  const container = document.getElementById("tree");
+
   if (!session || !session.userId) {
-    const container = document.getElementById("tree");
     if (container) {
       container.innerHTML = "<div class='info-box'>Login Required</div>";
     }
@@ -45,18 +47,17 @@ function authPage() {
     ? getUserById(session.userId)
     : null;
 
-  if (!currentUser) {
-    const container = document.getElementById("tree");
-    if (container) {
-      container.innerHTML = "<div class='info-box'>User Not Found</div>";
-    }
+  if (!currentUser && container) {
+    container.innerHTML = "<div class='info-box'>User Not Found</div>";
   }
 }
 
 // ================= RENDER UI =================
 function renderUI() {
   const container = document.getElementById("tree");
-  if (!container || !currentUser) return;
+
+  if (!container) return;
+  if (!currentUser) return;
 
   container.innerHTML = "";
 
@@ -94,22 +95,26 @@ function renderUI() {
 
   container.appendChild(table);
 
-  // DEFAULT
+  // DEFAULT VIEW
   renderLevelTable(1);
 }
 
-// ================= GET LEVEL USERS =================
+// ================= LEVEL FETCH =================
 function getUsersByLevel(rootUserId, targetLevel) {
+
   const users = typeof getUsers === "function" ? getUsers() : [];
+  if (!Array.isArray(users)) return [];
+
   const result = [];
 
   let queue = [{ id: rootUserId, level: 0 }];
   let visited = new Set();
 
   while (queue.length > 0) {
-    const current = queue.shift();
 
-    if (visited.has(current.id)) continue;
+    const current = queue.shift();
+    if (!current || visited.has(current.id)) continue;
+
     visited.add(current.id);
 
     const user = users.find(u => u.userId === current.id);
@@ -121,6 +126,7 @@ function getUsersByLevel(rootUserId, targetLevel) {
     }
 
     if (current.level < targetLevel) {
+
       if (user.leftChild) {
         queue.push({ id: user.leftChild, level: current.level + 1 });
       }
@@ -134,8 +140,9 @@ function getUsersByLevel(rootUserId, targetLevel) {
   return result;
 }
 
-// ================= RENDER LEVEL TABLE =================
+// ================= RENDER TABLE =================
 function renderLevelTable(level) {
+
   const table = document.getElementById("treeTable");
   if (!table || !currentUser) return;
 
@@ -149,7 +156,8 @@ function renderLevelTable(level) {
     </tr>
   `;
 
-  if (users.length === 0) {
+  if (!users || users.length === 0) {
+
     html += `
       <tr>
         <td colspan="3" style="padding:10px; text-align:center;">
@@ -157,13 +165,20 @@ function renderLevelTable(level) {
         </td>
       </tr>
     `;
+
   } else {
+
     users.forEach((u, index) => {
+
       html += `
         <tr>
           <td style="padding:8px; text-align:center;">${index + 1}</td>
-          <td style="padding:8px;">${u.fullName || u.username || u.userId}</td>
-          <td style="padding:8px;">${u.mobile || "-"}</td>
+          <td style="padding:8px;">
+            ${u.username || u.name || u.userId}
+          </td>
+          <td style="padding:8px;">
+            ${u.mobile || "-"}
+          </td>
         </tr>
       `;
     });
@@ -171,4 +186,3 @@ function renderLevelTable(level) {
 
   table.innerHTML = html;
 }
-
