@@ -1,6 +1,8 @@
+"use strict";
+
 /*
 ========================================
-SESSION MANAGER V4.0 (SYSTEM HARDENED FINAL)
+SESSION MANAGER V4.1 (SYSTEM HARDENED FINAL + TREE INTEGRATION)
 ========================================
 ✔ One auth engine only
 ✔ One session source only
@@ -10,15 +12,11 @@ SESSION MANAGER V4.0 (SYSTEM HARDENED FINAL)
 ✔ Multi-tab sync safe
 ✔ Logout invalidation safe
 ✔ Role verification
-✔ User existence verification
 ✔ System lock aware
-✔ Initialization guard
-✔ Replay-safe session refresh
+✔ TREE ACCESS CONTROL INTEGRATED
 ✔ Production LOCKED
 ========================================
 */
-
-"use strict";
 
 // =====================
 // CONFIG
@@ -53,7 +51,6 @@ function clearSessionStorage() {
 // TOKEN
 // =====================
 function generateSessionToken(user) {
-
   if (!user || !user.userId) return null;
 
   return btoa([
@@ -65,40 +62,72 @@ function generateSessionToken(user) {
 }
 
 // =====================
-// VALIDATE STRUCTURE
+// VALIDATION
 // =====================
 function isValidSessionShape(session) {
-
   if (!session || typeof session !== "object") return false;
 
-  if (!session.userId) return false;
-  if (!session.role) return false;
-  if (!session.loginTime) return false;
-  if (!session.lastActivity) return false;
-  if (!session.token) return false;
-
-  return true;
+  return !!(
+    session.userId &&
+    session.role &&
+    session.loginTime &&
+    session.lastActivity &&
+    session.token
+  );
 }
 
 // =====================
-// SESSION EXPIRED
+// EXPIRY CHECK
 // =====================
 function isSessionExpired(session) {
-
   if (!session || !session.lastActivity) return true;
-
   return (Date.now() - Number(session.lastActivity)) > SESSION_TIMEOUT;
+}
+
+// =====================
+// 🧠 TREE ACCESS CONTROL (NEW FIX)
+// =====================
+function getTreeAccessScope() {
+
+  const session = safeGet(SESSION_KEY, null);
+  if (!session) return null;
+
+  const role = String(session.role || "").toLowerCase();
+
+  if (role === "user") {
+    return {
+      scope: "USER_TREE",
+      maxLevel: 30,
+      view: "INTRODUCER_ONLY"
+    };
+  }
+
+  if (role === "admin") {
+    return {
+      scope: "ADMIN_TREE",
+      view: "FULL_SYSTEM",
+      direction: "TOP_TO_BOTTOM_LEFT_TO_RIGHT"
+    };
+  }
+
+  if (role === "super_admin") {
+    return {
+      scope: "SUPER_ADMIN_TREE",
+      view: "UNRESTRICTED",
+      auditMode: true
+    };
+  }
+
+  return null;
 }
 
 // =====================
 // CREATE SESSION
 // =====================
 function setSession(user) {
-
   try {
 
     if (!isSessionCoreReady()) return false;
-
     if (!user || !user.userId || !user.role) return false;
 
     if (user.status && user.status !== "active") {
@@ -110,12 +139,9 @@ function setSession(user) {
     const sessionData = {
       userId: user.userId,
       role: user.role,
-
       loginTime: now,
       lastActivity: now,
-
       token: generateSessionToken(user),
-
       version: 4,
       initialized: true
     };
@@ -134,10 +160,8 @@ function setSession(user) {
     return true;
 
   } catch (err) {
-
     console.error("setSession error:", err.message);
     clearSessionStorage();
-
     return false;
   }
 }
@@ -148,7 +172,6 @@ function setSession(user) {
 function destroySession() {
 
   try {
-
     let old = safeGet(SESSION_KEY, null);
 
     localStorage.setItem(
@@ -166,7 +189,7 @@ function destroySession() {
 }
 
 // =====================
-// GET SESSION
+// GET SESSION (MAIN ENGINE)
 // =====================
 function getSession() {
 
@@ -181,26 +204,23 @@ function getSession() {
       return null;
     }
 
-    // ================= SYSTEM LOCK =================
+    // SYSTEM LOCK
     if (typeof getSystemSettings === "function") {
-
-      let sys = getSystemSettings();
-
-      if (sys && sys.lockMode === true) {
+      const sys = getSystemSettings();
+      if (sys?.lockMode === true) {
         destroySession();
         return null;
       }
     }
 
-    // ================= EXPIRY =================
+    // EXPIRY
     if (isSessionExpired(session)) {
       destroySession();
       return null;
     }
 
-    // ================= USER VALIDATION =================
-    let user = getUserById(session.userId);
-
+    // USER VALIDATION
+    const user = getUserById(session.userId);
     if (!user) {
       destroySession();
       return null;
@@ -211,31 +231,31 @@ function getSession() {
       return null;
     }
 
-    // ================= ROLE VALIDATION =================
+    // ROLE CHECK
     if (String(user.role || "") !== String(session.role || "")) {
       destroySession();
       return null;
     }
 
-    // ================= TOKEN VALIDATION =================
+    // TOKEN CHECK
     const expectedToken = generateSessionToken(user);
-
     if (session.token !== expectedToken) {
       destroySession();
       return null;
     }
 
-    // ================= ACTIVITY REFRESH =================
+    // ACTIVITY REFRESH
     session.lastActivity = Date.now();
+
+    // 🧠 TREE SCOPING ATTACHED HERE (IMPORTANT FIX)
+    session.treeScope = getTreeAccessScope();
 
     safeSet(SESSION_KEY, session);
 
     return session;
 
   } catch (err) {
-
     console.error("getSession error:", err.message);
-
     destroySession();
     return null;
   }
@@ -247,24 +267,13 @@ function getSession() {
 function getCurrentUser() {
 
   try {
-
     const session = getSession();
-
     if (!session) return null;
 
-    const user = getUserById(session.userId);
-
-    if (!user) {
-      destroySession();
-      return null;
-    }
-
-    return user;
+    return getUserById(session.userId);
 
   } catch (err) {
-
     console.error("getCurrentUser error:", err.message);
-
     destroySession();
     return null;
   }
@@ -274,13 +283,10 @@ function getCurrentUser() {
 // ROLE CHECK
 // =====================
 function hasRole(role) {
-
-  let session = getSession();
-
+  const session = getSession();
   if (!session) return false;
 
-  return String(session.role || "").toLowerCase() ===
-         String(role || "").toLowerCase();
+  return String(session.role || "").toLowerCase() === String(role || "").toLowerCase();
 }
 
 // =====================
@@ -294,15 +300,11 @@ function isAuthenticated() {
 // PAGE PROTECTION
 // =====================
 function protectUserPage() {
-
   const user = getCurrentUser();
 
   if (!user) {
-
     destroySession();
-
     window.location.replace("user_login.html");
-
     return null;
   }
 
@@ -310,22 +312,16 @@ function protectUserPage() {
 }
 
 // =====================
-// ADMIN PAGE PROTECTION
+// ADMIN PROTECTION
 // =====================
 function protectAdminPage() {
 
   const user = protectUserPage();
-
   if (!user) return null;
 
-  if (
-    String(user.role || "").toLowerCase() !== "admin"
-  ) {
-
+  if (String(user.role || "").toLowerCase() !== "admin") {
     destroySession();
-
     window.location.replace("user_login.html");
-
     return null;
   }
 
@@ -336,14 +332,12 @@ function protectAdminPage() {
 // LOGOUT
 // =====================
 function logoutSession() {
-
   destroySession();
-
   window.location.replace("user_login.html");
 }
 
 // =====================
-// MULTI TAB SYNC
+// MULTI-TAB SYNC
 // =====================
 window.addEventListener("storage", function (e) {
 
@@ -351,14 +345,10 @@ window.addEventListener("storage", function (e) {
 
     if (e.key !== SESSION_EVENT_KEY) return;
 
-    let eventData = JSON.parse(e.newValue || "{}");
+    const eventData = JSON.parse(e.newValue || "{}");
 
-    if (!eventData || !eventData.type) return;
-
-    if (eventData.type === "LOGOUT") {
-
+    if (eventData?.type === "LOGOUT") {
       clearSessionStorage();
-
       window.location.replace("user_login.html");
     }
 
@@ -366,13 +356,17 @@ window.addEventListener("storage", function (e) {
 });
 
 // =====================
-// GLOBAL SAFE EXPORT
+// EXPORT
 // =====================
 window.setSession = setSession;
 window.getSession = getSession;
 window.getCurrentUser = getCurrentUser;
 window.logoutSession = logoutSession;
+
 window.isAuthenticated = isAuthenticated;
 window.hasRole = hasRole;
+
 window.protectUserPage = protectUserPage;
 window.protectAdminPage = protectAdminPage;
+
+window.getTreeAccessScope = getTreeAccessScope;
