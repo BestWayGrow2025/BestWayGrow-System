@@ -101,3 +101,4 @@ function executeUpgrade(actionType, payload = {}) {
 }
 
 window.executeUpgrade = executeUpgrade;
+
