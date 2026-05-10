@@ -4,11 +4,12 @@
 ========================================
 USER TREE FINAL SIMPLE (L1 TO L30)
 ========================================
-✔ Level-based introducer tree view
+✔ Introducer-based level view
 ✔ Session protected
 ✔ Safe BFS traversal
+✔ No memory leak
 ✔ UI stable rendering
-✔ READY FOR dashboard_engine integration
+✔ Production ready
 ========================================
 */
 
@@ -57,14 +58,13 @@ function authPage() {
   }
 }
 
-/* ================= RENDER UI ================= */
+/* ================= UI ================= */
 
 function renderUI() {
 
   const container = document.getElementById("tree");
 
-  if (!container) return;
-  if (!currentUser) return;
+  if (!container || !currentUser) return;
 
   container.innerHTML = "";
 
@@ -105,7 +105,7 @@ function renderUI() {
   renderLevelTable(1);
 }
 
-/* ================= LEVEL FETCH (FIXED SAFE BFS) ================= */
+/* ================= SAFE BFS LEVEL FETCH ================= */
 
 function getUsersByLevel(rootUserId, targetLevel) {
 
@@ -119,7 +119,7 @@ function getUsersByLevel(rootUserId, targetLevel) {
   const queue = [{ id: rootUserId, level: 0 }];
   const visited = new Set();
 
-  while (queue.length) {
+  while (queue.length > 0) {
 
     const current = queue.shift();
     if (!current || visited.has(current.id)) continue;
@@ -173,7 +173,7 @@ function renderLevelTable(level) {
     </tr>
   `;
 
-  if (!users.length) {
+  if (!users || users.length === 0) {
 
     html += `
       <tr>
@@ -204,7 +204,7 @@ function renderLevelTable(level) {
   table.innerHTML = html;
 }
 
-/* ================= EXPORT (FOR DEBUG / EXTENSION) ================= */
+/* ================= EXPORT ================= */
 
 window.getUsersByLevel = getUsersByLevel;
 window.renderLevelTable = renderLevelTable;
