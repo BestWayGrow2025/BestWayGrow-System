@@ -1,34 +1,24 @@
+"use strict";
+
 /*
 ========================================
-DASHBOARD ENGINE V1.0 (READ-ONLY DATA AGGREGATION LAYER)
+DASHBOARD ENGINE V1.1 (READ-ONLY + ROLE TREE FIX)
 ========================================
 ✔ Central dashboard data provider
 ✔ Read-only architecture
-✔ User dashboard support
-✔ Admin dashboard support
-✔ Wallet summary integration
-✔ Rank summary integration
-✔ Qualification progress integration
-✔ CTOR eligibility integration
-✔ Recent transaction support
-✔ Dependency-safe
+✔ User/Admin/Super Admin separation hooks
+✔ Wallet + Rank + CTOR integration
+✔ SAFE TREE SCOPE CONTROL ADDED
 ✔ Production READY
 ========================================
 */
-
-"use strict";
 
 // ===================================
 // SAFE HELPERS
 // ===================================
 function safeNumber(value) {
-
   const num = Number(value);
-
-  if (isNaN(num)) {
-    return 0;
-  }
-
+  if (isNaN(num)) return 0;
   return parseFloat(num.toFixed(2));
 }
 
@@ -37,11 +27,7 @@ function safeArray(value) {
 }
 
 function getDashboardUser(userId) {
-
-  if (typeof getUserById !== "function") {
-    return null;
-  }
-
+  if (typeof getUserById !== "function") return null;
   return getUserById(userId);
 }
 
@@ -49,10 +35,7 @@ function getDashboardUser(userId) {
 // TRANSACTIONS
 // ===================================
 function getRecentTransactions(userId, limit = 10) {
-
-  if (typeof getUserTransactions !== "function") {
-    return [];
-  }
+  if (typeof getUserTransactions !== "function") return [];
 
   const txns = safeArray(getUserTransactions(userId));
 
@@ -66,11 +49,7 @@ function getRecentTransactions(userId, limit = 10) {
 // WALLET SUMMARY
 // ===================================
 function getWalletSummary(user) {
-
-  const wallet =
-    (user && typeof user.wallet === "object")
-      ? user.wallet
-      : {};
+  const wallet = (user && typeof user.wallet === "object") ? user.wallet : {};
 
   return {
     balance: safeNumber(wallet.balance),
@@ -86,20 +65,13 @@ function getWalletSummary(user) {
 // ===================================
 function getRankSummary(user) {
 
-  const currentRankCode =
-    user?.currentRank ||
-    user?.rankCode ||
-    "MEMBER";
-
-  const highestRankCode =
-    user?.highestRank ||
-    currentRankCode;
+  const currentRankCode = user?.currentRank || user?.rankCode || "MEMBER";
+  const highestRankCode = user?.highestRank || currentRankCode;
 
   let currentRank = null;
   let highestRank = null;
 
   if (typeof getRankByCode === "function") {
-
     currentRank = getRankByCode(currentRankCode);
     highestRank = getRankByCode(highestRankCode);
   }
@@ -109,10 +81,9 @@ function getRankSummary(user) {
     highestRank: highestRankCode,
     currentRankName: currentRank?.name || currentRankCode,
     highestRankName: highestRank?.name || highestRankCode,
-    ctorEligible:
-      typeof isCTORRank === "function"
-        ? isCTORRank(highestRankCode)
-        : false
+    ctorEligible: typeof isCTORRank === "function"
+      ? isCTORRank(highestRankCode)
+      : false
   };
 }
 
@@ -122,9 +93,7 @@ function getRankSummary(user) {
 function getQualificationProgress(userId) {
 
   if (typeof getQualificationSummary === "function") {
-
     const summary = getQualificationSummary(userId);
-
     if (summary && typeof summary === "object") {
       return summary;
     }
@@ -144,14 +113,49 @@ function getQualificationProgress(userId) {
 function getCTORSummary(user) {
 
   const rankSummary = getRankSummary(user);
-
   const activePoints = safeNumber(user?.monthlyPoints);
 
   return {
     eligibleRank: rankSummary.ctorEligible,
     activePoints,
-    monthlyEligible:
-      rankSummary.ctorEligible && activePoints >= 1
+    monthlyEligible: rankSummary.ctorEligible && activePoints >= 1
+  };
+}
+
+// ===================================
+// 🧠 TREE SCOPE CONTROL (FIX ADDED)
+// ===================================
+
+// USER TREE ONLY (L1–L30, introducer view only)
+function getUserTreeScope(userId) {
+  const user = getDashboardUser(userId);
+  if (!user) return null;
+
+  return {
+    rootUserId: user.userId,
+    scope: "USER_ONLY",
+    maxLevel: 30,
+    mode: "INTRODUCER_VIEW_ONLY"
+  };
+}
+
+// ADMIN FULL TREE
+function getAdminTreeScope() {
+  return {
+    scope: "FULL_SYSTEM",
+    access: "ADMIN",
+    view: "ALL_USERS",
+    direction: "TOP_TO_BOTTOM_LEFT_TO_RIGHT"
+  };
+}
+
+// SUPER ADMIN FULL CONTROL
+function getSuperAdminTreeScope() {
+  return {
+    scope: "FULL_SYSTEM",
+    access: "SUPER_ADMIN",
+    view: "UNRESTRICTED",
+    auditMode: true
   };
 }
 
@@ -161,13 +165,7 @@ function getCTORSummary(user) {
 function getUserDashboard(userId) {
 
   const user = getDashboardUser(userId);
-
   if (!user) return null;
-
-  const wallet = getWalletSummary(user);
-  const rank = getRankSummary(user);
-  const qualification = getQualificationProgress(userId);
-  const ctor = getCTORSummary(user);
 
   return {
     profile: {
@@ -178,10 +176,10 @@ function getUserDashboard(userId) {
       joinDate: user.joinDate || null
     },
 
-    wallet,
-    rank,
-    qualification,
-    ctor,
+    wallet: getWalletSummary(user),
+    rank: getRankSummary(user),
+    qualification: getQualificationProgress(userId),
+    ctor: getCTORSummary(user),
 
     business: {
       monthlyBV: safeNumber(user.monthlyBV),
@@ -193,6 +191,9 @@ function getUserDashboard(userId) {
 
     recentTransactions: getRecentTransactions(userId, 10),
 
+    // 🧠 TREE SCOPE ATTACHED HERE
+    treeScope: getUserTreeScope(userId),
+
     generatedAt: new Date().toISOString()
   };
 }
@@ -202,9 +203,7 @@ function getUserDashboard(userId) {
 // ===================================
 function getAdminDashboard() {
 
-  if (typeof getUsers !== "function") {
-    return null;
-  }
+  if (typeof getUsers !== "function") return null;
 
   const users = safeArray(getUsers());
 
@@ -214,17 +213,14 @@ function getAdminDashboard() {
   let totalMonthlyBV = 0;
 
   users.forEach(user => {
-
     const wallet = getWalletSummary(user);
-
     totalBalance += wallet.balance;
     totalMonthlyBV += safeNumber(user?.monthlyBV);
   });
 
-  const ctorPool =
-    typeof getCTORPool === "function"
-      ? safeNumber(getCTORPool())
-      : 0;
+  const ctorPool = typeof getCTORPool === "function"
+    ? safeNumber(getCTORPool())
+    : 0;
 
   return {
     totalUsers: users.length,
@@ -233,10 +229,13 @@ function getAdminDashboard() {
     totalWalletBalance: safeNumber(totalBalance),
     totalMonthlyBV: safeNumber(totalMonthlyBV),
     currentCTORPool: ctorPool,
-    highestRank:
-      typeof getHighestRank === "function"
-        ? getHighestRank()
-        : null,
+    highestRank: typeof getHighestRank === "function"
+      ? getHighestRank()
+      : null,
+
+    // 🧠 ADMIN TREE SCOPE
+    treeScope: getAdminTreeScope(),
+
     generatedAt: new Date().toISOString()
   };
 }
@@ -245,26 +244,27 @@ function getAdminDashboard() {
 // CURRENT USER DASHBOARD
 // ===================================
 function getCurrentUserDashboard() {
-
-  if (typeof getCurrentUser !== "function") {
-    return null;
-  }
+  if (typeof getCurrentUser !== "function") return null;
 
   const user = getCurrentUser();
-
   if (!user?.userId) return null;
 
   return getUserDashboard(user.userId);
 }
 
 // ===================================
-// GLOBAL EXPORT
+// EXPORT
 // ===================================
 window.getRecentTransactions = getRecentTransactions;
 window.getWalletSummary = getWalletSummary;
 window.getRankSummary = getRankSummary;
 window.getQualificationProgress = getQualificationProgress;
 window.getCTORSummary = getCTORSummary;
+
 window.getUserDashboard = getUserDashboard;
 window.getAdminDashboard = getAdminDashboard;
-window.getCurrentUserDashboard = getCurrentUserDashboard;                         
+window.getCurrentUserDashboard = getCurrentUserDashboard;
+
+window.getUserTreeScope = getUserTreeScope;
+window.getAdminTreeScope = getAdminTreeScope;
+window.getSuperAdminTreeScope = getSuperAdminTreeScope;                       
