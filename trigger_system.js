@@ -2,9 +2,9 @@
 
 /*
 ========================================
-TRIGGER SYSTEM V9.1 (FINAL HARDENED)
+TRIGGER SYSTEM V9.2 (FINAL SINGLE-CORE)
 ========================================
-✔ Core aligned
+✔ Single authorized entry gate
 ✔ Session-manager protected
 ✔ Duplicate trigger protection
 ✔ Replay-safe trigger control
@@ -14,7 +14,7 @@ TRIGGER SYSTEM V9.1 (FINAL HARDENED)
 ✔ Recursive execution blocked
 ✔ Safe trigger cleanup
 ✔ Trigger lock protection
-✔ Income-engine idempotency aligned
+✔ Core financial engine aligned
 ✔ Zero-BV execution blocked
 ✔ Detailed logging
 ✔ Production FINAL
@@ -321,11 +321,11 @@ function runIncomeTrigger(
   }
 
   if (
-    typeof processIncome !== "function"
+    typeof executeFinancialCore !== "function"
   ) {
 
     console.warn(
-      "processIncome missing"
+      "executeFinancialCore missing"
     );
 
     return false;
@@ -367,12 +367,17 @@ function runIncomeTrigger(
 
     setTrigger(triggerKey);
 
-    let success = processIncome(
-      type,
-      userId,
-      bv,
-      triggerKey
-    );
+    let success =
+      executeFinancialCore({
+        type,
+        userId,
+        bv,
+        source:
+          source ||
+          "TRIGGER_SYSTEM",
+        ref:
+          triggerKey
+      });
 
     if (!success) {
       return false;
@@ -596,6 +601,48 @@ function clearTriggerStore() {
     return false;
   }
 }
+
+// =====================
+// GLOBAL EXPORTS
+// =====================
+window.isTriggerSystemSafe =
+  isTriggerSystemSafe;
+
+window.isRecentTrigger =
+  isRecentTrigger;
+
+window.setTrigger =
+  setTrigger;
+
+window.isTriggerLocked =
+  isTriggerLocked;
+
+window.setTriggerLock =
+  setTriggerLock;
+
+window.canRunTrigger =
+  canRunTrigger;
+
+window.runIncomeTrigger =
+  runIncomeTrigger;
+
+window.triggerPinUseIncome =
+  triggerPinUseIncome;
+
+window.triggerUpgradeIncome =
+  triggerUpgradeIncome;
+
+window.triggerRepurchaseIncome =
+  triggerRepurchaseIncome;
+
+window.triggerRegistrationIncome =
+  triggerRegistrationIncome;
+
+window.clearTriggerStore =
+  clearTriggerStore;
+
+window.cleanTriggerStore =
+  cleanTriggerStore;
 
 // =====================
 // CLEANER
