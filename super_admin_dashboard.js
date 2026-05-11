@@ -3,7 +3,7 @@
 /*
 ========================================
 SUPER ADMIN DASHBOARD
-STABLE FINAL EXECUTION VERSION + TREE VIEW INTEGRATION
+STABLE FINAL EXECUTION VERSION + TREE INTEGRATION FIXED
 ONE AUTH ENGINE ONLY
 ========================================
 */
@@ -163,7 +163,7 @@ function bindEvents() {
             break;
 
           case "tree":
-            loadTreeView(); // 🔥 TREE INTEGRATION
+            loadTreeView();
             break;
 
           case "reset":
@@ -274,14 +274,14 @@ function loadSystem() {
   `;
 }
 
-/* ================= 🌳 TREE VIEW (FINAL FIX) ================= */
+/* ================= 🌳 TREE VIEW (FIXED - CLEAN LOGIC) ================= */
 
 function loadTreeView() {
 
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  const users = typeof getUsers === "function" ? getUsers() : [];
 
   if (!Array.isArray(users)) {
     main.innerHTML = "<p>Tree data not available</p>";
@@ -309,17 +309,17 @@ function loadTreeView() {
   main.innerHTML = html;
 }
 
-/* ================= DEBUG TREE ================= */
+/* ================= DEBUG ================= */
 
 function showFullTreeConsole() {
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  const users = typeof getUsers === "function" ? getUsers() : [];
 
-  console.log("🌳 SUPER ADMIN FULL TREE DUMP:");
+  console.log("🌳 SUPER ADMIN TREE DUMP:");
   console.log(users);
 
-  if (typeof getUserTree === "function") {
-    console.log("SAMPLE TREE:", getUserTree(users[0]?.userId));
+  if (typeof getUserTree === "function" && users.length > 0) {
+    console.log("SAMPLE TREE:", getUserTree(users[0].userId));
   }
 }
 
@@ -352,3 +352,12 @@ function logout() {
 
   window.location.href = "super_admin_login.html";
 }
+
+/* ================= EXPORT ================= */
+
+window.loadHome = loadHome;
+window.loadUsers = loadUsers;
+window.loadSystem = loadSystem;
+window.loadTreeView = loadTreeView;
+window.showFullTreeConsole = showFullTreeConsole;
+window.logout = logout;
