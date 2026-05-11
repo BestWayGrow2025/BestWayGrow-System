@@ -6,10 +6,10 @@ USER TREE FINAL SIMPLE (L1 TO L30)
 ========================================
 ✔ Introducer-based level view
 ✔ Session protected
-✔ Safe BFS traversal
-✔ No memory leak
-✔ UI stable rendering
-✔ Production ready
+✔ Uses CENTRAL tree_api.js
+✔ Safe API-driven BFS removal
+✔ Clean UI separation
+✔ Production ready FINAL VERSION
 ========================================
 */
 
@@ -105,54 +105,16 @@ function renderUI() {
   renderLevelTable(1);
 }
 
-/* ================= SAFE BFS LEVEL FETCH ================= */
+/* ================= LEVEL FETCH (NOW API DRIVEN) ================= */
 
 function getUsersByLevel(rootUserId, targetLevel) {
 
-  const users = typeof getUsers === "function"
-    ? getUsers()
-    : [];
-
-  if (!Array.isArray(users)) return [];
-
-  const result = [];
-  const queue = [{ id: rootUserId, level: 0 }];
-  const visited = new Set();
-
-  while (queue.length > 0) {
-
-    const current = queue.shift();
-    if (!current || visited.has(current.id)) continue;
-
-    visited.add(current.id);
-
-    const user = users.find(u => u.userId === current.id);
-    if (!user) continue;
-
-    if (current.level === targetLevel) {
-      result.push(user);
-      continue;
-    }
-
-    if (current.level < targetLevel) {
-
-      if (user.leftChild) {
-        queue.push({
-          id: user.leftChild,
-          level: current.level + 1
-        });
-      }
-
-      if (user.rightChild) {
-        queue.push({
-          id: user.rightChild,
-          level: current.level + 1
-        });
-      }
-    }
+  // 🔥 CENTRALIZED TREE API CALL
+  if (typeof getLevelUsers === "function") {
+    return getLevelUsers(rootUserId, targetLevel);
   }
 
-  return result;
+  return [];
 }
 
 /* ================= TABLE RENDER ================= */
