@@ -1,4 +1,5 @@
 
+
 "use strict";
 
 /*
@@ -37,7 +38,7 @@ function getRightChild(userId, users) {
   return user ? user.rightChild : null;
 }
 
-/* ================= TREE PLACEMENT ENGINE ================= */
+/* ================= PLACEMENT ENGINE ================= */
 
 function findPlacement(sponsorId, position, users) {
 
@@ -114,14 +115,12 @@ function generateUserId(users) {
 function generateReferralLink(userId) {
 
   const base =
-    (window.location && window.location.origin)
-      ? window.location.origin
-      : "https://yourdomain.com";
+    window.location?.origin || "https://yourdomain.com";
 
-  return base + "/register.html?ref=" + encodeURIComponent(userId);
+  return `${base}/register.html?ref=${encodeURIComponent(userId)}`;
 }
 
-/* ================= TREE VIEW ================= */
+/* ================= TREE VIEW ENGINE ================= */
 
 function getUserTree(userId) {
 
@@ -151,13 +150,13 @@ function getUserTree(userId) {
   return build(userId);
 }
 
-/* ================= CREATE USER ENGINE ================= */
+/* ================= USER CREATE ENGINE ================= */
 
 function createUserWithTree(req) {
 
   try {
 
-    let sys =
+    const sys =
       typeof getSystemSettings === "function"
         ? getSystemSettings()
         : {};
@@ -183,7 +182,7 @@ function createUserWithTree(req) {
       req.position = "L";
     }
 
-    if (users.find(u => u.mobile === req.mobile)) {
+    if (users.some(u => u.mobile === req.mobile)) {
       throw new Error("Mobile already exists");
     }
 
@@ -232,6 +231,7 @@ function createUserWithTree(req) {
       createdAt: new Date().toISOString()
     };
 
+    // LINK TREE
     if (placement.side === "L") {
 
       if (parent.leftChild) {
@@ -273,3 +273,4 @@ function createUserWithTree(req) {
 window.createUserWithTree = createUserWithTree;
 window.findPlacement = findPlacement;
 window.getUserTree = getUserTree;
+window.generateUserId = generateUserId;
