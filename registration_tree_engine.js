@@ -1,43 +1,47 @@
+"use strict";
+
 /*
 ========================================
-REGISTRATION TREE ENGINE v4.2 (FINAL STABLE FIX)
-========================================
-✔ Collision-safe userId
-✔ Safe LEFT / RIGHT deep traversal
-✔ Cycle protection
-✔ Broken-node protection
-✔ Safe parent resolution
-✔ Queue-safe execution
-✔ Post-save integrity verification
-✔ Production stable
+REGISTRATION TREE ENGINE v4.2 (FINAL LOCKED FIXED)
 ========================================
 */
 
+function safeUsers() {
+  return (typeof getUsers === "function" ? getUsers() : []) || [];
+}
+
 // ================= USER ID =================
 function generateUserId() {
-  let users = typeof getUsers === "function" ? (getUsers() || []) : [];
+
+  let users = safeUsers();
   let id = "";
   let attempts = 0;
 
   do {
+
     id = "BWG" + Date.now() + Math.floor(Math.random() * 1000);
     attempts++;
+
     if (attempts > 10) {
       id = "BWG" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
       break;
     }
+
   } while (users.some(u => u.userId === id));
 
   return id;
 }
 
-// ================= FIND DEEP POSITION =================
+// ================= FIND POSITION =================
 function findDeepPosition(introducerId, position) {
-  let users = getUsers() || [];
+
+  let users = safeUsers();
 
   let current = users.find(u => u.userId === introducerId);
 
-  if (!current) throw new Error("Invalid introducer");
+  if (!current) {
+    throw new Error("Invalid introducer or root not found");
+  }
 
   let visited = new Set();
 
@@ -78,45 +82,49 @@ function findDeepPosition(introducerId, position) {
 
 // ================= CREATE USER =================
 function createUserWithTree(req) {
+
   if (!req) throw new Error("Invalid request");
 
-  let users = getUsers() || [];
+  let users = safeUsers();
 
   if (!req.username || !req.mobile || !req.password) {
     throw new Error("Missing required fields");
   }
 
-  let exists = users.find(u => u.mobile === req.mobile);
-  if (exists) throw new Error("Mobile already exists");
+  if (users.find(u => u.mobile === req.mobile)) {
+    throw new Error("Mobile already exists");
+  }
 
   let userId = generateUserId();
 
-  let placement = findDeepPosition(req.introducerId, req.position || "L");
+  let introducerId = req.introducerId || "BWG000000";
+
+  let placement = findDeepPosition(
+    introducerId,
+    req.position || "L"
+  );
 
   if (!placement || !placement.parent) {
-    throw new Error("Invalid tree placement");
+    throw new Error("Invalid placement");
   }
 
   let parent = placement.parent;
 
-  if (!parent.userId) {
-    throw new Error("Invalid parent node");
-  }
-
-  let originalLeft = parent.leftChild;
-  let originalRight = parent.rightChild;
+  let backupLeft = parent.leftChild;
+  let backupRight = parent.rightChild;
 
   let newUser = {
-    userId: userId,
+    userId,
+
     username: req.username,
     email: req.email || "",
     password: req.password,
     mobile: req.mobile,
 
-    introducerId: req.introducerId,
-    sponsorId: req.introducerId,
-    parentId: parent.userId,
+    introducerId,
+    sponsorId: introducerId,
 
+    parentId: parent.userId,
     position: placement.side,
 
     leftChild: null,
@@ -133,7 +141,6 @@ function createUserWithTree(req) {
 
   try {
 
-    // ================= LINK TREE =================
     if (placement.side === "L") {
       parent.leftChild = userId;
     } else {
@@ -148,46 +155,45 @@ function createUserWithTree(req) {
       localStorage.setItem("users", JSON.stringify(users));
     }
 
-    // ================= VERIFY =================
-    let savedUsers = getUsers() || [];
+    let saved = safeUsers();
 
-    let savedUser = savedUsers.find(u => u.userId === userId);
-    let savedParent = savedUsers.find(u => u.userId === parent.userId);
+    let checkUser = saved.find(u => u.userId === userId);
+    let checkParent = saved.find(u => u.userId === parent.userId);
 
-    if (!savedUser) throw new Error("User save verification failed");
-    if (!savedParent) throw new Error("Parent save verification failed");
+    if (!checkUser) throw new Error("User save failed");
+    if (!checkParent) throw new Error("Parent save failed");
 
     let linked =
-      (placement.side === "L" && savedParent.leftChild === userId) ||
-      (placement.side === "R" && savedParent.rightChild === userId);
+      (placement.side === "L" && checkParent.leftChild === userId) ||
+      (placement.side === "R" && checkParent.rightChild === userId);
 
-    if (!linked) throw new Error("Tree link verification failed");
+    if (!linked) throw new Error("Tree linking failed");
 
     if (typeof logActivity === "function") {
-      logActivity(userId, "SYSTEM", "TREE USER CREATED");
+      logActivity(userId, "SYSTEM", "TREE CREATED");
     }
 
     return {
-      user: savedUser,
-      userId: savedUser.userId,
-      introducerId: req.introducerId,
+      user: checkUser,
+      userId,
+      introducerId,
       position: placement.side
     };
 
-  } catch (e) {
+  } catch (err) {
 
-    // ================= ROLLBACK =================
-    parent.leftChild = originalLeft;
-    parent.rightChild = originalRight;
+    parent.leftChild = backupLeft;
+    parent.rightChild = backupRight;
 
     if (typeof logActivity === "function") {
-      logActivity(req.mobile || "SYSTEM", "SYSTEM", "TREE CREATE FAILED");
+      logActivity(req.mobile, "SYSTEM", "TREE CREATE FAILED");
     }
 
-    throw e;
+    throw err;
   }
 }
 
 // ================= EXPORT =================
 window.createUserWithTree = createUserWithTree;
 window.findDeepPosition = findDeepPosition;
+window.generateUserId = generateUserId;
