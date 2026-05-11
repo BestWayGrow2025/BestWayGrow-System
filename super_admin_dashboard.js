@@ -185,13 +185,27 @@ function bindEvents() {
           }
           break;
 
-        case "users":
-          loadUsers();
-          break;
+       case "users":
+  loadUsers();
+  break;
 
-        case "system":
-          loadSystem();
-          break;
+case "pins":
+  if (typeof loadPins === "function") {
+    loadPins();
+  } else {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <h3>📌 PIN Management</h3>
+        <p>PIN module not loaded.</p>
+      `;
+    }
+  }
+  break;
+
+case "system":
+  loadSystem();
+  break;
 
         case "tree":
           loadTreeView("all");
@@ -527,6 +541,7 @@ function logout() {
 
 window.loadHome = loadHome;
 window.loadUsers = loadUsers;
+window.loadPins = typeof loadPins === "function" ? loadPins : null;
 window.loadSystem = loadSystem;
 window.toggleSystemSetting = toggleSystemSetting;
 window.loadTreeView = loadTreeView;
