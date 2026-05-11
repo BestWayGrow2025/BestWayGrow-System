@@ -1,18 +1,21 @@
 
+"use strict";
+
 /*
 ========================================
-SUPER ADMIN PIN CONTROL (FINAL)
+SUPER ADMIN PIN CONTROL (FINAL FIXED)
 ========================================
-✔ Final PIN authority layer
-✔ Uses executePinFlow ONLY
-✔ No direct engine calls
-✔ No duplicate auth
-✔ System-level request control
-✔ Global override authority
+✔ Safe super admin layer
+✔ PIN request filtering
+✔ Execute flow only (no direct engine calls)
+✔ Dashboard integration added
+✔ loadPins() exported
+✔ UI safe hooks included
 ========================================
 */
 
-// ================= SAFE SUPER ADMIN =================
+/* ================= SAFE SUPER ADMIN ================= */
+
 function getSafeSuperAdmin() {
   if (typeof getSession !== "function") return null;
 
@@ -27,7 +30,8 @@ function getSafeSuperAdmin() {
   return session;
 }
 
-// ================= REQUEST FILTER =================
+/* ================= REQUEST FILTER ================= */
+
 function getSuperAdminPinRequests() {
   if (typeof getPinRequests !== "function") return [];
 
@@ -39,21 +43,26 @@ function getSuperAdminPinRequests() {
 }
 
 function getPendingSystemStockRequests() {
-  return getSuperAdminPinRequests().filter(req => req.status === "PENDING");
+  return getSuperAdminPinRequests().filter(req =>
+    req.status === "PENDING"
+  );
 }
 
-// ================= VALIDATION =================
+/* ================= VALIDATION ================= */
+
 function canReviewSystemStockRequest(requestId) {
   const admin = getSafeSuperAdmin();
   if (!admin) return false;
 
-  const requests = getPendingSystemStockRequests();
-  const req = requests.find(r => r.requestId === requestId);
+  const req = getPendingSystemStockRequests().find(
+    r => r.requestId === requestId
+  );
 
   return !!req;
 }
 
-// ================= APPROVE =================
+/* ================= APPROVE ================= */
+
 function approveSystemStockRequest(requestId) {
   if (!canReviewSystemStockRequest(requestId)) {
     alert("Invalid or unauthorized request");
@@ -65,11 +74,12 @@ function approveSystemStockRequest(requestId) {
   }
 
   return executePinFlow("PROCESS_REQUEST", {
-    requestId: requestId
+    requestId
   });
 }
 
-// ================= REJECT =================
+/* ================= REJECT ================= */
+
 function rejectSystemStockRequest(requestId) {
   if (!canReviewSystemStockRequest(requestId)) {
     alert("Invalid or unauthorized request");
@@ -81,11 +91,58 @@ function rejectSystemStockRequest(requestId) {
   }
 
   return executePinFlow("REJECT_REQUEST", {
-    requestId: requestId
+    requestId
   });
 }
 
-// ================= GLOBAL PIN AUTH =================
+/* ================= PIN DASHBOARD VIEW ================= */
+
+function loadPins() {
+  const main = document.getElementById("mainContent");
+  if (!main) return;
+
+  const requests = getSuperAdminPinRequests();
+
+  let html = `
+    <h3>📌 PIN CONTROL PANEL (SUPER ADMIN)</h3>
+
+    <div style="margin-bottom:10px;">
+      <b>Total Requests:</b> ${requests.length}
+    </div>
+
+    <table border="1" style="width:100%;text-align:left;">
+      <tr>
+        <th>Request ID</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+  `;
+
+  requests.forEach(req => {
+    html += `
+      <tr>
+        <td>${req.requestId}</td>
+        <td>${req.status}</td>
+        <td>
+          <button onclick="approveSystemStockRequest('${req.requestId}')">
+            Approve
+          </button>
+
+          <button onclick="rejectSystemStockRequest('${req.requestId}')">
+            Reject
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `</table>`;
+
+  main.innerHTML = html;
+}
+
+/* ================= GLOBAL PIN AUTH ================= */
+
 function canCreateGlobalPin(type) {
   const admin = getSafeSuperAdmin();
   return !!admin && ["upgrade", "repurchase"].includes(type);
@@ -99,3 +156,9 @@ function canDeleteGlobalPin(pin) {
 function canOverrideGlobalPin() {
   return !!getSafeSuperAdmin();
 }
+
+/* ================= EXPORTS ================= */
+
+window.loadPins = loadPins;
+window.approveSystemStockRequest = approveSystemStockRequest;
+window.rejectSystemStockRequest = rejectSystemStockRequest;
