@@ -2,15 +2,16 @@
 
 /*
 ========================================
-ADMIN DASHBOARD V2.0 (UNIFIED + TREE INTEGRATION FIXED)
+ADMIN DASHBOARD V2.1 (FINAL PRODUCTION)
 ========================================
-✔ UI unchanged
-✔ Engine untouched
-✔ Session safe
+✔ Unified session authentication
 ✔ Route guard compatible
-✔ TREE API INTEGRATED (FIXED)
-✔ NO DEBUG CONSOLE TREE
-✔ PRODUCTION READY STRUCTURE
+✔ Tree API integration
+✔ Admin-only access
+✔ Real users only in listings
+✔ Auto refresh
+✔ Safe logout
+✔ Production READY
 ========================================
 */
 
@@ -71,7 +72,11 @@ function bootAdminDashboard() {
     return;
   }
 
-  if ((adminUser.accountStatus || adminUser.status || "active") !== "active") {
+  if (
+    (adminUser.accountStatus ||
+      adminUser.status ||
+      "active") !== "active"
+  ) {
     alert("Admin inactive");
     logout();
     return;
@@ -80,11 +85,10 @@ function bootAdminDashboard() {
   loadAdminDashboardPage();
 }
 
-/* ================= TREE INTEGRATION (FIXED PRODUCTION VERSION) ================= */
+/* ================= TREE API ================= */
 
 function getAdminFullTree() {
 
-  // ✔ NOW USING CENTRAL TREE API (NO HEAVY LOOPING)
   if (typeof getAdminTreeView === "function") {
     return getAdminTreeView();
   }
@@ -96,13 +100,16 @@ function getAdminFullTree() {
 
 function loadAdminDashboardPage() {
 
-  const welcome = document.getElementById("welcome");
+  const welcome =
+    document.getElementById("welcome");
 
   if (welcome) {
     welcome.innerText =
       "Welcome " +
       (adminUser.username || adminUser.userId) +
-      " (" + adminUser.userId + ")";
+      " (" +
+      adminUser.userId +
+      ")";
   }
 
   loadHome();
@@ -116,15 +123,24 @@ function loadAdminDashboardPage() {
 
     const tab = currentBtn.innerText.trim();
 
-    if (tab === "System" && typeof loadSystem === "function") {
+    if (
+      tab.indexOf("System") >= 0 &&
+      typeof loadSystem === "function"
+    ) {
       loadSystem();
     }
 
-    if (tab === "Users" && typeof renderUsers === "function") {
+    if (
+      tab.indexOf("Users") >= 0 &&
+      typeof renderUsers === "function"
+    ) {
       renderUsers(currentPage);
     }
 
-    if (tab === "PIN" && typeof renderPins === "function") {
+    if (
+      tab.indexOf("PIN") >= 0 &&
+      typeof renderPins === "function"
+    ) {
       renderPins();
     }
 
@@ -140,48 +156,65 @@ function loadHome() {
 
   if (!main) return;
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  let users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
-  let allUsers = users.filter(u => u.role === "user");
+  // Real users only
+  let allUsers = users.filter(function (u) {
+    return u.role === "user";
+  });
 
   let totalWallet =
-    allUsers.reduce((sum, u) => sum + Number(u.walletBalance || 0), 0);
+    allUsers.reduce(function (sum, u) {
+      return sum + Number(u.walletBalance || 0);
+    }, 0);
 
   main.innerHTML = `
     <h3>Dashboard Overview</h3>
 
     <div class="grid">
-      <div class="miniCard"><h4>Total Users</h4><p>${allUsers.length}</p></div>
-      <div class="miniCard"><h4>Total Wallet</h4><p>₹${totalWallet.toFixed(2)}</p></div>
+      <div class="miniCard">
+        <h4>Total Users</h4>
+        <p>${allUsers.length}</p>
+      </div>
+
+      <div class="miniCard">
+        <h4>Total Wallet</h4>
+        <p>₹${totalWallet.toFixed(2)}</p>
+      </div>
     </div>
 
     <br>
 
     <button onclick="openAdminTreeView()">
-      🔥 View Full System Tree
+      🌳 View Full User Tree
     </button>
 
-    <p><b>Admin:</b> ${adminUser.username}</p>
+    <p><b>Admin:</b> ${adminUser.username || adminUser.userId}</p>
   `;
 }
 
-/* ================= NEW TREE UI (FIXED) ================= */
+/* ================= TREE UI ================= */
 
 function openAdminTreeView() {
 
-  const main = document.getElementById("mainContent");
+  const main =
+    document.getElementById("mainContent");
 
   if (!main) return;
 
   if (typeof getAdminTreeView !== "function") {
-    main.innerHTML = "<p>Tree API not available</p>";
+    main.innerHTML =
+      "<p>Tree API not available</p>";
     return;
   }
 
   const tree = getAdminTreeView();
 
   main.innerHTML = `
-    <h3>Full System Tree</h3>
+    <h3>Full User Tree</h3>
     <pre>${JSON.stringify(tree, null, 2)}</pre>
   `;
 }
@@ -218,15 +251,24 @@ function renderUsers() {
   if (!body) return;
 
   let users =
-    typeof getUsers === "function" ? getUsers() : [];
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
-  body.innerHTML = users.map(u => `
-    <tr>
-      <td>${u.userId}</td>
-      <td>${u.username || "-"}</td>
-      <td>₹${u.walletBalance || 0}</td>
-    </tr>
-  `).join("");
+  // Show real users only
+  users = users.filter(function (u) {
+    return u.role === "user";
+  });
+
+  body.innerHTML = users.map(function (u) {
+    return `
+      <tr>
+        <td>${u.userId}</td>
+        <td>${u.username || "-"}</td>
+        <td>₹${u.walletBalance || 0}</td>
+      </tr>
+    `;
+  }).join("");
 }
 
 /* ================= PIN ================= */
@@ -237,7 +279,9 @@ function loadPinsUI() {
     document.getElementById("mainContent");
 
   if (main) {
-    main.innerHTML = `<h3>PIN Control</h3>`;
+    main.innerHTML = `
+      <h3>PIN Control</h3>
+    `;
   }
 }
 
@@ -249,15 +293,19 @@ function renderPins() {
   if (!body) return;
 
   let pins =
-    typeof loadPins === "function" ? loadPins() : [];
+    typeof loadPins === "function"
+      ? loadPins()
+      : [];
 
-  body.innerHTML = pins.map(p => `
-    <tr>
-      <td>${p.pinId}</td>
-      <td>${p.type}</td>
-      <td>${p.status}</td>
-    </tr>
-  `).join("");
+  body.innerHTML = pins.map(function (p) {
+    return `
+      <tr>
+        <td>${p.pinId}</td>
+        <td>${p.type}</td>
+        <td>${p.status}</td>
+      </tr>
+    `;
+  }).join("");
 }
 
 /* ================= LOGOUT ================= */
