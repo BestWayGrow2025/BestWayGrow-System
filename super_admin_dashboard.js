@@ -2,9 +2,19 @@
 
 /*
 ========================================
-SUPER ADMIN DASHBOARD
+SUPER ADMIN DASHBOARD V2.0
 STABLE FINAL EXECUTION VERSION + TREE INTEGRATION FIXED
 ONE AUTH ENGINE ONLY
+========================================
+✔ Single boot protection
+✔ Route guard integration
+✔ Session validation
+✔ Proper destroySession() logout
+✔ Super admin role enforcement
+✔ Full system tree view
+✔ Office accounts excluded from tree
+✔ Safe UI rendering
+✔ Production READY
 ========================================
 */
 
@@ -37,25 +47,46 @@ function bootSuperAdmin() {
 
   try {
 
+    // Route guard protection
     if (typeof requireAuth === "function") {
-      requireAuth(["super_admin"]);
+      const ok = requireAuth(["super_admin"]);
+      if (ok === false) return;
     }
 
-    const session = typeof getSession === "function" ? getSession() : null;
+    // Session validation
+    const session =
+      typeof getSession === "function"
+        ? getSession()
+        : null;
 
     if (!session || session.role !== "super_admin") {
+
+      if (typeof destroySession === "function") {
+        destroySession();
+      }
+
       window.location.href = "super_admin_login.html";
       return;
     }
 
+    // Core initialization
     initPage();
 
+    // User authentication
     if (!authPage()) {
+
+      if (typeof destroySession === "function") {
+        destroySession();
+      }
+
       window.location.href = "super_admin_login.html";
       return;
     }
 
+    // UI binding
     bindEvents();
+
+    // Default page
     loadHome();
 
   } catch (err) {
@@ -63,6 +94,7 @@ function bootSuperAdmin() {
     console.error("BOOT ERROR:", err);
 
     const main = document.getElementById("mainContent");
+
     if (main) {
       main.innerHTML = `
         <h3>Dashboard Error</h3>
@@ -90,21 +122,28 @@ function initPage() {
 
 function authPage() {
 
-  const session = typeof getSession === "function" ? getSession() : null;
+  const session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
 
-  if (!session || session.role !== "super_admin") return false;
+  if (!session || session.role !== "super_admin") {
+    return false;
+  }
 
   currentUser =
     typeof getUserById === "function"
       ? getUserById(session.userId)
       : session;
 
-  if (!currentUser) return false;
+  if (!currentUser) {
+    return false;
+  }
 
   if ((currentUser.status || "active") !== "active") {
 
-    if (typeof clearSession === "function") {
-      clearSession();
+    if (typeof destroySession === "function") {
+      destroySession();
     }
 
     return false;
@@ -135,7 +174,9 @@ function bindEvents() {
         if (clickLock) return;
         clickLock = true;
 
-        setTimeout(() => clickLock = false, 250);
+        setTimeout(function () {
+          clickLock = false;
+        }, 250);
 
         document.querySelectorAll(".menu button")
           .forEach(b => b.classList.remove("active"));
@@ -151,7 +192,9 @@ function bindEvents() {
             break;
 
           case "create":
-            loadCreate();
+            if (typeof loadCreate === "function") {
+              loadCreate();
+            }
             break;
 
           case "users":
@@ -184,20 +227,33 @@ function bindEvents() {
   const homeBtn =
     document.querySelector('.menu button[data-page="home"]');
 
-  if (homeBtn) homeBtn.classList.add("active");
+  if (homeBtn) {
+    homeBtn.classList.add("active");
+  }
 }
 
 /* ================= HOME ================= */
 
 function loadHome() {
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  const users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
-  const totalUsers = users.filter(u => u.role === "user").length;
-  const admins = users.filter(u => u.role === "admin").length;
-  const sysAdmins = users.filter(u => u.role === "system_admin").length;
+  const totalUsers =
+    users.filter(u => u.role === "user").length;
 
-  document.getElementById("mainContent").innerHTML = `
+  const admins =
+    users.filter(u => u.role === "admin").length;
+
+  const sysAdmins =
+    users.filter(u => u.role === "system_admin").length;
+
+  const main = document.getElementById("mainContent");
+  if (!main) return;
+
+  main.innerHTML = `
     <h3>📊 Dashboard Overview</h3>
 
     <div style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;">
@@ -229,7 +285,10 @@ function loadHome() {
 
 function loadUsers() {
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  const users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
   let html = `
     <h3>All Users</h3>
@@ -242,7 +301,7 @@ function loadUsers() {
       </tr>
   `;
 
-  users.forEach(u => {
+  users.forEach(function (u) {
     html += `
       <tr>
         <td>${u.userId}</td>
@@ -255,18 +314,25 @@ function loadUsers() {
 
   html += `</table>`;
 
-  document.getElementById("mainContent").innerHTML = html;
+  const main = document.getElementById("mainContent");
+  if (main) {
+    main.innerHTML = html;
+  }
 }
 
 /* ================= SYSTEM ================= */
 
 function loadSystem() {
 
-  let s = typeof getSystemSettings === "function"
-    ? getSystemSettings()
-    : {};
+  const s =
+    typeof getSystemSettings === "function"
+      ? getSystemSettings()
+      : {};
 
-  document.getElementById("mainContent").innerHTML = `
+  const main = document.getElementById("mainContent");
+  if (!main) return;
+
+  main.innerHTML = `
     <h3>⚙️ System Control</h3>
     <p>Registration: ${s.registrationOpen ? "ON" : "OFF"}</p>
     <p>Upgrade: ${s.upgradesOpen ? "ON" : "OFF"}</p>
@@ -274,14 +340,25 @@ function loadSystem() {
   `;
 }
 
-/* ================= 🌳 TREE VIEW (FIXED - CLEAN LOGIC) ================= */
+/* ================= TREE VIEW ================= */
 
 function loadTreeView() {
 
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  const users = typeof getUsers === "function" ? getUsers() : [];
+  // Exclude office accounts from user tree display
+  const users = (
+    typeof getUsers === "function"
+      ? getUsers()
+      : []
+  ).filter(function (u) {
+    return (
+      u.role === "user" ||
+      u.role === "admin" ||
+      u.role === "system_admin"
+    );
+  });
 
   if (!Array.isArray(users)) {
     main.innerHTML = "<p>Tree data not available</p>";
@@ -294,8 +371,7 @@ function loadTreeView() {
     <div style="margin-top:20px;">
   `;
 
-  users.forEach(u => {
-
+  users.forEach(function (u) {
     html += `
       <div style="padding:10px;border:1px solid #ddd;margin:5px;">
         <b>${u.userId}</b> (${u.username || "No Name"})<br>
@@ -313,13 +389,22 @@ function loadTreeView() {
 
 function showFullTreeConsole() {
 
-  const users = typeof getUsers === "function" ? getUsers() : [];
+  const users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
   console.log("🌳 SUPER ADMIN TREE DUMP:");
   console.log(users);
 
-  if (typeof getUserTree === "function" && users.length > 0) {
-    console.log("SAMPLE TREE:", getUserTree(users[0].userId));
+  if (
+    typeof getUserTree === "function" &&
+    users.length > 0
+  ) {
+    console.log(
+      "SAMPLE TREE:",
+      getUserTree(users[0].userId)
+    );
   }
 }
 
@@ -327,7 +412,10 @@ function showFullTreeConsole() {
 
 function loadResetPanel() {
 
-  document.getElementById("mainContent").innerHTML = `
+  const main = document.getElementById("mainContent");
+  if (!main) return;
+
+  main.innerHTML = `
     <h3>⚠️ System Reset</h3>
     <button onclick="resetUsers()">Reset Users</button>
     <button onclick="restartSystem()">Restart</button>
@@ -346,8 +434,8 @@ function restartSystem() {
 
 function logout() {
 
-  if (typeof clearSession === "function") {
-    clearSession();
+  if (typeof destroySession === "function") {
+    destroySession();
   }
 
   window.location.href = "super_admin_login.html";
