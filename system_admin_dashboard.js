@@ -170,4 +170,3 @@ function logout() {
 if (typeof clearSession === "function") clearSession();
 window.location.href = "system_admin_login.html";
 }
-
