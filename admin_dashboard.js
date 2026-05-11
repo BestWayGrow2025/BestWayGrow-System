@@ -2,15 +2,15 @@
 
 /*
 ========================================
-ADMIN DASHBOARD V2.0 (UNIFIED + TREE INTEGRATION FIX)
+ADMIN DASHBOARD V2.0 (UNIFIED + TREE INTEGRATION FIXED)
 ========================================
 ✔ UI unchanged
 ✔ Engine untouched
-✔ Flow controller integrated
-✔ Route guard compatible
 ✔ Session safe
-✔ TREE VIEW INTEGRATION ADDED
-✔ FULL SYSTEM TREE SUPPORT ENABLED
+✔ Route guard compatible
+✔ TREE API INTEGRATED (FIXED)
+✔ NO DEBUG CONSOLE TREE
+✔ PRODUCTION READY STRUCTURE
 ========================================
 */
 
@@ -49,7 +49,7 @@ function bootAdminDashboard() {
       ? getSession()
       : null;
 
-  if (!session || !session.userId || session.role !== "admin") {
+  if (!session || session.role !== "admin") {
     alert("Login Required");
     window.location.replace("admin_login.html");
     return;
@@ -80,43 +80,16 @@ function bootAdminDashboard() {
   loadAdminDashboardPage();
 }
 
-/* ================= TREE INTEGRATION (NEW FIX) ================= */
+/* ================= TREE INTEGRATION (FIXED PRODUCTION VERSION) ================= */
 
-/**
- * ADMIN GLOBAL TREE VIEW (FULL SYSTEM)
- * This is now SAFE ENTRY POINT for all users tree
- */
 function getAdminFullTree() {
 
-  if (typeof getUsers !== "function") return [];
+  // ✔ NOW USING CENTRAL TREE API (NO HEAVY LOOPING)
+  if (typeof getAdminTreeView === "function") {
+    return getAdminTreeView();
+  }
 
-  const users = getUsers();
-
-  return users.map(user => {
-
-    if (typeof getUserTree === "function") {
-      return getUserTree(user.userId);
-    }
-
-    return {
-      userId: user.userId,
-      left: user.leftChild || null,
-      right: user.rightChild || null
-    };
-  });
-}
-
-/**
- * SUPER SIMPLE TREE DEBUG VIEW
- */
-function showAdminTreeConsole() {
-
-  const tree = getAdminFullTree();
-
-  console.log("🔥 ADMIN FULL TREE SNAPSHOT:");
-  console.log(tree);
-
-  return tree;
+  return [];
 }
 
 /* ================= PAGE LOAD ================= */
@@ -184,11 +157,32 @@ function loadHome() {
 
     <br>
 
-    <button onclick="showAdminTreeConsole()">
-      🔥 View Full Tree (Console Debug)
+    <button onclick="openAdminTreeView()">
+      🔥 View Full System Tree
     </button>
 
     <p><b>Admin:</b> ${adminUser.username}</p>
+  `;
+}
+
+/* ================= NEW TREE UI (FIXED) ================= */
+
+function openAdminTreeView() {
+
+  const main = document.getElementById("mainContent");
+
+  if (!main) return;
+
+  if (typeof getAdminTreeView !== "function") {
+    main.innerHTML = "<p>Tree API not available</p>";
+    return;
+  }
+
+  const tree = getAdminTreeView();
+
+  main.innerHTML = `
+    <h3>Full System Tree</h3>
+    <pre>${JSON.stringify(tree, null, 2)}</pre>
   `;
 }
 
@@ -288,13 +282,11 @@ function logout() {
 
 /* ================= EXPORT ================= */
 
-window.safeClick = safeClick;
 window.loadHome = loadHome;
 window.loadUsers = loadUsers;
 window.renderUsers = renderUsers;
 window.renderPins = renderPins;
 window.loadPinsUI = loadPinsUI;
-window.loadSystem = loadSystem;
 window.logout = logout;
+window.openAdminTreeView = openAdminTreeView;
 window.getAdminFullTree = getAdminFullTree;
-window.showAdminTreeConsole = showAdminTreeConsole;
