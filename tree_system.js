@@ -25,7 +25,7 @@ function getIntroducerChildren(userId, users) {
   return users.filter(u => u.introducerId === userId);
 }
 
-/* ================= DIRECT ACCESS (DEBUG SAFE) ================= */
+/* ================= DIRECT ACCESS ================= */
 
 function getLeftChild(userId, users) {
   const user = users.find(u => u.userId === userId);
@@ -121,7 +121,7 @@ function generateReferralLink(userId) {
   return base + "/register.html?ref=" + encodeURIComponent(userId);
 }
 
-/* ================= TREE VIEW ENGINE ================= */
+/* ================= TREE VIEW ================= */
 
 function getUserTree(userId) {
 
@@ -232,7 +232,6 @@ function createUserWithTree(req) {
       createdAt: new Date().toISOString()
     };
 
-    // LINK TREE
     if (placement.side === "L") {
 
       if (parent.leftChild) {
