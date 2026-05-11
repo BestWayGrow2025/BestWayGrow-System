@@ -6,44 +6,67 @@
 
   <style>
     body {
-      font-family: 'Segoe UI';
+      font-family: "Segoe UI", Arial, sans-serif;
       margin: 0;
       background: #eef2f7;
     }
 
     header {
       background: #ff6600;
-      color: #fff;
+      color: #ffffff;
       padding: 18px;
       text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+
+    header h2 {
+      margin: 0 0 8px 0;
+    }
+
+    header p {
+      margin: 6px 0;
+      font-weight: 600;
     }
 
     header button {
       margin-top: 10px;
-      padding: 6px 12px;
+      padding: 8px 16px;
       border: none;
       border-radius: 6px;
       background: #ff4d4d;
-      color: #fff;
+      color: #ffffff;
       cursor: pointer;
+      font-weight: 600;
+    }
+
+    header button:hover {
+      opacity: 0.92;
     }
 
     .menu {
       display: flex;
       gap: 10px;
-      background: #fff;
-      padding: 10px;
+      background: #ffffff;
+      padding: 12px;
       justify-content: center;
       flex-wrap: wrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
 
     .menu button {
-      padding: 10px 15px;
+      padding: 10px 16px;
       border: none;
       border-radius: 20px;
       background: #ff944d;
-      color: #fff;
+      color: #ffffff;
       cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s ease;
+    }
+
+    .menu button:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
     }
 
     .menu button.active {
@@ -55,11 +78,49 @@
     }
 
     .card {
-      background: #fff;
+      background: #ffffff;
       padding: 20px;
       border-radius: 10px;
       max-width: 1100px;
       margin: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      min-height: 400px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    table th,
+    table td {
+      border: 1px solid #dddddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    table th {
+      background: #f7f7f7;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+
+      .menu {
+        gap: 8px;
+      }
+
+      .menu button {
+        padding: 8px 12px;
+        font-size: 14px;
+      }
     }
   </style>
 </head>
@@ -72,14 +133,17 @@
   <button id="logoutBtn">Logout</button>
 </header>
 
+<!-- ================= MENU ================= -->
 <div class="menu">
-  <button data-page="home">Home</button>
-  <button data-page="create">Create Sys Admin</button>
-  <button data-page="users">Users</button>
-  <button data-page="system">System</button>
-  <button data-page="reset">Reset</button>
+  <button data-page="home">🏠 Home</button>
+  <button data-page="create">👑 Create Sys Admin</button>
+  <button data-page="users">👥 Users</button>
+  <button data-page="system">⚙️ System</button>
+  <button data-page="tree">🌳 Tree View</button>
+  <button data-page="reset">♻️ Reset</button>
 </div>
 
+<!-- ================= MAIN CONTENT ================= -->
 <div class="container">
   <div id="mainContent" class="card"></div>
 </div>
@@ -88,21 +152,24 @@
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
 
-<!-- ================= SECURITY GATE ================= -->
+<!-- ================= SECURITY ================= -->
 <script src="route_guard.js"></script>
 <script>
   requireAuth(["super_admin"]);
 </script>
 
-<!-- ================= SYSTEM ================= -->
+<!-- ================= SYSTEM MODULES ================= -->
 <script src="activity_log.js"></script>
 <script src="pin_product_master.js"></script>
 <script src="pin_master_system.js"></script>
 <script src="pin_request_system.js"></script>
 
-<!-- ================= LOGIC ================= -->
+<!-- ================= TREE SYSTEM ================= -->
+<script src="tree_system.js"></script>
+<script src="registration_tree_engine.js"></script>
+
+<!-- ================= DASHBOARD LOGIC ================= -->
 <script src="super_admin_dashboard.js"></script>
 
 </body>
 </html>
-
