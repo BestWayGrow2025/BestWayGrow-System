@@ -2,15 +2,16 @@
 
 /*
 ========================================
-PIN LIVE ORCHESTRATOR V1.0 (REAL-TIME CORE)
+PIN LIVE ORCHESTRATOR V1.1 (REAL-TIME CORE)
 ========================================
 ✔ Central event bus for PIN system
 ✔ Real-time sync across all dashboards
 ✔ Watches request + flow + approval changes
 ✔ Bridges request system + live UI panels
 ✔ No direct engine control (SAFE LAYER ONLY)
-✔ Event-driven architecture (NOT polling based)
+✔ Event-driven architecture
 ✔ Production LOCKED CORE SYNC ENGINE
+✔ Memory-safe listener execution
 ========================================
 */
 
@@ -27,25 +28,30 @@ PIN LIVE ORCHESTRATOR V1.0 (REAL-TIME CORE)
 
 // ================= EVENT BUS =================
 const PIN_EVENT_BUS = {
-  listeners: {},
+  listeners: Object.create(null),
 
   on(event, callback) {
+
     if (!this.listeners[event]) {
       this.listeners[event] = [];
     }
+
     this.listeners[event].push(callback);
   },
 
   emit(event, data) {
-    const handlers = this.listeners[event] || [];
 
-    handlers.forEach(fn => {
+    const handlers = this.listeners[event];
+
+    if (!handlers || !handlers.length) return;
+
+    for (let i = 0; i < handlers.length; i++) {
       try {
-        fn(data);
+        handlers[i](data);
       } catch (e) {
         console.error("PIN EVENT ERROR:", e);
       }
-    });
+    }
   }
 };
 
@@ -75,6 +81,7 @@ function startRequestWatcher() {
     try {
 
       const data = getSafeRequests();
+
       const hash = JSON.stringify(data);
 
       if (hash !== PIN_STATE_CACHE.requestsHash) {
@@ -89,7 +96,7 @@ function startRequestWatcher() {
       console.error("PIN WATCH ERROR:", err);
     }
 
-  }, 2000); // lightweight sync loop
+  }, 2000);
 }
 
 // ================= SAFE FETCH =================
@@ -109,13 +116,8 @@ function getSafeRequests() {
 // ================= FLOW HOOK BINDING =================
 function bindSystemHooks() {
 
-  // Hook into request creation
   hookIfExists("createPinRequest", "PIN_REQUEST_CREATED");
-
-  // Hook into flow execution
   hookIfExists("executePinFlow", "PIN_FLOW_EXECUTED");
-
-  // Hook into router
   hookIfExists("routePinRequest", "PIN_ROUTER_EXECUTED");
 }
 
@@ -140,34 +142,29 @@ function hookIfExists(fnName, eventName) {
   };
 }
 
-// ================= PUBLIC SYNC EVENTS =================
-
-// UI can subscribe to real-time updates
+// ================= PUBLIC API =================
 function onPinEvent(event, callback) {
   PIN_EVENT_BUS.on(event, callback);
 }
 
-// Force refresh broadcast
 function broadcastPinUpdate(payload = {}) {
   PIN_EVENT_BUS.emit("PIN_FORCE_UPDATE", payload);
 }
 
-// ================= AUTO UI SYNC BRIDGE =================
+// ================= AUTO UI SYNC =================
 PIN_EVENT_BUS.on("PIN_REQUEST_UPDATED", function (data) {
 
-  // update live panel if exists
   if (typeof window.renderTable === "function") {
     window.renderTable(data);
   }
 
-  // refresh admin panel if exists
   if (typeof window.loadPinRequests === "function") {
     window.loadPinRequests();
   }
 
 });
 
-// ================= GLOBAL API =================
+// ================= GLOBAL EXPORT =================
 function exposeGlobalAPI() {
 
   window.onPinEvent = onPinEvent;
