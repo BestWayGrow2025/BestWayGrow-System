@@ -19,14 +19,8 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.12);
     }
 
-    header h2 {
-      margin: 0 0 8px 0;
-    }
-
-    header p {
-      margin: 6px 0;
-      font-weight: 600;
-    }
+    header h2 { margin: 0 0 8px 0; }
+    header p { margin: 6px 0; font-weight: 600; }
 
     header button {
       margin-top: 10px;
@@ -39,9 +33,7 @@
       font-weight: 600;
     }
 
-    header button:hover {
-      opacity: 0.92;
-    }
+    header button:hover { opacity: 0.92; }
 
     .menu {
       display: flex;
@@ -61,7 +53,6 @@
       color: #ffffff;
       cursor: pointer;
       font-weight: 600;
-      transition: 0.2s ease;
     }
 
     .menu button:hover {
@@ -93,19 +84,21 @@
       margin-top: 10px;
     }
 
-    table th,
-    table td {
+    table th, table td {
       border: 1px solid #dddddd;
       padding: 8px;
       text-align: left;
     }
 
-    table th {
-      background: #f7f7f7;
-    }
+    table th { background: #f7f7f7; }
 
-    /* ================= EVENT MONITOR PANEL ================= */
-    #eventMonitorPanel {
+    /* ================= PANELS ================= */
+    #eventMonitorPanel,
+    #systemBackupPanel,
+    #systemAuditPanel,
+    #systemControlRoomPanel,
+    #systemHealthPanel,
+    #systemEventStreamPanel {
       margin-top: 20px;
       background: #ffffff;
       padding: 20px;
@@ -117,26 +110,10 @@
     }
 
     @media (max-width: 768px) {
-      .container {
-        padding: 10px;
-      }
-
-      .card {
-        padding: 15px;
-      }
-
-      .menu {
-        gap: 8px;
-      }
-
-      .menu button {
-        padding: 8px 12px;
-        font-size: 14px;
-      }
-
-      #eventMonitorPanel {
-        padding: 15px;
-      }
+      .container { padding: 10px; }
+      .card { padding: 15px; }
+      .menu { gap: 8px; }
+      .menu button { padding: 8px 12px; font-size: 14px; }
     }
   </style>
 </head>
@@ -161,28 +138,19 @@
 
 <!-- ================= MAIN CONTENT ================= -->
 <div class="container">
+
   <div id="mainContent" class="card"></div>
 
-  <!-- Live event monitor panel -->
   <div id="eventMonitorPanel"></div>
-
-  <!-- System backup manager panel -->
   <div id="systemBackupPanel"></div>
-
-  <!-- System audit trail panel -->
   <div id="systemAuditPanel"></div>
-
-  <!-- System control room (master ops UI) -->
   <div id="systemControlRoomPanel"></div>
-
-  <!-- System health dashboard -->
   <div id="systemHealthPanel"></div>
-
-  <!-- NEW: Event stream console -->
   <div id="systemEventStreamPanel"></div>
+
 </div>
-  
-<!-- ================= CORE SYSTEM ================= -->
+
+<!-- ================= CORE ================= -->
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
 <script src="route_guard.js"></script>
@@ -191,30 +159,30 @@
 <script src="activity_log.js"></script>
 <script src="system_event_hub.js"></script>
 
-<!-- ================= DIAGNOSTICS LAYER ================= -->
+<!-- ================= DIAGNOSTICS ================= -->
 <script src="system_diagnostics.js"></script>
 
-<!-- ================= CONTROL CENTER ================= -->
+<!-- ================= CONTROL ================= -->
 <script src="system_control_center.js"></script>
 
-<!-- ================= RECOVERY LAYER ================= -->
+<!-- ================= RECOVERY ================= -->
 <script src="system_recovery_manager.js"></script>
 
-<!-- ================= ORCHESTRATION LAYER ================= -->
+<!-- ================= ORCHESTRATION ================= -->
 <script src="system_orchestrator_ai.js"></script>
 
-<!-- ================= HEALTH LAYER ================= -->
+<!-- ================= HEALTH ================= -->
 <script src="system_health_dashboard.js"></script>
 
-<!-- ================= GOVERNANCE LAYER ================= -->
+<!-- ================= GOVERNANCE ================= -->
 <script src="system_os_mode.js"></script>
 <script src="system_ai_governor.js"></script>
 
-<!-- ================= BACKUP SYSTEM ================= -->
+<!-- ================= BACKUP ================= -->
 <script src="system_backup_manager.js"></script>
 <script src="system_backup_panel.js"></script>
 
-<!-- ================= AUDIT SYSTEM ================= -->
+<!-- ================= AUDIT ================= -->
 <script src="system_audit_trail.js"></script>
 <script src="system_audit_panel.js"></script>
 
@@ -240,7 +208,7 @@
 <script src="registration_tree_engine.js"></script>
 
 <!-- ================= DASHBOARD ================= -->
-<script src="super_admin_dashboard.js"></script>♥️
+<script src="super_admin_dashboard.js"></script>
 
 </body>
 </html>
