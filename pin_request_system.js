@@ -1,6 +1,8 @@
+"use strict";
+
 /*
 ========================================
-PIN REQUEST SYSTEM V9.0 (FINAL HARDENED)
+PIN REQUEST SYSTEM V9.1 (FINAL HARDENED)
 ========================================
 ✔ Core aligned
 ✔ Session protected
@@ -16,15 +18,10 @@ PIN REQUEST SYSTEM V9.0 (FINAL HARDENED)
 ========================================
 */
 
-"use strict";
-
-const PIN_REQUEST_KEY = "PIN_REQUEST_DATA";
-const PIN_REQUEST_LIMIT = 5000;
-
-const PIN_REQUEST_LOCKS = {};
-const PIN_REQUEST_LOCK_TTL = 10000;
-
-const PIN_PAYMENT_REPLAY_KEY = "PIN_PAYMENT_REPLAY";
+// ================= IMPORT SAFE =================
+const PIN_ACTION = {
+  REQUEST: "REQUEST"
+};
 
 // ================= CORE READY =================
 function isPinRequestSystemReady() {
@@ -33,6 +30,13 @@ function isPinRequestSystemReady() {
     window.__CORE_STATE__.initialized === true
   );
 }
+
+// ================= STORAGE KEYS =================
+const PIN_REQUEST_KEY = "PIN_REQUEST_DATA";
+const PIN_REQUEST_LIMIT = 5000;
+const PIN_REQUEST_LOCKS = {};
+const PIN_REQUEST_LOCK_TTL = 10000;
+const PIN_PAYMENT_REPLAY_KEY = "PIN_PAYMENT_REPLAY";
 
 // ================= PAYMENT REPLAY =================
 function getPaymentReplayStore() {
@@ -47,22 +51,22 @@ function savePaymentReplayStore(data) {
 function isPaymentUsed(paymentId) {
   if (!paymentId) return false;
 
-  let store = getPaymentReplayStore();
+  const store = getPaymentReplayStore();
   return store[paymentId] === true;
 }
 
 function markPaymentUsed(paymentId) {
   if (!paymentId) return;
 
-  let store = getPaymentReplayStore();
+  const store = getPaymentReplayStore();
   store[paymentId] = true;
 
   savePaymentReplayStore(store);
 }
 
-// ================= LOCK =================
+// ================= LOCK SYSTEM =================
 function isRequestLocked(key) {
-  let t = PIN_REQUEST_LOCKS[key];
+  const t = PIN_REQUEST_LOCKS[key];
 
   if (!t) return false;
 
@@ -92,22 +96,14 @@ function sanitizeRequest(r) {
     type: String(r.type || "").toLowerCase(),
     amount: parseFloat(Number(r.amount || 0).toFixed(2)),
     paymentId: String(r.paymentId || "").trim(),
-
     quantity: Math.max(1, parseInt(r.quantity || 1)),
-
     status: String(r.status || "PENDING").toUpperCase(),
     lock: r.lock === true,
-
-    assignedPins: Array.isArray(r.assignedPins)
-      ? r.assignedPins
-      : [],
-
+    assignedPins: Array.isArray(r.assignedPins) ? r.assignedPins : [],
     priority: String(r.priority || "YELLOW"),
     retry: Number(r.retry || 0),
-
     createdAt: Number(r.createdAt || Date.now()),
     processedAt: r.processedAt || null,
-
     processedBy: r.processedBy || null,
     failReason: r.failReason || null
   };
@@ -115,7 +111,6 @@ function sanitizeRequest(r) {
 
 // ================= LOAD / SAVE =================
 function getPinRequests() {
-
   let data = safeGet(PIN_REQUEST_KEY, []);
 
   if (!Array.isArray(data)) {
@@ -123,9 +118,7 @@ function getPinRequests() {
     return [];
   }
 
-  let clean = data
-    .map(sanitizeRequest)
-    .filter(Boolean);
+  const clean = data.map(sanitizeRequest).filter(Boolean);
 
   safeSet(PIN_REQUEST_KEY, clean);
 
@@ -133,23 +126,18 @@ function getPinRequests() {
 }
 
 function savePinRequests(data) {
+  if (!Array.isArray(data)) data = [];
 
-  if (!Array.isArray(data)) {
-    data = [];
+  const clean = data.map(sanitizeRequest).filter(Boolean);
+
+  if (clean.length > PIN_REQUEST_LIMIT) {
+    clean.splice(0, clean.length - PIN_REQUEST_LIMIT);
   }
 
-  data = data
-    .map(sanitizeRequest)
-    .filter(Boolean);
-
-  if (data.length > PIN_REQUEST_LIMIT) {
-    data = data.slice(-PIN_REQUEST_LIMIT);
-  }
-
-  safeSet(PIN_REQUEST_KEY, data);
+  safeSet(PIN_REQUEST_KEY, clean);
 }
 
-// ================= ID =================
+// ================= ID GENERATOR =================
 function generateRequestId() {
   return (
     "REQ_" +
@@ -161,16 +149,12 @@ function generateRequestId() {
 
 // ================= PRIORITY =================
 function detectPriority(userId) {
+  if (typeof getUserById !== "function") return "YELLOW";
 
-  if (typeof getUserById !== "function") {
-    return "YELLOW";
-  }
-
-  let user = getUserById(userId);
-
+  const user = getUserById(userId);
   if (!user) return "YELLOW";
 
-  let points = Number(user.activePoints || 0);
+  const points = Number(user.activePoints || 0);
 
   if (points >= 5) return "GREEN";
   if (points >= 2) return "YELLOW";
@@ -178,23 +162,17 @@ function detectPriority(userId) {
   return "RED";
 }
 
-// ================= QUEUE =================
+// ================= QUEUE CONTROL =================
 function isQueueEnabled() {
+  if (typeof getSystemSettings !== "function") return true;
 
-  if (typeof getSystemSettings !== "function") {
-    return true;
-  }
-
-  let s = getSystemSettings() || {};
-  let q = s.pinQueue || {};
-
-  return q.enabled !== false;
+  const s = getSystemSettings() || {};
+  return s.pinQueue?.enabled !== false;
 }
 
-// ================= DUPLICATE =================
+// ================= DUPLICATE CHECK =================
 function hasRecentDuplicateRequest(userId, type, paymentId) {
-
-  let requests = getPinRequests();
+  const requests = getPinRequests();
 
   return requests.some(r =>
     r.userId === userId &&
@@ -204,7 +182,7 @@ function hasRecentDuplicateRequest(userId, type, paymentId) {
   );
 }
 
-// ================= CREATE =================
+// ================= CREATE REQUEST =================
 function createPinRequest({
   userId,
   type,
@@ -213,22 +191,18 @@ function createPinRequest({
   quantity = 1
 }) {
 
-  const lockKey =
-    String(userId) + "_" +
-    String(paymentId);
+  const lockKey = `${userId}_${paymentId}`;
 
   try {
 
-    // ================= CORE =================
+    // ================= CORE CHECK =================
     if (!isPinRequestSystemReady()) {
       throw new Error("Core not ready");
     }
 
-    // ================= SESSION =================
+    // ================= SESSION CHECK =================
     if (typeof getSession === "function") {
-
       const session = getSession();
-
       if (!session || !session.userId) {
         throw new Error("Invalid session");
       }
@@ -241,12 +215,11 @@ function createPinRequest({
 
     setRequestLock(lockKey, true);
 
-    // ================= SYSTEM =================
-    if (
-      typeof isSystemSafe === "function" &&
-      !isSystemSafe()
-    ) {
-      throw new Error("System locked");
+    // ================= SYSTEM SAFETY =================
+    if (typeof isSystemSafe === "function") {
+      if (!isSystemSafe()) {
+        throw new Error("System locked");
+      }
     }
 
     if (!isQueueEnabled()) {
@@ -254,22 +227,12 @@ function createPinRequest({
     }
 
     // ================= NORMALIZE =================
-    type = String(type || "")
-      .trim()
-      .toLowerCase();
-
-    paymentId = String(paymentId || "")
-      .trim();
-
-    quantity = parseInt(quantity);
-
-    if (isNaN(quantity) || quantity < 1) {
-      quantity = 1;
-    }
-
+    type = String(type || "").trim().toLowerCase();
+    paymentId = String(paymentId || "").trim();
+    quantity = Math.max(1, parseInt(quantity || 1));
     amount = Number(amount);
 
-    // ================= VALIDATE =================
+    // ================= VALIDATION =================
     if (!userId || !type || !paymentId) {
       throw new Error("Invalid request data");
     }
@@ -282,23 +245,22 @@ function createPinRequest({
       throw new Error("Invalid amount");
     }
 
-    // ================= PAYMENT REPLAY =================
+    // ================= REPLAY PROTECTION =================
     if (isPaymentUsed(paymentId)) {
       throw new Error("Payment already used");
     }
 
-    // ================= PIN SYSTEM =================
-    if (
-      typeof isPinSystemSafe === "function" &&
-      !isPinSystemSafe(type)
-    ) {
-      throw new Error("PIN system disabled");
+    // ================= PIN SYSTEM CHECK =================
+    if (typeof isPinSystemSafe === "function") {
+      if (!isPinSystemSafe(type)) {
+        throw new Error("PIN system disabled");
+      }
     }
 
-    let requests = getPinRequests();
+    const requests = getPinRequests();
 
     // ================= PENDING CHECK =================
-    let pending = requests.find(r =>
+    const pending = requests.find(r =>
       r.userId === userId &&
       r.type === type &&
       r.status === "PENDING"
@@ -308,18 +270,12 @@ function createPinRequest({
       throw new Error("Pending request exists");
     }
 
-    // ================= DUPLICATE =================
-    if (
-      hasRecentDuplicateRequest(
-        userId,
-        type,
-        paymentId
-      )
-    ) {
+    // ================= DUPLICATE CHECK =================
+    if (hasRecentDuplicateRequest(userId, type, paymentId)) {
       throw new Error("Duplicate request blocked");
     }
 
-    // ================= ACTION POLICY =================
+    // ================= POLICY CHECK =================
     let role = "user";
 
     if (typeof getCurrentUser === "function") {
@@ -328,49 +284,33 @@ function createPinRequest({
     }
 
     if (typeof canExecutePinAction === "function") {
-
-      const allowed =
-        canExecutePinAction(
-          PIN_ACTION.REQUEST,
-          { status: "pending" },
-          role
-        );
+      const allowed = canExecutePinAction(
+        PIN_ACTION.REQUEST,
+        { status: "pending" },
+        role
+      );
 
       if (!allowed) {
-        throw new Error(
-          "Request blocked by policy"
-        );
+        throw new Error("Request blocked by policy");
       }
     }
 
-    // ================= CREATE =================
-    let newRequest = {
+    // ================= CREATE REQUEST =================
+    const newRequest = {
       requestId: generateRequestId(),
-
       userId,
       type,
-
-      amount: parseFloat(
-        amount.toFixed(2)
-      ),
-
+      amount: parseFloat(amount.toFixed(2)),
       paymentId,
       quantity,
-
       status: "PENDING",
       lock: false,
-
       assignedPins: [],
-
       priority: detectPriority(userId),
-
       retry: 0,
-
       createdAt: Date.now(),
-
       processedAt: null,
       processedBy: null,
-
       failReason: null
     };
 
@@ -378,14 +318,16 @@ function createPinRequest({
 
     savePinRequests(requests);
 
-    // ================= MARK REPLAY =================
     markPaymentUsed(paymentId);
 
     return newRequest;
 
   } finally {
-
     setRequestLock(lockKey, false);
-
   }
 }
+
+// ================= EXPORT =================
+window.createPinRequest = createPinRequest;
+window.getPinRequests = getPinRequests;
+window.savePinRequests = savePinRequests;
