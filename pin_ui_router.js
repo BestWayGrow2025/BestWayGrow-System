@@ -2,15 +2,21 @@
 
 /*
 ========================================
-PIN UI ROUTER (UNIFIED ENTRY LAYER)
+PIN UI ROUTER (UNIFIED ENTRY LAYER V1.1)
 ========================================
 ✔ Single UI entry point for all PIN actions
 ✔ Routes all requests to routePinRequest()
 ✔ Prevents direct loadPins misuse
 ✔ Works across all dashboards
 ✔ Role-safe UI gateway
+✔ Click spam protection added
+✔ Auto rebind safe system
+✔ Live panel refresh hook
 ========================================
 */
+
+// ================= GLOBAL LOCK =================
+let PIN_UI_LOCK = false;
 
 // ================= SAFE INIT =================
 (function () {
@@ -28,12 +34,24 @@ PIN UI ROUTER (UNIFIED ENTRY LAYER)
 // ================= MAIN BIND =================
 function bindPinUI() {
 
-  // Attach ALL PIN buttons globally by attribute
   document.querySelectorAll("[data-pin-action]").forEach(btn => {
+
+    if (btn.__PIN_BOUND__) return; // prevent duplicate binding
+    btn.__PIN_BOUND__ = true;
 
     btn.addEventListener("click", function () {
 
-      const action = btn.getAttribute("data-pin-action");
+      if (PIN_UI_LOCK) return;
+
+      PIN_UI_LOCK = true;
+
+      setTimeout(() => {
+        PIN_UI_LOCK = false;
+      }, 300);
+
+      const action = normalizeActionSafe(
+        btn.getAttribute("data-pin-action")
+      );
 
       const payload = safeReadPayload(btn);
 
@@ -41,6 +59,23 @@ function bindPinUI() {
     });
 
   });
+}
+
+// ================= NORMALIZER =================
+function normalizeActionSafe(action) {
+
+  if (!action) return "";
+
+  const map = {
+    request_pin: "REQUEST_PIN",
+    approve_request: "APPROVE_REQUEST",
+    reject_request: "REJECT_REQUEST",
+    assign_pin: "ASSIGN_PIN",
+    system_pin_request: "SYSTEM_PIN_REQUEST",
+    admin_stock_request: "ADMIN_STOCK_REQUEST"
+  };
+
+  return map[action] || String(action).toUpperCase();
 }
 
 // ================= SAFE PAYLOAD =================
@@ -67,17 +102,23 @@ function handlePinAction(action, payload) {
 
     if (typeof routePinRequest === "function") {
 
-      return routePinRequest(action, payload);
+      const res = routePinRequest(action, payload);
+
+      triggerLiveRefresh();
+
+      return res;
 
     } else if (typeof executePinFlow === "function") {
 
-      // fallback safety layer
-      return executePinFlow(action, payload);
+      const res = executePinFlow(action, payload);
+
+      triggerLiveRefresh();
+
+      return res;
 
     } else {
 
       renderFallback();
-
       return false;
     }
 
@@ -85,10 +126,28 @@ function handlePinAction(action, payload) {
 
     console.error("PIN UI ERROR:", err);
 
-    alert("PIN system error");
+    alert(err.message || "PIN system error");
 
     return false;
   }
+}
+
+// ================= LIVE REFRESH HOOK =================
+function triggerLiveRefresh() {
+
+  try {
+
+    // refresh admin panels if available
+    if (typeof loadPinRequests === "function") {
+      loadPinRequests();
+    }
+
+    // refresh live panel if exists
+    if (typeof refreshLivePins === "function") {
+      refreshLivePins();
+    }
+
+  } catch (_) {}
 }
 
 // ================= FALLBACK UI =================
@@ -104,7 +163,7 @@ function renderFallback() {
   `;
 }
 
-// ================= PUBLIC SAFE API =================
+// ================= PUBLIC API =================
 window.handlePinAction = handlePinAction;
 window.bindPinUI = bindPinUI;
-
+window.triggerLiveRefresh = triggerLiveRefresh;
