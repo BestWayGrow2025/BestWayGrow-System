@@ -194,5 +194,3 @@ window.runSystemDiagnostics = runDiagnostics;
 window.renderSystemDiagnostics = renderDiagnostics;
 window.startSystemDiagnostics = startDiagnosticsLoop;
 
-
-
