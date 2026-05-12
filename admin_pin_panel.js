@@ -1,12 +1,16 @@
+"use strict";
+
 /*
 ========================================
-ADMIN PIN PANEL V2.1 (FLOW INTEGRATED)
+ADMIN PIN PANEL V2.2 (FINAL PRODUCTION)
 ========================================
 ✔ Admin PIN request control panel
 ✔ Uses unified executePinFlow engine
 ✔ Fully aligned with PIN_ACTION system
 ✔ No direct engine calls
-✔ Clean orchestration only
+✔ Safe session validation
+✔ Auto refresh (3s)
+✔ Clean UI orchestration only
 ========================================
 */
 
@@ -18,17 +22,20 @@ document.addEventListener("DOMContentLoaded", function () {
   initAdminPinPanel();
 });
 
+// ================= INIT PANEL =================
 function initAdminPinPanel() {
-  if (typeof initCoreSystem === "function") initCoreSystem();
 
+  // Core system init
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
+
+  // Safe auth check (HARD STOP FIXED)
   const user = typeof protectPage === "function"
     ? protectPage({ role: "admin" })
     : null;
 
-  if (!user) {
-    window.location.href = "admin_login.html";
-    return;
-  }
+  if (!user) return;
 
   bindPinPanelEvents();
   refreshPinPanelStatus();
@@ -38,6 +45,7 @@ function initAdminPinPanel() {
 
 // ================= EVENTS =================
 function bindPinPanelEvents() {
+
   const filter = document.getElementById("filter");
 
   if (filter) {
@@ -45,14 +53,17 @@ function bindPinPanelEvents() {
   }
 }
 
+// ================= SAFE CLICK WRAPPER =================
 function safePinClick(fn) {
+
   if (pinAdminLock) return;
+
   pinAdminLock = true;
 
   try {
     fn();
   } catch (err) {
-    console.error("admin_pin_panel:", err);
+    console.error("admin_pin_panel error:", err);
     alert(err.message || "Action failed");
   }
 
@@ -63,6 +74,7 @@ function safePinClick(fn) {
 
 // ================= STATUS =================
 function refreshPinPanelStatus() {
+
   const up = document.getElementById("upgradeStatus");
   const rp = document.getElementById("repurchaseStatus");
 
@@ -87,15 +99,19 @@ function refreshPinPanelStatus() {
   }
 }
 
-// ================= REQUEST TABLE =================
+// ================= LOAD REQUESTS =================
 function loadPinRequests() {
+
   const filterEl = document.getElementById("filter");
   const table = document.getElementById("reqTable");
 
   if (!table) return;
 
   const filter = filterEl ? filterEl.value : "ALL";
-  const rows = typeof getPinRequests === "function" ? getPinRequests() : [];
+
+  const rows = typeof getPinRequests === "function"
+    ? getPinRequests()
+    : [];
 
   table.innerHTML = "";
 
@@ -105,6 +121,7 @@ function loadPinRequests() {
   }
 
   rows.forEach(req => {
+
     if (filter !== "ALL" && req.status !== filter) return;
 
     const priority = req.priority || "YELLOW";
@@ -139,11 +156,11 @@ function loadPinRequests() {
   });
 }
 
-// ================= ACTIONS (FLOW CONTROLLED) =================
-
-// APPROVE
+// ================= APPROVE =================
 function approvePinRequest(requestId) {
+
   safePinClick(() => {
+
     if (typeof executePinFlow !== "function") {
       throw new Error("Flow engine missing");
     }
@@ -157,9 +174,11 @@ function approvePinRequest(requestId) {
   });
 }
 
-// REJECT
+// ================= REJECT =================
 function rejectAdminPinRequest(requestId) {
+
   safePinClick(() => {
+
     if (!confirm("Reject this request?")) return;
 
     if (typeof executePinFlow !== "function") {
@@ -174,9 +193,11 @@ function rejectAdminPinRequest(requestId) {
   });
 }
 
-// FORCE PROCESS
+// ================= FORCE PROCESS =================
 function forcePinRequest(requestId) {
+
   safePinClick(() => {
+
     if (!confirm("Force process this request?")) return;
 
     if (typeof executePinFlow !== "function") {
@@ -194,7 +215,11 @@ function forcePinRequest(requestId) {
 
 // ================= DETAILS =================
 function viewPinRequestDetails(requestId) {
-  const rows = typeof getPinRequests === "function" ? getPinRequests() : [];
+
+  const rows = typeof getPinRequests === "function"
+    ? getPinRequests()
+    : [];
+
   const req = rows.find(r => r.requestId === requestId);
 
   if (!req) return;
@@ -214,7 +239,15 @@ Retry: ${req.retry || 0}`
 
 // ================= AUTO REFRESH =================
 function startPinPanelAutoRefresh() {
+
   if (pinRefreshTimer) clearInterval(pinRefreshTimer);
 
   pinRefreshTimer = setInterval(loadPinRequests, 3000);
 }
+
+// ================= GLOBAL EXPORTS =================
+window.loadPinRequests = loadPinRequests;
+window.approvePinRequest = approvePinRequest;
+window.rejectAdminPinRequest = rejectAdminPinRequest;
+window.forcePinRequest = forcePinRequest;
+window.viewPinRequestDetails = viewPinRequestDetails;
