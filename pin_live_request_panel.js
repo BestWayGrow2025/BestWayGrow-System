@@ -2,19 +2,21 @@
 
 /*
 ========================================
-LIVE PIN REQUEST PANEL (REAL-TIME)
+LIVE PIN REQUEST PANEL (REAL-TIME V1.1 FIXED)
 ========================================
 ✔ Auto-refresh request list
 ✔ No page reload required
 ✔ Unified admin/super/systems view
-✔ Safe executePinFlow integration
-✔ Lightweight polling engine
-✔ Production-safe live UI
+✔ STRICT router enforcement
+✔ Role-safe display
+✔ Collision-safe actions
+✔ Auto UI refresh after action
+✔ Production SAFE LIVE SYSTEM
 ========================================
 */
 
 // ================= CONFIG =================
-const PIN_LIVE_INTERVAL = 3000; // 3 sec refresh
+const PIN_LIVE_INTERVAL = 3000;
 let PIN_LIVE_TIMER = null;
 let PIN_LAST_HASH = null;
 
@@ -32,10 +34,10 @@ let PIN_LAST_HASH = null;
 // ================= START =================
 function initLivePanel() {
 
-  if (!document.getElementById("pinLivePanel")) return;
+  const el = document.getElementById("pinLivePanel");
+  if (!el) return;
 
   renderPanel();
-
   startLiveSync();
 }
 
@@ -56,7 +58,6 @@ function syncData() {
 
     const hash = JSON.stringify(data);
 
-    // skip update if no change
     if (hash === PIN_LAST_HASH) return;
 
     PIN_LAST_HASH = hash;
@@ -68,7 +69,7 @@ function syncData() {
   }
 }
 
-// ================= SAFE REQUEST FETCH =================
+// ================= SAFE FETCH =================
 function getRequestsSafe() {
 
   if (typeof getPinRequests !== "function") return [];
@@ -81,12 +82,10 @@ function getRequestsSafe() {
   }));
 }
 
-// ================= RENDER PANEL =================
+// ================= PANEL =================
 function renderPanel() {
 
   const el = document.getElementById("pinLivePanel");
-
-  if (!el) return;
 
   el.innerHTML = `
     <h3>📡 LIVE PIN REQUEST PANEL</h3>
@@ -96,11 +95,10 @@ function renderPanel() {
   syncData();
 }
 
-// ================= RENDER TABLE =================
+// ================= TABLE =================
 function renderTable(data) {
 
   const table = document.getElementById("pinLiveTable");
-
   if (!table) return;
 
   let html = `
@@ -121,8 +119,8 @@ function renderTable(data) {
         <td>${req.userId || "-"}</td>
         <td>${req.status}</td>
         <td>
-          <button onclick="approve('${req.requestId}')">Approve</button>
-          <button onclick="reject('${req.requestId}')">Reject</button>
+          <button onclick="PIN_LIVE_ACTION.approve('${req.requestId}')">Approve</button>
+          <button onclick="PIN_LIVE_ACTION.reject('${req.requestId}')">Reject</button>
         </td>
       </tr>
     `;
@@ -133,26 +131,51 @@ function renderTable(data) {
   table.innerHTML = html;
 }
 
-// ================= ACTIONS =================
-function approve(id) {
+// ================= ACTION WRAPPER (SAFE) =================
+const PIN_LIVE_ACTION = {
 
-  if (typeof routePinRequest === "function") {
-    routePinRequest("APPROVE_REQUEST", { requestId: id });
-  } else if (typeof executePinFlow === "function") {
-    executePinFlow("PROCESS_REQUEST", { requestId: id });
+  approve(id) {
+
+    try {
+
+      if (typeof routePinRequest === "function") {
+        routePinRequest("APPROVE_REQUEST", { requestId: id });
+      }
+
+      triggerRefresh();
+
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  reject(id) {
+
+    try {
+
+      if (typeof routePinRequest === "function") {
+        routePinRequest("REJECT_REQUEST", { requestId: id });
+      }
+
+      triggerRefresh();
+
+    } catch (e) {
+      console.error(e);
+    }
   }
+};
+
+// ================= AUTO REFRESH HOOK =================
+function triggerRefresh() {
+
+  try {
+
+    // immediate UI refresh
+    syncData();
+
+  } catch (_) {}
 }
 
-function reject(id) {
-
-  if (typeof routePinRequest === "function") {
-    routePinRequest("REJECT_REQUEST", { requestId: id });
-  } else if (typeof executePinFlow === "function") {
-    executePinFlow("REJECT_REQUEST", { requestId: id });
-  }
-}
-
-// ================= EXPORT =================
+// ================= EXPORT SAFE =================
 window.startLiveSync = startLiveSync;
-window.approve = approve;
-window.reject = reject;
+window.PIN_LIVE_ACTION = PIN_LIVE_ACTION;
