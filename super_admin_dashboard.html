@@ -150,15 +150,23 @@
 
 </div>
 
+<script>
+window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
+</script>
+
 <!-- ================= CORE ================= -->
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
 <script src="route_guard.js"></script>
 
+<!-- 🔐 SYSTEM BOOT MODE (ADDED) -->
+<script>
+window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
+</script>
+
 <!-- ================= EVENT LAYER ================= -->
 <script src="activity_log.js"></script>
 <script src="system_event_hub.js"></script>
-
 <!-- ================= DIAGNOSTICS ================= -->
 <script src="system_diagnostics.js"></script>
 
