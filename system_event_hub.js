@@ -2,14 +2,16 @@
 
 /*
 ========================================
-SYSTEM EVENT HUB V1.0 (ENTERPRISE CORE)
+SYSTEM EVENT HUB V2.0 (FINAL HARDENED CORE)
 ========================================
 ✔ Cross-module event unification layer
-✔ PIN + PAYOUT + BANK system sync bridge
-✔ Centralized event broadcasting
-✔ Prevents module desync issues
-✔ Safe observer pattern implementation
-✔ Production-grade event governor
+✔ PIN + PAYOUT + BANK + UI synchronization
+✔ Safe publish / subscribe architecture
+✔ Duplicate listener prevention
+✔ Duplicate hook prevention
+✔ Error-isolated event execution
+✔ Global broadcast API
+✔ Production LOCKED
 ========================================
 */
 
@@ -28,23 +30,58 @@ SYSTEM EVENT HUB V1.0 (ENTERPRISE CORE)
 const SYSTEM_EVENTS = {
   listeners: {},
 
+  // Subscribe
   on(event, fn) {
+
+    if (!event || typeof fn !== "function") return;
+
     if (!this.listeners[event]) {
       this.listeners[event] = [];
     }
+
+    // Prevent duplicate listeners
+    if (this.listeners[event].includes(fn)) return;
+
     this.listeners[event].push(fn);
   },
 
+  // Unsubscribe
+  off(event, fn) {
+
+    const list = this.listeners[event];
+    if (!Array.isArray(list)) return;
+
+    this.listeners[event] = list.filter(
+      handler => handler !== fn
+    );
+  },
+
+  // Emit event
   emit(event, data) {
+
     const list = this.listeners[event] || [];
 
     list.forEach(fn => {
       try {
         fn(data);
       } catch (err) {
-        console.error("SYSTEM EVENT ERROR:", err);
+        console.error(
+          "SYSTEM EVENT ERROR:",
+          event,
+          err
+        );
       }
     });
+  },
+
+  // Remove all listeners (optional maintenance)
+  clear(event) {
+
+    if (event) {
+      delete this.listeners[event];
+    } else {
+      this.listeners = {};
+    }
   }
 };
 
@@ -69,16 +106,12 @@ function bindPinSystemEvents() {
 // ================= PAYOUT EVENTS =================
 function bindPayoutSystemEvents() {
 
-  if (typeof window.processPayout !== "function") return;
-
   hook("processPayout", "PAYOUT_EVENT");
   hook("finalizePayout", "PAYOUT_FINALIZED");
 }
 
 // ================= BANK EVENTS =================
 function bindBankSystemEvents() {
-
-  if (typeof window.updateBankBalance !== "function") return;
 
   hook("updateBankBalance", "BANK_UPDATE");
   hook("creditBank", "BANK_CREDIT");
@@ -92,48 +125,92 @@ function hook(fnName, eventName) {
 
   const original = window[fnName];
 
-  window[fnName] = function (...args) {
+  // Prevent double wrapping
+  if (original.__systemEventHooked) return;
+
+  function wrappedFunction(...args) {
 
     const result = original.apply(this, args);
 
     SYSTEM_EVENTS.emit(eventName, {
+      functionName: fnName,
+      eventName,
       args,
       result,
       timestamp: Date.now()
     });
 
     return result;
-  };
+  }
+
+  // Mark wrapper and preserve reference
+  wrappedFunction.__systemEventHooked = true;
+  wrappedFunction.__originalFunction = original;
+
+  window[fnName] = wrappedFunction;
 }
 
-// ================= CROSS SYSTEM SYNC RULES =================
+// ================= CROSS-SYSTEM SYNC RULES =================
+
+// PIN Request → Bank Validation
 SYSTEM_EVENTS.on("PIN_REQUEST_EVENT", function (data) {
 
-  // Example: link PIN request to bank pre-check
   if (typeof window.validateBankForPin === "function") {
-    window.validateBankForPin(data);
+    try {
+      window.validateBankForPin(data);
+    } catch (err) {
+      console.error("PIN → BANK SYNC ERROR:", err);
+    }
   }
 });
 
+// Payout → PIN Synchronization
 SYSTEM_EVENTS.on("PAYOUT_EVENT", function (data) {
 
-  // Example: ensure payout never bypasses PIN system
   if (typeof window.syncPinAfterPayout === "function") {
-    window.syncPinAfterPayout(data);
+    try {
+      window.syncPinAfterPayout(data);
+    } catch (err) {
+      console.error("PAYOUT → PIN SYNC ERROR:", err);
+    }
   }
 });
 
+// Bank Update → Dashboard Refresh
 SYSTEM_EVENTS.on("BANK_UPDATE", function (data) {
 
-  // Example: update UI dashboards automatically
   if (typeof window.refreshDashboardBalances === "function") {
-    window.refreshDashboardBalances(data);
+    try {
+      window.refreshDashboardBalances(data);
+    } catch (err) {
+      console.error("BANK → UI SYNC ERROR:", err);
+    }
   }
 });
+
+// ================= GLOBAL BROADCAST =================
+function broadcastSystemEvent(event, payload = {}) {
+
+  SYSTEM_EVENTS.emit(event, {
+    ...payload,
+    timestamp: Date.now()
+  });
+}
 
 // ================= GLOBAL ACCESS =================
 function exposeGlobalHub() {
 
   window.SYSTEM_EVENTS = SYSTEM_EVENTS;
-  window.onSystemEvent = SYSTEM_EVENTS.on.bind(SYSTEM_EVENTS);
+
+  window.onSystemEvent =
+    SYSTEM_EVENTS.on.bind(SYSTEM_EVENTS);
+
+  window.offSystemEvent =
+    SYSTEM_EVENTS.off.bind(SYSTEM_EVENTS);
+
+  window.emitSystemEvent =
+    SYSTEM_EVENTS.emit.bind(SYSTEM_EVENTS);
+
+  window.broadcastSystemEvent =
+    broadcastSystemEvent;
 }
