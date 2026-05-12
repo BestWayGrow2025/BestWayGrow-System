@@ -182,25 +182,39 @@
   <div id="systemEventStreamPanel"></div>
 </div>
   
-<!-- ================= CORE ================= -->
+<!-- ================= CORE SYSTEM ================= -->
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
-
-<!-- ================= SECURITY ================= -->
 <script src="route_guard.js"></script>
-<script>
-  requireAuth(["super_admin"]);
-</script>
 
-<!-- ================= SYSTEM MODULES ================= -->
+<!-- ================= EVENT LAYER ================= -->
 <script src="activity_log.js"></script>
 <script src="system_event_hub.js"></script>
+
+<!-- ================= DIAGNOSTICS LAYER ================= -->
 <script src="system_diagnostics.js"></script>
 
+<!-- ================= CONTROL CENTER ================= -->
 <script src="system_control_center.js"></script>
 
+<!-- ================= RECOVERY LAYER ================= -->
+<script src="system_recovery_manager.js"></script>
+
+<!-- ================= ORCHESTRATION LAYER ================= -->
+<script src="system_orchestrator_ai.js"></script>
+
+<!-- ================= HEALTH LAYER ================= -->
+<script src="system_health_dashboard.js"></script>
+
+<!-- ================= GOVERNANCE LAYER ================= -->
+<script src="system_os_mode.js"></script>
+<script src="system_ai_governor.js"></script>
+
+<!-- ================= BACKUP SYSTEM ================= -->
 <script src="system_backup_manager.js"></script>
 <script src="system_backup_panel.js"></script>
+
+<!-- ================= AUDIT SYSTEM ================= -->
 <script src="system_audit_trail.js"></script>
 <script src="system_audit_panel.js"></script>
 
@@ -225,8 +239,8 @@
 <script src="tree_system.js"></script>
 <script src="registration_tree_engine.js"></script>
 
-<!-- ================= DASHBOARD LOGIC ================= -->
-<script src="super_admin_dashboard.js"></script>
+<!-- ================= DASHBOARD ================= -->
+<script src="super_admin_dashboard.js"></script>♥️
 
 </body>
 </html>
