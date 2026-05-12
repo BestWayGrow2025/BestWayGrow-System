@@ -25,6 +25,19 @@ SYSTEM RECOVERY MANAGER V1.0 (ENTERPRISE RESILIENCE CORE)
 
 })();
 
+// ================= GLOBAL SLC HOOK =================
+window.systemRecoveryManager = window.systemRecoveryManager || {
+  autoRecover: function () {
+    console.log("AUTO RECOVERY: Activated by SLC");
+
+    if (window.SYSTEM_EVENTS) {
+      window.SYSTEM_EVENTS.emit("RECOVERY_MODE_ACTIVE", {
+        time: Date.now()
+      });
+    }
+  }
+};
+
 // ================= CONFIG =================
 const RECOVERY_STATE = {
   lastCheckpoint: null,
@@ -34,6 +47,11 @@ const RECOVERY_STATE = {
 
 // ================= INIT =================
 function initSystemRecoveryManager() {
+
+  // SLC integration check
+  if (window.systemRecoveryManager && window.systemRecoveryManager.autoRecover) {
+    console.log("[RECOVERY] SLC Hook detected - binding auto recovery layer");
+  }
 
   bindSystemFailureWatchers();
   bindRecoveryEvents();
@@ -211,7 +229,7 @@ function recoverFullSystem() {
   }
 }
 
-// ================= RECOVERY MARKER =================
+// ================= RECOVERY SUCCESS =================
 function markRecoverySuccess(module) {
 
   console.log(`[RECOVERY] ${module} system recovered successfully`);
@@ -238,3 +256,18 @@ function exposeRecoveryAPI() {
     }
   };
 }
+
+// ================= SLC BINDING =================
+function bindSLCToRecovery() {
+
+  if (window.SystemLayerController) {
+
+    console.log("[RECOVERY] Connected to System Layer Controller");
+
+    window.SystemLayerController.setMode("NORMAL");
+
+  }
+}
+
+// auto connect after boot
+setTimeout(bindSLCToRecovery, 1500);
