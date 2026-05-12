@@ -2,16 +2,17 @@
 
 /*
 ========================================
-LIVE PIN REQUEST PANEL (REAL-TIME V1.1 FIXED)
+LIVE PIN REQUEST PANEL V1.2 (FINAL OPTIMIZED)
 ========================================
 ✔ Auto-refresh request list
 ✔ No page reload required
-✔ Unified admin/super/systems view
-✔ STRICT router enforcement
-✔ Role-safe display
+✔ Unified admin/super/system view
+✔ STRICT routePinRequest() enforcement
 ✔ Collision-safe actions
-✔ Auto UI refresh after action
-✔ Production SAFE LIVE SYSTEM
+✔ Immediate UI refresh after action
+✔ Event-driven sync via PIN_EVENT_BUS
+✔ Polling fallback if event bus unavailable
+✔ Production LOCKED
 ========================================
 */
 
@@ -20,7 +21,7 @@ const PIN_LIVE_INTERVAL = 3000;
 let PIN_LIVE_TIMER = null;
 let PIN_LAST_HASH = null;
 
-// ================= INIT =================
+// ================= INIT GUARD =================
 (function () {
 
   if (window.__PIN_LIVE_PANEL__) return;
@@ -31,68 +32,102 @@ let PIN_LAST_HASH = null;
 
 })();
 
-// ================= START =================
+// ================= INIT =================
 function initLivePanel() {
 
   const el = document.getElementById("pinLivePanel");
   if (!el) return;
 
   renderPanel();
-  startLiveSync();
+
+  // Priority 1: Event-driven live sync (preferred)
+  if (typeof onPinEvent === "function") {
+
+    onPinEvent("PIN_REQUEST_UPDATED", function (data) {
+      updateIfChanged(data);
+    });
+
+    onPinEvent("PIN_FORCE_UPDATE", function () {
+      syncData();
+    });
+
+    // Initial load
+    syncData();
+
+  } else {
+
+    // Priority 2: Polling fallback
+    startLiveSync();
+  }
 }
 
-// ================= LIVE LOOP =================
+// ================= POLLING FALLBACK =================
 function startLiveSync() {
 
-  if (PIN_LIVE_TIMER) clearInterval(PIN_LIVE_TIMER);
+  if (PIN_LIVE_TIMER) {
+    clearInterval(PIN_LIVE_TIMER);
+  }
 
   PIN_LIVE_TIMER = setInterval(syncData, PIN_LIVE_INTERVAL);
+
+  syncData();
 }
 
-// ================= DATA SYNC =================
+// ================= SYNC =================
 function syncData() {
 
   try {
 
     const data = getRequestsSafe();
 
-    const hash = JSON.stringify(data);
+    updateIfChanged(data);
 
-    if (hash === PIN_LAST_HASH) return;
-
-    PIN_LAST_HASH = hash;
-
-    renderTable(data);
-
-  } catch (e) {
-    console.error("PIN LIVE ERROR:", e);
+  } catch (err) {
+    console.error("PIN LIVE ERROR:", err);
   }
+}
+
+// ================= HASH CHECK =================
+function updateIfChanged(data) {
+
+  const hash = JSON.stringify(data || []);
+
+  if (hash === PIN_LAST_HASH) {
+    return;
+  }
+
+  PIN_LAST_HASH = hash;
+
+  renderTable(data || []);
 }
 
 // ================= SAFE FETCH =================
 function getRequestsSafe() {
 
-  if (typeof getPinRequests !== "function") return [];
+  if (typeof getPinRequests !== "function") {
+    return [];
+  }
 
-  return (getPinRequests() || []).map(r => ({
-    requestId: r.requestId,
-    paymentId: r.paymentId,
-    status: r.status,
-    userId: r.userId
-  }));
+  return (getPinRequests() || []).map(function (r) {
+    return {
+      requestId: r.requestId,
+      userId: r.userId || "-",
+      paymentId: r.paymentId || "-",
+      status: r.status || "UNKNOWN"
+    };
+  });
 }
 
 // ================= PANEL =================
 function renderPanel() {
 
   const el = document.getElementById("pinLivePanel");
+  if (!el) return;
 
   el.innerHTML = `
     <h3>📡 LIVE PIN REQUEST PANEL</h3>
     <div id="pinLiveTable"></div>
   `;
-
-  syncData();
 }
 
 // ================= TABLE =================
@@ -100,6 +135,13 @@ function renderTable(data) {
 
   const table = document.getElementById("pinLiveTable");
   if (!table) return;
+
+  if (!Array.isArray(data) || data.length === 0) {
+    table.innerHTML = `
+      <p>No PIN requests found.</p>
+    `;
+    return;
+  }
 
   let html = `
     <table border="1" width="100%" style="text-align:left;">
@@ -111,17 +153,29 @@ function renderTable(data) {
       </tr>
   `;
 
-  data.forEach(req => {
+  data.forEach(function (req) {
+
+    const status = String(req.status || "").toUpperCase();
+
+    let actions = "-";
+
+    if (status === "PENDING") {
+      actions = `
+        <button onclick="PIN_LIVE_ACTION.approve('${req.requestId}')">
+          Approve
+        </button>
+        <button onclick="PIN_LIVE_ACTION.reject('${req.requestId}')">
+          Reject
+        </button>
+      `;
+    }
 
     html += `
       <tr>
         <td>${req.requestId}</td>
-        <td>${req.userId || "-"}</td>
+        <td>${req.userId}</td>
         <td>${req.status}</td>
-        <td>
-          <button onclick="PIN_LIVE_ACTION.approve('${req.requestId}')">Approve</button>
-          <button onclick="PIN_LIVE_ACTION.reject('${req.requestId}')">Reject</button>
-        </td>
+        <td>${actions}</td>
       </tr>
     `;
   });
@@ -131,51 +185,63 @@ function renderTable(data) {
   table.innerHTML = html;
 }
 
-// ================= ACTION WRAPPER (SAFE) =================
+// ================= ACTION API =================
 const PIN_LIVE_ACTION = {
 
-  approve(id) {
-
-    try {
-
-      if (typeof routePinRequest === "function") {
-        routePinRequest("APPROVE_REQUEST", { requestId: id });
-      }
-
-      triggerRefresh();
-
-    } catch (e) {
-      console.error(e);
-    }
+  approve(requestId) {
+    executeLiveAction("APPROVE_REQUEST", requestId);
   },
 
-  reject(id) {
-
-    try {
-
-      if (typeof routePinRequest === "function") {
-        routePinRequest("REJECT_REQUEST", { requestId: id });
-      }
-
-      triggerRefresh();
-
-    } catch (e) {
-      console.error(e);
-    }
+  reject(requestId) {
+    executeLiveAction("REJECT_REQUEST", requestId);
   }
 };
 
-// ================= AUTO REFRESH HOOK =================
+// ================= EXECUTION =================
+function executeLiveAction(actionType, requestId) {
+
+  try {
+
+    if (typeof routePinRequest !== "function") {
+      throw new Error("routePinRequest not available");
+    }
+
+    const result = routePinRequest(actionType, {
+      requestId: requestId
+    });
+
+    // Immediate refresh
+    triggerRefresh();
+
+    return result;
+
+  } catch (err) {
+
+    console.error("PIN LIVE ACTION ERROR:", err);
+
+    return false;
+  }
+}
+
+// ================= FORCE REFRESH =================
 function triggerRefresh() {
 
   try {
 
-    // immediate UI refresh
+    // Event-driven refresh if available
+    if (typeof broadcastPinUpdate === "function") {
+      broadcastPinUpdate({
+        source: "pin_live_request_panel"
+      });
+    }
+
+    // Direct refresh fallback
     syncData();
 
   } catch (_) {}
 }
 
-// ================= EXPORT SAFE =================
+// ================= EXPORT =================
 window.startLiveSync = startLiveSync;
 window.PIN_LIVE_ACTION = PIN_LIVE_ACTION;
+window.triggerPinLiveRefresh = triggerRefresh;
