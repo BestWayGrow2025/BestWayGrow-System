@@ -159,14 +159,19 @@
   <button data-page="reset">♻️ Reset</button>
 </div>
 
+<!-- ================= MAIN CONTENT ================= -->
 <div class="container">
+  <!-- Main dashboard content loaded by super_admin_dashboard.js -->
   <div id="mainContent" class="card"></div>
 
-  <!-- ================= LIVE EVENT MONITOR ================= -->
+  <!-- Live event monitor panel -->
   <div id="eventMonitorPanel"></div>
 
-  <!-- ================= SYSTEM BACKUP PANEL ================= -->
+  <!-- System backup manager panel -->
   <div id="systemBackupPanel"></div>
+
+  <!-- System audit trail panel -->
+  <div id="systemAuditPanel"></div>
 </div>
 
 <!-- ================= CORE ================= -->
@@ -185,6 +190,8 @@
 <script src="system_diagnostics.js"></script>
 <script src="system_backup_manager.js"></script>
 <script src="system_backup_panel.js"></script>
+<script src="system_audit_trail.js"></script>
+<script src="system_audit_panel.js"></script>
 
 <!-- ================= PIN SYSTEM ================= -->
 <script src="pin_product_master.js"></script>
