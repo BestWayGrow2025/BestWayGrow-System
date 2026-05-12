@@ -150,16 +150,12 @@
 
 </div>
 
-<script>
-window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
-</script>
-
 <!-- ================= CORE ================= -->
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
 <script src="route_guard.js"></script>
 
-<!-- 🔐 SYSTEM BOOT MODE (ADDED) -->
+<!-- ================= BOOT MODE (ONLY ONCE) ================= -->
 <script>
 window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
 </script>
@@ -167,16 +163,17 @@ window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
 <!-- ================= EVENT LAYER ================= -->
 <script src="activity_log.js"></script>
 <script src="system_event_hub.js"></script>
+
 <!-- ================= DIAGNOSTICS ================= -->
 <script src="system_diagnostics.js"></script>
 
-<!-- AFTER control center -->
+<!-- ================= CONTROL CENTER ================= -->
 <script src="system_control_center.js"></script>
 
-<!-- NEW LAYER CONTROLLER -->
+<!-- ================= LAYER CONTROLLER ================= -->
 <script src="system_layer_controller.js"></script>
 
-<!-- BEFORE recovery -->
+<!-- ================= RECOVERY ================= -->
 <script src="system_recovery_manager.js"></script>
 
 <!-- ================= ORCHESTRATION ================= -->
