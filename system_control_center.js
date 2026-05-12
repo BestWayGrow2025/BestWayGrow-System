@@ -1,15 +1,16 @@
-    "use strict";
+  "use strict";
 
 /*
 ========================================
-SYSTEM CONTROL CENTER V1.0 (MASTER ORCHESTRATOR)
+SYSTEM CONTROL CENTER V2.0 (MASTER ORCHESTRATOR)
 ========================================
-✔ Unifies all system modules
-✔ Event Hub + Diagnostics + Backup + Audit + Health
-✔ Central monitoring brain
-✔ Real-time system coordination layer
-✔ Safe read-only orchestration
-✔ No business logic override (ONLY monitoring/control signals)
+✔ Unifies ALL system modules
+✔ Event Hub + Diagnostics + Backup + Audit + Health + Recovery
+✔ Full system observability layer
+✔ Real-time control snapshot engine
+✔ Dependency validation engine
+✔ Safe read-only orchestration (NO business mutation)
+✔ Production-grade monitoring core
 ========================================
 */
 
@@ -40,17 +41,24 @@ function initControlCenter() {
 function bindSystemSignals() {
 
   const hub = window.SYSTEM_EVENTS;
-
   if (!hub) return;
 
+  // Core financial + PIN + BANK events
   hub.on("PIN_REQUEST_EVENT", logSignal);
+  hub.on("PIN_ROUTE_EVENT", logSignal);
   hub.on("PAYOUT_EVENT", logSignal);
   hub.on("BANK_UPDATE", logSignal);
   hub.on("BANK_DEBIT", logSignal);
   hub.on("BANK_CREDIT", logSignal);
 
+  // System health + recovery
   hub.on("SYSTEM_FAILURE", alertSignal);
   hub.on("SYSTEM_WARNING", warnSignal);
+  hub.on("SYSTEM_RECOVERY", logSignal);
+
+  // Audit + diagnostics
+  hub.on("AUDIT_EVENT", logSignal);
+  hub.on("DIAGNOSTIC_EVENT", logSignal);
 }
 
 // ================= CONTROL LOOP =================
@@ -65,6 +73,7 @@ function startControlLoop() {
     runHealthCheck();
     runDependencyCheck();
     runSystemSnapshot();
+    runRecoveryCheck();
 
   }, 5000);
 }
@@ -81,6 +90,10 @@ function runHealthCheck() {
   if (health.overall === "CRITICAL") {
     emitAlert("CRITICAL SYSTEM STATE DETECTED");
   }
+
+  if (health.overall === "WARNING") {
+    emitWarning("SYSTEM HEALTH WARNING STATE");
+  }
 }
 
 // ================= DEPENDENCY CHECK =================
@@ -89,7 +102,11 @@ function runDependencyCheck() {
   const required = [
     "SYSTEM_EVENTS",
     "__SYSTEM_DIAGNOSTICS__",
-    "__PIN_LIVE_ORCHESTRATOR__"
+    "__PIN_LIVE_ORCHESTRATOR__",
+    "__SYSTEM_BACKUP_MANAGER__",
+    "__SYSTEM_AUDIT_TRAIL__",
+    "collectSystemHealth",
+    "runRecoveryCheck"
   ];
 
   const missing = required.filter(r => !window[r]);
@@ -99,17 +116,41 @@ function runDependencyCheck() {
   }
 }
 
-// ================= SNAPSHOT =================
+// ================= RECOVERY CHECK =================
+function runRecoveryCheck() {
+
+  if (typeof window.runSystemRecovery === "function") {
+    try {
+      window.runSystemRecovery();
+    } catch (e) {
+      emitAlert("Recovery system failure detected");
+    }
+  }
+}
+
+// ================= SNAPSHOT ENGINE =================
 function runSystemSnapshot() {
 
   window.__SYSTEM_SNAPSHOT__ = {
     time: Date.now(),
+
     eventHub: !!window.SYSTEM_EVENTS,
     diagnostics: !!window.__SYSTEM_DIAGNOSTICS__,
     backup: !!window.__SYSTEM_BACKUP_MANAGER__,
     audit: !!window.__SYSTEM_AUDIT_TRAIL__,
-    health: window.collectSystemHealth ? window.collectSystemHealth() : null
+    health: typeof window.collectSystemHealth === "function"
+      ? window.collectSystemHealth()
+      : null,
+
+    recovery: typeof window.runSystemRecovery === "function"
+      ? true
+      : false
   };
+
+  // Global system trace event
+  if (window.SYSTEM_EVENTS) {
+    window.SYSTEM_EVENTS.emit("CONTROL_SNAPSHOT", window.__SYSTEM_SNAPSHOT__);
+  }
 }
 
 // ================= SIGNAL HANDLERS =================
@@ -127,16 +168,22 @@ function warnSignal(data) {
 
 // ================= EMITTER HELPERS =================
 function emitAlert(msg) {
-
   if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("SYSTEM_ALERT", { msg, level: "CRITICAL" });
+    window.SYSTEM_EVENTS.emit("SYSTEM_ALERT", {
+      msg,
+      level: "CRITICAL",
+      time: Date.now()
+    });
   }
 }
 
 function emitWarning(msg) {
-
   if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("SYSTEM_ALERT", { msg, level: "WARNING" });
+    window.SYSTEM_EVENTS.emit("SYSTEM_ALERT", {
+      msg,
+      level: "WARNING",
+      time: Date.now()
+    });
   }
 }
 
