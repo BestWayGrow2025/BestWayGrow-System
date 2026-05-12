@@ -2,15 +2,14 @@
 
 /*
 ========================================
-PIN ACCESS ROUTER V1.1 (FINAL CORE GATE)
+PIN ACCESS ROUTER V1.2 (FINAL CORE GATE)
 ========================================
-✔ Role-based PIN request routing
-✔ Super admin override protection
+✔ Role-based PIN routing
+✔ Super admin override safe path
 ✔ Admin/System/User separation
-✔ Blocks direct engine bypass
-✔ Forces executePinFlow only path
-✔ Normalized action safety added
-✔ Production SAFE GATEWAY LAYER
+✔ Engine bypass protection
+✔ Normalized action safety
+✔ Production locked gateway
 ========================================
 */
 
@@ -28,14 +27,15 @@ function getActiveSessionUser() {
   return session;
 }
 
-// ================= ROLE CHECK =================
+// ================= ROLE =================
 function getRole() {
   const user = getActiveSessionUser();
   return user?.role || null;
 }
 
-// ================= ACTION NORMALIZER (FIXED) =================
+// ================= NORMALIZER =================
 function normalizeAction(actionType) {
+
   const map = {
     request_pin: "REQUEST_PIN",
     admin_stock_request: "ADMIN_STOCK_REQUEST",
@@ -53,6 +53,7 @@ function normalizeAction(actionType) {
 
 // ================= ACCESS MATRIX =================
 function getAllowedActions(role) {
+
   switch (role) {
 
     case "super_admin":
@@ -89,6 +90,7 @@ function getAllowedActions(role) {
 
 // ================= PERMISSION CHECK =================
 function canExecute(actionType) {
+
   const role = getRole();
   if (!role) return false;
 
@@ -97,7 +99,7 @@ function canExecute(actionType) {
   return allowed.includes(actionType);
 }
 
-// ================= BLOCK DIRECT BYPASS =================
+// ================= BLOCK BYPASS =================
 function isBlockedAction(actionType) {
 
   const blocked = [
@@ -125,7 +127,7 @@ function routePinRequest(actionType, payload = {}) {
 
     user = activeUser;
 
-    // Normalize (FIXED)
+    // Normalize
     actionType = normalizeAction(actionType);
 
     // Block bypass attempts
@@ -133,7 +135,17 @@ function routePinRequest(actionType, payload = {}) {
       throw new Error("Bypass attempt blocked");
     }
 
-    // Permission check
+    // ================= OVERRIDE PATH (SUPER ADMIN ONLY) =================
+    if (actionType === "OVERRIDE_PIN") {
+
+      if (user.role !== "super_admin") {
+        throw new Error("Only Super Admin can override");
+      }
+
+      return executePinFlow("OVERRIDE_PIN", payload);
+    }
+
+    // ================= PERMISSION CHECK =================
     if (!canExecute(actionType)) {
       throw new Error(
         "Permission denied for role: " + user.role
@@ -173,13 +185,6 @@ function routePinRequest(actionType, payload = {}) {
           assignedBy: user.userId
         });
 
-      case "OVERRIDE_PIN":
-        if (user.role !== "super_admin") {
-          throw new Error("Only Super Admin can override");
-        }
-
-        return executePinFlow("OVERRIDE_PIN", payload);
-
       default:
         throw new Error("Invalid action type");
     }
@@ -202,6 +207,6 @@ function routePinRequest(actionType, payload = {}) {
   }
 }
 
-// ================= SAFE GLOBAL EXPORT =================
+// ================= EXPORT =================
 window.routePinRequest = routePinRequest;
 window.canExecutePin = canExecute;
