@@ -2,13 +2,14 @@
 
 /*
 ========================================
-PIN ACCESS ROUTER V1.0 (FINAL CORE GATE)
+PIN ACCESS ROUTER V1.1 (FINAL CORE GATE)
 ========================================
 ✔ Role-based PIN request routing
 ✔ Super admin override protection
 ✔ Admin/System/User separation
 ✔ Blocks direct engine bypass
 ✔ Forces executePinFlow only path
+✔ Normalized action safety added
 ✔ Production SAFE GATEWAY LAYER
 ========================================
 */
@@ -31,6 +32,23 @@ function getActiveSessionUser() {
 function getRole() {
   const user = getActiveSessionUser();
   return user?.role || null;
+}
+
+// ================= ACTION NORMALIZER (FIXED) =================
+function normalizeAction(actionType) {
+  const map = {
+    request_pin: "REQUEST_PIN",
+    admin_stock_request: "ADMIN_STOCK_REQUEST",
+    system_pin_request: "SYSTEM_PIN_REQUEST",
+    approve_request: "APPROVE_REQUEST",
+    reject_request: "REJECT_REQUEST",
+    assign_pin: "ASSIGN_PIN",
+    override_pin: "OVERRIDE_PIN"
+  };
+
+  const key = String(actionType || "").trim();
+
+  return map[key] || key.toUpperCase();
 }
 
 // ================= ACCESS MATRIX =================
@@ -95,16 +113,20 @@ function isBlockedAction(actionType) {
 // ================= MAIN ROUTER =================
 function routePinRequest(actionType, payload = {}) {
 
+  let user = null;
+
   try {
 
-    const user = getActiveSessionUser();
+    const activeUser = getActiveSessionUser();
 
-    if (!user) {
+    if (!activeUser) {
       throw new Error("No active session");
     }
 
-    // Normalize
-    actionType = String(actionType || "").trim().toUpperCase();
+    user = activeUser;
+
+    // Normalize (FIXED)
+    actionType = normalizeAction(actionType);
 
     // Block bypass attempts
     if (isBlockedAction(actionType)) {
