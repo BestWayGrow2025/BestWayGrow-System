@@ -1,4 +1,4 @@
-  "use strict";
+ "use strict";
 
 /*
 ========================================
@@ -190,3 +190,19 @@ function emitWarning(msg) {
 // ================= GLOBAL ACCESS =================
 window.runSystemSnapshot = runSystemSnapshot;
 window.initControlCenter = initControlCenter;
+
+
+// ================= SLC INTEGRATION =================
+// (System Layer Controller connection hook)
+function connectToSLC() {
+
+  if (window.SystemLayerController) {
+
+    window.SystemLayerController.setMode("NORMAL");
+
+    console.log("CONTROL CENTER: Connected to SLC");
+  }
+}
+
+// auto bind
+setTimeout(connectToSLC, 1000);
