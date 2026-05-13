@@ -158,7 +158,12 @@ function bindDefaultWalletSync() {
 // ================= GLOBAL BROADCAST API =================
 function broadcastWalletEvent(payload = {}) {
 
-  if (!window.SYSTEM_EVENTS) return;
+  if (
+    !window.SYSTEM_EVENTS ||
+    typeof window.SYSTEM_EVENTS.emit !== "function"
+  ) {
+    return;
+  }
 
   window.SYSTEM_EVENTS.emit("WALLET_EVENT", {
     ...payload,
@@ -182,18 +187,3 @@ function exposeWalletBridgeAPI() {
 
 // ================= FINAL CONFIRMATION =================
 console.log("[WALLET EVENT BRIDGE] Global flags registered");
-
-// ================= HEALTH DASHBOARD FLAG =================
-window.__WALLET_SYSTEM_ACTIVE__ = true;
-
-// Compatibility API expected by diagnostics
-window.broadcastWalletEvent = function (payload = {}) {
-  try {
-    window.SYSTEM_EVENTS?.emit("WALLET_EVENT", {
-      ...payload,
-      timestamp: Date.now()
-    });
-  } catch (_) {}
-};
-
-console.log("[WALLET] HEALTH FLAG REGISTERED");
