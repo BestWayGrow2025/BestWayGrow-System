@@ -103,8 +103,10 @@ function createSystemBackup(label = "Manual Backup") {
     saveBackupRegistry(backups);
 
     // Broadcast event if event hub exists
-    if (typeof window.SYSTEM_EVENTS !== "undefined" &&
-        typeof window.SYSTEM_EVENTS.emit === "function") {
+    if (
+      typeof window.SYSTEM_EVENTS !== "undefined" &&
+      typeof window.SYSTEM_EVENTS.emit === "function"
+    ) {
       window.SYSTEM_EVENTS.emit("SYSTEM_BACKUP_CREATED", metadata);
     }
 
@@ -154,8 +156,10 @@ function restoreSystemBackup(backupId) {
     });
 
     // Broadcast event if event hub exists
-    if (typeof window.SYSTEM_EVENTS !== "undefined" &&
-        typeof window.SYSTEM_EVENTS.emit === "function") {
+    if (
+      typeof window.SYSTEM_EVENTS !== "undefined" &&
+      typeof window.SYSTEM_EVENTS.emit === "function"
+    ) {
       window.SYSTEM_EVENTS.emit("SYSTEM_BACKUP_RESTORED", {
         backupId,
         timestamp: Date.now()
@@ -213,7 +217,9 @@ function getLatestSystemBackup() {
 function getBackupRegistry() {
 
   try {
-    return JSON.parse(localStorage.getItem(BACKUP_STORAGE_KEY) || "[]");
+    return JSON.parse(
+      localStorage.getItem(BACKUP_STORAGE_KEY) || "[]"
+    );
   } catch (_) {
     return [];
   }
