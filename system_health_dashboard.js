@@ -119,8 +119,13 @@ function computeOverallStatus() {
   const criticalModules = [
     window.SYSTEM_EVENTS,
     window.runDiagnostics,
+
     window.__RECOVERY_ENGINE_ACTIVE__,
+    window.__BACKUP_SYSTEM_ACTIVE__,
+    window.__AUDIT_TRAIL_ACTIVE__,
+
     window.PIN_EVENT_BUS,
+
     window.__WALLET_SYSTEM_ACTIVE__,
     window.__PAYOUT_SYSTEM_ACTIVE__
   ];
