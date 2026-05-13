@@ -2,14 +2,13 @@
 
 /*
 ========================================
-SYSTEM SELF-COHERENCE LAYER (SCL++) FINAL UPGRADE
+SYSTEM SELF-COHERENCE LAYER (SCL++) FINAL STABLE
 ========================================
-✔ System integrity validator
-✔ Boot order verifier
-✔ Auto-healing trigger layer
-✔ AI Governor coordination
-✔ Full system coherence enforcement
-✔ Highest-level control layer (ABOVE ALL)
+✔ Tiered system integrity validation
+✔ Core system protection (NON-BLOCKING AI LAYERS)
+✔ No false system locks
+✔ Safe monitoring
+✔ Production stable
 ========================================
 */
 
@@ -35,24 +34,39 @@ function initSCL() {
 // ================= SYSTEM VALIDATION =================
 function validateSystemIntegrity() {
 
-  const required = [
+  // ================= CORE (CRITICAL) =================
+  const requiredCore = [
     "SYSTEM_EVENTS",
     "__SYSTEM_DIAGNOSTICS__",
     "__SYSTEM_CONTROL_CENTER__",
     "__SYSTEM_LAYER_CONTROLLER__",
-    "__SYSTEM_RECOVERY_MANAGER__",
+    "__SYSTEM_RECOVERY_MANAGER__"
+  ];
+
+  // ================= OPTIONAL AI LAYERS =================
+  const optionalAI = [
     "SYSTEM_ORCHESTRATOR_AI",
     "SYSTEM_OS_MODE",
     "SYSTEM_AI_GOVERNOR"
   ];
 
-  const missing = required.filter(r => !window[r]);
+  const missingCore = requiredCore.filter(r => !window[r]);
+  const missingAI = optionalAI.filter(r => !window[r]);
 
-  if (missing.length > 0) {
+  // ❌ ONLY CORE FAILURES CAN LOCK SYSTEM
+  if (missingCore.length > 0) {
 
-    console.warn("[SCL] Missing modules detected:", missing);
+    console.error("[SCL] CRITICAL MODULES MISSING:", missingCore);
 
-    triggerSystemLock("MISSING_MODULES", missing);
+    triggerSystemLock("CRITICAL_MODULES_MISSING", missingCore);
+
+  } else {
+    console.log("[SCL] Core system integrity OK");
+  }
+
+  // ⚠️ AI MODULES ARE NON-BLOCKING
+  if (missingAI.length > 0) {
+    console.warn("[SCL] AI modules not loaded (non-critical):", missingAI);
   }
 
   console.log("[SCL] System integrity check complete");
@@ -89,6 +103,7 @@ function triggerSystemLock(reason, data) {
     });
   }
 
+  // Attempt recovery ONLY if available
   if (window.SYSTEM_RECOVERY && window.SYSTEM_RECOVERY.forceRecovery) {
     window.SYSTEM_RECOVERY.forceRecovery("FULL");
   }
@@ -98,4 +113,4 @@ function triggerSystemLock(reason, data) {
 window.SCL = {
   validate: validateSystemIntegrity,
   lock: triggerSystemLock
-};
+};    
