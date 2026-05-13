@@ -1,19 +1,19 @@
- "use strict";
+"use strict";
 
 /*
 ========================================
 AI GOVERNOR CORE (TOP LAYER)
 ========================================
-- Controls system evolution
-- Enforces global safety rules
-- Tunes system behavior
-- NEVER touches business logic
+✔ Controls system behavior
+✔ Enforces safety rules
+✔ Snapshot-based decision engine
 ========================================
 */
 
 (function () {
 
   if (window.__AI_GOVERNOR__) return;
+
   window.__AI_GOVERNOR__ = true;
 
   document.addEventListener("DOMContentLoaded", initGovernor);
@@ -24,7 +24,7 @@ AI GOVERNOR CORE (TOP LAYER)
 function initGovernor() {
 
   if (!window.SYSTEM_EVENTS) {
-    console.warn("AI GOVERNOR: Event Hub missing");
+    console.warn("[GOVERNOR] Event Hub missing");
     return;
   }
 
@@ -32,17 +32,52 @@ function initGovernor() {
   startGovernorLoop();
 }
 
-// ================= SIGNALS =================
+// ================= SIGNAL BIND =================
 function bindGovernorSignals() {
 
   const hub = window.SYSTEM_EVENTS;
 
-  hub.on("SYSTEM_ALERT", evaluateSystemRisk);
-  hub.on("SYSTEM_FAILURE", evaluateSystemRisk);
-  hub.on("SYSTEM_WARNING", evaluateSystemRisk);
+  hub.on("SYSTEM_ALERT", evaluateRisk);
+  hub.on("SYSTEM_FAILURE", evaluateRisk);
+  hub.on("SYSTEM_WARNING", evaluateRisk);
+  hub.on("CONTROL_SNAPSHOT", handleSnapshot);
 }
 
-// ================= GOVERNOR LOOP =================
+// ================= SNAPSHOT HANDLER =================
+function handleSnapshot(snapshot) {
+
+  if (!snapshot) return;
+
+  const health = snapshot.health?.overall;
+
+  if (health === "CRITICAL") {
+
+    console.warn("[GOVERNOR] CRITICAL → SYSTEM THROTTLE");
+
+    if (window.SystemOSMode) {
+      window.SystemOSMode.setMode("FROZEN");
+    }
+
+    if (window.SYSTEM_EVENTS) {
+      window.SYSTEM_EVENTS.emit("GOVERNOR_ACTION", {
+        type: "THROTTLE",
+        reason: "CRITICAL_HEALTH",
+        time: Date.now()
+      });
+    }
+  }
+
+  if (health === "WARNING") {
+
+    console.warn("[GOVERNOR] WARNING → MONITOR MODE");
+
+    if (window.SystemOSMode) {
+      window.SystemOSMode.setMode("MONITOR");
+    }
+  }
+}
+
+// ================= LOOP =================
 let GOV_TIMER = null;
 
 function startGovernorLoop() {
@@ -52,65 +87,31 @@ function startGovernorLoop() {
     const snapshot = window.__SYSTEM_SNAPSHOT__;
     if (!snapshot) return;
 
-    runGlobalEvaluation(snapshot);
-    runEvolutionCheck(snapshot);
-    runSafetyAudit(snapshot);
+    if (snapshot.health?.overall === "CRITICAL") {
+      triggerFreeze("CRITICAL STATE DETECTED");
+    }
 
-  }, 60000); // 1 min governor cycle
+  }, 60000);
 }
 
-// ================= GLOBAL EVALUATION =================
-function runGlobalEvaluation(snapshot) {
+// ================= RISK =================
+function evaluateRisk(data) {
 
-  if (!snapshot.health) return;
+  if (!data) return;
 
-  if (snapshot.health.overall === "CRITICAL") {
-    triggerSystemFreeze("CRITICAL STATE DETECTED");
-  }
-}
-
-// ================= EVOLUTION ENGINE =================
-function runEvolutionCheck(snapshot) {
-
-  // placeholder safe evolution logic
-  if (snapshot.eventHub && snapshot.diagnostics) {
-    console.log("🧠 GOVERNOR: System stable - evolution allowed");
-  }
-}
-
-// ================= SAFETY AUDIT =================
-function runSafetyAudit(snapshot) {
-
-  const issues = [];
-
-  if (!snapshot.eventHub) issues.push("EVENT_HUB");
-  if (!snapshot.diagnostics) issues.push("DIAGNOSTICS");
-
-  if (issues.length > 0) {
-    triggerSystemFreeze("Missing Core Modules: " + issues.join(", "));
-  }
-}
-
-// ================= RISK EVALUATION =================
-function evaluateSystemRisk(data) {
-
-  console.warn("🧠 GOVERNOR RISK CHECK:", data);
+  console.warn("[GOVERNOR] RISK CHECK:", data);
 
   if (data.level === "CRITICAL") {
-    triggerSystemFreeze("CRITICAL EVENT TRIGGERED");
+    triggerFreeze("CRITICAL EVENT");
   }
 }
 
-// ================= FREEZE ENGINE =================
-function triggerSystemFreeze(reason) {
+// ================= FREEZE =================
+function triggerFreeze(reason) {
 
-  console.error("🛑 SYSTEM FREEZE:", reason);
+  console.error("[GOVERNOR FREEZE]", reason);
 
   if (window.SYSTEM_EVENTS) {
     window.SYSTEM_EVENTS.emit("SYSTEM_FREEZE", { reason });
   }
 }
-
-// ================= GLOBAL ACCESS =================
-window.runGovernorCheck = runGlobalEvaluation;                 
-
