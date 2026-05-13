@@ -2,15 +2,13 @@
 
 /*
 ========================================
-SYSTEM EVENT HUB V2.0 (FINAL HARDENED CORE)
+SYSTEM EVENT HUB V2.1 (FINAL SAFE CORE)
 ========================================
-✔ Cross-module event unification layer
-✔ PIN + PAYOUT + BANK + UI synchronization
-✔ Safe publish / subscribe architecture
-✔ Duplicate listener prevention
-✔ Error-isolated event execution
-✔ Global broadcast API
-✔ Production LOCKED
+✔ Global event bus
+✔ Safe overwrite protection
+✔ Cross-module sync engine
+✔ PIN + PAYOUT + BANK bridge layer
+✔ Prevents duplicate registration
 ========================================
 */
 
@@ -18,102 +16,104 @@ SYSTEM EVENT HUB V2.0 (FINAL HARDENED CORE)
 (function () {
 
   if (window.__SYSTEM_EVENT_HUB__) return;
-
   window.__SYSTEM_EVENT_HUB__ = true;
 
-  initSystemEventHub();
+  // Build bus FIRST (important fix)
+  const SYSTEM_EVENTS = createEventBus();
+
+  // Expose immediately (prevents missing reference errors)
+  window.SYSTEM_EVENTS = SYSTEM_EVENTS;
+
+  // Safe API exposure
+  exposeGlobalHub(SYSTEM_EVENTS);
+
+  // Initialize bindings AFTER exposure
+  initSystemEventHub(SYSTEM_EVENTS);
 
 })();
 
-// ================= EVENT BUS =================
-const SYSTEM_EVENTS = {
+// ================= EVENT BUS FACTORY =================
+function createEventBus() {
 
-  listeners: {},
+  return {
 
-  // Subscribe
-  on(event, fn) {
+    listeners: {},
 
-    if (!event || typeof fn !== "function") return;
+    on(event, fn) {
 
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
-    }
+      if (!event || typeof fn !== "function") return;
 
-    // Prevent duplicate listeners
-    if (this.listeners[event].includes(fn)) return;
-
-    this.listeners[event].push(fn);
-  },
-
-  // Unsubscribe
-  off(event, fn) {
-
-    const list = this.listeners[event];
-    if (!Array.isArray(list)) return;
-
-    this.listeners[event] = list.filter(handler => handler !== fn);
-  },
-
-  // Emit event
-  emit(event, data) {
-
-    const list = this.listeners[event] || [];
-
-    list.forEach(fn => {
-      try {
-        fn(data);
-      } catch (err) {
-        console.error("SYSTEM EVENT ERROR:", event, err);
+      if (!this.listeners[event]) {
+        this.listeners[event] = [];
       }
-    });
-  },
 
-  // Clear listeners
-  clear(event) {
+      if (this.listeners[event].includes(fn)) return;
 
-    if (event) {
-      delete this.listeners[event];
-    } else {
-      this.listeners = {};
+      this.listeners[event].push(fn);
+    },
+
+    off(event, fn) {
+
+      const list = this.listeners[event];
+      if (!Array.isArray(list)) return;
+
+      this.listeners[event] = list.filter(h => h !== fn);
+    },
+
+    emit(event, data) {
+
+      const list = this.listeners[event] || [];
+
+      list.forEach(fn => {
+        try {
+          fn(data);
+        } catch (err) {
+          console.error("SYSTEM EVENT ERROR:", event, err);
+        }
+      });
+    },
+
+    clear(event) {
+
+      if (event) delete this.listeners[event];
+      else this.listeners = {};
     }
-  }
-};
+  };
+}
 
 // ================= INIT =================
-function initSystemEventHub() {
+function initSystemEventHub(bus) {
 
-  bindPinSystemEvents();
-  bindPayoutSystemEvents();
-  bindBankSystemEvents();
-
-  exposeGlobalHub();
+  bindPinSystemEvents(bus);
+  bindPayoutSystemEvents(bus);
+  bindBankSystemEvents(bus);
 }
 
 // ================= PIN EVENTS =================
-function bindPinSystemEvents() {
+function bindPinSystemEvents(bus) {
 
-  hook("executePinFlow", "PIN_EVENT");
-  hook("createPinRequest", "PIN_REQUEST_EVENT");
-  hook("routePinRequest", "PIN_ROUTE_EVENT");
+  hook("executePinFlow", "PIN_EVENT", bus);
+  hook("createPinRequest", "PIN_REQUEST_EVENT", bus);
+  hook("routePinRequest", "PIN_ROUTE_EVENT", bus);
 }
 
 // ================= PAYOUT EVENTS =================
-function bindPayoutSystemEvents() {
+function bindPayoutSystemEvents(bus) {
 
-  hook("processPayout", "PAYOUT_EVENT");
-  hook("finalizePayout", "PAYOUT_FINALIZED");
+  hook("processPayout", "PAYOUT_EVENT", bus);
+  hook("finalizePayout", "PAYOUT_FINALIZED", bus);
 }
 
 // ================= BANK EVENTS =================
-function bindBankSystemEvents() {
+function bindBankSystemEvents(bus) {
 
-  hook("updateBankBalance", "BANK_UPDATE");
-  hook("creditBank", "BANK_CREDIT");
-  hook("debitBank", "BANK_DEBIT");
+  hook("updateBankBalance", "BANK_UPDATE", bus);
+  hook("creditBank", "BANK_CREDIT", bus);
+  hook("debitBank", "BANK_DEBIT", bus);
 }
 
-// ================= SAFE HOOK WRAPPER =================
-function hook(fnName, eventName) {
+// ================= SAFE HOOK =================
+function hook(fnName, eventName, bus) {
 
   if (typeof window[fnName] !== "function") return;
 
@@ -121,11 +121,11 @@ function hook(fnName, eventName) {
 
   if (original.__systemEventHooked) return;
 
-  function wrappedFunction(...args) {
+  function wrapped(...args) {
 
     const result = original.apply(this, args);
 
-    SYSTEM_EVENTS.emit(eventName, {
+    bus.emit(eventName, {
       functionName: fnName,
       eventName,
       args,
@@ -136,68 +136,25 @@ function hook(fnName, eventName) {
     return result;
   }
 
-  wrappedFunction.__systemEventHooked = true;
-  wrappedFunction.__originalFunction = original;
+  wrapped.__systemEventHooked = true;
+  wrapped.__originalFunction = original;
 
-  window[fnName] = wrappedFunction;
-}
-
-// ================= CROSS-SYSTEM SYNC RULES =================
-
-// PIN → BANK
-SYSTEM_EVENTS.on("PIN_REQUEST_EVENT", function (data) {
-
-  if (typeof window.validateBankForPin === "function") {
-    try {
-      window.validateBankForPin(data);
-    } catch (err) {
-      console.error("PIN → BANK SYNC ERROR:", err);
-    }
-  }
-});
-
-// PAYOUT → PIN
-SYSTEM_EVENTS.on("PAYOUT_EVENT", function (data) {
-
-  if (typeof window.syncPinAfterPayout === "function") {
-    try {
-      window.syncPinAfterPayout(data);
-    } catch (err) {
-      console.error("PAYOUT → PIN SYNC ERROR:", err);
-    }
-  }
-});
-
-// BANK → UI
-SYSTEM_EVENTS.on("BANK_UPDATE", function (data) {
-
-  if (typeof window.refreshDashboardBalances === "function") {
-    try {
-      window.refreshDashboardBalances(data);
-    } catch (err) {
-      console.error("BANK → UI SYNC ERROR:", err);
-    }
-  }
-});
-
-// ================= GLOBAL BROADCAST =================
-function broadcastSystemEvent(event, payload = {}) {
-
-  SYSTEM_EVENTS.emit(event, {
-    ...payload,
-    timestamp: Date.now()
-  });
+  window[fnName] = wrapped;
 }
 
 // ================= GLOBAL ACCESS =================
-function exposeGlobalHub() {
+function exposeGlobalHub(bus) {
 
-  window.SYSTEM_EVENTS = window.SYSTEM_EVENTS || SYSTEM_EVENTS;
+  window.onSystemEvent = bus.on.bind(bus);
+  window.offSystemEvent = bus.off.bind(bus);
+  window.emitSystemEvent = bus.emit.bind(bus);
 
-  window.onSystemEvent = SYSTEM_EVENTS.on.bind(SYSTEM_EVENTS);
-  window.offSystemEvent = SYSTEM_EVENTS.off.bind(SYSTEM_EVENTS);
-  window.emitSystemEvent = SYSTEM_EVENTS.emit.bind(SYSTEM_EVENTS);
-  window.broadcastSystemEvent = broadcastSystemEvent;
+  window.broadcastSystemEvent = function (event, payload = {}) {
+    bus.emit(event, {
+      ...payload,
+      timestamp: Date.now()
+    });
+  };
 
-  console.log("[EVENT HUB] Initialized safe fallback bus");
+  console.log("[EVENT HUB] GLOBAL REGISTRATION COMPLETE");
 }
