@@ -223,3 +223,7 @@ function clearForm() {
 function showMsg(msg) {
   document.getElementById("msg").innerText = msg;
 }
+
+// ================= EXPORT =================
+window.createSystemAdmin = createAdmin;
+window.super_admin_create_system_admin = true;
