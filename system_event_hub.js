@@ -8,7 +8,6 @@ SYSTEM EVENT HUB V2.0 (FINAL HARDENED CORE)
 ✔ PIN + PAYOUT + BANK + UI synchronization
 ✔ Safe publish / subscribe architecture
 ✔ Duplicate listener prevention
-✔ Duplicate hook prevention
 ✔ Error-isolated event execution
 ✔ Global broadcast API
 ✔ Production LOCKED
@@ -28,6 +27,7 @@ SYSTEM EVENT HUB V2.0 (FINAL HARDENED CORE)
 
 // ================= EVENT BUS =================
 const SYSTEM_EVENTS = {
+
   listeners: {},
 
   // Subscribe
@@ -51,9 +51,7 @@ const SYSTEM_EVENTS = {
     const list = this.listeners[event];
     if (!Array.isArray(list)) return;
 
-    this.listeners[event] = list.filter(
-      handler => handler !== fn
-    );
+    this.listeners[event] = list.filter(handler => handler !== fn);
   },
 
   // Emit event
@@ -65,16 +63,12 @@ const SYSTEM_EVENTS = {
       try {
         fn(data);
       } catch (err) {
-        console.error(
-          "SYSTEM EVENT ERROR:",
-          event,
-          err
-        );
+        console.error("SYSTEM EVENT ERROR:", event, err);
       }
     });
   },
 
-  // Remove all listeners (optional maintenance)
+  // Clear listeners
   clear(event) {
 
     if (event) {
@@ -125,7 +119,6 @@ function hook(fnName, eventName) {
 
   const original = window[fnName];
 
-  // Prevent double wrapping
   if (original.__systemEventHooked) return;
 
   function wrappedFunction(...args) {
@@ -143,7 +136,6 @@ function hook(fnName, eventName) {
     return result;
   }
 
-  // Mark wrapper and preserve reference
   wrappedFunction.__systemEventHooked = true;
   wrappedFunction.__originalFunction = original;
 
@@ -152,7 +144,7 @@ function hook(fnName, eventName) {
 
 // ================= CROSS-SYSTEM SYNC RULES =================
 
-// PIN Request → Bank Validation
+// PIN → BANK
 SYSTEM_EVENTS.on("PIN_REQUEST_EVENT", function (data) {
 
   if (typeof window.validateBankForPin === "function") {
@@ -164,7 +156,7 @@ SYSTEM_EVENTS.on("PIN_REQUEST_EVENT", function (data) {
   }
 });
 
-// Payout → PIN Synchronization
+// PAYOUT → PIN
 SYSTEM_EVENTS.on("PAYOUT_EVENT", function (data) {
 
   if (typeof window.syncPinAfterPayout === "function") {
@@ -176,7 +168,7 @@ SYSTEM_EVENTS.on("PAYOUT_EVENT", function (data) {
   }
 });
 
-// Bank Update → Dashboard Refresh
+// BANK → UI
 SYSTEM_EVENTS.on("BANK_UPDATE", function (data) {
 
   if (typeof window.refreshDashboardBalances === "function") {
@@ -200,17 +192,12 @@ function broadcastSystemEvent(event, payload = {}) {
 // ================= GLOBAL ACCESS =================
 function exposeGlobalHub() {
 
-  window.SYSTEM_EVENTS = SYSTEM_EVENTS;
+  window.SYSTEM_EVENTS = window.SYSTEM_EVENTS || SYSTEM_EVENTS;
 
-  window.onSystemEvent =
-    SYSTEM_EVENTS.on.bind(SYSTEM_EVENTS);
+  window.onSystemEvent = SYSTEM_EVENTS.on.bind(SYSTEM_EVENTS);
+  window.offSystemEvent = SYSTEM_EVENTS.off.bind(SYSTEM_EVENTS);
+  window.emitSystemEvent = SYSTEM_EVENTS.emit.bind(SYSTEM_EVENTS);
+  window.broadcastSystemEvent = broadcastSystemEvent;
 
-  window.offSystemEvent =
-    SYSTEM_EVENTS.off.bind(SYSTEM_EVENTS);
-
-  window.emitSystemEvent =
-    SYSTEM_EVENTS.emit.bind(SYSTEM_EVENTS);
-
-  window.broadcastSystemEvent =
-    broadcastSystemEvent;
+  console.log("[EVENT HUB] Initialized safe fallback bus");
 }
