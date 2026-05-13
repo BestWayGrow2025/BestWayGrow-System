@@ -2,7 +2,7 @@
 
 /*
 ========================================
-PIN LIVE ORCHESTRATOR V1.1 (REAL-TIME CORE)
+PIN LIVE ORCHESTRATOR V1.2 (FINAL FIXED)
 ========================================
 ✔ Central event bus for PIN system
 ✔ Real-time sync across all dashboards
@@ -12,25 +12,29 @@ PIN LIVE ORCHESTRATOR V1.1 (REAL-TIME CORE)
 ✔ Event-driven architecture
 ✔ Production LOCKED CORE SYNC ENGINE
 ✔ Memory-safe listener execution
+✔ FIXED: PIN_STATE_CACHE initialization order
+✔ FIXED: Duplicate function wrapping protection
+✔ FIXED: Diagnostics compatibility
 ========================================
 */
 
-// ================= GUARD =================
-(function () {
-
-  if (window.__PIN_LIVE_ORCHESTRATOR__) return;
-
-  window.__PIN_LIVE_ORCHESTRATOR__ = true;
-
-  initPinLiveOrchestrator();
-
-})();
+// ================= CORE STATE TRACKER =================
+// MUST BE DECLARED BEFORE initPinLiveOrchestrator() RUNS
+const PIN_STATE_CACHE = {
+  requestsHash: null,
+  lastUpdate: 0,
+  watcherStarted: false
+};
 
 // ================= EVENT BUS =================
 const PIN_EVENT_BUS = {
   listeners: Object.create(null),
 
   on(event, callback) {
+
+    if (typeof callback !== "function") {
+      return;
+    }
 
     if (!this.listeners[event]) {
       this.listeners[event] = [];
@@ -43,7 +47,9 @@ const PIN_EVENT_BUS = {
 
     const handlers = this.listeners[event];
 
-    if (!handlers || !handlers.length) return;
+    if (!handlers || !handlers.length) {
+      return;
+    }
 
     for (let i = 0; i < handlers.length; i++) {
       try {
@@ -55,28 +61,34 @@ const PIN_EVENT_BUS = {
   }
 };
 
-// ================= CORE STATE TRACKER =================
-let PIN_STATE_CACHE = {
-  requestsHash: null,
-  lastUpdate: 0
-};
-
 // ================= INIT =================
 function initPinLiveOrchestrator() {
 
-  if (typeof getPinRequests === "function") {
+  // Start watcher only once
+  if (
+    typeof window.getPinRequests === "function" &&
+    !PIN_STATE_CACHE.watcherStarted
+  ) {
     startRequestWatcher();
   }
 
   bindSystemHooks();
 
   exposeGlobalAPI();
+
+  console.log("[PIN LIVE ORCHESTRATOR] Initialized");
 }
 
 // ================= WATCH REQUEST CHANGES =================
 function startRequestWatcher() {
 
-  setInterval(() => {
+  if (PIN_STATE_CACHE.watcherStarted) {
+    return;
+  }
+
+  PIN_STATE_CACHE.watcherStarted = true;
+
+  setInterval(function () {
 
     try {
 
@@ -102,15 +114,21 @@ function startRequestWatcher() {
 // ================= SAFE FETCH =================
 function getSafeRequests() {
 
-  if (typeof getPinRequests !== "function") return [];
+  if (typeof window.getPinRequests !== "function") {
+    return [];
+  }
 
-  return (getPinRequests() || []).map(r => ({
-    requestId: r.requestId,
-    userId: r.userId,
-    type: r.type,
-    status: r.status,
-    paymentId: r.paymentId
-  }));
+  const requests = window.getPinRequests() || [];
+
+  return requests.map(function (r) {
+    return {
+      requestId: r.requestId,
+      userId: r.userId,
+      type: r.type,
+      status: r.status,
+      paymentId: r.paymentId
+    };
+  });
 }
 
 // ================= FLOW HOOK BINDING =================
@@ -124,22 +142,35 @@ function bindSystemHooks() {
 // ================= SAFE HOOK WRAPPER =================
 function hookIfExists(fnName, eventName) {
 
-  if (typeof window[fnName] !== "function") return;
+  if (typeof window[fnName] !== "function") {
+    return;
+  }
+
+  // Prevent duplicate wrapping
+  if (window[fnName].__pinLiveWrapped === true) {
+    return;
+  }
 
   const original = window[fnName];
 
-  window[fnName] = function (...args) {
+  function wrappedFunction(...args) {
 
     const result = original.apply(this, args);
 
     PIN_EVENT_BUS.emit(eventName, {
-      args,
-      result,
+      functionName: fnName,
+      args: args,
+      result: result,
       timestamp: Date.now()
     });
 
     return result;
-  };
+  }
+
+  wrappedFunction.__pinLiveWrapped = true;
+  wrappedFunction.__originalFunction = original;
+
+  window[fnName] = wrappedFunction;
 }
 
 // ================= PUBLIC API =================
@@ -154,14 +185,17 @@ function broadcastPinUpdate(payload = {}) {
 // ================= AUTO UI SYNC =================
 PIN_EVENT_BUS.on("PIN_REQUEST_UPDATED", function (data) {
 
-  if (typeof window.renderTable === "function") {
-    window.renderTable(data);
-  }
+  try {
+    if (typeof window.renderTable === "function") {
+      window.renderTable(data);
+    }
+  } catch (_) {}
 
-  if (typeof window.loadPinRequests === "function") {
-    window.loadPinRequests();
-  }
-
+  try {
+    if (typeof window.loadPinRequests === "function") {
+      window.loadPinRequests();
+    }
+  } catch (_) {}
 });
 
 // ================= GLOBAL EXPORT =================
@@ -170,4 +204,26 @@ function exposeGlobalAPI() {
   window.onPinEvent = onPinEvent;
   window.broadcastPinUpdate = broadcastPinUpdate;
   window.PIN_EVENT_BUS = PIN_EVENT_BUS;
+  window.PIN_STATE_CACHE = PIN_STATE_CACHE;
+  window.initPinLiveOrchestrator = initPinLiveOrchestrator;
 }
+
+// ================= DIAGNOSTICS FLAG =================
+window.__PIN_LIVE_SYSTEM_ACTIVE__ = true;
+
+// ================= GUARD =================
+// MUST BE LAST, AFTER ALL const declarations
+(function () {
+
+  if (window.__PIN_LIVE_ORCHESTRATOR__) {
+    return;
+  }
+
+  window.__PIN_LIVE_ORCHESTRATOR__ = true;
+
+  initPinLiveOrchestrator();
+
+})();
+
+// ================= FINAL CONFIRMATION =================
+console.log("[PIN LIVE ORCHESTRATOR] Fully Loaded");
