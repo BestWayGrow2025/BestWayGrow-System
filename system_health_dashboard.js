@@ -5,19 +5,15 @@
 SYSTEM HEALTH DASHBOARD V1.0 (CONTROL ROOM UI)
 ========================================
 ✔ Real-time system health overview
-✔ Aggregates Diagnostics + Event Hub + Recovery state
-✔ Live module status monitoring
-✔ Super Admin control dashboard
-✔ No backend dependency required
-✔ Read-only SAFE visualization layer
+✔ Aggregates system module flags
+✔ Live monitoring
+✔ Read-only visualization layer
 ========================================
 */
 
-// ================= GUARD =================
 (function () {
 
   if (window.__SYSTEM_HEALTH_DASHBOARD__) return;
-
   window.__SYSTEM_HEALTH_DASHBOARD__ = true;
 
   document.addEventListener("DOMContentLoaded", initHealthDashboard);
@@ -40,7 +36,6 @@ let HEALTH_TIMER = null;
 function startLiveHealthSync() {
 
   if (HEALTH_TIMER) clearInterval(HEALTH_TIMER);
-
   HEALTH_TIMER = setInterval(renderHealthData, 4000);
 }
 
@@ -58,7 +53,7 @@ function renderDashboard() {
   renderHealthData();
 }
 
-// ================= CORE HEALTH ENGINE =================
+// ================= HEALTH RENDER =================
 function renderHealthData() {
 
   const el = document.getElementById("healthContent");
@@ -97,13 +92,16 @@ function collectSystemHealth() {
 
   return {
     eventHub: check(window.SYSTEM_EVENTS),
-    diagnostics: check(window.__SYSTEM_DIAGNOSTICS__),
-    recovery: check(window.__SYSTEM_RECOVERY__),
-    backup: check(window.__SYSTEM_BACKUP_MANAGER__),
-    audit: check(window.__SYSTEM_AUDIT_TRAIL__),
-    pin: check(window.__PIN_LIVE_ORCHESTRATOR__),
-    wallet: check(window.walletSystem),
-    payout: check(window.payoutController),
+    diagnostics: check(window.runDiagnostics),
+
+    recovery: check(window.__RECOVERY_ENGINE_ACTIVE__),
+    backup: check(window.__BACKUP_SYSTEM_ACTIVE__),
+    audit: check(window.__AUDIT_TRAIL_ACTIVE__),
+
+    pin: check(window.PIN_EVENT_BUS),
+
+    wallet: check(window.__WALLET_SYSTEM_ACTIVE__),
+    payout: check(window.__PAYOUT_SYSTEM_ACTIVE__),
 
     overall: computeOverallStatus(),
     statusColor: computeColor()
@@ -112,48 +110,37 @@ function collectSystemHealth() {
 
 // ================= STATUS CHECK =================
 function check(module) {
-
-  if (!module) return "❌ MISSING";
-
-  return "✅ ACTIVE";
+  return module ? "✅ ACTIVE" : "❌ MISSING";
 }
 
 // ================= OVERALL STATUS =================
 function computeOverallStatus() {
 
-  const modules = [
+  const criticalModules = [
     window.SYSTEM_EVENTS,
-    window.__SYSTEM_RECOVERY__,
-    window.__PIN_LIVE_ORCHESTRATOR__
+    window.runDiagnostics,
+    window.__RECOVERY_ENGINE_ACTIVE__,
+    window.PIN_EVENT_BUS,
+    window.__WALLET_SYSTEM_ACTIVE__,
+    window.__PAYOUT_SYSTEM_ACTIVE__
   ];
 
-  const missing = modules.filter(m => !m);
+  const missingCount = criticalModules.filter(m => !m).length;
 
-  if (missing.length === 0) return "HEALTHY";
-  if (missing.length < 2) return "DEGRADED";
+  if (missingCount === 0) return "HEALTHY";
+  if (missingCount <= 2) return "DEGRADED";
 
   return "CRITICAL";
 }
 
-// ================= COLOR STATUS =================
+// ================= COLOR =================
 function computeColor() {
 
   const status = computeOverallStatus();
 
-  switch (status) {
-
-    case "HEALTHY":
-      return "green";
-
-    case "DEGRADED":
-      return "orange";
-
-    case "CRITICAL":
-      return "red";
-
-    default:
-      return "gray";
-  }
+  if (status === "HEALTHY") return "green";
+  if (status === "DEGRADED") return "orange";
+  return "red";
 }
 
 // ================= EXPORT =================
