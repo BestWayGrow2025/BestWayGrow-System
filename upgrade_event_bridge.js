@@ -10,6 +10,7 @@ UPGRADE EVENT BRIDGE V1.0 (FINAL)
 ✔ No business logic changes
 ✔ Safe wrapper only
 ✔ Duplicate-hook protection
+✔ Diagnostics-compatible broadcast function
 ✔ Production LOCKED
 ========================================
 */
@@ -52,7 +53,7 @@ function hookUpgradeFunction() {
 
     // BEFORE EVENT
     try {
-      SYSTEM_EVENTS.emit("UPGRADE_BEFORE", {
+      window.SYSTEM_EVENTS.emit("UPGRADE_BEFORE", {
         args,
         timestamp: Date.now()
       });
@@ -63,7 +64,7 @@ function hookUpgradeFunction() {
 
     // AFTER EVENT
     try {
-      SYSTEM_EVENTS.emit("UPGRADE_COMPLETED", {
+      window.SYSTEM_EVENTS.emit("UPGRADE_COMPLETED", {
         args,
         result,
         timestamp: Date.now()
@@ -82,7 +83,7 @@ function hookUpgradeFunction() {
 if (typeof window.onSystemEvent === "function") {
 
   // Refresh dashboards after upgrade
-  onSystemEvent("UPGRADE_COMPLETED", function () {
+  window.onSystemEvent("UPGRADE_COMPLETED", function () {
 
     try {
       if (typeof window.refreshDashboardBalances === "function") {
@@ -107,4 +108,26 @@ if (typeof window.onSystemEvent === "function") {
 // ================= EXPORT =================
 window.initUpgradeEventBridge = initUpgradeEventBridge;
 
+// ================= GLOBAL REGISTRATION FIX =================
 
+// Required by diagnostics:
+// Missing Modules: broadcastUpgradeEvent
+window.broadcastUpgradeEvent = function (payload = {}) {
+
+  if (
+    window.SYSTEM_EVENTS &&
+    typeof window.SYSTEM_EVENTS.emit === "function"
+  ) {
+    window.SYSTEM_EVENTS.emit("UPGRADE_EVENT", {
+      ...payload,
+      timestamp: Date.now()
+    });
+  }
+
+  console.log("[UPGRADE BRIDGE] Event broadcasted");
+};
+
+// Optional active flag
+window.__UPGRADE_SYSTEM_ACTIVE__ = true;
+
+console.log("[UPGRADE BRIDGE] Global hooks registered");
