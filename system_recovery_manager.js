@@ -2,19 +2,15 @@
 
 /*
 ========================================
-SYSTEM RECOVERY MANAGER V1.0 (ENTERPRISE RESILIENCE CORE)
+SYSTEM RECOVERY MANAGER V1.0
 ========================================
 ✔ Automatic system failure detection
-✔ Module-level recovery orchestration
+✔ Self-healing recovery engine
 ✔ Event-driven rollback system
-✔ Safe restore checkpoints
-✔ Cross-system integration (PIN / Wallet / Income / Payout)
-✔ Works with system_event_hub.js
-✔ Production-grade disaster recovery layer
+✔ SLC + Governor integration ready
 ========================================
 */
 
-// ================= GUARD =================
 (function () {
 
   if (window.__SYSTEM_RECOVERY_MANAGER__) return;
@@ -25,20 +21,7 @@ SYSTEM RECOVERY MANAGER V1.0 (ENTERPRISE RESILIENCE CORE)
 
 })();
 
-// ================= GLOBAL SLC HOOK =================
-window.systemRecoveryManager = window.systemRecoveryManager || {
-  autoRecover: function () {
-    console.log("AUTO RECOVERY: Activated by SLC");
-
-    if (window.SYSTEM_EVENTS) {
-      window.SYSTEM_EVENTS.emit("RECOVERY_MODE_ACTIVE", {
-        time: Date.now()
-      });
-    }
-  }
-};
-
-// ================= CONFIG =================
+// ================= RECOVERY ENGINE =================
 const RECOVERY_STATE = {
   lastCheckpoint: null,
   failureLog: [],
@@ -48,19 +31,14 @@ const RECOVERY_STATE = {
 // ================= INIT =================
 function initSystemRecoveryManager() {
 
-  // SLC integration check
-  if (window.systemRecoveryManager && window.systemRecoveryManager.autoRecover) {
-    console.log("[RECOVERY] SLC Hook detected - binding auto recovery layer");
-  }
-
   bindSystemFailureWatchers();
-  bindRecoveryEvents();
   exposeRecoveryAPI();
+  bindSLCToRecovery();
 
   console.log("[RECOVERY] System Recovery Manager initialized");
 }
 
-// ================= FAILURE WATCHER =================
+// ================= FAILURE WATCHERS =================
 function bindSystemFailureWatchers() {
 
   if (!window.SYSTEM_EVENTS) return;
@@ -71,7 +49,7 @@ function bindSystemFailureWatchers() {
   window.SYSTEM_EVENTS.on("BANK_UPDATE", monitorBankState);
 }
 
-// ================= CORE FAILURE HANDLER =================
+// ================= FAILURE HANDLER =================
 function handleSystemFailure(errorData) {
 
   RECOVERY_STATE.failureLog.push({
@@ -80,17 +58,15 @@ function handleSystemFailure(errorData) {
     time: Date.now()
   });
 
-  console.error("[RECOVERY] System failure detected:", errorData);
+  console.error("[RECOVERY] Failure detected:", errorData);
 
   triggerAutoRecovery(errorData);
 }
 
-// ================= PIN FLOW MONITOR =================
+// ================= MODULE MONITORS =================
 function monitorPinFlow(data) {
 
-  if (!data) return;
-
-  if (data.result && data.result.error) {
+  if (data?.result?.error) {
     handleSystemFailure({
       module: "PIN",
       detail: data.result.error
@@ -98,12 +74,9 @@ function monitorPinFlow(data) {
   }
 }
 
-// ================= PAYOUT MONITOR =================
 function monitorPayoutFlow(data) {
 
-  if (!data) return;
-
-  if (data.result && data.result.failed) {
+  if (data?.result?.failed) {
     handleSystemFailure({
       module: "PAYOUT",
       detail: data.result
@@ -111,12 +84,9 @@ function monitorPayoutFlow(data) {
   }
 }
 
-// ================= BANK MONITOR =================
 function monitorBankState(data) {
 
-  if (!data) return;
-
-  if (data.result && data.result.status === "CORRUPT") {
+  if (data?.result?.status === "CORRUPT") {
     handleSystemFailure({
       module: "BANK",
       detail: data.result
@@ -124,14 +94,14 @@ function monitorBankState(data) {
   }
 }
 
-// ================= AUTO RECOVERY ENGINE =================
+// ================= AUTO RECOVERY =================
 function triggerAutoRecovery(failureData) {
 
   if (RECOVERY_STATE.recoveryInProgress) return;
 
   RECOVERY_STATE.recoveryInProgress = true;
 
-  console.warn("[RECOVERY] Attempting auto recovery...");
+  console.warn("[RECOVERY] Auto recovery started...");
 
   try {
 
@@ -174,78 +144,83 @@ function triggerAutoRecovery(failureData) {
   }
 }
 
-// ================= MODULE RECOVERY =================
+// ================= RECOVERY ACTIONS =================
 function recoverPinSystem() {
 
-  console.warn("[RECOVERY] Restoring PIN system state...");
+  console.warn("[RECOVERY] PIN system restore");
 
-  if (typeof window.resetPinSystemCache === "function") {
-    window.resetPinSystemCache();
-  }
+  window.resetPinSystemCache?.();
 
-  if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("PIN_RECOVERED", { status: "RESTORED" });
-  }
+  window.SYSTEM_EVENTS?.emit("PIN_RECOVERED", { status: "RESTORED" });
 }
 
 function recoverPayoutSystem() {
 
-  console.warn("[RECOVERY] Restoring payout system...");
+  console.warn("[RECOVERY] Payout system restore");
 
-  if (typeof window.resetPayoutQueue === "function") {
-    window.resetPayoutQueue();
-  }
+  window.resetPayoutQueue?.();
 
-  if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("PAYOUT_RECOVERED", { status: "RESTORED" });
-  }
+  window.SYSTEM_EVENTS?.emit("PAYOUT_RECOVERED", { status: "RESTORED" });
 }
 
 function recoverBankSystem() {
 
-  console.warn("[RECOVERY] Restoring bank system...");
+  console.warn("[RECOVERY] Bank system restore");
 
-  if (typeof window.resetBankState === "function") {
-    window.resetBankState();
-  }
+  window.resetBankState?.();
 
-  if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("BANK_RECOVERED", { status: "RESTORED" });
-  }
+  window.SYSTEM_EVENTS?.emit("BANK_RECOVERED", { status: "RESTORED" });
 }
 
 function recoverFullSystem() {
 
-  console.warn("[RECOVERY] Performing FULL SYSTEM recovery...");
+  console.warn("[RECOVERY] Full system recovery");
 
   recoverPinSystem();
   recoverPayoutSystem();
   recoverBankSystem();
 
-  if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("SYSTEM_FULL_RECOVERY", {
-      status: "ALL_MODULES_RESTORED"
-    });
-  }
+  window.SYSTEM_EVENTS?.emit("SYSTEM_FULL_RECOVERY", {
+    status: "ALL_MODULES_RESTORED"
+  });
 }
 
-// ================= RECOVERY SUCCESS =================
+// ================= SUCCESS LOG =================
 function markRecoverySuccess(module) {
 
-  console.log(`[RECOVERY] ${module} system recovered successfully`);
+  console.log(`[RECOVERY] ${module} recovery successful`);
 
-  if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("RECOVERY_SUCCESS", {
-      module,
-      time: Date.now()
-    });
-  }
+  window.SYSTEM_EVENTS?.emit("RECOVERY_SUCCESS", {
+    module,
+    time: Date.now()
+  });
 }
 
-// ================= API =================
+// ================= SLC INTEGRATION =================
+function bindSLCToRecovery() {
+
+  if (!window.SystemLayerController) return;
+
+  console.log("[RECOVERY] Connected to SLC");
+
+  // ensure safe mode compatibility
+  window.SystemLayerController.setMode("NORMAL");
+}
+
+// ================= PUBLIC API =================
 function exposeRecoveryAPI() {
 
-  window.SYSTEM_RECOVERY = {
+  window.systemRecoveryManager = {
+
+    autoRecover: function () {
+      console.log("AUTO RECOVERY: Triggered");
+
+      if (window.SYSTEM_EVENTS) {
+        window.SYSTEM_EVENTS.emit("RECOVERY_MODE_ACTIVE", {
+          time: Date.now()
+        });
+      }
+    },
 
     getState: () => RECOVERY_STATE,
 
@@ -257,17 +232,3 @@ function exposeRecoveryAPI() {
   };
 }
 
-// ================= SLC BINDING =================
-function bindSLCToRecovery() {
-
-  if (window.SystemLayerController) {
-
-    console.log("[RECOVERY] Connected to System Layer Controller");
-
-    window.SystemLayerController.setMode("NORMAL");
-
-  }
-}
-
-// auto connect after boot
-setTimeout(bindSLCToRecovery, 1500);
