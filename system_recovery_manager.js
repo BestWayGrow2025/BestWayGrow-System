@@ -267,7 +267,7 @@ window.__RECOVERY_ENGINE_ACTIVE__ = true;
 // REQUIRED MANUAL CHECK FUNCTION
 window.runRecoveryCheck = function () {
 
-  // Silent health check (prevents console spam)
+  // Silent health check (no console output)
 
   window.SYSTEM_EVENTS?.emit("RECOVERY_CHECK_OK", {
     time: Date.now()
