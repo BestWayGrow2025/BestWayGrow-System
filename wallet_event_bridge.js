@@ -182,3 +182,18 @@ function exposeWalletBridgeAPI() {
 
 // ================= FINAL CONFIRMATION =================
 console.log("[WALLET EVENT BRIDGE] Global flags registered");
+
+// ================= HEALTH DASHBOARD FLAG =================
+window.__WALLET_SYSTEM_ACTIVE__ = true;
+
+// Compatibility API expected by diagnostics
+window.broadcastWalletEvent = function (payload = {}) {
+  try {
+    window.SYSTEM_EVENTS?.emit("WALLET_EVENT", {
+      ...payload,
+      timestamp: Date.now()
+    });
+  } catch (_) {}
+};
+
+console.log("[WALLET] HEALTH FLAG REGISTERED");
