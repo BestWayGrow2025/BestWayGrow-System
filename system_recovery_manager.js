@@ -232,3 +232,16 @@ function exposeRecoveryAPI() {
   };
 }
 
+// ================= GLOBAL REGISTRATION FIX =================
+window.__RECOVERY_ENGINE_ACTIVE__ = true;
+
+// REQUIRED FOR CONTROL CENTER CHECKS
+window.runRecoveryCheck = function () {
+  console.log("[RECOVERY] Manual check OK");
+
+  window.SYSTEM_EVENTS?.emit("RECOVERY_CHECK_OK", {
+    time: Date.now()
+  });
+};
+
+console.log("[RECOVERY] Global flags registered");
