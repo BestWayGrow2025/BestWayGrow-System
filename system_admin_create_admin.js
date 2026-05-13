@@ -1,3 +1,5 @@
+console.log("SUPER ADMIN FILE LOADED");
+
 let session = null;
 let currentUser = null;
 let lock = false;
