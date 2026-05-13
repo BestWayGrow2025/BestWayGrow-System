@@ -184,7 +184,12 @@ function bindDefaultPayoutSync() {
 // ================= GLOBAL BROADCAST API =================
 function broadcastPayoutEvent(payload = {}) {
 
-  if (!window.SYSTEM_EVENTS) return;
+  if (
+    !window.SYSTEM_EVENTS ||
+    typeof window.SYSTEM_EVENTS.emit !== "function"
+  ) {
+    return;
+  }
 
   window.SYSTEM_EVENTS.emit("PAYOUT_EVENT", {
     ...payload,
@@ -208,3 +213,18 @@ function exposePayoutBridgeAPI() {
 
 // ================= FINAL CONFIRMATION =================
 console.log("[PAYOUT EVENT BRIDGE] Global flags registered");
+
+// ================= HEALTH DASHBOARD FLAG =================
+window.__PAYOUT_SYSTEM_ACTIVE__ = true;
+
+// Compatibility API expected by diagnostics
+window.broadcastPayoutEvent = function (payload = {}) {
+  try {
+    window.SYSTEM_EVENTS?.emit("PAYOUT_EVENT", {
+      ...payload,
+      timestamp: Date.now()
+    });
+  } catch (_) {}
+};
+
+console.log("[PAYOUT] HEALTH FLAG REGISTERED");
