@@ -1,16 +1,14 @@
- "use strict";
+"use strict";
 
 /*
 ========================================
 SYSTEM CONTROL CENTER V2.0 (MASTER ORCHESTRATOR)
 ========================================
-✔ Unifies ALL system modules
-✔ Event Hub + Diagnostics + Backup + Audit + Health + Recovery
-✔ Full system observability layer
-✔ Real-time control snapshot engine
-✔ Dependency validation engine
-✔ Safe read-only orchestration (NO business mutation)
-✔ Production-grade monitoring core
+✔ Unified system observability layer
+✔ Event Hub integration
+✔ Diagnostics + Health + Recovery + Backup + Audit
+✔ Real-time snapshot engine
+✔ SLC + Governor readiness
 ========================================
 */
 
@@ -35,6 +33,12 @@ function initControlCenter() {
 
   bindSystemSignals();
   startControlLoop();
+
+  // IMPORTANT: wire event hub
+  wireControlCenterToEventHub();
+
+  // SLC connection
+  connectToSLC();
 }
 
 // ================= SIGNAL REGISTRY =================
@@ -43,7 +47,6 @@ function bindSystemSignals() {
   const hub = window.SYSTEM_EVENTS;
   if (!hub) return;
 
-  // Core financial + PIN + BANK events
   hub.on("PIN_REQUEST_EVENT", logSignal);
   hub.on("PIN_ROUTE_EVENT", logSignal);
   hub.on("PAYOUT_EVENT", logSignal);
@@ -51,14 +54,26 @@ function bindSystemSignals() {
   hub.on("BANK_DEBIT", logSignal);
   hub.on("BANK_CREDIT", logSignal);
 
-  // System health + recovery
   hub.on("SYSTEM_FAILURE", alertSignal);
   hub.on("SYSTEM_WARNING", warnSignal);
   hub.on("SYSTEM_RECOVERY", logSignal);
 
-  // Audit + diagnostics
   hub.on("AUDIT_EVENT", logSignal);
   hub.on("DIAGNOSTIC_EVENT", logSignal);
+}
+
+// ================= EVENT HUB WIRING =================
+function wireControlCenterToEventHub() {
+
+  if (!window.SYSTEM_EVENTS) return;
+
+  window.SYSTEM_EVENTS.on("SYSTEM_ALERT", (data) => {
+    console.warn("CONTROL CENTER ALERT:", data);
+  });
+
+  window.SYSTEM_EVENTS.on("RECOVERY_SUCCESS", (data) => {
+    console.log("CONTROL CENTER RECOVERY OK:", data);
+  });
 }
 
 // ================= CONTROL LOOP =================
@@ -147,7 +162,6 @@ function runSystemSnapshot() {
       : false
   };
 
-  // Global system trace event
   if (window.SYSTEM_EVENTS) {
     window.SYSTEM_EVENTS.emit("CONTROL_SNAPSHOT", window.__SYSTEM_SNAPSHOT__);
   }
@@ -166,7 +180,7 @@ function warnSignal(data) {
   console.warn("⚠️ SYSTEM WARNING:", data);
 }
 
-// ================= EMITTER HELPERS =================
+// ================= ALERT HELPERS =================
 function emitAlert(msg) {
   if (window.SYSTEM_EVENTS) {
     window.SYSTEM_EVENTS.emit("SYSTEM_ALERT", {
@@ -187,22 +201,15 @@ function emitWarning(msg) {
   }
 }
 
-// ================= GLOBAL ACCESS =================
-window.runSystemSnapshot = runSystemSnapshot;
-window.initControlCenter = initControlCenter;
-
-
-// ================= SLC INTEGRATION =================
-// (System Layer Controller connection hook)
+// ================= SLC CONNECTION =================
 function connectToSLC() {
 
   if (window.SystemLayerController) {
-
     window.SystemLayerController.setMode("NORMAL");
-
     console.log("CONTROL CENTER: Connected to SLC");
   }
 }
 
-// auto bind
-setTimeout(connectToSLC, 1000);
+// ================= GLOBAL ACCESS =================
+window.runSystemSnapshot = runSystemSnapshot;
+window.initControlCenter = initControlCenter;
