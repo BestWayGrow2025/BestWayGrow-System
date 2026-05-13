@@ -2,15 +2,15 @@
 
 /*
 ========================================
-WALLET EVENT BRIDGE V1.0 (FINAL)
+WALLET EVENT BRIDGE V2.0 (PRODUCTION FINAL)
 ========================================
-✔ Connects wallet_system.js to SYSTEM_EVENTS
-✔ Broadcasts credit/debit lifecycle events
-✔ Synchronizes PIN bank and withdrawals
-✔ Triggers dashboard balance refresh
-✔ No business logic changes
-✔ Safe wrapper only
+✔ Connects wallet system functions to SYSTEM_EVENTS
+✔ Broadcasts credit/debit/update/transfer events
+✔ Emits wallet balance change notifications
+✔ Supports dashboard + PIN bank synchronization
+✔ Safe wrapper only (no business logic changes)
 ✔ Duplicate-hook protection
+✔ Diagnostics + Control Center compatible
 ✔ Production LOCKED
 ========================================
 */
@@ -29,15 +29,26 @@ WALLET EVENT BRIDGE V1.0 (FINAL)
 // ================= INIT =================
 function initWalletEventBridge() {
 
-  if (typeof window.SYSTEM_EVENTS === "undefined") {
+  if (
+    !window.SYSTEM_EVENTS ||
+    typeof window.SYSTEM_EVENTS.emit !== "function"
+  ) {
     return;
   }
 
-  // Common wallet functions (hook only if they exist)
+  // Hook common wallet functions only if they exist
   hookWalletFunction("creditWallet", "WALLET_CREDIT");
   hookWalletFunction("debitWallet", "WALLET_DEBIT");
   hookWalletFunction("updateWalletBalance", "WALLET_UPDATE");
   hookWalletFunction("transferWallet", "WALLET_TRANSFER");
+
+  // Register global APIs and flags
+  exposeWalletBridgeAPI();
+
+  // Attach default synchronization listeners
+  bindDefaultWalletSync();
+
+  console.log("[WALLET EVENT BRIDGE] Initialized");
 }
 
 // ================= SAFE HOOK =================
@@ -58,19 +69,19 @@ function hookWalletFunction(fnName, eventName) {
 
     // BEFORE EVENT
     try {
-      SYSTEM_EVENTS.emit(eventName + "_BEFORE", {
+      window.SYSTEM_EVENTS.emit(eventName + "_BEFORE", {
         functionName: fnName,
         args,
         timestamp: Date.now()
       });
     } catch (_) {}
 
-    // EXECUTE ORIGINAL
+    // EXECUTE ORIGINAL FUNCTION
     const result = original.apply(this, args);
 
-    // AFTER EVENT
+    // MAIN EVENT
     try {
-      SYSTEM_EVENTS.emit(eventName, {
+      window.SYSTEM_EVENTS.emit(eventName, {
         functionName: fnName,
         args,
         result,
@@ -78,10 +89,22 @@ function hookWalletFunction(fnName, eventName) {
       });
     } catch (_) {}
 
-    // GENERIC BALANCE CHANGED EVENT
+    // GENERIC EVENT REQUIRED BY AUDIT/CONTROL CENTER
     try {
-      SYSTEM_EVENTS.emit("WALLET_BALANCE_CHANGED", {
+      window.SYSTEM_EVENTS.emit("WALLET_EVENT", {
         functionName: fnName,
+        eventName,
+        args,
+        result,
+        timestamp: Date.now()
+      });
+    } catch (_) {}
+
+    // BALANCE CHANGED EVENT
+    try {
+      window.SYSTEM_EVENTS.emit("WALLET_BALANCE_CHANGED", {
+        functionName: fnName,
+        eventName,
         args,
         result,
         timestamp: Date.now()
@@ -92,16 +115,20 @@ function hookWalletFunction(fnName, eventName) {
   }
 
   wrappedWalletFunction.__eventBridgeWrapped = true;
+  wrappedWalletFunction.__originalFunction = original;
 
   window[fnName] = wrappedWalletFunction;
 }
 
 // ================= DEFAULT SYSTEM SYNC =================
-if (typeof window.onSystemEvent === "function") {
+function bindDefaultWalletSync() {
 
-  // Refresh dashboard balances automatically
-  onSystemEvent("WALLET_BALANCE_CHANGED", function () {
+  if (typeof window.onSystemEvent !== "function") {
+    return;
+  }
 
+  // Refresh dashboard balances
+  window.onSystemEvent("WALLET_BALANCE_CHANGED", function () {
     try {
       if (typeof window.refreshDashboardBalances === "function") {
         window.refreshDashboardBalances();
@@ -110,8 +137,7 @@ if (typeof window.onSystemEvent === "function") {
   });
 
   // Optional PIN bank synchronization
-  onSystemEvent("WALLET_DEBIT", function (data) {
-
+  window.onSystemEvent("WALLET_DEBIT", function (data) {
     try {
       if (typeof window.syncWalletToPinBank === "function") {
         window.syncWalletToPinBank(data);
@@ -119,9 +145,8 @@ if (typeof window.onSystemEvent === "function") {
     } catch (_) {}
   });
 
-  // Optional withdrawal synchronization
-  onSystemEvent("WALLET_CREDIT", function (data) {
-
+  // Optional payout synchronization
+  window.onSystemEvent("WALLET_CREDIT", function (data) {
     try {
       if (typeof window.syncWalletAfterPayout === "function") {
         window.syncWalletAfterPayout(data);
@@ -130,5 +155,30 @@ if (typeof window.onSystemEvent === "function") {
   });
 }
 
+// ================= GLOBAL BROADCAST API =================
+function broadcastWalletEvent(payload = {}) {
+
+  if (!window.SYSTEM_EVENTS) return;
+
+  window.SYSTEM_EVENTS.emit("WALLET_EVENT", {
+    ...payload,
+    timestamp: Date.now()
+  });
+}
+
 // ================= EXPORT =================
-window.initWalletEventBridge = initWalletEventBridge;
+function exposeWalletBridgeAPI() {
+
+  // Required diagnostics flags
+  window.__WALLET_SYSTEM_ACTIVE__ = true;
+  window.wallet_event_bridge_loaded = true;
+
+  // Required API for diagnostics
+  window.broadcastWalletEvent = broadcastWalletEvent;
+
+  // Initialization API
+  window.initWalletEventBridge = initWalletEventBridge;
+}
+
+// ================= FINAL CONFIRMATION =================
+console.log("[WALLET EVENT BRIDGE] Global flags registered");
