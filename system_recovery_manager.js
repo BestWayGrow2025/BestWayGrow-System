@@ -267,11 +267,13 @@ window.__RECOVERY_ENGINE_ACTIVE__ = true;
 // REQUIRED MANUAL CHECK FUNCTION
 window.runRecoveryCheck = function () {
 
-  console.log("[RECOVERY CHECK] OK");
+  // Silent health check (prevents console spam)
 
   window.SYSTEM_EVENTS?.emit("RECOVERY_CHECK_OK", {
     time: Date.now()
   });
+
+  return true;
 };
 
 // OPTIONAL READ-ONLY STATE ACCESS
