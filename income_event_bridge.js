@@ -2,15 +2,15 @@
 
 /*
 ========================================
-INCOME EVENT BRIDGE V1.0 (FINAL)
+INCOME EVENT BRIDGE V2.0 (PRODUCTION FINAL)
 ========================================
-✔ Connects income_engine.js to SYSTEM_EVENTS
-✔ Broadcasts income creation lifecycle
-✔ Synchronizes income logs and hold income
-✔ Triggers dashboard and report refresh
-✔ No business logic changes
-✔ Safe wrapper only
+✔ Connects income engine functions to SYSTEM_EVENTS
+✔ Broadcasts income processing lifecycle events
+✔ Emits generic INCOME_EVENT for diagnostics
+✔ Supports dashboard and reports synchronization
+✔ Safe wrapper only (no business logic changes)
 ✔ Duplicate-hook protection
+✔ Diagnostics + Control Center compatible
 ✔ Production LOCKED
 ========================================
 */
@@ -29,15 +29,26 @@ INCOME EVENT BRIDGE V1.0 (FINAL)
 // ================= INIT =================
 function initIncomeEventBridge() {
 
-  if (typeof window.SYSTEM_EVENTS === "undefined") {
+  if (
+    !window.SYSTEM_EVENTS ||
+    typeof window.SYSTEM_EVENTS.emit !== "function"
+  ) {
     return;
   }
 
-  // Hook common income functions if they exist
+  // Hook common income functions only if they exist
   hookIncomeFunction("processIncome", "INCOME_PROCESSED");
   hookIncomeFunction("creditIncome", "INCOME_CREDIT");
   hookIncomeFunction("createIncomeLog", "INCOME_LOG_CREATED");
   hookIncomeFunction("releaseHoldIncome", "HOLD_INCOME_RELEASED");
+
+  // Register global APIs and flags
+  exposeIncomeBridgeAPI();
+
+  // Attach default synchronization listeners
+  bindDefaultIncomeSync();
+
+  console.log("[INCOME EVENT BRIDGE] Initialized");
 }
 
 // ================= SAFE HOOK =================
@@ -58,19 +69,19 @@ function hookIncomeFunction(fnName, eventName) {
 
     // BEFORE EVENT
     try {
-      SYSTEM_EVENTS.emit(eventName + "_BEFORE", {
+      window.SYSTEM_EVENTS.emit(eventName + "_BEFORE", {
         functionName: fnName,
         args,
         timestamp: Date.now()
       });
     } catch (_) {}
 
-    // EXECUTE ORIGINAL
+    // EXECUTE ORIGINAL FUNCTION
     const result = original.apply(this, args);
 
     // MAIN EVENT
     try {
-      SYSTEM_EVENTS.emit(eventName, {
+      window.SYSTEM_EVENTS.emit(eventName, {
         functionName: fnName,
         args,
         result,
@@ -78,10 +89,22 @@ function hookIncomeFunction(fnName, eventName) {
       });
     } catch (_) {}
 
-    // GENERIC INCOME CHANGED EVENT
+    // GENERIC EVENT REQUIRED BY AUDIT/CONTROL CENTER
     try {
-      SYSTEM_EVENTS.emit("INCOME_UPDATED", {
+      window.SYSTEM_EVENTS.emit("INCOME_EVENT", {
         functionName: fnName,
+        eventName,
+        args,
+        result,
+        timestamp: Date.now()
+      });
+    } catch (_) {}
+
+    // SUMMARY EVENT
+    try {
+      window.SYSTEM_EVENTS.emit("INCOME_UPDATED", {
+        functionName: fnName,
+        eventName,
         args,
         result,
         timestamp: Date.now()
@@ -92,14 +115,19 @@ function hookIncomeFunction(fnName, eventName) {
   }
 
   wrappedIncomeFunction.__eventBridgeWrapped = true;
+  wrappedIncomeFunction.__originalFunction = original;
 
   window[fnName] = wrappedIncomeFunction;
 }
 
 // ================= DEFAULT SYSTEM SYNC =================
-if (typeof window.onSystemEvent === "function") {
+function bindDefaultIncomeSync() {
 
-  onSystemEvent("INCOME_UPDATED", function () {
+  if (typeof window.onSystemEvent !== "function") {
+    return;
+  }
+
+  window.onSystemEvent("INCOME_UPDATED", function () {
 
     try {
       if (typeof window.loadIncomeSummary === "function") {
@@ -127,5 +155,30 @@ if (typeof window.onSystemEvent === "function") {
   });
 }
 
+// ================= GLOBAL BROADCAST API =================
+function broadcastIncomeEvent(payload = {}) {
+
+  if (!window.SYSTEM_EVENTS) return;
+
+  window.SYSTEM_EVENTS.emit("INCOME_EVENT", {
+    ...payload,
+    timestamp: Date.now()
+  });
+}
+
 // ================= EXPORT =================
-window.initIncomeEventBridge = initIncomeEventBridge;
+function exposeIncomeBridgeAPI() {
+
+  // Required diagnostics flags
+  window.__INCOME_SYSTEM_ACTIVE__ = true;
+  window.income_event_bridge_loaded = true;
+
+  // Required API for diagnostics
+  window.broadcastIncomeEvent = broadcastIncomeEvent;
+
+  // Initialization API
+  window.initIncomeEventBridge = initIncomeEventBridge;
+}
+
+// ================= FINAL CONFIRMATION =================
+console.log("[INCOME EVENT BRIDGE] Global flags registered");
