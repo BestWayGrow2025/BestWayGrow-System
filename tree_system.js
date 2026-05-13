@@ -1,10 +1,8 @@
-
-
 "use strict";
 
 /*
 ========================================
-TREE SYSTEM V13 (FINAL PRODUCTION LOCK)
+TREE SYSTEM V14 (PRODUCTION FINAL)
 ========================================
 ✔ Sponsor Tree = hidden placement engine
 ✔ Introducer Tree = UI filtered support only
@@ -12,7 +10,9 @@ TREE SYSTEM V13 (FINAL PRODUCTION LOCK)
 ✔ Cycle protection
 ✔ Broken-node protection
 ✔ Full read support
-✔ Production stable
+✔ Diagnostics compatible
+✔ Control Center compatible
+✔ Production LOCKED
 ========================================
 */
 
@@ -42,10 +42,15 @@ function getRightChild(userId, users) {
 
 function findPlacement(sponsorId, position, users) {
 
-  if (!Array.isArray(users)) throw new Error("Invalid users list");
+  if (!Array.isArray(users)) {
+    throw new Error("Invalid users list");
+  }
 
   let current = users.find(u => u.userId === sponsorId);
-  if (!current) throw new Error("Invalid sponsor");
+
+  if (!current) {
+    throw new Error("Invalid sponsor");
+  }
 
   let safety = 0;
 
@@ -150,6 +155,21 @@ function getUserTree(userId) {
   return build(userId);
 }
 
+/* ================= DIAGNOSTIC TREE DATA ================= */
+
+function getTreeData(userId) {
+
+  if (userId) {
+    return getUserTree(userId);
+  }
+
+  if (typeof getUsers === "function") {
+    return getUsers() || [];
+  }
+
+  return [];
+}
+
 /* ================= USER CREATE ENGINE ================= */
 
 function createUserWithTree(req) {
@@ -162,7 +182,9 @@ function createUserWithTree(req) {
         : {};
 
     if (sys.lockMode) throw new Error("System Locked");
-    if (sys.registrationOpen === false) throw new Error("Registration Closed");
+    if (sys.registrationOpen === false) {
+      throw new Error("Registration Closed");
+    }
 
     let users =
       typeof getUsers === "function"
@@ -202,7 +224,6 @@ function createUserWithTree(req) {
 
     const newUser = {
       userId,
-
       username: req.username || "",
       password: req.password || "",
       name: req.name || "",
@@ -231,21 +252,15 @@ function createUserWithTree(req) {
       createdAt: new Date().toISOString()
     };
 
-    // LINK TREE
     if (placement.side === "L") {
-
       if (parent.leftChild) {
         throw new Error("Left already occupied");
       }
-
       parent.leftChild = userId;
-
     } else {
-
       if (parent.rightChild) {
         throw new Error("Right already occupied");
       }
-
       parent.rightChild = userId;
     }
 
@@ -262,7 +277,6 @@ function createUserWithTree(req) {
     return newUser;
 
   } catch (err) {
-
     console.error("Tree system error:", err.message);
     throw err;
   }
@@ -274,3 +288,11 @@ window.createUserWithTree = createUserWithTree;
 window.findPlacement = findPlacement;
 window.getUserTree = getUserTree;
 window.generateUserId = generateUserId;
+window.getTreeData = getTreeData;
+
+/* ================= REQUIRED FLAGS ================= */
+
+window.__TREE_ENGINE_ACTIVE__ = true;
+window.__TREE_SYSTEM_ACTIVE__ = true;
+
+console.log("[TREE SYSTEM] Global flags registered");
