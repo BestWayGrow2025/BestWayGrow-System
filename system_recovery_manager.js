@@ -8,7 +8,8 @@ SYSTEM RECOVERY MANAGER V1.0 (FINAL STABLE BUILD)
 ✔ Event-driven failure detection
 ✔ PIN / PAYOUT / BANK recovery support
 ✔ Governor + Control Center integration
-✔ DASHBOARD SAFE EXPORT LAYER FIXED
+✔ Dashboard-safe global exports
+✔ Production LOCKED
 ========================================
 */
 
@@ -43,7 +44,12 @@ function initSystemRecoveryManager() {
 // ================= WATCHERS =================
 function bindSystemFailureWatchers() {
 
-  if (!window.SYSTEM_EVENTS) return;
+  if (
+    !window.SYSTEM_EVENTS ||
+    typeof window.SYSTEM_EVENTS.on !== "function"
+  ) {
+    return;
+  }
 
   window.SYSTEM_EVENTS.on("SYSTEM_EVENT_ERROR", handleSystemFailure);
   window.SYSTEM_EVENTS.on("PIN_FLOW_EVENT", monitorPinFlow);
@@ -62,11 +68,12 @@ function handleSystemFailure(errorData) {
 
   console.error("[RECOVERY] Failure detected:", errorData);
 
-  triggerAutoRecovery(errorData);
+  triggerAutoRecovery(errorData || {});
 }
 
 // ================= MODULE MONITORS =================
 function monitorPinFlow(data) {
+
   if (data?.result?.error) {
     handleSystemFailure({
       module: "PIN",
@@ -76,6 +83,7 @@ function monitorPinFlow(data) {
 }
 
 function monitorPayoutFlow(data) {
+
   if (data?.result?.failed) {
     handleSystemFailure({
       module: "PAYOUT",
@@ -85,6 +93,7 @@ function monitorPayoutFlow(data) {
 }
 
 function monitorBankState(data) {
+
   if (data?.result?.status === "CORRUPT") {
     handleSystemFailure({
       module: "BANK",
@@ -126,29 +135,58 @@ function triggerAutoRecovery(failureData) {
     markRecoverySuccess(module);
 
   } catch (err) {
+
     console.error("[RECOVERY ERROR]", err);
+
+    RECOVERY_STATE.failureLog.push({
+      type: "RECOVERY_FAILED",
+      error: String(err),
+      time: Date.now()
+    });
+
   } finally {
+
     RECOVERY_STATE.recoveryInProgress = false;
   }
 }
 
 // ================= RECOVERY ACTIONS =================
 function recoverPinSystem() {
+
+  console.warn("[RECOVERY] PIN system restore");
+
   window.resetPinSystemCache?.();
-  window.SYSTEM_EVENTS?.emit("PIN_RECOVERED", { status: "RESTORED" });
+
+  window.SYSTEM_EVENTS?.emit("PIN_RECOVERED", {
+    status: "RESTORED"
+  });
 }
 
 function recoverPayoutSystem() {
+
+  console.warn("[RECOVERY] Payout system restore");
+
   window.resetPayoutQueue?.();
-  window.SYSTEM_EVENTS?.emit("PAYOUT_RECOVERED", { status: "RESTORED" });
+
+  window.SYSTEM_EVENTS?.emit("PAYOUT_RECOVERED", {
+    status: "RESTORED"
+  });
 }
 
 function recoverBankSystem() {
+
+  console.warn("[RECOVERY] Bank system restore");
+
   window.resetBankState?.();
-  window.SYSTEM_EVENTS?.emit("BANK_RECOVERED", { status: "RESTORED" });
+
+  window.SYSTEM_EVENTS?.emit("BANK_RECOVERED", {
+    status: "RESTORED"
+  });
 }
 
 function recoverFullSystem() {
+
+  console.warn("[RECOVERY] Full system recovery");
 
   recoverPinSystem();
   recoverPayoutSystem();
@@ -162,18 +200,21 @@ function recoverFullSystem() {
 // ================= SUCCESS =================
 function markRecoverySuccess(module) {
 
+  console.log("[RECOVERY] " + module + " recovery successful");
+
   window.SYSTEM_EVENTS?.emit("RECOVERY_SUCCESS", {
     module,
     time: Date.now()
   });
 }
 
-// ================= API =================
+// ================= PUBLIC API =================
 function exposeRecoveryAPI() {
 
   window.systemRecoveryManager = {
 
     autoRecover: function () {
+
       console.log("AUTO RECOVERY ACTIVE");
 
       window.SYSTEM_EVENTS?.emit("RECOVERY_MODE_ACTIVE", {
@@ -181,11 +222,17 @@ function exposeRecoveryAPI() {
       });
     },
 
-    getState: () => RECOVERY_STATE,
+    getState: function () {
+      return RECOVERY_STATE;
+    },
 
-    forceRecovery: (module) => triggerAutoRecovery({ module }),
+    forceRecovery: function (module) {
+      triggerAutoRecovery({
+        module: module || "UNKNOWN"
+      });
+    },
 
-    clearLogs: () => {
+    clearLogs: function () {
       RECOVERY_STATE.failureLog = [];
     }
   };
@@ -196,19 +243,28 @@ function bindSLCToRecovery() {
 
   if (!window.SystemLayerController) return;
 
-  window.SystemLayerController.setMode("NORMAL");
+  try {
 
-  console.log("[RECOVERY] Connected to SLC");
+    if (
+      typeof window.SystemLayerController.setMode === "function"
+    ) {
+      window.SystemLayerController.setMode("NORMAL");
+    }
+
+    console.log("[RECOVERY] Connected to SLC");
+
+  } catch (err) {
+
+    console.error("[RECOVERY] SLC integration error:", err);
+  }
 }
 
-// ===================================================
-// 🔥 DASHBOARD CRITICAL FIX (THIS IS WHAT YOU WERE MISSING)
-// ===================================================
+// ================= DASHBOARD GLOBAL EXPORTS =================
 
-// REQUIRED FLAG FOR MODULE DETECTION
+// REQUIRED FLAG FOR SYSTEM HEALTH DASHBOARD
 window.__RECOVERY_ENGINE_ACTIVE__ = true;
 
-// REQUIRED GLOBAL FUNCTION (MUST NOT BE INSIDE FUNCTION)
+// REQUIRED MANUAL CHECK FUNCTION
 window.runRecoveryCheck = function () {
 
   console.log("[RECOVERY CHECK] OK");
@@ -216,12 +272,12 @@ window.runRecoveryCheck = function () {
   window.SYSTEM_EVENTS?.emit("RECOVERY_CHECK_OK", {
     time: Date.now()
   });
-
 };
 
-// GLOBAL SAFE ACCESS
+// OPTIONAL READ-ONLY STATE ACCESS
 window.getRecoveryState = function () {
   return RECOVERY_STATE;
 };
 
 console.log("[RECOVERY] FULLY EXPORTED & DASHBOARD READY");
+
