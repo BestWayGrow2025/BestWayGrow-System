@@ -2,15 +2,18 @@
 
 /*
 ========================================
-SYSTEM CONTROL CENTER V2.0 (MASTER ORCHESTRATOR)
+SYSTEM CONTROL CENTER V2.1 (STABLE CORE)
 ========================================
-✔ Unified system observability layer
+✔ Observability layer
 ✔ Event Hub integration
-✔ Diagnostics + Health + Recovery + Backup + Audit
-✔ Real-time snapshot engine
-✔ SLC + Governor readiness
+✔ Snapshot engine
+✔ Diagnostics bridge
+✔ Recovery + SLC readiness
 ========================================
 */
+
+// ================= GLOBAL FLAGS (CRITICAL) =================
+window.__SYSTEM_DIAGNOSTICS__ = true;
 
 // ================= GUARD =================
 (function () {
@@ -27,17 +30,14 @@ SYSTEM CONTROL CENTER V2.0 (MASTER ORCHESTRATOR)
 function initControlCenter() {
 
   if (!window.SYSTEM_EVENTS) {
-    console.warn("CONTROL CENTER: Event Hub missing");
+    console.warn("[CONTROL CENTER] Event Hub missing");
     return;
   }
 
   bindSystemSignals();
   startControlLoop();
 
-  // IMPORTANT: wire event hub
   wireControlCenterToEventHub();
-
-  // SLC connection
   connectToSLC();
 }
 
@@ -65,14 +65,15 @@ function bindSystemSignals() {
 // ================= EVENT HUB WIRING =================
 function wireControlCenterToEventHub() {
 
-  if (!window.SYSTEM_EVENTS) return;
+  const hub = window.SYSTEM_EVENTS;
+  if (!hub) return;
 
-  window.SYSTEM_EVENTS.on("SYSTEM_ALERT", (data) => {
-    console.warn("CONTROL CENTER ALERT:", data);
+  hub.on("SYSTEM_ALERT", (data) => {
+    console.warn("[CONTROL CENTER ALERT]", data);
   });
 
-  window.SYSTEM_EVENTS.on("RECOVERY_SUCCESS", (data) => {
-    console.log("CONTROL CENTER RECOVERY OK:", data);
+  hub.on("RECOVERY_SUCCESS", (data) => {
+    console.log("[CONTROL CENTER RECOVERY OK]", data);
   });
 }
 
@@ -96,10 +97,7 @@ function startControlLoop() {
 // ================= HEALTH CHECK =================
 function runHealthCheck() {
 
-  const health = window.collectSystemHealth
-    ? window.collectSystemHealth()
-    : null;
-
+  const health = window.collectSystemHealth?.();
   if (!health) return;
 
   if (health.overall === "CRITICAL") {
@@ -153,18 +151,11 @@ function runSystemSnapshot() {
     diagnostics: !!window.__SYSTEM_DIAGNOSTICS__,
     backup: !!window.__SYSTEM_BACKUP_MANAGER__,
     audit: !!window.__SYSTEM_AUDIT_TRAIL__,
-    health: typeof window.collectSystemHealth === "function"
-      ? window.collectSystemHealth()
-      : null,
-
+    health: window.collectSystemHealth?.() || null,
     recovery: typeof window.runSystemRecovery === "function"
-      ? true
-      : false
   };
 
-  if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("CONTROL_SNAPSHOT", window.__SYSTEM_SNAPSHOT__);
-  }
+  window.SYSTEM_EVENTS?.emit("CONTROL_SNAPSHOT", window.__SYSTEM_SNAPSHOT__);
 }
 
 // ================= SIGNAL HANDLERS =================
@@ -182,23 +173,19 @@ function warnSignal(data) {
 
 // ================= ALERT HELPERS =================
 function emitAlert(msg) {
-  if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("SYSTEM_ALERT", {
-      msg,
-      level: "CRITICAL",
-      time: Date.now()
-    });
-  }
+  window.SYSTEM_EVENTS?.emit("SYSTEM_ALERT", {
+    msg,
+    level: "CRITICAL",
+    time: Date.now()
+  });
 }
 
 function emitWarning(msg) {
-  if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("SYSTEM_ALERT", {
-      msg,
-      level: "WARNING",
-      time: Date.now()
-    });
-  }
+  window.SYSTEM_EVENTS?.emit("SYSTEM_ALERT", {
+    msg,
+    level: "WARNING",
+    time: Date.now()
+  });
 }
 
 // ================= SLC CONNECTION =================
@@ -206,10 +193,16 @@ function connectToSLC() {
 
   if (window.SystemLayerController) {
     window.SystemLayerController.setMode("NORMAL");
-    console.log("CONTROL CENTER: Connected to SLC");
+    console.log("[CONTROL CENTER] Connected to SLC");
   }
 }
 
-// ================= GLOBAL ACCESS =================
+// ================= GLOBAL API (FIXED) =================
+window.__SYSTEM_CONTROL_CENTER_API__ = {
+  init: initControlCenter,
+  snapshot: () => window.__SYSTEM_SNAPSHOT__,
+  forceSnapshot: runSystemSnapshot
+};
+
 window.runSystemSnapshot = runSystemSnapshot;
 window.initControlCenter = initControlCenter;
