@@ -2,27 +2,20 @@
 
 /*
 ========================================
-SYSTEM AUDIT TRAIL V1.0 (FINAL STABLE)
+SYSTEM AUDIT TRAIL V1.1 (FINAL FIXED)
 ========================================
+✔ Constants declared before initialization
 ✔ Safe event binding
 ✔ Dashboard detection ready
 ✔ Retry-safe SYSTEM_EVENTS hookup
 ✔ Clean global exports
+✔ Initialization-order issue resolved
+✔ Production LOCKED
 ========================================
 */
 
-// ================= GUARD =================
-(function () {
-
-  if (window.__SYSTEM_AUDIT_TRAIL__) return;
-
-  window.__SYSTEM_AUDIT_TRAIL__ = true;
-
-  initSystemAuditTrail();
-
-})();
-
-// ================= STORAGE =================
+// ================= STORAGE CONSTANTS =================
+// MUST BE DECLARED BEFORE initSystemAuditTrail() RUNS
 const AUDIT_STORAGE_KEY = "BWG_SYSTEM_AUDIT_TRAIL";
 const AUDIT_MAX_RECORDS = 10000;
 
@@ -33,12 +26,24 @@ const AUDIT_SEVERITY = {
   CRITICAL: "CRITICAL"
 };
 
+// ================= GUARD =================
+// MUST RUN AFTER CONSTANTS ARE DECLARED
+(function () {
+
+  if (window.__SYSTEM_AUDIT_TRAIL__) return;
+
+  window.__SYSTEM_AUDIT_TRAIL__ = true;
+
+  initSystemAuditTrail();
+
+})();
+
 // ================= INIT =================
 function initSystemAuditTrail() {
 
   ensureAuditStorage();
 
-  // SAFE DELAY BIND (FIXES EVENT HUB LOAD ORDER ISSUE)
+  // Safe delayed bind (handles event hub load order)
   setTimeout(bindSystemEvents, 500);
 
   exposeAuditAPI();
@@ -48,7 +53,7 @@ function initSystemAuditTrail() {
     action: "INITIALIZED",
     severity: AUDIT_SEVERITY.INFO,
     details: {
-      version: "1.0",
+      version: "1.1",
       timestamp: Date.now()
     }
   });
@@ -118,7 +123,10 @@ function writeAudit(entry) {
 // ================= EVENT BIND =================
 function bindSystemEvents() {
 
-  if (!window.SYSTEM_EVENTS || typeof window.SYSTEM_EVENTS.on !== "function") {
+  if (
+    !window.SYSTEM_EVENTS ||
+    typeof window.SYSTEM_EVENTS.on !== "function"
+  ) {
     console.warn("[AUDIT] SYSTEM_EVENTS not ready, retrying...");
     setTimeout(bindSystemEvents, 500);
     return;
@@ -137,7 +145,7 @@ function bindSystemEvents() {
     "SYSTEM_BACKUP_CREATED"
   ];
 
-  monitored.forEach(eventName => {
+  monitored.forEach(function (eventName) {
 
     window.SYSTEM_EVENTS.on(eventName, function (data) {
 
@@ -183,7 +191,15 @@ function sanitizeAuditData(data) {
 }
 
 function generateAuditId() {
-  return "AUDIT_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8).toUpperCase();
+  return (
+    "AUDIT_" +
+    Date.now() +
+    "_" +
+    Math.random()
+      .toString(36)
+      .slice(2, 8)
+      .toUpperCase()
+  );
 }
 
 function getCurrentUserIdSafe() {
@@ -244,22 +260,29 @@ function getAuditRecords() {
   try {
     const raw = localStorage.getItem(AUDIT_STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (_) {
     return [];
   }
 }
 
-function getAuditByModule(m) {
-  return getAuditRecords().filter(r => r.module === m);
+function getAuditByModule(moduleName) {
+  return getAuditRecords().filter(function (r) {
+    return r.module === moduleName;
+  });
 }
 
-function getAuditBySeverity(s) {
-  return getAuditRecords().filter(r => r.severity === s);
+function getAuditBySeverity(severity) {
+  return getAuditRecords().filter(function (r) {
+    return r.severity === severity;
+  });
 }
 
 function clearAuditTrail() {
 
-  localStorage.setItem(AUDIT_STORAGE_KEY, JSON.stringify([]));
+  localStorage.setItem(
+    AUDIT_STORAGE_KEY,
+    JSON.stringify([])
+  );
 
   window.SYSTEM_EVENTS?.emit("AUDIT_CLEARED", {
     time: Date.now()
@@ -271,9 +294,22 @@ function clearAuditTrail() {
 // ================= GLOBAL FLAGS =================
 window.__AUDIT_TRAIL_ACTIVE__ = true;
 
+// Diagnostics compatibility API
 window.runAuditCheck = function () {
   console.log("[AUDIT CHECK] OK");
-  window.SYSTEM_EVENTS?.emit("AUDIT_CHECK_OK", { time: Date.now() });
+  window.SYSTEM_EVENTS?.emit("AUDIT_CHECK_OK", {
+    time: Date.now()
+  });
 };
 
+// Optional state access
+window.getAuditStorageKey = function () {
+  return AUDIT_STORAGE_KEY;
+};
+
+window.getAuditSeverityMap = function () {
+  return AUDIT_SEVERITY;
+};
+
+// ================= FINAL CONFIRMATION =================
 console.log("[AUDIT] FULLY READY + DASHBOARD SAFE");
