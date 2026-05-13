@@ -227,4 +227,8 @@ window.broadcastPayoutEvent = function (payload = {}) {
   } catch (_) {}
 };
 
+window.__PAYOUT_SYSTEM_ACTIVE__ = true;
+window.payout_system_loaded = true;
+window.PAYOUT_SYSTEM_ACTIVE = true;
+
 console.log("[PAYOUT] HEALTH FLAG REGISTERED");
