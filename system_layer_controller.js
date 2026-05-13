@@ -5,23 +5,24 @@
 SYSTEM LAYER CONTROLLER (SLC) V1.0
 ========================================
 ✔ Master system scheduler
-✔ Controls all system modules
-✔ Prevents duplicate execution
-✔ Central lifecycle manager
-✔ Safe startup/shutdown engine
+✔ Controls system execution flow
+✔ SAFE MODE + NORMAL MODE switch
+✔ Prevents module overload
+✔ Recovery integration ready
 ========================================
 */
 
 (function () {
 
   if (window.__SYSTEM_LAYER_CONTROLLER__) return;
+
   window.__SYSTEM_LAYER_CONTROLLER__ = true;
 
   document.addEventListener("DOMContentLoaded", initSLC);
 
 })();
 
-// ================= REGISTRY =================
+// ================= STATE =================
 const MODULES = {};
 
 let MASTER_TICK = null;
@@ -30,11 +31,14 @@ let SYSTEM_MODE = "NORMAL";
 // ================= INIT =================
 function initSLC() {
 
-  console.log("SLC: Initializing System Layer Controller...");
+  console.log("[SLC] Initializing System Layer Controller...");
+
+  if (!window.SYSTEM_EVENTS) {
+    console.warn("[SLC] SYSTEM_EVENTS missing - running in limited mode");
+  }
 
   registerCoreModules();
   startMasterTick();
-
 }
 
 // ================= MODULE REGISTRY =================
@@ -70,7 +74,7 @@ function registerCoreModules() {
     lastRun: 0
   };
 
-  console.log("SLC: Modules registered", MODULES);
+  console.log("[SLC] Modules registered");
 }
 
 // ================= MASTER LOOP =================
@@ -80,6 +84,7 @@ function startMasterTick() {
 
   MASTER_TICK = setInterval(() => {
 
+    // BLOCK EXECUTION IN LOCKDOWN MODE
     if (SYSTEM_MODE === "LOCKDOWN") return;
 
     runCycle();
@@ -87,7 +92,7 @@ function startMasterTick() {
   }, 3000);
 }
 
-// ================= CYCLE =================
+// ================= EXECUTION CYCLE =================
 function runCycle() {
 
   const now = Date.now();
@@ -96,7 +101,7 @@ function runCycle() {
 
     if (!module.active) return;
 
-    // throttle execution per module (5s minimum)
+    // throttle per module (5s rule)
     if (now - module.lastRun < 5000) return;
 
     executeModule(module);
@@ -105,7 +110,7 @@ function runCycle() {
 
 }
 
-// ================= EXECUTION =================
+// ================= MODULE EXECUTION =================
 function executeModule(module) {
 
   try {
@@ -117,40 +122,47 @@ function executeModule(module) {
     }
 
   } catch (err) {
-    console.error("SLC Execution Error:", module.name, err);
+    console.error("[SLC] Execution Error:", module.name, err);
   }
-
 }
 
 // ================= MODE CONTROL =================
 function setSystemMode(mode) {
 
   SYSTEM_MODE = mode;
-  console.log("SLC: Mode switched to", mode);
 
-  if (mode === "RECOVERY") {
+  console.log("[SLC] Mode switched →", mode);
+
+  // Trigger recovery if LOCKDOWN
+  if (mode === "LOCKDOWN") {
     triggerRecovery();
   }
-
 }
 
 // ================= RECOVERY =================
 function triggerRecovery() {
 
   if (window.systemRecoveryManager) {
-    window.systemRecoveryManager.autoRecover();
+    try {
+      window.systemRecoveryManager.autoRecover();
+    } catch (err) {
+      console.error("[SLC] Recovery failed:", err);
+    }
   }
-
 }
 
-// ================= UTILS =================
+// ================= UTIL =================
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 // ================= GLOBAL API =================
 window.SystemLayerController = {
+
   setMode: setSystemMode,
   getMode: () => SYSTEM_MODE,
-  getModules: () => MODULES
+  getModules: () => MODULES,
+
+  // optional manual recovery trigger
+  triggerRecovery: triggerRecovery
 };
