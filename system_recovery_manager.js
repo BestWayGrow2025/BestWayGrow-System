@@ -283,5 +283,7 @@ console.log("[RECOVERY] FULLY EXPORTED & DASHBOARD READY");
 
 // ================= HEALTH DASHBOARD FLAG =================
 window.__RECOVERY_ENGINE_ACTIVE__ = true;
+window.recovery_engine_loaded = true;
+window.SYSTEM_RECOVERY_ACTIVE = true;
 
 console.log("[RECOVERY] HEALTH FLAG REGISTERED");
