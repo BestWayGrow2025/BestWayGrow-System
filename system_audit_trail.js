@@ -245,9 +245,7 @@ function exposeAuditAPI() {
 
   window.writeAudit = writeAudit;
 
-  window.getAuditRecords = function () {
-    return getAuditRecords();
-  };
+  window.getAuditRecords = getAuditRecords;
 
   window.getAuditByModule = getAuditByModule;
   window.getAuditBySeverity = getAuditBySeverity;
