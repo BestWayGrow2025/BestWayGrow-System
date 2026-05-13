@@ -186,4 +186,8 @@ function exposeWalletBridgeAPI() {
 }
 
 // ================= FINAL CONFIRMATION =================
-console.log("[WALLET EVENT BRIDGE] Global flags registered");
+window.__WALLET_SYSTEM_ACTIVE__ = true;
+window.wallet_system_loaded = true;
+window.WALLET_SYSTEM_ACTIVE = true;
+
+console.log("[WALLET] HEALTH FLAG REGISTERED");
