@@ -281,3 +281,7 @@ window.getRecoveryState = function () {
 
 console.log("[RECOVERY] FULLY EXPORTED & DASHBOARD READY");
 
+// ================= HEALTH DASHBOARD FLAG =================
+window.__RECOVERY_ENGINE_ACTIVE__ = true;
+
+console.log("[RECOVERY] HEALTH FLAG REGISTERED");
