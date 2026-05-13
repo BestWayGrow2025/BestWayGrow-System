@@ -36,7 +36,7 @@ function runOrchestrationCycle() {
 // ================= OPTIMIZATION =================
 function optimizeEventFlow(snapshot) {
 
-  console.log("⚙️ ORCHESTRATOR: optimizing system flow");
+ // console.log("⚙️ ORCHESTRATOR: optimizing system flow");
 
   // safe optimization placeholder
   if (snapshot.health && snapshot.health.overall === "GOOD") {
