@@ -2,7 +2,10 @@
 <html>
 <head>
   <title>System Admin Login</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:,">
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -59,9 +62,18 @@
     <p id="msg"></p>
   </div>
 
+  <!-- ================= BOOT MANAGER ================= -->
+  <script src="boot_manager.js"></script>
+
+  <!-- ================= CORE SYSTEM ================= -->
   <script src="core_system.js"></script>
+
+  <!-- ================= OPTIONAL SYSTEMS ================= -->
   <script src="activity_log.js"></script>
   <script src="session_manager.js"></script>
+
+  <!-- ================= LOGIN LOGIC ================= -->
   <script src="system_admin_login.js"></script>
+
 </body>
 </html>
