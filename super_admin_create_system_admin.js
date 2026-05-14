@@ -198,6 +198,13 @@ window.showMsg = showMsg;
 
 /* ================= LOAD FLAG (THIS FIXES YOUR ERROR) ================= */
 
-window.super_admin_create_system_admin = true;
+window.createSystemAdmin = createSystemAdmin;
+window.showMsg = showMsg;
 
-console.log("[SUPER ADMIN] MODULE LOADED SUCCESSFULLY");
+window.__SUPER_ADMIN_MODULE__ = {
+  loaded: true,
+  name: "super_admin_create_system_admin",
+  time: Date.now()
+};
+
+console.log("[SUPER ADMIN] MODULE READY");
