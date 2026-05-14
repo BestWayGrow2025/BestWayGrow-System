@@ -90,16 +90,14 @@ function redirectLogin() {
 
 function bindEvents() {
 
-  const createBtn = document.getElementById("createBtn");
+  document.addEventListener("click", function (e) {
 
-  if (!createBtn) {
-    console.warn("[SUPER ADMIN] createBtn not found");
-    return;
-  }
+    const btn = e.target.closest("#createBtn");
 
-  createBtn.onclick = function () {
+    if (!btn) return;
+
     safeClick(createSystemAdmin);
-  };
+  });
 }
 
 /* ================= SAFE CLICK ================= */
