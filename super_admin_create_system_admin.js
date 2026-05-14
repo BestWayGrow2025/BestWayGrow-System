@@ -2,11 +2,12 @@
 
 /*
 ========================================
-SUPER ADMIN CREATE SYSTEM ADMIN v3.1 FINAL SAFE BOOT
+SUPER ADMIN CREATE SYSTEM ADMIN v4.0
+BOOT ARCHITECTURE V2 FINAL
 ========================================
-✔ Fixed DOM load race condition
-✔ No "not loaded" false failure
-✔ Stable module registration
+✔ BOOT.register standard
+✔ Dependency-safe startup
+✔ Stable module flags
 ✔ Production ready
 ========================================
 */
@@ -15,29 +16,15 @@ let session = null;
 let currentUser = null;
 let lock = false;
 
-/* ================= BOOT CONFIRMATION ================= */
-
 console.log("[SUPER ADMIN] FILE EXECUTION STARTED");
 
-/* ================= SAFE BOOT ================= */
+/* ================= BOOT REGISTRATION ================= */
 
-function boot() {
-  try {
-    initPage();
-    checkAuth();
-    bindEvents();
-
-    console.log("[SUPER ADMIN] MODULE BOOT SUCCESS");
-  } catch (e) {
-    console.error("[SUPER ADMIN BOOT ERROR]", e);
-  }
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", boot);
-} else {
-  boot();
-}
+BOOT.register("super_admin_create_system_admin", function () {
+  initPage();
+  checkAuth();
+  bindEvents();
+});
 
 /* ================= INIT ================= */
 
@@ -54,7 +41,6 @@ function initPage() {
 /* ================= AUTH CHECK ================= */
 
 function checkAuth() {
-
   session =
     typeof getSession === "function"
       ? getSession()
@@ -89,7 +75,6 @@ function checkAuth() {
 /* ================= REDIRECT ================= */
 
 function redirectLogin() {
-
   if (typeof destroySession === "function") {
     destroySession();
   }
@@ -101,7 +86,6 @@ function redirectLogin() {
 /* ================= EVENTS ================= */
 
 function bindEvents() {
-
   document.addEventListener("click", function (e) {
     const btn = e.target.closest("#createBtn");
     if (!btn) return;
@@ -113,7 +97,6 @@ function bindEvents() {
 /* ================= SAFE CLICK ================= */
 
 function safeClick(fn) {
-
   if (lock) return;
   lock = true;
 
@@ -124,7 +107,7 @@ function safeClick(fn) {
     showMsg("❌ System Error");
   }
 
-  setTimeout(() => {
+  setTimeout(function () {
     lock = false;
   }, 300);
 }
@@ -132,7 +115,6 @@ function safeClick(fn) {
 /* ================= MESSAGE ================= */
 
 function showMsg(text) {
-
   const msg = document.getElementById("msg");
   if (msg) msg.innerText = text;
 }
@@ -140,7 +122,6 @@ function showMsg(text) {
 /* ================= PASSWORD ================= */
 
 function encodePassword(p) {
-
   try {
     return btoa(p);
   } catch (e) {
@@ -151,7 +132,6 @@ function encodePassword(p) {
 /* ================= CREATE SYSTEM ADMIN ================= */
 
 function createSystemAdmin() {
-
   const id = document.getElementById("sysId")?.value?.trim();
   const name = document.getElementById("sysName")?.value?.trim();
   const pass = document.getElementById("sysPass")?.value?.trim();
@@ -166,9 +146,9 @@ function createSystemAdmin() {
       ? (getUsers() || [])
       : [];
 
-  const exists = users.find(u =>
-    (u.userId || "").toLowerCase() === id.toLowerCase()
-  );
+  const exists = users.find(function (u) {
+    return (u.userId || "").toLowerCase() === id.toLowerCase();
+  });
 
   if (exists) {
     showMsg("⚠️ ID already exists");
@@ -217,3 +197,7 @@ window.__SUPER_ADMIN_MODULE__ = {
 };
 
 console.log("[SUPER ADMIN CREATE SYSTEM ADMIN] MODULE LOADED OK");
+
+/* ================= START MODULE ================= */
+
+BOOT.start("super_admin_create_system_admin");
