@@ -1,172 +1,383 @@
+"use strict";
+
 /*
-
-SYSTEM ADMIN DASHBOARD (FINAL V8.2)
-ONE AUTH ENGINE ONLY (session_manager.js)
-FLOW SAFE + CLEAN
-
+========================================
+SYSTEM ADMIN DASHBOARD v9.0 FINAL BOOT
+========================================
+✔ Boot Architecture V2 compatible
+✔ Safe module registration
+✔ Session validation
+✔ Role protection
+✔ Welcome banner
+✔ Menu navigation
+✔ Dashboard overview
+✔ Users list
+✔ Create Admin integration
+✔ PIN module integration
+✔ Settings placeholder
+✔ Safe logout
+✔ No global collisions
+✔ Production ready
+========================================
 */
+
+console.log("[SYSTEM ADMIN DASHBOARD] FILE EXECUTION STARTED");
 
 let currentUser = null;
 let clickLock = false;
+let menuBound = false;
 
-// ================= BOOT =================
-document.addEventListener("DOMContentLoaded", function () {
-bootSystem();
+/* ================= MODULE REGISTRATION ================= */
+
+BOOT.register("system_admin_dashboard", function () {
+  initPage();
+  checkAuth();
+  bindEvents();
+  loadHome();
 });
 
-// ================= BOOT SYSTEM =================
-function bootSystem() {
-initPage();
+/* ================= INIT ================= */
 
-if (!authPage()) {
-window.location.href = "system_admin_login.html";
-return;
-}
-
-bindEvents();
-loadHome();
-}
-
-// ================= INIT =================
 function initPage() {
-if (typeof initCoreSystem === "function") {
-initCoreSystem();
-} else {
-alert("❌ core_system.js missing");
-throw new Error("STOP");
-}
-}
-
-// ================= AUTH =================
-function authPage() {
-const session = typeof getSession === "function" ? getSession() : null;
-
-if (!session || session.role !== "system_admin") {
-return false;
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  } else {
+    alert("❌ core_system.js missing");
+    throw new Error("STOP");
+  }
 }
 
-currentUser = typeof getUserById === "function"
-? getUserById(session.userId)
-: session;
+/* ================= AUTH ================= */
 
-if (!currentUser) return false;
+function checkAuth() {
+  const session =
+    typeof getSession === "function"
+      ? getSession()
+      : JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
 
-const status = currentUser.status || currentUser.accountStatus || "active";
+  if (!session || !session.userId) {
+    redirectLogin();
+    throw new Error("STOP");
+  }
 
-if (status !== "active") {
-if (typeof clearSession === "function") clearSession();
-return false;
+  if (session.role && session.role !== "system_admin") {
+    redirectLogin();
+    throw new Error("STOP");
+  }
+
+  currentUser =
+    typeof getUserById === "function"
+      ? getUserById(session.userId)
+      : session;
+
+  if (!currentUser || currentUser.role !== "system_admin") {
+    redirectLogin();
+    throw new Error("STOP");
+  }
+
+  const status =
+    currentUser.status ||
+    currentUser.accountStatus ||
+    "active";
+
+  if (status !== "active") {
+    redirectLogin();
+    throw new Error("STOP");
+  }
+
+  const welcome = document.getElementById("welcome");
+
+  if (welcome) {
+    welcome.innerText =
+      "Welcome " +
+      (currentUser.username || currentUser.userId) +
+      " (" +
+      currentUser.userId +
+      ")";
+  }
 }
 
-const el = document.getElementById("welcome");
-if (el) {
-el.innerText =
-"Welcome " +
-(currentUser.username || currentUser.userId) +
-" (" +
-currentUser.userId +
-")";
+/* ================= REDIRECT ================= */
+
+function redirectLogin() {
+  if (typeof destroySession === "function") {
+    destroySession();
+  } else if (typeof clearSession === "function") {
+    clearSession();
+  } else {
+    localStorage.removeItem("loggedInSystemAdmin");
+  }
+
+  window.location.href = "system_admin_login.html";
 }
 
-return true;
-}
+/* ================= EVENTS ================= */
 
-// ================= EVENTS =================
 function bindEvents() {
-const logoutBtn = document.getElementById("logoutBtn");
-if (logoutBtn) logoutBtn.addEventListener("click", logout);
+  if (menuBound) return;
+  menuBound = true;
 
-const buttons = document.querySelectorAll(".menu button");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-buttons.forEach(btn => {
-btn.addEventListener("click", function () {
-if (clickLock) return;
+  if (logoutBtn && !logoutBtn.dataset.bound) {
+    logoutBtn.dataset.bound = "true";
+    logoutBtn.addEventListener("click", logout);
+  }
 
-clickLock = true;  
+  const buttons = document.querySelectorAll(".menu button");
 
-  buttons.forEach(b => b.classList.remove("active"));  
-  btn.classList.add("active");  
+  buttons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      if (clickLock) return;
 
-  try {  
-    const page = btn.dataset.page;  
+      clickLock = true;
 
-    if (page === "home") loadHome();  
-    if (page === "users") loadUsers();  
-    if (page === "create") loadCreateAdmin();  
-    if (page === "pins") loadPins();  
-    if (page === "settings") loadSettings();  
-  } catch (err) {  
-    document.getElementById("mainContent").innerHTML =  
-      `<p style="color:red;">Failed to load section</p>`;  
-  }  
+      buttons.forEach(function (b) {
+        b.classList.remove("active");
+      });
 
-  setTimeout(() => {  
-    clickLock = false;  
-  }, 250);  
-});
+      btn.classList.add("active");
 
-});
+      try {
+        const page = btn.dataset.page;
+
+        switch (page) {
+          case "home":
+            loadHome();
+            break;
+
+          case "users":
+            loadUsers();
+            break;
+
+          case "create":
+            loadCreateAdmin();
+            break;
+
+          case "pins":
+            loadPinsSafe();
+            break;
+
+          case "settings":
+            loadSettings();
+            break;
+        }
+      } catch (err) {
+        console.error("[SYSTEM ADMIN DASHBOARD ERROR]", err);
+
+        const main = document.getElementById("mainContent");
+
+        if (main) {
+          main.innerHTML =
+            '<p style="color:red;">Failed to load section</p>';
+        }
+      }
+
+      setTimeout(function () {
+        clickLock = false;
+      }, 250);
+    });
+  });
+
+  const homeBtn =
+    document.querySelector('.menu button[data-page="home"]');
+
+  if (homeBtn) {
+    homeBtn.classList.add("active");
+  }
 }
 
-// ================= HOME =================
+/* ================= HOME ================= */
+
 function loadHome() {
-const users = typeof getUsers === "function" ? getUsers() : [];
+  const users =
+    typeof getUsers === "function"
+      ? (getUsers() || [])
+      : [];
 
-const officeUsers = users.filter(u => u.tree === "office" && u.role === "user");
-const officeAdmins = users.filter(u => u.tree === "office" && u.role === "admin");
+  const officeUsers = users.filter(function (u) {
+    return u.tree === "office" && u.role === "user";
+  });
 
-const fieldUsers = users.filter(u => u.tree === "field" && u.role === "user");
-const fieldAdmins = users.filter(u => u.tree === "field" && u.role === "admin");
+  const officeAdmins = users.filter(function (u) {
+    return u.tree === "office" && u.role === "admin";
+  });
 
-const rootAdmin = users.filter(u =>
-u.role === "admin" &&
-u.adminType === "root_admin" &&
-u.tree === "field"
-);
+  const fieldUsers = users.filter(function (u) {
+    return u.tree === "field" && u.role === "user";
+  });
 
-document.getElementById("mainContent").innerHTML = `
-<div class="card">
-<h3>Dashboard Overview</h3>
+  const fieldAdmins = users.filter(function (u) {
+    return u.tree === "field" && u.role === "admin";
+  });
 
-<div style="display:flex; gap:15px;">  
-    <div>  
-      <h4>Office</h4>  
-      <p>Users: ${officeUsers.length}</p>  
-      <p>Admins: ${officeAdmins.length}</p>  
-    </div>  
+  const rootAdmin = users.filter(function (u) {
+    return (
+      u.role === "admin" &&
+      u.adminType === "root_admin" &&
+      u.tree === "field"
+    );
+  });
 
-    <div>  
-      <h4>Field</h4>  
-      <p>Users: ${fieldUsers.length}</p>  
-      <p>Admins: ${fieldAdmins.length}</p>  
-      <p>Root Admin: ${rootAdmin.length}</p>  
-    </div>  
-  </div>  
-</div>
+  const main = document.getElementById("mainContent");
+  if (!main) return;
 
-`;
+  main.innerHTML = `
+    <div class="card">
+      <h3>Dashboard Overview</h3>
+
+      <div style="display:flex;flex-wrap:wrap;gap:15px;">
+
+        <div style="flex:1;min-width:220px;">
+          <h4>Office</h4>
+          <p>Users: ${officeUsers.length}</p>
+          <p>Admins: ${officeAdmins.length}</p>
+        </div>
+
+        <div style="flex:1;min-width:220px;">
+          <h4>Field</h4>
+          <p>Users: ${fieldUsers.length}</p>
+          <p>Admins: ${fieldAdmins.length}</p>
+          <p>Root Admin: ${rootAdmin.length}</p>
+        </div>
+
+      </div>
+    </div>
+  `;
 }
 
-// ================= USERS =================
+/* ================= USERS ================= */
+
 function loadUsers() {
-const users = typeof getUsers === "function"
-? getUsers().filter(u => !u.hiddenAccount)
-: [];
+  const users =
+    typeof getUsers === "function"
+      ? (getUsers() || []).filter(function (u) {
+          return !u.hiddenAccount;
+        })
+      : [];
 
-let html = `<div class="card"><h3>All Users</h3><table>
+  let html = `
+    <div class="card">
+      <h3>All Users</h3>
 
-  <tr>  
-    <th>ID</th><th>Name</th><th>Role</th><th>Type</th><th>Tree</th><th>Status</th><th>Action</th>  
-  </tr>`;  users.forEach(u => {
-html +=   <tr>   <td>${u.userId || "-"}</td>   <td>${u.username || "-"}</td>   <td>${u.role || "-"}</td>   <td>${u.adminType || "-"}</td>   <td>${u.tree || "-"}</td>   <td>${u.status || "active"}</td>   <td>Protected</td>   </tr>  ;
-});
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Type</th>
+          <th>Tree</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+  `;
 
-html += </table></div>;
-document.getElementById("mainContent").innerHTML = html;
+  users.forEach(function (u) {
+    html += `
+      <tr>
+        <td>${u.userId || "-"}</td>
+        <td>${u.username || "-"}</td>
+        <td>${u.role || "-"}</td>
+        <td>${u.adminType || "-"}</td>
+        <td>${u.tree || "-"}</td>
+        <td>${u.status || "active"}</td>
+        <td>Protected</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </table>
+    </div>
+  `;
+
+  const main = document.getElementById("mainContent");
+  if (main) {
+    main.innerHTML = html;
+  }
 }
 
-// ================= LOGOUT =================
+/* ================= CREATE ADMIN ================= */
+
+function loadCreateAdmin() {
+  const main = document.getElementById("mainContent");
+  if (!main) return;
+
+  if (typeof window.open === "function") {
+    window.open(
+      "system_admin_create_admin.html",
+      "_blank"
+    );
+  } else {
+    main.innerHTML = `
+      <div class="card">
+        <h3>Create Admin</h3>
+        <p>Unable to open create admin page.</p>
+      </div>
+    `;
+  }
+}
+
+/* ================= PINS ================= */
+
+function loadPinsSafe() {
+  if (typeof loadPins === "function") {
+    loadPins();
+    return;
+  }
+
+  const main = document.getElementById("mainContent");
+  if (!main) return;
+
+  main.innerHTML = `
+    <div class="card">
+      <h3>PIN Management</h3>
+      <p>PIN module not loaded.</p>
+    </div>
+  `;
+}
+
+/* ================= SETTINGS ================= */
+
+function loadSettings() {
+  const main = document.getElementById("mainContent");
+  if (!main) return;
+
+  main.innerHTML = `
+    <div class="card">
+      <h3>System Settings</h3>
+      <p>Settings module will be connected here.</p>
+    </div>
+  `;
+}
+
+/* ================= LOGOUT ================= */
+
 function logout() {
-if (typeof clearSession === "function") clearSession();
-window.location.href = "system_admin_login.html";
+  redirectLogin();
 }
+
+/* ================= EXPORTS ================= */
+
+window.loadHome = loadHome;
+window.loadUsers = loadUsers;
+window.loadCreateAdmin = loadCreateAdmin;
+window.loadPinsSafe = loadPinsSafe;
+window.loadSettings = loadSettings;
+window.logout = logout;
+
+/* ================= MODULE FLAGS ================= */
+
+window.__SYSTEM_ADMIN_DASHBOARD__ = true;
+
+window.__SYSTEM_ADMIN_DASHBOARD_MODULE__ = {
+  loaded: true,
+  name: "system_admin_dashboard",
+  time: Date.now()
+};
+
+/* ================= START MODULE ================= */
+
+BOOT.start("system_admin_dashboard");
+
+console.log("[SYSTEM ADMIN DASHBOARD] MODULE LOADED OK");
