@@ -1,26 +1,33 @@
+"use strict";
+
 /*
 ========================================
-SYSTEM ADMIN LOGIN FINAL (UNIFIED AUTH)
+SYSTEM ADMIN LOGIN V4.0 FINAL BOOT
 ========================================
-✔ Fully migrated to session_manager.js
-✔ No legacy localStorage usage
-✔ Safe role validation
-✔ Stable redirect flow
-✔ Production LOCKED
+✔ Boot Architecture V2 compatible
+✔ Single initialization point
+✔ Unified session_manager.js
+✔ Safe login lock
+✔ Automatic redirect if already logged in
+✔ Strict system_admin role validation
+✔ Production stable
 ========================================
 */
 
-"use strict";
+console.log("[SYSTEM ADMIN LOGIN] FILE EXECUTION STARTED");
 
 let lock = false;
 
-document.addEventListener("DOMContentLoaded", function () {
+/* ================= MODULE REGISTRATION ================= */
+
+BOOT.register("system_admin_login", function () {
   initPage();
   bindEvents();
   loadPage();
 });
 
-// ================= INIT =================
+/* ================= INIT ================= */
+
 function initPage() {
   if (typeof initCoreSystem !== "function") {
     alert("❌ core_system.js not loaded");
@@ -30,16 +37,34 @@ function initPage() {
   initCoreSystem();
 }
 
-// ================= EVENTS =================
+/* ================= EVENTS ================= */
+
 function bindEvents() {
   const btn = document.getElementById("loginBtn");
 
-  if (btn) {
-    btn.addEventListener("click", login);
+  if (btn && !btn.dataset.bound) {
+    btn.dataset.bound = "true";
+
+    btn.addEventListener("click", function () {
+      safeClick(login);
+    });
+  }
+
+  const password = document.getElementById("password");
+
+  if (password && !password.dataset.bound) {
+    password.dataset.bound = "true";
+
+    password.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        safeClick(login);
+      }
+    });
   }
 }
 
-// ================= AUTO REDIRECT =================
+/* ================= AUTO REDIRECT ================= */
+
 function loadPage() {
   const session =
     typeof getSession === "function"
@@ -47,37 +72,72 @@ function loadPage() {
       : null;
 
   if (session && session.role === "system_admin") {
-    window.location.replace("system_admin_dashboard.html");
+    window.location.replace(
+      "system_admin_dashboard.html"
+    );
   }
 }
 
-// ================= LOGIN =================
-function login() {
+/* ================= SAFE CLICK ================= */
 
+function safeClick(fn) {
   if (lock) return;
   lock = true;
 
-  const userId = document
-    .getElementById("userId")
-    .value
-    .trim()
-    .toUpperCase();
+  try {
+    fn();
+  } catch (err) {
+    console.error("[SYSTEM ADMIN LOGIN ERROR]", err);
+    showMsg("❌ System Error");
+  }
 
-  const password = document
-    .getElementById("password")
-    .value
-    .trim();
+  setTimeout(function () {
+    lock = false;
+  }, 500);
+}
+
+/* ================= SAFE DECODE ================= */
+
+function safeDecode(val) {
+  try {
+    return atob(val || "");
+  } catch (e) {
+    return val || "";
+  }
+}
+
+/* ================= USERS ================= */
+
+function getSafeUsers() {
+  try {
+    return typeof getUsers === "function"
+      ? (getUsers() || [])
+      : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+/* ================= LOGIN ================= */
+
+function login() {
+  const userId =
+    document.getElementById("userId")
+      .value
+      .trim()
+      .toUpperCase();
+
+  const password =
+    document.getElementById("password")
+      .value
+      .trim();
 
   if (!userId || !password) {
     showMsg("⚠️ Enter ID & Password");
-    lock = false;
     return;
   }
 
-  const users =
-    typeof getUsers === "function"
-      ? getUsers()
-      : [];
+  const users = getSafeUsers();
 
   const user = users.find(function (u) {
     return (
@@ -88,54 +148,52 @@ function login() {
 
   if (!user) {
     showMsg("❌ Invalid ID");
-    lock = false;
     return;
   }
 
   if ((user.status || "active") !== "active") {
     showMsg("🚫 Account inactive");
-    lock = false;
     return;
   }
 
-  const storedPass = safeDecode(user.password || "");
+  const storedPass =
+    safeDecode(user.password || "");
 
   if (storedPass !== password) {
     showMsg("❌ Wrong Password");
-    lock = false;
     return;
   }
 
-  // ================= UNIFIED SESSION =================
+  /* Unified session */
   if (typeof setSession !== "function") {
     alert("Session system missing");
-    lock = false;
     return;
   }
+
+  const now = Date.now();
 
   const success = setSession({
     userId: user.userId,
-    role: user.role
+    role: user.role,
+    loginTime: now,
+    lastActivity: now
   });
 
   if (success !== true) {
     showMsg("❌ Session creation failed");
-    lock = false;
     return;
   }
 
-  // ================= ACTIVITY LOG =================
+  /* Activity log */
   if (typeof logActivity === "function") {
     try {
       logActivity(
         user.userId,
         "system_admin",
-        "Login",
+        "LOGIN",
         "ADMIN"
       );
-    } catch (e) {
-      console.warn("Activity log failed");
-    }
+    } catch (e) {}
   }
 
   showMsg("✅ Login successful");
@@ -144,27 +202,41 @@ function login() {
     window.location.replace(
       "system_admin_dashboard.html"
     );
-  }, 400);
-
-  setTimeout(function () {
-    lock = false;
-  }, 600);
+  }, 500);
 }
 
-// ================= MESSAGE =================
+/* ================= MESSAGE ================= */
+
 function showMsg(msg) {
-  const el = document.getElementById("msg");
+  const el =
+    document.getElementById("msg");
 
   if (el) {
     el.innerText = msg;
+  } else {
+    alert(msg);
   }
 }
 
-// ================= SAFE DECODE =================
-function safeDecode(val) {
-  try {
-    return atob(val || "");
-  } catch {
-    return val || "";
-  }
-}
+/* ================= EXPORT ================= */
+
+window.SystemAdminLogin = {
+  login: login,
+  showMsg: showMsg
+};
+
+/* ================= MODULE FLAGS ================= */
+
+window.__SYSTEM_ADMIN_LOGIN__ = true;
+
+window.__SYSTEM_ADMIN_LOGIN_MODULE__ = {
+  loaded: true,
+  name: "system_admin_login",
+  time: Date.now()
+};
+
+/* ================= START MODULE ================= */
+
+BOOT.start("system_admin_login");
+
+console.log("[SYSTEM ADMIN LOGIN] MODULE LOADED OK");
