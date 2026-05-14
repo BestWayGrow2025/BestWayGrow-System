@@ -3,9 +3,8 @@
 <head>
   <title>Super Admin Login</title>
   <meta charset="UTF-8">
-
-  <!-- basic safety -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:,">
 </head>
 
 <body>
@@ -32,7 +31,10 @@
 
   </div>
 
-  <!-- ================= CORE SYSTEM (MUST FIRST) ================= -->
+  <!-- ================= BOOT MANAGER ================= -->
+  <script src="boot_manager.js"></script>
+
+  <!-- ================= CORE SYSTEM ================= -->
   <script src="core_system.js"></script>
 
   <!-- ================= OPTIONAL SYSTEMS ================= -->
@@ -41,20 +43,6 @@
 
   <!-- ================= LOGIN LOGIC ================= -->
   <script src="super_admin_login.js"></script>
-
-  <!-- ================= SAFETY INIT ================= -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      // auto-bind login safely (prevents undefined click issues)
-      const btn = document.getElementById("loginBtn");
-
-      if (btn && typeof login === "function") {
-        btn.addEventListener("click", function () {
-          login();
-        });
-      }
-    });
-  </script>
 
 </body>
 </html>
