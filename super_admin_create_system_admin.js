@@ -2,12 +2,12 @@
 
 /*
 ========================================
-SUPER ADMIN CREATE SYSTEM ADMIN v3.0 FINAL CLEAN
+SUPER ADMIN CREATE SYSTEM ADMIN v3.1 FINAL SAFE BOOT
 ========================================
-✔ Single module standard
-✔ Self-coherence compatible
-✔ No duplicate flags
-✔ Production stable
+✔ Fixed DOM load race condition
+✔ No "not loaded" false failure
+✔ Stable module registration
+✔ Production ready
 ========================================
 */
 
@@ -19,13 +19,25 @@ let lock = false;
 
 console.log("[SUPER ADMIN] FILE EXECUTION STARTED");
 
-/* ================= PAGE BOOT ================= */
+/* ================= SAFE BOOT ================= */
 
-document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  checkAuth();
-  bindEvents();
-});
+function boot() {
+  try {
+    initPage();
+    checkAuth();
+    bindEvents();
+
+    console.log("[SUPER ADMIN] MODULE BOOT SUCCESS");
+  } catch (e) {
+    console.error("[SUPER ADMIN BOOT ERROR]", e);
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot);
+} else {
+  boot();
+}
 
 /* ================= INIT ================= */
 
@@ -77,6 +89,7 @@ function checkAuth() {
 /* ================= REDIRECT ================= */
 
 function redirectLogin() {
+
   if (typeof destroySession === "function") {
     destroySession();
   }
@@ -88,6 +101,7 @@ function redirectLogin() {
 /* ================= EVENTS ================= */
 
 function bindEvents() {
+
   document.addEventListener("click", function (e) {
     const btn = e.target.closest("#createBtn");
     if (!btn) return;
@@ -99,6 +113,7 @@ function bindEvents() {
 /* ================= SAFE CLICK ================= */
 
 function safeClick(fn) {
+
   if (lock) return;
   lock = true;
 
@@ -117,6 +132,7 @@ function safeClick(fn) {
 /* ================= MESSAGE ================= */
 
 function showMsg(text) {
+
   const msg = document.getElementById("msg");
   if (msg) msg.innerText = text;
 }
@@ -124,6 +140,7 @@ function showMsg(text) {
 /* ================= PASSWORD ================= */
 
 function encodePassword(p) {
+
   try {
     return btoa(p);
   } catch (e) {
@@ -183,14 +200,15 @@ function createSystemAdmin() {
   document.getElementById("sysPass").value = "";
 }
 
-/* ================= EXPORT ================= */
+/* ================= EXPORTS ================= */
 
 window.createSystemAdmin = createSystemAdmin;
 window.showMsg = showMsg;
 
-/* ================= MODULE REGISTRATION (FINAL STANDARD) ================= */
+/* ================= MODULE FLAGS ================= */
 
 window.__SUPER_ADMIN_CREATE_SYSTEM_ADMIN__ = true;
+window.super_admin_create_system_admin = true;
 
 window.__SUPER_ADMIN_MODULE__ = {
   loaded: true,
