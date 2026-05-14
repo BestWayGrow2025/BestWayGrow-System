@@ -3,6 +3,7 @@
 <head>
   <title>System Admin Create Admin</title>
   <link rel="icon" href="data:,">
+
   <style>
     body {
       font-family: Arial;
@@ -56,38 +57,45 @@
 </head>
 <body>
 
-<h2>SYSTEM ADMIN → CREATE ADMIN</h2>
+  <h2>SYSTEM ADMIN → CREATE ADMIN</h2>
 
-<div class="box">
-  <label>Admin ID</label>
-  <input id="adminId">
+  <div class="box">
+    <label>Admin ID</label>
+    <input id="adminId">
 
-  <label>Name</label>
-  <input id="name">
+    <label>Name</label>
+    <input id="name">
 
-  <label>Password</label>
-  <input id="password" type="password">
+    <label>Password</label>
+    <input id="password" type="password">
 
-  <label>Admin Type</label>
-  <select id="adminType">
-    <option value="root_admin">Root Admin (User Tree)</option>
-    <option value="admin_a">Admin A (Full Access)</option>
-    <option value="admin_b">Admin B (Department Access)</option>
-  </select>
+    <label>Admin Type</label>
+    <select id="adminType">
+      <option value="root_admin">Root Admin (User Tree)</option>
+      <option value="admin_a">Admin A (Full Access)</option>
+      <option value="admin_b">Admin B (Department Access)</option>
+    </select>
 
-  <div id="deptBox">
-    <label><input type="checkbox" value="finance"> Finance</label><br>
-    <label><input type="checkbox" value="franchisee"> Franchisee</label><br>
-    <label><input type="checkbox" value="kyc"> KYC</label><br>
+    <div id="deptBox">
+      <label><input type="checkbox" value="finance"> Finance</label><br>
+      <label><input type="checkbox" value="franchisee"> Franchisee</label><br>
+      <label><input type="checkbox" value="kyc"> KYC</label><br>
+    </div>
+
+    <button id="createBtn">Create Admin</button>
+    <p id="msg"></p>
   </div>
 
-  <button id="createBtn">Create Admin</button>
-  <p id="msg"></p>
-</div>
+  <!-- BOOT ARCHITECTURE V2 -->
+  <script src="boot_manager.js"></script>
 
-<script src="core_system.js"></script>
-<script src="session_manager.js"></script>
-<script src="system_admin_create_admin.js"></script>
+  <!-- CORE DEPENDENCIES -->
+  <script src="core_system.js"></script>
+  <script src="session_manager.js"></script>
+
+  <!-- PAGE MODULE -->
+  <script src="system_admin_create_admin.js"></script>
+
 </body>
 </html>
 
