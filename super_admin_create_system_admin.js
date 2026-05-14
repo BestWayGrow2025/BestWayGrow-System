@@ -2,12 +2,12 @@
 
 /*
 ========================================
-SUPER ADMIN CREATE SYSTEM ADMIN v2.1 FINAL SAFE
+SUPER ADMIN CREATE SYSTEM ADMIN v3.0 FINAL CLEAN
 ========================================
-✔ Safe boot guaranteed
-✔ No ReferenceError risk
-✔ Stable module flag
-✔ Production ready
+✔ Single module standard
+✔ Self-coherence compatible
+✔ No duplicate flags
+✔ Production stable
 ========================================
 */
 
@@ -77,7 +77,6 @@ function checkAuth() {
 /* ================= REDIRECT ================= */
 
 function redirectLogin() {
-
   if (typeof destroySession === "function") {
     destroySession();
   }
@@ -89,7 +88,6 @@ function redirectLogin() {
 /* ================= EVENTS ================= */
 
 function bindEvents() {
-
   document.addEventListener("click", function (e) {
     const btn = e.target.closest("#createBtn");
     if (!btn) return;
@@ -101,7 +99,6 @@ function bindEvents() {
 /* ================= SAFE CLICK ================= */
 
 function safeClick(fn) {
-
   if (lock) return;
   lock = true;
 
@@ -186,22 +183,19 @@ function createSystemAdmin() {
   document.getElementById("sysPass").value = "";
 }
 
-/* ================= EXPORT SAFE ================= */
+/* ================= EXPORT ================= */
 
 window.createSystemAdmin = createSystemAdmin;
 window.showMsg = showMsg;
 
-/* ================= MODULE FLAG (SAFE CHECK STANDARD) ================= */
+/* ================= MODULE REGISTRATION (FINAL STANDARD) ================= */
 
 window.__SUPER_ADMIN_CREATE_SYSTEM_ADMIN__ = true;
 
-/* ================= SAFE GLOBAL CHECK HELPERS ================= */
-
-// ALWAYS USE THIS IN DASHBOARD
-window.isSuperAdminModuleLoaded = function () {
-  return window.__SUPER_ADMIN_CREATE_SYSTEM_ADMIN__ === true;
+window.__SUPER_ADMIN_MODULE__ = {
+  loaded: true,
+  name: "super_admin_create_system_admin",
+  time: Date.now()
 };
 
-/* ================= FINAL CONFIRMATION ================= */
-
-console.log("[SUPER ADMIN CREATE SYSTEM ADMIN] MODULE LOADED SUCCESSFULLY");
+console.log("[SUPER ADMIN CREATE SYSTEM ADMIN] MODULE LOADED OK");
