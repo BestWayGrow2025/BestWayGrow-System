@@ -79,8 +79,7 @@
     }
 
     table {
-      width: 100%;
-      border-collapse: collapse;
+      width: 100%;n      border-collapse: collapse;
       margin-top: 10px;
     }
 
@@ -92,7 +91,6 @@
 
     table th { background: #f7f7f7; }
 
-    /* ================= PANELS ================= */
     #eventMonitorPanel,
     #systemBackupPanel,
     #systemAuditPanel,
@@ -126,7 +124,6 @@
   <button id="logoutBtn">Logout</button>
 </header>
 
-<!-- ================= MENU ================= -->
 <div class="menu">
   <button data-page="home">🏠 Home</button>
   <button data-page="create">👑 Create Sys Admin</button>
@@ -136,9 +133,7 @@
   <button data-page="reset">♻️ Reset</button>
 </div>
 
-<!-- ================= MAIN CONTENT ================= -->
 <div class="container">
-
   <div id="mainContent" class="card"></div>
 
   <div id="eventMonitorPanel"></div>
@@ -147,15 +142,17 @@
   <div id="systemControlRoomPanel"></div>
   <div id="systemHealthPanel"></div>
   <div id="systemEventStreamPanel"></div>
-
 </div>
+
+<!-- ================= BOOT MANAGER ================= -->
+<script src="boot_manager.js"></script>
 
 <!-- ================= CORE ================= -->
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
 <script src="route_guard.js"></script>
 
-<!-- ================= BOOT MODE (ONLY ONCE) ================= -->
+<!-- ================= BOOT MODE ================= -->
 <script>
 window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
 </script>
