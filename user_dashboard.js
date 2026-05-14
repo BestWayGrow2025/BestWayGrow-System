@@ -1,63 +1,175 @@
+"use strict";
+
 /*
 ========================================
-USER DASHBOARD FINAL V8.3 (STABILITY PATCH)
+USER DASHBOARD FINAL V9.0 BOOT VERSION
+========================================
+✔ Boot Architecture V2 compatible
+✔ Unified session authentication
+✔ Route guard integration
+✔ Strict user-only access
+✔ Safe logout
+✔ Tree counting
+✔ PIN request integration
+✔ Direct team viewer
+✔ Referral link copy
+✔ Production READY
 ========================================
 */
 
-function getSafeUser() {
+let currentUser = null;
 
-  const user =
-    typeof getCurrentUser === "function"
-      ? getCurrentUser()
-      : null;
+/* ================= MODULE REGISTRATION ================= */
 
-  const main = document.getElementById("mainContent");
+BOOT.register("user_dashboard", function () {
+  initPage();
 
-  if (!user) {
-
-    if (main) {
-      main.innerHTML = "<div class='info-box'>Login Required</div>";
-    }
-
-    return null;
+  if (!authPage()) {
+    window.location.href = "user_login.html";
+    return;
   }
 
-  return user;
+  bindEvents();
+  loadHome();
+});
+
+/* ================= INIT ================= */
+
+function initPage() {
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  } else {
+    alert("❌ core_system.js missing");
+    throw new Error("STOP");
+  }
 }
 
-// ================= USERS =================
+/* ================= AUTH ================= */
+
+function authPage() {
+  if (typeof requireAuth === "function") {
+    const ok = requireAuth(["user"]);
+    if (ok === false) return false;
+  }
+
+  const session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
+
+  if (!session || session.role !== "user") {
+    return false;
+  }
+
+  currentUser =
+    typeof getCurrentUser === "function"
+      ? getCurrentUser()
+      : (
+          typeof getUserById === "function"
+            ? getUserById(session.userId)
+            : null
+        );
+
+  if (!currentUser) {
+    return false;
+  }
+
+  const status =
+    currentUser.status ||
+    currentUser.accountStatus ||
+    "active";
+
+  if (status !== "active") {
+    logout();
+    return false;
+  }
+
+  const welcome =
+    document.getElementById("welcome");
+
+  if (welcome) {
+    welcome.innerText =
+      "Welcome " +
+      (currentUser.username || currentUser.userId) +
+      " (" +
+      currentUser.userId +
+      ")";
+  }
+
+  return true;
+}
+
+/* ================= EVENTS ================= */
+
+function bindEvents() {
+  const logoutBtn =
+    document.getElementById("logoutBtn");
+
+  if (logoutBtn) {
+    logoutBtn.onclick = logout;
+  }
+}
+
+/* ================= SAFE HELPERS ================= */
+
+function getSafeUser() {
+  return currentUser;
+}
+
 function getAllUsers() {
-  return typeof getUsers === "function" ? getUsers() : [];
+  return typeof getUsers === "function"
+    ? getUsers()
+    : [];
 }
 
-// ================= TREE =================
-function countTree(userId, users) {
+/* ================= TREE COUNT ================= */
 
-  let user = users.find(u => u.userId === userId);
-  if (!user) return { left: 0, right: 0, total: 0 };
+function countTree(userId, users) {
+  const user =
+    users.find(function (u) {
+      return u.userId === userId;
+    });
+
+  if (!user) {
+    return { left: 0, right: 0, total: 0 };
+  }
 
   function traverse(id) {
     if (!id) return 0;
 
-    let node = users.find(u => u.userId === id);
+    const node =
+      users.find(function (u) {
+        return u.userId === id;
+      });
+
     if (!node) return 0;
 
-    return 1 + traverse(node.leftChild) + traverse(node.rightChild);
+    return (
+      1 +
+      traverse(node.leftChild) +
+      traverse(node.rightChild)
+    );
   }
 
-  let left = traverse(user.leftChild);
-  let right = traverse(user.rightChild);
+  const left = traverse(user.leftChild);
+  const right = traverse(user.rightChild);
 
-  return { left, right, total: left + right };
+  return {
+    left: left,
+    right: right,
+    total: left + right
+  };
 }
 
-// ================= HOME =================
-function loadHome() {
+/* ================= HOME ================= */
 
+function loadHome() {
   const user = getSafeUser();
   if (!user) return;
 
-  const main = document.getElementById("mainContent");
+  const main =
+    document.getElementById("mainContent");
+
   if (!main) return;
 
   const users = getAllUsers();
@@ -94,13 +206,15 @@ function loadHome() {
   `;
 }
 
-// ================= PIN SECTION =================
-function loadPinSection() {
+/* ================= PIN SECTION ================= */
 
+function loadPinSection() {
   const user = getSafeUser();
   if (!user) return;
 
-  const main = document.getElementById("mainContent");
+  const main =
+    document.getElementById("mainContent");
+
   if (!main) return;
 
   main.innerHTML = `
@@ -113,107 +227,114 @@ function loadPinSection() {
   `;
 }
 
-// ================= REQUEST PIN =================
-function requestPin() {
+/* ================= REQUEST PIN ================= */
 
+function requestPin() {
   const user = getSafeUser();
   if (!user) return;
 
-  const amount = Number(document.getElementById("pinAmount").value);
-  const paymentId = document.getElementById("pinPaymentId").value;
+  const amount =
+    Number(document.getElementById("pinAmount").value);
+
+  const paymentId =
+    document.getElementById("pinPaymentId").value.trim();
 
   try {
-
     if (typeof executePinFlow !== "function") {
       throw new Error("Flow engine missing");
     }
 
     executePinFlow("REQUEST_PIN", {
       type: "upgrade",
-      amount,
-      paymentId
+      amount: amount,
+      paymentId: paymentId
     });
 
     alert("PIN Request Submitted");
-
   } catch (err) {
     alert(err.message);
   }
 }
 
-// ================= DIRECT TEAM =================
-function loadDirectTeam() {
+/* ================= DIRECT TEAM ================= */
 
+function loadDirectTeam() {
   const user = getSafeUser();
   if (!user) return;
 
-  const main = document.getElementById("mainContent");
+  const main =
+    document.getElementById("mainContent");
+
   if (!main) return;
 
   const users = getAllUsers();
-  const list = users.filter(u => u.introducerId === user.userId);
 
-  let html = `<h3>Direct Team</h3><table><tr><th>ID</th><th>Name</th></tr>`;
+  const list =
+    users.filter(function (u) {
+      return u.introducerId === user.userId;
+    });
 
-  list.forEach(u => {
-    html += `<tr><td>${u.userId}</td><td>${u.username}</td></tr>`;
+  let html =
+    `<h3>Direct Team</h3>
+     <table>
+       <tr>
+         <th>ID</th>
+         <th>Name</th>
+       </tr>`;
+
+  list.forEach(function (u) {
+    html += `
+      <tr>
+        <td>${u.userId}</td>
+        <td>${u.username || "-"}</td>
+      </tr>
+    `;
   });
 
   html += `</table>`;
+
   main.innerHTML = html;
 }
 
-// ================= COPY =================
-function copyReferralLink() {
+/* ================= REFERRAL COPY ================= */
 
-  const box = document.getElementById("referralLinkBox");
+function copyReferralLink() {
+  const box =
+    document.getElementById("referralLinkBox");
+
   if (!box) return;
 
-  navigator.clipboard.writeText(box.value)
-    .then(() => alert("Copied"));
+  navigator.clipboard
+    .writeText(box.value)
+    .then(function () {
+      alert("Copied");
+    });
 }
 
-// ================= LOGOUT FIXED =================
-function logout() {
+/* ================= LOGOUT ================= */
 
-  // FIX: unified session system
+function logout() {
   if (typeof logoutSession === "function") {
     logoutSession();
-  } else if (typeof destroySession === "function") {
+    return;
+  }
+
+  if (typeof destroySession === "function") {
     destroySession();
   }
 
   window.location.replace("user_login.html");
 }
 
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
+/* ================= EXPORT ================= */
 
-  if (typeof requireAuth === "function") {
-
-    // FIX: tighten role to actual dashboard ownership
-    const ok = requireAuth(["user"]);
-
-    if (ok === false) return;
-  }
-
-  const user = getSafeUser();
-  if (!user) return;
-
-  const welcome = document.getElementById("welcome");
-  if (welcome) {
-    welcome.innerText = `Welcome ${user.username} (${user.userId})`;
-  }
-
-  loadHome();
-
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) logoutBtn.onclick = logout;
-});
-
-// ================= EXPORT =================
 window.loadHome = loadHome;
 window.loadPinSection = loadPinSection;
 window.loadDirectTeam = loadDirectTeam;
-
+window.copyReferralLink = copyReferralLink;
+window.requestPin = requestPin;
 window.logout = logout;
+
+/* ================= START MODULE ================= */
+
+BOOT.start("user_dashboard");
