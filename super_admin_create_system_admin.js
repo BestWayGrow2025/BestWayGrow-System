@@ -191,20 +191,15 @@ function createSystemAdmin() {
   document.getElementById("sysPass").value = "";
 }
 
-/* ================= EXPORT (CRITICAL FIX) ================= */
+/* ================= EXPORT ================= */
 
 window.createSystemAdmin = createSystemAdmin;
 window.showMsg = showMsg;
 
-/* ================= LOAD FLAG (THIS FIXES YOUR ERROR) ================= */
+/* ================= LOAD FLAG (FIXED STANDARD) ================= */
 
-window.createSystemAdmin = createSystemAdmin;
-window.showMsg = showMsg;
+window.super_admin_create_system_admin = true;
 
-window.__SUPER_ADMIN_MODULE__ = {
-  loaded: true,
-  name: "super_admin_create_system_admin",
-  time: Date.now()
-};
+/* ================= FINAL CONFIRMATION ================= */
 
-console.log("[SUPER ADMIN] MODULE READY");
+console.log("[SUPER ADMIN CREATE SYSTEM ADMIN] MODULE LOADED SUCCESSFULLY");
