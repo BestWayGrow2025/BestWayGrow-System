@@ -1,23 +1,33 @@
+"use strict";
+
 /*
 ========================================
-SUPER ADMIN LOGIN V3.1 (UNIFIED FINAL FIX)
+SUPER ADMIN LOGIN V4.0 FINAL BOOT
 ========================================
-✔ Fully session_manager compatible
-✔ Role secured
-✔ Token-safe session creation
+✔ Boot Architecture V2 compatible
+✔ Single initialization point
+✔ Unified session_manager.js
+✔ Safe login lock
+✔ Automatic redirect if already logged in
+✔ Strict super_admin role validation
 ✔ Production stable
 ========================================
 */
 
+console.log("[SUPER ADMIN LOGIN] FILE EXECUTION STARTED");
+
 let lock = false;
 
-document.addEventListener("DOMContentLoaded", function () {
+/* ================= MODULE REGISTRATION ================= */
+
+BOOT.register("super_admin_login", function () {
   initPage();
   bindEvents();
   loadPage();
 });
 
-// ================= INIT =================
+/* ================= INIT ================= */
+
 function initPage() {
   if (typeof initCoreSystem !== "function") {
     alert("❌ core_system.js not loaded");
@@ -27,27 +37,47 @@ function initPage() {
   initCoreSystem();
 }
 
-// ================= EVENTS =================
+/* ================= EVENTS ================= */
+
 function bindEvents() {
   const btn = document.getElementById("loginBtn");
 
-  if (btn) {
+  if (btn && !btn.dataset.bound) {
+    btn.dataset.bound = "true";
+
     btn.addEventListener("click", function () {
       safeClick(login);
     });
   }
+
+  const password = document.getElementById("password");
+
+  if (password && !password.dataset.bound) {
+    password.dataset.bound = "true";
+
+    password.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        safeClick(login);
+      }
+    });
+  }
 }
 
-// ================= AUTO REDIRECT =================
+/* ================= AUTO REDIRECT ================= */
+
 function loadPage() {
-  let session = typeof getSession === "function" ? getSession() : null;
+  const session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
 
   if (session && session.role === "super_admin") {
     window.location.href = "super_admin_dashboard.html";
   }
 }
 
-// ================= SAFE CLICK =================
+/* ================= SAFE CLICK ================= */
+
 function safeClick(fn) {
   if (lock) return;
   lock = true;
@@ -55,55 +85,66 @@ function safeClick(fn) {
   try {
     fn();
   } catch (err) {
-    console.error(err);
+    console.error("[SUPER ADMIN LOGIN ERROR]", err);
+    showMsg("❌ System Error");
   }
 
-  setTimeout(() => {
+  setTimeout(function () {
     lock = false;
   }, 500);
 }
 
-// ================= SAFE DECODE =================
+/* ================= SAFE DECODE ================= */
+
 function safeDecode(value) {
   try {
     return atob(value || "");
-  } catch {
+  } catch (e) {
     return value || "";
   }
 }
 
-// ================= USERS =================
+/* ================= USERS ================= */
+
 function getSafeUsers() {
   try {
-    return typeof getUsers === "function" ? getUsers() : [];
-  } catch {
+    return typeof getUsers === "function"
+      ? (getUsers() || [])
+      : [];
+  } catch (e) {
     return [];
   }
 }
 
-// ================= LOGIN =================
-function login() {
+/* ================= LOGIN ================= */
 
-  let userId = document.getElementById("userId").value.trim();
-  let password = document.getElementById("password").value.trim();
+function login() {
+  const userId =
+    document.getElementById("userId").value.trim();
+
+  const password =
+    document.getElementById("password").value.trim();
 
   if (!userId || !password) {
     showMsg("⚠️ Enter ID & Password");
     return;
   }
 
-  let users = getSafeUsers();
+  const users = getSafeUsers();
 
-  let user = users.find(u =>
-    String(u.userId || "").toUpperCase() === userId.toUpperCase()
-  );
+  const user = users.find(function (u) {
+    return (
+      String(u.userId || "").toUpperCase() ===
+      userId.toUpperCase()
+    );
+  });
 
   if (!user) {
     showMsg("❌ Invalid ID");
     return;
   }
 
-  // 🔒 STRICT ROLE CHECK (FIX)
+  /* Strict role check */
   if (user.role !== "super_admin") {
     showMsg("🚫 Access Denied");
     return;
@@ -114,14 +155,14 @@ function login() {
     return;
   }
 
-  let storedPass = safeDecode(user.password);
+  const storedPass = safeDecode(user.password);
 
   if (storedPass !== password) {
     showMsg("❌ Wrong Password");
     return;
   }
 
-  // ================= UNIFIED SESSION =================
+  /* Unified session */
   if (typeof setSession !== "function") {
     alert("Session system missing");
     return;
@@ -136,22 +177,31 @@ function login() {
     lastActivity: now
   });
 
+  /* Activity log */
   if (typeof logActivity === "function") {
     try {
-      logActivity(user.userId, "super_admin", "Login", "ADMIN");
+      logActivity(
+        user.userId,
+        "super_admin",
+        "LOGIN",
+        "ADMIN"
+      );
     } catch (e) {}
   }
 
   showMsg("✅ Login successful");
 
-  setTimeout(() => {
-    window.location.href = "super_admin_dashboard.html";
+  setTimeout(function () {
+    window.location.href =
+      "super_admin_dashboard.html";
   }, 500);
 }
 
-// ================= MESSAGE =================
+/* ================= MESSAGE ================= */
+
 function showMsg(text) {
-  let msg = document.getElementById("msg");
+  const msg =
+    document.getElementById("msg");
 
   if (msg) {
     msg.innerText = text;
@@ -160,3 +210,25 @@ function showMsg(text) {
   }
 }
 
+/* ================= EXPORT ================= */
+
+window.SuperAdminLogin = {
+  login: login,
+  showMsg: showMsg
+};
+
+/* ================= MODULE FLAGS ================= */
+
+window.__SUPER_ADMIN_LOGIN__ = true;
+
+window.__SUPER_ADMIN_LOGIN_MODULE__ = {
+  loaded: true,
+  name: "super_admin_login",
+  time: Date.now()
+};
+
+/* ================= START MODULE ================= */
+
+BOOT.start("super_admin_login");
+
+console.log("[SUPER ADMIN LOGIN] MODULE LOADED OK");
