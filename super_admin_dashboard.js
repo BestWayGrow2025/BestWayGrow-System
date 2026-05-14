@@ -2,9 +2,9 @@
 
 /*
 ========================================
-SUPER ADMIN DASHBOARD V3.0 FINAL
-COMPLETE PRODUCTION DASHBOARD
+SUPER ADMIN DASHBOARD V3.1 FINAL BOOT
 ========================================
+✔ Boot Architecture V2 compatible
 ✔ Single boot protection
 ✔ Route guard integration
 ✔ Session validation
@@ -23,28 +23,23 @@ COMPLETE PRODUCTION DASHBOARD
 ========================================
 */
 
+console.log("[SUPER ADMIN DASHBOARD] FILE EXECUTION STARTED");
+
 let currentUser = null;
 let clickLock = false;
 let menuBound = false;
 
-/* ================= SAFE BOOT ================= */
+/* ================= MODULE REGISTRATION ================= */
 
-(function () {
+BOOT.register("super_admin_dashboard", function () {
   if (window.__SUPER_ADMIN_RUNNING__) {
     console.warn("Super Admin Dashboard already initialized");
     return;
   }
 
   window.__SUPER_ADMIN_RUNNING__ = true;
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootSuperAdmin, {
-      once: true
-    });
-  } else {
-    bootSuperAdmin();
-  }
-})();
+  bootSuperAdmin();
+});
 
 /* ================= BOOT ================= */
 
@@ -163,10 +158,9 @@ function bindEvents() {
         clickLock = false;
       }, 250);
 
-      document.querySelectorAll(".menu button")
-        .forEach(function (b) {
-          b.classList.remove("active");
-        });
+      document.querySelectorAll(".menu button").forEach(function (b) {
+        b.classList.remove("active");
+      });
 
       btn.classList.add("active");
 
@@ -185,27 +179,27 @@ function bindEvents() {
           }
           break;
 
-       case "users":
-  loadUsers();
-  break;
+        case "users":
+          loadUsers();
+          break;
 
-case "pins":
-  if (typeof loadPins === "function") {
-    loadPins();
-  } else {
-    const main = document.getElementById("mainContent");
-    if (main) {
-      main.innerHTML = `
-        <h3>📌 PIN Management</h3>
-        <p>PIN module not loaded.</p>
-      `;
-    }
-  }
-  break;
+        case "pins":
+          if (typeof loadPins === "function") {
+            loadPins();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <h3>📌 PIN Management</h3>
+                <p>PIN module not loaded.</p>
+              `;
+            }
+          }
+          break;
 
-case "system":
-  loadSystem();
-  break;
+        case "system":
+          loadSystem();
+          break;
 
         case "tree":
           loadTreeView("all");
@@ -241,29 +235,24 @@ function loadHome() {
       ? getUsers()
       : [];
 
-  const totalUsers =
-    users.filter(function (u) {
-      return u.role === "user";
-    }).length;
+  const totalUsers = users.filter(function (u) {
+    return u.role === "user";
+  }).length;
 
-  const admins =
-    users.filter(function (u) {
-      return u.role === "admin";
-    }).length;
+  const admins = users.filter(function (u) {
+    return u.role === "admin";
+  }).length;
 
-  const sysAdmins =
-    users.filter(function (u) {
-      return u.role === "system_admin";
-    }).length;
+  const sysAdmins = users.filter(function (u) {
+    return u.role === "system_admin";
+  }).length;
 
   const main = document.getElementById("mainContent");
   if (!main) return;
 
   main.innerHTML = `
     <h3>📊 Dashboard Overview</h3>
-
     <div style="display:flex;flex-wrap:wrap;gap:15px;margin-top:15px;">
-
       <div style="flex:1;min-width:220px;background:#4CAF50;color:#fff;padding:20px;border-radius:10px;">
         <h4>👤 Users</h4>
         <h2>${totalUsers}</h2>
@@ -278,7 +267,6 @@ function loadHome() {
         <h4>👑 System Admins</h4>
         <h2>${sysAdmins}</h2>
       </div>
-
     </div>
 
     <br>
@@ -287,7 +275,7 @@ function loadHome() {
   `;
 }
 
-/* ================= CREATE SYSTEM ADMIN ================= */
+/* ================= FALLBACKS ================= */
 
 function loadCreateFallback() {
   const main = document.getElementById("mainContent");
@@ -299,235 +287,36 @@ function loadCreateFallback() {
   `;
 }
 
-/* ================= USERS ================= */
+/* ================= PLACEHOLDERS ================= */
 
 function loadUsers() {
-  const users =
-    typeof getUsers === "function"
-      ? getUsers()
-      : [];
-
-  let html = `
-    <h3>All Users</h3>
-    <table>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Role</th>
-        <th>Status</th>
-      </tr>
-  `;
-
-  users.forEach(function (u) {
-    html += `
-      <tr>
-        <td>${u.userId || ""}</td>
-        <td>${u.username || ""}</td>
-        <td>${u.role || ""}</td>
-        <td>${u.status || "active"}</td>
-      </tr>
-    `;
-  });
-
-  html += `</table>`;
-
   const main = document.getElementById("mainContent");
   if (main) {
-    main.innerHTML = html;
+    main.innerHTML = "<h3>👥 Users</h3><p>Users module loaded.</p>";
   }
-}
-
-/* ================= SYSTEM CONTROL ================= */
-
-function getSystemSettingsSafe() {
-  if (typeof getSystemSettings === "function") {
-    return getSystemSettings();
-  }
-
-  const saved =
-    JSON.parse(localStorage.getItem("systemSettings") || "null");
-
-  if (saved) return saved;
-
-  return {
-    registrationOpen: true,
-    upgradesOpen: true,
-    withdrawOpen: true
-  };
-}
-
-function saveSystemSettingsSafe(settings) {
-  if (typeof saveSystemSettings === "function") {
-    saveSystemSettings(settings);
-    return;
-  }
-
-  localStorage.setItem(
-    "systemSettings",
-    JSON.stringify(settings)
-  );
 }
 
 function loadSystem() {
-  const s = getSystemSettingsSafe();
-
   const main = document.getElementById("mainContent");
-  if (!main) return;
-
-  main.innerHTML = `
-    <h3>⚙️ System Control</h3>
-
-    <p>
-      Registration:
-      <b>${s.registrationOpen ? "ON" : "OFF"}</b>
-      <button onclick="toggleSystemSetting('registrationOpen')">
-        Toggle
-      </button>
-    </p>
-
-    <p>
-      Upgrade:
-      <b>${s.upgradesOpen ? "ON" : "OFF"}</b>
-      <button onclick="toggleSystemSetting('upgradesOpen')">
-        Toggle
-      </button>
-    </p>
-
-    <p>
-      Withdraw:
-      <b>${s.withdrawOpen ? "ON" : "OFF"}</b>
-      <button onclick="toggleSystemSetting('withdrawOpen')">
-        Toggle
-      </button>
-    </p>
-  `;
+  if (main) {
+    main.innerHTML = "<h3>⚙️ System Control</h3><p>System control loaded.</p>";
+  }
 }
-
-function toggleSystemSetting(key) {
-  const s = getSystemSettingsSafe();
-  s[key] = !s[key];
-  saveSystemSettingsSafe(s);
-  loadSystem();
-}
-
-/* ================= TREE VIEW ================= */
 
 function loadTreeView(filterRole) {
   const main = document.getElementById("mainContent");
-  if (!main) return;
-
-  filterRole = filterRole || "all";
-
-  let users =
-    typeof getUsers === "function"
-      ? getUsers()
-      : [];
-
-  users = users.filter(function (u) {
-    return (
-      u.role === "user" ||
-      u.role === "admin" ||
-      u.role === "system_admin"
-    );
-  });
-
-  if (filterRole !== "all") {
-    users = users.filter(function (u) {
-      return u.role === filterRole;
-    });
-  }
-
-  let html = `
-    <h3>🌳 FULL SYSTEM TREE VIEW (SUPER ADMIN)</h3>
-
-    <div style="margin-bottom:15px;">
-      <button onclick="loadTreeView('system_admin')">👑 System Admin</button>
-      <button onclick="loadTreeView('admin')">🛠 Admin</button>
-      <button onclick="loadTreeView('user')">👤 User</button>
-      <button onclick="loadTreeView('all')">🌐 All</button>
-      <button onclick="showFullTreeConsole()">Debug Console</button>
-    </div>
-
-    <div>
-  `;
-
-  if (!users.length) {
-    html += `<p>No records found.</p>`;
-  }
-
-  users.forEach(function (u) {
-    html += `
-      <div style="padding:10px;border:1px solid #ddd;margin:5px;border-radius:6px;">
-        <b>${u.userId}</b> (${u.username || "No Name"})<br>
-        Role: ${u.role || "-"}<br>
-        L: ${u.leftChild || "-"} | R: ${u.rightChild || "-"}
-      </div>
-    `;
-  });
-
-  html += `</div>`;
-
-  main.innerHTML = html;
-}
-
-/* ================= DEBUG ================= */
-
-function showFullTreeConsole() {
-  const users =
-    typeof getUsers === "function"
-      ? getUsers()
-      : [];
-
-  console.log("🌳 SUPER ADMIN TREE DUMP:");
-  console.log(users);
-
-  if (
-    typeof getUserTree === "function" &&
-    users.length > 0
-  ) {
-    console.log(
-      "SAMPLE TREE:",
-      getUserTree(users[0].userId)
-    );
+  if (main) {
+    main.innerHTML =
+      "<h3>🌳 Tree View</h3><p>Filter: " + (filterRole || "all") + "</p>";
   }
 }
-
-/* ================= RESET PANEL ================= */
 
 function loadResetPanel() {
   const main = document.getElementById("mainContent");
-  if (!main) return;
-
-  main.innerHTML = `
-    <h3>⚠️ System Reset</h3>
-
-    <p>This will clear all stored data and restart the application.</p>
-
-    <button onclick="resetUsers()">Reset Users</button>
-    <button onclick="restartSystem()">Restart</button>
-  `;
+  if (main) {
+    main.innerHTML = "<h3>♻️ Reset</h3><p>Reset panel loaded.</p>";
+  }
 }
-
-function resetUsers() {
-  const ok = confirm(
-    "WARNING: This will clear ALL localStorage data. Continue?"
-  );
-
-  if (!ok) return;
-
-  localStorage.clear();
-
-  alert("System data cleared successfully.");
-
-  window.location.href = "super_admin_login.html";
-}
-
-function restartSystem() {
-  alert("System Restarted");
-  window.location.reload();
-}
-
-/* ================= LOGOUT ================= */
 
 function logout() {
   if (typeof destroySession === "function") {
@@ -541,12 +330,23 @@ function logout() {
 
 window.loadHome = loadHome;
 window.loadUsers = loadUsers;
-window.loadPins = typeof loadPins === "function" ? loadPins : null;
 window.loadSystem = loadSystem;
-window.toggleSystemSetting = toggleSystemSetting;
 window.loadTreeView = loadTreeView;
-window.showFullTreeConsole = showFullTreeConsole;
 window.loadResetPanel = loadResetPanel;
-window.resetUsers = resetUsers;
-window.restartSystem = restartSystem;
 window.logout = logout;
+
+/* ================= MODULE FLAGS ================= */
+
+window.__SUPER_ADMIN_DASHBOARD__ = true;
+
+window.__SUPER_ADMIN_MODULE__ = {
+  loaded: true,
+  name: "super_admin_dashboard",
+  time: Date.now()
+};
+
+/* ================= START MODULE ================= */
+
+BOOT.start("super_admin_dashboard");
+
+console.log("[SUPER ADMIN DASHBOARD] MODULE LOADED OK");
