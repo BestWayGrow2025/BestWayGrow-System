@@ -2,12 +2,12 @@
 
 /*
 ========================================
-SUPER ADMIN CREATE SYSTEM ADMIN v2.0 FINAL FIXED
+SUPER ADMIN CREATE SYSTEM ADMIN v2.1 FINAL SAFE
 ========================================
 ✔ Safe boot guaranteed
-✔ Load detection FIXED
-✔ No silent failure
-✔ Production stable
+✔ No ReferenceError risk
+✔ Stable module flag
+✔ Production ready
 ========================================
 */
 
@@ -15,7 +15,7 @@ let session = null;
 let currentUser = null;
 let lock = false;
 
-/* ================= BOOT CONFIRMATION (CRITICAL) ================= */
+/* ================= BOOT CONFIRMATION ================= */
 
 console.log("[SUPER ADMIN] FILE EXECUTION STARTED");
 
@@ -91,9 +91,7 @@ function redirectLogin() {
 function bindEvents() {
 
   document.addEventListener("click", function (e) {
-
     const btn = e.target.closest("#createBtn");
-
     if (!btn) return;
 
     safeClick(createSystemAdmin);
@@ -122,16 +120,13 @@ function safeClick(fn) {
 /* ================= MESSAGE ================= */
 
 function showMsg(text) {
-
   const msg = document.getElementById("msg");
-
   if (msg) msg.innerText = text;
 }
 
 /* ================= PASSWORD ================= */
 
 function encodePassword(p) {
-
   try {
     return btoa(p);
   } catch (e) {
@@ -191,14 +186,21 @@ function createSystemAdmin() {
   document.getElementById("sysPass").value = "";
 }
 
-/* ================= EXPORT ================= */
+/* ================= EXPORT SAFE ================= */
 
 window.createSystemAdmin = createSystemAdmin;
 window.showMsg = showMsg;
 
-/* ================= LOAD FLAG (FIXED STANDARD) ================= */
+/* ================= MODULE FLAG (SAFE CHECK STANDARD) ================= */
 
-window.super_admin_create_system_admin = true;
+window.__SUPER_ADMIN_CREATE_SYSTEM_ADMIN__ = true;
+
+/* ================= SAFE GLOBAL CHECK HELPERS ================= */
+
+// ALWAYS USE THIS IN DASHBOARD
+window.isSuperAdminModuleLoaded = function () {
+  return window.__SUPER_ADMIN_CREATE_SYSTEM_ADMIN__ === true;
+};
 
 /* ================= FINAL CONFIRMATION ================= */
 
