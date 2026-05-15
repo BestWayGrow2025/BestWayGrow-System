@@ -14,7 +14,11 @@ REGISTRATION QUEUE SYSTEM v10.2 (FINAL FIXED)
 var REG_QUEUE_KEY = "REG_QUEUE_DATA";
 var REG_QUEUE_ARCHIVE_KEY = "REG_QUEUE_ARCHIVE";
 var REG_LOCK_KEY = "REG_QUEUE_LOCK";
-var REG_LOCK_OWNER = "TAB_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+var REG_LOCK_OWNER =
+  "TAB_" +
+  Date.now() +
+  "_" +
+  Math.random().toString(36).slice(2, 8);
 
 var REG_MAX_BATCH = 5;
 var REG_FAILED_TTL = 24 * 60 * 60 * 1000;
@@ -24,7 +28,9 @@ var REG_ACTIVE_TIMER = null;
 // ================= LOAD / SAVE =================
 function getRegQueue() {
   try {
-    let data = JSON.parse(localStorage.getItem(REG_QUEUE_KEY));
+    let data = JSON.parse(
+      localStorage.getItem(REG_QUEUE_KEY)
+    );
     return Array.isArray(data) ? data : [];
   } catch (e) {
     localStorage.setItem(REG_QUEUE_KEY, "[]");
@@ -33,23 +39,44 @@ function getRegQueue() {
 }
 
 function saveRegQueue(data) {
-  localStorage.setItem(REG_QUEUE_KEY, JSON.stringify(Array.isArray(data) ? data : []));
+  localStorage.setItem(
+    REG_QUEUE_KEY,
+    JSON.stringify(
+      Array.isArray(data) ? data : []
+    )
+  );
 }
 
 function getRegArchive() {
   try {
-    let data = JSON.parse(localStorage.getItem(REG_QUEUE_ARCHIVE_KEY));
+    let data = JSON.parse(
+      localStorage.getItem(
+        REG_QUEUE_ARCHIVE_KEY
+      )
+    );
     return Array.isArray(data) ? data : [];
   } catch (e) {
-    localStorage.setItem(REG_QUEUE_ARCHIVE_KEY, "[]");
+    localStorage.setItem(
+      REG_QUEUE_ARCHIVE_KEY,
+      "[]"
+    );
     return [];
   }
 }
 
 function saveRegArchive(data) {
-  if (!Array.isArray(data)) data = [];
-  if (data.length > 2000) data = data.slice(-2000);
-  localStorage.setItem(REG_QUEUE_ARCHIVE_KEY, JSON.stringify(data));
+  if (!Array.isArray(data)) {
+    data = [];
+  }
+
+  if (data.length > 2000) {
+    data = data.slice(-2000);
+  }
+
+  localStorage.setItem(
+    REG_QUEUE_ARCHIVE_KEY,
+    JSON.stringify(data)
+  );
 }
 
 // ================= FINGERPRINT =================
@@ -63,8 +90,12 @@ function makeRegFingerprint(data) {
   ].join("|");
 
   let hash = 0;
+
   for (let i = 0; i < raw.length; i++) {
-    hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+    hash =
+      ((hash << 5) - hash) +
+      raw.charCodeAt(i);
+
     hash |= 0;
   }
 
@@ -74,7 +105,9 @@ function makeRegFingerprint(data) {
 // ================= LOCK =================
 function getRegLock() {
   try {
-    return JSON.parse(localStorage.getItem(REG_LOCK_KEY));
+    return JSON.parse(
+      localStorage.getItem(REG_LOCK_KEY)
+    );
   } catch {
     return null;
   }
@@ -82,18 +115,28 @@ function getRegLock() {
 
 function isRegLocked() {
   let lock = getRegLock();
-  if (!lock) return false;
-  if (Date.now() - lock.time > 5000) return false;
+
+  if (!lock) {
+    return false;
+  }
+
+  if (Date.now() - lock.time > 5000) {
+    return false;
+  }
+
   return lock.status === true;
 }
 
 function setRegLock(val) {
   if (val) {
-    localStorage.setItem(REG_LOCK_KEY, JSON.stringify({
-      status: true,
-      time: Date.now(),
-      owner: REG_LOCK_OWNER
-    }));
+    localStorage.setItem(
+      REG_LOCK_KEY,
+      JSON.stringify({
+        status: true,
+        time: Date.now(),
+        owner: REG_LOCK_OWNER
+      })
+    );
   } else {
     localStorage.removeItem(REG_LOCK_KEY);
   }
@@ -101,30 +144,64 @@ function setRegLock(val) {
 
 // ================= VALIDATION =================
 function isValidQueueRow(row) {
-  return row &&
+  return (
+    row &&
     row.mobile &&
     row.username &&
     row.password &&
-    row.status;
+    row.status
+  );
 }
 
 // ================= ADD TO QUEUE =================
 function addToRegistrationQueue(data) {
-  if (!data || !data.mobile) return false;
+  if (!data || !data.mobile) {
+    return false;
+  }
 
   let queue = getRegQueue();
   let archive = getRegArchive();
-  let fingerprint = makeRegFingerprint(data);
+  let fingerprint =
+    makeRegFingerprint(data);
 
-  if (queue.find(q => q.fingerprint === fingerprint && q.status !== "FAILED")) return false;
-  if (archive.find(a => a.fingerprint === fingerprint)) return false;
+  // Prevent duplicates in queue
+  if (
+    queue.find(function (q) {
+      return (
+        q.fingerprint === fingerprint &&
+        q.status !== "FAILED"
+      );
+    })
+  ) {
+    return false;
+  }
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  if (users.find(u => u.mobile === data.mobile)) return false;
+  // Prevent duplicates in archive
+  if (
+    archive.find(function (a) {
+      return a.fingerprint === fingerprint;
+    })
+  ) {
+    return false;
+  }
+
+  // Prevent duplicates in users
+  let users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
+
+  if (
+    users.find(function (u) {
+      return u.mobile === data.mobile;
+    })
+  ) {
+    return false;
+  }
 
   queue.push({
     ...data,
-    fingerprint,
+    fingerprint: fingerprint,
     requestTime: Date.now(),
     status: "PENDING",
     retry: 0,
@@ -133,26 +210,48 @@ function addToRegistrationQueue(data) {
 
   saveRegQueue(queue);
   processRegistrationQueue();
+
   return true;
 }
 
-// ================= PROCESS ONE (FIXED CORE BUG) =================
+// ================= PROCESS ONE =================
 function processOneRegistration(req) {
-  if (!req) throw new Error("Invalid request");
-  if (typeof createUserWithTree !== "function") {
-    throw new Error("Tree engine missing");
+  if (!req) {
+    throw new Error("Invalid request");
   }
 
-  let result = createUserWithTree(req);
+  if (
+    typeof createUserWithTree !==
+    "function"
+  ) {
+    throw new Error(
+      "Tree engine missing"
+    );
+  }
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
+  let result =
+    createUserWithTree(req);
+
+  let users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
   let created =
-    users.find(u => u.userId === (result && result.userId)) ||
-    users.find(u => u.mobile === req.mobile);
+    users.find(function (u) {
+      return (
+        u.userId ===
+        (result && result.userId)
+      );
+    }) ||
+    users.find(function (u) {
+      return u.mobile === req.mobile;
+    });
 
   if (!created) {
-    throw new Error("User creation verification failed");
+    throw new Error(
+      "User creation verification failed"
+    );
   }
 
   return true;
@@ -160,43 +259,74 @@ function processOneRegistration(req) {
 
 // ================= MAIN PROCESS =================
 function processRegistrationQueue() {
-  if (isRegLocked()) return;
+  if (isRegLocked()) {
+    return;
+  }
 
   let queue = getRegQueue();
-  if (!queue.length) return;
+
+  if (!queue.length) {
+    return;
+  }
 
   setRegLock(true);
 
   try {
     let processed = 0;
 
-    for (let i = 0; i < queue.length; i++) {
+    for (
+      let i = 0;
+      i < queue.length;
+      i++
+    ) {
+      if (
+        processed >= REG_MAX_BATCH
+      ) {
+        break;
+      }
 
-      if (processed >= REG_MAX_BATCH) break;
-      if (!queue[i]) continue;
-      if (queue[i].status !== "PENDING") continue;
+      if (!queue[i]) {
+        continue;
+      }
+
+      if (
+        queue[i].status !==
+        "PENDING"
+      ) {
+        continue;
+      }
 
       try {
-        processOneRegistration(queue[i]);
+        processOneRegistration(
+          queue[i]
+        );
 
         queue[i].status = "DONE";
-        queue[i].completedAt = Date.now();
+        queue[i].completedAt =
+          Date.now();
+
         processed++;
-
       } catch (err) {
-        queue[i].retry = (queue[i].retry || 0) + 1;
-        queue[i].error = err.message;
+        queue[i].retry =
+          (queue[i].retry || 0) + 1;
 
-        if (queue[i].retry >= 3) {
-          queue[i].status = "FAILED";
-          queue[i].failedAt = Date.now();
+        queue[i].error =
+          err.message;
+
+        if (
+          queue[i].retry >= 3
+        ) {
+          queue[i].status =
+            "FAILED";
+
+          queue[i].failedAt =
+            Date.now();
         }
       }
     }
 
     saveRegQueue(queue);
     cleanupRegistrationQueue();
-
   } finally {
     setRegLock(false);
     scheduleRegistrationQueue();
@@ -212,16 +342,21 @@ function cleanupRegistrationQueue() {
   let keep = [];
 
   for (let row of queue) {
-    if (!row) continue;
+    if (!row) {
+      continue;
+    }
 
     if (row.status === "DONE") {
       archive.push(row);
       continue;
     }
 
-    if (row.status === "FAILED" &&
-        row.failedAt &&
-        (now - row.failedAt > REG_FAILED_TTL)) {
+    if (
+      row.status === "FAILED" &&
+      row.failedAt &&
+      now - row.failedAt >
+        REG_FAILED_TTL
+    ) {
       archive.push(row);
       continue;
     }
@@ -235,21 +370,41 @@ function cleanupRegistrationQueue() {
 
 // ================= LOOP =================
 function scheduleRegistrationQueue() {
-  setTimeout(processRegistrationQueue, 2000);
+  setTimeout(
+    processRegistrationQueue,
+    2000
+  );
 }
 
 function startRegistrationQueue() {
-  setTimeout(processRegistrationQueue, 500);
+  setTimeout(
+    processRegistrationQueue,
+    500
+  );
 }
 
 // ================= EXPORT =================
-window.addToRegistrationQueue = addToRegistrationQueue;
-window.processRegistrationQueue = processRegistrationQueue;
-window.processOneRegistration = processOneRegistration;
-window.startRegistrationQueue = startRegistrationQueue;
+window.getRegQueue = getRegQueue;
+window.saveRegQueue = saveRegQueue;
+window.getRegArchive =
+  getRegArchive;
+window.saveRegArchive =
+  saveRegArchive;
+window.makeRegFingerprint =
+  makeRegFingerprint;
+window.addToRegistrationQueue =
+  addToRegistrationQueue;
+window.processRegistrationQueue =
+  processRegistrationQueue;
+window.processOneRegistration =
+  processOneRegistration;
+window.startRegistrationQueue =
+  startRegistrationQueue;
 
 // ================= START =================
 if (!window.__REG_QUEUE_STARTED__) {
-  window.__REG_QUEUE_STARTED__ = true;
+  window.__REG_QUEUE_STARTED__ =
+    true;
+
   startRegistrationQueue();
 }
