@@ -2,29 +2,26 @@
 
 /*
 ========================================
-LEDGER ENGINE V1.0 (FINAL BANK CORE)
+LEDGER ENGINE V1.0 (BANK CORE)
 ========================================
-✔ Immutable transaction log
-✔ Duplicate TX protection
-✔ Audit-ready ledger storage
-✔ System-wide financial truth layer
-✔ Single source of financial record
+✔ Single source of truth
+✔ Prevent duplicate transactions
+✔ Audit-ready storage
 ========================================
 */
 
 const LEDGER_DB_KEY = "LEDGER_TX_LOG";
 
-// ================= GET LEDGER =================
+// ================= GET =================
 function getLedger() {
   try {
-    const data = JSON.parse(localStorage.getItem(LEDGER_DB_KEY));
-    return (data && typeof data === "object") ? data : {};
+    return JSON.parse(localStorage.getItem(LEDGER_DB_KEY) || "{}");
   } catch {
     return {};
   }
 }
 
-// ================= SAVE LEDGER =================
+// ================= SAVE =================
 function saveLedger(data) {
   try {
     localStorage.setItem(
@@ -41,15 +38,12 @@ function saveLedger(data) {
 // ================= RECORD TX =================
 function recordTransaction(tx) {
   try {
-    if (!tx || typeof tx !== "object") return false;
-    if (!tx.txId || typeof tx.txId !== "string") return false;
+    if (!tx || !tx.txId) return false;
 
     const ledger = getLedger();
 
-    // Duplicate protection (immutable ledger rule)
-    if (ledger.hasOwnProperty(tx.txId)) {
-      return false;
-    }
+    // duplicate prevention
+    if (ledger[tx.txId]) return false;
 
     ledger[tx.txId] = {
       ...tx,
@@ -70,5 +64,4 @@ function recordTransaction(tx) {
 // ================= EXPORT =================
 window.recordTransaction = recordTransaction;
 window.getLedger = getLedger;
-
 window.__LEDGER_ENGINE_ACTIVE__ = true;
