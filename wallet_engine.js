@@ -2,126 +2,74 @@
 
 /*
 ========================================
-WALLET ENGINE BRIDGE v1.0 (FINAL SAFE)
+WALLET ENGINE V1.0 (STATE ONLY)
 ========================================
-✔ Bridges Income Engine → Wallet System
-✔ Prevents duplicate credit calls
-✔ Normalizes transactions
-✔ Safe fallback layer
-✔ Compatible with INCOME ENGINE V9
-✔ Compatible with wallet_system.js
+✔ Balance storage only
+✔ Credit / debit operations only
+✔ No business logic
+✔ No routing / no fallback
+✔ Ledger-independent state layer
 ========================================
 */
 
-const WALLET_ENGINE_TX = "WALLET_ENGINE_TX_LOG";
+const WALLET_DB_KEY = "WALLET_STATE";
 
-// ================= TX GUARD =================
-function getWalletEngineTx() {
+// ================= GET =================
+function getWallets() {
   try {
-    return JSON.parse(localStorage.getItem(WALLET_ENGINE_TX)) || {};
+    return JSON.parse(localStorage.getItem(WALLET_DB_KEY) || "{}");
   } catch {
     return {};
   }
 }
 
-function saveWalletEngineTx(data) {
-  localStorage.setItem(WALLET_ENGINE_TX, JSON.stringify(data || {}));
-}
-
-function isTxProcessed(ref) {
-  const log = getWalletEngineTx();
-  return !!log[ref];
-}
-
-function markTx(ref) {
-  const log = getWalletEngineTx();
-  log[ref] = Date.now();
-  saveWalletEngineTx(log);
-}
-
-// ================= WALLET ROUTER =================
-function creditToWalletEngine({
-  userId,
-  amount,
-  type,
-  note,
-  ref,
-  meta = {}
-}) {
+// ================= SAVE =================
+function saveWallets(data) {
   try {
-
-    if (!userId || !amount || amount <= 0) {
-      return false;
+    localStorage.setItem(
+      WALLET_DB_KEY,
+      JSON.stringify(data && typeof data === "object" ? data : {})
+    );
+  } catch (e) {
+    if (typeof logCritical === "function") {
+      logCritical("WALLET_SAVE_FAILED: " + e.message);
     }
-
-    if (!ref) {
-      ref = "WALLET_" + Date.now();
-    }
-
-    // prevent duplicate credit
-    if (isTxProcessed(ref)) {
-      return false;
-    }
-
-    let success = false;
-
-    // ================= PRIMARY WALLET SYSTEM =================
-    if (typeof creditWallet === "function") {
-      success = creditWallet(
-        userId,
-        amount,
-        note || "WALLET CREDIT",
-        ref,
-        true
-      );
-    }
-
-    // ================= FALLBACK SYSTEM =================
-    else if (typeof walletCredit === "function") {
-      success = walletCredit(userId, amount, note, ref);
-    }
-
-    else {
-      console.error("No wallet system found");
-      return false;
-    }
-
-    if (!success) {
-      return false;
-    }
-
-    // mark tx only after success
-    markTx(ref);
-
-    // optional logging
-    if (typeof addWalletLog === "function") {
-      addWalletLog({
-        userId,
-        amount,
-        type: type || "income",
-        note,
-        ref,
-        meta,
-        time: Date.now()
-      });
-    }
-
-    return true;
-
-  } catch (err) {
-    console.error("wallet_engine error:", err.message);
-    return false;
   }
 }
 
-// ================= SAFE INCOME HOOK =================
-// Optional direct hook for INCOME ENGINE fallback
-function routeIncomeToWallet(data) {
-  return creditToWalletEngine(data);
+// ================= CREDIT =================
+function creditWallet(userId, amount) {
+  if (!userId || amount <= 0) return false;
+
+  const wallets = getWallets();
+
+  if (!wallets[userId]) {
+    wallets[userId] = { balance: 0 };
+  }
+
+  wallets[userId].balance += Number(amount);
+
+  saveWallets(wallets);
+  return true;
+}
+
+// ================= DEBIT =================
+function debitWallet(userId, amount) {
+  if (!userId || amount <= 0) return false;
+
+  const wallets = getWallets();
+
+  if (!wallets[userId]) return false;
+  if (wallets[userId].balance < amount) return false;
+
+  wallets[userId].balance -= Number(amount);
+
+  saveWallets(wallets);
+  return true;
 }
 
 // ================= EXPORT =================
-window.creditToWalletEngine = creditToWalletEngine;
-window.routeIncomeToWallet = routeIncomeToWallet;
+window.creditWallet = creditWallet;
+window.debitWallet = debitWallet;
 
-console.log("[WALLET ENGINE] Bridge active");
+window.__WALLET_ENGINE_ACTIVE__ = true;
