@@ -1,164 +1,116 @@
+"use strict";
+
 /*
 ========================================
-INTEGRATION LOCK LAYER V1.0
-CENTRAL EXECUTION SAFETY CONTROLLER
+INTEGRATION LOCK LAYER V1.0 (BANK CORE SAFETY)
 ========================================
-✔ Prevents duplicate execution
-✔ Controls CTOR flow safety
-✔ Controls PIN flow safety
-✔ Unified action dispatcher
-✔ System-wide execution guard
-✔ Production safe
+✔ Global atomic execution lock
+✔ Prevents race conditions
+✔ Auto-expiring stale lock
+✔ System-wide transaction safety
 ========================================
 */
 
-"use strict";
+const GLOBAL_LOCK_KEY = "__SYSTEM_GLOBAL_LOCK__";
+const LOCK_TTL = 8000;
 
-// =====================================
-// GLOBAL INTEGRATION LOCK STATE
-// =====================================
-window.INTEGRATION_LOCK = {
-  CTOR_RUNNING: false,
-  PIN_RUNNING: false,
-  ACTION_QUEUE: [],
-  LAST_ACTION: null
-};
-
-// =====================================
-// SAFE EXECUTION WRAPPER
-// =====================================
-function executeLocked(actionName, fn) {
-
-  if (typeof fn !== "function") {
-    console.warn("[LOCK] Invalid function:", actionName);
-    return false;
-  }
-
-  // log action
-  window.INTEGRATION_LOCK.ACTION_QUEUE.push({
-    action: actionName,
-    time: new Date().toISOString()
-  });
-
-  window.INTEGRATION_LOCK.LAST_ACTION = actionName;
-
+// ================= LOCK STATE =================
+function getGlobalLock() {
   try {
-    return fn();
+    return JSON.parse(localStorage.getItem(GLOBAL_LOCK_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function setGlobalLock(data) {
+  try {
+    localStorage.setItem(
+      GLOBAL_LOCK_KEY,
+      JSON.stringify(data || null)
+    );
+  } catch (e) {
+    if (typeof logCritical === "function") {
+      logCritical("LOCK_SAVE_FAILED: " + e.message);
+    }
+  }
+}
+
+function clearGlobalLock() {
+  try {
+    localStorage.removeItem(GLOBAL_LOCK_KEY);
+  } catch {}
+}
+
+// ================= LOCK CHECK =================
+function isSystemLocked() {
+  const lock = getGlobalLock();
+
+  if (!lock || !lock.timestamp) {
+    return false;
+  }
+
+  if (Date.now() - Number(lock.timestamp) > LOCK_TTL) {
+    clearGlobalLock();
+    return false;
+  }
+
+  return true;
+}
+
+// ================= ACQUIRE LOCK =================
+function acquireSystemLock(context = "unknown") {
+  if (isSystemLocked()) {
+    return false;
+  }
+
+  setGlobalLock({
+    context,
+    timestamp: Date.now()
+  });
+
+  return true;
+}
+
+// ================= RELEASE LOCK =================
+function releaseSystemLock() {
+  clearGlobalLock();
+  return true;
+}
+
+// ================= SAFE EXECUTION =================
+function executeWithSystemLock(fn, context = "generic") {
+  try {
+    if (typeof fn !== "function") {
+      return false;
+    }
+
+    if (!acquireSystemLock(context)) {
+      return false;
+    }
+
+    const result = fn();
+
+    releaseSystemLock();
+
+    return result;
+
   } catch (err) {
-    console.error("[LOCK ERROR]", actionName, err);
+    releaseSystemLock();
+
+    if (typeof logCritical === "function") {
+      logCritical("LOCK_EXEC_ERROR: " + err.message);
+    }
+
     return false;
   }
 }
 
-// =====================================
-// CTOR SAFE LOCK
-// =====================================
-function safeRunCTOR() {
+// ================= EXPORT =================
+window.getGlobalLock = getGlobalLock;
+window.isSystemLocked = isSystemLocked;
+window.acquireSystemLock = acquireSystemLock;
+window.releaseSystemLock = releaseSystemLock;
+window.executeWithSystemLock = executeWithSystemLock;
 
-  if (window.INTEGRATION_LOCK.CTOR_RUNNING) {
-    alert("⚠ CTOR already running. Please wait.");
-    return;
-  }
-
-  window.INTEGRATION_LOCK.CTOR_RUNNING = true;
-
-  executeLocked("CTOR_DISTRIBUTION", function () {
-
-    if (typeof distributeCTOR === "function") {
-      distributeCTOR();
-    } else {
-      console.warn("distributeCTOR not found");
-    }
-
-  });
-
-  setTimeout(() => {
-    window.INTEGRATION_LOCK.CTOR_RUNNING = false;
-  }, 3000);
-}
-
-// =====================================
-// PIN SAFE LOCK
-// =====================================
-function safeGeneratePIN() {
-
-  if (window.INTEGRATION_LOCK.PIN_RUNNING) {
-    alert("⚠ PIN process already running.");
-    return;
-  }
-
-  window.INTEGRATION_LOCK.PIN_RUNNING = true;
-
-  executeLocked("PIN_GENERATION", function () {
-
-    if (typeof createPIN === "function") {
-      createPIN();
-    } else {
-      console.warn("createPIN not found");
-    }
-
-  });
-
-  setTimeout(() => {
-    window.INTEGRATION_LOCK.PIN_RUNNING = false;
-  }, 2000);
-}
-
-// =====================================
-// SAFE DASHBOARD ACTION CALLER
-// =====================================
-function safeAction(actionName) {
-
-  const fn = window[actionName];
-
-  if (typeof fn === "function") {
-    return executeLocked(actionName, fn);
-  }
-
-  console.warn("[LOCK] Action not found:", actionName);
-  return false;
-}
-
-// =====================================
-// DASHBOARD BINDING SYSTEM
-// =====================================
-function bindIntegrationActions() {
-
-  const buttons = document.querySelectorAll("[data-action]");
-
-  buttons.forEach(btn => {
-
-    btn.addEventListener("click", function () {
-
-      const action = this.getAttribute("data-action");
-
-      safeAction(action);
-
-    });
-
-  });
-
-}
-
-// =====================================
-// SYSTEM DEBUG VIEW (OPTIONAL)
-// =====================================
-function getIntegrationStatus() {
-
-  return {
-    CTOR_RUNNING: window.INTEGRATION_LOCK.CTOR_RUNNING,
-    PIN_RUNNING: window.INTEGRATION_LOCK.PIN_RUNNING,
-    LAST_ACTION: window.INTEGRATION_LOCK.LAST_ACTION,
-    QUEUE_SIZE: window.INTEGRATION_LOCK.ACTION_QUEUE.length
-  };
-}
-
-// =====================================
-// GLOBAL EXPORTS
-// =====================================
-window.executeLocked = executeLocked;
-window.safeRunCTOR = safeRunCTOR;
-window.safeGeneratePIN = safeGeneratePIN;
-window.safeAction = safeAction;
-window.bindIntegrationActions = bindIntegrationActions;
-window.getIntegrationStatus = getIntegrationStatus;
+window.__INTEGRATION_LOCK_ACTIVE__ = true;
