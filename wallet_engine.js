@@ -5,10 +5,8 @@
 WALLET ENGINE V1.0 (STATE ONLY)
 ========================================
 ✔ Balance storage only
-✔ Credit / debit operations only
 ✔ No business logic
-✔ No routing / no fallback
-✔ Ledger-independent state layer
+✔ No ledger knowledge
 ========================================
 */
 
@@ -39,8 +37,6 @@ function saveWallets(data) {
 
 // ================= CREDIT =================
 function creditWallet(userId, amount) {
-  if (!userId || amount <= 0) return false;
-
   const wallets = getWallets();
 
   if (!wallets[userId]) {
@@ -55,8 +51,6 @@ function creditWallet(userId, amount) {
 
 // ================= DEBIT =================
 function debitWallet(userId, amount) {
-  if (!userId || amount <= 0) return false;
-
   const wallets = getWallets();
 
   if (!wallets[userId]) return false;
@@ -71,5 +65,4 @@ function debitWallet(userId, amount) {
 // ================= EXPORT =================
 window.creditWallet = creditWallet;
 window.debitWallet = debitWallet;
-
 window.__WALLET_ENGINE_ACTIVE__ = true;
