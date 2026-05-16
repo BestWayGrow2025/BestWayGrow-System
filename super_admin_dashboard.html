@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Super Admin Dashboard FINAL</title>
+  <title>Super Admin Dashboard V4.0 FINAL MASTER CONTROL</title>
   <link rel="icon" href="data:,">
 
   <style>
@@ -19,8 +19,14 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.12);
     }
 
-    header h2 { margin: 0 0 8px 0; }
-    header p { margin: 6px 0; font-weight: 600; }
+    header h2 {
+      margin: 0 0 8px 0;
+    }
+
+    header p {
+      margin: 6px 0;
+      font-weight: 600;
+    }
 
     header button {
       margin-top: 10px;
@@ -33,7 +39,9 @@
       font-weight: 600;
     }
 
-    header button:hover { opacity: 0.92; }
+    header button:hover {
+      opacity: 0.92;
+    }
 
     .menu {
       display: flex;
@@ -53,6 +61,7 @@
       color: #ffffff;
       cursor: pointer;
       font-weight: 600;
+      transition: all 0.2s ease;
     }
 
     .menu button:hover {
@@ -79,17 +88,21 @@
     }
 
     table {
-      width: 100%;n      border-collapse: collapse;
+      width: 100%;
+      border-collapse: collapse;
       margin-top: 10px;
     }
 
-    table th, table td {
+    table th,
+    table td {
       border: 1px solid #dddddd;
       padding: 8px;
       text-align: left;
     }
 
-    table th { background: #f7f7f7; }
+    table th {
+      background: #f7f7f7;
+    }
 
     #eventMonitorPanel,
     #systemBackupPanel,
@@ -108,10 +121,22 @@
     }
 
     @media (max-width: 768px) {
-      .container { padding: 10px; }
-      .card { padding: 15px; }
-      .menu { gap: 8px; }
-      .menu button { padding: 8px 12px; font-size: 14px; }
+      .container {
+        padding: 10px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+
+      .menu {
+        gap: 8px;
+      }
+
+      .menu button {
+        padding: 8px 12px;
+        font-size: 14px;
+      }
     }
   </style>
 </head>
@@ -124,11 +149,22 @@
   <button id="logoutBtn">Logout</button>
 </header>
 
+<!-- ================= MASTER MENU ================= -->
 <div class="menu">
   <button data-page="home">🏠 Home</button>
   <button data-page="create">👑 Create Sys Admin</button>
   <button data-page="users">👥 Users</button>
   <button data-page="system">⚙️ System</button>
+  <button data-page="pinmaster">📌 PIN Master</button>
+  <button data-page="productmaster">📦 Product Master</button>
+  <button data-page="rankmaster">🏆 Rank Master</button>
+  <button data-page="incomecontrol">💰 Income Control</button>
+  <button data-page="audit">📜 Audit</button>
+  <button data-page="health">🩺 Health</button>
+  <button data-page="backup">💾 Backup</button>
+  <button data-page="controlroom">🖥️ Control Room</button>
+  <button data-page="aigovernor">🤖 AI Governor</button>
+  <button data-page="reports">📊 Reports</button>
   <button data-page="tree">🌳 Tree View</button>
   <button data-page="reset">♻️ Reset</button>
 </div>
