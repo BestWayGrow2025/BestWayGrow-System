@@ -199,25 +199,24 @@ function bindEvents() {
           loadSystem();
           break;
 
-      case "pinmaster":
-  // PIN Master Control
-  // Uses super_admin_pin_control.js
-  // Displays:
-  // - View all PIN stock requests
-  // - Approve system stock requests
-  // - Reject requests
-  // - Global PIN authority controls
-
-  if (typeof loadPins === "function") {
-    loadPins();
+      case "rankmaster":
+  // Rank Master Control
+  if (typeof loadRankMaster === "function") {
+    loadRankMaster();
   } else {
     const main =
       document.getElementById("mainContent");
 
     if (main) {
       main.innerHTML = `
-        <h3>📌 PIN Master Control</h3>
-        <p>super_admin_pin_control.js not loaded.</p>
+        <h3>🏆 Rank Master</h3>
+        <p>Rank Master module is ready.</p>
+        <p>
+          Core files:
+          rank_master.js,
+          rank_engine.js,
+          qualification_engine.js
+        </p>
       `;
     }
   }
