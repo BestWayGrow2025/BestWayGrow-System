@@ -199,16 +199,19 @@ function bindEvents() {
           loadSystem();
           break;
 
-        case "pinmaster":
-          // PIN Master Control
-          if (typeof loadPins === "function") {
-            loadPins();
-          } else {
-            window.location.href =
-              "admin_pin_panel.html";
-          }
-          break;
+       case "pinmaster":
+  // PIN Master Control
+  // Opens dedicated Super Admin PIN Control page
+  // Features:
+  // - View all PIN stock
+  // - Create PINs
+  // - Approve PIN requests
+  // - Monitor PIN inventory
 
+  window.location.href =
+    "super_admin_pin_control.html";
+  break;
+          
         case "productmaster":
           // Product Master (PIN Product Master)
           if (typeof loadProductMaster === "function") {
