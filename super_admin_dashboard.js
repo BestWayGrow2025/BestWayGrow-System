@@ -199,17 +199,28 @@ function bindEvents() {
           loadSystem();
           break;
 
-       case "pinmaster":
+      case "pinmaster":
   // PIN Master Control
-  // Opens dedicated Super Admin PIN Control page
-  // Features:
-  // - View all PIN stock
-  // - Create PINs
-  // - Approve PIN requests
-  // - Monitor PIN inventory
+  // Uses super_admin_pin_control.js
+  // Displays:
+  // - View all PIN stock requests
+  // - Approve system stock requests
+  // - Reject requests
+  // - Global PIN authority controls
 
-  window.location.href =
-    "super_admin_pin_control.html";
+  if (typeof loadPins === "function") {
+    loadPins();
+  } else {
+    const main =
+      document.getElementById("mainContent");
+
+    if (main) {
+      main.innerHTML = `
+        <h3>📌 PIN Master Control</h3>
+        <p>super_admin_pin_control.js not loaded.</p>
+      `;
+    }
+  }
   break;
           
         case "productmaster":
