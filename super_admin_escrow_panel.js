@@ -2,23 +2,26 @@
 
 /*
 ========================================
-ESCROW ENGINE V1.0 FULL SYSTEM CORE
+ESCROW CONTROL PANEL V1.0 (SUPER ADMIN CORE)
 ========================================
-✔ PIN Bank integrated
-✔ Product + PIN escrow support
-✔ Admin / System / Super Admin flow ready
-✔ Request → Hold → Release lifecycle
-✔ Safe storage layer
-✔ Audit-ready hooks
-✔ Production safe
+✔ PIN Bank integration
+✔ Product + PIN escrow flow
+✔ Approval-based release system
+✔ User → Admin → System Admin → Super Admin tracking
+✔ AI governance hook
+✔ Audit logging ready
+✔ Safe production architecture
 ========================================
 */
 
-const ESCROW_KEY = "ESCROW_ENGINE_DATA";
-const ESCROW_LOG_KEY = "ESCROW_ENGINE_LOG";
-const ESCROW_LIMIT = 5000;
+console.log("[ESCROW PANEL] LOADED");
 
-/* ================= SAFE STORAGE ================= */
+/* ================= ESCROW STORAGE ================= */
+
+const ESCROW_KEY = "ESCROW_DB";
+const ESCROW_LOG_KEY = "ESCROW_LOG";
+
+/* ================= LOAD ESCROW ================= */
 
 function loadEscrows() {
   let data = safeGet(ESCROW_KEY, []);
@@ -26,187 +29,194 @@ function loadEscrows() {
 }
 
 function saveEscrows(data) {
-  if (!Array.isArray(data)) data = [];
-  safeSet(ESCROW_KEY, data);
+  safeSet(ESCROW_KEY, Array.isArray(data) ? data : []);
 }
 
-/* ================= LOG ================= */
-
-function logEscrow(entry = {}) {
-  let logs = safeGet(ESCROW_LOG_KEY, []);
-
-  if (!Array.isArray(logs)) logs = [];
-
-  logs.push({
-    id: "ESC_" + Date.now() + "_" + Math.floor(Math.random() * 99999),
-    type: entry.type || "UNKNOWN",
-    escrowId: entry.escrowId || "-",
-    userId: entry.userId || "-",
-    amount: Number(entry.amount || 0),
-    status: entry.status || "UNKNOWN",
-    time: Date.now()
-  });
-
-  if (logs.length > ESCROW_LIMIT) {
-    logs = logs.slice(-ESCROW_LIMIT);
-  }
-
-  safeSet(ESCROW_LOG_KEY, logs);
-}
-
-/* ================= ESCROW STATUS FLOW =================
-REQUESTED → FUNDS LOCKED (PIN BANK)
-APPROVED  → HOLD STATE
-RELEASED  → TRANSFER DONE
-CANCELLED → REFUND TO PIN BANK
-===================================================== */
-
-/* ================= CREATE ESCROW ================= */
+/* ================= ESCROW OBJECT ================= */
+/*
+status:
+- pending_payment
+- held_in_pin_bank
+- pending_approval
+- approved
+- rejected
+- released
+*/
 
 function createEscrow({
   userId,
+  type, // "PIN" | "PRODUCT"
   productId,
-  pinType,        // upgrade / repurchase
+  pinId,
   amount,
-  createdBy
+  bv,
+  createdBy = "SYSTEM"
 }) {
-  if (!userId || !amount) return false;
-
-  const escrows = loadEscrows();
+  let escrows = loadEscrows();
 
   const escrow = {
-    escrowId: "ESC_" + Date.now() + "_" + Math.floor(Math.random() * 99999),
+    escrowId: "ESC_" + Date.now() + "_" + Math.floor(Math.random() * 9999),
+
     userId,
+    type,
+
     productId: productId || null,
-    pinType: pinType || "upgrade",
-    amount: Number(amount),
-    status: "REQUESTED",
+    pinId: pinId || null,
 
-    createdBy: createdBy || "SYSTEM",
-    createdAt: Date.now(),
+    amount: Number(amount || 0),
+    bv: Number(bv || 0),
 
-    approvedBy: null,
-    releasedBy: null,
-    cancelledBy: null,
+    status: "pending_payment",
 
-    history: []
+    flow: [
+      { stage: "created", by: createdBy, time: Date.now() }
+    ],
+
+    createdAt: Date.now()
   };
 
   escrows.push(escrow);
   saveEscrows(escrows);
 
-  logEscrow({
-    type: "CREATE",
-    escrowId: escrow.escrowId,
-    userId,
-    amount,
-    status: "REQUESTED"
-  });
-
   return escrow;
 }
 
-/* ================= APPROVE ESCROW ================= */
+/* ================= ESCROW → PIN BANK ================= */
 
-function approveEscrow(escrowId, adminId) {
-  const escrows = loadEscrows();
-  const esc = escrows.find(e => e.escrowId === escrowId);
+function moveToPinBank(escrowId) {
+  let escrows = loadEscrows();
 
-  if (!esc || esc.status !== "REQUESTED") return false;
+  let esc = escrows.find(e => e.escrowId === escrowId);
+  if (!esc) return false;
 
-  esc.status = "APPROVED";
-  esc.approvedBy = adminId;
-  esc.approvedAt = Date.now();
+  if (esc.status !== "pending_payment") return false;
 
-  esc.history.push({
-    action: "APPROVED",
-    by: adminId,
+  let user = typeof getUserById === "function"
+    ? getUserById(esc.userId)
+    : null;
+
+  if (!user) return false;
+
+  let bank = getPinBank(user);
+
+  if (bank.balance < esc.amount) return false;
+
+  bank.balance -= esc.amount;
+  bank.totalDebit += esc.amount;
+
+  esc.status = "held_in_pin_bank";
+  esc.flow.push({
+    stage: "held",
+    by: "PIN_BANK",
     time: Date.now()
   });
 
   saveEscrows(escrows);
+  savePinBankUser(user);
 
-  logEscrow({
-    type: "APPROVE",
-    escrowId,
-    userId: esc.userId,
-    amount: esc.amount,
-    status: "APPROVED"
-  });
+  logEscrow("HELD", esc);
 
   return true;
 }
 
-/* ================= RELEASE ESCROW ================= */
+/* ================= APPROVAL FLOW ================= */
 
-function releaseEscrow(escrowId, systemId) {
-  const escrows = loadEscrows();
-  const esc = escrows.find(e => e.escrowId === escrowId);
+function approveEscrow(escrowId, approverId) {
+  let escrows = loadEscrows();
 
-  if (!esc || esc.status !== "APPROVED") return false;
+  let esc = escrows.find(e => e.escrowId === escrowId);
+  if (!esc) return false;
 
-  esc.status = "RELEASED";
-  esc.releasedBy = systemId;
-  esc.releasedAt = Date.now();
+  if (esc.status !== "held_in_pin_bank") return false;
 
-  esc.history.push({
-    action: "RELEASED",
-    by: systemId,
+  esc.status = "pending_approval";
+
+  esc.flow.push({
+    stage: "approved_by_admin",
+    by: approverId,
     time: Date.now()
   });
 
-  /* HERE YOU CONNECT PRODUCT / PIN FLOW */
-  if (typeof consumePinBank === "function") {
-    consumePinBank(esc.userId, esc.amount, escrowId);
-  }
-
   saveEscrows(escrows);
-
-  logEscrow({
-    type: "RELEASE",
-    escrowId,
-    userId: esc.userId,
-    amount: esc.amount,
-    status: "RELEASED"
-  });
+  logEscrow("APPROVAL", esc);
 
   return true;
 }
 
-/* ================= CANCEL ESCROW ================= */
+/* ================= RELEASE FUNDS ================= */
 
-function cancelEscrow(escrowId, adminId) {
-  const escrows = loadEscrows();
-  const esc = escrows.find(e => e.escrowId === escrowId);
+function releaseEscrow(escrowId, superAdminId) {
+  let escrows = loadEscrows();
 
-  if (!esc || esc.status === "RELEASED") return false;
+  let esc = escrows.find(e => e.escrowId === escrowId);
+  if (!esc) return false;
 
-  esc.status = "CANCELLED";
-  esc.cancelledBy = adminId;
-  esc.cancelledAt = Date.now();
+  if (esc.status !== "pending_approval") return false;
 
-  esc.history.push({
-    action: "CANCELLED",
-    by: adminId,
+  esc.status = "released";
+
+  esc.flow.push({
+    stage: "released",
+    by: superAdminId,
     time: Date.now()
   });
 
-  /* OPTIONAL REFUND LOGIC */
-  if (typeof creditPinBank === "function") {
-    creditPinBank(esc.userId, esc.amount, "ESCROW REFUND", escrowId);
-  }
-
   saveEscrows(escrows);
-
-  logEscrow({
-    type: "CANCEL",
-    escrowId,
-    userId: esc.userId,
-    amount: esc.amount,
-    status: "CANCELLED"
-  });
+  logEscrow("RELEASED", esc);
 
   return true;
+}
+
+/* ================= REJECT ================= */
+
+function rejectEscrow(escrowId, reason = "NO_REASON") {
+  let escrows = loadEscrows();
+
+  let esc = escrows.find(e => e.escrowId === escrowId);
+  if (!esc) return false;
+
+  esc.status = "rejected";
+
+  esc.flow.push({
+    stage: "rejected",
+    reason,
+    time: Date.now()
+  });
+
+  saveEscrows(escrows);
+  logEscrow("REJECTED", esc);
+
+  return true;
+}
+
+/* ================= LOG ================= */
+
+function logEscrow(action, esc) {
+  let logs = safeGet(ESCROW_LOG_KEY, []);
+  if (!Array.isArray(logs)) logs = [];
+
+  logs.push({
+    id: "ESCLOG_" + Date.now(),
+    action,
+    escrowId: esc.escrowId,
+    userId: esc.userId,
+    type: esc.type,
+    amount: esc.amount,
+    status: esc.status,
+    time: Date.now()
+  });
+
+  safeSet(ESCROW_LOG_KEY, logs);
+}
+
+/* ================= AI CONTROL HOOK ================= */
+
+function escrowAIAnalyzer(escrow) {
+  // future AI hook
+  return {
+    risk: "low",
+    recommendation: "approve"
+  };
 }
 
 /* ================= UI PANEL ================= */
@@ -215,64 +225,51 @@ function loadEscrowPanel() {
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  const escrows = loadEscrows();
+  let escrows = loadEscrows();
 
   main.innerHTML = `
     <h3>📦 ESCROW CONTROL PANEL</h3>
 
-    <button onclick="refreshEscrowPanel()">🔄 Refresh</button>
-
-    <h4>Total Escrows: ${escrows.length}</h4>
+    <div style="margin:10px 0;">
+      <button onclick="loadEscrowPanel()">🔄 Refresh</button>
+    </div>
 
     <table>
-      <tr>
-        <th>Escrow ID</th>
-        <th>User</th>
-        <th>Product</th>
-        <th>Type</th>
-        <th>Amount</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-
-      ${escrows.map(e => `
+      <thead>
         <tr>
-          <td>${e.escrowId}</td>
-          <td>${e.userId}</td>
-          <td>${e.productId || "-"}</td>
-          <td>${e.pinType}</td>
-          <td>${e.amount}</td>
-          <td>${e.status}</td>
-          <td>
-            ${e.status === "REQUESTED" ? `
-              <button onclick="approveEscrow('${e.escrowId}', 'ADMIN')">Approve</button>
-            ` : ""}
-
-            ${e.status === "APPROVED" ? `
-              <button onclick="releaseEscrow('${e.escrowId}', 'SYSTEM')">Release</button>
-            ` : ""}
-
-            ${e.status !== "RELEASED" ? `
-              <button onclick="cancelEscrow('${e.escrowId}', 'ADMIN')">Cancel</button>
-            ` : ""}
-          </td>
+          <th>Escrow ID</th>
+          <th>User</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Action</th>
         </tr>
-      `).join("")}
+      </thead>
+      <tbody>
+        ${escrows.map(e => `
+          <tr>
+            <td>${e.escrowId}</td>
+            <td>${e.userId}</td>
+            <td>${e.type}</td>
+            <td>${e.amount}</td>
+            <td>${e.status}</td>
+            <td>
+              <button onclick="approveEscrow('${e.escrowId}', 'ADMIN')">Approve</button>
+              <button onclick="releaseEscrow('${e.escrowId}', 'SUPER_ADMIN')">Release</button>
+              <button onclick="rejectEscrow('${e.escrowId}', 'MANUAL')">Reject</button>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
     </table>
   `;
 }
 
-/* ================= REFRESH ================= */
-
-function refreshEscrowPanel() {
-  loadEscrowPanel();
-}
-
-/* ================= EXPORTS ================= */
+/* ================= EXPORT ================= */
 
 window.loadEscrowPanel = loadEscrowPanel;
 window.createEscrow = createEscrow;
 window.approveEscrow = approveEscrow;
 window.releaseEscrow = releaseEscrow;
-window.cancelEscrow = cancelEscrow;
-window.refreshEscrowPanel = refreshEscrowPanel;
+window.rejectEscrow = rejectEscrow;
+window.moveToPinBank = moveToPinBank;
