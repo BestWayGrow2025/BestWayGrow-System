@@ -3,7 +3,7 @@
 /*
 ========================================
 SUPER ADMIN DASHBOARD V4.0 FINAL MASTER CONTROL
-========================================
+========================================             
 ✔ Full original structure preserved
 ✔ Only fixes applied (NO feature removal)
 ✔ Duplicate-safe routing
@@ -286,16 +286,60 @@ function bindEvents() {
           break;
 
         case "aigovernor":
-          if (typeof loadAIGovernor === "function") {
-            loadAIGovernor();
-          } else {
-            document.getElementById("mainContent").innerHTML = `
-              <h3>🤖 AI Governor</h3>
-              <p>AI governance module active.</p>
-            `;
-          }
-          break;
+  if (typeof loadAIGovernor === "function") {
+    loadAIGovernor();
+  } else {
+    document.getElementById("mainContent").innerHTML = `
+      <h3>🤖 AI Governor</h3>
+      <p>AI governance module active.</p>
+    `;
+  }
+  break;
 
+/* ================= ESCROW CONTROL ================= */
+case "escrow":
+
+  const main = document.getElementById("mainContent");
+  if (!main) break;
+
+  main.innerHTML = `
+    <h3>📦 ESCROW CONTROL PANEL</h3>
+    <p>Loading escrow system...</p>
+  `;
+
+  function renderEscrow() {
+    if (typeof loadEscrowPanel === "function") {
+      loadEscrowPanel();
+      return true;
+    }
+    return false;
+  }
+
+  if (!renderEscrow()) {
+    const script = document.createElement("script");
+    script.src = "super_admin_escrow_panel.js";
+
+    script.onload = function () {
+      if (!renderEscrow()) {
+        main.innerHTML = `
+          <h3>📦 ESCROW CONTROL PANEL</h3>
+          <p style="color:red;">Escrow module loaded but function missing</p>
+        `;
+      }
+    };
+
+    script.onerror = function () {
+      main.innerHTML = `
+        <h3>📦 ESCROW CONTROL PANEL</h3>
+        <p style="color:red;">Failed to load escrow panel file</p>
+      `;
+    };
+
+    document.body.appendChild(script);
+  }
+
+  break;
+          
         case "reports":
           window.location.href = "admin_reports.html";
           break;
