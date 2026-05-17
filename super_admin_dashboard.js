@@ -300,7 +300,11 @@ function bindEvents() {
 case "escrow":
 
   const main = document.getElementById("mainContent");
-  if (!main) break;
+
+  if (!main) {
+    console.warn("[ESCROW] mainContent not found");
+    break;
+  }
 
   main.innerHTML = `
     <h3>📦 ESCROW CONTROL PANEL</h3>
@@ -314,7 +318,7 @@ case "escrow":
     }
     return false;
   }
-
+          
   if (!renderEscrow()) {
     const script = document.createElement("script");
     script.src = "super_admin_escrow_panel.js";
