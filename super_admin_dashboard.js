@@ -174,19 +174,57 @@ function bindEvents() {
           break;
 
         /* ================= PIN MASTER ================= */
-        case "pinmaster":
-          if (typeof loadPins === "function") {
-            loadPins();
-          } else {
-            const main = document.getElementById("mainContent");
-            if (main) {
-              main.innerHTML = `
-                <h3>📌 PIN Master Control</h3>
-                <p>super_admin_pin_control.js not loaded.</p>
-              `;
-            }
-          }
-          break;
+      case "pinmaster":
+  // PIN Master Control (SAFE FINAL VERSION)
+
+  const main = document.getElementById("mainContent");
+
+  if (!main) break;
+
+  // Step 1: Show loading state immediately
+  main.innerHTML = `
+    <h3>📌 PIN CONTROL PANEL (SUPER ADMIN)</h3>
+    <p>Loading PIN module...</p>
+  `;
+
+  // Step 2: Ensure module is loaded
+  function renderPinModule() {
+    if (typeof loadPins === "function") {
+      loadPins();
+      return true;
+    }
+    return false;
+  }
+
+  // Step 3: Try immediate render
+  if (!renderPinModule()) {
+    // Step 4: Dynamically load module if missing
+    const script = document.createElement("script");
+    script.src = "super_admin_pin_control.js";
+    script.onload = function () {
+      if (!renderPinModule()) {
+        main.innerHTML = `
+          <h3>📌 PIN CONTROL PANEL</h3>
+          <p style="color:red;">
+            PIN module loaded but function loadPins() not found.
+          </p>
+        `;
+      }
+    };
+
+    script.onerror = function () {
+      main.innerHTML = `
+        <h3>📌 PIN CONTROL PANEL</h3>
+        <p style="color:red;">
+          Failed to load super_admin_pin_control.js
+        </p>
+      `;
+    };
+
+    document.body.appendChild(script);
+  }
+
+  break;
 
         /* ================= PRODUCT MASTER ================= */
         case "productmaster":
