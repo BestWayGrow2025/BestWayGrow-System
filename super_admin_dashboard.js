@@ -296,8 +296,8 @@ case "backup":
           }
           break;
 
-        /* ================= ESCROW CONTROL ================= */
-        case "escrow":
+     /* ================= ESCROW CONTROL ================= */
+        case "escrow": {
 
           const main = document.getElementById("mainContent");
 
@@ -347,6 +347,7 @@ case "backup":
           }
 
           break;
+        }
           
         case "reports":
           window.location.href = "admin_reports.html";
