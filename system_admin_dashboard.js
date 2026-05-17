@@ -141,27 +141,106 @@ function bindEvents() {
       try {
         const page = btn.dataset.page;
 
-        switch (page) {
-          case "home":
-            loadHome();
-            break;
+       switch (page) {
+        case "home":
+          loadHome();
+          break;
 
-          case "users":
-            loadUsers();
-            break;
+        case "users":
+          loadUsers();
+          break;
 
-          case "create":
-            loadCreateAdmin();
-            break;
+        case "create":
+          loadCreateAdmin();
+          break;
 
-          case "pins":
-            loadPinsSafe();
-            break;
+        case "pins":
+          loadPinsSafe();
+          break;
 
-          case "settings":
-            loadSettings();
-            break;
-        }
+        case "settings":
+          loadSettings();
+          break;
+
+        /* ================= ESCROW CONTROL ================= */
+        case "escrow":
+          if (typeof loadEscrowPanel === "function") {
+            loadEscrowPanel();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <div class="card">
+                  <h3>📦 Escrow Control</h3>
+                  <p>Escrow module not loaded.</p>
+                </div>
+              `;
+            }
+          }
+          break;
+
+        /* ================= ENTERPRISE CONTROL ROOM ================= */
+        case "controlroom":
+          if (typeof loadEnterpriseControlRoom === "function") {
+            loadEnterpriseControlRoom();
+          } else if (
+            typeof renderEnterpriseControlRoomDashboard === "function"
+          ) {
+            renderEnterpriseControlRoomDashboard();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <div class="card">
+                  <h3>🖥 Enterprise Control Room</h3>
+                  <p>Enterprise Control Room module not loaded.</p>
+                </div>
+              `;
+            }
+          }
+          break;
+
+        /* ================= BUSINESS INTELLIGENCE ================= */
+        case "businessintelligence":
+          if (typeof loadBusinessIntelligenceDashboard === "function") {
+            loadBusinessIntelligenceDashboard();
+          } else if (
+            typeof renderEnterpriseBusinessIntelligenceDashboard ===
+            "function"
+          ) {
+            renderEnterpriseBusinessIntelligenceDashboard();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <div class="card">
+                  <h3>📊 Business Intelligence</h3>
+                  <p>Business Intelligence module not loaded.</p>
+                </div>
+              `;
+            }
+          }
+          break;
+
+        /* ================= STRATEGIC AI ADVISOR ================= */
+        case "strategicai":
+          if (typeof loadStrategicAIAdvisor === "function") {
+            loadStrategicAIAdvisor();
+          } else if (typeof renderStrategicAIAdvisor === "function") {
+            renderStrategicAIAdvisor();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <div class="card">
+                  <h3>🧠 Strategic AI Advisor</h3>
+                  <p>Strategic AI Advisor module not loaded.</p>
+                </div>
+              `;
+            }
+          }
+          break;
+      }
       } catch (err) {
         console.error("[SYSTEM ADMIN DASHBOARD ERROR]", err);
 
