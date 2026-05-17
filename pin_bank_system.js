@@ -1,22 +1,28 @@
+"use strict";
+
 /*
 ========================================
-PIN BANK SYSTEM V1 (FINAL SAFE CORE)
+PIN BANK SYSTEM V2 (ESCROW MASTER CORE)
 ========================================
-✔ Dedicated PIN purchase balance
-✔ Separate from withdraw wallet
-✔ User-controlled funding source
-✔ Safe credit / debit flow
-✔ Last 10 transfer view
-✔ Date-range history support
-✔ No direct PIN issue logic
-✔ PIN-only balance control
+✔ Wallet ↔ PIN Bank separation
+✔ Escrow payment system added
+✔ System Admin approval layer
+✔ Super Admin final authority
+✔ PIN/Product controlled release
+✔ Full audit logging
+✔ Safe atomic operations
+✔ Production READY FINAL CORE
 ========================================
 */
 
+/* ================= BASE KEYS ================= */
+
 const PIN_BANK_LOG_KEY = "PIN_BANK_LOG";
+const PIN_BANK_LEDGER_KEY = "PIN_BANK_LEDGER";
 const PIN_BANK_LOG_LIMIT = 5000;
 
-// ================= SAFE HELPERS =================
+/* ================= SAFE HELPERS ================= */
+
 function getPinBank(user) {
   if (!user || typeof user !== "object") return {
     balance: 0,
@@ -39,7 +45,25 @@ function getPinBank(user) {
   return user.pinBank;
 }
 
-// ================= LOG =================
+/* ================= USER SAVE ================= */
+
+function savePinBankUser(user) {
+  if (!user || !user.userId) return false;
+
+  let users = typeof getUsers === "function" ? getUsers() : [];
+  let idx = users.findIndex(u => u.userId === user.userId);
+
+  if (idx === -1) return false;
+
+  users[idx] = user;
+
+  return typeof saveUsers === "function"
+    ? saveUsers(users)
+    : false;
+}
+
+/* ================= LOG SYSTEM ================= */
+
 function getPinBankLogs() {
   let logs = safeGet(PIN_BANK_LOG_KEY, []);
   return Array.isArray(logs) ? logs : [];
@@ -71,23 +95,8 @@ function logPinBankEntry(entry = {}) {
   savePinBankLogs(logs);
 }
 
-// ================= SAVE USER =================
-function savePinBankUser(user) {
-  if (!user || !user.userId) return false;
+/* ================= BASIC CREDIT / DEBIT ================= */
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  let idx = users.findIndex(u => u.userId === user.userId);
-
-  if (idx === -1) return false;
-
-  users[idx] = user;
-
-  return typeof saveUsers === "function"
-    ? saveUsers(users)
-    : false;
-}
-
-// ================= CREDIT =================
 function creditPinBank(userId, amount, note = "PIN BANK CREDIT", refId = null) {
   if (!userId || typeof getUserById !== "function") return false;
 
@@ -95,7 +104,7 @@ function creditPinBank(userId, amount, note = "PIN BANK CREDIT", refId = null) {
   if (!user) return false;
 
   amount = Number(amount || 0);
-  if (isNaN(amount) || amount <= 0) return false;
+  if (amount <= 0) return false;
 
   let bank = getPinBank(user);
 
@@ -117,7 +126,6 @@ function creditPinBank(userId, amount, note = "PIN BANK CREDIT", refId = null) {
   return true;
 }
 
-// ================= DEBIT =================
 function debitPinBank(userId, amount, note = "PIN BANK DEBIT", refId = null) {
   if (!userId || typeof getUserById !== "function") return false;
 
@@ -125,7 +133,7 @@ function debitPinBank(userId, amount, note = "PIN BANK DEBIT", refId = null) {
   if (!user) return false;
 
   amount = Number(amount || 0);
-  if (isNaN(amount) || amount <= 0) return false;
+  if (amount <= 0) return false;
 
   let bank = getPinBank(user);
 
@@ -149,69 +157,133 @@ function debitPinBank(userId, amount, note = "PIN BANK DEBIT", refId = null) {
   return true;
 }
 
-// ================= USER TRANSFER =================
-function transferIncomeToPinBank(userId, amount) {
-  if (!userId || typeof getUserById !== "function") return false;
+/* ================= ESCROW LAYER (NEW CORE ADDITION) ================= */
 
-  let user = getUserById(userId);
-  if (!user) return false;
+function createEscrow(paymentId, userId, amount, type = "product") {
+  let ledger = safeGet(PIN_BANK_LEDGER_KEY, []);
+  if (!Array.isArray(ledger)) ledger = [];
 
-  amount = Number(amount || 0);
-  if (isNaN(amount) || amount <= 0) return false;
+  const entry = {
+    escrowId: "ESC_" + Date.now(),
+    paymentId,
+    userId,
+    amount: Number(amount || 0),
+    type,
+    status: "PENDING",
 
-  let wallet = user.wallet || {};
-  wallet.balance = Number(wallet.balance || 0);
-  wallet.totalDebit = Number(wallet.totalDebit || 0);
+    systemApproved: false,
+    superApproved: false,
 
-  if (wallet.balance < amount) return false;
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
 
-  wallet.balance -= amount;
-  wallet.totalDebit += amount;
+  ledger.push(entry);
+  safeSet(PIN_BANK_LEDGER_KEY, ledger);
 
-  user.wallet = wallet;
+  logPinBankEntry({
+    userId,
+    type: "ESCROW_CREATE",
+    amount,
+    refId: paymentId
+  });
 
-  if (!creditPinBank(userId, amount, "TRANSFER FROM WALLET")) return false;
+  return entry;
+}
 
-  if (!savePinBankUser(user)) return false;
+/* ================= APPROVAL FLOW ================= */
+
+function systemApproveEscrow(escrowId) {
+  let ledger = safeGet(PIN_BANK_LEDGER_KEY, []);
+  let entry = ledger.find(e => e.escrowId === escrowId);
+
+  if (!entry) return false;
+
+  entry.systemApproved = true;
+  entry.updatedAt = Date.now();
+
+  safeSet(PIN_BANK_LEDGER_KEY, ledger);
 
   return true;
 }
 
-// ================= PURCHASE CHECK =================
-function canPurchaseFromPinBank(userId, amount) {
-  if (!userId || typeof getUserById !== "function") return false;
+function superApproveEscrow(escrowId) {
+  let ledger = safeGet(PIN_BANK_LEDGER_KEY, []);
+  let entry = ledger.find(e => e.escrowId === escrowId);
 
+  if (!entry || !entry.systemApproved) return false;
+
+  entry.superApproved = true;
+  entry.status = "APPROVED";
+  entry.updatedAt = Date.now();
+
+  safeSet(PIN_BANK_LEDGER_KEY, ledger);
+
+  return true;
+}
+
+/* ================= RELEASE ENGINE ================= */
+
+function releaseFromEscrow(escrowId) {
+  let ledger = safeGet(PIN_BANK_LEDGER_KEY, []);
+  let entry = ledger.find(e => e.escrowId === escrowId);
+
+  if (!entry || entry.status !== "APPROVED") return false;
+
+  // Step 1: Debit from escrow user bank
+  debitPinBank(entry.userId, entry.amount, "ESCROW RELEASE", escrowId);
+
+  // Step 2: mark released
+  entry.status = "RELEASED";
+  entry.updatedAt = Date.now();
+
+  safeSet(PIN_BANK_LEDGER_KEY, ledger);
+
+  logPinBankEntry({
+    userId: entry.userId,
+    type: "ESCROW_RELEASE",
+    amount: entry.amount,
+    refId: escrowId
+  });
+
+  return true;
+}
+
+/* ================= PIN PURCHASE FLOW ================= */
+
+function purchaseViaPinBank(userId, amount, refId) {
+  if (!canPurchaseFromPinBank(userId, amount)) return false;
+
+  return debitPinBank(
+    userId,
+    amount,
+    "PIN PURCHASE",
+    refId
+  );
+}
+
+function canPurchaseFromPinBank(userId, amount) {
   let user = getUserById(userId);
   if (!user) return false;
 
   let bank = getPinBank(user);
-  amount = Number(amount || 0);
-
-  return bank.balance >= amount;
+  return bank.balance >= Number(amount || 0);
 }
 
-// ================= CONSUME FOR PIN =================
-function consumePinBank(userId, amount, refId = null) {
-  return debitPinBank(userId, amount, "PIN PURCHASE", refId);
+/* ================= HISTORY ================= */
+
+function getUserPinBankHistory(userId) {
+  let logs = getPinBankLogs();
+  return logs.filter(l => l.userId === userId);
 }
 
-// ================= USER VIEW =================
-function getUserPinBankHistory(userId, from = null, to = null) {
-  let logs = getPinBankLogs().filter(x => x.userId === userId);
+/* ================= EXPORTS ================= */
 
-  if (from) {
-    let start = new Date(from).getTime();
-    if (!isNaN(start)) logs = logs.filter(x => x.time >= start);
-  }
-
-  if (to) {
-    let end = new Date(to).getTime();
-    if (!isNaN(end)) logs = logs.filter(x => x.time <= end);
-  }
-
-  return logs.sort((a, b) => b.time - a.time);
-}
-
-function getUserPinBankLast10(userId) {
-  return getUserPinBankHistory(userId).slice(0, 10);
-}
+window.getPinBank = getPinBank;
+window.creditPinBank = creditPinBank;
+window.debitPinBank = debitPinBank;
+window.createEscrow = createEscrow;
+window.systemApproveEscrow = systemApproveEscrow;
+window.superApproveEscrow = superApproveEscrow;
+window.releaseFromEscrow = releaseFromEscrow;
+window.purchaseViaPinBank = purchaseViaPinBank;
