@@ -273,7 +273,7 @@ function bindEvents() {
           }
           break;
 
-        case "backup":
+case "backup":
           if (typeof renderSystemBackupPanel === "function") {
             renderSystemBackupPanel("systemBackupPanel");
           }
@@ -286,63 +286,67 @@ function bindEvents() {
           break;
 
         case "aigovernor":
-  if (typeof loadAIGovernor === "function") {
-    loadAIGovernor();
-  } else {
-    document.getElementById("mainContent").innerHTML = `
-      <h3>🤖 AI Governor</h3>
-      <p>AI governance module active.</p>
-    `;
-  }
-  break;
+          if (typeof loadAIGovernor === "function") {
+            loadAIGovernor();
+          } else {
+            document.getElementById("mainContent").innerHTML = `
+              <h3>🤖 AI Governor</h3>
+              <p>AI governance module active.</p>
+            `;
+          }
+          break;
 
-/* ================= ESCROW CONTROL ================= */
-case "escrow":
+        /* ================= ESCROW CONTROL ================= */
+        case "escrow":
 
-  const main = document.getElementById("mainContent");
+          const main = document.getElementById("mainContent");
 
-  if (!main) {
-    console.warn("[ESCROW] mainContent not found");
-    break;
-  }
+          if (!main) {
+            console.warn("[ESCROW] mainContent not found");
+            break;
+          }
 
-  main.innerHTML = `
-    <h3>📦 ESCROW CONTROL PANEL</h3>
-    <p>Loading escrow system...</p>
-  `;
+          main.innerHTML = `
+            <h3>📦 ESCROW CONTROL PANEL</h3>
+            <p>Loading escrow system...</p>
+          `;
 
-  function renderEscrow() {
-    if (typeof loadEscrowPanel === "function") {
-      loadEscrowPanel();
-      return true;
-    }
-    return false;
-  }
-          
-  if (!renderEscrow()) {
-    const script = document.createElement("script");
-    script.src = "super_admin_escrow_panel.js";
+          function renderEscrow() {
+            if (typeof loadEscrowPanel === "function") {
+              loadEscrowPanel();
+              return true;
+            }
+            return false;
+          }
 
-    script.onload = function () {
-      if (!renderEscrow()) {
-        main.innerHTML = `
-          <h3>📦 ESCROW CONTROL PANEL</h3>
-          <p style="color:red;">Escrow module loaded but function missing</p>
-        `;
-      }
-    };
+          if (!renderEscrow()) {
+            const script = document.createElement("script");
+            script.src = "super_admin_escrow_panel.js";
 
-    script.onerror = function () {
-      main.innerHTML = `
-        <h3>📦 ESCROW CONTROL PANEL</h3>
-        <p style="color:red;">Failed to load escrow panel file</p>
-      `;
-    };
+            script.onload = function () {
+              if (!renderEscrow()) {
+                main.innerHTML = `
+                  <h3>📦 ESCROW CONTROL PANEL</h3>
+                  <p style="color:red;">
+                    Escrow module loaded but function missing
+                  </p>
+                `;
+              }
+            };
 
-    document.body.appendChild(script);
-  }
+            script.onerror = function () {
+              main.innerHTML = `
+                <h3>📦 ESCROW CONTROL PANEL</h3>
+                <p style="color:red;">
+                  Failed to load super_admin_escrow_panel.js
+                </p>
+              `;
+            };
 
-  break;
+            document.body.appendChild(script);
+          }
+
+          break;
           
         case "reports":
           window.location.href = "admin_reports.html";
