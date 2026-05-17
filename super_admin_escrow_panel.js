@@ -2,126 +2,205 @@
 
 /*
 ========================================
-SUPER ADMIN ESCROW PANEL
+SUPER ADMIN ESCROW PANEL V1.0 FINAL
 ========================================
-✔ PIN escrow requests view
-✔ Product escrow requests view
-✔ System approval control
-✔ Super admin final approval
-✔ Reject flow support
-✔ Full trace visibility
-✔ Production UI controller
+✔ Escrow dashboard UI controller
+✔ System + Super approval workflow
+✔ PIN + Product escrow visibility
+✔ Safe render engine
+✔ Live ledger sync
+✔ Admin control actions
 ========================================
 */
 
-/* ================= INIT ================= */
+console.log("[ESCROW PANEL] LOADED");
+
+let escrowLock = false;
+
+// ================= INIT =================
+
+window.addEventListener("load", function () {
+  bindEscrowMenu();
+});
+
+// ================= MENU BIND =================
+
+function bindEscrowMenu() {
+  document.querySelectorAll('.menu button[data-page="escrow"]').forEach(btn => {
+    btn.addEventListener("click", loadEscrowPanel);
+  });
+}
+
+// ================= MAIN PANEL =================
 
 function loadEscrowPanel() {
-  const main = document.getElementById("mainContent");
-  if (!main) return;
+  const box = document.getElementById("mainContent");
 
-  const ledger =
-    typeof safeGet === "function"
-      ? safeGet("PIN_BANK_LEDGER", [])
-      : [];
+  if (!box) return;
 
-  const pending = ledger.filter(
-    e => e.status === "PENDING"
-  );
+  const ledger = typeof safeGet === "function"
+    ? safeGet("PIN_BANK_LEDGER", [])
+    : [];
 
-  let html = `
-    <h3>📌 ESCROW CONTROL PANEL (SUPER ADMIN)</h3>
+  const data = Array.isArray(ledger) ? ledger : [];
 
-    <div style="margin-bottom:10px;">
-      <b>Total Pending Requests:</b> ${pending.length}
+  const total = data.length;
+  const pending = data.filter(e => e.status === "PENDING").length;
+  const approved = data.filter(e => e.status === "APPROVED").length;
+  const rejected = data.filter(e => e.status === "REJECTED").length;
+
+  box.innerHTML = `
+    <h3>📦 ESCROW CONTROL PANEL</h3>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+      <div style="background:#ff9800;color:#fff;padding:12px;border-radius:8px;">
+        Total: ${total}
+      </div>
+
+      <div style="background:#2196f3;color:#fff;padding:12px;border-radius:8px;">
+        Pending: ${pending}
+      </div>
+
+      <div style="background:#4caf50;color:#fff;padding:12px;border-radius:8px;">
+        Approved: ${approved}
+      </div>
+
+      <div style="background:#f44336;color:#fff;padding:12px;border-radius:8px;">
+        Rejected: ${rejected}
+      </div>
     </div>
 
-    <table border="1" width="100%" style="text-align:left;">
-      <tr>
-        <th>Escrow ID</th>
-        <th>Type</th>
-        <th>User ID</th>
-        <th>Amount</th>
-        <th>Status</th>
-        <th>System</th>
-        <th>Super</th>
-        <th>Actions</th>
-      </tr>
+    <br>
+
+    <h4>📜 ESCROW LIST</h4>
+
+    <div>
+      ${renderEscrowTable(data)}
+    </div>
   `;
-
-  pending.forEach(e => {
-    html += `
-      <tr>
-        <td>${e.escrowId}</td>
-        <td>${e.type}</td>
-        <td>${e.userId}</td>
-        <td>₹${Number(e.amount || 0).toFixed(2)}</td>
-        <td>${e.status}</td>
-        <td>${e.systemApproved ? "✔" : "❌"}</td>
-        <td>${e.superApproved ? "✔" : "❌"}</td>
-        <td>
-          <button onclick="approveSystemEscrow('${e.escrowId}')">
-            System Approve
-          </button>
-
-          <button onclick="approveSuperEscrow('${e.escrowId}')">
-            Super Approve
-          </button>
-
-          <button onclick="rejectEscrow('${e.escrowId}')">
-            Reject
-          </button>
-        </td>
-      </tr>
-    `;
-  });
-
-  html += `</table>`;
-
-  main.innerHTML = html;
 }
 
-/* ================= ACTIONS ================= */
+// ================= RENDER TABLE =================
 
-function approveSystemEscrow(id) {
-  if (typeof systemApproveEscrow !== "function") return;
-
-  systemApproveEscrow(id);
-  loadEscrowPanel();
-}
-
-function approveSuperEscrow(id) {
-  if (typeof superApproveEscrow !== "function") return;
-
-  superApproveEscrow(id);
-  loadEscrowPanel();
-}
-
-function rejectEscrow(id) {
-  let ledger =
-    typeof safeGet === "function"
-      ? safeGet("PIN_BANK_LEDGER", [])
-      : [];
-
-  ledger = ledger.map(e => {
-    if (e.escrowId === id) {
-      e.status = "REJECTED";
-      e.updatedAt = Date.now();
-    }
-    return e;
-  });
-
-  if (typeof safeSet === "function") {
-    safeSet("PIN_BANK_LEDGER", ledger);
+function renderEscrowTable(data) {
+  if (!data.length) {
+    return "<p>No escrow records found</p>";
   }
 
-  loadEscrowPanel();
+  return `
+    <table>
+      <thead>
+        <tr>
+          <th>Escrow ID</th>
+          <th>User ID</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>System</th>
+          <th>Super</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        ${data.map(e => `
+          <tr>
+            <td>${e.escrowId}</td>
+            <td>${e.userId}</td>
+            <td>${e.type}</td>
+            <td>₹${Number(e.amount || 0).toFixed(2)}</td>
+            <td>${e.status}</td>
+            <td>${e.systemApproved ? "✅" : "❌"}</td>
+            <td>${e.superApproved ? "✅" : "❌"}</td>
+
+            <td>
+              ${renderActions(e)}
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
 }
 
-/* ================= EXPORT ================= */
+// ================= ACTION BUTTONS =================
+
+function renderActions(e) {
+  if (e.status === "APPROVED" || e.status === "REJECTED") {
+    return "<small>Locked</small>";
+  }
+
+  return `
+    <button onclick="approveSystemEscrowUI('${e.escrowId}')">
+      System Approve
+    </button>
+
+    <button onclick="approveSuperEscrowUI('${e.escrowId}')">
+      Super Approve
+    </button>
+
+    <button onclick="rejectEscrowUI('${e.escrowId}')">
+      Reject
+    </button>
+  `;
+}
+
+// ================= ACTION WRAPPERS =================
+
+function approveSystemEscrowUI(id) {
+  if (escrowLock) return;
+  escrowLock = true;
+
+  try {
+    if (typeof systemApproveEscrow === "function") {
+      systemApproveEscrow(id);
+      alert("System Approved");
+    }
+    loadEscrowPanel();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    escrowLock = false;
+  }
+}
+
+function approveSuperEscrowUI(id) {
+  if (escrowLock) return;
+  escrowLock = true;
+
+  try {
+    if (typeof superApproveEscrow === "function") {
+      superApproveEscrow(id);
+      alert("Super Approved");
+    }
+    loadEscrowPanel();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    escrowLock = false;
+  }
+}
+
+function rejectEscrowUI(id) {
+  if (escrowLock) return;
+  escrowLock = true;
+
+  try {
+    if (typeof rejectEscrow === "function") {
+      rejectEscrow(id);
+      alert("Escrow Rejected");
+    }
+    loadEscrowPanel();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    escrowLock = false;
+  }
+}
+
+// ================= EXPORT =================
 
 window.loadEscrowPanel = loadEscrowPanel;
-window.approveSystemEscrow = approveSystemEscrow;
-window.approveSuperEscrow = approveSuperEscrow;
-window.rejectEscrow = rejectEscrow;
-
+window.approveSystemEscrowUI = approveSystemEscrowUI;
+window.approveSuperEscrowUI = approveSuperEscrowUI;
+window.rejectEscrowUI = rejectEscrowUI;
