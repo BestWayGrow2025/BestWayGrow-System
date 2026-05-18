@@ -23,6 +23,8 @@ AI GOVERNOR CORE (TOP LAYER)
 // ================= INIT =================
 function initGovernor() {
 
+  console.log("[AI GOVERNOR] INITIALIZED");
+
   if (!window.SYSTEM_EVENTS) {
     console.warn("[GOVERNOR] Event Hub missing");
     return;
@@ -115,3 +117,12 @@ function triggerFreeze(reason) {
     window.SYSTEM_EVENTS.emit("SYSTEM_FREEZE", { reason });
   }
 }
+
+// ================= GLOBAL MODULE EXPORT (IMPORTANT FIX) =================
+window.system_ai_governor = {
+  init: initGovernor,
+  handleSnapshot,
+  evaluateRisk,
+  triggerFreeze,
+  startGovernorLoop
+};
