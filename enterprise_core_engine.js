@@ -2,15 +2,17 @@
 
 /*
 ========================================
-ENTERPRISE CORE ENGINE v1.0
+ENTERPRISE CORE ENGINE v1.1
 CENTRAL SYSTEM ORCHESTRATION LAYER
+(FIXED ROUTING + EXECUTION LAYER)
 ========================================
 ✔ Module registry system
 ✔ Event bus controller
 ✔ Cross-dashboard communication layer
 ✔ Health tracking
 ✔ Safe execution router
-✔ Enterprise integration backbone
+✔ Unified route execution fix
+✔ Enterprise backbone stable
 ========================================
 */
 
@@ -59,6 +61,30 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
     }
   }
 
+  /* ================= ROUTE FIX (NEW) ================= */
+
+  function route(page, ...args) {
+    return run(page, ...args);
+  }
+
+  function execute(page, ...args) {
+
+    const fn =
+      state.modules[page] ||
+      window[page];
+
+    if (typeof fn === "function") {
+      try {
+        return fn(...args);
+      } catch (err) {
+        console.error("[CORE EXECUTE ERROR]", page, err);
+        state.health = "DEGRADED";
+      }
+    } else {
+      console.warn("[CORE ENGINE] Module not found:", page);
+    }
+  }
+
   /* ================= EVENT SYSTEM ================= */
   function emit(eventName, payload) {
 
@@ -78,7 +104,6 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
       );
     }
 
-    // internal listeners
     const list = state.listeners[eventName] || [];
     list.forEach(fn => {
       try {
@@ -122,7 +147,7 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
     return state.health;
   }
 
-  /* ================= SAFE CALL WRAPPER ================= */
+  /* ================= SAFE CALL ================= */
   function safeCall(fn, fallback) {
     try {
       if (typeof fn === "function") {
@@ -135,7 +160,7 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
     }
   }
 
-  /* ================= EVENT EMITTER WRAPPER ================= */
+  /* ================= TRIGGER ================= */
   function trigger(eventName, payload) {
     emit(eventName, payload);
   }
@@ -145,6 +170,8 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
   return {
     register,
     run,
+    route,
+    execute,
     emit,
     trigger,
     on,
@@ -158,6 +185,10 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
 /* ================= GLOBAL EXPORT ================= */
 
 window.ENTERPRISE_CORE_ENGINE = window.__ENTERPRISE_CORE_ENGINE__;
+
+// 🔥 BACKWARD + FORWARD COMPATIBILITY
+window.ENTERPRISE_CORE_ENGINE.route = window.ENTERPRISE_CORE_ENGINE.route;
+window.ENTERPRISE_CORE_ENGINE.execute = window.ENTERPRISE_CORE_ENGINE.execute;
 
 /* ================= READY LOG ================= */
 
