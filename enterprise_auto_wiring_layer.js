@@ -2,15 +2,16 @@
 
 /*
 ========================================
-ENTERPRISE AUTO WIRING LAYER v1.0
+ENTERPRISE AUTO WIRING LAYER v1.1 (FINAL FIXED)
 AUTO MODULE CONNECTOR SYSTEM
 ========================================
 ✔ Auto module discovery
-✔ Core engine auto registration
-✔ UI function binding
+✔ Core engine registration
+✔ UI binding layer
 ✔ Event auto linking
-✔ Navigation tracking
+✔ Navigation execution router FIXED
 ✔ Health monitoring
+✔ Global init exposure FIXED
 ✔ ZERO manual wiring dependency
 ========================================
 */
@@ -131,6 +132,27 @@ function trackNavigationFlow() {
   });
 }
 
+/* ================= EXECUTION ROUTER (FIXED) ================= */
+
+function bindNavigationExecutor() {
+
+  const CORE = getCore();
+  if (!CORE || typeof CORE.run !== "function") return;
+
+  CORE.on("NAVIGATION_CLICK", (data) => {
+
+    const page = data.page;
+
+    console.log("[ROUTER] EXECUTING:", page);
+
+    try {
+      CORE.run(page);
+    } catch (err) {
+      console.error("[ROUTER ERROR]", page, err);
+    }
+  });
+}
+
 /* ================= INIT ================= */
 
 function initAutoWiring() {
@@ -142,6 +164,7 @@ function initAutoWiring() {
   patchGlobalRoutes();
   trackNavigationFlow();
   startHealthMonitor();
+  bindNavigationExecutor();
 
   console.log("[AUTO WIRING] ACTIVE & CONNECTED");
 }
@@ -154,13 +177,14 @@ if (document.readyState === "loading") {
   initAutoWiring();
 }
 
-/* ================= GLOBAL EXPORT (FIXED - IMPORTANT) ================= */
+/* ================= GLOBAL EXPORT (CRITICAL FIX) ================= */
 
 window.initAutoWiring = initAutoWiring;
 
 window.__ENTERPRISE_AUTO_WIRING_LAYER__ = {
   active: true,
-  version: "1.0"
+  version: "1.1",
+  status: "READY"
 };
 
 console.log("[AUTO WIRING LAYER] READY");
