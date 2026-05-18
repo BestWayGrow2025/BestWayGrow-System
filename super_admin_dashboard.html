@@ -205,10 +205,7 @@
   <div id="systemHealthPanel"></div>
   <div id="systemEventStreamPanel"></div>
 </div>
-
-<!-- ================= BOOT MANAGER ================= -->
-<script src="boot_manager.js"></script>
-
+  
 <!-- ================= CORE ================= -->
 <script src="core_system.js"></script>
 <script src="session_manager.js"></script>
@@ -311,25 +308,7 @@ window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
 <!-- ================= DASHBOARD ================= -->
 <script src="super_admin_dashboard.js"></script>
 
-<!-- ================= SAFE FORCED START ================= -->
-<script>
-window.addEventListener("load", function () {
-  setTimeout(() => {
-
-    console.log("[SYSTEM CHECK] Boot sequence validation...");
-
-    if (typeof window.initAutoWiring === "function") {
-      window.initAutoWiring();
-      console.log("[FORCED FIX] Auto wiring started");
-    } else {
-      console.error("[CRITICAL] initAutoWiring NOT FOUND");
-    }
-
-    console.log("[SYSTEM CHECK COMPLETE]");
-
-  }, 800);
-});
-</script>
+<script src="boot_manager.js"></script>
 
 </body>
 </html>
