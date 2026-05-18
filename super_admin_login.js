@@ -20,11 +20,26 @@ let lock = false;
 
 /* ================= MODULE REGISTRATION ================= */
 
-BOOT.register("super_admin_login", function () {
-  initPage();
-  bindEvents();
-  loadPage();
-});
+// Register with Enterprise Core Engine instead of BOOT
+if (
+  window.ENTERPRISE_CORE_ENGINE &&
+  typeof window.ENTERPRISE_CORE_ENGINE.register === "function"
+) {
+  window.ENTERPRISE_CORE_ENGINE.register("super_admin_login", function () {
+    initPage();
+    bindEvents();
+    loadPage();
+  });
+}
+
+// Fallback: run directly if Core Engine is not available
+else {
+  document.addEventListener("DOMContentLoaded", function () {
+    initPage();
+    bindEvents();
+    loadPage();
+  });
+}
 
 /* ================= INIT ================= */
 
@@ -34,6 +49,7 @@ function initPage() {
     throw new Error("STOP");
   }
 
+  // Safe initialization
   initCoreSystem();
 }
 
