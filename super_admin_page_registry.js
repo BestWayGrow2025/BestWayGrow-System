@@ -2,76 +2,94 @@
 
 /*
 ========================================
-SUPER ADMIN PAGE REGISTRY v1.0
+SUPER ADMIN PAGE REGISTRY v1.1 (FIXED)
 ========================================
-Registers dashboard pages with
-Enterprise Core Engine.
+✔ Waits for Core Engine readiness
+✔ Safe module registration
+✔ No race conditions
 ========================================
 */
 
 (function () {
 
+  function waitForCore(callback) {
+
+    const timer = setInterval(() => {
+
+      if (
+        window.ENTERPRISE_CORE_ENGINE &&
+        typeof window.ENTERPRISE_CORE_ENGINE.register === "function"
+      ) {
+        clearInterval(timer);
+        callback();
+      }
+
+    }, 100);
+
+  }
+
   function registerPage(page, title) {
-    if (
-      !window.ENTERPRISE_CORE_ENGINE ||
-      typeof window.ENTERPRISE_CORE_ENGINE.register !== "function"
-    ) {
-      return;
-    }
 
     window.ENTERPRISE_CORE_ENGINE.register(page, function () {
+
       const container = document.getElementById("mainContent");
       if (!container) return;
 
       container.innerHTML = `
         <h2>${title}</h2>
-        <p>${title} module loaded successfully.</p>
+        <p>${page} module loaded successfully.</p>
       `;
     });
+
   }
 
-  // Core Pages
-  registerPage("home", "🏠 Home Dashboard");
-  registerPage("create", "👑 Create System Admin");
-  registerPage("users", "👥 User Management");
-  registerPage("system", "⚙️ System Settings");
+  function initRegistry() {
 
-  // Business Pages
-  registerPage("pinmaster", "📌 PIN Master");
-  registerPage("productmaster", "📦 Product Master");
-  registerPage("rankmaster", "🏆 Rank Master");
-  registerPage("incomecontrol", "💰 Income Control");
+    // Core Pages
+    registerPage("home", "🏠 Home Dashboard");
+    registerPage("create", "👑 Create System Admin");
+    registerPage("users", "👥 User Management");
+    registerPage("system", "⚙️ System Settings");
 
-  // Governance
-  registerPage("audit", "📜 Audit");
-  registerPage("health", "🩺 Health");
-  registerPage("backup", "💾 Backup");
-  registerPage("aigovernor", "🤖 AI Governor");
+    // Business Pages
+    registerPage("pinmaster", "📌 PIN Master");
+    registerPage("productmaster", "📦 Product Master");
+    registerPage("rankmaster", "🏆 Rank Master");
+    registerPage("incomecontrol", "💰 Income Control");
 
-  // Financial
-  registerPage("escrow", "📦 Escrow Control");
+    // Governance
+    registerPage("audit", "📜 Audit");
+    registerPage("health", "🩺 Health");
+    registerPage("backup", "💾 Backup");
+    registerPage("aigovernor", "🤖 AI Governor");
 
-  // Executive
-  registerPage("controlroom", "🖥 Enterprise Control Room");
-  registerPage("businessintelligence", "📊 Business Intelligence");
-  registerPage("strategicai", "🧠 Strategic AI Advisor");
+    // Financial
+    registerPage("escrow", "📦 Escrow Control");
 
-  // Platform Integration
-  registerPage("auditblockchain", "⛓ Enterprise Audit Blockchain");
-  registerPage("realtime", "📡 Live System Realtime");
-  registerPage("payments", "💳 Payment Gateway");
-  registerPage("orchestrator", "🧩 Orchestrator Kernel");
-  registerPage("healthmonitor", "🩺 Advanced Health Monitor");
+    // Executive
+    registerPage("controlroom", "🖥 Enterprise Control Room");
+    registerPage("businessintelligence", "📊 Business Intelligence");
+    registerPage("strategicai", "🧠 Strategic AI Advisor");
 
-  // Monitoring
-  registerPage("eventmonitor", "📡 Event Monitor");
-  registerPage("eventstream", "🌊 Event Stream");
+    // Platform
+    registerPage("auditblockchain", "⛓ Enterprise Audit Blockchain");
+    registerPage("realtime", "📡 Live System Realtime");
+    registerPage("payments", "💳 Payment Gateway");
+    registerPage("orchestrator", "🧩 Orchestrator Kernel");
+    registerPage("healthmonitor", "🩺 Advanced Health Monitor");
 
-  // Reporting
-  registerPage("reports", "📊 Reports");
-  registerPage("tree", "🌳 Tree View");
-  registerPage("reset", "♻️ Reset");
+    // Monitoring
+    registerPage("eventmonitor", "📡 Event Monitor");
+    registerPage("eventstream", "🌊 Event Stream");
 
-  console.log("[SUPER ADMIN PAGE REGISTRY] READY");
+    // Reporting
+    registerPage("reports", "📊 Reports");
+    registerPage("tree", "🌳 Tree View");
+    registerPage("reset", "♻️ Reset");
+
+    console.log("[SUPER ADMIN PAGE REGISTRY] READY");
+  }
+
+  waitForCore(initRegistry);
 
 })();
