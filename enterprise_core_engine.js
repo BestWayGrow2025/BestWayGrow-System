@@ -24,7 +24,8 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
     modules: {},
     events: [],
     health: "OK",
-    mode: "PRODUCTION"
+    mode: "PRODUCTION",
+    listeners: {}
   };
 
   /* ================= REGISTER MODULE ================= */
@@ -76,6 +77,25 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
         new CustomEvent(eventName, { detail: payload })
       );
     }
+
+    // internal listeners
+    const list = state.listeners[eventName] || [];
+    list.forEach(fn => {
+      try {
+        fn(payload);
+      } catch (e) {
+        console.error("[CORE ENGINE LISTENER ERROR]", e);
+      }
+    });
+  }
+
+  /* ================= LISTEN ================= */
+  function on(eventName, fn) {
+    if (!state.listeners[eventName]) {
+      state.listeners[eventName] = [];
+    }
+
+    state.listeners[eventName].push(fn);
   }
 
   /* ================= STATUS ================= */
@@ -115,12 +135,19 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
     }
   }
 
+  /* ================= EVENT EMITTER WRAPPER ================= */
+  function trigger(eventName, payload) {
+    emit(eventName, payload);
+  }
+
   /* ================= PUBLIC API ================= */
 
   return {
     register,
     run,
     emit,
+    trigger,
+    on,
     status,
     healthCheck,
     safeCall
