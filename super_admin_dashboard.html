@@ -295,7 +295,6 @@ window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
 <script src="registration_tree_engine.js"></script>
 
 <!-- ================= SUPER ADMIN PIN CONTROL ================= -->
-<!-- MUST LOAD BEFORE DASHBOARD -->
 <script src="super_admin_pin_control.js"></script>
 
 <!-- ================= EXECUTIVE MODULES ================= -->
@@ -303,20 +302,30 @@ window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
 <script src="enterprise_business_intelligence_dashboard.js"></script>
 <script src="strategic_ai_advisor.js"></script>
 
+<!-- ================= ENTERPRISE CORE ENGINE ================= -->
+<script src="enterprise_core_engine.js"></script>
+
+<!-- ================= AUTO WIRING (IMPORTANT FIX) ================= -->
+<script src="enterprise_auto_wiring_layer.js"></script>
+
 <!-- ================= DASHBOARD ================= -->
 <script src="super_admin_dashboard.js"></script>
 
-<!-- ================= FORCED SYSTEM START (FIX) ================= -->
+<!-- ================= SAFE FORCED START ================= -->
 <script>
 window.addEventListener("load", function () {
   setTimeout(() => {
 
-    if (window.initAutoWiring) {
+    console.log("[SYSTEM CHECK] Boot sequence validation...");
+
+    if (typeof window.initAutoWiring === "function") {
       window.initAutoWiring();
       console.log("[FORCED FIX] Auto wiring started");
     } else {
-      console.error("[CRITICAL] Auto wiring not found");
+      console.error("[CRITICAL] initAutoWiring NOT FOUND");
     }
+
+    console.log("[SYSTEM CHECK COMPLETE]");
 
   }, 800);
 });
