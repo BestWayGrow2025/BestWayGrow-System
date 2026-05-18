@@ -2,34 +2,56 @@
 
 /*
 ========================================
-SYSTEM EVENT HUB V2.1 (FINAL SAFE CORE)
+SYSTEM EVENT HUB v2.2 (BOOT MANAGER COMPATIBLE)
 ========================================
 ✔ Global event bus
 ✔ Safe overwrite protection
-✔ Cross-module sync engine
+✔ Cross-module synchronization
 ✔ PIN + PAYOUT + BANK bridge layer
 ✔ Prevents duplicate registration
-✔ Enterprise core integration (Wired)
+✔ Boot Manager compatible
+✔ SYSTEM_READY event integration
+✔ No legacy BOOT dependency
 ========================================
 */
 
-// ================= GUARD =================
 (function () {
 
-  if (window.__SYSTEM_EVENT_HUB__) return;
+  // ================= GUARD =================
+  if (window.__SYSTEM_EVENT_HUB__) {
+    console.log("[EVENT HUB] Already Loaded");
+    return;
+  }
+
   window.__SYSTEM_EVENT_HUB__ = true;
 
+  // ================= CREATE EVENT BUS =================
   const SYSTEM_EVENTS = createEventBus();
 
-  window.SYSTEM_EVENTS = SYSTEM_EVENTS;
+  // Preserve existing bus if already created by boot_manager.js
+  if (!window.SYSTEM_EVENTS) {
+    window.SYSTEM_EVENTS = SYSTEM_EVENTS;
+  }
 
-  exposeGlobalHub(SYSTEM_EVENTS);
+  const BUS = window.SYSTEM_EVENTS;
 
-  initSystemEventHub(SYSTEM_EVENTS);
+  // ================= GLOBAL HELPERS =================
+  exposeGlobalHub(BUS);
+
+  // ================= INIT =================
+  initSystemEventHub(BUS);
+
+  // ================= ENTERPRISE CORE CONNECTION =================
+  connectEnterpriseToEventHub(BUS);
+
+  console.log("[EVENT HUB] READY");
 
 })();
 
-// ================= EVENT BUS FACTORY =================
+/* ========================================
+   EVENT BUS FACTORY
+======================================== */
+
 function createEventBus() {
 
   return {
@@ -37,52 +59,69 @@ function createEventBus() {
     listeners: {},
 
     on(event, fn) {
+
       if (!event || typeof fn !== "function") return;
 
       if (!this.listeners[event]) {
         this.listeners[event] = [];
       }
 
+      // Prevent duplicate registration
       if (this.listeners[event].includes(fn)) return;
 
       this.listeners[event].push(fn);
     },
 
     off(event, fn) {
+
       const list = this.listeners[event];
+
       if (!Array.isArray(list)) return;
 
-      this.listeners[event] = list.filter(h => h !== fn);
+      this.listeners[event] = list.filter(handler => handler !== fn);
     },
 
     emit(event, data) {
+
       const list = this.listeners[event] || [];
 
       list.forEach(fn => {
         try {
           fn(data);
         } catch (err) {
-          console.error("SYSTEM EVENT ERROR:", event, err);
+          console.error("[EVENT HUB ERROR]", event, err);
         }
       });
     },
 
     clear(event) {
-      if (event) delete this.listeners[event];
-      else this.listeners = {};
+
+      if (event) {
+        delete this.listeners[event];
+      } else {
+        this.listeners = {};
+      }
     }
   };
 }
 
-// ================= INIT =================
+/* ========================================
+   INIT SYSTEM EVENT HUB
+======================================== */
+
 function initSystemEventHub(bus) {
 
   bindPinSystemEvents(bus);
   bindPayoutSystemEvents(bus);
   bindBankSystemEvents(bus);
+
+  console.log("[EVENT HUB] CORE HOOKS REGISTERED");
 }
 
-// ================= PIN EVENTS =================
+/* ========================================
+   PIN EVENTS
+======================================== */
+
 function bindPinSystemEvents(bus) {
 
   hook("executePinFlow", "PIN_EVENT", bus);
@@ -90,14 +129,20 @@ function bindPinSystemEvents(bus) {
   hook("routePinRequest", "PIN_ROUTE_EVENT", bus);
 }
 
-// ================= PAYOUT EVENTS =================
+/* ========================================
+   PAYOUT EVENTS
+======================================== */
+
 function bindPayoutSystemEvents(bus) {
 
   hook("processPayout", "PAYOUT_EVENT", bus);
   hook("finalizePayout", "PAYOUT_FINALIZED", bus);
 }
 
-// ================= BANK EVENTS =================
+/* ========================================
+   BANK EVENTS
+======================================== */
+
 function bindBankSystemEvents(bus) {
 
   hook("updateBankBalance", "BANK_UPDATE", bus);
@@ -105,13 +150,17 @@ function bindBankSystemEvents(bus) {
   hook("debitBank", "BANK_DEBIT", bus);
 }
 
-// ================= SAFE HOOK =================
+/* ========================================
+   SAFE FUNCTION HOOK
+======================================== */
+
 function hook(fnName, eventName, bus) {
 
   if (typeof window[fnName] !== "function") return;
 
   const original = window[fnName];
 
+  // Prevent duplicate wrapping
   if (original.__systemEventHooked) return;
 
   function wrapped(...args) {
@@ -120,9 +169,9 @@ function hook(fnName, eventName, bus) {
 
     bus.emit(eventName, {
       functionName: fnName,
-      eventName,
-      args,
-      result,
+      eventName: eventName,
+      args: args,
+      result: result,
       timestamp: Date.now()
     });
 
@@ -133,9 +182,14 @@ function hook(fnName, eventName, bus) {
   wrapped.__originalFunction = original;
 
   window[fnName] = wrapped;
+
+  console.log("[EVENT HUB] Hooked:", fnName, "→", eventName);
 }
 
-// ================= GLOBAL ACCESS =================
+/* ========================================
+   GLOBAL ACCESS HELPERS
+======================================== */
+
 function exposeGlobalHub(bus) {
 
   window.onSystemEvent = bus.on.bind(bus);
@@ -143,6 +197,7 @@ function exposeGlobalHub(bus) {
   window.emitSystemEvent = bus.emit.bind(bus);
 
   window.broadcastSystemEvent = function (event, payload = {}) {
+
     bus.emit(event, {
       ...payload,
       timestamp: Date.now()
@@ -152,48 +207,73 @@ function exposeGlobalHub(bus) {
   console.log("[EVENT HUB] GLOBAL REGISTRATION COMPLETE");
 }
 
-// ================= ENTERPRISE CORE WIRING =================
-(function connectEnterpriseToEventHub() {
+/* ========================================
+   ENTERPRISE CORE CONNECTION
+======================================== */
 
-  function tryConnect() {
+function connectEnterpriseToEventHub(bus) {
 
-    if (!window.BOOT || !window.BOOT.enterprise) {
-      setTimeout(tryConnect, 500);
-      return;
-    }
+  function wireCore() {
 
-    const core = window.BOOT.enterprise.core;
+    // Prevent duplicate wiring
+    if (window.__EVENT_HUB_CORE_CONNECTED__) return;
+    window.__EVENT_HUB_CORE_CONNECTED__ = true;
 
-    if (!core || !window.SYSTEM_EVENTS) {
-      setTimeout(tryConnect, 500);
+    const core =
+      window.ENTERPRISE_CORE_ENGINE ||
+      window.__ENTERPRISE_CORE_ENGINE__ ||
+      null;
+
+    if (!core) {
+      console.warn("[EVENT HUB] Enterprise Core not found");
       return;
     }
 
     console.log("[EVENT HUB] WIRING ENTERPRISE CORE");
 
-    window.SYSTEM_EVENTS.on("PIN_EVENT", (data) => {
-      core?.analyze?.(data);
+    // PIN EVENTS
+    bus.on("PIN_EVENT", function (data) {
+      core.analyze?.(data);
       window.__AUTOPILOT__?.decide?.(data);
     });
 
-    window.SYSTEM_EVENTS.on("PAYOUT_EVENT", (data) => {
-      core?.analyze?.(data);
+    // PAYOUT EVENTS
+    bus.on("PAYOUT_EVENT", function (data) {
+      core.analyze?.(data);
       window.__AUTOPILOT__?.optimize?.(data);
     });
 
-    window.SYSTEM_EVENTS.on("BANK_UPDATE", (data) => {
-      core?.analyze?.(data);
+    // BANK EVENTS
+    bus.on("BANK_UPDATE", function (data) {
+      core.analyze?.(data);
       window.__SELF_LEARNING__?.learn?.(data);
     });
 
-    window.SYSTEM_EVENTS.on("SYSTEM_EVENT", (data) => {
-      core?.analyze?.(data);
+    // SYSTEM EVENTS
+    bus.on("SYSTEM_EVENT", function (data) {
+      core.analyze?.(data);
       window.__AUTO_WIRING__?.adjust?.(data);
     });
 
     console.log("[EVENT HUB] ENTERPRISE CORE CONNECTED");
   }
 
-  tryConnect();
+  // If system already ready, connect immediately
+  if (window.__SYSTEM_BOOT__ && window.__SYSTEM_BOOT__.ready) {
+    wireCore();
+    return;
+  }
 
-})();
+  // Wait for SYSTEM_READY from boot_manager.js
+  if (window.SYSTEM_EVENTS &&
+      typeof window.SYSTEM_EVENTS.on === "function") {
+
+    window.SYSTEM_EVENTS.on("SYSTEM_READY", function () {
+      wireCore();
+    });
+
+  } else {
+    // Fallback if boot manager not yet available
+    setTimeout(wireCore, 1000);
+  }
+}
