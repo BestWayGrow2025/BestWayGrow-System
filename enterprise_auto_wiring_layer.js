@@ -2,189 +2,248 @@
 
 /*
 ========================================
-ENTERPRISE AUTO WIRING LAYER v1.1 (FINAL FIXED)
-AUTO MODULE CONNECTOR SYSTEM
+ENTERPRISE AUTO WIRING LAYER v1.2
+ENTERPRISE FINAL STABLE
 ========================================
 ✔ Auto module discovery
 ✔ Core engine registration
 ✔ UI binding layer
 ✔ Event auto linking
-✔ Navigation execution router FIXED
+✔ Navigation execution router
 ✔ Health monitoring
-✔ Global init exposure FIXED
-✔ ZERO manual wiring dependency
+✔ Duplicate init protection
+✔ Global init exposure
+✔ Boot Manager controlled startup
 ========================================
 */
 
-console.log("[AUTO WIRING LAYER] LOADING");
+(function () {
 
-/* ================= CORE SAFE ACCESS ================= */
-
-function getCore() {
-  return window.ENTERPRISE_CORE_ENGINE ||
-         window.__ENTERPRISE_CORE_ENGINE__;
-}
-
-/* ================= MODULE MAP ================= */
-
-const MODULE_MAP = [
-  "loadHome",
-  "loadUsers",
-  "loadSystem",
-  "loadTreeView",
-  "loadResetPanel",
-  "loadEscrowPanel",
-  "loadPins",
-  "loadCreateAdmin",
-  "loadStrategicAIAdvisor",
-  "loadEnterpriseAuditBlockchain",
-  "loadLiveSystemRealtime",
-  "loadPaymentGatewayBridge",
-  "loadSystemOrchestratorKernel",
-  "loadSystemHealthMonitor",
-  "renderEventMonitorPanel",
-  "renderSystemEventStreamUI",
-  "renderSystemControlCenter",
-  "renderSystemAuditPanel"
-];
-
-/* ================= AUTO REGISTER MODULES ================= */
-
-function autoRegisterModules() {
-
-  const CORE = getCore();
-  if (!CORE || typeof CORE.register !== "function") {
-    console.warn("[AUTO WIRING] Core Engine not ready");
+  // ========================================
+  // DUPLICATE LOAD PROTECTION
+  // ========================================
+  if (window.__ENTERPRISE_AUTO_WIRING_LAYER__) {
+    console.log("[AUTO WIRING LAYER] Already Loaded");
     return;
   }
 
-  MODULE_MAP.forEach(name => {
-    if (typeof window[name] === "function") {
-      CORE.register(name, window[name]);
-      console.log("[AUTO WIRING] Registered:", name);
+  console.log("[AUTO WIRING LAYER] LOADING");
+
+  // ========================================
+  // GLOBAL STATE
+  // ========================================
+  window.__ENTERPRISE_AUTO_WIRING_LAYER__ = {
+    active: false,
+    initialized: false,
+    version: "1.2",
+    status: "LOADED"
+  };
+
+  let healthInterval = null;
+
+  /* ================= CORE SAFE ACCESS ================= */
+
+  function getCore() {
+    return (
+      window.ENTERPRISE_CORE_ENGINE ||
+      window.__ENTERPRISE_CORE_ENGINE__ ||
+      null
+    );
+  }
+
+  /* ================= MODULE MAP ================= */
+
+  const MODULE_MAP = [
+    "loadHome",
+    "loadUsers",
+    "loadSystem",
+    "loadTreeView",
+    "loadResetPanel",
+    "loadEscrowPanel",
+    "loadPins",
+    "loadCreateAdmin",
+    "loadStrategicAIAdvisor",
+    "loadEnterpriseAuditBlockchain",
+    "loadLiveSystemRealtime",
+    "loadPaymentGatewayBridge",
+    "loadSystemOrchestratorKernel",
+    "loadSystemHealthMonitor",
+    "renderEventMonitorPanel",
+    "renderSystemEventStreamUI",
+    "renderSystemControlCenter",
+    "renderSystemAuditPanel"
+  ];
+
+  /* ================= AUTO REGISTER MODULES ================= */
+
+  function autoRegisterModules() {
+
+    const CORE = getCore();
+
+    if (!CORE || typeof CORE.register !== "function") {
+      console.warn("[AUTO WIRING] Core Engine not ready");
+      return;
     }
-  });
-}
 
-/* ================= EVENT WIRING ================= */
+    MODULE_MAP.forEach(name => {
+      if (typeof window[name] === "function") {
+        CORE.register(name, window[name]);
+        console.log("[AUTO WIRING] Registered:", name);
+      }
+    });
+  }
 
-function autoWireEvents() {
+  /* ================= EVENT WIRING ================= */
 
-  const CORE = getCore();
-  if (!CORE || typeof CORE.emit !== "function") return;
+  function autoWireEvents() {
 
-  document.addEventListener("click", function (e) {
+    const CORE = getCore();
 
-    const el = e.target;
-    if (!el || !el.dataset) return;
+    if (!CORE || typeof CORE.emit !== "function") return;
 
-    const page = el.dataset.page;
+    if (document.__autoWiringClickBound__) return;
+    document.__autoWiringClickBound__ = true;
 
-    if (page) {
-      CORE.emit("NAVIGATION_CLICK", {
-        page,
+    document.addEventListener("click", function (e) {
+
+      const el = e.target.closest("[data-page]");
+
+      if (!el || !el.dataset) return;
+
+      const page = el.dataset.page;
+
+      if (page) {
+        CORE.emit("NAVIGATION_CLICK", {
+          page,
+          time: Date.now()
+        });
+      }
+    });
+  }
+
+  /* ================= ROUTE PATCH ================= */
+
+  function patchGlobalRoutes() {
+
+    const CORE = getCore();
+
+    if (!CORE || typeof CORE.run !== "function") return;
+
+    window.safeCoreRun = function (name) {
+      return CORE.run(name);
+    };
+  }
+
+  /* ================= HEALTH MONITOR ================= */
+
+  function startHealthMonitor() {
+
+    const CORE = getCore();
+
+    if (!CORE || typeof CORE.healthCheck !== "function") return;
+
+    if (healthInterval) return;
+
+    healthInterval = setInterval(() => {
+      try {
+        const status = CORE.healthCheck();
+        console.log("[AUTO HEALTH]", status);
+      } catch (err) {
+        console.error("[AUTO HEALTH ERROR]", err);
+      }
+    }, 10000);
+  }
+
+  /* ================= NAVIGATION TRACKING ================= */
+
+  function trackNavigationFlow() {
+
+    const CORE = getCore();
+
+    if (
+      !CORE ||
+      typeof CORE.emit !== "function" ||
+      typeof CORE.on !== "function"
+    ) {
+      return;
+    }
+
+    if (CORE.__navigationTrackingBound__) return;
+    CORE.__navigationTrackingBound__ = true;
+
+    CORE.on("NAVIGATION_CLICK", function (data) {
+
+      console.log("[AUTO WIRING] NAV:", data.page);
+
+      CORE.emit("SYSTEM_EVENT", {
+        type: "navigation",
+        page: data.page,
         time: Date.now()
       });
-    }
-  });
-}
-
-/* ================= ROUTE PATCH ================= */
-
-function patchGlobalRoutes() {
-
-  const CORE = getCore();
-  if (!CORE) return;
-
-  window.safeCoreRun = function (name) {
-    return CORE.run(name);
-  };
-}
-
-/* ================= HEALTH MONITOR ================= */
-
-function startHealthMonitor() {
-
-  const CORE = getCore();
-  if (!CORE || typeof CORE.healthCheck !== "function") return;
-
-  setInterval(() => {
-    const status = CORE.healthCheck();
-    console.log("[AUTO HEALTH]", status);
-  }, 10000);
-}
-
-/* ================= NAVIGATION TRACKING ================= */
-
-function trackNavigationFlow() {
-
-  const CORE = getCore();
-  if (!CORE || typeof CORE.emit !== "function") return;
-
-  CORE.on("NAVIGATION_CLICK", (data) => {
-    console.log("[AUTO WIRING] NAV:", data.page);
-
-    CORE.emit("SYSTEM_EVENT", {
-      type: "navigation",
-      page: data.page,
-      time: Date.now()
     });
-  });
-}
+  }
 
-/* ================= EXECUTION ROUTER (FIXED) ================= */
+  /* ================= EXECUTION ROUTER ================= */
 
-function bindNavigationExecutor() {
+  function bindNavigationExecutor() {
 
-  const CORE = getCore();
-  if (!CORE || typeof CORE.run !== "function") return;
+    const CORE = getCore();
 
-  CORE.on("NAVIGATION_CLICK", (data) => {
-
-    const page = data.page;
-
-    console.log("[ROUTER] EXECUTING:", page);
-
-    try {
-      CORE.run(page);
-    } catch (err) {
-      console.error("[ROUTER ERROR]", page, err);
+    if (
+      !CORE ||
+      typeof CORE.run !== "function" ||
+      typeof CORE.on !== "function"
+    ) {
+      return;
     }
-  });
-}
 
-/* ================= INIT ================= */
+    if (CORE.__navigationExecutorBound__) return;
+    CORE.__navigationExecutorBound__ = true;
 
-function initAutoWiring() {
+    CORE.on("NAVIGATION_CLICK", function (data) {
 
-  console.log("[AUTO WIRING] INIT START");
+      const page = data.page;
 
-  autoRegisterModules();
-  autoWireEvents();
-  patchGlobalRoutes();
-  trackNavigationFlow();
-  startHealthMonitor();
-  bindNavigationExecutor();
+      console.log("[ROUTER] EXECUTING:", page);
 
-  console.log("[AUTO WIRING] ACTIVE & CONNECTED");
-}
+      try {
+        CORE.run(page);
+      } catch (err) {
+        console.error("[ROUTER ERROR]", page, err);
+      }
+    });
+  }
 
-/* ================= AUTO START ================= */
+  /* ================= INIT ================= */
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initAutoWiring);
-} else {
-  initAutoWiring();
-}
+  function initAutoWiring() {
 
-/* ================= GLOBAL EXPORT (CRITICAL FIX) ================= */
+    if (window.__ENTERPRISE_AUTO_WIRING_LAYER__.initialized) {
+      console.log("[AUTO WIRING] Already Initialized");
+      return;
+    }
 
-window.initAutoWiring = initAutoWiring;
+    console.log("[AUTO WIRING] INIT START");
 
-window.__ENTERPRISE_AUTO_WIRING_LAYER__ = {
-  active: true,
-  version: "1.1",
-  status: "READY"
-};
+    autoRegisterModules();
+    autoWireEvents();
+    patchGlobalRoutes();
+    trackNavigationFlow();
+    startHealthMonitor();
+    bindNavigationExecutor();
 
-console.log("[AUTO WIRING LAYER] READY");
+    window.__ENTERPRISE_AUTO_WIRING_LAYER__.active = true;
+    window.__ENTERPRISE_AUTO_WIRING_LAYER__.initialized = true;
+    window.__ENTERPRISE_AUTO_WIRING_LAYER__.status = "READY";
+
+    console.log("[AUTO WIRING] ACTIVE & CONNECTED");
+  }
+
+  /* ================= GLOBAL EXPORT ================= */
+
+  window.initAutoWiring = initAutoWiring;
+  window.getAutoWiringCore = getCore;
+
+  console.log("[AUTO WIRING LAYER] READY");
+
+})();
