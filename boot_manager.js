@@ -8,13 +8,15 @@ BOOT ARCHITECTURE V2 - CORE ENGINE
 ✔ Dependency validation
 ✔ Load tracking
 ✔ Crash-safe boot
-✔ No silent failures
+✔ Enterprise engine support
+✔ Auto initialization pipeline
 ========================================
 */
 
 window.BOOT = {
   modules: {},
   status: {},
+  hooks: {}
 };
 
 /* ================= REGISTER MODULE ================= */
@@ -47,10 +49,67 @@ BOOT.require = function (list) {
 
 BOOT.start = function (name) {
   if (BOOT.modules[name]) {
-    BOOT.modules[name]();
-    BOOT.loaded(name);
+    try {
+      BOOT.modules[name]();
+      BOOT.loaded(name);
+
+      // trigger hook after start
+      BOOT.runHook("afterStart", name);
+
+    } catch (e) {
+      console.error("[BOOT CRASH]", name, e);
+      BOOT.runHook("onCrash", { name, error: e });
+    }
   } else {
     throw new Error("Module not found: " + name);
+  }
+};
+
+/* ================= BOOT HOOK SYSTEM ================= */
+
+BOOT.on = function (event, fn) {
+  BOOT.hooks[event] = BOOT.hooks[event] || [];
+  BOOT.hooks[event].push(fn);
+};
+
+BOOT.runHook = function (event, data) {
+  const list = BOOT.hooks[event] || [];
+  list.forEach(fn => {
+    try {
+      fn(data);
+    } catch (e) {
+      console.error("[HOOK ERROR]", e);
+    }
+  });
+};
+
+/* ================= ENTERPRISE AUTO INIT ================= */
+
+BOOT.initEnterprise = function () {
+
+  console.log("[BOOT] Initializing Enterprise Layer...");
+
+  if (typeof initializeEnterpriseCoreSystem === "function") {
+    initializeEnterpriseCoreSystem();
+  }
+
+  if (typeof bindEnterpriseCoreToDashboard === "function") {
+    bindEnterpriseCoreToDashboard();
+  }
+
+  BOOT.runHook("enterpriseReady", true);
+
+};
+
+/* ================= AUTO START ================= */
+
+BOOT.startSystem = function () {
+  console.log("[BOOT] SYSTEM START SEQUENCE INITIATED");
+
+  BOOT.initEnterprise();
+
+  if (BOOT.modules["super_admin_dashboard"]) {
+    BOOT.start("super_admin_dashboard");
   }
 };
 
@@ -60,3 +119,13 @@ BOOT.report = function () {
   console.log("===== BOOT STATUS =====");
   console.table(BOOT.status);
 };
+
+/* ================= OPTIONAL GLOBAL HOOKS ================= */
+
+BOOT.on("onCrash", function (data) {
+  console.error("[RECOVERY TRIGGER]", data);
+});
+
+BOOT.on("enterpriseReady", function () {
+  console.log("[ENTERPRISE] FULL CORE ACTIVE");
+});
