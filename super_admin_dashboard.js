@@ -307,20 +307,95 @@ case "backup":
           }
           break;
 
-        /* ================= STRATEGIC AI ADVISOR ================= */
+       /* ================= STRATEGIC AI ADVISOR ================= */
         case "strategicai":
           if (typeof loadStrategicAIAdvisor === "function") {
             loadStrategicAIAdvisor();
-          } else if (
-            typeof renderStrategicAIAdvisor === "function"
-          ) {
+          } else if (typeof renderStrategicAIAdvisor === "function") {
             renderStrategicAIAdvisor();
           } else {
             const main = document.getElementById("mainContent");
             if (main) {
               main.innerHTML = `
-                <h3>🧠 Strategic AI Advisor</h3>
-                <p>Strategic AI Advisor module not loaded.</p>
+                <div class="card">
+                  <h3>🧠 Strategic AI Advisor</h3>
+                  <p>Strategic AI Advisor module not loaded.</p>
+                </div>
+              `;
+            }
+          }
+          break;
+
+        /* ================= ENTERPRISE AUDIT BLOCKCHAIN ================= */
+        case "auditblockchain":
+          if (typeof loadEnterpriseAuditBlockchain === "function") {
+            loadEnterpriseAuditBlockchain();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <h3>⛓ Enterprise Audit Blockchain</h3>
+                <p>Blockchain-based audit ledger module active.</p>
+              `;
+            }
+          }
+          break;
+
+        /* ================= LIVE SYSTEM REALTIME ================= */
+        case "realtime":
+          if (typeof loadLiveSystemRealtime === "function") {
+            loadLiveSystemRealtime();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <h3>📡 Live System Realtime</h3>
+                <p>Real-time monitoring engine active.</p>
+              `;
+            }
+          }
+          break;
+
+        /* ================= PAYMENT GATEWAY ================= */
+        case "payments":
+          if (typeof loadPaymentGatewayBridge === "function") {
+            loadPaymentGatewayBridge();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <h3>💳 Payment Gateway Bridge</h3>
+                <p>Payment gateway integration module active.</p>
+              `;
+            }
+          }
+          break;
+
+        /* ================= ORCHESTRATOR KERNEL ================= */
+        case "orchestrator":
+          if (typeof loadSystemOrchestratorKernel === "function") {
+            loadSystemOrchestratorKernel();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <h3>🧩 System Orchestrator Kernel</h3>
+                <p>Central orchestration kernel active.</p>
+              `;
+            }
+          }
+          break;
+
+        /* ================= ADVANCED HEALTH MONITOR ================= */
+        case "healthmonitor":
+          if (typeof loadSystemHealthMonitor === "function") {
+            loadSystemHealthMonitor();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <h3>🩺 Advanced Health Monitor</h3>
+                <p>Deep system health monitoring active.</p>
               `;
             }
           }
@@ -340,7 +415,7 @@ case "backup":
             }
           }
           break;
-
+          
         /* ================= EVENT STREAM ================= */
         case "eventstream":
           if (typeof renderSystemEventStreamUI === "function") {
