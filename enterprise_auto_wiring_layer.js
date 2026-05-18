@@ -9,6 +9,8 @@ AUTO MODULE CONNECTOR SYSTEM
 ✔ Core engine auto registration
 ✔ UI function binding
 ✔ Event auto linking
+✔ Navigation tracking
+✔ Health monitoring
 ✔ Zero manual wiring layer
 ========================================
 */
@@ -82,7 +84,10 @@ function autoWireEvents() {
     const page = target.dataset.page;
 
     if (page) {
-      CORE.emit("NAVIGATION_CLICK", { page });
+      CORE.emit("NAVIGATION_CLICK", {
+        page,
+        timestamp: Date.now()
+      });
     }
 
   });
@@ -96,9 +101,7 @@ function patchGlobalRoutes() {
   if (!CORE) return;
 
   window.safeCoreRun = function (name) {
-
     return CORE.run(name);
-
   };
 
 }
@@ -113,9 +116,28 @@ function startHealthMonitor() {
 
     const status = CORE.healthCheck();
 
-    console.log("[AUTO HEALTH]", status);
+    console.log("[AUTO HEALTH STATUS]", status);
 
   }, 10000);
+
+}
+
+/* ================= AUTO NAVIGATION TRACKING ================= */
+
+function trackNavigationFlow() {
+
+  if (!CORE || typeof CORE.emit !== "function") return;
+
+  CORE.on("NAVIGATION_CLICK", (data) => {
+
+    console.log("[AUTO WIRING] Navigation:", data.page);
+
+    CORE.emit("SYSTEM_EVENT", {
+      type: "navigation",
+      page: data.page
+    });
+
+  });
 
 }
 
@@ -123,13 +145,15 @@ function startHealthMonitor() {
 
 function initAutoWiring() {
 
+  console.log("[AUTO WIRING] INITIALIZING...");
+
   autoRegisterModules();
   autoWireEvents();
   patchGlobalRoutes();
+  trackNavigationFlow();
   startHealthMonitor();
 
-  console.log("[AUTO WIRING LAYER] ACTIVE");
-
+  console.log("[AUTO WIRING LAYER] ACTIVE & CONNECTED");
 }
 
 /* ================= SAFE INIT ================= */
@@ -140,7 +164,10 @@ if (document.readyState === "loading") {
   initAutoWiring();
 }
 
-/* ================= EXPORT ================= */
+/* ================= GLOBAL FLAG ================= */
 
-window.__ENTERPRISE_AUTO_WIRING_LAYER__ = true;
+window.__ENTERPRISE_AUTO_WIRING_LAYER__ = {
+  active: true,
+  version: "1.0"
+};
 
