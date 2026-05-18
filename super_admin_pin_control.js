@@ -1,164 +1,86 @@
-
 "use strict";
 
-/*
-========================================
-SUPER ADMIN PIN CONTROL (FINAL FIXED)
-========================================
-✔ Safe super admin layer
-✔ PIN request filtering
-✔ Execute flow only (no direct engine calls)
-✔ Dashboard integration added
-✔ loadPins() exported
-✔ UI safe hooks included
-========================================
-*/
+(function () {
 
-/* ================= SAFE SUPER ADMIN ================= */
+  function waitForCore(callback) {
 
-function getSafeSuperAdmin() {
-  if (typeof getSession !== "function") return null;
+    const timer = setInterval(() => {
 
-  const session = getSession();
+      if (
+        window.ENTERPRISE_CORE_ENGINE &&
+        typeof window.ENTERPRISE_CORE_ENGINE.register === "function"
+      ) {
+        clearInterval(timer);
+        callback();
+      }
 
-  if (!session || session.role !== "super_admin") return null;
+    }, 100);
 
-  if (typeof getUserById === "function") {
-    return getUserById(session.userId);
   }
 
-  return session;
-}
+  function initRegistry() {
 
-/* ================= REQUEST FILTER ================= */
+    const CORE = window.ENTERPRISE_CORE_ENGINE;
 
-function getSuperAdminPinRequests() {
-  if (typeof getPinRequests !== "function") return [];
+    if (!CORE) return;
 
-  return (getPinRequests() || []).filter(req =>
-    req &&
-    req.paymentId &&
-    String(req.paymentId).startsWith("SYSTEM_STOCK_")
-  );
-}
+    // ================= HOME =================
+    CORE.register("home", function () {
+      document.getElementById("mainContent").innerHTML =
+        window.renderHome?.() || "<h2>🏠 Home</h2>";
+    });
 
-function getPendingSystemStockRequests() {
-  return getSuperAdminPinRequests().filter(req =>
-    req.status === "PENDING"
-  );
-}
+    // ================= CREATE =================
+    CORE.register("create", function () {
+      document.getElementById("mainContent").innerHTML =
+        window.renderCreateAdmin?.() || "<h2>👑 Create Admin</h2>";
+    });
 
-/* ================= VALIDATION ================= */
+    // ================= USERS =================
+    CORE.register("users", function () {
+      document.getElementById("mainContent").innerHTML =
+        window.renderUsers?.() || "<h2>👥 Users</h2>";
+    });
 
-function canReviewSystemStockRequest(requestId) {
-  const admin = getSafeSuperAdmin();
-  if (!admin) return false;
+    // ================= SYSTEM =================
+    CORE.register("system", function () {
+      document.getElementById("mainContent").innerHTML =
+        window.renderSystem?.() || "<h2>⚙️ System</h2>";
+    });
 
-  const req = getPendingSystemStockRequests().find(
-    r => r.requestId === requestId
-  );
+    // ================= PIN =================
+    CORE.register("pinmaster", function () {
+      document.getElementById("mainContent").innerHTML =
+        window.renderPINMaster?.() || "<h2>📌 PIN Master</h2>";
+    });
 
-  return !!req;
-}
+    // ================= PRODUCT =================
+    CORE.register("productmaster", function () {
+      document.getElementById("mainContent").innerHTML =
+        window.renderProductMaster?.() || "<h2>📦 Product Master</h2>";
+    });
 
-/* ================= APPROVE ================= */
+    // ================= AUDIT =================
+    CORE.register("audit", function () {
+      document.getElementById("mainContent").innerHTML =
+        window.renderAudit?.() || "<h2>📜 Audit</h2>";
+    });
 
-function approveSystemStockRequest(requestId) {
-  if (!canReviewSystemStockRequest(requestId)) {
-    alert("Invalid or unauthorized request");
-    return;
+    // ================= HEALTH =================
+    CORE.register("health", function () {
+      document.getElementById("mainContent").innerHTML =
+        window.renderHealth?.() || "<h2>🩺 Health</h2>";
+    });
+
+    // ================= BACKUP =================
+    CORE.register("backup", function () {
+      document.getElementById("mainContent").innerHTML =
+        window.renderBackup?.() || "<h2>💾 Backup</h2>";
+    });
+
+    console.log("[SUPER ADMIN PAGE REGISTRY] OPTION B READY");
   }
 
-  if (typeof executePinFlow !== "function") {
-    throw new Error("PIN Flow Controller missing");
-  }
+  waitForCore(initRegistry);
 
-  return executePinFlow("PROCESS_REQUEST", {
-    requestId
-  });
-}
-
-/* ================= REJECT ================= */
-
-function rejectSystemStockRequest(requestId) {
-  if (!canReviewSystemStockRequest(requestId)) {
-    alert("Invalid or unauthorized request");
-    return;
-  }
-
-  if (typeof executePinFlow !== "function") {
-    throw new Error("PIN Flow Controller missing");
-  }
-
-  return executePinFlow("REJECT_REQUEST", {
-    requestId
-  });
-}
-
-/* ================= PIN DASHBOARD VIEW ================= */
-
-function loadPins() {
-  const main = document.getElementById("mainContent");
-  if (!main) return;
-
-  const requests = getSuperAdminPinRequests();
-
-  let html = `
-    <h3>📌 PIN CONTROL PANEL (SUPER ADMIN)</h3>
-
-    <div style="margin-bottom:10px;">
-      <b>Total Requests:</b> ${requests.length}
-    </div>
-
-    <table border="1" style="width:100%;text-align:left;">
-      <tr>
-        <th>Request ID</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-  `;
-
-  requests.forEach(req => {
-    html += `
-      <tr>
-        <td>${req.requestId}</td>
-        <td>${req.status}</td>
-        <td>
-          <button onclick="approveSystemStockRequest('${req.requestId}')">
-            Approve
-          </button>
-
-          <button onclick="rejectSystemStockRequest('${req.requestId}')">
-            Reject
-          </button>
-        </td>
-      </tr>
-    `;
-  });
-
-  html += `</table>`;
-
-  main.innerHTML = html;
-}
-
-/* ================= GLOBAL PIN AUTH ================= */
-
-function canCreateGlobalPin(type) {
-  const admin = getSafeSuperAdmin();
-  return !!admin && ["upgrade", "repurchase"].includes(type);
-}
-
-function canDeleteGlobalPin(pin) {
-  if (typeof canDeletePin !== "function") return false;
-  return canDeletePin(pin, "super_admin");
-}
-
-function canOverrideGlobalPin() {
-  return !!getSafeSuperAdmin();
-}
-
-/* ================= EXPORTS ================= */
-
-window.loadPins = loadPins;
-window.approveSystemStockRequest = approveSystemStockRequest;
-window.rejectSystemStockRequest = rejectSystemStockRequest;
+})();
