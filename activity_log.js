@@ -278,3 +278,24 @@ function clearCriticalLogs(performedBy = "SYSTEM") {
   safeSave(CRITICAL_KEY, []);
   logActivity(performedBy, "SYSTEM", "Critical logs cleared", "ADMIN");
 }
+
+// ===============================
+// 🌐 GLOBAL EXPORTS
+// ===============================
+window.logActivity = logActivity;
+window.getActivityLogs = getActivityLogs;
+window.clearActivityLogs = clearActivityLogs;
+
+window.filterLogsByUser = filterLogsByUser;
+window.filterLogsByRole = filterLogsByRole;
+window.filterLogsAdvanced = filterLogsAdvanced;
+
+window.logCritical = logCritical;
+window.getCriticalLogs = getCriticalLogs;
+window.clearCriticalLogs = clearCriticalLogs;
+
+// Internal utilities (optional but useful)
+window.normalizeSource = normalizeSource;
+window.makeChecksum = makeChecksum;
+
+console.log("[ACTIVITY LOG] READY V7.3");
