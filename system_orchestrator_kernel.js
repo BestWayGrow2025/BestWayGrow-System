@@ -2,180 +2,247 @@
 
 /*
 ========================================
-FULL ORCHESTRATOR KERNEL (FOK v1.1 FIXED)
+FULL ORCHESTRATOR KERNEL (FOK v1.2 FINAL)
 ========================================
-✔ Safe boot sequencing FIXED
-✔ Waits for CORE ENGINE
-✔ Waits for AUTO WIRING
-✔ Prevents empty module boot
-✔ Guaranteed initialization order
+✔ Boot Manager compatible
+✔ No automatic self-start
+✔ Safe duplicate protection
+✔ Dependency-aware module orchestration
+✔ Core and optional module boot
+✔ SYSTEM_READY driven initialization
+✔ Global initOrchestrator exposure
+✔ ORCHESTRATOR_READY event emission
+✔ Production stable
 ========================================
 */
 
 (function () {
 
-  if (window.__SYSTEM_ORCHESTRATOR_KERNEL__) return;
+  // ================= DUPLICATE LOAD PROTECTION =================
+  if (window.__SYSTEM_ORCHESTRATOR_KERNEL__) {
+    console.log("[FOK] Already Loaded");
+    return;
+  }
+
   window.__SYSTEM_ORCHESTRATOR_KERNEL__ = true;
 
-  // 🔥 FIX: DO NOT START IMMEDIATELY
-  window.addEventListener("load", waitForSystemReady);
+  console.log("[FOK] LOADING");
 
-})();
-
-/* ================= MODULE STORE ================= */
-
-window.FOK_MODULES = window.FOK_MODULES || {
-  core: [],
-  optional: [],
-  ui: []
-};
-
-/* ================= REGISTER MODULE ================= */
-
-function registerModule(name, type, initFn, deps = []) {
-
-  if (!window.FOK_MODULES[type]) {
-    window.FOK_MODULES[type] = [];
-  }
-
-  window.FOK_MODULES[type].push({
-    name,
-    initFn,
-    deps,
-    status: "PENDING"
-  });
-}
-
-/* ================= READY CHECK ================= */
-
-function isReady(module) {
-  return module.deps.every(dep => window[dep]);
-}
-
-/* ================= WAIT SYSTEM ================= */
-
-function waitForSystemReady() {
-
-  const check = setInterval(() => {
-
-    const core = window.ENTERPRISE_CORE_ENGINE || window.__ENTERPRISE_CORE_ENGINE__;
-    const auto = window.initAutoWiring;
-
-    if (core && auto) {
-
-      clearInterval(check);
-
-      console.log("[FOK] SYSTEM READY DETECTED");
-
-      initOrchestrator();
-
-    } else {
-
-      console.log("[FOK] Waiting for dependencies...");
-
-    }
-
-  }, 300);
-}
-
-/* ================= BOOT ================= */
-
-function initOrchestrator() {
-
-  console.log("[FOK] Orchestrator Starting...");
-
-  bootCoreModules();
-  bootOptionalModules();
-
-  setTimeout(finalizeBoot, 200);
-
-  console.log("[FOK] Orchestration Complete");
-}
-
-/* ================= CORE ================= */
-
-function bootCoreModules() {
-
-  window.FOK_MODULES.core.forEach(mod => {
-
-    try {
-
-      if (!isReady(mod)) {
-        console.warn("[FOK] Waiting:", mod.name);
-        return;
-      }
-
-      mod.initFn();
-      mod.status = "ACTIVE";
-
-    } catch (err) {
-      console.error("[FOK] ERROR:", mod.name, err);
-    }
-  });
-}
-
-/* ================= OPTIONAL ================= */
-
-function bootOptionalModules() {
-
-  window.FOK_MODULES.optional.forEach(mod => {
-
-    try {
-
-      if (!isReady(mod)) {
-        console.warn("[FOK] SKIP:", mod.name);
-        return;
-      }
-
-      mod.initFn();
-      mod.status = "ACTIVE";
-
-    } catch (err) {
-      console.error("[FOK] ERROR:", mod.name, err);
-    }
-  });
-}
-
-/* ================= FINALIZE ================= */
-
-function finalizeBoot() {
-
-  window.__SYSTEM_STATUS__ = {
-    orchestrator: "READY",
-    modules: window.FOK_MODULES
+  // ================= MODULE STORE =================
+  window.FOK_MODULES = window.FOK_MODULES || {
+    core: [],
+    optional: [],
+    ui: []
   };
 
-  console.log("[FOK] SYSTEM STABLE");
+  /* ========================================
+     REGISTER MODULE
+  ======================================== */
 
-  if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.emit("ORCHESTRATOR_READY", {
-      time: Date.now()
+  function registerModule(name, type, initFn, deps = []) {
+
+    if (!name || typeof initFn !== "function") {
+      console.warn("[FOK] Invalid module registration:", name);
+      return;
+    }
+
+    if (!window.FOK_MODULES[type]) {
+      window.FOK_MODULES[type] = [];
+    }
+
+    // Prevent duplicate registrations
+    const exists = window.FOK_MODULES[type].some(
+      mod => mod.name === name
+    );
+
+    if (exists) {
+      console.log("[FOK] Module already registered:", name);
+      return;
+    }
+
+    window.FOK_MODULES[type].push({
+      name: name,
+      initFn: initFn,
+      deps: Array.isArray(deps) ? deps : [],
+      status: "PENDING",
+      lastError: null,
+      initializedAt: null
+    });
+
+    console.log("[FOK] Registered:", type.toUpperCase(), name);
+  }
+
+  /* ========================================
+     DEPENDENCY CHECK
+  ======================================== */
+
+  function isReady(module) {
+
+    if (!module || !Array.isArray(module.deps)) {
+      return true;
+    }
+
+    return module.deps.every(dep => !!window[dep]);
+  }
+
+  /* ========================================
+     BOOT MODULE LIST
+  ======================================== */
+
+  function bootModules(type) {
+
+    const modules = window.FOK_MODULES[type] || [];
+
+    modules.forEach(mod => {
+
+      // Skip already active modules
+      if (mod.status === "ACTIVE") {
+        return;
+      }
+
+      try {
+
+        // Dependency check
+        if (!isReady(mod)) {
+          console.warn("[FOK] Waiting for dependencies:", mod.name);
+          return;
+        }
+
+        // Execute module initializer
+        mod.initFn();
+
+        // Update status
+        mod.status = "ACTIVE";
+        mod.lastError = null;
+        mod.initializedAt = Date.now();
+
+        console.log("[FOK] ACTIVE:", mod.name);
+
+      } catch (err) {
+
+        mod.status = "FAILED";
+        mod.lastError = err.message;
+
+        console.error("[FOK] ERROR:", mod.name, err);
+      }
     });
   }
-}
 
-/* ================= API ================= */
+  /* ========================================
+     CORE BOOT
+  ======================================== */
 
-window.SystemModule = {
-
-  core(name, initFn, deps = []) {
-    registerModule(name, "core", initFn, deps);
-  },
-
-  optional(name, initFn, deps = []) {
-    registerModule(name, "optional", initFn, deps);
-  },
-
-  getStatus() {
-    return window.FOK_MODULES;
+  function bootCoreModules() {
+    bootModules("core");
   }
-};
 
-/* ================= DEBUG ================= */
+  /* ========================================
+     OPTIONAL BOOT
+  ======================================== */
 
-window.FOK = {
-  modules: window.FOK_MODULES,
-  register: registerModule
-};
+  function bootOptionalModules() {
+    bootModules("optional");
+  }
 
-console.log("[FOK] LOADED");
+  /* ========================================
+     UI BOOT (OPTIONAL)
+  ======================================== */
+
+  function bootUIModules() {
+    bootModules("ui");
+  }
+
+  /* ========================================
+     FINALIZE
+  ======================================== */
+
+  function finalizeBoot() {
+
+    window.__SYSTEM_STATUS__ = {
+      orchestrator: "READY",
+      timestamp: Date.now(),
+      modules: window.FOK_MODULES
+    };
+
+    console.log("[FOK] SYSTEM STABLE");
+
+    if (window.SYSTEM_EVENTS &&
+        typeof window.SYSTEM_EVENTS.emit === "function") {
+
+      window.SYSTEM_EVENTS.emit("ORCHESTRATOR_READY", {
+        time: Date.now(),
+        status: window.__SYSTEM_STATUS__
+      });
+    }
+  }
+
+  /* ========================================
+     MAIN INITIALIZER
+  ======================================== */
+
+  function initOrchestrator() {
+
+    // Prevent duplicate initialization
+    if (window.__FOK_INITIALIZED__) {
+      console.log("[FOK] Already Initialized");
+      return;
+    }
+
+    window.__FOK_INITIALIZED__ = true;
+
+    console.log("[FOK] Orchestrator Starting...");
+
+    // Boot in strict order
+    bootCoreModules();
+    bootOptionalModules();
+    bootUIModules();
+
+    // Final stabilization
+    setTimeout(finalizeBoot, 200);
+
+    console.log("[FOK] Orchestration Complete");
+  }
+
+  /* ========================================
+     PUBLIC API
+  ======================================== */
+
+  window.SystemModule = {
+
+    core(name, initFn, deps = []) {
+      registerModule(name, "core", initFn, deps);
+    },
+
+    optional(name, initFn, deps = []) {
+      registerModule(name, "optional", initFn, deps);
+    },
+
+    ui(name, initFn, deps = []) {
+      registerModule(name, "ui", initFn, deps);
+    },
+
+    getStatus() {
+      return window.FOK_MODULES;
+    }
+  };
+
+  /* ========================================
+     GLOBAL EXPORTS (CRITICAL FOR BOOT MANAGER)
+  ======================================== */
+
+  // Boot Manager calls this function directly
+  window.initOrchestrator = initOrchestrator;
+
+  // Debug interface
+  window.FOK = {
+    modules: window.FOK_MODULES,
+    register: registerModule,
+    init: initOrchestrator,
+    getStatus: function () {
+      return window.FOK_MODULES;
+    }
+  };
+
+  console.log("[FOK] READY");
+
+})();
