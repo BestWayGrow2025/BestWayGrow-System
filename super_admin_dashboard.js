@@ -2,72 +2,92 @@
 
 /*
 ========================================
-SUPER ADMIN DASHBOARD v4.1 (WIRED SAFE)
+SUPER ADMIN DASHBOARD v4.1 (STABLE FIX)
 ========================================
-✔ Waits for SYSTEM_READY
-✔ No direct boot dependency
-✔ CORE-safe navigation
-✔ Event-driven UI binding
-✔ Prevents undefined crashes
+✔ Safe CORE execution layer
+✔ Button click ALWAYS works
+✔ Event-safe navigation
+✔ No dependency timing crash
+✔ SYSTEM_READY compatible
 ========================================
 */
 
 console.log("[DASHBOARD] LOADING");
 
-// ================= CORE ACCESS =================
+/* ================= SAFE CORE ACCESS ================= */
+
 function getCore() {
   return window.ENTERPRISE_CORE_ENGINE ||
          window.__ENTERPRISE_CORE_ENGINE__;
 }
 
-// ================= NAVIGATION =================
-function navigate(page) {
+/* ================= SAFE EXECUTOR ================= */
+
+function safeRun(page) {
 
   const CORE = getCore();
 
-  console.log("[DASHBOARD] NAV:", page);
+  try {
 
-  if (CORE && typeof CORE.run === "function") {
-    try {
+    if (CORE && typeof CORE.run === "function") {
       CORE.run(page);
-    } catch (err) {
-      console.error("[DASHBOARD ERROR]", err);
+      console.log("[DASHBOARD] ROUTED VIA CORE:", page);
+      return;
     }
-  } else {
-    console.warn("[DASHBOARD] CORE NOT READY");
+
+    // fallback (IMPORTANT FIX)
+    console.warn("[DASHBOARD] CORE NOT READY - QUEUED:", page);
+
+    window.__PENDING_ROUTE__ = window.__PENDING_ROUTE__ || [];
+    window.__PENDING_ROUTE__.push(page);
+
+  } catch (err) {
+    console.error("[DASHBOARD ERROR]", err);
   }
 }
 
-// ================= BUTTON BINDING =================
-function bindMenuButtons() {
+/* ================= BUTTON ROUTER ================= */
 
-  document.querySelectorAll(".menu button").forEach(btn => {
+function handleNavigation(page) {
+  safeRun(page);
+}
 
-    btn.addEventListener("click", () => {
+/* ================= BUTTON BINDING ================= */
 
-      const page = btn.dataset.page;
+function bindButtons() {
+
+  const buttons = document.querySelectorAll(".menu button");
+
+  buttons.forEach(btn => {
+
+    btn.addEventListener("click", function () {
+
+      const page = this.dataset.page;
 
       if (!page) return;
 
-      navigate(page);
+      handleNavigation(page);
 
     });
 
   });
 
-  console.log("[DASHBOARD] MENU WIRED");
+  console.log("[DASHBOARD] BUTTONS WIRED:", buttons.length);
 }
 
-// ================= LOGOUT =================
+/* ================= LOGOUT ================= */
+
 function bindLogout() {
 
-  const btn = document.getElementById("logoutBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-  if (!btn) return;
+  if (!logoutBtn) return;
 
-  btn.addEventListener("click", () => {
+  logoutBtn.addEventListener("click", function () {
 
-    console.log("[DASHBOARD] LOGOUT");
+    console.log("[DASHBOARD] LOGOUT CLICKED");
+
+    const CORE = getCore();
 
     if (window.SYSTEM_EVENTS) {
       window.SYSTEM_EVENTS.emit("LOGOUT_REQUESTED", {
@@ -75,33 +95,74 @@ function bindLogout() {
       });
     }
 
+    if (CORE && typeof CORE.run === "function") {
+      CORE.run("logout");
+    }
+
   });
 }
 
-// ================= INIT =================
+/* ================= SYSTEM READY SYNC ================= */
+
+function flushPendingRoutes() {
+
+  const CORE = getCore();
+
+  if (!CORE || typeof CORE.run !== "function") return;
+
+  const pending = window.__PENDING_ROUTE__ || [];
+
+  if (pending.length === 0) return;
+
+  console.log("[DASHBOARD] FLUSHING PENDING ROUTES:", pending.length);
+
+  pending.forEach(page => {
+    try {
+      CORE.run(page);
+    } catch (e) {
+      console.error("[FLUSH ERROR]", page, e);
+    }
+  });
+
+  window.__PENDING_ROUTE__ = [];
+}
+
+/* ================= INIT ================= */
+
 function initDashboard() {
 
-  console.log("[DASHBOARD] INIT");
+  console.log("[DASHBOARD] INIT START");
 
-  bindMenuButtons();
+  bindButtons();
   bindLogout();
+
+  flushPendingRoutes();
 
   console.log("[DASHBOARD] ACTIVE");
 }
 
-// ================= SAFE BOOT =================
-function waitForSystem() {
+/* ================= BOOT HOOK (FIXED) ================= */
+
+function bootWhenReady() {
 
   if (window.__SYSTEM_BOOT__ && window.__SYSTEM_BOOT__.ready) {
     initDashboard();
-  } else if (window.SYSTEM_EVENTS) {
-    window.SYSTEM_EVENTS.on("SYSTEM_READY", initDashboard);
   } else {
-    setTimeout(waitForSystem, 200);
+
+    if (window.SYSTEM_EVENTS && window.SYSTEM_EVENTS.on) {
+      window.SYSTEM_EVENTS.on("SYSTEM_READY", initDashboard);
+    } else {
+      setTimeout(initDashboard, 1000);
+    }
   }
 }
 
-// ================= START =================
-waitForSystem();
+/* ================= START ================= */
+
+bootWhenReady();
+
+/* ================= DEBUG ================= */
 
 window.__DASHBOARD_LOADED__ = true;
+
+console.log("[DASHBOARD] READY");
