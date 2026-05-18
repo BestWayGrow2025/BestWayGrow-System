@@ -2,65 +2,102 @@
 
 /*
 ========================================
-CORE SYSTEM V10.1 (FINAL FIXED)
+CORE SYSTEM v10.2 (BOOT MANAGER FINAL)
 ========================================
 ✔ Safe storage recovery
 ✔ Verified writes
-✔ Clean initialization order FIXED
-✔ Global READY signal ADDED
-✔ Prevent race condition across modules
-✔ Production stable boot layer
+✔ Duplicate cleanup
+✔ User normalization
+✔ System settings normalization
+✔ Seed user self-healing
+✔ Global READY signal
+✔ Boot Manager compatible
+✔ No automatic self-start
+✔ Production stable
 ========================================
 */
 
-// ================= GLOBAL STATE =================
+// ========================================
+// GLOBAL STATE
+// ========================================
+
 window.__CORE_STATE__ = window.__CORE_STATE__ || {
   initialized: false,
   initializing: false,
   corrupted: false,
   storageAvailable: true,
-  version: "10.1",
+  version: "10.2",
   initTime: null,
   lastError: null
 };
 
-// ================= STORAGE TEST =================
+// ========================================
+// STORAGE TEST
+// ========================================
+
 function isStorageAvailable() {
+
   try {
+
     const testKey = "__storage_test__";
+
     localStorage.setItem(testKey, "1");
     localStorage.removeItem(testKey);
+
     return true;
+
   } catch (e) {
-    console.error("Storage unavailable:", e.message);
+
+    console.error("[CORE] Storage unavailable:", e.message);
+
     window.__CORE_STATE__.storageAvailable = false;
     window.__CORE_STATE__.lastError = e.message;
+
     return false;
   }
 }
 
-// ================= SAFE STORAGE =================
+// ========================================
+// SAFE STORAGE
+// ========================================
+
 function safeGet(key, fallback) {
+
   try {
+
     const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
+
+    if (raw === null || raw === undefined || raw === "") {
+      return fallback;
+    }
 
     const data = JSON.parse(raw);
-    return data ?? fallback;
+
+    return (data === null || data === undefined)
+      ? fallback
+      : data;
 
   } catch (e) {
-    console.error("safeGet error:", key, e.message);
+
+    console.error("[CORE] safeGet error:", key, e.message);
+
     window.__CORE_STATE__.lastError = e.message;
+
     return fallback;
   }
 }
 
 function safeSet(key, value) {
+
   try {
+
     const encoded = JSON.stringify(value);
+
     localStorage.setItem(key, encoded);
 
+    // Verify write
     const verify = localStorage.getItem(key);
+
     if (verify !== encoded) {
       throw new Error("Storage verification failed");
     }
@@ -68,24 +105,34 @@ function safeSet(key, value) {
     return true;
 
   } catch (e) {
-    console.error("safeSet error:", key, e.message);
+
+    console.error("[CORE] safeSet error:", key, e.message);
+
     window.__CORE_STATE__.corrupted = true;
     window.__CORE_STATE__.lastError = e.message;
+
     return false;
   }
 }
 
-// ================= NORMALIZER =================
+// ========================================
+// USER NORMALIZER
+// ========================================
+
 function normalizeUser(user = {}) {
+
   if (!user || typeof user !== "object") return null;
   if (!user.userId) return null;
 
   const safeUser = { ...user };
 
+  // Defaults
   safeUser.status = safeUser.status || "active";
+  safeUser.accountStatus = safeUser.accountStatus || "active";
   safeUser.role = safeUser.role || "user";
 
-  safeUser.wallet = safeUser.wallet || {
+  // Wallet defaults
+  const walletDefaults = {
     balance: 0,
     incomeBalance: 0,
     holdIncome: 0,
@@ -93,134 +140,302 @@ function normalizeUser(user = {}) {
     totalDebit: 0
   };
 
-  Object.keys(safeUser.wallet).forEach(k => {
-    let v = Number(safeUser.wallet[k]);
-    if (isNaN(v) || v < 0) v = 0;
-    safeUser.wallet[k] = parseFloat(v.toFixed(2));
+  const sourceWallet =
+    safeUser.wallet && typeof safeUser.wallet === "object"
+      ? safeUser.wallet
+      : {};
+
+  const cleanWallet = {};
+
+  Object.keys(walletDefaults).forEach(key => {
+
+    let value = Number(sourceWallet[key]);
+
+    if (isNaN(value) || value < 0) {
+      value = 0;
+    }
+
+    cleanWallet[key] = parseFloat(value.toFixed(2));
   });
 
-  safeUser.directIds = Array.isArray(safeUser.directIds) ? [...safeUser.directIds] : [];
-  safeUser.children = Array.isArray(safeUser.children) ? [...safeUser.children] : [];
+  safeUser.wallet = cleanWallet;
+
+  // Arrays
+  safeUser.directIds = Array.isArray(safeUser.directIds)
+    ? [...safeUser.directIds]
+    : [];
+
+  safeUser.children = Array.isArray(safeUser.children)
+    ? [...safeUser.children]
+    : [];
 
   return safeUser;
 }
 
-// ================= USERS =================
+// ========================================
+// USERS
+// ========================================
+
 function getUsers() {
+
   let users = safeGet("users", []);
-  if (!Array.isArray(users)) users = [];
+
+  if (!Array.isArray(users)) {
+    users = [];
+  }
 
   const clean = [];
   const ids = new Set();
 
-  users.forEach(u => {
-    const n = normalizeUser(u);
-    if (!n) return;
+  users.forEach(user => {
 
-    if (ids.has(n.userId)) return;
+    const normalized = normalizeUser(user);
 
-    ids.add(n.userId);
-    clean.push(n);
+    if (!normalized) return;
+    if (ids.has(normalized.userId)) return;
+
+    ids.add(normalized.userId);
+    clean.push(normalized);
   });
 
   return clean;
 }
 
 function saveUsers(users) {
-  if (!Array.isArray(users)) return false;
+
+  if (!Array.isArray(users)) {
+    return false;
+  }
 
   const clean = [];
   const ids = new Set();
 
-  users.forEach(u => {
-    const n = normalizeUser(u);
-    if (!n) return;
+  users.forEach(user => {
 
-    if (ids.has(n.userId)) return;
+    const normalized = normalizeUser(user);
 
-    ids.add(n.userId);
-    clean.push(n);
+    if (!normalized) return;
+    if (ids.has(normalized.userId)) return;
+
+    ids.add(normalized.userId);
+    clean.push(normalized);
   });
 
   return safeSet("users", clean);
 }
 
-// ================= SETTINGS =================
-function getSystemSettings() {
-  const stored = safeGet("systemSettings", {});
+// ========================================
+// SYSTEM SETTINGS
+// ========================================
 
-  return {
+function normalizeSystemSettings(settings = {}) {
+
+  const defaults = {
     lockMode: false,
     registrationOpen: true,
     adminAccess: true,
+    upgradesOpen: true,
+    repurchaseOpen: true,
+    withdrawOpen: true,
+    pinCreateOpen: true,
     payoutOpen: true,
     incomeOpen: true,
     autoRun: false,
-    updatedAt: new Date().toISOString(),
-    ...(stored || {})
+    manualRun: true,
+    queueStop: false,
+    initialized: true,
+    updatedAt: new Date().toISOString()
   };
+
+  const safe = {
+    ...defaults,
+    ...(settings && typeof settings === "object" ? settings : {})
+  };
+
+  // Normalize booleans
+  Object.keys(defaults).forEach(key => {
+    if (typeof defaults[key] === "boolean") {
+      safe[key] = safe[key] === true;
+    }
+  });
+
+  safe.updatedAt = new Date().toISOString();
+
+  return safe;
+}
+
+function getSystemSettings() {
+
+  const stored = safeGet("systemSettings", {});
+
+  return normalizeSystemSettings(stored);
 }
 
 function saveSystemSettings(settings) {
-  return safeSet("systemSettings", settings);
+
+  return safeSet(
+    "systemSettings",
+    normalizeSystemSettings(settings)
+  );
 }
 
-// ================= CORE INIT =================
+// ========================================
+// HELPERS
+// ========================================
+
+function getUserById(userId) {
+
+  if (!userId) return null;
+
+  return getUsers().find(user => user.userId === userId) || null;
+}
+
+function getDirectUsers(userId) {
+
+  if (!userId) return [];
+
+  return getUsers().filter(
+    user => user.introducerId === userId
+  );
+}
+
+function getChildren(userId) {
+
+  if (!userId) return [];
+
+  return getUsers().filter(
+    user => user.sponsorId === userId
+  );
+}
+
+function isSystemSafe() {
+
+  const state = window.__CORE_STATE__;
+
+  return !!(
+    state &&
+    state.initialized &&
+    !state.initializing &&
+    !state.corrupted &&
+    state.storageAvailable
+  );
+}
+
+// ========================================
+// SEED USERS
+// ========================================
+
+function seedSystemUsers(users) {
+
+  let changed = false;
+  const now = Date.now();
+
+  const seeds = [
+    {
+      userId: "SUPERADMIN",
+      username: "Super Admin",
+      password: btoa("123"),
+      role: "super_admin",
+      status: "active",
+      createdAt: now
+    },
+    {
+      userId: "SYSTEM",
+      username: "System Pool",
+      role: "system",
+      status: "active",
+      createdAt: now,
+      wallet: {
+        balance: 0,
+        incomeBalance: 0,
+        holdIncome: 0,
+        totalCredit: 0,
+        totalDebit: 0
+      }
+    }
+  ];
+
+  const ids = new Set(users.map(user => user.userId));
+
+  seeds.forEach(seed => {
+
+    if (!ids.has(seed.userId)) {
+      users.push(normalizeUser(seed));
+      changed = true;
+    }
+  });
+
+  return changed;
+}
+
+// ========================================
+// CORE INITIALIZATION
+// ========================================
+
 function initCoreSystem() {
 
-  if (window.__CORE_STATE__.initialized) return true;
-  if (window.__CORE_STATE__.initializing) return false;
+  // Already initialized
+  if (window.__CORE_STATE__.initialized) {
+    return true;
+  }
+
+  // Currently initializing
+  if (window.__CORE_STATE__.initializing) {
+    return false;
+  }
 
   window.__CORE_STATE__.initializing = true;
 
   try {
 
+    // Storage test
     if (!isStorageAvailable()) {
       throw new Error("Storage unavailable");
     }
 
+    // Load users
     let users = getUsers();
 
-    const seeds = [
-      {
-        userId: "SUPERADMIN",
-        role: "super_admin",
-        status: "active"
-      },
-      {
-        userId: "SYSTEM",
-        role: "system",
-        status: "active",
-        wallet: {
-          balance: 0,
-          incomeBalance: 0,
-          totalCredit: 0,
-          totalDebit: 0
-        }
+    // Seed required users
+    const changed = seedSystemUsers(users);
+
+    // Save if changed
+    if (changed) {
+      if (!saveUsers(users)) {
+        throw new Error("Failed to save users");
       }
-    ];
+    }
 
-    const ids = new Set(users.map(u => u.userId));
+    // Normalize and save settings
+    if (!saveSystemSettings(getSystemSettings())) {
+      throw new Error("Failed to save system settings");
+    }
 
-    seeds.forEach(s => {
-      if (!ids.has(s.userId)) {
-        users.push(normalizeUser(s));
-      }
-    });
-
-    saveUsers(users);
-    saveSystemSettings(getSystemSettings());
-
+    // Update core state
     window.__CORE_STATE__.initialized = true;
     window.__CORE_STATE__.initializing = false;
+    window.__CORE_STATE__.corrupted = false;
+    window.__CORE_STATE__.storageAvailable = true;
     window.__CORE_STATE__.initTime = Date.now();
     window.__CORE_STATE__.lastError = null;
 
-    // 🔥 GLOBAL SYNC SIGNAL (IMPORTANT FIX)
+    // Global readiness flags
     window.__CORE_READY__ = true;
+
+    // Native event
     window.dispatchEvent(new Event("CORE_READY"));
 
-    console.log("[CORE] SYSTEM READY V10.1");
+    // Event bus event
+    if (window.SYSTEM_EVENTS &&
+        typeof window.SYSTEM_EVENTS.emit === "function") {
+
+      window.SYSTEM_EVENTS.emit("CORE_READY", {
+        time: Date.now(),
+        state: window.__CORE_STATE__
+      });
+    }
+
+    console.log("[CORE] SYSTEM READY v10.2");
 
     return true;
 
@@ -228,14 +443,37 @@ function initCoreSystem() {
 
     console.error("[CORE ERROR]", e.message);
 
-    window.__CORE_STATE__.corrupted = true;
+    window.__CORE_STATE__.initialized = false;
     window.__CORE_STATE__.initializing = false;
+    window.__CORE_STATE__.corrupted = true;
     window.__CORE_STATE__.lastError = e.message;
 
     return false;
   }
 }
 
-// ================= SAFE INIT =================
-window.addEventListener("DOMContentLoaded", initCoreSystem);
+// ========================================
+// GLOBAL EXPORTS
+// ========================================
 
+// Critical export for boot_manager.js
+window.initCoreSystem = initCoreSystem;
+
+// Helper exports
+window.isStorageAvailable = isStorageAvailable;
+window.safeGet = safeGet;
+window.safeSet = safeSet;
+window.normalizeUser = normalizeUser;
+window.getUsers = getUsers;
+window.saveUsers = saveUsers;
+window.getSystemSettings = getSystemSettings;
+window.saveSystemSettings = saveSystemSettings;
+window.getUserById = getUserById;
+window.getDirectUsers = getDirectUsers;
+window.getChildren = getChildren;
+window.isSystemSafe = isSystemSafe;
+
+// Debug marker
+window.__CORE_SYSTEM_LOADED__ = true;
+
+console.log("[CORE] LOADED v10.2");
