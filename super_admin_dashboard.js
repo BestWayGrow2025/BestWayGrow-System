@@ -532,6 +532,7 @@ case "reset":
 default:
   loadHome();
 }
+
 /* ================= HOME ================= */
 
 function loadHome() {
@@ -592,6 +593,78 @@ function logout() {
   if (typeof destroySession === "function") destroySession();
   window.location.href = "super_admin_login.html";
 }
+
+/* ================= NEXT LAYER EXTENSIONS ================= */
+
+/* ================= MODULE HEALTH CHECK ================= */
+function checkModuleHealth(moduleName, fallbackUI) {
+  try {
+    if (typeof window[moduleName] === "function") {
+      window[moduleName]();
+      return;
+    }
+
+    const main = document.getElementById("mainContent");
+
+    if (main) {
+      main.innerHTML = fallbackUI;
+    }
+  } catch (e) {
+    console.error("[MODULE ERROR]", moduleName, e);
+
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>⚠ Module Error</h3>
+          <p>${moduleName} failed to load safely.</p>
+        </div>
+      `;
+    }
+  }
+}
+
+/* ================= SAFE ROUTE WRAPPER ================= */
+function safeRoute(loaderFn, fallbackHTML) {
+  try {
+    if (typeof loaderFn === "function") {
+      loaderFn();
+    } else {
+      const main = document.getElementById("mainContent");
+      if (main) main.innerHTML = fallbackHTML;
+    }
+  } catch (err) {
+    console.error("[SAFE ROUTE ERROR]", err);
+
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>⚠ Route Error</h3>
+          <p>Failed to load section safely.</p>
+        </div>
+      `;
+    }
+  }
+}
+
+/* ================= AUTO ACTIVE MENU FIX ================= */
+function setActiveMenu(page) {
+  document.querySelectorAll(".menu button").forEach(btn => {
+    btn.classList.remove("active");
+
+    if (btn.dataset.page === page) {
+      btn.classList.add("active");
+    }
+  });
+}
+
+/* ================= GLOBAL DASHBOARD STATUS ================= */
+window.__SUPER_ADMIN_DASHBOARD_STATUS__ = {
+  loaded: true,
+  mode: "PRODUCTION",
+  timestamp: Date.now()
+};
 
 /* ================= EXPORT ================= */
 
