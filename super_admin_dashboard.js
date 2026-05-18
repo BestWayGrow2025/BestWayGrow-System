@@ -2,24 +2,20 @@
 
 /*
 ========================================
-SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE)
+SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
 ========================================
 ✔ Safe CORE execution layer
 ✔ Button click ALWAYS works
+✔ Fixed CORE routing compatibility
 ✔ Event-safe navigation
 ✔ Pending route queue support
 ✔ SYSTEM_READY compatible
-✔ Duplicate initialization protection
-✔ Logout handling
 ✔ Production hardened
 ========================================
 */
 
 (function () {
 
-  // ========================================
-  // SINGLE INITIALIZATION LOCK
-  // ========================================
   if (window.__SUPER_ADMIN_DASHBOARD__) {
     console.log("[DASHBOARD] Already Loaded");
     return;
@@ -43,7 +39,7 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE)
     );
   }
 
-  /* ================= SAFE EXECUTOR ================= */
+  /* ================= SAFE EXECUTOR (FIXED) ================= */
 
   function safeRun(page) {
 
@@ -53,21 +49,33 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE)
 
     try {
 
-      // Preferred execution through CORE
+      // ✅ FIX: support BOTH run() and fallback execution
       if (CORE && typeof CORE.run === "function") {
         CORE.run(page);
-        console.log("[DASHBOARD] ROUTED VIA CORE:", page);
+        console.log("[DASHBOARD] ROUTED VIA CORE.run:", page);
         return true;
       }
 
-      // Secondary fallback
+      // 🔥 NEW FIX: some builds expose execute/route instead
+      if (CORE && typeof CORE.execute === "function") {
+        CORE.execute(page);
+        console.log("[DASHBOARD] ROUTED VIA CORE.execute:", page);
+        return true;
+      }
+
+      if (CORE && typeof CORE.route === "function") {
+        CORE.route(page);
+        console.log("[DASHBOARD] ROUTED VIA CORE.route:", page);
+        return true;
+      }
+
+      // fallback safeCoreRun
       if (typeof window.safeCoreRun === "function") {
         window.safeCoreRun(page);
         console.log("[DASHBOARD] ROUTED VIA safeCoreRun:", page);
         return true;
       }
 
-      // Queue route if CORE not ready yet
       console.warn("[DASHBOARD] CORE NOT READY - QUEUED:", page);
 
       window.__PENDING_ROUTE__ = window.__PENDING_ROUTE__ || [];
@@ -81,7 +89,7 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE)
     }
   }
 
-  /* ================= PAGE ROUTER ================= */
+  /* ================= NAVIGATION ================= */
 
   function handleNavigation(page) {
     return safeRun(page);
@@ -95,17 +103,14 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE)
 
     buttons.forEach(btn => {
 
-      // Prevent duplicate binding
       if (btn.__dashboardBound__) return;
       btn.__dashboardBound__ = true;
 
       btn.addEventListener("click", function () {
 
         const page = this.dataset.page;
-
         if (!page) return;
 
-        // Visual active state
         document
           .querySelectorAll(".menu button.active")
           .forEach(b => b.classList.remove("active"));
@@ -124,11 +129,8 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE)
   function bindLogout() {
 
     const logoutBtn = document.getElementById("logoutBtn");
+    if (!logoutBtn || logoutBtn.__dashboardBound__) return;
 
-    if (!logoutBtn) return;
-
-    // Prevent duplicate binding
-    if (logoutBtn.__dashboardBound__) return;
     logoutBtn.__dashboardBound__ = true;
 
     logoutBtn.addEventListener("click", function () {
@@ -137,56 +139,39 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE)
 
       try {
 
-        // Notify system
-        if (window.SYSTEM_EVENTS &&
-            typeof window.SYSTEM_EVENTS.emit === "function") {
-
+        if (window.SYSTEM_EVENTS?.emit) {
           window.SYSTEM_EVENTS.emit("LOGOUT_REQUESTED", {
             time: Date.now()
           });
         }
 
-        // Route via CORE if available
         const CORE = getCore();
 
-        if (CORE && typeof CORE.run === "function") {
+        if (CORE?.run) {
           CORE.run("logout");
           return;
         }
 
-        // Fallback to session manager
-        if (typeof window.logout === "function") {
-          window.logout();
-          return;
-        }
-
-        // Final fallback
         window.location.href = "index.html";
 
       } catch (err) {
-        console.error("[DASHBOARD] LOGOUT ERROR", err);
+        console.error("[DASHBOARD LOGOUT ERROR]", err);
       }
     });
   }
 
-  /* ================= PENDING ROUTE FLUSH ================= */
+  /* ================= PENDING ROUTES ================= */
 
   function flushPendingRoutes() {
 
     const CORE = getCore();
-
-    if (!CORE || typeof CORE.run !== "function") return;
+    if (!CORE?.run) return;
 
     const pending = window.__PENDING_ROUTE__ || [];
 
-    if (!Array.isArray(pending) || pending.length === 0) {
-      return;
-    }
+    if (!pending.length) return;
 
-    console.log(
-      "[DASHBOARD] FLUSHING PENDING ROUTES:",
-      pending.length
-    );
+    console.log("[DASHBOARD] FLUSHING PENDING ROUTES:", pending.length);
 
     pending.forEach(page => {
       try {
@@ -199,30 +184,21 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE)
     window.__PENDING_ROUTE__ = [];
   }
 
-  /* ================= WELCOME SECTION ================= */
+  /* ================= WELCOME ================= */
 
   function updateWelcome() {
 
     const el = document.getElementById("welcome");
-
     if (!el) return;
 
     try {
+      const user = window.getCurrentUser?.();
 
-      if (typeof window.getCurrentUser === "function") {
-        const user = window.getCurrentUser();
+      el.textContent = user?.userId
+        ? "Welcome, " + user.userId
+        : "Welcome, Super Admin";
 
-        if (user && (user.username || user.userId)) {
-          el.textContent =
-            "Welcome, " +
-            (user.username || user.userId);
-          return;
-        }
-      }
-
-      el.textContent = "Welcome, Super Admin";
-
-    } catch (err) {
+    } catch {
       el.textContent = "Welcome, Super Admin";
     }
   }
@@ -231,32 +207,23 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE)
 
   function loadDefaultPage() {
 
-    // If page already loaded elsewhere, do nothing
     const content = document.getElementById("mainContent");
 
-    if (content && content.innerHTML.trim() !== "") {
-      return;
-    }
+    if (content && content.innerHTML.trim() !== "") return;
 
-    // Load home page by default
     safeRun("home");
 
-    // Highlight Home button
     const homeBtn =
       document.querySelector('.menu button[data-page="home"]');
 
-    if (homeBtn) {
-      homeBtn.classList.add("active");
-    }
+    homeBtn?.classList.add("active");
   }
 
   /* ================= INIT ================= */
 
   function initDashboard() {
 
-    // Prevent duplicate initialization
     if (window.__SUPER_ADMIN_DASHBOARD__.initialized) {
-      console.log("[DASHBOARD] Already Initialized");
       flushPendingRoutes();
       return;
     }
@@ -275,48 +242,26 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE)
     console.log("[DASHBOARD] ACTIVE");
   }
 
-  /* ================= BOOT HOOK ================= */
+  /* ================= BOOT ================= */
 
   function bootWhenReady() {
 
-    // Boot manager already completed
-    if (window.__SYSTEM_BOOT__ &&
-        window.__SYSTEM_BOOT__.ready) {
-
+    if (window.__SYSTEM_BOOT__?.ready) {
       initDashboard();
       return;
     }
 
-    // Preferred event-driven startup
-    if (window.SYSTEM_EVENTS &&
-        typeof window.SYSTEM_EVENTS.on === "function") {
-
-      window.SYSTEM_EVENTS.on("SYSTEM_READY", initDashboard);
-      return;
-    }
-
-    // DOM fallback
-    if (document.readyState === "loading") {
-      document.addEventListener(
-        "DOMContentLoaded",
-        initDashboard
-      );
-    } else {
-      setTimeout(initDashboard, 1000);
-    }
+    window.SYSTEM_EVENTS?.on?.("SYSTEM_READY", initDashboard)
+      || document.addEventListener("DOMContentLoaded", initDashboard);
   }
 
-  /* ================= GLOBAL EXPORT ================= */
+  /* ================= EXPORT ================= */
 
   window.initDashboard = initDashboard;
   window.handleNavigation = handleNavigation;
   window.safeDashboardRun = safeRun;
 
-  /* ================= START ================= */
-
   bootWhenReady();
-
-  /* ================= DEBUG FLAGS ================= */
 
   window.__DASHBOARD_LOADED__ = true;
 
