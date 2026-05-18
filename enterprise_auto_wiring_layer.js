@@ -17,11 +17,12 @@ AUTO MODULE CONNECTOR SYSTEM
 
 console.log("[AUTO WIRING LAYER] LOADING");
 
-/* ================= SAFE ENGINE REF ================= */
+/* ================= CORE (LIVE REFERENCE) ================= */
 
-const CORE =
-  window.ENTERPRISE_CORE_ENGINE ||
-  window.__ENTERPRISE_CORE_ENGINE__;
+function getCore() {
+  return window.ENTERPRISE_CORE_ENGINE ||
+         window.__ENTERPRISE_CORE_ENGINE__;
+}
 
 /* ================= MODULE LIST ================= */
 
@@ -50,6 +51,7 @@ const MODULE_MAP = [
 
 function autoRegisterModules() {
 
+  const CORE = getCore();
   if (!CORE || typeof CORE.register !== "function") {
     console.warn("[AUTO WIRING] Core Engine not found");
     return;
@@ -58,27 +60,23 @@ function autoRegisterModules() {
   MODULE_MAP.forEach(name => {
 
     if (typeof window[name] === "function") {
-
       CORE.register(name, window[name]);
-
       console.log("[AUTO WIRING] Registered:", name);
-
     }
 
   });
-
 }
 
 /* ================= AUTO EVENT WIRING ================= */
 
 function autoWireEvents() {
 
+  const CORE = getCore();
   if (!CORE || typeof CORE.emit !== "function") return;
 
   document.addEventListener("click", function (e) {
 
     const target = e.target;
-
     if (!target || !target.dataset) return;
 
     const page = target.dataset.page;
@@ -91,41 +89,40 @@ function autoWireEvents() {
     }
 
   });
-
 }
 
-/* ================= AUTO ROUTE PATCH ================= */
+/* ================= ROUTE PATCH ================= */
 
 function patchGlobalRoutes() {
 
+  const CORE = getCore();
   if (!CORE) return;
 
   window.safeCoreRun = function (name) {
     return CORE.run(name);
   };
-
 }
 
-/* ================= HEALTH AUTO CHECK ================= */
+/* ================= HEALTH MONITOR ================= */
 
 function startHealthMonitor() {
 
+  const CORE = getCore();
   if (!CORE || typeof CORE.healthCheck !== "function") return;
 
   setInterval(() => {
 
     const status = CORE.healthCheck();
-
     console.log("[AUTO HEALTH STATUS]", status);
 
   }, 10000);
-
 }
 
-/* ================= AUTO NAVIGATION TRACKING ================= */
+/* ================= NAVIGATION TRACKING ================= */
 
 function trackNavigationFlow() {
 
+  const CORE = getCore();
   if (!CORE || typeof CORE.emit !== "function") return;
 
   CORE.on("NAVIGATION_CLICK", (data) => {
@@ -134,14 +131,14 @@ function trackNavigationFlow() {
 
     CORE.emit("SYSTEM_EVENT", {
       type: "navigation",
-      page: data.page
+      page: data.page,
+      timestamp: Date.now()
     });
 
   });
-
 }
 
-/* ================= BOOT SEQUENCE ================= */
+/* ================= MAIN INIT ================= */
 
 function initAutoWiring() {
 
@@ -164,10 +161,13 @@ if (document.readyState === "loading") {
   initAutoWiring();
 }
 
-/* ================= GLOBAL FLAG ================= */
+/* ================= GLOBAL EXPORT FIX ================= */
+
+window.initAutoWiring = initAutoWiring;
 
 window.__ENTERPRISE_AUTO_WIRING_LAYER__ = {
   active: true,
   version: "1.0"
 };
 
+console.log("[AUTO WIRING LAYER] READY");
