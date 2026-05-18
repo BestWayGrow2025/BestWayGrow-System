@@ -279,9 +279,84 @@ case "backup":
           }
           break;
 
-        case "controlroom":
+       case "controlroom":
           if (typeof renderSystemControlCenter === "function") {
             renderSystemControlCenter("systemControlRoomPanel");
+          }
+          break;
+
+        /* ================= BUSINESS INTELLIGENCE ================= */
+        case "businessintelligence":
+          if (
+            typeof loadBusinessIntelligenceDashboard === "function"
+          ) {
+            loadBusinessIntelligenceDashboard();
+          } else if (
+            typeof renderEnterpriseBusinessIntelligenceDashboard ===
+            "function"
+          ) {
+            renderEnterpriseBusinessIntelligenceDashboard();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <h3>📊 Business Intelligence</h3>
+                <p>Business Intelligence module not loaded.</p>
+              `;
+            }
+          }
+          break;
+
+        /* ================= STRATEGIC AI ADVISOR ================= */
+        case "strategicai":
+          if (typeof loadStrategicAIAdvisor === "function") {
+            loadStrategicAIAdvisor();
+          } else if (
+            typeof renderStrategicAIAdvisor === "function"
+          ) {
+            renderStrategicAIAdvisor();
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <h3>🧠 Strategic AI Advisor</h3>
+                <p>Strategic AI Advisor module not loaded.</p>
+              `;
+            }
+          }
+          break;
+
+        /* ================= EVENT MONITOR ================= */
+        case "eventmonitor":
+          if (typeof renderEventMonitorPanel === "function") {
+            renderEventMonitorPanel("eventMonitorPanel");
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <h3>📡 Event Monitor</h3>
+                <p>Event Monitor module not loaded.</p>
+              `;
+            }
+          }
+          break;
+
+        /* ================= EVENT STREAM ================= */
+        case "eventstream":
+          if (typeof renderSystemEventStreamUI === "function") {
+            renderSystemEventStreamUI("systemEventStreamPanel");
+          } else if (
+            typeof renderSystemEventStreamPanel === "function"
+          ) {
+            renderSystemEventStreamPanel("systemEventStreamPanel");
+          } else {
+            const main = document.getElementById("mainContent");
+            if (main) {
+              main.innerHTML = `
+                <h3>🌊 Event Stream</h3>
+                <p>Event Stream module not loaded.</p>
+              `;
+            }
           }
           break;
 
