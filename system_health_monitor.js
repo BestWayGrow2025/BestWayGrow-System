@@ -10,11 +10,6 @@ REAL-TIME FINANCIAL SAFETY LAYER
 ✔ Audit + payout safety signals
 ✔ Corruption detection layer
 ✔ Auto-fail-safe trigger support
-✔ Works with:
-   - audit_compliance_engine.js
-   - income_engine.js
-   - payout_controller.js
-   - withdrawal_system.js
 ========================================
 */
 
@@ -25,6 +20,7 @@ const HEALTH_LIMIT = 500;
 // =====================
 // STATE
 // =====================
+
 function getHealthState() {
   try {
     return (
@@ -58,6 +54,7 @@ function saveHealthState(state) {
 // =====================
 // LOGGING
 // =====================
+
 function getHealthLog() {
   try {
     const log = safeGet(HEALTH_LOG_KEY, []);
@@ -77,7 +74,7 @@ function saveHealthLog(log) {
 
     safeSet(HEALTH_LOG_KEY, log);
     return true;
-  } catch (err) {
+  } catch {
     return false;
   }
 }
@@ -106,7 +103,7 @@ function recordHealthEvent(entry = {}) {
 // Wallet health
 function checkWalletHealth() {
   try {
-    if (typeof getWallets !== "function") return true;
+    if (typeof getWallets !== "function") return [];
 
     const wallets = getWallets();
     let issues = [];
@@ -136,12 +133,71 @@ function checkWithdrawalHealth() {
 
     const w = getWithdrawals();
 
+    if (!Array.isArray(w)) return [];
+
     return w
       .filter(x => !x.requestId || !x.userId)
       .map(x => ({
         issue: "INVALID_WITHDRAWAL",
         data: x
       }));
-  } catch (err) {
-    return [{ issue: "WITHDRAWAL_CHECK_ERROR",
 
+  } catch (err) {
+    return [{
+      issue: "WITHDRAWAL_CHECK_ERROR",
+      error: err.message
+    }];
+  }
+}
+
+// =====================
+// MASTER HEALTH CHECK
+// =====================
+
+function runSystemHealthCheck() {
+  try {
+
+    const walletIssues = checkWalletHealth();
+    const withdrawalIssues = checkWithdrawalHealth();
+
+    const allIssues = [...walletIssues, ...withdrawalIssues];
+
+    const state = {
+      healthy: allIssues.length === 0,
+      lastCheck: Date.now(),
+      issues: allIssues
+    };
+
+    saveHealthState(state);
+    recordHealthEvent({
+      type: "SYSTEM_HEALTH_CHECK",
+      status: state.healthy ? "OK" : "WARNING",
+      details: state
+    });
+
+    return state;
+
+  } catch (err) {
+
+    return {
+      healthy: false,
+      lastCheck: Date.now(),
+      issues: [{
+        issue: "HEALTH_ENGINE_CRASH",
+        error: err.message
+      }]
+    };
+  }
+}
+
+// =====================
+// AUTO EXPORT
+// =====================
+
+window.systemHealthMonitor = {
+  getHealthState,
+  runSystemHealthCheck,
+  recordHealthEvent
+};
+
+console.log("[SYSTEM HEALTH MONITOR] LOADED SUCCESSFULLY");
