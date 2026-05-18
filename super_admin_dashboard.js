@@ -2,14 +2,13 @@
 
 /*
 ========================================
-SUPER ADMIN DASHBOARD v4.0 (CLEAN WIRED)
+SUPER ADMIN DASHBOARD v4.1 (WIRED SAFE)
 ========================================
-✔ Fully event-driven (NO direct boot dependency)
 ✔ Waits for SYSTEM_READY
-✔ CORE-safe execution
-✔ Button routing fixed
-✔ No race condition
-✔ Compatible with Boot Manager v1.0
+✔ No direct boot dependency
+✔ CORE-safe navigation
+✔ Event-driven UI binding
+✔ Prevents undefined crashes
 ========================================
 */
 
@@ -21,42 +20,28 @@ function getCore() {
          window.__ENTERPRISE_CORE_ENGINE__;
 }
 
-// ================= SAFE EVENT BUS =================
-function getEvents() {
-  return window.SYSTEM_EVENTS;
-}
-
-// ================= PAGE ROUTER =================
-function handleNavigation(page) {
+// ================= NAVIGATION =================
+function navigate(page) {
 
   const CORE = getCore();
 
-  console.log("[DASHBOARD] NAVIGATE:", page);
+  console.log("[DASHBOARD] NAV:", page);
 
-  try {
-
-    if (CORE && typeof CORE.run === "function") {
+  if (CORE && typeof CORE.run === "function") {
+    try {
       CORE.run(page);
-    } else {
-      console.warn("[DASHBOARD] CORE not ready, fallback used:", page);
+    } catch (err) {
+      console.error("[DASHBOARD ERROR]", err);
     }
-
-  } catch (err) {
-    console.error("[DASHBOARD ROUTE ERROR]", err);
+  } else {
+    console.warn("[DASHBOARD] CORE NOT READY");
   }
 }
 
 // ================= BUTTON BINDING =================
-function bindButtons() {
+function bindMenuButtons() {
 
-  const buttons = document.querySelectorAll(".menu button");
-
-  if (!buttons.length) {
-    console.warn("[DASHBOARD] No buttons found");
-    return;
-  }
-
-  buttons.forEach(btn => {
+  document.querySelectorAll(".menu button").forEach(btn => {
 
     btn.addEventListener("click", () => {
 
@@ -64,33 +49,28 @@ function bindButtons() {
 
       if (!page) return;
 
-      handleNavigation(page);
+      navigate(page);
 
     });
 
   });
 
-  console.log("[DASHBOARD] BUTTONS WIRED:", buttons.length);
+  console.log("[DASHBOARD] MENU WIRED");
 }
 
 // ================= LOGOUT =================
 function bindLogout() {
 
-  const logoutBtn = document.getElementById("logoutBtn");
+  const btn = document.getElementById("logoutBtn");
 
-  if (!logoutBtn) {
-    console.warn("[DASHBOARD] Logout button not found");
-    return;
-  }
+  if (!btn) return;
 
-  logoutBtn.addEventListener("click", () => {
+  btn.addEventListener("click", () => {
 
-    console.log("[DASHBOARD] LOGOUT CLICKED");
+    console.log("[DASHBOARD] LOGOUT");
 
-    const EVENTS = getEvents();
-
-    if (EVENTS) {
-      EVENTS.emit("LOGOUT_REQUESTED", {
+    if (window.SYSTEM_EVENTS) {
+      window.SYSTEM_EVENTS.emit("LOGOUT_REQUESTED", {
         time: Date.now()
       });
     }
@@ -98,48 +78,30 @@ function bindLogout() {
   });
 }
 
-// ================= INIT DASHBOARD =================
+// ================= INIT =================
 function initDashboard() {
 
-  console.log("[DASHBOARD] INIT START");
+  console.log("[DASHBOARD] INIT");
 
-  bindButtons();
+  bindMenuButtons();
   bindLogout();
 
   console.log("[DASHBOARD] ACTIVE");
 }
 
-// ================= SAFE SYSTEM HOOK =================
+// ================= SAFE BOOT =================
 function waitForSystem() {
 
-  const EVENTS = getEvents();
-
-  if (EVENTS && typeof EVENTS.on === "function") {
-
-    EVENTS.on("SYSTEM_READY", () => {
-      console.log("[DASHBOARD] SYSTEM_READY RECEIVED");
-      initDashboard();
-    });
-
+  if (window.__SYSTEM_BOOT__ && window.__SYSTEM_BOOT__.ready) {
+    initDashboard();
+  } else if (window.SYSTEM_EVENTS) {
+    window.SYSTEM_EVENTS.on("SYSTEM_READY", initDashboard);
   } else {
-
-    // fallback polling safety
-    const interval = setInterval(() => {
-
-      if (window.__SYSTEM_BOOT__?.ready) {
-        clearInterval(interval);
-        initDashboard();
-      }
-
-    }, 300);
-
+    setTimeout(waitForSystem, 200);
   }
 }
 
 // ================= START =================
 waitForSystem();
 
-// ================= GLOBAL FLAG =================
 window.__DASHBOARD_LOADED__ = true;
-
-console.log("[DASHBOARD] FILE READY");
