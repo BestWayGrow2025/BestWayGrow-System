@@ -17,7 +17,7 @@ AUTO MODULE CONNECTOR SYSTEM
 
 console.log("[AUTO WIRING LAYER] LOADING");
 
-/* ================= CORE (LIVE SAFE ACCESS) ================= */
+/* ================= CORE SAFE ACCESS ================= */
 
 function getCore() {
   return window.ENTERPRISE_CORE_ENGINE ||
@@ -146,7 +146,7 @@ function initAutoWiring() {
   console.log("[AUTO WIRING] ACTIVE & CONNECTED");
 }
 
-/* ================= AUTO BOOT ================= */
+/* ================= AUTO START ================= */
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initAutoWiring);
@@ -154,7 +154,7 @@ if (document.readyState === "loading") {
   initAutoWiring();
 }
 
-/* ================= GLOBAL EXPORT (IMPORTANT FIX) ================= */
+/* ================= GLOBAL EXPORT (FIXED - IMPORTANT) ================= */
 
 window.initAutoWiring = initAutoWiring;
 
