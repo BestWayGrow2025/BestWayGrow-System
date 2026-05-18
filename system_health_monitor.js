@@ -17,9 +17,9 @@ const HEALTH_LOG_KEY = "SYSTEM_HEALTH_LOG";
 const HEALTH_STATE_KEY = "SYSTEM_HEALTH_STATE";
 const HEALTH_LIMIT = 500;
 
-// =====================
-// STATE
-// =====================
+/* =====================
+   STATE
+===================== */
 
 function getHealthState() {
   try {
@@ -51,9 +51,9 @@ function saveHealthState(state) {
   }
 }
 
-// =====================
-// LOGGING
-// =====================
+/* =====================
+   LOGGING
+===================== */
 
 function getHealthLog() {
   try {
@@ -96,9 +96,9 @@ function recordHealthEvent(entry = {}) {
   }
 }
 
-// =====================
-// CORE CHECKS
-// =====================
+/* =====================
+   CORE CHECKS
+===================== */
 
 // Wallet health
 function checkWalletHealth() {
@@ -106,7 +106,7 @@ function checkWalletHealth() {
     if (typeof getWallets !== "function") return [];
 
     const wallets = getWallets();
-    let issues = [];
+    const issues = [];
 
     for (let uid in wallets) {
       const bal = wallets[uid]?.balance;
@@ -121,8 +121,12 @@ function checkWalletHealth() {
     }
 
     return issues;
+
   } catch (err) {
-    return [{ issue: "WALLET_CHECK_ERROR", error: err.message }];
+    return [{
+      issue: "WALLET_CHECK_ERROR",
+      error: err.message
+    }];
   }
 }
 
@@ -150,9 +154,9 @@ function checkWithdrawalHealth() {
   }
 }
 
-// =====================
-// MASTER HEALTH CHECK
-// =====================
+/* =====================
+   MASTER HEALTH CHECK
+===================== */
 
 function runSystemHealthCheck() {
   try {
@@ -169,6 +173,7 @@ function runSystemHealthCheck() {
     };
 
     saveHealthState(state);
+
     recordHealthEvent({
       type: "SYSTEM_HEALTH_CHECK",
       status: state.healthy ? "OK" : "WARNING",
@@ -178,7 +183,6 @@ function runSystemHealthCheck() {
     return state;
 
   } catch (err) {
-
     return {
       healthy: false,
       lastCheck: Date.now(),
@@ -190,9 +194,9 @@ function runSystemHealthCheck() {
   }
 }
 
-// =====================
-// AUTO EXPORT
-// =====================
+/* =====================
+   GLOBAL EXPORT
+===================== */
 
 window.systemHealthMonitor = {
   getHealthState,
