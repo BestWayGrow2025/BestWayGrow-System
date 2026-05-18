@@ -9,6 +9,7 @@ SYSTEM EVENT HUB V2.1 (FINAL SAFE CORE)
 ✔ Cross-module sync engine
 ✔ PIN + PAYOUT + BANK bridge layer
 ✔ Prevents duplicate registration
+✔ Enterprise core integration (Wired)
 ========================================
 */
 
@@ -18,16 +19,12 @@ SYSTEM EVENT HUB V2.1 (FINAL SAFE CORE)
   if (window.__SYSTEM_EVENT_HUB__) return;
   window.__SYSTEM_EVENT_HUB__ = true;
 
-  // Build bus FIRST (important fix)
   const SYSTEM_EVENTS = createEventBus();
 
-  // Expose immediately (prevents missing reference errors)
   window.SYSTEM_EVENTS = SYSTEM_EVENTS;
 
-  // Safe API exposure
   exposeGlobalHub(SYSTEM_EVENTS);
 
-  // Initialize bindings AFTER exposure
   initSystemEventHub(SYSTEM_EVENTS);
 
 })();
@@ -40,7 +37,6 @@ function createEventBus() {
     listeners: {},
 
     on(event, fn) {
-
       if (!event || typeof fn !== "function") return;
 
       if (!this.listeners[event]) {
@@ -53,7 +49,6 @@ function createEventBus() {
     },
 
     off(event, fn) {
-
       const list = this.listeners[event];
       if (!Array.isArray(list)) return;
 
@@ -61,7 +56,6 @@ function createEventBus() {
     },
 
     emit(event, data) {
-
       const list = this.listeners[event] || [];
 
       list.forEach(fn => {
@@ -74,7 +68,6 @@ function createEventBus() {
     },
 
     clear(event) {
-
       if (event) delete this.listeners[event];
       else this.listeners = {};
     }
@@ -158,3 +151,49 @@ function exposeGlobalHub(bus) {
 
   console.log("[EVENT HUB] GLOBAL REGISTRATION COMPLETE");
 }
+
+// ================= ENTERPRISE CORE WIRING =================
+(function connectEnterpriseToEventHub() {
+
+  function tryConnect() {
+
+    if (!window.BOOT || !window.BOOT.enterprise) {
+      setTimeout(tryConnect, 500);
+      return;
+    }
+
+    const core = window.BOOT.enterprise.core;
+
+    if (!core || !window.SYSTEM_EVENTS) {
+      setTimeout(tryConnect, 500);
+      return;
+    }
+
+    console.log("[EVENT HUB] WIRING ENTERPRISE CORE");
+
+    window.SYSTEM_EVENTS.on("PIN_EVENT", (data) => {
+      core?.analyze?.(data);
+      window.__AUTOPILOT__?.decide?.(data);
+    });
+
+    window.SYSTEM_EVENTS.on("PAYOUT_EVENT", (data) => {
+      core?.analyze?.(data);
+      window.__AUTOPILOT__?.optimize?.(data);
+    });
+
+    window.SYSTEM_EVENTS.on("BANK_UPDATE", (data) => {
+      core?.analyze?.(data);
+      window.__SELF_LEARNING__?.learn?.(data);
+    });
+
+    window.SYSTEM_EVENTS.on("SYSTEM_EVENT", (data) => {
+      core?.analyze?.(data);
+      window.__AUTO_WIRING__?.adjust?.(data);
+    });
+
+    console.log("[EVENT HUB] ENTERPRISE CORE CONNECTED");
+  }
+
+  tryConnect();
+
+})();
