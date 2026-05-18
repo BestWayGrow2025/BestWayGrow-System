@@ -22,17 +22,23 @@ FULL ORCHESTRATOR KERNEL (FOK v1.0)
 
 })();
 
-// ================= MODULE REGISTRY =================
-const MODULES = {
+/* ================= MODULE REGISTRY ================= */
+
+window.FOK_MODULES = window.FOK_MODULES || {
   core: [],
   optional: [],
   ui: []
 };
 
-// ================= REGISTER MODULE =================
+/* ================= REGISTER MODULE ================= */
+
 function registerModule(name, type, initFn, deps = []) {
 
-  MODULES[type].push({
+  if (!window.FOK_MODULES[type]) {
+    window.FOK_MODULES[type] = [];
+  }
+
+  window.FOK_MODULES[type].push({
     name,
     initFn,
     deps,
@@ -40,12 +46,14 @@ function registerModule(name, type, initFn, deps = []) {
   });
 }
 
-// ================= SAFE CHECK =================
+/* ================= SAFE CHECK ================= */
+
 function isReady(module) {
   return module.deps.every(dep => window[dep]);
 }
 
-// ================= BOOT SEQUENCE =================
+/* ================= BOOT SEQUENCE ================= */
+
 function initOrchestrator() {
 
   console.log("[FOK] Orchestrator Kernel Starting...");
@@ -57,10 +65,11 @@ function initOrchestrator() {
   console.log("[FOK] Orchestration Complete");
 }
 
-// ================= CORE BOOT =================
+/* ================= CORE BOOT ================= */
+
 function bootCoreModules() {
 
-  MODULES.core.forEach(mod => {
+  window.FOK_MODULES.core.forEach(mod => {
 
     try {
 
@@ -78,10 +87,11 @@ function bootCoreModules() {
   });
 }
 
-// ================= OPTIONAL BOOT =================
+/* ================= OPTIONAL BOOT ================= */
+
 function bootOptionalModules() {
 
-  MODULES.optional.forEach(mod => {
+  window.FOK_MODULES.optional.forEach(mod => {
 
     try {
 
@@ -99,14 +109,15 @@ function bootOptionalModules() {
   });
 }
 
-// ================= FINALIZATION =================
+/* ================= FINALIZATION ================= */
+
 function finalizeBoot() {
 
   setTimeout(() => {
 
     window.__SYSTEM_STATUS__ = {
       orchestrator: "READY",
-      modules: MODULES
+      modules: window.FOK_MODULES
     };
 
     console.log("[FOK] System Fully Stabilized");
@@ -120,7 +131,8 @@ function finalizeBoot() {
   }, 300);
 }
 
-// ================= SAFE MODULE REGISTRATION API =================
+/* ================= SAFE MODULE REGISTRATION API ================= */
+
 window.SystemModule = {
 
   core(name, initFn, deps) {
@@ -132,12 +144,15 @@ window.SystemModule = {
   },
 
   getStatus() {
-    return MODULES;
+    return window.FOK_MODULES;
   }
 };
 
-// ================= GLOBAL DEBUG =================
+/* ================= GLOBAL DEBUG ================= */
+
 window.FOK = {
-  modules: MODULES,
+  modules: window.FOK_MODULES,
   register: registerModule
 };
+
+console.log("[FOK] Orchestrator Kernel Loaded");
