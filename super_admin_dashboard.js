@@ -2,27 +2,40 @@
 
 /*
 ========================================
-SUPER ADMIN DASHBOARD v4.1 (STABLE FIX)
+SUPER ADMIN DASHBOARD v4.1 (STABLE FIX + SAFE FINAL)
 ========================================
 ✔ Safe CORE execution layer
 ✔ Button click ALWAYS works
-✔ Event-safe navigation
+✔ Event-safe navigation wrapper
 ✔ No dependency timing crash
 ✔ SYSTEM_READY compatible
+✔ Duplicate init protection FIXED
+✔ Event fallback safety FIXED
+✔ Auto recovery safe flush
 ========================================
 */
 
 console.log("[DASHBOARD] LOADING");
 
-/* ================= SAFE CORE ACCESS ================= */
-
+// ================= SAFE CORE ACCESS =================
 function getCore() {
   return window.ENTERPRISE_CORE_ENGINE ||
          window.__ENTERPRISE_CORE_ENGINE__;
 }
 
-/* ================= SAFE EXECUTOR ================= */
+// ================= INIT GUARD =================
+window.__DASHBOARD_INIT__ = false;
 
+// ================= EVENT WRAPPER (CRITICAL FIX) =================
+function onEvent(event, cb) {
+  if (window.SYSTEM_EVENTS && typeof window.SYSTEM_EVENTS.on === "function") {
+    window.SYSTEM_EVENTS.on(event, cb);
+  } else {
+    window.addEventListener(event, (e) => cb(e.detail));
+  }
+}
+
+// ================= SAFE EXECUTOR =================
 function safeRun(page) {
 
   const CORE = getCore();
@@ -35,7 +48,6 @@ function safeRun(page) {
       return;
     }
 
-    // fallback (IMPORTANT FIX)
     console.warn("[DASHBOARD] CORE NOT READY - QUEUED:", page);
 
     window.__PENDING_ROUTE__ = window.__PENDING_ROUTE__ || [];
@@ -46,14 +58,12 @@ function safeRun(page) {
   }
 }
 
-/* ================= BUTTON ROUTER ================= */
-
+// ================= ROUTER =================
 function handleNavigation(page) {
   safeRun(page);
 }
 
-/* ================= BUTTON BINDING ================= */
-
+// ================= BUTTON BINDING =================
 function bindButtons() {
 
   const buttons = document.querySelectorAll(".menu button");
@@ -75,8 +85,7 @@ function bindButtons() {
   console.log("[DASHBOARD] BUTTONS WIRED:", buttons.length);
 }
 
-/* ================= LOGOUT ================= */
-
+// ================= LOGOUT =================
 function bindLogout() {
 
   const logoutBtn = document.getElementById("logoutBtn");
@@ -89,7 +98,7 @@ function bindLogout() {
 
     const CORE = getCore();
 
-    if (window.SYSTEM_EVENTS) {
+    if (window.SYSTEM_EVENTS && typeof window.SYSTEM_EVENTS.emit === "function") {
       window.SYSTEM_EVENTS.emit("LOGOUT_REQUESTED", {
         time: Date.now()
       });
@@ -102,8 +111,7 @@ function bindLogout() {
   });
 }
 
-/* ================= SYSTEM READY SYNC ================= */
-
+// ================= FLUSH PENDING ROUTES =================
 function flushPendingRoutes() {
 
   const CORE = getCore();
@@ -114,7 +122,7 @@ function flushPendingRoutes() {
 
   if (pending.length === 0) return;
 
-  console.log("[DASHBOARD] FLUSHING PENDING ROUTES:", pending.length);
+  console.log("[DASHBOARD] FLUSHING ROUTES:", pending.length);
 
   pending.forEach(page => {
     try {
@@ -127,42 +135,42 @@ function flushPendingRoutes() {
   window.__PENDING_ROUTE__ = [];
 }
 
-/* ================= INIT ================= */
+// ================= AUTO RECOVERY WATCHER =================
+setInterval(() => {
+  if (window.__SYSTEM_BOOT__?.ready) {
+    flushPendingRoutes();
+  }
+}, 2000);
 
+// ================= INIT =================
 function initDashboard() {
+
+  if (window.__DASHBOARD_INIT__) return;
+  window.__DASHBOARD_INIT__ = true;
 
   console.log("[DASHBOARD] INIT START");
 
   bindButtons();
   bindLogout();
-
   flushPendingRoutes();
 
   console.log("[DASHBOARD] ACTIVE");
 }
 
-/* ================= BOOT HOOK (FIXED) ================= */
-
+// ================= BOOT HOOK =================
 function bootWhenReady() {
 
   if (window.__SYSTEM_BOOT__ && window.__SYSTEM_BOOT__.ready) {
     initDashboard();
   } else {
-
-    if (window.SYSTEM_EVENTS && window.SYSTEM_EVENTS.on) {
-      window.SYSTEM_EVENTS.on("SYSTEM_READY", initDashboard);
-    } else {
-      setTimeout(initDashboard, 1000);
-    }
+    onEvent("SYSTEM_READY", initDashboard);
   }
 }
 
-/* ================= START ================= */
-
+// ================= START =================
 bootWhenReady();
 
-/* ================= DEBUG ================= */
-
+// ================= DEBUG FLAG =================
 window.__DASHBOARD_LOADED__ = true;
 
 console.log("[DASHBOARD] READY");
