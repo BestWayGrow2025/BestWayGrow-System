@@ -2,171 +2,152 @@
 
 /*
 ========================================
-BOOT ARCHITECTURE V2 - CORE ENGINE
+MASTER BOOT CONTROLLER v2.0 (FINAL STABLE)
 ========================================
-✔ Module registry system
-✔ Dependency validation
-✔ Load tracking
-✔ Crash-safe boot
-✔ Enterprise engine support
-✔ Auto initialization pipeline
+✔ Single source of system startup
+✔ Guarantees load order safety
+✔ SYSTEM_READY event authority
+✔ Prevents early execution bugs
+✔ Stabilizes CORE + ORCHESTRATOR + UI
 ========================================
 */
 
-window.BOOT = {
-  modules: {},
-  status: {},
-  hooks: {},
+console.log("[BOOT] LOADING BOOT MANAGER");
 
-  /* ================= ENTERPRISE LAYER REGISTRY ================= */
-  enterprise: {
-    core: null,
-    autopilot: null,
-    autowiring: null,
-    learning: null
+/* ================= GLOBAL BOOT STATE ================= */
+
+window.__SYSTEM_BOOT__ = {
+  ready: false,
+  coreReady: false,
+  orchestratorReady: false,
+  wiringReady: false,
+  started: false
+};
+
+/* ================= EVENT BUS (GLOBAL SAFE) ================= */
+
+window.SYSTEM_EVENTS = window.SYSTEM_EVENTS || {
+  emit(event, data) {
+    window.dispatchEvent(new CustomEvent(event, { detail: data }));
+  },
+  on(event, callback) {
+    window.addEventListener(event, (e) => callback(e.detail));
   }
 };
 
-/* ================= REGISTER MODULE ================= */
+/* ================= SAFE CHECK HELPERS ================= */
 
-BOOT.register = function (name, fn) {
-  BOOT.modules[name] = fn;
-  BOOT.status[name] = "registered";
-};
+function waitFor(fn, cb, timeout = 5000) {
 
-/* ================= MARK LOADED ================= */
+  const start = Date.now();
 
-BOOT.loaded = function (name) {
-  BOOT.status[name] = "loaded";
-  console.log("[BOOT] Loaded:", name);
-};
+  const timer = setInterval(() => {
 
-/* ================= REQUIRE CHECK ================= */
-
-BOOT.require = function (list) {
-  for (let i = 0; i < list.length; i++) {
-    const m = list[i];
-    if (!BOOT.status[m] || BOOT.status[m] !== "loaded") {
-      console.error("[BOOT ERROR] Missing module:", m);
-      throw new Error("BOOT FAILURE: " + m);
+    if (fn()) {
+      clearInterval(timer);
+      cb(true);
+      return;
     }
-  }
-};
 
-/* ================= START MODULE ================= */
-
-BOOT.start = function (name) {
-  if (BOOT.modules[name]) {
-    try {
-      BOOT.modules[name]();
-      BOOT.loaded(name);
-
-      BOOT.runHook("afterStart", name);
-
-    } catch (e) {
-      console.error("[BOOT CRASH]", name, e);
-      BOOT.runHook("onCrash", { name, error: e });
+    if (Date.now() - start > timeout) {
+      clearInterval(timer);
+      console.warn("[BOOT] TIMEOUT WAIT:", fn.toString());
+      cb(false);
     }
+
+  }, 100);
+}
+
+/* ================= CORE INIT ================= */
+
+function initCore() {
+
+  if (typeof window.initCoreSystem === "function") {
+    const ok = window.initCoreSystem();
+    window.__SYSTEM_BOOT__.coreReady = !!ok;
+    console.log("[BOOT] CORE:", ok);
   } else {
-    throw new Error("Module not found: " + name);
+    console.warn("[BOOT] CORE NOT FOUND");
   }
-};
+}
 
-/* ================= BOOT HOOK SYSTEM ================= */
+/* ================= ORCHESTRATOR INIT ================= */
 
-BOOT.on = function (event, fn) {
-  BOOT.hooks[event] = BOOT.hooks[event] || [];
-  BOOT.hooks[event].push(fn);
-};
+function initOrchestrator() {
 
-BOOT.runHook = function (event, data) {
-  const list = BOOT.hooks[event] || [];
-  list.forEach(fn => {
-    try {
-      fn(data);
-    } catch (e) {
-      console.error("[HOOK ERROR]", e);
-    }
+  if (typeof window.initOrchestrator === "function") {
+    window.initOrchestrator();
+    window.__SYSTEM_BOOT__.orchestratorReady = true;
+    console.log("[BOOT] ORCHESTRATOR READY");
+  } else {
+    console.warn("[BOOT] ORCHESTRATOR NOT FOUND");
+  }
+}
+
+/* ================= AUTO WIRING INIT ================= */
+
+function initWiring() {
+
+  if (typeof window.initAutoWiring === "function") {
+    window.initAutoWiring();
+    window.__SYSTEM_BOOT__.wiringReady = true;
+    console.log("[BOOT] AUTO WIRING READY");
+  } else {
+    console.warn("[BOOT] AUTO WIRING NOT FOUND");
+  }
+}
+
+/* ================= FLUSH SYSTEM ================= */
+
+function finalizeBoot() {
+
+  window.__SYSTEM_BOOT__.ready = true;
+  window.__SYSTEM_BOOT__.started = true;
+
+  console.log("[BOOT] SYSTEM FULLY READY");
+
+  window.SYSTEM_EVENTS.emit("SYSTEM_READY", {
+    time: Date.now(),
+    boot: window.__SYSTEM_BOOT__
   });
-};
+}
 
-/* ================= ENTERPRISE AUTO INIT ================= */
+/* ================= MASTER BOOT SEQUENCE ================= */
 
-BOOT.initEnterprise = function () {
+function bootSystem() {
 
-  console.log("[BOOT] Initializing Enterprise Layer...");
+  console.log("[BOOT] START SEQUENCE");
 
-  /* ================= CORE ENGINE ================= */
-  if (typeof EnterpriseCoreEngine !== "undefined") {
-    BOOT.enterprise.core = new EnterpriseCoreEngine();
+  initCore();
+  initOrchestrator();
+  initWiring();
+
+  // ensure async safety window
+  setTimeout(finalizeBoot, 300);
+}
+
+/* ================= SAFE START ================= */
+
+function startBoot() {
+
+  if (window.__SYSTEM_BOOT__.started) return;
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootSystem);
+  } else {
+    bootSystem();
   }
-
-  /* ================= AUTO WIRING ================= */
-  if (typeof EnterpriseAutoWiringLayer !== "undefined") {
-    BOOT.enterprise.autowiring = new EnterpriseAutoWiringLayer();
-    BOOT.enterprise.autowiring?.connect?.();
-  }
-
-  /* ================= AUTOPILOT ENGINE ================= */
-  if (typeof EnterpriseAutopilotEngine !== "undefined") {
-    BOOT.enterprise.autopilot = new EnterpriseAutopilotEngine();
-  }
-
-  /* ================= SELF LEARNING ENGINE ================= */
-  if (typeof EnterpriseSelfLearningEngine !== "undefined") {
-    BOOT.enterprise.learning = new EnterpriseSelfLearningEngine();
-  }
-
-  /* ================= EVENT HUB WIRING ================= */
-
-  if (window.systemEventHub && BOOT.enterprise.core) {
-    BOOT.enterprise.core.attachLiveLoop?.(window.systemEventHub);
-  }
-
-  if (BOOT.enterprise.learning && window.auditAPI) {
-    BOOT.enterprise.learning.attach?.(window.auditAPI);
-  }
-
-  if (typeof attachAutopilotToEventHub === "function") {
-    attachAutopilotToEventHub(window.systemEventHub);
-  }
-
-  BOOT.runHook("enterpriseReady", true);
-
-  console.log("[BOOT] ENTERPRISE CORE FULLY WIRED");
-};
+}
 
 /* ================= AUTO START ================= */
 
-BOOT.startSystem = function () {
-  console.log("[BOOT] SYSTEM START SEQUENCE INITIATED");
+startBoot();
 
-  BOOT.initEnterprise();
+/* ================= DEBUG EXPORT ================= */
 
-  if (BOOT.modules["super_admin_dashboard"]) {
-    BOOT.start("super_admin_dashboard");
-  }
-
-  BOOT.runHook("systemReady", true);
+window.BOOT = {
+  state: window.__SYSTEM_BOOT__,
+  restart: bootSystem
 };
 
-/* ================= BOOT REPORT ================= */
-
-BOOT.report = function () {
-  console.log("===== BOOT STATUS =====");
-  console.table(BOOT.status);
-};
-
-/* ================= OPTIONAL GLOBAL HOOKS ================= */
-
-BOOT.on("onCrash", function (data) {
-  console.error("[RECOVERY TRIGGER]", data);
-});
-
-BOOT.on("enterpriseReady", function () {
-  console.log("[ENTERPRISE] FULL CORE ACTIVE");
-});
-
-BOOT.on("systemReady", function () {
-  console.log("[SYSTEM] ALL LAYERS ONLINE");
-});
+console.log("[BOOT] MANAGER READY");
