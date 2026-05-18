@@ -307,227 +307,231 @@ case "backup":
           }
           break;
 
-       /* ================= STRATEGIC AI ADVISOR ================= */
-        case "strategicai":
-          if (typeof loadStrategicAIAdvisor === "function") {
-            loadStrategicAIAdvisor();
-          } else if (typeof renderStrategicAIAdvisor === "function") {
-            renderStrategicAIAdvisor();
-          } else {
-            const main = document.getElementById("mainContent");
-            if (main) {
-              main.innerHTML = `
-                <div class="card">
-                  <h3>🧠 Strategic AI Advisor</h3>
-                  <p>Strategic AI Advisor module not loaded.</p>
-                </div>
-              `;
-            }
-          }
-          break;
+-/* ================= STRATEGIC AI ADVISOR ================= */
+case "strategicai":
+  if (typeof loadStrategicAIAdvisor === "function") {
+    loadStrategicAIAdvisor();
+  } else if (typeof renderStrategicAIAdvisor === "function") {
+    renderStrategicAIAdvisor();
+  } else {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>🧠 Strategic AI Advisor</h3>
+          <p>Strategic AI Advisor module not loaded.</p>
+        </div>
+      `;
+    }
+  }
+  break;
 
-        /* ================= ENTERPRISE AUDIT BLOCKCHAIN ================= */
-        case "auditblockchain":
-          if (typeof loadEnterpriseAuditBlockchain === "function") {
-            loadEnterpriseAuditBlockchain();
-          } else {
-            const main = document.getElementById("mainContent");
-            if (main) {
-              main.innerHTML = `
-                <h3>⛓ Enterprise Audit Blockchain</h3>
-                <p>Blockchain-based audit ledger module active.</p>
-              `;
-            }
-          }
-          break;
+/* ================= ENTERPRISE AUDIT BLOCKCHAIN ================= */
+case "auditblockchain":
+  if (typeof loadEnterpriseAuditBlockchain === "function") {
+    loadEnterpriseAuditBlockchain();
+  } else {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>⛓ Enterprise Audit Blockchain</h3>
+          <p>Blockchain-based audit ledger module active.</p>
+        </div>
+      `;
+    }
+  }
+  break;
 
-        /* ================= LIVE SYSTEM REALTIME ================= */
-        case "realtime":
-          if (typeof loadLiveSystemRealtime === "function") {
-            loadLiveSystemRealtime();
-          } else {
-            const main = document.getElementById("mainContent");
-            if (main) {
-              main.innerHTML = `
-                <h3>📡 Live System Realtime</h3>
-                <p>Real-time monitoring engine active.</p>
-              `;
-            }
-          }
-          break;
+/* ================= LIVE SYSTEM REALTIME ================= */
+case "realtime":
+  if (typeof loadLiveSystemRealtime === "function") {
+    loadLiveSystemRealtime();
+  } else {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>📡 Live System Realtime</h3>
+          <p>Real-time monitoring engine active.</p>
+        </div>
+      `;
+    }
+  }
+  break;
 
-        /* ================= PAYMENT GATEWAY ================= */
-        case "payments":
-          if (typeof loadPaymentGatewayBridge === "function") {
-            loadPaymentGatewayBridge();
-          } else {
-            const main = document.getElementById("mainContent");
-            if (main) {
-              main.innerHTML = `
-                <h3>💳 Payment Gateway Bridge</h3>
-                <p>Payment gateway integration module active.</p>
-              `;
-            }
-          }
-          break;
+/* ================= PAYMENT GATEWAY ================= */
+case "payments":
+  if (typeof loadPaymentGatewayBridge === "function") {
+    loadPaymentGatewayBridge();
+  } else {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>💳 Payment Gateway Bridge</h3>
+          <p>Payment gateway integration module active.</p>
+        </div>
+      `;
+    }
+  }
+  break;
 
-        /* ================= ORCHESTRATOR KERNEL ================= */
-        case "orchestrator":
-          if (typeof loadSystemOrchestratorKernel === "function") {
-            loadSystemOrchestratorKernel();
-          } else {
-            const main = document.getElementById("mainContent");
-            if (main) {
-              main.innerHTML = `
-                <h3>🧩 System Orchestrator Kernel</h3>
-                <p>Central orchestration kernel active.</p>
-              `;
-            }
-          }
-          break;
+/* ================= ORCHESTRATOR KERNEL ================= */
+case "orchestrator":
+  if (typeof loadSystemOrchestratorKernel === "function") {
+    loadSystemOrchestratorKernel();
+  } else {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>🧩 System Orchestrator Kernel</h3>
+          <p>Central orchestration kernel active.</p>
+        </div>
+      `;
+    }
+  }
+  break;
 
-        /* ================= ADVANCED HEALTH MONITOR ================= */
-        case "healthmonitor":
-          if (typeof loadSystemHealthMonitor === "function") {
-            loadSystemHealthMonitor();
-          } else {
-            const main = document.getElementById("mainContent");
-            if (main) {
-              main.innerHTML = `
-                <h3>🩺 Advanced Health Monitor</h3>
-                <p>Deep system health monitoring active.</p>
-              `;
-            }
-          }
-          break;
+/* ================= ADVANCED HEALTH MONITOR ================= */
+case "healthmonitor":
+  if (typeof loadSystemHealthMonitor === "function") {
+    loadSystemHealthMonitor();
+  } else {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>🩺 Advanced Health Monitor</h3>
+          <p>Deep system health monitoring active.</p>
+        </div>
+      `;
+    }
+  }
+  break;
 
-        /* ================= EVENT MONITOR ================= */
-        case "eventmonitor":
-          if (typeof renderEventMonitorPanel === "function") {
-            renderEventMonitorPanel("eventMonitorPanel");
-          } else {
-            const main = document.getElementById("mainContent");
-            if (main) {
-              main.innerHTML = `
-                <h3>📡 Event Monitor</h3>
-                <p>Event Monitor module not loaded.</p>
-              `;
-            }
-          }
-          break;
-          
-        /* ================= EVENT STREAM ================= */
-        case "eventstream":
-          if (typeof renderSystemEventStreamUI === "function") {
-            renderSystemEventStreamUI("systemEventStreamPanel");
-          } else if (
-            typeof renderSystemEventStreamPanel === "function"
-          ) {
-            renderSystemEventStreamPanel("systemEventStreamPanel");
-          } else {
-            const main = document.getElementById("mainContent");
-            if (main) {
-              main.innerHTML = `
-                <h3>🌊 Event Stream</h3>
-                <p>Event Stream module not loaded.</p>
-              `;
-            }
-          }
-          break;
+/* ================= EVENT MONITOR ================= */
+case "eventmonitor":
+  if (typeof renderEventMonitorPanel === "function") {
+    renderEventMonitorPanel("eventMonitorPanel");
+  } else {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>📡 Event Monitor</h3>
+          <p>Event Monitor module not loaded.</p>
+        </div>
+      `;
+    }
+  }
+  break;
 
-        case "aigovernor":
-          if (typeof loadAIGovernor === "function") {
-            loadAIGovernor();
-          } else {
-            document.getElementById("mainContent").innerHTML = `
-              <h3>🤖 AI Governor</h3>
-              <p>AI governance module active.</p>
-            `;
-          }
-          break;
+/* ================= EVENT STREAM ================= */
+case "eventstream":
+  if (typeof renderSystemEventStreamUI === "function") {
+    renderSystemEventStreamUI("systemEventStreamPanel");
+  } else if (typeof renderSystemEventStreamPanel === "function") {
+    renderSystemEventStreamPanel("systemEventStreamPanel");
+  } else {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>🌊 Event Stream</h3>
+          <p>Event Stream module not loaded.</p>
+        </div>
+      `;
+    }
+  }
+  break;
 
-     /* ================= ESCROW CONTROL ================= */
-        case "escrow": {
+/* ================= AI GOVERNOR ================= */
+case "aigovernor":
+  if (typeof loadAIGovernor === "function") {
+    loadAIGovernor();
+  } else {
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML = `
+        <div class="card">
+          <h3>🤖 AI Governor</h3>
+          <p>AI governance module active.</p>
+        </div>
+      `;
+    }
+  }
+  break;
 
-          const main = document.getElementById("mainContent");
+/* ================= ESCROW CONTROL ================= */
+case "escrow": {
+  const main = document.getElementById("mainContent");
 
-          if (!main) {
-            console.warn("[ESCROW] mainContent not found");
-            break;
-          }
-
-          main.innerHTML = `
-            <h3>📦 ESCROW CONTROL PANEL</h3>
-            <p>Loading escrow system...</p>
-          `;
-
-          function renderEscrow() {
-            if (typeof loadEscrowPanel === "function") {
-              loadEscrowPanel();
-              return true;
-            }
-            return false;
-          }
-
-          if (!renderEscrow()) {
-            const script = document.createElement("script");
-            script.src = "super_admin_escrow_panel.js";
-
-            script.onload = function () {
-              if (!renderEscrow()) {
-                main.innerHTML = `
-                  <h3>📦 ESCROW CONTROL PANEL</h3>
-                  <p style="color:red;">
-                    Escrow module loaded but function missing
-                  </p>
-                `;
-              }
-            };
-
-            script.onerror = function () {
-              main.innerHTML = `
-                <h3>📦 ESCROW CONTROL PANEL</h3>
-                <p style="color:red;">
-                  Failed to load super_admin_escrow_panel.js
-                </p>
-              `;
-            };
-
-            document.body.appendChild(script);
-          }
-
-          break;
-        }
-          
-        case "reports":
-          window.location.href = "admin_reports.html";
-          break;
-
-        case "tree":
-          loadTreeView("all");
-          break;
-
-        case "reset":
-          loadResetPanel();
-          break;
-
-        default:
-          loadHome();
-      }
-    });
-  });
-
-  const logoutBtn = document.getElementById("logoutBtn");
-
-  if (logoutBtn && !logoutBtn.dataset.bound) {
-    logoutBtn.dataset.bound = "true";
-    logoutBtn.addEventListener("click", logout);
+  if (!main) {
+    console.warn("[ESCROW] mainContent not found");
+    break;
   }
 
-  const homeBtn = document.querySelector('.menu button[data-page="home"]');
-  if (homeBtn) homeBtn.classList.add("active");
+  main.innerHTML = `
+    <div class="card">
+      <h3>📦 ESCROW CONTROL PANEL</h3>
+      <p>Loading escrow system...</p>
+    </div>
+  `;
+
+  function renderEscrow() {
+    if (typeof loadEscrowPanel === "function") {
+      loadEscrowPanel();
+      return true;
+    }
+    return false;
+  }
+
+  if (!renderEscrow()) {
+    const script = document.createElement("script");
+    script.src = "super_admin_escrow_panel.js";
+
+    script.onload = function () {
+      if (!renderEscrow()) {
+        main.innerHTML = `
+          <div class="card">
+            <h3>📦 ESCROW CONTROL PANEL</h3>
+            <p style="color:red;">Escrow module loaded but function missing</p>
+          </div>
+        `;
+      }
+    };
+
+    script.onerror = function () {
+      main.innerHTML = `
+        <div class="card">
+          <h3>📦 ESCROW CONTROL PANEL</h3>
+          <p style="color:red;">Failed to load super_admin_escrow_panel.js</p>
+        `;
+    };
+
+    document.body.appendChild(script);
+  }
+
+  break;
 }
 
+case "reports":
+  window.location.href = "admin_reports.html";
+  break;
+
+case "tree":
+  loadTreeView("all");
+  break;
+
+case "reset":
+  loadResetPanel();
+  break;
+
+default:
+  loadHome();
+}
 /* ================= HOME ================= */
 
 function loadHome() {
