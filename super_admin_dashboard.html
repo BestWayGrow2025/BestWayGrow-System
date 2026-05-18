@@ -306,5 +306,21 @@ window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
 <!-- ================= DASHBOARD ================= -->
 <script src="super_admin_dashboard.js"></script>
 
+<!-- ================= FORCED SYSTEM START (FIX) ================= -->
+<script>
+window.addEventListener("load", function () {
+  setTimeout(() => {
+
+    if (window.initAutoWiring) {
+      window.initAutoWiring();
+      console.log("[FORCED FIX] Auto wiring started");
+    } else {
+      console.error("[CRITICAL] Auto wiring not found");
+    }
+
+  }, 800);
+});
+</script>
+
 </body>
 </html>
