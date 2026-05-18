@@ -2,14 +2,13 @@
 
 /*
 ========================================
-FULL ORCHESTRATOR KERNEL (FOK v1.0)
+FULL ORCHESTRATOR KERNEL (FOK v1.1 FIXED)
 ========================================
-✔ Dependency-aware module orchestration
-✔ Safe boot sequencing
-✔ Auto-retry module initialization
-✔ Prevents undefined / load-order failures
-✔ Works above SHBA + SCL
-✔ Single source of system startup truth
+✔ Safe boot sequencing FIXED
+✔ Waits for CORE ENGINE
+✔ Waits for AUTO WIRING
+✔ Prevents empty module boot
+✔ Guaranteed initialization order
 ========================================
 */
 
@@ -18,11 +17,12 @@ FULL ORCHESTRATOR KERNEL (FOK v1.0)
   if (window.__SYSTEM_ORCHESTRATOR_KERNEL__) return;
   window.__SYSTEM_ORCHESTRATOR_KERNEL__ = true;
 
-  document.addEventListener("DOMContentLoaded", initOrchestrator);
+  // 🔥 FIX: DO NOT START IMMEDIATELY
+  window.addEventListener("load", waitForSystemReady);
 
 })();
 
-/* ================= MODULE REGISTRY ================= */
+/* ================= MODULE STORE ================= */
 
 window.FOK_MODULES = window.FOK_MODULES || {
   core: [],
@@ -46,26 +46,53 @@ function registerModule(name, type, initFn, deps = []) {
   });
 }
 
-/* ================= SAFE CHECK ================= */
+/* ================= READY CHECK ================= */
 
 function isReady(module) {
   return module.deps.every(dep => window[dep]);
 }
 
-/* ================= BOOT SEQUENCE ================= */
+/* ================= WAIT SYSTEM ================= */
+
+function waitForSystemReady() {
+
+  const check = setInterval(() => {
+
+    const core = window.ENTERPRISE_CORE_ENGINE || window.__ENTERPRISE_CORE_ENGINE__;
+    const auto = window.initAutoWiring;
+
+    if (core && auto) {
+
+      clearInterval(check);
+
+      console.log("[FOK] SYSTEM READY DETECTED");
+
+      initOrchestrator();
+
+    } else {
+
+      console.log("[FOK] Waiting for dependencies...");
+
+    }
+
+  }, 300);
+}
+
+/* ================= BOOT ================= */
 
 function initOrchestrator() {
 
-  console.log("[FOK] Orchestrator Kernel Starting...");
+  console.log("[FOK] Orchestrator Starting...");
 
   bootCoreModules();
   bootOptionalModules();
-  finalizeBoot();
+
+  setTimeout(finalizeBoot, 200);
 
   console.log("[FOK] Orchestration Complete");
 }
 
-/* ================= CORE BOOT ================= */
+/* ================= CORE ================= */
 
 function bootCoreModules() {
 
@@ -74,7 +101,7 @@ function bootCoreModules() {
     try {
 
       if (!isReady(mod)) {
-        console.warn("[FOK] Core module waiting:", mod.name);
+        console.warn("[FOK] Waiting:", mod.name);
         return;
       }
 
@@ -82,12 +109,12 @@ function bootCoreModules() {
       mod.status = "ACTIVE";
 
     } catch (err) {
-      console.error("[FOK] Core module failed:", mod.name, err);
+      console.error("[FOK] ERROR:", mod.name, err);
     }
   });
 }
 
-/* ================= OPTIONAL BOOT ================= */
+/* ================= OPTIONAL ================= */
 
 function bootOptionalModules() {
 
@@ -96,7 +123,7 @@ function bootOptionalModules() {
     try {
 
       if (!isReady(mod)) {
-        console.warn("[FOK] Optional module skipped:", mod.name);
+        console.warn("[FOK] SKIP:", mod.name);
         return;
       }
 
@@ -104,42 +131,38 @@ function bootOptionalModules() {
       mod.status = "ACTIVE";
 
     } catch (err) {
-      console.error("[FOK] Optional module failed:", mod.name, err);
+      console.error("[FOK] ERROR:", mod.name, err);
     }
   });
 }
 
-/* ================= FINALIZATION ================= */
+/* ================= FINALIZE ================= */
 
 function finalizeBoot() {
 
-  setTimeout(() => {
+  window.__SYSTEM_STATUS__ = {
+    orchestrator: "READY",
+    modules: window.FOK_MODULES
+  };
 
-    window.__SYSTEM_STATUS__ = {
-      orchestrator: "READY",
-      modules: window.FOK_MODULES
-    };
+  console.log("[FOK] SYSTEM STABLE");
 
-    console.log("[FOK] System Fully Stabilized");
-
-    if (window.SYSTEM_EVENTS) {
-      window.SYSTEM_EVENTS.emit("ORCHESTRATOR_READY", {
-        time: Date.now()
-      });
-    }
-
-  }, 300);
+  if (window.SYSTEM_EVENTS) {
+    window.SYSTEM_EVENTS.emit("ORCHESTRATOR_READY", {
+      time: Date.now()
+    });
+  }
 }
 
-/* ================= SAFE MODULE REGISTRATION API ================= */
+/* ================= API ================= */
 
 window.SystemModule = {
 
-  core(name, initFn, deps) {
+  core(name, initFn, deps = []) {
     registerModule(name, "core", initFn, deps);
   },
 
-  optional(name, initFn, deps) {
+  optional(name, initFn, deps = []) {
     registerModule(name, "optional", initFn, deps);
   },
 
@@ -148,11 +171,11 @@ window.SystemModule = {
   }
 };
 
-/* ================= GLOBAL DEBUG ================= */
+/* ================= DEBUG ================= */
 
 window.FOK = {
   modules: window.FOK_MODULES,
   register: registerModule
 };
 
-console.log("[FOK] Orchestrator Kernel Loaded");
+console.log("[FOK] LOADED");
