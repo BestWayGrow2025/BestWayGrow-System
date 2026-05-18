@@ -194,3 +194,4 @@ window.runSystemDiagnostics = runDiagnostics;
 window.renderSystemDiagnostics = renderDiagnostics;
 window.startSystemDiagnostics = startDiagnosticsLoop;
 
+console.log("[SYSTEM DIAGNOSTICS] READY V1.0");
