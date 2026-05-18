@@ -21,6 +21,8 @@ AI ORCHESTRATOR (CONTROL INTELLIGENCE)
 
 function initOrchestrator() {
 
+  console.log("[AI ORCHESTRATOR] INITIALIZED");
+
   setInterval(runOrchestrationCycle, 30000);
 }
 
@@ -36,13 +38,17 @@ function runOrchestrationCycle() {
 // ================= OPTIMIZATION =================
 function optimizeEventFlow(snapshot) {
 
- // console.log("⚙️ ORCHESTRATOR: optimizing system flow");
-
-  // safe optimization placeholder
   if (snapshot.health && snapshot.health.overall === "GOOD") {
-    console.log("System stable - no optimization needed");
+    console.log("[ORCHESTRATOR] System stable - no optimization needed");
   }
 }
 
-// ================= GLOBAL =================
+// ================= GLOBAL MODULE EXPORT (IMPORTANT FIX) =================
+window.system_orchestrator_ai = {
+  init: initOrchestrator,
+  run: runOrchestrationCycle,
+  optimize: optimizeEventFlow
+};
+
+// ================= OPTIONAL LEGACY EXPORT =================
 window.runOrchestrationCycle = runOrchestrationCycle;
