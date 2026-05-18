@@ -2,7 +2,7 @@
 
 /*
 ========================================
-STRATEGIC AI ADVISOR V1.0
+STRATEGIC AI ADVISOR V1.0 (FINAL FIXED)
 ========================================
 ✔ Executive recommendations
 ✔ Growth analysis
@@ -10,11 +10,14 @@ STRATEGIC AI ADVISOR V1.0
 ✔ Financial monitoring
 ✔ PIN usage intelligence
 ✔ Compliance alerts
-✔ Strategic suggestions
+✔ Core Engine integration FIXED
+✔ Enterprise module registration FIXED
 ========================================
 */
 
 console.log("[STRATEGIC AI ADVISOR] LOADED");
+
+/* ================= CORE FUNCTION ================= */
 
 function loadStrategicAIAdvisor() {
 
@@ -88,58 +91,34 @@ function loadStrategicAIAdvisor() {
   const recommendations = [];
   const alerts = [];
 
-  // Growth
   if (totalUsers < 100) {
-    recommendations.push(
-      "Focus on user acquisition to reach the first 100 active users."
-    );
+    recommendations.push("Focus on user acquisition to reach 100 users.");
   } else if (totalUsers < 1000) {
-    recommendations.push(
-      "Strengthen onboarding and retention to scale toward 1,000 users."
-    );
+    recommendations.push("Strengthen onboarding and retention for scaling.");
   } else {
-    recommendations.push(
-      "Optimize automation and infrastructure for large-scale growth."
-    );
+    recommendations.push("Optimize infrastructure for large-scale growth.");
   }
 
-  // PIN efficiency
   if (pinUsageRate < 30) {
-    recommendations.push(
-      "PIN utilization is low. Review pricing, stock, and distribution."
-    );
+    recommendations.push("PIN usage is low — review distribution strategy.");
   } else if (pinUsageRate > 80) {
-    recommendations.push(
-      "PIN utilization is very high. Consider increasing inventory."
-    );
+    recommendations.push("PIN usage is high — consider increasing supply.");
   }
 
-  // Escrow workload
   if (pendingEscrows > 20) {
-    alerts.push(
-      "High pending escrow volume detected. Additional review capacity may be needed."
-    );
+    alerts.push("High escrow backlog detected.");
   }
 
-  // Revenue
   if (totalRevenue > 1000000) {
-    recommendations.push(
-      "Revenue has crossed a major milestone. Evaluate tax and treasury planning."
-    );
+    recommendations.push("Revenue milestone achieved — review compliance planning.");
   }
 
-  // Compliance
   if (!auditValid) {
-    alerts.push(
-      "Audit blockchain integrity check failed. Immediate investigation required."
-    );
+    alerts.push("Audit chain integrity issue detected.");
   }
 
-  // Default recommendation
   if (recommendations.length === 0) {
-    recommendations.push(
-      "Operations appear stable. Continue monitoring KPIs and growth trends."
-    );
+    recommendations.push("System stable. Continue monitoring KPIs.");
   }
 
   /* ================= RENDER ================= */
@@ -157,21 +136,44 @@ function loadStrategicAIAdvisor() {
       <tr><td>Audit Integrity</td><td>${auditValid ? "VALID" : "INVALID"}</td></tr>
     </table>
 
-    <h4>🚨 Strategic Alerts</h4>
+    <h4>🚨 Alerts</h4>
     ${
       alerts.length
         ? `<ul>${alerts.map(a => `<li>${a}</li>`).join("")}</ul>`
         : "<p>No critical alerts detected.</p>"
     }
 
-    <h4>💡 AI Recommendations</h4>
+    <h4>💡 Recommendations</h4>
     <ol>
       ${recommendations.map(r => `<li>${r}</li>`).join("")}
     </ol>
   `;
 }
 
-/* ================= EXPORT ================= */
+/* ================= MODULE REGISTRATION FIX ================= */
+/* IMPORTANT: This makes it visible to Core Engine + SCL */
 
-window.loadStrategicAIAdvisor =
-  loadStrategicAIAdvisor;
+if (window.ENTERPRISE_CORE_ENGINE?.register) {
+  window.ENTERPRISE_CORE_ENGINE.register(
+    "strategic_ai_advisor",
+    loadStrategicAIAdvisor
+  );
+}
+
+/* ================= GLOBAL EXPORT (SYSTEM COMPATIBLE) ================= */
+
+window.strategic_ai_advisor = {
+
+  init: loadStrategicAIAdvisor,
+
+  run: function () {
+    return loadStrategicAIAdvisor();
+  },
+
+  evaluate: function () {
+    return {
+      status: "OK",
+      module: "STRATEGIC_AI_ADVISOR"
+    };
+  }
+};
