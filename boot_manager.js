@@ -16,7 +16,15 @@ BOOT ARCHITECTURE V2 - CORE ENGINE
 window.BOOT = {
   modules: {},
   status: {},
-  hooks: {}
+  hooks: {},
+
+  /* ================= ENTERPRISE LAYER REGISTRY ================= */
+  enterprise: {
+    core: null,
+    autopilot: null,
+    autowiring: null,
+    learning: null
+  }
 };
 
 /* ================= REGISTER MODULE ================= */
@@ -53,7 +61,6 @@ BOOT.start = function (name) {
       BOOT.modules[name]();
       BOOT.loaded(name);
 
-      // trigger hook after start
       BOOT.runHook("afterStart", name);
 
     } catch (e) {
@@ -89,16 +96,44 @@ BOOT.initEnterprise = function () {
 
   console.log("[BOOT] Initializing Enterprise Layer...");
 
-  if (typeof initializeEnterpriseCoreSystem === "function") {
-    initializeEnterpriseCoreSystem();
+  /* ================= CORE ENGINE ================= */
+  if (typeof EnterpriseCoreEngine !== "undefined") {
+    BOOT.enterprise.core = new EnterpriseCoreEngine();
   }
 
-  if (typeof bindEnterpriseCoreToDashboard === "function") {
-    bindEnterpriseCoreToDashboard();
+  /* ================= AUTO WIRING ================= */
+  if (typeof EnterpriseAutoWiringLayer !== "undefined") {
+    BOOT.enterprise.autowiring = new EnterpriseAutoWiringLayer();
+    BOOT.enterprise.autowiring?.connect?.();
+  }
+
+  /* ================= AUTOPILOT ENGINE ================= */
+  if (typeof EnterpriseAutopilotEngine !== "undefined") {
+    BOOT.enterprise.autopilot = new EnterpriseAutopilotEngine();
+  }
+
+  /* ================= SELF LEARNING ENGINE ================= */
+  if (typeof EnterpriseSelfLearningEngine !== "undefined") {
+    BOOT.enterprise.learning = new EnterpriseSelfLearningEngine();
+  }
+
+  /* ================= EVENT HUB WIRING ================= */
+
+  if (window.systemEventHub && BOOT.enterprise.core) {
+    BOOT.enterprise.core.attachLiveLoop?.(window.systemEventHub);
+  }
+
+  if (BOOT.enterprise.learning && window.auditAPI) {
+    BOOT.enterprise.learning.attach?.(window.auditAPI);
+  }
+
+  if (typeof attachAutopilotToEventHub === "function") {
+    attachAutopilotToEventHub(window.systemEventHub);
   }
 
   BOOT.runHook("enterpriseReady", true);
 
+  console.log("[BOOT] ENTERPRISE CORE FULLY WIRED");
 };
 
 /* ================= AUTO START ================= */
@@ -111,6 +146,8 @@ BOOT.startSystem = function () {
   if (BOOT.modules["super_admin_dashboard"]) {
     BOOT.start("super_admin_dashboard");
   }
+
+  BOOT.runHook("systemReady", true);
 };
 
 /* ================= BOOT REPORT ================= */
@@ -128,4 +165,8 @@ BOOT.on("onCrash", function (data) {
 
 BOOT.on("enterpriseReady", function () {
   console.log("[ENTERPRISE] FULL CORE ACTIVE");
+});
+
+BOOT.on("systemReady", function () {
+  console.log("[SYSTEM] ALL LAYERS ONLINE");
 });
