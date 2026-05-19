@@ -1,217 +1,159 @@
 "use strict";
-
 /*
-========================================
-SUPER ADMIN MODULE LOADER v1.0
-========================================
-✔ Central dashboard renderer
-✔ Real module execution
-✔ CORE integrated
-✔ Page-to-function mapper
-✔ Safe execution layer
-========================================
+SUPER ADMIN MODULE LOADER v1.1
+✔ Central dashboard renderer ✔ Real module execution ✔ CORE integrated ✔ Page-to-function mapper ✔ Safe execution layer ✔ Naming collision fixed
 */
-
 (function () {
+if (window.SUPER_ADMIN_MODULE_LOADER) return;
+window.SUPER_ADMIN_MODULE_LOADER = true;
+console.log("[MODULE LOADER] LOADED");
+/* ================= PAGE MAP ================= */
+const PAGE_MODULES = {
+// ================= CORE =================
+home: loadHomeDashboard,
+create: loadCreateSystemAdmin,
+users: loadUsersPage,
+system: loadSystemSettings,
 
-  if (window.__SUPER_ADMIN_MODULE_LOADER__) return;
+// ================= BUSINESS =================
+pinmaster: loadPinMaster,
+productmaster: loadProductMaster,
+rankmaster: loadRankMaster,
+incomecontrol: loadIncomeControl,
 
-  window.__SUPER_ADMIN_MODULE_LOADER__ = true;
+// ================= GOVERNANCE =================
+audit: loadAuditPanel,
+health: loadHealthPanel,
+backup: loadBackupPanel,
+aigovernor: loadAIGovernor,
 
-  console.log("[MODULE LOADER] LOADED");
+// ================= EXECUTIVE =================
+controlroom: openEnterpriseControlRoom,
+businessintelligence: openBusinessIntelligence,
+strategicai: openStrategicAIAdvisor,
 
-  /* ================= PAGE MAP ================= */
+// ================= MONITORING =================
+eventmonitor: loadEventMonitor,
+eventstream: loadEventStream,
 
-  const PAGE_MODULES = {
+// ================= REPORTING =================
+reports: loadReports,
+tree: loadTreeView,
 
-    // ================= CORE =================
-    home: loadHomeDashboard,
-    create: loadCreateSystemAdmin,
-    users: loadUsersPage,
-    system: loadSystemSettings,
+// ================= RESET =================
+reset: loadResetPanel
+};
+/* ================= MAIN EXECUTOR ================= */
+function executeModule(page) {
+try {
 
-    // ================= BUSINESS =================
-    pinmaster: loadPinMaster,
-    productmaster: loadProductMaster,
-    rankmaster: loadRankMaster,
-    incomecontrol: loadIncomeControl,
+  const fn = PAGE_MODULES[page];
 
-    // ================= GOVERNANCE =================
-    audit: loadAuditPanel,
-    health: loadHealthPanel,
-    backup: loadBackupPanel,
-    aigovernor: loadAIGovernor,
-
-    // ================= EXECUTIVE =================
-    controlroom: loadEnterpriseControlRoom,
-    businessintelligence: loadBusinessIntelligence,
-    strategicai: loadStrategicAIAdvisor,
-
-    // ================= MONITORING =================
-    eventmonitor: loadEventMonitor,
-    eventstream: loadEventStream,
-
-    // ================= REPORTING =================
-    reports: loadReports,
-    tree: loadTreeView,
-
-    // ================= RESET =================
-    reset: loadResetPanel
-  };
-
-  /* ================= MAIN EXECUTOR ================= */
-
-  function executeModule(page) {
-
-    try {
-
-      const fn = PAGE_MODULES[page];
-
-      if (typeof fn === "function") {
-        fn();
-        console.log("[MODULE LOADER] EXECUTED:", page);
-        return;
-      }
-
-      renderMissing(page);
-
-    } catch (err) {
-
-      console.error("[MODULE LOADER ERROR]", page, err);
-
-      renderError(page, err);
-    }
+  if (typeof fn === "function") {
+    fn();
+    console.log("[MODULE LOADER] EXECUTED:", page);
+    return;
   }
 
-  /* ================= FALLBACKS ================= */
+  renderMissing(page);
 
-  function renderMissing(page) {
+} catch (err) {
 
-    const main = document.getElementById("mainContent");
+  console.error("[MODULE LOADER ERROR]", page, err);
 
-    if (!main) return;
+  renderError(page, err);
+}
+}
+/* ================= FALLBACKS ================= */
+function renderMissing(page) {
+const main = document.getElementById("mainContent");
 
-    main.innerHTML = `
-      <h2>⚠ Module Not Ready</h2>
-      <p>Page: ${page}</p>
-    `;
-  }
+if (!main) return;
 
-  function renderError(page, err) {
+main.innerHTML = `
+  <h2>⚠ Module Not Ready</h2>
+  <p>Page: ${page}</p>
+`;
+}
+function renderError(page, err) {
+const main = document.getElementById("mainContent");
 
-    const main = document.getElementById("mainContent");
+if (!main) return;
 
-    if (!main) return;
+main.innerHTML = `
+  <h2>❌ Module Error</h2>
+  <p><strong>Page:</strong> ${page}</p>
+  <pre>${err}</pre>
+`;
+}
+/* ================= PLACEHOLDER MODULES ================= */
+function simplePage(title) {
+const main = document.getElementById("mainContent");
 
-    main.innerHTML = `
-      <h2>❌ Module Error</h2>
-      <p><strong>Page:</strong> ${page}</p>
-      <pre>${err}</pre>
-    `;
-  }
+if (!main) return;
 
-  /* ================= PLACEHOLDER MODULES ================= */
+main.innerHTML = `
+  <h2>${title}</h2>
+  <p>${title} loaded successfully.</p>
+`;
+}
+function loadHomeDashboard() { simplePage("🏠 Home Dashboard"); }
+function loadCreateSystemAdmin() { simplePage("👑 Create System Admin"); }
+function loadUsersPage() { simplePage("👥 User Management"); }
+function loadSystemSettings() { simplePage("⚙️ System Settings"); }
+function loadPinMaster() { simplePage("📌 PIN Master"); }
+function loadProductMaster() { simplePage("📦 Product Master"); }
+function loadRankMaster() { simplePage("🏆 Rank Master"); }
+function loadIncomeControl() { simplePage("💰 Income Control"); }
+function loadAuditPanel() { simplePage("📜 Audit"); }
+function loadHealthPanel() { simplePage("🩺 Health"); }
+function loadBackupPanel() { simplePage("💾 Backup"); }
+function loadAIGovernor() { simplePage("🤖 AI Governor"); }
+/* ================= EXECUTIVE MODULES ================= */
+function openEnterpriseControlRoom() {
+if (
+  typeof window.loadEnterpriseControlRoom ===
+  "function"
+) {
 
-  function simplePage(title) {
+  window.loadEnterpriseControlRoom();
+  return;
+}
 
-    const main = document.getElementById("mainContent");
+simplePage("🖥 Enterprise Control Room");
+}
+function openBusinessIntelligence() {
+if (
+  typeof window.loadBusinessIntelligenceDashboard ===
+  "function"
+) {
 
-    if (!main) return;
+  window.loadBusinessIntelligenceDashboard();
+  return;
+}
 
-    main.innerHTML = `
-      <h2>${title}</h2>
-      <p>${title} loaded successfully.</p>
-    `;
-  }
+simplePage("📊 Business Intelligence");
+}
+function openStrategicAIAdvisor() {
+if (
+  typeof window.loadStrategicAIAdvisor ===
+  "function"
+) {
 
-  function loadHomeDashboard() {
-    simplePage("🏠 Home Dashboard");
-  }
+  window.loadStrategicAIAdvisor();
+  return;
+}
 
-  function loadCreateSystemAdmin() {
-    simplePage("👑 Create System Admin");
-  }
-
-  function loadUsersPage() {
-    simplePage("👥 User Management");
-  }
-
-  function loadSystemSettings() {
-    simplePage("⚙️ System Settings");
-  }
-
-  function loadPinMaster() {
-    simplePage("📌 PIN Master");
-  }
-
-  function loadProductMaster() {
-    simplePage("📦 Product Master");
-  }
-
-  function loadRankMaster() {
-    simplePage("🏆 Rank Master");
-  }
-
-  function loadIncomeControl() {
-    simplePage("💰 Income Control");
-  }
-
-  function loadAuditPanel() {
-    simplePage("📜 Audit");
-  }
-
-  function loadHealthPanel() {
-    simplePage("🩺 Health");
-  }
-
-  function loadBackupPanel() {
-    simplePage("💾 Backup");
-  }
-
-  function loadAIGovernor() {
-    simplePage("🤖 AI Governor");
-  }
-
-  function loadEnterpriseControlRoom() {
-    simplePage("🖥 Enterprise Control Room");
-  }
-
-  function loadBusinessIntelligence() {
-    simplePage("📊 Business Intelligence");
-  }
-
-  function loadStrategicAIAdvisor() {
-
-    if (typeof window.loadStrategicAIAdvisor === "function") {
-      window.loadStrategicAIAdvisor();
-      return;
-    }
-
-    simplePage("🧠 Strategic AI Advisor");
-  }
-
-  function loadEventMonitor() {
-    simplePage("📡 Event Monitor");
-  }
-
-  function loadEventStream() {
-    simplePage("🌊 Event Stream");
-  }
-
-  function loadReports() {
-    simplePage("📊 Reports");
-  }
-
-  function loadTreeView() {
-    simplePage("🌳 Tree View");
-  }
-
-  function loadResetPanel() {
-    simplePage("♻️ Reset");
-  }
-
-  /* ================= EXPORT ================= */
-
-  window.executeSuperAdminModule = executeModule;
-
+simplePage("🧠 Strategic AI Advisor");
+}
+/* ================= MONITORING ================= */
+function loadEventMonitor() { simplePage("📡 Event Monitor"); }
+function loadEventStream() { simplePage("🌊 Event Stream"); }
+/* ================= REPORTING ================= */
+function loadReports() { simplePage("📊 Reports"); }
+function loadTreeView() { simplePage("🌳 Tree View"); }
+/* ================= RESET ================= */
+function loadResetPanel() { simplePage("♻️ Reset"); }
+/* ================= EXPORT ================= */
+window.executeSuperAdminModule = executeModule;
 })();
