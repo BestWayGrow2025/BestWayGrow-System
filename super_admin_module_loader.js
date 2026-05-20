@@ -174,19 +174,24 @@ function loadPinMaster() {
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  main.innerHTML = `<div id="pinMasterContainer"></div>`;
+  main.innerHTML = `
+    <div id="pinMasterContainer"></div>
+  `;
+
+  const container = document.getElementById("pinMasterContainer");
+
+  container.innerHTML = `
+    <h2>📌 PIN Master</h2>
+
+    <button data-pin-action="assign_pin">Assign PIN</button>
+    <button data-pin-action="request_pin">Request PIN</button>
+    <button data-pin-action="approve_request">Approve</button>
+  `;
 
   setTimeout(() => {
-
-    // IMPORTANT: reset binding state indirectly by re-running bind
     if (typeof window.bindPinUI === "function") {
       window.bindPinUI();
     }
-
-    if (typeof window.refreshPinUI === "function") {
-      window.refreshPinUI();
-    }
-
   }, 0);
 }
   
