@@ -81,7 +81,8 @@ function normalizeActionSafe(action) {
     admin_stock_request: "ADMIN_STOCK_REQUEST"
   };
 
- return map[action] || action;
+  return map[action] || action;
+}
 
 // ================= SAFE PAYLOAD =================
 function safeReadPayload(el) {
