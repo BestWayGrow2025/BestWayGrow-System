@@ -142,9 +142,23 @@ SUPER ADMIN MODULE LOADER v1.2
     simplePage("🏠 Home Dashboard");
   }
 
-  function loadCreateSystemAdmin() {
-    simplePage("👑 Create System Admin");
+ function loadCreateSystemAdmin() {
+
+  // Try real Create System Admin renderer
+  if (typeof window.renderCreateSystemAdminPanel === "function") {
+    window.renderCreateSystemAdminPanel();
+    return;
   }
+
+  // Alternative naming fallback
+  if (typeof window.loadCreateSystemAdminPanel === "function") {
+    window.loadCreateSystemAdminPanel();
+    return;
+  }
+
+  // Safe placeholder fallback
+  simplePage("👑 Create System Admin");
+}
 
   function loadUsersPage() {
     simplePage("👥 User Management");
