@@ -171,36 +171,19 @@ SUPER ADMIN MODULE LOADER v1.2
   /* ================= BUSINESS ================= */
 function loadPinMaster() {
 
-  const main = document.getElementById("mainContent");
-  if (!main) return;
-
-  // Create target container expected by PIN UI modules
-  main.innerHTML = `
-    <div id="pinMasterContainer"></div>
-  `;
-
-  // Initialize injector if available
-  if (typeof window.initPinInjector === "function") {
-    window.initPinInjector();
+  // Directly call the working PIN UI router
+  if (typeof window.routePinRequest === "function") {
+    window.routePinRequest("pinmaster");
+    return;
   }
 
-  // Load PIN records
-  if (typeof window.loadPins === "function") {
-    window.loadPins();
-  }
-
-  // Bind UI events
-  if (typeof window.bindPinUI === "function") {
-    window.bindPinUI();
-  }
-
-  // Render / refresh UI
+  // Alternative refresh path
   if (typeof window.refreshPinUI === "function") {
     window.refreshPinUI();
     return;
   }
 
-  // Last resort fallback
+  // Final fallback
   simplePage("📌 PIN Master");
 }
   
