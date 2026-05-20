@@ -74,7 +74,7 @@ function normalizeActionSafe(action) {
 
   const map = {
     request_pin: "REQUEST_PIN",
-    approve_request: "APPROVE_REQUEST",
+   approve_request: "PROCESS_REQUEST",
     reject_request: "REJECT_REQUEST",
     assign_pin: "ASSIGN_PIN",
     system_pin_request: "SYSTEM_PIN_REQUEST",
