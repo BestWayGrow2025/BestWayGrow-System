@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
+SUPER ADMIN DASHBOARD v4.3 (FINAL STABLE)
 ========================================
 ✔ Safe CORE execution layer
 ✔ Button click ALWAYS works
@@ -10,12 +10,16 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
 ✔ Event-safe navigation
 ✔ Pending route queue support
 ✔ SYSTEM_READY compatible
+✔ Logout fully fixed
 ✔ Production hardened
 ========================================
 */
 
 (function () {
 
+  // ========================================
+  // SINGLE LOAD PROTECTION
+  // ========================================
   if (window.__SUPER_ADMIN_DASHBOARD__) {
     console.log("[DASHBOARD] Already Loaded");
     return;
@@ -24,12 +28,14 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
   window.__SUPER_ADMIN_DASHBOARD__ = {
     loaded: true,
     initialized: false,
-    version: "4.2"
+    version: "4.3"
   };
 
   console.log("[DASHBOARD] LOADING");
 
-  /* ================= SAFE CORE ACCESS ================= */
+  /* ========================================
+     SAFE CORE ACCESS
+  ======================================== */
 
   function getCore() {
     return (
@@ -39,7 +45,9 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
     );
   }
 
-  /* ================= SAFE EXECUTOR (FIXED) ================= */
+  /* ========================================
+     SAFE PAGE EXECUTION
+  ======================================== */
 
   function safeRun(page) {
 
@@ -49,14 +57,14 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
 
     try {
 
-      // ✅ FIX: support BOTH run() and fallback execution
+      // Primary router
       if (CORE && typeof CORE.run === "function") {
         CORE.run(page);
         console.log("[DASHBOARD] ROUTED VIA CORE.run:", page);
         return true;
       }
 
-      // 🔥 NEW FIX: some builds expose execute/route instead
+      // Alternate router methods
       if (CORE && typeof CORE.execute === "function") {
         CORE.execute(page);
         console.log("[DASHBOARD] ROUTED VIA CORE.execute:", page);
@@ -69,13 +77,14 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
         return true;
       }
 
-      // fallback safeCoreRun
+      // Legacy fallback
       if (typeof window.safeCoreRun === "function") {
         window.safeCoreRun(page);
         console.log("[DASHBOARD] ROUTED VIA safeCoreRun:", page);
         return true;
       }
 
+      // Queue until system becomes ready
       console.warn("[DASHBOARD] CORE NOT READY - QUEUED:", page);
 
       window.__PENDING_ROUTE__ = window.__PENDING_ROUTE__ || [];
@@ -89,13 +98,17 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
     }
   }
 
-  /* ================= NAVIGATION ================= */
+  /* ========================================
+     NAVIGATION HANDLER
+  ======================================== */
 
   function handleNavigation(page) {
     return safeRun(page);
   }
 
-  /* ================= BUTTON BINDING ================= */
+  /* ========================================
+     MENU BUTTONS
+  ======================================== */
 
   function bindButtons() {
 
@@ -111,6 +124,7 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
         const page = this.dataset.page;
         if (!page) return;
 
+        // Active button highlight
         document
           .querySelectorAll(".menu button.active")
           .forEach(b => b.classList.remove("active"));
@@ -124,12 +138,16 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
     console.log("[DASHBOARD] BUTTONS WIRED:", buttons.length);
   }
 
-  /* ================= LOGOUT ================= */
+  /* ========================================
+     LOGOUT (FULLY FIXED)
+  ======================================== */
 
   function bindLogout() {
 
     const logoutBtn = document.getElementById("logoutBtn");
-    if (!logoutBtn || logoutBtn.__dashboardBound__) return;
+
+    if (!logoutBtn) return;
+    if (logoutBtn.__dashboardBound__) return;
 
     logoutBtn.__dashboardBound__ = true;
 
@@ -139,39 +157,69 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
 
       try {
 
-        if (window.SYSTEM_EVENTS?.emit) {
+        // Emit system event
+        if (
+          window.SYSTEM_EVENTS &&
+          typeof window.SYSTEM_EVENTS.emit === "function"
+        ) {
           window.SYSTEM_EVENTS.emit("LOGOUT_REQUESTED", {
             time: Date.now()
           });
         }
 
-        const CORE = getCore();
-
-        if (CORE?.run) {
-          CORE.run("logout");
+        // Preferred logout()
+        if (typeof window.logout === "function") {
+          window.logout();
           return;
         }
 
+        // Secondary clearSession()
+        if (typeof window.clearSession === "function") {
+          window.clearSession();
+        }
+
+        // Clear common storage keys
+        try {
+          localStorage.removeItem("currentUser");
+          localStorage.removeItem("sessionUser");
+          localStorage.removeItem("activeUser");
+          sessionStorage.clear();
+        } catch (storageErr) {
+          console.warn("[DASHBOARD] Storage cleanup warning", storageErr);
+        }
+
+        // Final redirect
         window.location.href = "index.html";
 
       } catch (err) {
         console.error("[DASHBOARD LOGOUT ERROR]", err);
+
+        // Emergency redirect
+        window.location.href = "index.html";
       }
     });
   }
 
-  /* ================= PENDING ROUTES ================= */
+  /* ========================================
+     PENDING ROUTE FLUSH
+  ======================================== */
 
   function flushPendingRoutes() {
 
     const CORE = getCore();
-    if (!CORE?.run) return;
+
+    if (!CORE || typeof CORE.run !== "function") return;
 
     const pending = window.__PENDING_ROUTE__ || [];
 
-    if (!pending.length) return;
+    if (!Array.isArray(pending) || pending.length === 0) {
+      return;
+    }
 
-    console.log("[DASHBOARD] FLUSHING PENDING ROUTES:", pending.length);
+    console.log(
+      "[DASHBOARD] FLUSHING PENDING ROUTES:",
+      pending.length
+    );
 
     pending.forEach(page => {
       try {
@@ -184,7 +232,9 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
     window.__PENDING_ROUTE__ = [];
   }
 
-  /* ================= WELCOME ================= */
+  /* ========================================
+     WELCOME MESSAGE
+  ======================================== */
 
   function updateWelcome() {
 
@@ -192,34 +242,50 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
     if (!el) return;
 
     try {
-      const user = window.getCurrentUser?.();
 
-      el.textContent = user?.userId
-        ? "Welcome, " + user.userId
-        : "Welcome, Super Admin";
+      if (typeof window.getCurrentUser === "function") {
+        const user = window.getCurrentUser();
 
-    } catch {
+        if (user && (user.username || user.userId)) {
+          el.textContent =
+            "Welcome, " +
+            (user.username || user.userId);
+          return;
+        }
+      }
+
+      el.textContent = "Welcome, Super Admin";
+
+    } catch (err) {
       el.textContent = "Welcome, Super Admin";
     }
   }
 
-  /* ================= DEFAULT PAGE ================= */
+  /* ========================================
+     DEFAULT PAGE
+  ======================================== */
 
   function loadDefaultPage() {
 
     const content = document.getElementById("mainContent");
 
-    if (content && content.innerHTML.trim() !== "") return;
+    if (content && content.innerHTML.trim() !== "") {
+      return;
+    }
 
     safeRun("home");
 
     const homeBtn =
       document.querySelector('.menu button[data-page="home"]');
 
-    homeBtn?.classList.add("active");
+    if (homeBtn) {
+      homeBtn.classList.add("active");
+    }
   }
 
-  /* ================= INIT ================= */
+  /* ========================================
+     INITIALIZATION
+  ======================================== */
 
   function initDashboard() {
 
@@ -242,24 +308,49 @@ SUPER ADMIN DASHBOARD v4.2 (FINAL STABLE - FIXED ROUTER)
     console.log("[DASHBOARD] ACTIVE");
   }
 
-  /* ================= BOOT ================= */
+  /* ========================================
+     BOOT WHEN READY
+  ======================================== */
 
   function bootWhenReady() {
 
-    if (window.__SYSTEM_BOOT__?.ready) {
+    if (
+      window.__SYSTEM_BOOT__ &&
+      window.__SYSTEM_BOOT__.ready
+    ) {
       initDashboard();
       return;
     }
 
-    window.SYSTEM_EVENTS?.on?.("SYSTEM_READY", initDashboard)
-      || document.addEventListener("DOMContentLoaded", initDashboard);
+    if (
+      window.SYSTEM_EVENTS &&
+      typeof window.SYSTEM_EVENTS.on === "function"
+    ) {
+      window.SYSTEM_EVENTS.on("SYSTEM_READY", initDashboard);
+      return;
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener(
+        "DOMContentLoaded",
+        initDashboard
+      );
+    } else {
+      setTimeout(initDashboard, 1000);
+    }
   }
 
-  /* ================= EXPORT ================= */
+  /* ========================================
+     GLOBAL EXPORTS
+  ======================================== */
 
   window.initDashboard = initDashboard;
   window.handleNavigation = handleNavigation;
   window.safeDashboardRun = safeRun;
+
+  /* ========================================
+     STARTUP
+  ======================================== */
 
   bootWhenReady();
 
