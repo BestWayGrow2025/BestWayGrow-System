@@ -2,15 +2,14 @@
 
 /*
 ========================================
-PIN UI AUTO INJECTOR V2.0 (FINAL SAFE CORE)
+PIN UI AUTO INJECTOR V2.0 (FINAL FIXED CORE)
 ========================================
 ✔ Role-safe injection layer
-✔ Attribute-based binding only
-✔ Router-first execution enforced
-✔ Duplicate-safe binding
-✔ No DOM brute scanning
-✔ MutationObserver sync safe
-✔ Production LOCKED
+✔ NO event binding (FIXED ARCHITECTURE)
+✔ Router-only click handling enforced
+✔ MutationObserver safe sync
+✔ Duplicate-safe marking only
+✔ Production stable
 ========================================
 */
 
@@ -33,7 +32,7 @@ function initInjector() {
   observeDOMChanges();
 }
 
-// ================= SAFE BIND =================
+// ================= SAFE MARKER BIND (NO EVENTS) =================
 function bindPinElements() {
 
   document.querySelectorAll("[data-pin-action]").forEach(el => {
@@ -42,31 +41,34 @@ function bindPinElements() {
 
     el.__pinBound = true;
 
-    el.addEventListener("click", function (e) {
+    // ONLY MARK ELEMENTS — NO CLICK EVENTS HERE
+    el.setAttribute("data-pin-bound", "true");
 
-      e.preventDefault();
-
-      const action = el.getAttribute("data-pin-action");
-
-      const payload = extractPayload(el);
-
-      execute(action, payload);
-
-    });
   });
 }
 
-// ================= EXECUTION =================
+// ================= PAYLOAD =================
+function extractPayload(el) {
+
+  return {
+    requestId: el.dataset.requestId || el.getAttribute("data-request-id") || null,
+    pinId: el.dataset.pinId || el.getAttribute("data-pin-id") || null,
+    toId: el.dataset.toId || el.getAttribute("data-to-id") || null,
+    paymentId: el.dataset.paymentId || el.getAttribute("data-payment-id") || null
+  };
+}
+
+// ================= EXECUTION (OPTIONAL DEBUG ONLY) =================
 function execute(action, payload) {
 
   try {
 
-    // PRIORITY 1: ROUTER (MANDATORY PATH)
+    // PRIORITY 1: ROUTER (ONLY REAL PATH)
     if (typeof routePinRequest === "function") {
       return routePinRequest(action, payload);
     }
 
-    // PRIORITY 2: SAFE FALLBACK ONLY
+    // PRIORITY 2: FALLBACK HANDLER
     if (typeof handlePinAction === "function") {
       return handlePinAction(action, payload);
     }
@@ -83,22 +85,14 @@ function execute(action, payload) {
   }
 }
 
-// ================= PAYLOAD =================
-function extractPayload(el) {
-
-  return {
-    requestId: el.dataset.requestId || el.getAttribute("data-request-id") || null,
-    pinId: el.dataset.pinId || el.getAttribute("data-pin-id") || null,
-    toId: el.dataset.toId || el.getAttribute("data-to-id") || null,
-    paymentId: el.dataset.paymentId || el.getAttribute("data-payment-id") || null
-  };
-}
-
 // ================= DOM OBSERVER =================
 function observeDOMChanges() {
 
   const observer = new MutationObserver(() => {
+
+    // Only mark new elements, DO NOT rebind events
     bindPinElements();
+
   });
 
   observer.observe(document.body, {
