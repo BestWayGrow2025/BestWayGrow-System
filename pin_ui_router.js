@@ -1,4 +1,4 @@
- "use strict";
+"use strict";
 
 /*
 ========================================
@@ -74,11 +74,18 @@ function normalizeActionSafe(action) {
 
   const map = {
     request_pin: "REQUEST_PIN",
-   approve_request: "PROCESS_REQUEST",
+
+    // ✅ FIXED MAPPING (CRITICAL)
+    approve_request: "APPROVE_REQUEST",
+
     reject_request: "REJECT_REQUEST",
     assign_pin: "ASSIGN_PIN",
     system_pin_request: "SYSTEM_PIN_REQUEST",
-    admin_stock_request: "ADMIN_STOCK_REQUEST"
+    admin_stock_request: "ADMIN_STOCK_REQUEST",
+
+    // (optional future-safe aliases)
+    process_request: "PROCESS_REQUEST",
+    use_pin: "USE_PIN"
   };
 
   return map[action] || action;
