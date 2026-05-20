@@ -1,17 +1,16 @@
-"use strict";
+ "use strict";
 
 /*
 ========================================
-PIN UI ROUTER (UNIFIED ENTRY LAYER V1.1)
+PIN UI ROUTER (UNIFIED ENTRY LAYER V1.1 - FIXED)
 ========================================
 ✔ Single UI entry point for all PIN actions
-✔ Routes all requests to routePinRequest()
-✔ Prevents direct loadPins misuse
-✔ Works across all dashboards
+✔ Safe rebind system (FIXED)
+✔ No duplicate binding corruption
+✔ DOM refresh safe
 ✔ Role-safe UI gateway
-✔ Click spam protection added
-✔ Auto rebind safe system
-✔ Live panel refresh hook
+✔ Click spam protection
+✔ Stable event handler lifecycle
 ========================================
 */
 
@@ -31,15 +30,20 @@ let PIN_UI_LOCK = false;
 
 })();
 
-// ================= MAIN BIND =================
+// ================= MAIN BIND (FIXED) =================
 function bindPinUI() {
 
-  document.querySelectorAll("[data-pin-action]").forEach(btn => {
+  const buttons = document.querySelectorAll("[data-pin-action]");
 
-    if (btn.__PIN_BOUND__) return; // prevent duplicate binding
-    btn.__PIN_BOUND__ = true;
+  buttons.forEach(btn => {
 
-    btn.addEventListener("click", function () {
+    // ❌ REMOVE OLD HANDLER IF EXISTS (FIXED)
+    if (btn.__PIN_HANDLER__) {
+      btn.removeEventListener("click", btn.__PIN_HANDLER__);
+    }
+
+    // ✔ NEW SAFE HANDLER
+    btn.__PIN_HANDLER__ = function () {
 
       if (PIN_UI_LOCK) return;
 
@@ -56,7 +60,9 @@ function bindPinUI() {
       const payload = safeReadPayload(btn);
 
       handlePinAction(action, payload);
-    });
+    };
+
+    btn.addEventListener("click", btn.__PIN_HANDLER__);
 
   });
 }
@@ -137,12 +143,10 @@ function triggerLiveRefresh() {
 
   try {
 
-    // refresh admin panels if available
     if (typeof loadPinRequests === "function") {
       loadPinRequests();
     }
 
-    // refresh live panel if exists
     if (typeof refreshLivePins === "function") {
       refreshLivePins();
     }
