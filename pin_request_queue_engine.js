@@ -161,6 +161,7 @@ function processPinQueue() {
     if (!Array.isArray(allRequests) || !allRequests.length) return;
 
     for (let i = 0; i < batch.length; i++) {
+
       let req = batch[i];
       if (!req || !req.requestId) continue;
 
@@ -169,22 +170,21 @@ function processPinQueue() {
       if (realReq.status !== "PENDING") continue;
       if (realReq.queueLock === true) continue;
 
+      // LOCK REQUEST
       lockRequest(realReq);
       savePinRequests(allRequests);
 
       try {
+
+        // PROCESSOR CALL ONLY
         processPinRequestAuto(realReq.requestId);
 
-        // re-fetch state after downstream mutation
+        // REFRESH STATE AFTER PROCESSOR
         allRequests = getPinRequests() || [];
         realReq = allRequests.find(r => r.requestId === req.requestId);
 
-        if (realReq && realReq.status === "PENDING") {
-          realReq.status = "DONE";
-          realReq.processedAt = Date.now();
-        }
-
       } catch (err) {
+
         allRequests = getPinRequests() || [];
         realReq = allRequests.find(r => r.requestId === req.requestId);
 
@@ -199,6 +199,7 @@ function processPinQueue() {
         }
       }
 
+      // UNLOCK SAFELY
       allRequests = getPinRequests() || [];
       realReq = allRequests.find(r => r.requestId === req.requestId);
 
