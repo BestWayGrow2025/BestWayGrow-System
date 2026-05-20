@@ -171,13 +171,14 @@ SUPER ADMIN MODULE LOADER v1.2
   /* ================= BUSINESS ================= */
 function loadPinMaster() {
 
-  // Directly call the working PIN UI router
+  // Use the working PIN router with no arguments
+  // (the router itself determines what to render)
   if (typeof window.routePinRequest === "function") {
-    window.routePinRequest("pinmaster");
+    window.routePinRequest();
     return;
   }
 
-  // Alternative refresh path
+  // Secondary fallback
   if (typeof window.refreshPinUI === "function") {
     window.refreshPinUI();
     return;
