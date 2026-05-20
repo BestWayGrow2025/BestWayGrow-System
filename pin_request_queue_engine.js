@@ -76,7 +76,11 @@ function isQueueAllowed() {
 function isQueueLocked() {
   let q = getQueueSettings();
 
-  if (q.lock === true && q.lockTime && (Date.now() - q.lockTime > PIN_QUEUE_STALE_MS)) {
+  if (
+    q.lock === true &&
+    q.lockTime &&
+    (Date.now() - q.lockTime > PIN_QUEUE_STALE_MS)
+  ) {
     updateQueueSettings({ lock: false, lockTime: null });
     return false;
   }
@@ -161,7 +165,6 @@ function processPinQueue() {
     if (!Array.isArray(allRequests) || !allRequests.length) return;
 
     for (let i = 0; i < batch.length; i++) {
-
       let req = batch[i];
       if (!req || !req.requestId) continue;
 
@@ -172,11 +175,12 @@ function processPinQueue() {
 
       // LOCK REQUEST
       lockRequest(realReq);
-      savePinRequests(allRequests);
+
+      // ❌ FIX: NO SAVE INSIDE LOOP (PATCH 2 FIX)
+      // savePinRequests(allRequests);
 
       try {
-
-        // PROCESSOR CALL ONLY
+        // PROCESSOR ONLY
         processPinRequestAuto(realReq.requestId);
 
         // REFRESH STATE AFTER PROCESSOR
@@ -184,7 +188,6 @@ function processPinQueue() {
         realReq = allRequests.find(r => r.requestId === req.requestId);
 
       } catch (err) {
-
         allRequests = getPinRequests() || [];
         realReq = allRequests.find(r => r.requestId === req.requestId);
 
@@ -205,8 +208,12 @@ function processPinQueue() {
 
       if (realReq) unlockRequest(realReq);
 
+      // SAVE ONCE AFTER EACH REQUEST (SAFE)
       savePinRequests(allRequests);
     }
+
+    // 🧠 OPTIONAL OPTIMIZATION (batch safety final write)
+    savePinRequests(allRequests);
 
   } catch (err) {
     console.error("PIN QUEUE CRASH:", err);
@@ -232,4 +239,3 @@ function startPinQueueEngine() {
 
 // ================= START =================
 startPinQueueEngine();
-
