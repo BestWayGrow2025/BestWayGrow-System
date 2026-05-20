@@ -2,7 +2,7 @@
 
 /*
 ========================================
-PIN LIVE ORCHESTRATOR V1.2 (FINAL FIXED)
+PIN LIVE ORCHESTRATOR V1.3 (BLINK FIX FINAL)
 ========================================
 ✔ Central event bus for PIN system
 ✔ Real-time sync across all dashboards
@@ -12,18 +12,19 @@ PIN LIVE ORCHESTRATOR V1.2 (FINAL FIXED)
 ✔ Event-driven architecture
 ✔ Production LOCKED CORE SYNC ENGINE
 ✔ Memory-safe listener execution
-✔ FIXED: PIN_STATE_CACHE initialization order
-✔ FIXED: Duplicate function wrapping protection
-✔ FIXED: Diagnostics compatibility
+✔ Duplicate function wrapping protection
+✔ Diagnostics compatibility
+✔ FIXED: Prevents PIN Master page blinking
+✔ FIXED: UI refresh only when request table exists
 ========================================
 */
 
 // ================= CORE STATE TRACKER =================
-// MUST BE DECLARED BEFORE initPinLiveOrchestrator() RUNS
 const PIN_STATE_CACHE = {
   requestsHash: null,
   lastUpdate: 0,
-  watcherStarted: false
+  watcherStarted: false,
+  watcherIntervalId: null
 };
 
 // ================= EVENT BUS =================
@@ -31,10 +32,7 @@ const PIN_EVENT_BUS = {
   listeners: Object.create(null),
 
   on(event, callback) {
-
-    if (typeof callback !== "function") {
-      return;
-    }
+    if (typeof callback !== "function") return;
 
     if (!this.listeners[event]) {
       this.listeners[event] = [];
@@ -44,7 +42,6 @@ const PIN_EVENT_BUS = {
   },
 
   emit(event, data) {
-
     const handlers = this.listeners[event];
 
     if (!handlers || !handlers.length) {
@@ -73,7 +70,6 @@ function initPinLiveOrchestrator() {
   }
 
   bindSystemHooks();
-
   exposeGlobalAPI();
 
   console.log("[PIN LIVE ORCHESTRATOR] Initialized");
@@ -88,16 +84,13 @@ function startRequestWatcher() {
 
   PIN_STATE_CACHE.watcherStarted = true;
 
-  setInterval(function () {
+  PIN_STATE_CACHE.watcherIntervalId = setInterval(function () {
 
     try {
-
       const data = getSafeRequests();
-
       const hash = JSON.stringify(data);
 
       if (hash !== PIN_STATE_CACHE.requestsHash) {
-
         PIN_STATE_CACHE.requestsHash = hash;
         PIN_STATE_CACHE.lastUpdate = Date.now();
 
@@ -182,8 +175,25 @@ function broadcastPinUpdate(payload = {}) {
   PIN_EVENT_BUS.emit("PIN_FORCE_UPDATE", payload);
 }
 
-// ================= AUTO UI SYNC =================
+// ================= PAGE DETECTION =================
+function isPinRequestPageActive() {
+
+  return !!(
+    document.getElementById("pinRequestTable") ||
+    document.querySelector("[data-pin-request-table]") ||
+    document.querySelector(".pin-request-table")
+  );
+}
+
+// ================= AUTO UI SYNC (BLINK FIX) =================
 PIN_EVENT_BUS.on("PIN_REQUEST_UPDATED", function (data) {
+
+  // CRITICAL FIX:
+  // Only refresh UI if a PIN Request table is actually present.
+  // This prevents unrelated pages (such as PIN Master) from blinking.
+  if (!isPinRequestPageActive()) {
+    return;
+  }
 
   try {
     if (typeof window.renderTable === "function") {
@@ -212,7 +222,6 @@ function exposeGlobalAPI() {
 window.__PIN_LIVE_SYSTEM_ACTIVE__ = true;
 
 // ================= GUARD =================
-// MUST BE LAST, AFTER ALL const declarations
 (function () {
 
   if (window.__PIN_LIVE_ORCHESTRATOR__) {
