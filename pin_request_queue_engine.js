@@ -15,6 +15,8 @@ PIN REQUEST QUEUE ENGINE V9.0 (FINAL PATCH LOCK)
 ========================================
 */
 
+"use strict";
+
 // ================= CONFIG =================
 const PIN_QUEUE_RETRY_LIMIT = 3;
 const PIN_QUEUE_STALE_MS = 10000;
@@ -176,18 +178,15 @@ function processPinQueue() {
       // LOCK REQUEST
       lockRequest(realReq);
 
-      // ❌ FIX: NO SAVE INSIDE LOOP (PATCH 2 FIX)
-      // savePinRequests(allRequests);
-
       try {
         // PROCESSOR ONLY
         processPinRequestAuto(realReq.requestId);
 
         // REFRESH STATE AFTER PROCESSOR
         allRequests = getPinRequests() || [];
-        realReq = allRequests.find(r => r.requestId === req.requestId);
 
       } catch (err) {
+
         allRequests = getPinRequests() || [];
         realReq = allRequests.find(r => r.requestId === req.requestId);
 
@@ -202,18 +201,14 @@ function processPinQueue() {
         }
       }
 
-      // UNLOCK SAFELY
+      // UNLOCK
       allRequests = getPinRequests() || [];
       realReq = allRequests.find(r => r.requestId === req.requestId);
 
       if (realReq) unlockRequest(realReq);
 
-      // SAVE ONCE AFTER EACH REQUEST (SAFE)
       savePinRequests(allRequests);
     }
-
-    // 🧠 OPTIONAL OPTIMIZATION (batch safety final write)
-    savePinRequests(allRequests);
 
   } catch (err) {
     console.error("PIN QUEUE CRASH:", err);
