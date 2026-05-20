@@ -81,8 +81,7 @@ function normalizeActionSafe(action) {
     admin_stock_request: "ADMIN_STOCK_REQUEST"
   };
 
-  return map[action] || String(action).toUpperCase();
-}
+ return map[action] || action;
 
 // ================= SAFE PAYLOAD =================
 function safeReadPayload(el) {
