@@ -176,9 +176,9 @@ function loadPinMaster() {
 
   main.innerHTML = `<div id="pinMasterContainer"></div>`;
 
-  // ⚠ ensure DOM is ready before binding
   setTimeout(() => {
 
+    // IMPORTANT: reset binding state indirectly by re-running bind
     if (typeof window.bindPinUI === "function") {
       window.bindPinUI();
     }
@@ -187,12 +187,7 @@ function loadPinMaster() {
       window.refreshPinUI();
     }
 
-    if (typeof window.initPinInjector === "function") {
-      window.initPinInjector();
-    }
-
   }, 0);
-
 }
   
   function loadProductMaster() {
