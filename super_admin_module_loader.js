@@ -335,8 +335,14 @@ function loadPinMaster() {
     simplePage("♻️ Reset");
   }
 
-  /* ================= EXPORT ================= */
+ /* ================= EXPORT ================= */
 
-  window.executeSuperAdminModule = executeModule;
+window.executeSuperAdminModule = executeModule;
+
+/* ================= FINAL PIN BIND FIX ================= */
+
+if (typeof window.loadPinMaster === "function") {
+  PAGE_MODULES.pinmaster = window.loadPinMaster;
+}
 
 })();
