@@ -1,6 +1,8 @@
+"use strict";
+
 /*
 ========================================
-PIN FLOW CONTROLLER V2.0 (HARDENED CORE)
+PIN FLOW CONTROLLER V2.1 (BUTTON FIX FINAL)
 ========================================
 ✔ Central orchestration layer
 ✔ Session enforced
@@ -12,11 +14,12 @@ PIN FLOW CONTROLLER V2.0 (HARDENED CORE)
 ✔ Execution locking
 ✔ Duplicate prevention
 ✔ Safe audit logging
+✔ FIXED: APPROVE_REQUEST support
+✔ FIXED: SYSTEM_PIN_REQUEST support
+✔ FIXED: ADMIN_STOCK_REQUEST support
 ✔ Production LOCKED
 ========================================
 */
-
-"use strict";
 
 // ================= CONFIG =================
 const PIN_FLOW_LOCKS = {};
@@ -148,6 +151,10 @@ function executePinFlow(actionType, payload = {}) {
       // ================= REQUEST =================
       case "REQUEST_PIN":
 
+      case "SYSTEM_PIN_REQUEST":
+
+      case "ADMIN_STOCK_REQUEST":
+
         if (typeof createPinRequest !== "function") {
           throw new Error("Request system unavailable");
         }
@@ -156,6 +163,31 @@ function executePinFlow(actionType, payload = {}) {
           ...payload,
           userId: user.userId
         });
+
+      // ================= APPROVE =================
+      case "APPROVE_REQUEST":
+
+      case "PROCESS_REQUEST":
+
+        if (typeof processPinRequestAuto !== "function") {
+          throw new Error("Processor unavailable");
+        }
+
+        return processPinRequestAuto(
+          payload.requestId
+        );
+
+      // ================= REJECT =================
+      case "REJECT_REQUEST":
+
+        if (typeof rejectPinRequest !== "function") {
+          throw new Error("Request system unavailable");
+        }
+
+        return rejectPinRequest(
+          payload.requestId,
+          user.userId
+        );
 
       // ================= ASSIGN =================
       case "ASSIGN_PIN":
@@ -184,31 +216,9 @@ function executePinFlow(actionType, payload = {}) {
           payload.purpose || "general"
         );
 
-      // ================= REJECT =================
-      case "REJECT_REQUEST":
-
-        if (typeof rejectPinRequest !== "function") {
-          throw new Error("Request system unavailable");
-        }
-
-        return rejectPinRequest(
-          payload.requestId,
-          user.userId
-        );
-
-      // ================= PROCESS =================
-      case "PROCESS_REQUEST":
-
-        if (typeof processPinRequestAuto !== "function") {
-          throw new Error("Processor unavailable");
-        }
-
-        return processPinRequestAuto(
-          payload.requestId
-        );
-
+      // ================= INVALID =================
       default:
-        throw new Error("Invalid action type");
+        throw new Error("Invalid action type: " + actionType);
     }
 
   } catch (err) {
@@ -224,6 +234,8 @@ function executePinFlow(actionType, payload = {}) {
       } catch (_) {}
     }
 
+    console.error("[PIN FLOW ERROR]", err);
+
     return false;
 
   } finally {
@@ -236,4 +248,3 @@ function executePinFlow(actionType, payload = {}) {
 
 // ================= SAFE GLOBAL EXPORT =================
 window.executePinFlow = executePinFlow;
-
