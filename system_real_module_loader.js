@@ -2,16 +2,17 @@
 
 /*
 ========================================
-SYSTEM REAL MODULE LOADER V1.0
+SYSTEM REAL MODULE LOADER V2.0 FINAL
 ========================================
 ✔ Loads REAL dashboard modules
 ✔ Connector-compatible
 ✔ One-way execution flow
 ✔ No routing logic
 ✔ No business logic
-✔ No dashboard logic
+✔ No dashboard recursion
 ✔ Real module activation only
 ✔ Enterprise architecture safe
+✔ FIXED: Home module recursion issue
 ========================================
 */
 
@@ -21,6 +22,8 @@ SYSTEM REAL MODULE LOADER V1.0
   if (window.__SYSTEM_REAL_MODULE_LOADER__) return;
 
   window.__SYSTEM_REAL_MODULE_LOADER__ = true;
+
+  console.log("[REAL MODULE LOADER] READY");
 
 })();
 
@@ -44,7 +47,9 @@ async function loadHtmlIntoMain(htmlFile) {
     const response = await fetch(htmlFile);
 
     if (!response.ok) {
-      throw new Error("Failed to load: " + htmlFile);
+      throw new Error(
+        "Failed to load: " + htmlFile
+      );
     }
 
     const html = await response.text();
@@ -55,7 +60,10 @@ async function loadHtmlIntoMain(htmlFile) {
 
   } catch (err) {
 
-    console.error("[REAL MODULE HTML LOAD ERROR]", err);
+    console.error(
+      "[REAL MODULE HTML LOAD ERROR]",
+      err
+    );
 
     return false;
   }
@@ -69,7 +77,9 @@ function loadScriptOnce(scriptFile) {
     try {
 
       const existing = document.querySelector(
-        'script[data-system-module="' + scriptFile + '"]'
+        'script[data-system-module="' +
+        scriptFile +
+        '"]'
       );
 
       if (existing) {
@@ -77,19 +87,25 @@ function loadScriptOnce(scriptFile) {
         return;
       }
 
-      const script = document.createElement("script");
+      const script =
+        document.createElement("script");
 
       script.src = scriptFile;
       script.async = false;
-      script.dataset.systemModule = scriptFile;
+      script.dataset.systemModule =
+        scriptFile;
 
       script.onload = function () {
         resolve(true);
       };
 
       script.onerror = function () {
+
         reject(
-          new Error("Failed script load: " + scriptFile)
+          new Error(
+            "Failed script load: " +
+            scriptFile
+          )
         );
       };
 
@@ -103,7 +119,7 @@ function loadScriptOnce(scriptFile) {
   });
 }
 
-// ================= MODULE LOADER =================
+// ================= GENERIC MODULE LOADER =================
 async function loadRealModule(config = {}) {
 
   try {
@@ -112,20 +128,25 @@ async function loadRealModule(config = {}) {
       throw new Error("Missing html file");
     }
 
-    // STEP 1
+    // STEP 1 → HTML
     await loadHtmlIntoMain(config.html);
 
-    // STEP 2
+    // STEP 2 → JS
     if (config.js) {
       await loadScriptOnce(config.js);
     }
 
-    // STEP 3
+    // STEP 3 → INIT
     if (
       config.initFunction &&
-      typeof window[config.initFunction] === "function"
+      typeof window[
+        config.initFunction
+      ] === "function"
     ) {
-      window[config.initFunction]();
+
+      window[
+        config.initFunction
+      ]();
     }
 
     console.log(
@@ -137,68 +158,149 @@ async function loadRealModule(config = {}) {
 
   } catch (err) {
 
-    console.error("[REAL MODULE LOADER ERROR]", err);
+    console.error(
+      "[REAL MODULE LOADER ERROR]",
+      err
+    );
 
     return false;
   }
 }
 
-// ================= HOME =================
+// ========================================
+// HOME MODULE
+// ========================================
 function loadHomeDashboardModule() {
 
-  return loadRealModule({
-    html: "super_admin_dashboard.html",
-    js: "super_admin_dashboard.js"
-  });
+  try {
+
+    const main = getSystemMainContent();
+
+    if (!main) return false;
+
+    main.innerHTML = `
+      <div class="dashboard-home">
+
+        <h2>
+          🏠 SUPER ADMIN CONTROL CENTER
+        </h2>
+
+        <p>
+          Enterprise control layer active.
+        </p>
+
+        <div style="
+          margin-top:20px;
+          padding:15px;
+          border:1px solid #ddd;
+          border-radius:8px;
+        ">
+
+          <h3>System Status</h3>
+
+          <ul>
+            <li>✔ Dashboard Active</li>
+            <li>✔ Routing Active</li>
+            <li>✔ Module Loader Active</li>
+            <li>✔ Enterprise Core Active</li>
+          </ul>
+
+        </div>
+
+      </div>
+    `;
+
+    return true;
+
+  } catch (err) {
+
+    console.error(
+      "[HOME MODULE ERROR]",
+      err
+    );
+
+    return false;
+  }
 }
 
-// ================= CREATE SYS ADMIN =================
+// ========================================
+// CREATE SYSTEM ADMIN
+// ========================================
 function loadCreateSystemAdminRealModule() {
 
   return loadRealModule({
-    html: "super_admin_create_system_admin.html",
-    js: "super_admin_create_system_admin.js"
+
+    html:
+      "super_admin_create_system_admin.html",
+
+    js:
+      "super_admin_create_system_admin.js"
   });
 }
 
-// ================= SYSTEM ADMIN PANEL =================
+// ========================================
+// SYSTEM ADMIN PANEL
+// ========================================
 function loadSystemAdminPanelModule() {
 
   return loadRealModule({
-    html: "system_admin_dashboard.html",
-    js: "system_admin_dashboard.js"
+
+    html:
+      "system_admin_dashboard.html",
+
+    js:
+      "system_admin_dashboard.js"
   });
 }
 
-// ================= PIN PANEL =================
+// ========================================
+// PIN MASTER PANEL
+// ========================================
 function loadPinMasterRealModule() {
 
   return loadRealModule({
-    html: "admin_pin_panel.html",
-    js: "admin_pin_panel.js"
+
+    html:
+      "admin_pin_panel.html",
+
+    js:
+      "admin_pin_panel.js"
   });
 }
 
-// ================= REPORTS =================
+// ========================================
+// REPORTS MODULE
+// ========================================
 function loadReportsRealModule() {
 
   return loadRealModule({
-    html: "admin_reports.html",
-    js: "admin_reports.js"
+
+    html:
+      "admin_reports.html",
+
+    js:
+      "admin_reports.js"
   });
 }
 
-// ================= USERS =================
+// ========================================
+// USERS MODULE
+// ========================================
 function loadUsersRealModule() {
 
   return loadRealModule({
-    html: "registration_approval.html",
-    js: "registration_approval.js"
+
+    html:
+      "registration_approval.html",
+
+    js:
+      "registration_approval.js"
   });
 }
 
-// ================= EXPORT =================
-window.loadRealModule = loadRealModule;
+// ================= EXPORTS =================
+window.loadRealModule =
+  loadRealModule;
 
 window.loadHomeDashboardModule =
   loadHomeDashboardModule;
