@@ -2,25 +2,24 @@
 
 /*
 ========================================
-PIN REQUEST PROCESSOR ENGINE V2.0 (FINAL HARDENED)
+PIN REQUEST PROCESSOR ENGINE V2.1 (CLEAN FLOW)
 ========================================
-✔ Executes queued PIN requests
-✔ Connects request → master system
-✔ Duplicate-safe processing
-✔ Queue-compatible execution layer
-✔ Uses master system assignPin() when available
-✔ Safe fallback to direct stock assignment
-✔ Production-safe processor
+✔ Single responsibility: PROCESS requests only
+✔ One-way execution flow (NO UI / NO EVENTS)
+✔ Queue-safe processing
+✔ Master system first, fallback safe
+✔ Deterministic execution
+✔ Production stable core
 ========================================
 */
 
 // ================= PROCESS LOCK =================
 const PIN_PROCESSOR_LOCKS = {};
 
-// ================= ENTRY =================
+// ================= MAIN ENTRY =================
 function processPinRequestAuto(requestId) {
 
-  let lockKey = String(requestId || "");
+  const lockKey = String(requestId || "");
 
   try {
 
@@ -29,17 +28,18 @@ function processPinRequestAuto(requestId) {
       throw new Error("Missing requestId");
     }
 
-    // ================= DUPLICATE PROTECTION =================
+    // ================= LOCK =================
     if (PIN_PROCESSOR_LOCKS[lockKey]) {
       return false;
     }
 
     PIN_PROCESSOR_LOCKS[lockKey] = true;
 
-    // ================= LOAD REQUESTS =================
+    // ================= LOAD DATA =================
     const requests = getPinRequests();
+
     if (!Array.isArray(requests)) {
-      throw new Error("PIN requests storage unavailable");
+      throw new Error("Request store unavailable");
     }
 
     const request = requests.find(r => r && r.requestId === requestId);
@@ -48,34 +48,28 @@ function processPinRequestAuto(requestId) {
       throw new Error("Request not found");
     }
 
-    // Already processed
     if (request.status !== "PENDING") {
       return false;
     }
 
-    // ================= BASIC VALIDATION =================
-    if (!request.userId || !request.type) {
-      throw new Error("Invalid request data");
-    }
-
     const quantity = Math.max(1, Number(request.quantity || 1));
 
-    // ================= PROCESS =================
     let assignedPins = [];
 
     // ==================================================
-    // PRIORITY 1: USE MASTER SYSTEM assignPin()
+    // PRIORITY 1: MASTER SYSTEM (assignPin)
     // ==================================================
     if (typeof assignPin === "function" && typeof loadPins === "function") {
 
       const pins = loadPins();
+
       if (!Array.isArray(pins)) {
-        throw new Error("PIN storage unavailable");
+        throw new Error("PIN store unavailable");
       }
 
       for (let i = 0; i < quantity; i++) {
 
-        let pin = findAvailablePin(pins, request.type);
+        const pin = findAvailablePin(pins, request.type);
 
         if (!pin || !pin.pinId) {
           throw new Error("No available PIN stock");
@@ -88,41 +82,38 @@ function processPinRequestAuto(requestId) {
           "AUTO_PROCESSOR"
         );
 
-        if (result === false) {
-          throw new Error("Master system assignment failed");
+        if (!result) {
+          throw new Error("Master assignment failed");
         }
 
         assignedPins.push(pin.pinId);
       }
 
     }
+
     // ==================================================
     // PRIORITY 2: FALLBACK DIRECT ASSIGNMENT
     // ==================================================
     else {
 
-      if (
-        typeof loadPins !== "function" ||
-        typeof savePins !== "function"
-      ) {
-        throw new Error("PIN system not loaded");
+      if (typeof loadPins !== "function" || typeof savePins !== "function") {
+        throw new Error("PIN system not available");
       }
 
-      let pins = loadPins();
+      const pins = loadPins();
 
       if (!Array.isArray(pins)) {
-        throw new Error("PIN storage unavailable");
+        throw new Error("PIN store invalid");
       }
 
       for (let i = 0; i < quantity; i++) {
 
-        let pin = findAvailablePin(pins, request.type);
+        const pin = findAvailablePin(pins, request.type);
 
         if (!pin || !pin.pinId) {
           throw new Error("No available PIN stock");
         }
 
-        // Fallback assignment
         pin.status = "assigned";
         pin.assignedTo = request.userId;
         pin.assignedAt = Date.now();
@@ -140,39 +131,25 @@ function processPinRequestAuto(requestId) {
     request.processedBy = "AUTO_PROCESSOR";
     request.failReason = null;
 
-    // ================= SAVE REQUESTS =================
     savePinRequests(requests);
-
-    // ================= LOG =================
-    if (typeof logPin === "function") {
-      try {
-        logPin({
-          action: "AUTO_PROCESS",
-          pinId: requestId,
-          by: "SYSTEM",
-          status: "SUCCESS"
-        });
-      } catch (_) {}
-    }
 
     return true;
 
   } catch (err) {
 
-    console.error("[PIN PROCESSOR ERROR]", err);
+    console.error("[PIN PROCESSOR ERROR]", err.message);
 
-    // ================= FAILURE MARKING =================
+    // ================= FAILURE UPDATE =================
     try {
 
-      let requests = getPinRequests();
+      const requests = getPinRequests();
 
       if (Array.isArray(requests)) {
 
-        let req = requests.find(
-          r => r && r.requestId === requestId
-        );
+        const req = requests.find(r => r && r.requestId === requestId);
 
         if (req && req.status === "PENDING") {
+
           req.status = "FAILED";
           req.failReason = err.message || "Unknown error";
           req.processedAt = Date.now();
@@ -199,7 +176,7 @@ function findAvailablePin(pins, type) {
 
   const pinType = String(type || "").toLowerCase();
 
-  return pins.find(function (p) {
+  return pins.find(p => {
     return (
       p &&
       p.pinId &&
