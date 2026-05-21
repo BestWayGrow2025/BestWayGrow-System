@@ -2,16 +2,15 @@
 
 /*
 ========================================
-PIN UI LAUNCHER V1.0 (ENTERPRISE UI CORE)
+PIN UI LAUNCHER V1.1 (PRODUCTION FIXED CORE)
 ========================================
 ✔ Central UI launcher layer
-✔ Request / Approve / Assign popup system
 ✔ Safe modal rendering
-✔ No business logic
-✔ Router-compatible
-✔ DOM-safe injection
-✔ Single modal lifecycle
-✔ Production stable
+✔ Router-safe execution (NO inline JS routing)
+✔ Event-safe button binding
+✔ Stable lifecycle control
+✔ Clean separation from router
+✔ Production locked
 ========================================
 */
 
@@ -22,7 +21,7 @@ PIN UI LAUNCHER V1.0 (ENTERPRISE UI CORE)
 
   window.__PIN_UI_LAUNCHER__ = true;
 
-  initPinUILauncher();
+  document.addEventListener("DOMContentLoaded", initPinUILauncher);
 
 })();
 
@@ -36,22 +35,18 @@ function initPinUILauncher() {
 // ================= ROOT =================
 function createModalRoot() {
 
-  if (document.getElementById("pinModalRoot")) {
-    return;
-  }
+  if (document.getElementById("pinModalRoot")) return;
 
   const root = document.createElement("div");
-
   root.id = "pinModalRoot";
 
   document.body.appendChild(root);
 }
 
-// ================= MODAL RENDER =================
+// ================= MODAL =================
 function renderPinModal(title, bodyHTML) {
 
   const root = document.getElementById("pinModalRoot");
-
   if (!root) return false;
 
   root.innerHTML = `
@@ -82,7 +77,7 @@ function renderPinModal(title, bodyHTML) {
         ">
           <h3 style="margin:0;">${title}</h3>
 
-          <button onclick="closePinModal()">
+          <button onclick="window.closePinModal()">
             ✖
           </button>
         </div>
@@ -103,10 +98,20 @@ function renderPinModal(title, bodyHTML) {
 function closePinModal() {
 
   const root = document.getElementById("pinModalRoot");
-
   if (!root) return;
 
   root.innerHTML = "";
+}
+
+// ================= SAFE ROUTE CALL =================
+function safeRoute(action, payload) {
+
+  if (typeof window.routePinRequest !== "function") {
+    console.error("Router not available");
+    return false;
+  }
+
+  return window.routePinRequest(action, payload);
 }
 
 // ================= REQUEST PANEL =================
@@ -117,19 +122,7 @@ function openPinRequestPanel(payload = {}) {
     `
       <p>Create new PIN request</p>
 
-      <button onclick="
-        routePinRequest(
-          'REQUEST_PIN',
-          {
-            __directExecute:true,
-            type:'upgrade',
-            amount:100,
-            paymentId:'PAY_' + Date.now(),
-            quantity:1
-          }
-        );
-        closePinModal();
-      ">
+      <button id="submitRequestBtn">
         Submit Request
       </button>
     `
@@ -148,16 +141,7 @@ function openApprovePanel(payload = {}) {
 
       <br><br>
 
-      <button onclick="
-        routePinRequest(
-          'APPROVE_REQUEST',
-          {
-            __directExecute:true,
-            requestId:'${payload.requestId || ""}'
-          }
-        );
-        closePinModal();
-      ">
+      <button id="approveBtn">
         Approve Now
       </button>
     `
@@ -175,29 +159,58 @@ function openAssignPinPanel(payload = {}) {
       <input
         id="assignToId"
         placeholder="Enter User ID"
-        style="
-          width:100%;
-          padding:10px;
-          margin-bottom:10px;
-        "
+        style="width:100%;padding:10px;margin-bottom:10px;"
       />
 
-      <button onclick="
-        routePinRequest(
-          'ASSIGN_PIN',
-          {
-            __directExecute:true,
-            pinId:'${payload.pinId || "PIN001"}',
-            toId:document.getElementById('assignToId').value
-          }
-        );
-        closePinModal();
-      ">
+      <button id="assignBtn">
         Assign PIN
       </button>
     `
   );
 }
+
+// ================= EVENT BINDING (AFTER MODAL RENDER) =================
+document.addEventListener("click", function (e) {
+
+  // REQUEST
+  if (e.target && e.target.id === "submitRequestBtn") {
+
+    safeRoute("REQUEST_PIN", {
+      type: "upgrade",
+      amount: 100,
+      paymentId: "PAY_" + Date.now(),
+      quantity: 1
+    });
+
+    closePinModal();
+  }
+
+  // APPROVE
+  if (e.target && e.target.id === "approveBtn") {
+
+    const reqId = document.querySelector("b")?.innerText || "";
+
+    safeRoute("APPROVE_REQUEST", {
+      requestId: reqId,
+      __directExecute: true
+    });
+
+    closePinModal();
+  }
+
+  // ASSIGN
+  if (e.target && e.target.id === "assignBtn") {
+
+    const toId = document.getElementById("assignToId")?.value || "";
+
+    safeRoute("ASSIGN_PIN", {
+      pinId: "PIN001",
+      toId: toId
+    });
+
+    closePinModal();
+  }
+});
 
 // ================= EXPORT =================
 window.renderPinModal = renderPinModal;
@@ -206,4 +219,3 @@ window.closePinModal = closePinModal;
 window.openPinRequestPanel = openPinRequestPanel;
 window.openApprovePanel = openApprovePanel;
 window.openAssignPinPanel = openAssignPinPanel;
-
