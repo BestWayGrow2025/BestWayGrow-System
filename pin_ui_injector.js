@@ -2,13 +2,16 @@
 
 /*
 ========================================
-PIN UI AUTO INJECTOR V2.0 (FINAL FIXED CORE)
+PIN UI AUTO INJECTOR V3.0 (UI RENDER CORE)
 ========================================
 ✔ Role-safe injection layer
-✔ NO event binding (FIXED ARCHITECTURE)
-✔ Router-only click handling enforced
+✔ Central modal renderer
+✔ Request PIN popup
+✔ Assign PIN popup
+✔ Approve Request popup
+✔ Close modal system
+✔ Router-compatible UI layer
 ✔ MutationObserver safe sync
-✔ Duplicate-safe marking only
 ✔ Production stable
 ========================================
 */
@@ -30,9 +33,11 @@ function initInjector() {
   bindPinElements();
 
   observeDOMChanges();
+
+  injectModalRoot();
 }
 
-// ================= SAFE MARKER BIND (NO EVENTS) =================
+// ================= SAFE MARKER =================
 function bindPinElements() {
 
   document.querySelectorAll("[data-pin-action]").forEach(el => {
@@ -41,34 +46,187 @@ function bindPinElements() {
 
     el.__pinBound = true;
 
-    // ONLY MARK ELEMENTS — NO CLICK EVENTS HERE
     el.setAttribute("data-pin-bound", "true");
-
   });
 }
 
-// ================= PAYLOAD =================
-function extractPayload(el) {
+// ================= MODAL ROOT =================
+function injectModalRoot() {
 
-  return {
-    requestId: el.dataset.requestId || el.getAttribute("data-request-id") || null,
-    pinId: el.dataset.pinId || el.getAttribute("data-pin-id") || null,
-    toId: el.dataset.toId || el.getAttribute("data-to-id") || null,
-    paymentId: el.dataset.paymentId || el.getAttribute("data-payment-id") || null
-  };
+  if (document.getElementById("pinModalRoot")) return;
+
+  const div = document.createElement("div");
+
+  div.id = "pinModalRoot";
+
+  document.body.appendChild(div);
 }
 
-// ================= EXECUTION (OPTIONAL DEBUG ONLY) =================
+// ================= OPEN REQUEST PANEL =================
+function openPinRequestPanel() {
+
+  renderPinModal(`
+    <h3>📌 Request PIN</h3>
+
+    <input id="pinRequestType"
+      placeholder="upgrade / repurchase"
+      style="width:100%;margin-bottom:10px;"
+    />
+
+    <input id="pinRequestAmount"
+      placeholder="Amount"
+      type="number"
+      style="width:100%;margin-bottom:10px;"
+    />
+
+    <input id="pinPaymentId"
+      placeholder="Payment ID"
+      style="width:100%;margin-bottom:10px;"
+    />
+
+    <button onclick="submitPinRequest()">
+      Submit Request
+    </button>
+
+    <button onclick="closePinModal()">
+      Close
+    </button>
+  `);
+}
+
+// ================= OPEN ASSIGN PANEL =================
+function openAssignPinPanel(payload = {}) {
+
+  renderPinModal(`
+    <h3>📌 Assign PIN</h3>
+
+    <p>PIN ID: ${payload.pinId || "-"}</p>
+
+    <input id="assignToUser"
+      placeholder="User ID"
+      style="width:100%;margin-bottom:10px;"
+    />
+
+    <button onclick="submitAssignPin('${payload.pinId || ""}')">
+      Assign
+    </button>
+
+    <button onclick="closePinModal()">
+      Close
+    </button>
+  `);
+}
+
+// ================= OPEN APPROVE PANEL =================
+function openApprovePanel(payload = {}) {
+
+  renderPinModal(`
+    <h3>✅ Approve Request</h3>
+
+    <p>Request ID: ${payload.requestId || "-"}</p>
+
+    <button onclick="submitApproveRequest('${payload.requestId || ""}')">
+      Approve Now
+    </button>
+
+    <button onclick="closePinModal()">
+      Close
+    </button>
+  `);
+}
+
+// ================= MODAL RENDER =================
+function renderPinModal(content) {
+
+  const root = document.getElementById("pinModalRoot");
+
+  if (!root) return;
+
+  root.innerHTML = `
+    <div style="
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,0.5);
+      z-index:99999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    ">
+
+      <div style="
+        background:#fff;
+        padding:20px;
+        width:400px;
+        border-radius:10px;
+      ">
+        ${content}
+      </div>
+
+    </div>
+  `;
+}
+
+// ================= CLOSE MODAL =================
+function closePinModal() {
+
+  const root = document.getElementById("pinModalRoot");
+
+  if (!root) return;
+
+  root.innerHTML = "";
+}
+
+// ================= REQUEST SUBMIT =================
+function submitPinRequest() {
+
+  const type = document.getElementById("pinRequestType")?.value;
+  const amount = document.getElementById("pinRequestAmount")?.value;
+  const paymentId = document.getElementById("pinPaymentId")?.value;
+
+  execute("REQUEST_PIN", {
+    type,
+    amount,
+    paymentId
+  });
+
+  closePinModal();
+}
+
+// ================= ASSIGN SUBMIT =================
+function submitAssignPin(pinId) {
+
+  const toId = document.getElementById("assignToUser")?.value;
+
+  execute("ASSIGN_PIN", {
+    pinId,
+    toId
+  });
+
+  closePinModal();
+}
+
+// ================= APPROVE SUBMIT =================
+function submitApproveRequest(requestId) {
+
+  execute("APPROVE_REQUEST", {
+    requestId
+  });
+
+  closePinModal();
+}
+
+// ================= EXECUTION =================
 function execute(action, payload) {
 
   try {
 
-    // PRIORITY 1: ROUTER (ONLY REAL PATH)
     if (typeof routePinRequest === "function") {
       return routePinRequest(action, payload);
     }
 
-    // PRIORITY 2: FALLBACK HANDLER
     if (typeof handlePinAction === "function") {
       return handlePinAction(action, payload);
     }
@@ -90,7 +248,6 @@ function observeDOMChanges() {
 
   const observer = new MutationObserver(() => {
 
-    // Only mark new elements, DO NOT rebind events
     bindPinElements();
 
   });
@@ -103,3 +260,13 @@ function observeDOMChanges() {
 
 // ================= EXPORT =================
 window.initPinInjector = initInjector;
+
+window.openPinRequestPanel = openPinRequestPanel;
+window.openAssignPinPanel = openAssignPinPanel;
+window.openApprovePanel = openApprovePanel;
+
+window.closePinModal = closePinModal;
+
+window.submitPinRequest = submitPinRequest;
+window.submitAssignPin = submitAssignPin;
+window.submitApproveRequest = submitApproveRequest;
