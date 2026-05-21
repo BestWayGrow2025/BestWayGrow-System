@@ -2,11 +2,12 @@
 
 /*
 ========================================
-PIN ACCESS ROUTER V1.2 (FINAL CORE GATE)
+PIN ACCESS ROUTER V2.0 (UI CONNECTED)
 ========================================
 ✔ Role-based PIN routing
+✔ UI panel integration
+✔ Modal-safe architecture
 ✔ Super admin override safe path
-✔ Admin/System/User separation
 ✔ Engine bypass protection
 ✔ Normalized action safety
 ✔ Production locked gateway
@@ -15,9 +16,11 @@ PIN ACCESS ROUTER V1.2 (FINAL CORE GATE)
 
 // ================= SAFE SESSION =================
 function getActiveSessionUser() {
+
   if (typeof getSession !== "function") return null;
 
   const session = getSession();
+
   if (!session || !session.userId) return null;
 
   if (typeof getUserById === "function") {
@@ -29,7 +32,9 @@ function getActiveSessionUser() {
 
 // ================= ROLE =================
 function getRole() {
+
   const user = getActiveSessionUser();
+
   return user?.role || null;
 }
 
@@ -88,28 +93,25 @@ function getAllowedActions(role) {
   }
 }
 
-// ================= PERMISSION CHECK =================
+// ================= PERMISSION =================
 function canExecute(actionType) {
 
   const role = getRole();
+
   if (!role) return false;
 
-  const allowed = getAllowedActions(role);
-
-  return allowed.includes(actionType);
+  return getAllowedActions(role).includes(actionType);
 }
 
-// ================= BLOCK BYPASS =================
+// ================= BLOCKED ACTIONS =================
 function isBlockedAction(actionType) {
 
-  const blocked = [
+  return [
     "DIRECT_ENGINE_CALL",
     "RAW_EXECUTE",
     "FORCE_ASSIGN",
     "SYSTEM_OVERRIDE"
-  ];
-
-  return blocked.includes(actionType);
+  ].includes(actionType);
 }
 
 // ================= MAIN ROUTER =================
@@ -127,63 +129,96 @@ function routePinRequest(actionType, payload = {}) {
 
     user = activeUser;
 
-    // Normalize
+    // ================= NORMALIZE =================
     actionType = normalizeAction(actionType);
 
-    // Block bypass attempts
+    // ================= BLOCK =================
     if (isBlockedAction(actionType)) {
-      throw new Error("Bypass attempt blocked");
+      throw new Error("Blocked action");
     }
 
-    // ================= OVERRIDE PATH (SUPER ADMIN ONLY) =================
-    if (actionType === "OVERRIDE_PIN") {
-
-      if (user.role !== "super_admin") {
-        throw new Error("Only Super Admin can override");
-      }
-
-      return executePinFlow("OVERRIDE_PIN", payload);
-    }
-
-    // ================= PERMISSION CHECK =================
+    // ================= PERMISSION =================
     if (!canExecute(actionType)) {
+
       throw new Error(
         "Permission denied for role: " + user.role
       );
     }
 
-    // ================= ROUTING =================
+    // ================= UI ROUTING =================
     switch (actionType) {
 
+      // ================= REQUEST PIN =================
       case "REQUEST_PIN":
+
+        if (
+          typeof openPinRequestPanel === "function" &&
+          !payload.__directExecute
+        ) {
+          return openPinRequestPanel(payload);
+        }
+
         return executePinFlow("REQUEST_PIN", {
           ...payload,
           userId: user.userId
         });
 
+      // ================= APPROVE =================
+      case "APPROVE_REQUEST":
+
+        if (
+          typeof openApprovePanel === "function" &&
+          !payload.__directExecute
+        ) {
+          return openApprovePanel(payload);
+        }
+
+        return executePinFlow("PROCESS_REQUEST", payload);
+
+      // ================= REJECT =================
+      case "REJECT_REQUEST":
+
+        return executePinFlow("REJECT_REQUEST", payload);
+
+      // ================= ASSIGN =================
+      case "ASSIGN_PIN":
+
+        if (
+          typeof openAssignPinPanel === "function" &&
+          !payload.__directExecute
+        ) {
+          return openAssignPinPanel(payload);
+        }
+
+        return executePinFlow("ASSIGN_PIN", {
+          ...payload,
+          assignedBy: user.userId
+        });
+
+      // ================= ADMIN STOCK =================
       case "ADMIN_STOCK_REQUEST":
+
         return executePinFlow("ADMIN_STOCK_REQUEST", {
           ...payload,
           adminId: user.userId
         });
 
+      // ================= SYSTEM REQUEST =================
       case "SYSTEM_PIN_REQUEST":
+
         return executePinFlow("SYSTEM_PIN_REQUEST", {
           ...payload,
           systemAdminId: user.userId
         });
 
-      case "APPROVE_REQUEST":
-        return executePinFlow("PROCESS_REQUEST", payload);
+      // ================= OVERRIDE =================
+      case "OVERRIDE_PIN":
 
-      case "REJECT_REQUEST":
-        return executePinFlow("REJECT_REQUEST", payload);
+        if (user.role !== "super_admin") {
+          throw new Error("Only Super Admin allowed");
+        }
 
-      case "ASSIGN_PIN":
-        return executePinFlow("ASSIGN_PIN", {
-          ...payload,
-          assignedBy: user.userId
-        });
+        return executePinFlow("OVERRIDE_PIN", payload);
 
       default:
         throw new Error("Invalid action type");
@@ -194,12 +229,15 @@ function routePinRequest(actionType, payload = {}) {
     console.error("PIN ROUTER ERROR:", err.message);
 
     if (typeof logCritical === "function") {
+
       try {
+
         logCritical(
           "PIN ROUTER ERROR: " + err.message,
           user?.userId || "UNKNOWN",
           "PIN_ROUTER"
         );
+
       } catch (_) {}
     }
 
