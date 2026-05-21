@@ -2,7 +2,7 @@
 
 /*
 ========================================
-LIVE PIN REQUEST PANEL V1.2 (FINAL OPTIMIZED)
+LIVE PIN REQUEST PANEL V1.3 (FINAL CONNECTED)
 ========================================
 ✔ Auto-refresh request list
 ✔ No page reload required
@@ -12,6 +12,7 @@ LIVE PIN REQUEST PANEL V1.2 (FINAL OPTIMIZED)
 ✔ Immediate UI refresh after action
 ✔ Event-driven sync via PIN_EVENT_BUS
 ✔ Polling fallback if event bus unavailable
+✔ FIXED: button click → router binding added
 ✔ Production LOCKED
 ========================================
 */
@@ -40,7 +41,27 @@ function initLivePanel() {
 
   renderPanel();
 
-  // Priority 1: Event-driven live sync (preferred)
+  // ================= EVENT BINDING FIX =================
+  document.addEventListener("click", function (e) {
+
+    const btn = e.target.closest("[data-pin-action]");
+
+    if (!btn) return;
+
+    const action = btn.getAttribute("data-pin-action");
+    const requestId = btn.getAttribute("data-request-id");
+
+    if (typeof routePinRequest === "function") {
+
+      routePinRequest(action, {
+        requestId: requestId
+      });
+    }
+
+    triggerRefresh();
+  });
+
+  // Priority 1: Event-driven sync
   if (typeof onPinEvent === "function") {
 
     onPinEvent("PIN_REQUEST_UPDATED", function (data) {
@@ -51,12 +72,10 @@ function initLivePanel() {
       syncData();
     });
 
-    // Initial load
     syncData();
 
   } else {
 
-    // Priority 2: Polling fallback
     startLiveSync();
   }
 }
@@ -92,9 +111,7 @@ function updateIfChanged(data) {
 
   const hash = JSON.stringify(data || []);
 
-  if (hash === PIN_LAST_HASH) {
-    return;
-  }
+  if (hash === PIN_LAST_HASH) return;
 
   PIN_LAST_HASH = hash;
 
@@ -104,11 +121,10 @@ function updateIfChanged(data) {
 // ================= SAFE FETCH =================
 function getRequestsSafe() {
 
-  if (typeof getPinRequests !== "function") {
-    return [];
-  }
+  if (typeof getPinRequests !== "function") return [];
 
   return (getPinRequests() || []).map(function (r) {
+
     return {
       requestId: r.requestId,
       userId: r.userId || "-",
@@ -137,9 +153,8 @@ function renderTable(data) {
   if (!table) return;
 
   if (!Array.isArray(data) || data.length === 0) {
-    table.innerHTML = `
-      <p>No PIN requests found.</p>
-    `;
+
+    table.innerHTML = `<p>No PIN requests found.</p>`;
     return;
   }
 
@@ -159,21 +174,22 @@ function renderTable(data) {
 
     let actions = "-";
 
-   if (status === "PENDING") {
-actions = `
-<button
-  data-pin-action="approve_request"
-  data-request-id="${req.requestId}">
-  Approve
-</button>
+    if (status === "PENDING") {
 
-<button
-  data-pin-action="reject_request"
-  data-request-id="${req.requestId}">
-  Reject
-</button>
+      actions = `
+        <button
+          data-pin-action="APPROVE_REQUEST"
+          data-request-id="${req.requestId}">
+          Approve
+        </button>
 
-`; }
+        <button
+          data-pin-action="REJECT_REQUEST"
+          data-request-id="${req.requestId}">
+          Reject
+        </button>
+      `;
+    }
 
     html += `
       <tr>
@@ -211,14 +227,13 @@ function executeLiveAction(actionType, requestId) {
       throw new Error("routePinRequest not available");
     }
 
-    const result = routePinRequest(actionType, {
+    routePinRequest(actionType, {
       requestId: requestId
     });
 
-    // Immediate refresh
     triggerRefresh();
 
-    return result;
+    return true;
 
   } catch (err) {
 
@@ -233,14 +248,12 @@ function triggerRefresh() {
 
   try {
 
-    // Event-driven refresh if available
-    if (typeof broadcastPinUpdate === "function") {
-      broadcastPinUpdate({
+    if (typeof broadcastPinEvent === "function") {
+      broadcastPinEvent("PIN_REQUEST_UPDATED", {
         source: "pin_live_request_panel"
       });
     }
 
-    // Direct refresh fallback
     syncData();
 
   } catch (_) {}
