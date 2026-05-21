@@ -2,10 +2,11 @@
 
 /*
 ========================================
-PIN ACCESS ROUTER V2.0 (UI CONNECTED)
+PIN ACCESS ROUTER V2.1 (UI CONNECTED FINAL)
 ========================================
 ✔ Role-based PIN routing
 ✔ UI panel integration
+✔ Safe fallback execution
 ✔ Modal-safe architecture
 ✔ Super admin override safe path
 ✔ Engine bypass protection
@@ -114,6 +115,29 @@ function isBlockedAction(actionType) {
   ].includes(actionType);
 }
 
+// ================= SAFE UI OPEN =================
+function safeOpenPanel(fnName, payload, fallbackAction) {
+
+  try {
+
+    if (
+      typeof window[fnName] === "function" &&
+      !payload.__directExecute
+    ) {
+
+      return window[fnName](payload);
+    }
+
+    return executePinFlow(fallbackAction, payload);
+
+  } catch (err) {
+
+    console.error("[PIN UI FALLBACK]", err);
+
+    return executePinFlow(fallbackAction, payload);
+  }
+}
+
 // ================= MAIN ROUTER =================
 function routePinRequest(actionType, payload = {}) {
 
@@ -145,80 +169,85 @@ function routePinRequest(actionType, payload = {}) {
       );
     }
 
-    // ================= UI ROUTING =================
+    // ================= ROUTING =================
     switch (actionType) {
 
       // ================= REQUEST PIN =================
       case "REQUEST_PIN":
 
-        if (
-          typeof openPinRequestPanel === "function" &&
-          !payload.__directExecute
-        ) {
-          return openPinRequestPanel(payload);
-        }
-
-        return executePinFlow("REQUEST_PIN", {
-          ...payload,
-          userId: user.userId
-        });
+        return safeOpenPanel(
+          "openPinRequestPanel",
+          {
+            ...payload,
+            userId: user.userId
+          },
+          "REQUEST_PIN"
+        );
 
       // ================= APPROVE =================
       case "APPROVE_REQUEST":
 
-        if (
-          typeof openApprovePanel === "function" &&
-          !payload.__directExecute
-        ) {
-          return openApprovePanel(payload);
-        }
-
-        return executePinFlow("PROCESS_REQUEST", payload);
+        return safeOpenPanel(
+          "openApprovePanel",
+          payload,
+          "PROCESS_REQUEST"
+        );
 
       // ================= REJECT =================
       case "REJECT_REQUEST":
 
-        return executePinFlow("REJECT_REQUEST", payload);
+        return executePinFlow(
+          "REJECT_REQUEST",
+          payload
+        );
 
       // ================= ASSIGN =================
       case "ASSIGN_PIN":
 
-        if (
-          typeof openAssignPinPanel === "function" &&
-          !payload.__directExecute
-        ) {
-          return openAssignPinPanel(payload);
-        }
-
-        return executePinFlow("ASSIGN_PIN", {
-          ...payload,
-          assignedBy: user.userId
-        });
+        return safeOpenPanel(
+          "openAssignPinPanel",
+          {
+            ...payload,
+            assignedBy: user.userId
+          },
+          "ASSIGN_PIN"
+        );
 
       // ================= ADMIN STOCK =================
       case "ADMIN_STOCK_REQUEST":
 
-        return executePinFlow("ADMIN_STOCK_REQUEST", {
-          ...payload,
-          adminId: user.userId
-        });
+        return executePinFlow(
+          "ADMIN_STOCK_REQUEST",
+          {
+            ...payload,
+            adminId: user.userId
+          }
+        );
 
       // ================= SYSTEM REQUEST =================
       case "SYSTEM_PIN_REQUEST":
 
-        return executePinFlow("SYSTEM_PIN_REQUEST", {
-          ...payload,
-          systemAdminId: user.userId
-        });
+        return executePinFlow(
+          "SYSTEM_PIN_REQUEST",
+          {
+            ...payload,
+            systemAdminId: user.userId
+          }
+        );
 
       // ================= OVERRIDE =================
       case "OVERRIDE_PIN":
 
         if (user.role !== "super_admin") {
-          throw new Error("Only Super Admin allowed");
+          throw new Error(
+            "Only Super Admin allowed"
+          );
         }
 
-        return executePinFlow("OVERRIDE_PIN", payload);
+        return executePinFlow(
+          "OVERRIDE_PIN",
+          payload
+        );
 
       default:
         throw new Error("Invalid action type");
@@ -226,7 +255,10 @@ function routePinRequest(actionType, payload = {}) {
 
   } catch (err) {
 
-    console.error("PIN ROUTER ERROR:", err.message);
+    console.error(
+      "PIN ROUTER ERROR:",
+      err.message
+    );
 
     if (typeof logCritical === "function") {
 
