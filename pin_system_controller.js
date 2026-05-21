@@ -1,82 +1,65 @@
 "use strict";
-
 /*
-========================================
-PIN SYSTEM CONTROLLER V1.0 (TRAFFIC CORE ONLY)
-========================================
-✔ Single entry gateway
-✔ Queue-based execution
-✔ No business logic changes
-✔ No router modification
-✔ No UI modification
-✔ Safe production wrapper
-========================================
+PIN SYSTEM CONTROLLER V2.0 FINAL
+✔ Central traffic controller ✔ Single execution gateway ✔ Queue-based flow ✔ One-way execution only ✔ No business logic ✔ No UI rendering ✔ No routing modification ✔ Safe async execution ✔ Production LOCKED
 */
+// ================= INIT GUARD ================= (function () {
+if (window.PIN_SYSTEM_CONTROLLER) return;
+window.PIN_SYSTEM_CONTROLLER = true;
+})();
+// ================= QUEUE ================= const PIN_SYSTEM_QUEUE = [];
+// ================= PROCESS STATE ================= let PIN_SYSTEM_BUSY = false;
+// ================= ENTRY ================= function pinSystemExecute(actionType, payload = {}) {
+return enqueuePinTask(actionType, payload); }
+// ================= ENQUEUE ================= function enqueuePinTask(actionType, payload = {}) {
+PIN_SYSTEM_QUEUE.push({ actionType: String(actionType || "").trim(), payload: payload || {}, createdAt: Date.now() });
+processPinQueue();
+return true; }
+// ================= PROCESSOR ================= async function processPinQueue() {
+// Prevent parallel queue execution if (PIN_SYSTEM_BUSY) { return; }
+PIN_SYSTEM_BUSY = true;
+try {
+while (PIN_SYSTEM_QUEUE.length > 0) {
 
-// ================= QUEUE =================
-const PIN_QUEUE = [];
-let PIN_PROCESSING = false;
+  const task = PIN_SYSTEM_QUEUE.shift();
 
-// ================= ENTRY POINT =================
-function pinSystemExecute(actionType, payload = {}) {
+  if (!task) continue;
 
-  return enqueueRequest(actionType, payload);
-}
+  try {
 
-// ================= QUEUE HANDLER =================
-function enqueueRequest(actionType, payload) {
+    await executePinTask(
+      task.actionType,
+      task.payload
+    );
 
-  PIN_QUEUE.push({ actionType, payload });
+  } catch (err) {
 
-  processQueue();
-
-}
-
-// ================= PROCESS QUEUE =================
-async function processQueue() {
-
-  if (PIN_PROCESSING) return;
-
-  PIN_PROCESSING = true;
-
-  while (PIN_QUEUE.length > 0) {
-
-    const task = PIN_QUEUE.shift();
-
-    try {
-
-      await executeSafe(task.actionType, task.payload);
-
-    } catch (err) {
-
-      console.error("[PIN CONTROLLER ERROR]", err);
-
-    }
-
+    console.error(
+      "[PIN SYSTEM CONTROLLER TASK ERROR]",
+      err
+    );
   }
-
-  PIN_PROCESSING = false;
 }
 
-// ================= SAFE EXECUTION =================
-async function executeSafe(actionType, payload) {
+} finally {
+PIN_SYSTEM_BUSY = false;
 
-  // STEP 1: ROUTE ONLY (NO LOGIC CHANGE)
-  if (typeof routePinRequest === "function") {
+} }
+// ================= TASK EXECUTION ================= async function executePinTask(actionType, payload) {
+// ================= VALIDATION ================= if (!actionType) { throw new Error("Missing actionType"); }
+// ================================================== // PRIORITY 1 → ROUTER // ================================================== if (typeof routePinRequest === "function") {
+return await routePinRequest(
+  actionType,
+  payload || {}
+);
 
-    const result = routePinRequest(actionType, payload);
-
-    return result;
-  }
-
-  // STEP 2: fallback safe execution
-  if (typeof executePinFlow === "function") {
-
-    return executePinFlow(actionType, payload);
-  }
-
-  throw new Error("No execution engine found");
 }
+// ================================================== // PRIORITY 2 → FLOW ENGINE // ================================================== if (typeof executePinFlow === "function") {
+return await executePinFlow(
+  actionType,
+  payload || {}
+);
 
-// ================= EXPORT =================
-window.pinSystemExecute = pinSystemExecute;
+}
+// ================================================== // FAILURE // ================================================== throw new Error( "No PIN execution engine available" ); }
+// ================= EXPORT ================= window.pinSystemExecute = pinSystemExecute; window.enqueuePinTask = enqueuePinTask;
