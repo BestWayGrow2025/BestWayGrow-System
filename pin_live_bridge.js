@@ -2,7 +2,7 @@
 
 /*
 ========================================
-PIN LIVE BRIDGE V1.0 (SYNC LAYER CORE)
+PIN LIVE BRIDGE V1.1 (BLINK FIX FINAL)
 ========================================
 ✔ Connects Orchestrator ↔ UI Panel
 ✔ Bridges Router events → Live UI updates
@@ -10,6 +10,9 @@ PIN LIVE BRIDGE V1.0 (SYNC LAYER CORE)
 ✔ No direct engine calls
 ✔ Event-driven UI refresh layer
 ✔ Production-safe bridge connector
+✔ FIXED: Prevents PIN Master page blinking
+✔ FIXED: Refresh only when relevant UI exists
+✔ FIXED: Duplicate route wrapping protection
 ========================================
 */
 
@@ -28,11 +31,20 @@ PIN LIVE BRIDGE V1.0 (SYNC LAYER CORE)
 function initPinLiveBridge() {
 
   bindOrchestratorEvents();
-
   bindRouterEvents();
-
   bindGlobalRefreshHooks();
 
+}
+
+// ================= PAGE DETECTION =================
+function isPinRequestPageActive() {
+
+  return !!(
+    document.getElementById("pinLivePanel") ||
+    document.getElementById("pinRequestTable") ||
+    document.querySelector("[data-pin-request-table]") ||
+    document.querySelector(".pin-request-table")
+  );
 }
 
 // ================= ORCHESTRATOR SYNC =================
@@ -43,8 +55,11 @@ function bindOrchestratorEvents() {
   // LIVE REQUEST UPDATE
   onPinEvent("PIN_REQUEST_UPDATED", function (data) {
 
-    pushToLivePanel(data);
+    // CRITICAL FIX:
+    // Do nothing unless a PIN request UI is currently visible.
+    if (!isPinRequestPageActive()) return;
 
+    pushToLivePanel(data);
     refreshAdminPanel();
 
   });
@@ -52,12 +67,16 @@ function bindOrchestratorEvents() {
   // FLOW EXECUTION EVENTS
   onPinEvent("PIN_FLOW_EXECUTED", function () {
 
+    if (!isPinRequestPageActive()) return;
+
     triggerUIRefresh();
 
   });
 
   // ROUTER EVENTS
   onPinEvent("PIN_ROUTER_EXECUTED", function () {
+
+    if (!isPinRequestPageActive()) return;
 
     triggerUIRefresh();
 
@@ -69,22 +88,36 @@ function bindRouterEvents() {
 
   if (typeof routePinRequest !== "function") return;
 
+  // Prevent duplicate wrapping
+  if (window.routePinRequest.__pinLiveBridgeWrapped === true) {
+    return;
+  }
+
   const original = window.routePinRequest;
 
-  window.routePinRequest = function (...args) {
+  function wrappedRoutePinRequest(...args) {
 
     const result = original.apply(this, args);
 
-    triggerUIRefresh();
+    if (isPinRequestPageActive()) {
+      triggerUIRefresh();
+    }
 
     return result;
-  };
+  }
+
+  wrappedRoutePinRequest.__pinLiveBridgeWrapped = true;
+  wrappedRoutePinRequest.__originalFunction = original;
+
+  window.routePinRequest = wrappedRoutePinRequest;
 }
 
 // ================= GLOBAL UI REFRESH =================
 function bindGlobalRefreshHooks() {
 
   window.refreshPinUI = function () {
+
+    if (!isPinRequestPageActive()) return;
 
     triggerUIRefresh();
 
@@ -94,39 +127,58 @@ function bindGlobalRefreshHooks() {
 // ================= UI PUSH =================
 function pushToLivePanel(data) {
 
-  if (typeof window.renderTable === "function") {
-    window.renderTable(data);
+  if (!isPinRequestPageActive()) {
+    return;
   }
 
-  const panel = document.getElementById("pinLivePanel");
+  try {
+    if (typeof window.renderTable === "function") {
+      window.renderTable(data);
+    }
+  } catch (_) {}
 
-  if (panel && typeof window.syncData === "function") {
-    window.syncData();
-  }
+  try {
+    const panel = document.getElementById("pinLivePanel");
+
+    if (panel && typeof window.syncData === "function") {
+      window.syncData();
+    }
+  } catch (_) {}
 }
 
 // ================= ADMIN PANEL REFRESH =================
 function refreshAdminPanel() {
 
-  if (typeof window.loadPinRequests === "function") {
-    window.loadPinRequests();
+  if (!isPinRequestPageActive()) {
+    return;
   }
 
-  if (typeof window.refreshPinPanelStatus === "function") {
-    window.refreshPinPanelStatus();
-  }
+  try {
+    if (typeof window.loadPinRequests === "function") {
+      window.loadPinRequests();
+    }
+  } catch (_) {}
+
+  try {
+    if (typeof window.refreshPinPanelStatus === "function") {
+      window.refreshPinPanelStatus();
+    }
+  } catch (_) {}
 }
 
 // ================= MASTER UI TRIGGER =================
 function triggerUIRefresh() {
 
-  pushToLivePanel([]);
+  if (!isPinRequestPageActive()) {
+    return;
+  }
 
+  pushToLivePanel([]);
   refreshAdminPanel();
 
-  if (typeof window.loadPins === "function") {
-    window.loadPins();
-  }
+  // REMOVED:
+  // loadPins() was being called unnecessarily and could
+  // trigger UI redraws even on non-request pages.
 }
 
 // ================= GLOBAL EXPORT =================
