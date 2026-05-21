@@ -2,14 +2,16 @@
 
 /*
 ========================================
-SYSTEM MODULE CONNECTOR V1.0
+SYSTEM MODULE CONNECTOR V2.0 FINAL
 ========================================
-✔ Connects router → real modules
+✔ Pure connector layer
 ✔ One-way execution flow
-✔ No routing logic inside
-✔ No business logic
-✔ Only module activation
-✔ Enterprise structure
+✔ NO rendering logic
+✔ NO placeholder UI
+✔ NO business logic
+✔ ONLY module dispatching
+✔ Real module loader integrated
+✔ Enterprise architecture compliant
 ========================================
 */
 
@@ -20,6 +22,8 @@ SYSTEM MODULE CONNECTOR V1.0
 
   window.__SYSTEM_MODULE_CONNECTOR__ = true;
 
+  console.log("[SYSTEM MODULE CONNECTOR] READY");
+
 })();
 
 // ================= MAIN CONNECTOR =================
@@ -27,199 +31,138 @@ function connectSystemModule(page) {
 
   try {
 
-    switch (String(page || "").toLowerCase()) {
+    const route = String(page || "")
+      .trim()
+      .toLowerCase();
+
+    switch (route) {
 
       // ================= HOME =================
       case "home":
 
-        renderHomeModule();
-        break;
+        return loadHomeDashboardModule();
 
       // ================= CREATE SYS ADMIN =================
       case "create":
 
-        renderCreateSystemAdminModule();
-        break;
+        return loadCreateSystemAdminRealModule();
 
       // ================= USERS =================
       case "users":
 
-        renderUsersModule();
-        break;
+        return loadUsersRealModule();
 
       // ================= SYSTEM =================
       case "system":
 
-        renderSystemModule();
-        break;
+        return loadSystemAdminPanelModule();
 
       // ================= PIN MASTER =================
       case "pinmaster":
 
-        renderPinMasterModule();
-        break;
-
-      // ================= PRODUCT MASTER =================
-      case "productmaster":
-
-        renderProductMasterModule();
-        break;
+        return loadPinMasterRealModule();
 
       // ================= REPORTS =================
       case "reports":
 
-        renderReportsModule();
-        break;
+        return loadReportsRealModule();
 
+      // ================= PRODUCT MASTER =================
+      case "productmaster":
+
+        return loadRealModule({
+          html: "admin_pin.html",
+          js: "admin_pin.js"
+        });
+
+      // ================= TREE VIEW =================
+      case "tree":
+
+        return loadRealModule({
+          html: "user_tree.html",
+          js: "tree_system.js"
+        });
+
+      // ================= AUDIT =================
+      case "audit":
+
+        return loadRealModule({
+          html: "admin_activity_log.html",
+          js: "admin_activity_log.js"
+        });
+
+      // ================= HEALTH =================
+      case "health":
+
+        return loadRealModule({
+          html: "check_status.html",
+          js: "check_status.js"
+        });
+
+      // ================= BACKUP =================
+      case "backup":
+
+        return loadRealModule({
+          html: "system_init.html",
+          js: "system_backup_manager.js"
+        });
+
+      // ================= DEFAULT =================
       default:
 
-        renderUnknownModule(page);
+        return loadUnknownSystemModule(route);
     }
 
   } catch (err) {
 
-    console.error("[MODULE CONNECTOR ERROR]", err);
+    console.error(
+      "[SYSTEM MODULE CONNECTOR ERROR]",
+      err
+    );
+
+    return false;
   }
 }
 
-// ================= MAIN TARGET =================
-function getMainContent() {
+// ================= UNKNOWN MODULE =================
+function loadUnknownSystemModule(page) {
 
-  return document.getElementById("mainContent");
-}
+  try {
 
-// ================= HOME =================
-function renderHomeModule() {
+    const main =
+      document.getElementById("mainContent");
 
-  const main = getMainContent();
+    if (!main) return false;
 
-  if (!main) return;
+    main.innerHTML = `
+      <div style="
+        padding:20px;
+        background:#fff3f3;
+        border:1px solid #ffbaba;
+        border-radius:8px;
+      ">
+        <h2>❌ MODULE NOT FOUND</h2>
 
-  main.innerHTML = `
-    <h2>🏠 Home Dashboard</h2>
-    <p>System operational.</p>
-  `;
-}
+        <p>
+          Unknown module:
+          <b>${page}</b>
+        </p>
+      </div>
+    `;
 
-// ================= CREATE SYSTEM ADMIN =================
-function renderCreateSystemAdminModule() {
+    return false;
 
-  const main = getMainContent();
+  } catch (err) {
 
-  if (!main) return;
+    console.error(
+      "[UNKNOWN MODULE ERROR]",
+      err
+    );
 
-  // Existing repo integration
-  if (typeof loadCreateSystemAdminPanel === "function") {
-
-    loadCreateSystemAdminPanel();
-    return;
+    return false;
   }
-
-  main.innerHTML = `
-    <h2>👑 Create System Admin</h2>
-    <p>System Admin module ready.</p>
-  `;
-}
-
-// ================= USERS =================
-function renderUsersModule() {
-
-  const main = getMainContent();
-
-  if (!main) return;
-
-  main.innerHTML = `
-    <h2>👥 User Management</h2>
-    <p>User management module connected.</p>
-  `;
-}
-
-// ================= SYSTEM =================
-function renderSystemModule() {
-
-  const main = getMainContent();
-
-  if (!main) return;
-
-  main.innerHTML = `
-    <h2>⚙️ System Panel</h2>
-    <p>System controls connected.</p>
-  `;
-}
-
-// ================= PIN MASTER =================
-function renderPinMasterModule() {
-
-  const main = getMainContent();
-
-  if (!main) return;
-
-  main.innerHTML = `
-    <h2>📌 PIN Master</h2>
-
-    <div style="margin-bottom:15px;">
-
-      <button onclick="openAssignPinPanel()">
-        Assign PIN
-      </button>
-
-      <button onclick="openPinRequestPanel()">
-        Request PIN
-      </button>
-
-      <button onclick="openApprovePanel({requestId:'MANUAL'})">
-        Approve
-      </button>
-
-    </div>
-
-    <div id="pinLivePanel"></div>
-  `;
-
-  // Auto load live panel
-  if (typeof initLivePanel === "function") {
-    initLivePanel();
-  }
-}
-
-// ================= PRODUCT MASTER =================
-function renderProductMasterModule() {
-
-  const main = getMainContent();
-
-  if (!main) return;
-
-  main.innerHTML = `
-    <h2>📦 Product Master</h2>
-    <p>Product management module connected.</p>
-  `;
-}
-
-// ================= REPORTS =================
-function renderReportsModule() {
-
-  const main = getMainContent();
-
-  if (!main) return;
-
-  main.innerHTML = `
-    <h2>📊 Reports</h2>
-    <p>Reports module connected.</p>
-  `;
-}
-
-// ================= UNKNOWN =================
-function renderUnknownModule(page) {
-
-  const main = getMainContent();
-
-  if (!main) return;
-
-  main.innerHTML = `
-    <h2>❌ Module Not Found</h2>
-    <p>${page}</p>
-  `;
 }
 
 // ================= EXPORT =================
-window.connectSystemModule = connectSystemModule;
+window.connectSystemModule =
+  connectSystemModule;
