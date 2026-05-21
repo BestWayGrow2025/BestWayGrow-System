@@ -2,15 +2,25 @@
 
 /*
 ========================================
-PIN BOOTLOADER V1.0 (SYSTEM START CORE)
+PIN BOOTLOADER V1.0 (SYSTEM CORE START)
 ========================================
-✔ Single entry system initializer
-✔ Ensures correct load order
+✔ Central system startup controller
+✔ Ensures correct load sequence
+✔ Waits for core + router + UI + event bus
 ✔ Prevents partial system execution
-✔ Initializes all PIN modules safely
+✔ Role-safe initialization
 ✔ Production LOCKED
 ========================================
 */
+
+// ================= BOOT STATE =================
+window.__PIN_BOOT_STATE__ = {
+  started: false,
+  coreReady: false,
+  routerReady: false,
+  uiReady: false,
+  eventBusReady: false
+};
 
 // ================= INIT GUARD =================
 (function () {
@@ -19,60 +29,90 @@ PIN BOOTLOADER V1.0 (SYSTEM START CORE)
 
   window.__PIN_BOOTLOADER__ = true;
 
-  document.addEventListener("DOMContentLoaded", initPinSystem);
+  document.addEventListener("DOMContentLoaded", startBootSequence);
 
 })();
 
-// ================= SYSTEM INIT =================
-function initPinSystem() {
+// ================= MAIN BOOT =================
+function startBootSequence() {
 
-  try {
+  console.log("[PIN BOOT] STARTING SEQUENCE...");
 
-    console.log("[PIN BOOT] STARTING SYSTEM...");
+  window.__PIN_BOOT_STATE__.started = true;
 
-    // ================= STEP 1: CORE CHECK =================
-    if (!window.__CORE_STATE__ || !window.__CORE_STATE__.initialized) {
-      console.warn("[PIN BOOT] Core not ready yet");
+  checkSystemReadiness();
+
+}
+
+// ================= READINESS CHECK =================
+function checkSystemReadiness() {
+
+  const interval = setInterval(() => {
+
+    window.__PIN_BOOT_STATE__.coreReady =
+      typeof window.__CORE_STATE__ !== "undefined";
+
+    window.__PIN_BOOT_STATE__.routerReady =
+      typeof window.routePinRequest === "function";
+
+    window.__PIN_BOOT_STATE__.uiReady =
+      document.getElementById("pinModalRoot") !== null;
+
+    window.__PIN_BOOT_STATE__.eventBusReady =
+      typeof window.PIN_EVENT_BUS !== "undefined";
+
+    const allReady =
+      window.__PIN_BOOT_STATE__.coreReady &&
+      window.__PIN_BOOT_STATE__.routerReady &&
+      window.__PIN_BOOT_STATE__.uiReady &&
+      window.__PIN_BOOT_STATE__.eventBusReady;
+
+    if (allReady) {
+
+      clearInterval(interval);
+
+      finalizeBoot();
+
     }
 
-    // ================= STEP 2: EVENT BUS =================
-    if (typeof window.broadcastPinEvent === "function") {
-      window.broadcastPinEvent("PIN_SYSTEM_BOOT", {
-        status: "EVENT_BUS_READY"
-      });
-    }
+  }, 200);
+}
 
-    // ================= STEP 3: ROUTER READY =================
-    if (typeof window.routePinRequest === "function") {
-      console.log("[PIN BOOT] Router Ready");
-    }
+// ================= FINAL BOOT =================
+function finalizeBoot() {
 
-    // ================= STEP 4: UI LAUNCHER =================
-    if (typeof window.openPinRequestPanel === "function") {
-      console.log("[PIN BOOT] UI Launcher Ready");
-    }
+  console.log("[PIN BOOT] SYSTEM READY ✔");
 
-    // ================= STEP 5: LIVE PANEL INIT =================
-    if (typeof window.startLiveSync === "function") {
-      window.startLiveSync();
-    }
+  // ================= INIT UI LAYERS =================
 
-    // ================= FINAL STATE =================
-    window.__PIN_SYSTEM_READY__ = true;
-
-    console.log("[PIN BOOT] SYSTEM READY ✔");
-
-    if (typeof window.broadcastPinEvent === "function") {
-      window.broadcastPinEvent("PIN_SYSTEM_READY", {
-        status: "READY"
-      });
-    }
-
-  } catch (err) {
-
-    console.error("[PIN BOOT ERROR]", err);
+  if (typeof initPinInjector === "function") {
+    initPinInjector();
   }
+
+  if (typeof startLiveSync === "function") {
+    startLiveSync();
+  }
+
+  // ================= GLOBAL STATE =================
+
+  window.__PIN_BOOT_STATE__.completed = true;
+
+  // ================= EVENT =================
+
+  if (typeof broadcastPinEvent === "function") {
+    broadcastPinEvent("PIN_SYSTEM_READY", {
+      time: Date.now()
+    });
+  }
+
+  console.log("[PIN BOOT] ALL MODULES ACTIVE 🚀");
+}
+
+// ================= STATUS API =================
+function getPinBootStatus() {
+  return window.__PIN_BOOT_STATE__;
 }
 
 // ================= EXPORT =================
-window.initPinSystem = initPinSystem;
+window.getPinBootStatus = getPinBootStatus;
+window.startPinBoot = startBootSequence;
