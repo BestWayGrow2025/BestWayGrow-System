@@ -159,16 +159,21 @@ function renderTable(data) {
 
     let actions = "-";
 
-    if (status === "PENDING") {
-      actions = `
-        <button onclick="PIN_LIVE_ACTION.approve('${req.requestId}')">
-          Approve
-        </button>
-        <button onclick="PIN_LIVE_ACTION.reject('${req.requestId}')">
-          Reject
-        </button>
-      `;
-    }
+   if (status === "PENDING") {
+actions = `
+<button
+  data-pin-action="approve_request"
+  data-request-id="${req.requestId}">
+  Approve
+</button>
+
+<button
+  data-pin-action="reject_request"
+  data-request-id="${req.requestId}">
+  Reject
+</button>
+
+`; }
 
     html += `
       <tr>
