@@ -2,16 +2,16 @@
 
 /*
 ========================================
-SYSTEM MODULE CONNECTOR V2.0 FINAL
+SYSTEM MODULE CONNECTOR V2.1 FINAL
 ========================================
 ✔ Pure connector layer
 ✔ One-way execution flow
-✔ NO rendering logic
-✔ NO placeholder UI
+✔ SAFE module dispatching
+✔ NO UI rendering logic
 ✔ NO business logic
-✔ ONLY module dispatching
-✔ Real module loader integrated
-✔ Enterprise architecture compliant
+✔ SAFE function guards added
+✔ Enterprise production safe
+✔ Loader-compatible architecture
 ========================================
 */
 
@@ -26,6 +26,25 @@ SYSTEM MODULE CONNECTOR V2.0 FINAL
 
 })();
 
+// ================= SAFE CALL WRAPPER =================
+function safeCall(fn, fallback, ...args) {
+
+  try {
+
+    if (typeof fn === "function") {
+      return fn(...args);
+    }
+
+    console.warn("[MODULE MISSING FUNCTION]", fn);
+    return fallback || false;
+
+  } catch (err) {
+
+    console.error("[SAFE CALL ERROR]", err);
+    return false;
+  }
+}
+
 // ================= MAIN CONNECTOR =================
 function connectSystemModule(page) {
 
@@ -39,77 +58,65 @@ function connectSystemModule(page) {
 
       // ================= HOME =================
       case "home":
-
-        return loadHomeDashboardModule();
+        return safeCall(loadHomeDashboardModule);
 
       // ================= CREATE SYS ADMIN =================
       case "create":
-
-        return loadCreateSystemAdminRealModule();
+        return safeCall(loadCreateSystemAdminRealModule);
 
       // ================= USERS =================
       case "users":
-
-        return loadUsersRealModule();
+        return safeCall(loadUsersRealModule);
 
       // ================= SYSTEM =================
       case "system":
-
-        return loadSystemAdminPanelModule();
+        return safeCall(loadSystemAdminPanelModule);
 
       // ================= PIN MASTER =================
       case "pinmaster":
-
-        return loadPinMasterRealModule();
+        return safeCall(loadPinMasterRealModule);
 
       // ================= REPORTS =================
       case "reports":
-
-        return loadReportsRealModule();
+        return safeCall(loadReportsRealModule);
 
       // ================= PRODUCT MASTER =================
       case "productmaster":
-
-        return loadRealModule({
-          html: "admin_pin.html",
-          js: "admin_pin.js"
+        return safeCall(loadRealModule, false, {
+          html: "product_master.html",
+          js: "product_master.js"
         });
 
       // ================= TREE VIEW =================
       case "tree":
-
-        return loadRealModule({
+        return safeCall(loadRealModule, false, {
           html: "user_tree.html",
           js: "tree_system.js"
         });
 
       // ================= AUDIT =================
       case "audit":
-
-        return loadRealModule({
+        return safeCall(loadRealModule, false, {
           html: "admin_activity_log.html",
           js: "admin_activity_log.js"
         });
 
       // ================= HEALTH =================
       case "health":
-
-        return loadRealModule({
+        return safeCall(loadRealModule, false, {
           html: "check_status.html",
           js: "check_status.js"
         });
 
       // ================= BACKUP =================
       case "backup":
-
-        return loadRealModule({
-          html: "system_init.html",
+        return safeCall(loadRealModule, false, {
+          html: "system_backup_panel.html",
           js: "system_backup_manager.js"
         });
 
       // ================= DEFAULT =================
       default:
-
         return loadUnknownSystemModule(route);
     }
 
@@ -164,5 +171,4 @@ function loadUnknownSystemModule(page) {
 }
 
 // ================= EXPORT =================
-window.connectSystemModule =
-  connectSystemModule;
+window.connectSystemModule = connectSystemModule;
