@@ -1,128 +1,58 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin PIN Control</title>
-  <link rel="icon" href="data:,">
+<div class="pin-panel">
 
-  <style>
-    body {
-      font-family: Arial;
-      padding: 20px;
-      background: #f4f7f9;
-    }
+  <h2>PIN CONTROL PANEL</h2>
 
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+  <!-- ================= UPGRADE ================= -->
+  <div class="box">
+    <h3>Upgrade PIN</h3>
+    <input type="number" id="up_bv" placeholder="BV"><br>
+    <input type="number" id="up_amount" placeholder="Amount"><br>
+    <input type="number" id="up_gst" placeholder="GST"><br>
+    <button id="startUpgradeBtn">START</button>
+    <button id="stopUpgradeBtn">STOP</button>
+    <p id="upgradeStatus"></p>
+  </div>
 
-    .box {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
+  <!-- ================= REPURCHASE ================= -->
+  <div class="box">
+    <h3>Repurchase PIN</h3>
+    <input type="number" id="re_bv" placeholder="BV"><br>
+    <input type="number" id="re_amount" placeholder="Amount"><br>
+    <input type="number" id="re_gst" placeholder="GST"><br>
+    <button id="startRepurchaseBtn">START</button>
+    <button id="stopRepurchaseBtn">STOP</button>
+    <p id="repurchaseStatus"></p>
+  </div>
 
-    input, select {
-      padding: 8px;
-      margin: 5px 0;
-      width: 240px;
-    }
+  <!-- ================= REQUESTS ================= -->
+  <div class="box">
+    <h3>PIN Requests</h3>
 
-    button {
-      padding: 8px 12px;
-      margin: 5px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-    }
+    <select id="filter">
+      <option value="ALL">All</option>
+      <option value="PENDING">Pending</option>
+      <option value="PROCESSING">Processing</option>
+      <option value="COMPLETED">Completed</option>
+      <option value="FAILED">Failed</option>
+      <option value="REJECTED">Rejected</option>
+    </select>
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      background: #fff;
-    }
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>User</th>
+          <th>Type</th>
+          <th>Qty</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
 
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-      font-size: 13px;
-    }
-  </style>
-</head>
+      <tbody id="reqTable"></tbody>
+    </table>
 
-<body>
+  </div>
 
-<h2>PIN CONTROL PANEL</h2>
-
-<div class="box">
-  <h3>Upgrade PIN</h3>
-  <input type="number" id="up_bv" placeholder="BV"><br>
-  <input type="number" id="up_amount" placeholder="Amount"><br>
-  <input type="number" id="up_gst" placeholder="GST"><br>
-  <button id="startUpgradeBtn">START</button>
-  <button id="stopUpgradeBtn">STOP</button>
-  <p id="upgradeStatus"></p>
 </div>
-
-<div class="box">
-  <h3>Repurchase PIN</h3>
-  <input type="number" id="re_bv" placeholder="BV"><br>
-  <input type="number" id="re_amount" placeholder="Amount"><br>
-  <input type="number" id="re_gst" placeholder="GST"><br>
-  <button id="startRepurchaseBtn">START</button>
-  <button id="stopRepurchaseBtn">STOP</button>
-  <p id="repurchaseStatus"></p>
-</div>
-
-<div class="box">
-  <h3>PIN Requests</h3>
-
-  <select id="filter">
-    <option value="ALL">All</option>
-    <option value="PENDING">Pending</option>
-    <option value="PROCESSING">Processing</option>
-    <option value="COMPLETED">Completed</option>
-    <option value="FAILED">Failed</option>
-    <option value="REJECTED">Rejected</option>
-  </select>
-
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>User</th>
-        <th>Type</th>
-        <th>Qty</th>
-        <th>Priority</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="reqTable"></tbody>
-  </table>
-</div>
-
-<!-- ================= CORE SYSTEM ================= -->
-<script src="core_system.js"></script>
-<script src="session_manager.js"></script>
-
-<!-- ================= PIN CONTROL LAYER (IMPORTANT ORDER) ================= -->
-<script src="pin_action_control.js"></script>
-<script src="pin_master_system.js"></script>
-<script src="pin_request_system.js"></script>
-<script src="pin_config_system.js"></script>
-
-<!-- ================= STOCK + ROLE CONTROL ================= -->
-<script src="admin_pin_stock.js"></script>
-<script src="system_admin_pin_control.js"></script>
-<script src="super_admin_pin_control.js"></script>
-
-<!-- ================= UI PANEL ================= -->
-<script src="admin_pin_panel.js"></script>
-
-</body>
-</html>
