@@ -1,18 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User Dashboard</title>
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="assets/css/style.css" />
-</head>
-<body>
+<div class="user-dashboard-module">
 
   <div class="dashboard-layout">
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
+
       <div class="logo">User Panel</div>
 
       <button onclick="loadHome()">Home</button>
@@ -34,57 +26,24 @@
       <button onclick="loadKYCSection()">KYC Upload</button>
       <button onclick="loadRankReward()">Rank / Reward</button>
       <button onclick="loadReferralLink()">Referral Link</button>
+
       <button id="logoutBtn">Logout</button>
+
     </aside>
 
     <!-- MAIN PANEL -->
     <main class="main-panel">
-      <div id="welcome" class="welcome-bar">Welcome</div>
-      <div id="mainContent">Loading...</div>
+
+      <div id="welcome" class="welcome-bar">
+        Welcome
+      </div>
+
+      <div id="mainContent">
+        Loading...
+      </div>
+
     </main>
 
   </div>
 
-  <!-- ================= CORE SYSTEM ================= -->
-  <script src="boot_manager.js"></script>
-  <script src="core_system.js"></script>
-  <script src="session_manager.js"></script>
-
-  <!-- ================= SECURITY ================= -->
-  <script src="route_guard.js"></script>
-
-  <!-- ================= DATA ENGINE ================= -->
-  <script src="tree_system.js"></script>
-  <script src="activity_log.js"></script>
-
-  <!-- ================= PIN ENGINE ================= -->
-  <script src="pin_product_master.js"></script>
-  <script src="pin_master_system.js"></script>
-  <script src="pin_request_system.js"></script>
-
-  <!-- ================= FEATURE MODULES ================= -->
-  <script src="user_tree.js"></script>
-  <script src="user_pin_section.js"></script>
-
-  <script src="user_wallet_dashboard.js"></script>
-  <script src="user_wallet_history.js"></script>
-
-  <script src="user_profile_panel.js"></script>
-  <script src="user_income_history.js"></script>
-
-  <script src="user_withdraw_system.js"></script>
-  <script src="user_notifications_panel.js"></script>
-  <script src="user_support_tickets.js"></script>
-
-  <script src="user_login_history.js"></script>
-  <script src="user_kyc_upload.js"></script>
-  <script src="user_rank_reward_system.js"></script>
-
-  <!-- ================= SAFETY WRAPPER ================= -->
-  <script src="dashboard_menu.js"></script>
-
-  <!-- ================= MAIN DASHBOARD ================= -->
-  <script src="user_dashboard.js"></script>
-
-</body>
-</html>
+</div>
