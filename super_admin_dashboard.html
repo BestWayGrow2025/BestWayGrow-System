@@ -1,337 +1,62 @@
- <!DOCTYPE html>
-<html>
-<head>
-  <title>Super Admin Dashboard V4.0 FINAL MASTER CONTROL</title>
-  <link rel="icon" href="data:,">
+<div class="super-admin-dashboard-module">
 
-  <style>
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      margin: 0;
-      background: #eef2f7;
-    }
+  <header>
+    <h2>👑 SUPER ADMIN MASTER CONTROL</h2>
+    <p id="welcome"></p>
+    <button id="logoutBtn">Logout</button>
+  </header>
 
-    header {
-      background: #ff6600;
-      color: #ffffff;
-      padding: 18px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    }
+  <div class="menu">
 
-    header h2 {
-      margin: 0 0 8px 0;
-    }
+    <button data-page="home">🏠 Home</button>
+    <button data-page="create">👑 Create Sys Admin</button>
+    <button data-page="users">👥 Users</button>
+    <button data-page="system">⚙️ System</button>
 
-    header p {
-      margin: 6px 0;
-      font-weight: 600;
-    }
+    <button data-page="pinmaster">📌 PIN Master</button>
+    <button data-page="productmaster">📦 Product Master</button>
+    <button data-page="rankmaster">🏆 Rank Master</button>
+    <button data-page="incomecontrol">💰 Income Control</button>
 
-    header button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      background: #ff4d4d;
-      color: #ffffff;
-      cursor: pointer;
-      font-weight: 600;
-    }
+    <button data-page="audit">📜 Audit</button>
+    <button data-page="health">🩺 Health</button>
+    <button data-page="backup">💾 Backup</button>
+    <button data-page="aigovernor">🤖 AI Governor</button>
 
-    header button:hover {
-      opacity: 0.92;
-    }
+    <button data-page="escrow">📦 Escrow Control</button>
 
-    .menu {
-      display: flex;
-      gap: 10px;
-      background: #ffffff;
-      padding: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
+    <button data-page="controlroom">🖥 Enterprise Control Room</button>
+    <button data-page="businessintelligence">📊 Business Intelligence</button>
+    <button data-page="strategicai">🧠 Strategic AI Advisor</button>
 
-    .menu button {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 20px;
-      background: #ff944d;
-      color: #ffffff;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s ease;
-    }
+    <button data-page="auditblockchain">⛓ Enterprise Audit Blockchain</button>
+    <button data-page="realtime">📡 Live System Realtime</button>
+    <button data-page="payments">💳 Payment Gateway</button>
+    <button data-page="orchestrator">🧩 Orchestrator Kernel</button>
+    <button data-page="healthmonitor">🩺 Advanced Health Monitor</button>
 
-    .menu button:hover {
-      transform: translateY(-1px);
-      opacity: 0.95;
-    }
+    <button data-page="eventmonitor">📡 Event Monitor</button>
+    <button data-page="eventstream">🌊 Event Stream</button>
 
-    .menu button.active {
-      background: #cc5200;
-    }
+    <button data-page="reports">📊 Reports</button>
+    <button data-page="tree">🌳 Tree View</button>
+    <button data-page="reset">♻️ Reset</button>
 
-    .container {
-      padding: 20px;
-    }
+  </div>
 
-    .card {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 1100px;
-      margin: auto;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      min-height: 400px;
-    }
+  <div class="container">
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
+    <div id="mainContent" class="card"></div>
 
-    table th,
-    table td {
-      border: 1px solid #dddddd;
-      padding: 8px;
-      text-align: left;
-    }
+    <div id="pinLivePanel" class="card"></div>
 
-    table th {
-      background: #f7f7f7;
-    }
+    <div id="eventMonitorPanel"></div>
+    <div id="systemBackupPanel"></div>
+    <div id="systemAuditPanel"></div>
+    <div id="systemControlRoomPanel"></div>
+    <div id="systemHealthPanel"></div>
+    <div id="systemEventStreamPanel"></div>
 
-    #eventMonitorPanel,
-    #systemBackupPanel,
-    #systemAuditPanel,
-    #systemControlRoomPanel,
-    #systemHealthPanel,
-    #systemEventStreamPanel {
-      margin-top: 20px;
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 1100px;
-      margin-left: auto;
-      margin-right: auto;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    @media (max-width: 768px) {
-      .container {
-        padding: 10px;
-      }
-
-      .card {
-        padding: 15px;
-      }
-
-      .menu {
-        gap: 8px;
-      }
-
-      .menu button {
-        padding: 8px 12px;
-        font-size: 14px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-<header>
-  <h2>👑 SUPER ADMIN MASTER CONTROL</h2>
-  <p id="welcome"></p>
-  <button id="logoutBtn">Logout</button>
-</header>
-
-<!-- ================= MASTER MENU ================= -->
-<div class="menu">
-
-  <button data-page="home">🏠 Home</button>
-  <button data-page="create">👑 Create Sys Admin</button>
-  <button data-page="users">👥 Users</button>
-  <button data-page="system">⚙️ System</button>
-
-  <!-- ================= CORE BUSINESS ================= -->
-  <button data-page="pinmaster">📌 PIN Master</button>
-  <button data-page="productmaster">📦 Product Master</button>
-  <button data-page="rankmaster">🏆 Rank Master</button>
-  <button data-page="incomecontrol">💰 Income Control</button>
-
-  <!-- ================= GOVERNANCE ================= -->
-  <button data-page="audit">📜 Audit</button>
-  <button data-page="health">🩺 Health</button>
-  <button data-page="backup">💾 Backup</button>
-  <button data-page="aigovernor">🤖 AI Governor</button>
-
-  <!-- ================= FINANCIAL CONTROL ================= -->
-  <button data-page="escrow">📦 Escrow Control</button>
-
-  <!-- ================= EXECUTIVE DASHBOARDS ================= -->
-  <button data-page="controlroom">🖥 Enterprise Control Room</button>
-  <button data-page="businessintelligence">📊 Business Intelligence</button>
-  <button data-page="strategicai">🧠 Strategic AI Advisor</button>
-
-  <!-- ================= ENTERPRISE PLATFORM INTEGRATION ================= -->
-  <button data-page="auditblockchain">⛓ Enterprise Audit Blockchain</button>
-  <button data-page="realtime">📡 Live System Realtime</button>
-  <button data-page="payments">💳 Payment Gateway</button>
-  <button data-page="orchestrator">🧩 Orchestrator Kernel</button>
-  <button data-page="healthmonitor">🩺 Advanced Health Monitor</button>
-
-  <!-- ================= LIVE MONITORING ================= -->
-  <button data-page="eventmonitor">📡 Event Monitor</button>
-  <button data-page="eventstream">🌊 Event Stream</button>
-
-  <!-- ================= STANDARD REPORTING ================= -->
-  <button data-page="reports">📊 Reports</button>
-  <button data-page="tree">🌳 Tree View</button>
-  <button data-page="reset">♻️ Reset</button>
+  </div>
 
 </div>
-
-<div class="container">
-
-  <div id="mainContent" class="card"></div>
-
-  <!-- ================= PIN LIVE SYSTEM ================= -->
-  <div id="pinLivePanel" class="card"></div>
-
-  <!-- ================= ENTERPRISE PANELS ================= -->
-  <div id="eventMonitorPanel"></div>
-  <div id="systemBackupPanel"></div>
-  <div id="systemAuditPanel"></div>
-  <div id="systemControlRoomPanel"></div>
-  <div id="systemHealthPanel"></div>
-  <div id="systemEventStreamPanel"></div>
-
-</div>
-  
-<!-- ================= CORE ================= -->
-<script src="core_system.js"></script>
-<script src="session_manager.js"></script>
-<script src="route_guard.js"></script>
-
-<!-- ================= BOOT MODE ================= -->
-<script>
-window.__SYSTEM_BOOT_MODE__ = "SEQUENTIAL";
-</script>
-
-<!-- ================= EVENT LAYER ================= -->
-<script src="activity_log.js"></script>
-<script src="system_event_hub.js"></script>
-<script src="pin_event_bus.js"></script>
-
-<!-- ================= DIAGNOSTICS ================= -->
-<script src="system_diagnostics.js"></script>
-
-<!-- ================= CONTROL CENTER ================= -->
-<script src="system_control_center.js"></script>
-
-<!-- ================= LAYER CONTROLLER ================= -->
-<script src="system_layer_controller.js"></script>
-
-<!-- ================= RECOVERY ================= -->
-<script src="system_recovery_manager.js"></script>
-
-<!-- ================= ORCHESTRATION ================= -->
-<script src="system_orchestrator_ai.js"></script>
-
-<!-- ================= HEALTH ================= -->
-<script src="system_health_dashboard.js"></script>
-
-<!-- ================= GOVERNANCE ================= -->
-<script src="system_os_mode.js"></script>
-<script src="system_ai_governor.js"></script>
-<script src="system_self_coherence_layer.js"></script>
-
-<!-- ================= EXECUTION GOVERNOR ================= -->
-<script src="system_execution_governor.js"></script>
-
-<!-- ================= BACKUP ================= -->
-<script src="system_backup_manager.js"></script>
-<script src="system_backup_panel.js"></script>
-
-<!-- ================= AUDIT ================= -->
-<script src="system_audit_trail.js"></script>
-<script src="system_audit_panel.js"></script>
-
-<!-- ================= ENTERPRISE AUDIT BLOCKCHAIN ================= -->
-<script src="enterprise_audit_blockchain.js"></script>
-
-<!-- ================= LIVE SYSTEM REALTIME ================= -->
-<script src="live_system_realtime.js"></script>
-
-<!-- ================= PAYMENT GATEWAY ================= -->
-<script src="payment_gateway_bridge.js"></script>
-
-<!-- ================= ORCHESTRATOR KERNEL ================= -->
-<script src="system_orchestrator_kernel.js"></script>
-
-<!-- ================= ADVANCED HEALTH MONITOR ================= -->
-<script src="system_health_monitor.js"></script>
-
-<!-- ================= PIN SYSTEM ================= -->
-<script src="pin_product_master.js"></script>
-<script src="pin_master_system.js"></script>
-<script src="pin_request_system.js"></script>
-<script src="pin_access_router.js"></script>
-<script src="pin_ui_router.js"></script>
-<script src="pin_ui_injector.js"></script>
-<script src="pin_flow_controller.js"></script>
-<script src="pin_request_processor_engine.js"></script>
-<script src="pin_request_queue_engine.js"></script>
-<script src="pin_runtime_bootstrap.js"></script>
-<script src="pin_live_orchestrator.js"></script>
-<script src="pin_live_bridge.js"></script>
-<script src="pin_live_request_panel.js"></script>
-
-<!-- ================= EVENT BRIDGES ================= -->
-<script src="upgrade_event_bridge.js"></script>
-<script src="wallet_event_bridge.js"></script>
-<script src="income_event_bridge.js"></script>
-<script src="payout_event_bridge.js"></script>
-
-<!-- ================= TREE SYSTEM ================= -->
-<script src="tree_system.js"></script>
-<script src="registration_tree_engine.js"></script>
-
-<!-- ================= SUPER ADMIN PIN CONTROL ================= -->
-<script src="super_admin_pin_control.js"></script>
-
-<!-- ================= EXECUTIVE MODULES ================= -->
-<script src="enterprise_control_room_dashboard.js"></script>
-<script src="enterprise_business_intelligence_dashboard.js"></script>
-<script src="strategic_ai_advisor.js"></script>
-
-<!-- ================= CORE ENGINE ================= -->
-<script src="enterprise_core_engine.js"></script>
-
-<!-- ================= AUTO WIRING ================= -->
-<script src="enterprise_auto_wiring_layer.js"></script>
-
-<!-- ================= PAGE REGISTRY ================= -->
-<script src="super_admin_page_registry.js"></script>
-
-<!-- ================= CREATE SYSTEM ADMIN PANEL ================= -->
-<script src="create_system_admin_panel.js"></script>
-
-<!-- ================= MODULE LOADER ================= -->
-<script src="super_admin_module_loader.js"></script>
-
-<!-- ================= NAVIGATION CORE ================= -->
-<script src="navigation_core.js"></script>
-
-<!-- ================= DASHBOARD UI ================= -->
-<script src="super_admin_dashboard.js"></script>
-
-<!-- ================= BOOT CONTROLLER ================= -->
-<script src="boot_manager.js"></script>
-
-</body>
-</html>
