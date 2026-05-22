@@ -1,57 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Income Control</title>
-  <link rel="icon" href="data:,">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f4f7f9;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    h2, h3 {
-      margin-top: 0;
-    }
-
-    button {
-      padding: 10px 14px;
-      margin: 5px 5px 5px 0;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      color: white;
-    }
-
-    .on-btn {
-      background: #28a745;
-    }
-
-    .off-btn {
-      background: #dc3545;
-    }
-
-    .status {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
+<div class="income-control-panel">
 
   <div class="card">
     <h2>Income Control Panel</h2>
   </div>
 
+  <!-- ================= UGLI ================= -->
   <div class="card">
     <h3>UGLI (Upgrade Income)</h3>
     <button class="on-btn" id="ugliOnBtn">ON</button>
@@ -59,6 +12,7 @@
     <p class="status" id="ugliStatus"></p>
   </div>
 
+  <!-- ================= RLI ================= -->
   <div class="card">
     <h3>RLI (Repurchase Income)</h3>
     <button class="on-btn" id="rliOnBtn">ON</button>
@@ -66,6 +20,7 @@
     <p class="status" id="rliStatus"></p>
   </div>
 
+  <!-- ================= BINARY ================= -->
   <div class="card">
     <h3>Binary Income (Future)</h3>
     <button class="on-btn" id="binaryOnBtn">ON</button>
@@ -73,9 +28,4 @@
     <p class="status" id="binaryStatus"></p>
   </div>
 
-  <script src="core_system.js"></script>
-  <script src="session_manager.js"></script>
-  <script src="admin_income_control.js"></script>
-</body>
-</html>
-
+</div>
