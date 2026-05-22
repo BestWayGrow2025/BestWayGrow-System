@@ -1,124 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Dashboard</title>
-  <link rel="icon" href="data:,">
+<div class="admin-dashboard-module">
 
-  <style>
-    body{
-      font-family:'Segoe UI',Arial,sans-serif;
-      margin:0;
-      background:linear-gradient(135deg,#eef2f7,#e6ecf5);
-    }
-    header{
-      background:linear-gradient(135deg,#000,#434343);
-      color:#fff;
-      padding:18px;
-      text-align:center;
-    }
-    header button{
-      margin-top:10px;
-      padding:6px 12px;
-      border:none;
-      border-radius:6px;
-      background:#ff4d4d;
-      color:#fff;
-      cursor:pointer;
-    }
-    .menu{
-      display:flex;
-      overflow-x:auto;
-      background:#fff;
-      padding:10px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.08);
-    }
-    .menu button{
-      margin:5px;
-      padding:10px 14px;
-      border:none;
-      border-radius:20px;
-      background:linear-gradient(135deg,#007bff,#00c6ff);
-      color:#fff;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-    .menu button.active{
-      background:linear-gradient(135deg,#003f88,#0059b3);
-    }
-    .container{
-      padding:20px;
-    }
-    .card{
-      background:#fff;
-      padding:20px;
-      border-radius:15px;
-      max-width:1000px;
-      margin:auto;
-      box-shadow:0 3px 12px rgba(0,0,0,0.08);
-    }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:10px;
-      font-size:13px;
-    }
-    th, td{
-      border:1px solid #eee;
-      padding:10px;
-      text-align:center;
-    }
-  </style>
-</head>
+  <header>
+    <h2>👨‍💼 ADMIN DASHBOARD</h2>
+    <p id="welcome"></p>
+    <button id="logoutBtn">Logout</button>
+  </header>
 
-<body>
+  <div class="menu">
 
-<header>
-  <h2>👨‍💼 ADMIN DASHBOARD</h2>
-  <p id="welcome"></p>
-  <button id="logoutBtn">Logout</button>
-</header>
+    <button data-page="home">Home</button>
+    <button data-page="users">Users</button>
+    <button data-page="pinmaster">PIN</button>
+    <button data-page="system">System</button>
+    <button data-page="reports">Reports</button>
 
-<div class="menu">
-  <button data-page="home">Home</button>
-  <button data-page="users">Users</button>
-  <button data-page="pins">PIN</button>
-  <button data-page="wallet">Wallet</button>
-  <button data-page="income">Income</button>
-  <button data-page="system">System</button>
+  </div>
+
+  <div class="container">
+    <div id="mainContent" class="card">
+      Loading...
+    </div>
+  </div>
+
 </div>
-
-<div class="container">
-  <div id="mainContent" class="card">Loading...</div>
-</div>
-
-<!-- BOOT ARCHITECTURE V2 -->
-<script src="boot_manager.js"></script>
-
-<!-- CORE -->
-<script src="core_system.js"></script>
-<script src="session_manager.js"></script>
-
-<!-- SECURITY -->
-<script src="route_guard.js"></script>
-
-<!-- SUPPORT MODULES -->
-<script src="activity_log.js"></script>
-<script src="wallet_system.js"></script>
-<script src="registration_queue.js"></script>
-<script src="system_config.js"></script>
-<script src="trigger_system.js"></script>
-<script src="hold_income_system.js"></script>
-<script src="income_control_system.js"></script>
-<script src="income_log_system.js"></script>
-<script src="income_engine.js"></script>
-
-<!-- PIN SYSTEM -->
-<script src="pin_product_master.js"></script>
-<script src="pin_master_system.js"></script>
-<script src="pin_request_system.js"></script>
-
-<!-- DASHBOARD -->
-<script src="admin_dashboard.js"></script>
-
-</body>
-</html>
