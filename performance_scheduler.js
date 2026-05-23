@@ -2,287 +2,154 @@
 
 /*
 ========================================
-PERFORMANCE SCHEDULER v1.1 (ENTERPRISE FINAL)
+PERFORMANCE SCHEDULER v1.0 (FINAL CORE)
 ========================================
-✔ Centralized runtime scheduling
-✔ Prevents UI render flooding
-✔ Debounce + throttle protection
-✔ Safe task queue execution
-✔ Idle-time optimization
-✔ Duplicate schedule prevention
-✔ Low-priority background execution
+✔ Throttle + debounce engine
+✔ Frame scheduling (RAF)
+✔ Idle task support
+✔ Queue-based execution
+✔ Prevents UI flood + render spikes
 ✔ Memory-safe timers
-✔ Enterprise runtime governance layer
-✔ Cleanup-safe lifecycle management
+✔ Duplicate call protection
 ✔ Production LOCKED
 ========================================
 */
 
 (function () {
 
-  // ========================================
-  // DUPLICATE LOAD PROTECTION
-  // ========================================
-  if (window.__PERFORMANCE_SCHEDULER__) {
-    console.log("[PERFORMANCE SCHEDULER] Already Loaded");
-    return;
-  }
+  // ================= GUARD =================
+  if (window.__PERFORMANCE_SCHEDULER__) return;
 
   window.__PERFORMANCE_SCHEDULER__ = {
     loaded: true,
-    version: "1.1"
+    version: "1.0"
   };
 
-  console.log("[PERFORMANCE SCHEDULER] Initializing");
+  console.log("[SCHEDULER] ACTIVE");
 
-  // ========================================
-  // INTERNAL STATE
-  // ========================================
-  const TASK_QUEUE = [];
-  const ACTIVE_TIMERS = Object.create(null);
-  const ACTIVE_FRAMES = Object.create(null);
-  const ACTIVE_IDLE = Object.create(null);
+  // ================= INTERNAL STATE =================
+  const timers = Object.create(null);
+  const frames = Object.create(null);
+  const idleTasks = Object.create(null);
+  const queue = [];
 
-  // ========================================
-  // SAFE EXECUTION
-  // ========================================
-  function safeExecute(fn, label = "anonymous") {
+  let processing = false;
 
+  // ================= SAFE EXEC =================
+  function safe(fn, label = "task") {
     try {
-
-      if (typeof fn !== "function") {
-        return;
-      }
-
-      return fn();
-
+      return typeof fn === "function" ? fn() : null;
     } catch (err) {
-
-      console.error(
-        "[PERFORMANCE SCHEDULER ERROR]",
-        label,
-        err
-      );
+      console.error("[SCHEDULER ERROR]", label, err);
     }
   }
 
-  // ========================================
-  // THROTTLE
-  // ========================================
-  function throttle(key, fn, delay = 250) {
+  // ================= THROTTLE =================
+  function throttle(key, fn, delay = 200) {
+    if (!key || typeof fn !== "function") return;
+    if (timers[key]) return;
 
-    if (!key || typeof fn !== "function") {
-      return;
-    }
-
-    if (ACTIVE_TIMERS[key]) {
-      return;
-    }
-
-    ACTIVE_TIMERS[key] = setTimeout(function () {
-
-      safeExecute(fn, key);
-
-      clearTimeout(ACTIVE_TIMERS[key]);
-      delete ACTIVE_TIMERS[key];
-
+    timers[key] = setTimeout(() => {
+      safe(fn, key);
+      clearTimeout(timers[key]);
+      delete timers[key];
     }, delay);
   }
 
-  // ========================================
-  // DEBOUNCE
-  // ========================================
-  function debounce(key, fn, delay = 300) {
+  // ================= DEBOUNCE =================
+  function debounce(key, fn, delay = 250) {
+    if (!key || typeof fn !== "function") return;
 
-    if (!key || typeof fn !== "function") {
-      return;
+    if (timers[key]) {
+      clearTimeout(timers[key]);
     }
 
-    if (ACTIVE_TIMERS[key]) {
-      clearTimeout(ACTIVE_TIMERS[key]);
-    }
-
-    ACTIVE_TIMERS[key] = setTimeout(function () {
-
-      safeExecute(fn, key);
-
-      clearTimeout(ACTIVE_TIMERS[key]);
-      delete ACTIVE_TIMERS[key];
-
+    timers[key] = setTimeout(() => {
+      safe(fn, key);
+      clearTimeout(timers[key]);
+      delete timers[key];
     }, delay);
   }
 
-  // ========================================
-  // REQUEST ANIMATION FRAME
-  // ========================================
-  function scheduleFrame(key, fn) {
+  // ================= RAF =================
+  function frame(key, fn) {
+    if (!key || typeof fn !== "function") return;
 
-    if (!key || typeof fn !== "function") {
-      return;
+    if (frames[key]) {
+      cancelAnimationFrame(frames[key]);
     }
 
-    if (ACTIVE_FRAMES[key]) {
-      cancelAnimationFrame(ACTIVE_FRAMES[key]);
-    }
-
-    ACTIVE_FRAMES[key] = requestAnimationFrame(function () {
-
-      safeExecute(fn, key);
-
-      delete ACTIVE_FRAMES[key];
+    frames[key] = requestAnimationFrame(() => {
+      safe(fn, key);
+      delete frames[key];
     });
   }
 
-  // ========================================
-  // IDLE TASK
-  // ========================================
-  function scheduleIdle(key, fn, timeout = 1000) {
+  // ================= IDLE =================
+  function idle(key, fn, timeout = 1000) {
+    if (!key || typeof fn !== "function") return;
 
-    if (!key || typeof fn !== "function") {
-      return;
-    }
+    if (idleTasks[key]) return;
 
-    // Prevent duplicate idle jobs
-    if (ACTIVE_IDLE[key]) {
-      return;
-    }
+    const run = () => {
+      safe(fn, key);
+      delete idleTasks[key];
+    };
 
     if (typeof requestIdleCallback === "function") {
-
-      ACTIVE_IDLE[key] = requestIdleCallback(function () {
-
-        safeExecute(fn, key);
-
-        delete ACTIVE_IDLE[key];
-
-      }, { timeout });
-
+      idleTasks[key] = requestIdleCallback(run, { timeout });
     } else {
-
-      ACTIVE_IDLE[key] = setTimeout(function () {
-
-        safeExecute(fn, key);
-
-        delete ACTIVE_IDLE[key];
-
-      }, timeout);
+      idleTasks[key] = setTimeout(run, timeout);
     }
   }
 
-  // ========================================
-  // TASK QUEUE
-  // ========================================
+  // ================= QUEUE =================
   function queueTask(fn, priority = "normal") {
+    if (typeof fn !== "function") return;
 
-    if (typeof fn !== "function") {
-      return;
-    }
-
-    TASK_QUEUE.push({
+    queue.push({
       fn,
       priority,
-      timestamp: Date.now()
+      time: Date.now()
     });
   }
 
-  // ========================================
-  // PROCESS QUEUE
-  // ========================================
+  // ================= PROCESS QUEUE =================
   function processQueue() {
+    if (processing || queue.length === 0) return;
 
-    if (!TASK_QUEUE.length) {
-      return;
-    }
+    processing = true;
 
-    const high = TASK_QUEUE.filter(
-      t => t.priority === "high"
-    );
+    const high = queue.filter(t => t.priority === "high");
+    const normal = queue.filter(t => t.priority === "normal");
+    const low = queue.filter(t => t.priority === "low");
 
-    const normal = TASK_QUEUE.filter(
-      t => t.priority === "normal"
-    );
-
-    const low = TASK_QUEUE.filter(
-      t => t.priority === "low"
-    );
-
-    TASK_QUEUE.length = 0;
+    queue.length = 0;
 
     [...high, ...normal, ...low].forEach(task => {
-      safeExecute(task.fn, "queued-task");
+      safe(task.fn, "queue");
     });
+
+    processing = false;
   }
 
-  // ========================================
-  // AUTO PROCESS LOOP
-  // ========================================
-  const PROCESSOR_INTERVAL = setInterval(
-    processQueue,
-    250
-  );
+  // ================= LOOP =================
+  setInterval(processQueue, 250);
 
-  // ========================================
-  // CLEANUP GOVERNANCE
-  // ========================================
-  window.addEventListener("beforeunload", function () {
-
-    Object.keys(ACTIVE_TIMERS).forEach(key => {
-      clearTimeout(ACTIVE_TIMERS[key]);
-    });
-
-    Object.keys(ACTIVE_FRAMES).forEach(key => {
-      cancelAnimationFrame(ACTIVE_FRAMES[key]);
-    });
-
-    Object.keys(ACTIVE_IDLE).forEach(key => {
-
-      try {
-
-        if (typeof cancelIdleCallback === "function") {
-          cancelIdleCallback(ACTIVE_IDLE[key]);
-        } else {
-          clearTimeout(ACTIVE_IDLE[key]);
-        }
-
-      } catch (_) {}
-
-    });
-
-    clearInterval(PROCESSOR_INTERVAL);
-
-  });
-
-  // ========================================
-  // GLOBAL HELPERS
-  // ========================================
+  // ================= GLOBAL API =================
   window.performanceThrottle = throttle;
   window.performanceDebounce = debounce;
-  window.performanceFrame = scheduleFrame;
-  window.performanceIdle = scheduleIdle;
+  window.performanceFrame = frame;
+  window.performanceIdle = idle;
   window.performanceQueueTask = queueTask;
 
-  // ========================================
-  // RUNTIME GOVERNANCE INTEGRATION
-  // ========================================
-  if (
-    window.SYSTEM_EVENTS &&
-    typeof window.SYSTEM_EVENTS.on === "function"
-  ) {
-
-    window.SYSTEM_EVENTS.on(
-      "SYSTEM_READY",
-      function () {
-
-        console.log(
-          "[PERFORMANCE SCHEDULER] SYSTEM READY LINKED"
-        );
-      }
-    );
+  // ================= SYSTEM READY HOOK =================
+  if (window.SYSTEM_EVENTS?.on) {
+    window.SYSTEM_EVENTS.on("SYSTEM_READY", () => {
+      console.log("[SCHEDULER] SYSTEM READY LINKED");
+    });
   }
 
-  // ========================================
-  // FINAL READY
-  // ========================================
-  console.log("[PERFORMANCE SCHEDULER] READY");
+  console.log("[SCHEDULER] READY");
 
 })();
