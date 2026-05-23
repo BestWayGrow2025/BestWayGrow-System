@@ -2,7 +2,7 @@
 
 /*
 ========================================
-PERFORMANCE SCHEDULER v1.0 (ENTERPRISE FINAL)
+PERFORMANCE SCHEDULER v1.1 (ENTERPRISE FINAL)
 ========================================
 ✔ Centralized runtime scheduling
 ✔ Prevents UI render flooding
@@ -13,6 +13,7 @@ PERFORMANCE SCHEDULER v1.0 (ENTERPRISE FINAL)
 ✔ Low-priority background execution
 ✔ Memory-safe timers
 ✔ Enterprise runtime governance layer
+✔ Cleanup-safe lifecycle management
 ✔ Production LOCKED
 ========================================
 */
@@ -29,7 +30,7 @@ PERFORMANCE SCHEDULER v1.0 (ENTERPRISE FINAL)
 
   window.__PERFORMANCE_SCHEDULER__ = {
     loaded: true,
-    version: "1.0"
+    version: "1.1"
   };
 
   console.log("[PERFORMANCE SCHEDULER] Initializing");
@@ -193,9 +194,17 @@ PERFORMANCE SCHEDULER v1.0 (ENTERPRISE FINAL)
       return;
     }
 
-    const high = TASK_QUEUE.filter(t => t.priority === "high");
-    const normal = TASK_QUEUE.filter(t => t.priority === "normal");
-    const low = TASK_QUEUE.filter(t => t.priority === "low");
+    const high = TASK_QUEUE.filter(
+      t => t.priority === "high"
+    );
+
+    const normal = TASK_QUEUE.filter(
+      t => t.priority === "normal"
+    );
+
+    const low = TASK_QUEUE.filter(
+      t => t.priority === "low"
+    );
 
     TASK_QUEUE.length = 0;
 
@@ -207,7 +216,41 @@ PERFORMANCE SCHEDULER v1.0 (ENTERPRISE FINAL)
   // ========================================
   // AUTO PROCESS LOOP
   // ========================================
-  setInterval(processQueue, 250);
+  const PROCESSOR_INTERVAL = setInterval(
+    processQueue,
+    250
+  );
+
+  // ========================================
+  // CLEANUP GOVERNANCE
+  // ========================================
+  window.addEventListener("beforeunload", function () {
+
+    Object.keys(ACTIVE_TIMERS).forEach(key => {
+      clearTimeout(ACTIVE_TIMERS[key]);
+    });
+
+    Object.keys(ACTIVE_FRAMES).forEach(key => {
+      cancelAnimationFrame(ACTIVE_FRAMES[key]);
+    });
+
+    Object.keys(ACTIVE_IDLE).forEach(key => {
+
+      try {
+
+        if (typeof cancelIdleCallback === "function") {
+          cancelIdleCallback(ACTIVE_IDLE[key]);
+        } else {
+          clearTimeout(ACTIVE_IDLE[key]);
+        }
+
+      } catch (_) {}
+
+    });
+
+    clearInterval(PROCESSOR_INTERVAL);
+
+  });
 
   // ========================================
   // GLOBAL HELPERS
@@ -221,8 +264,10 @@ PERFORMANCE SCHEDULER v1.0 (ENTERPRISE FINAL)
   // ========================================
   // RUNTIME GOVERNANCE INTEGRATION
   // ========================================
-  if (window.SYSTEM_EVENTS &&
-      typeof window.SYSTEM_EVENTS.on === "function") {
+  if (
+    window.SYSTEM_EVENTS &&
+    typeof window.SYSTEM_EVENTS.on === "function"
+  ) {
 
     window.SYSTEM_EVENTS.on(
       "SYSTEM_READY",
