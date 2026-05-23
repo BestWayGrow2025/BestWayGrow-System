@@ -2,7 +2,7 @@
 
 /*
 ========================================
-NAVIGATION CORE v2.0 (CLEAN CREATE)
+NAVIGATION CORE v2.1 FINAL
 ========================================
 ✔ Single routing authority
 ✔ Works with Core Engine
@@ -10,12 +10,21 @@ NAVIGATION CORE v2.0 (CLEAN CREATE)
 ✔ No duplicate listeners
 ✔ Safe enterprise navigation
 ✔ Production stable
+✔ Runtime-safe active switching
+✔ Duplicate DOM binding prevention
 ========================================
 */
 
 (function () {
 
-  document.addEventListener("DOMContentLoaded", initNavigationCore);
+  if (window.__NAVIGATION_CORE__) return;
+
+  window.__NAVIGATION_CORE__ = true;
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initNavigationCore
+  );
 
 })();
 
@@ -23,26 +32,39 @@ NAVIGATION CORE v2.0 (CLEAN CREATE)
 
 function initNavigationCore() {
 
-  const menu = document.querySelector(".menu");
+  const menu =
+    document.querySelector(".menu");
+
   if (!menu) return;
 
-  // Prevent duplicate binding (IMPORTANT FIX)
+  // Prevent duplicate binding
   if (menu.__NAV_BOUND__) return;
+
   menu.__NAV_BOUND__ = true;
 
-  menu.addEventListener("click", routeClick);
+  menu.addEventListener(
+    "click",
+    routeClick
+  );
 
-  console.log("[NAV CORE] READY v2.0");
+  console.log(
+    "[NAV CORE] READY v2.1"
+  );
 }
 
 /* ================= ROUTE CLICK ================= */
 
 function routeClick(e) {
 
-  const btn = e.target.closest("button[data-page]");
+  const btn =
+    e.target.closest(
+      "button[data-page]"
+    );
+
   if (!btn) return;
 
-  const page = btn.dataset.page;
+  const page =
+    btn.dataset.page;
 
   if (!page) return;
 
@@ -57,48 +79,70 @@ function navigate(page, btn) {
 
     setActive(btn);
 
-    // STEP 1 → Core Engine (PRIMARY)
-    if (window.ENTERPRISE_CORE_ENGINE?.run) {
+    // ================= PRIMARY ENGINE =================
+    if (
+      window
+        .ENTERPRISE_CORE_ENGINE
+        ?.run
+    ) {
 
-      const result = window.ENTERPRISE_CORE_ENGINE.run(page);
+      const result =
+        window
+          .ENTERPRISE_CORE_ENGINE
+          .run(page);
 
       if (result !== undefined) {
-        console.log("[NAV CORE] ENGINE ROUTED:", page);
+
+        console.log(
+          "[NAV CORE] ENGINE ROUTED:",
+          page
+        );
+
         return;
       }
     }
 
-    // STEP 2 → Page Registry fallback
-    if (window.ENTERPRISE_CORE_ENGINE?.modules?.[page]) {
-      window.ENTERPRISE_CORE_ENGINE.modules[page]();
-      console.log("[NAV CORE] MODULE ROUTED:", page);
+    // ================= MODULE REGISTRY =================
+    if (
+      window
+        .ENTERPRISE_CORE_ENGINE
+        ?.modules?.[page]
+    ) {
+
+      window
+        .ENTERPRISE_CORE_ENGINE
+        .modules[page]();
+
+      console.log(
+        "[NAV CORE] MODULE ROUTED:",
+        page
+      );
+
       return;
     }
 
-    // STEP 3 → Global fallback
-    if (typeof window[page] === "function") {
+    // ================= GLOBAL FALLBACK =================
+    if (
+      typeof window[page] ===
+      "function"
+    ) {
+
       window[page]();
-      console.log("[NAV CORE] GLOBAL ROUTED:", page);
+
+      console.log(
+        "[NAV CORE] GLOBAL ROUTED:",
+        page
+      );
+
       return;
     }
 
-    console.warn("[NAV CORE] NOT FOUND:", page);
+    console.warn(
+      "[NAV CORE] NOT FOUND:",
+      page
+    );
 
   } catch (err) {
-    console.error("[NAV CORE ERROR]", err);
-  }
-}
 
-/* ================= ACTIVE UI ================= */
-
-function setActive(btn) {
-
-  document.querySelectorAll(".menu button")
-    .forEach(b => b.classList.remove("active"));
-
-  if (btn) btn.classList.add("active");
-}
-
-/* ================= GLOBAL ================= */
-
-window.navigateTo = navigate;
+    console.error(
+      "[
