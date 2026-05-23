@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SYSTEM DIAGNOSTICS V1.0 (HEALTH MONITOR)
+SYSTEM DIAGNOSTICS V1.1 (HEALTH MONITOR - STABLE CORE)
 ========================================
 ✔ Enterprise system health monitoring
 ✔ Module presence verification
@@ -11,6 +11,8 @@ SYSTEM DIAGNOSTICS V1.0 (HEALTH MONITOR)
 ✔ Missing module detection
 ✔ Runtime status overview
 ✔ Safe read-only monitoring
+✔ Duplicate interval protection
+✔ Render loop protection
 ✔ Production LOCKED
 ========================================
 */
@@ -18,28 +20,23 @@ SYSTEM DIAGNOSTICS V1.0 (HEALTH MONITOR)
 // ================= CONFIG =================
 const DIAGNOSTIC_INTERVAL = 5000;
 let DIAGNOSTIC_TIMER = null;
+let DIAGNOSTIC_RUNNING = false;
 
 // ================= MODULE REGISTRY =================
 const DIAGNOSTIC_MODULES = [
-  // Core
   "SYSTEM_EVENTS",
   "onSystemEvent",
 
-  // PIN
   "routePinRequest",
   "handlePinAction",
   "PIN_EVENT_BUS",
 
-  // Event Bridges
   "broadcastUpgradeEvent",
   "broadcastWalletEvent",
   "broadcastIncomeEvent",
   "broadcastPayoutEvent",
 
-  // Tree
   "getTreeData",
-
-  // Session
   "getCurrentUser"
 ];
 
@@ -65,10 +62,15 @@ function initSystemDiagnostics() {
   bindEventMonitoring();
 }
 
-// ================= LOOP =================
+// ================= LOOP (SAFE START ONLY ONCE) =================
 function startDiagnosticsLoop() {
 
-  if (DIAGNOSTIC_TIMER) clearInterval(DIAGNOSTIC_TIMER);
+  if (DIAGNOSTIC_RUNNING) return;
+  DIAGNOSTIC_RUNNING = true;
+
+  if (DIAGNOSTIC_TIMER) {
+    clearInterval(DIAGNOSTIC_TIMER);
+  }
 
   DIAGNOSTIC_TIMER = setInterval(renderDiagnostics, DIAGNOSTIC_INTERVAL);
 }
@@ -90,10 +92,13 @@ function bindEventMonitoring() {
   ];
 
   importantEvents.forEach(eventName => {
+
     try {
+
       window.onSystemEvent(eventName, function () {
         updateLastEvent(eventName);
       });
+
     } catch (_) {}
   });
 }
@@ -194,4 +199,4 @@ window.runSystemDiagnostics = runDiagnostics;
 window.renderSystemDiagnostics = renderDiagnostics;
 window.startSystemDiagnostics = startDiagnosticsLoop;
 
-console.log("[SYSTEM DIAGNOSTICS] READY V1.0");
+console.log("[SYSTEM DIAGNOSTICS] READY V1.1");
