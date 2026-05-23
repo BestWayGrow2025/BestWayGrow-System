@@ -2,316 +2,230 @@
 
 /*
 ========================================
-ENTERPRISE OBSERVER v1.0 (RUNTIME GOVERNANCE FINAL)
+ENTERPRISE OBSERVER v1.0 (FINAL GOVERNANCE LAYER)
 ========================================
-✔ DOM mutation observer
-✔ Duplicate render detection
-✔ Infinite refresh loop detection
-✔ Event flood monitoring
-✔ Render contamination detection
-✔ Recursive UI protection
-✔ Enterprise runtime governance
-✔ Diagnostics compatible
-✔ Memory-safe observers
-✔ Production LOCKED
+✔ Central state observation engine
+✔ Prevents duplicate UI re-renders
+✔ Watches SYSTEM_EVENTS + PIN + SESSION changes
+✔ Debounced global change detection
+✔ Safe subscription model
+✔ Memory-safe listener registry
+✔ Integrates with SYSTEM_EVENT_HUB
+✔ Works with DIAGNOSTICS + PIN LIVE SYSTEM
+✔ Prevents dashboard blinking loops
+✔ Production LOCKED CORE
 ========================================
 */
 
 (function () {
 
   // ========================================
-  // INIT GUARD
+  // DUPLICATE LOAD GUARD
   // ========================================
   if (window.__ENTERPRISE_OBSERVER__) {
     console.log("[OBSERVER] Already Loaded");
     return;
   }
 
-  window.__ENTERPRISE_OBSERVER__ = true;
-
-  console.log("[OBSERVER] Initializing...");
-
-  // ========================================
-  // STATE
-  // ========================================
-  const OBSERVER_STATE = {
-    active: false,
-    startedAt: Date.now(),
-
-    mutationCount: 0,
-    duplicateWarnings: 0,
-    renderWarnings: 0,
-    floodWarnings: 0,
-
-    recentMutations: [],
-    observedElements: new Map(),
-
-    observer: null
+  window.__ENTERPRISE_OBSERVER__ = {
+    loaded: true,
+    version: "1.0"
   };
 
-  // ========================================
-  // CONFIG
-  // ========================================
-  const CONFIG = {
-    mutationLimit: 150,
-    duplicateThreshold: 5,
-    floodThreshold: 40,
-    windowMs: 3000
-  };
+  console.log("[OBSERVER] Initializing Enterprise Observer");
 
   // ========================================
-  // SAFE LOGGER
+  // INTERNAL STATE
   // ========================================
-  function log(type, message, data = null) {
+  const OBSERVERS = {};
+  const CHANGE_QUEUE = [];
+  let PROCESSING = false;
+  let TIMER = null;
 
-    const payload = {
-      type,
-      message,
-      data,
-      timestamp: Date.now()
+  // ========================================
+  // SAFE EXECUTION WRAPPER
+  // ========================================
+  function safeRun(fn, label = "observer") {
+    try {
+      if (typeof fn !== "function") return null;
+      return fn();
+    } catch (err) {
+      console.error("[OBSERVER ERROR]", label, err);
+      return null;
+    }
+  }
+
+  // ========================================
+  // STATE HASH GENERATOR
+  // ========================================
+  function createHash(obj) {
+    try {
+      return JSON.stringify(obj);
+    } catch (_) {
+      return String(Date.now());
+    }
+  }
+
+  // ========================================
+  // REGISTER OBSERVER
+  // ========================================
+  function observe(key, selectorFn, callback, options = {}) {
+
+    if (typeof selectorFn !== "function") return;
+    if (typeof callback !== "function") return;
+
+    OBSERVERS[key] = {
+      selectorFn,
+      callback,
+      lastHash: null,
+      debounce: options.debounce || 200
     };
 
-    console.warn("[ENTERPRISE OBSERVER]", payload);
-
-    if (typeof window.broadcastSystemEvent === "function") {
-      window.broadcastSystemEvent("SYSTEM_EVENT", payload);
-    }
+    console.log("[OBSERVER] Registered:", key);
   }
 
   // ========================================
-  // DUPLICATE DETECTION
+  // REMOVE OBSERVER
   // ========================================
-  function detectDuplicatePanels() {
+  function unobserve(key) {
+    delete OBSERVERS[key];
+  }
 
-    const cards = document.querySelectorAll(".card");
+  // ========================================
+  // QUEUE CHANGE
+  // ========================================
+  function queueChange(change) {
+    CHANGE_QUEUE.push(change);
+  }
 
-    const map = {};
+  // ========================================
+  // PROCESS QUEUE (BATCH SAFE)
+  // ========================================
+  function processQueue() {
 
-    cards.forEach(card => {
+    if (PROCESSING) return;
+    PROCESSING = true;
 
-      const text = (
-        card.innerText ||
-        card.textContent ||
-        ""
-      )
-        .trim()
-        .slice(0, 80);
+    const batch = CHANGE_QUEUE.splice(0, CHANGE_QUEUE.length);
 
-      if (!text) return;
+    for (let i = 0; i < batch.length; i++) {
+      const item = batch[i];
 
-      map[text] = (map[text] || 0) + 1;
-    });
+      safeRun(() => {
+        item.callback(item.data);
+      }, item.key);
+    }
 
-    Object.keys(map).forEach(key => {
+    PROCESSING = false;
+  }
 
-      if (map[key] >= CONFIG.duplicateThreshold) {
+  // ========================================
+  // DETECT CHANGES
+  // ========================================
+  function detectChanges() {
 
-        OBSERVER_STATE.duplicateWarnings++;
+    Object.keys(OBSERVERS).forEach((key) => {
 
-        log(
-          "DUPLICATE_PANEL",
-          "Possible duplicate UI render detected",
-          {
-            content: key,
-            count: map[key]
-          }
-        );
+      const observer = OBSERVERS[key];
+      if (!observer) return;
+
+      const data = safeRun(observer.selectorFn, key);
+      const hash = createHash(data);
+
+      if (observer.lastHash !== hash) {
+
+        observer.lastHash = hash;
+
+        queueChange({
+          key,
+          data,
+          callback: observer.callback
+        });
       }
     });
+
+    processQueue();
   }
 
   // ========================================
-  // RENDER FLOOD DETECTION
+  // SCHEDULE DETECTION (DEBOUNCE)
   // ========================================
-  function detectRenderFlood() {
+  function scheduleDetection() {
 
-    const now = Date.now();
+    if (TIMER) clearTimeout(TIMER);
 
-    OBSERVER_STATE.recentMutations =
-      OBSERVER_STATE.recentMutations.filter(
-        time => now - time < CONFIG.windowMs
-      );
-
-    if (
-      OBSERVER_STATE.recentMutations.length >
-      CONFIG.floodThreshold
-    ) {
-
-      OBSERVER_STATE.floodWarnings++;
-
-      log(
-        "RENDER_FLOOD",
-        "Render flood detected",
-        {
-          count:
-            OBSERVER_STATE.recentMutations.length
-        }
-      );
-    }
+    TIMER = setTimeout(() => {
+      detectChanges();
+    }, 250);
   }
 
   // ========================================
-  // OBSERVER CALLBACK
+  // GLOBAL SYSTEM HOOKS
   // ========================================
-  function mutationHandler(mutations) {
+  function bindSystemHooks() {
 
-    OBSERVER_STATE.mutationCount += mutations.length;
+    if (window.SYSTEM_EVENTS?.on) {
 
-    const now = Date.now();
+      window.SYSTEM_EVENTS.on("SYSTEM_READY", () => {
+        console.log("[OBSERVER] SYSTEM READY detected");
+        detectChanges();
+      });
 
-    OBSERVER_STATE.recentMutations.push(now);
-
-    detectRenderFlood();
-
-    mutations.forEach(mutation => {
-
-      if (
-        mutation.type === "childList"
-      ) {
-
-        detectDuplicatePanels();
-
-      }
-
-    });
-
-    // HARD LIMIT WARNING
-    if (
-      OBSERVER_STATE.mutationCount >
-      CONFIG.mutationLimit
-    ) {
-
-      OBSERVER_STATE.renderWarnings++;
-
-      log(
-        "HEAVY_MUTATION",
-        "Heavy DOM mutation activity detected",
-        {
-          mutations:
-            OBSERVER_STATE.mutationCount
-        }
-      );
-
-      // reset counter safely
-      OBSERVER_STATE.mutationCount = 0;
+      window.SYSTEM_EVENTS.on("PIN_REQUEST_EVENT", scheduleDetection);
+      window.SYSTEM_EVENTS.on("PIN_FLOW_EXECUTED", scheduleDetection);
+      window.SYSTEM_EVENTS.on("BANK_UPDATE", scheduleDetection);
+      window.SYSTEM_EVENTS.on("PAYOUT_EVENT", scheduleDetection);
     }
+
+    // session / storage sync trigger
+    window.addEventListener("storage", scheduleDetection);
   }
 
   // ========================================
-  // START OBSERVER
+  // PUBLIC API
   // ========================================
-  function startObserver() {
-
-    if (OBSERVER_STATE.active) {
-      return;
-    }
-
-    const target =
-      document.body || document.documentElement;
-
-    if (!target) {
-      return;
-    }
-
-    const observer = new MutationObserver(
-      mutationHandler
-    );
-
-    observer.observe(target, {
-      childList: true,
-      subtree: true,
-      attributes: false
-    });
-
-    OBSERVER_STATE.observer = observer;
-    OBSERVER_STATE.active = true;
-
-    console.log("[OBSERVER] ACTIVE");
-  }
-
-  // ========================================
-  // STOP OBSERVER
-  // ========================================
-  function stopObserver() {
-
-    if (
-      OBSERVER_STATE.observer
-    ) {
-
-      OBSERVER_STATE.observer.disconnect();
-
-      OBSERVER_STATE.active = false;
-
-      console.log("[OBSERVER] STOPPED");
-    }
-  }
-
-  // ========================================
-  // DIAGNOSTICS
-  // ========================================
-  function getObserverReport() {
-
+  function getObserverState() {
     return {
-      active:
-        OBSERVER_STATE.active,
-
-      startedAt:
-        OBSERVER_STATE.startedAt,
-
-      duplicateWarnings:
-        OBSERVER_STATE.duplicateWarnings,
-
-      renderWarnings:
-        OBSERVER_STATE.renderWarnings,
-
-      floodWarnings:
-        OBSERVER_STATE.floodWarnings,
-
-      recentMutations:
-        OBSERVER_STATE.recentMutations.length
+      observerCount: Object.keys(OBSERVERS).length,
+      queueSize: CHANGE_QUEUE.length,
+      processing: PROCESSING
     };
   }
 
+  function forceCheck() {
+    detectChanges();
+  }
+
   // ========================================
-  // GLOBAL EXPORTS
+  // INIT
   // ========================================
-  window.startEnterpriseObserver =
-    startObserver;
+  function init() {
 
-  window.stopEnterpriseObserver =
-    stopObserver;
+    bindSystemHooks();
 
-  window.getEnterpriseObserverReport =
-    getObserverReport;
+    // initial safe scan
+    setTimeout(() => {
+      detectChanges();
+    }, 500);
 
-  window.ENTERPRISE_OBSERVER_STATE =
-    OBSERVER_STATE;
+    console.log("[OBSERVER] READY");
+  }
 
   // ========================================
   // AUTO START
   // ========================================
-  function boot() {
-
-    startObserver();
-
-  }
-
-  if (
-    document.readyState === "loading"
-  ) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      boot
-    );
-
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
   } else {
-
-    boot();
-
+    init();
   }
 
-  console.log("[OBSERVER] READY");
+  // ========================================
+  // EXPORT GLOBALS
+  // ========================================
+  window.observe = observe;
+  window.unobserve = unobserve;
+  window.forceObserverCheck = forceCheck;
+  window.getObserverState = getObserverState;
 
 })();
-
