@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SYSTEM MODULE CONNECTOR V2.1 FINAL
+SYSTEM MODULE CONNECTOR V2.2 FINAL
 ========================================
 ✔ Pure connector layer
 ✔ One-way execution flow
@@ -12,6 +12,8 @@ SYSTEM MODULE CONNECTOR V2.1 FINAL
 ✔ SAFE function guards added
 ✔ Enterprise production safe
 ✔ Loader-compatible architecture
+✔ mainContent protection added
+✔ HTML injection removed
 ========================================
 */
 
@@ -36,11 +38,13 @@ function safeCall(fn, fallback, ...args) {
     }
 
     console.warn("[MODULE MISSING FUNCTION]", fn);
+
     return fallback || false;
 
   } catch (err) {
 
     console.error("[SAFE CALL ERROR]", err);
+
     return false;
   }
 }
@@ -50,6 +54,18 @@ function connectSystemModule(page) {
 
   try {
 
+    const main =
+      document.getElementById("mainContent");
+
+    if (!main) {
+
+      console.error(
+        "[SYSTEM CONNECTOR] mainContent missing"
+      );
+
+      return false;
+    }
+
     const route = String(page || "")
       .trim()
       .toLowerCase();
@@ -58,66 +74,112 @@ function connectSystemModule(page) {
 
       // ================= HOME =================
       case "home":
-        return safeCall(loadHomeDashboardModule);
+
+        return safeCall(
+          loadHomeDashboardModule
+        );
 
       // ================= CREATE SYS ADMIN =================
       case "create":
-        return safeCall(loadCreateSystemAdminRealModule);
+
+        return safeCall(
+          loadCreateSystemAdminRealModule
+        );
 
       // ================= USERS =================
       case "users":
-        return safeCall(loadUsersRealModule);
+
+        return safeCall(
+          loadUsersRealModule
+        );
 
       // ================= SYSTEM =================
       case "system":
-        return safeCall(loadSystemAdminPanelModule);
+
+        return safeCall(
+          loadSystemAdminPanelModule
+        );
 
       // ================= PIN MASTER =================
       case "pinmaster":
-        return safeCall(loadPinMasterRealModule);
+
+        return safeCall(
+          loadPinMasterRealModule
+        );
 
       // ================= REPORTS =================
       case "reports":
-        return safeCall(loadReportsRealModule);
+
+        return safeCall(
+          loadReportsRealModule
+        );
 
       // ================= PRODUCT MASTER =================
       case "productmaster":
-        return safeCall(loadRealModule, false, {
-          html: "product_master.html",
-          js: "product_master.js"
-        });
+
+        return safeCall(
+          loadRealModule,
+          false,
+          {
+            html: "product_master.html",
+            js: "product_master.js"
+          }
+        );
 
       // ================= TREE VIEW =================
       case "tree":
-        return safeCall(loadRealModule, false, {
-          html: "user_tree.html",
-          js: "tree_system.js"
-        });
+
+        return safeCall(
+          loadRealModule,
+          false,
+          {
+            html: "user_tree.html",
+            js: "tree_system.js"
+          }
+        );
 
       // ================= AUDIT =================
       case "audit":
-        return safeCall(loadRealModule, false, {
-          html: "admin_activity_log.html",
-          js: "admin_activity_log.js"
-        });
+
+        return safeCall(
+          loadRealModule,
+          false,
+          {
+            html: "admin_activity_log.html",
+            js: "admin_activity_log.js"
+          }
+        );
 
       // ================= HEALTH =================
       case "health":
-        return safeCall(loadRealModule, false, {
-          html: "check_status.html",
-          js: "check_status.js"
-        });
+
+        return safeCall(
+          loadRealModule,
+          false,
+          {
+            html: "check_status.html",
+            js: "check_status.js"
+          }
+        );
 
       // ================= BACKUP =================
       case "backup":
-        return safeCall(loadRealModule, false, {
-          html: "system_backup_panel.html",
-          js: "system_backup_manager.js"
-        });
+
+        return safeCall(
+          loadRealModule,
+          false,
+          {
+            html: "system_backup_panel.html",
+            js: "system_backup_manager.js"
+          }
+        );
 
       // ================= DEFAULT =================
       default:
-        return loadUnknownSystemModule(route);
+
+        return loadUnknownSystemModule(
+          route
+        );
     }
 
   } catch (err) {
@@ -141,21 +203,8 @@ function loadUnknownSystemModule(page) {
 
     if (!main) return false;
 
-    main.innerHTML = `
-      <div style="
-        padding:20px;
-        background:#fff3f3;
-        border:1px solid #ffbaba;
-        border-radius:8px;
-      ">
-        <h2>❌ MODULE NOT FOUND</h2>
-
-        <p>
-          Unknown module:
-          <b>${page}</b>
-        </p>
-      </div>
-    `;
+    main.textContent =
+      "MODULE NOT FOUND : " + page;
 
     return false;
 
@@ -171,4 +220,5 @@ function loadUnknownSystemModule(page) {
 }
 
 // ================= EXPORT =================
-window.connectSystemModule = connectSystemModule;
+window.connectSystemModule =
+  connectSystemModule;
