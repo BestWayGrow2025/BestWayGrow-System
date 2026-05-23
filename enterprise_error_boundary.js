@@ -2,449 +2,112 @@
 
 /*
 ========================================
-ENTERPRISE ERROR BOUNDARY v1.0 (FINAL)
+ENTERPRISE ERROR BOUNDARY v1.0 (FINAL CORE)
 ========================================
-✔ Global runtime error protection
-✔ Async promise rejection protection
-✔ Recursive crash prevention
-✔ Module isolation layer
-✔ Enterprise diagnostics integration
-✔ Event hub integration
-✔ Crash flood protection
-✔ White-screen prevention
-✔ Production-safe fallback handling
-✔ Runtime governance compatible
+✔ Global error catcher
+✔ Promise rejection handler
+✔ Safe execution wrapper
+✔ Module isolation wrapper
+✔ Lightweight fallback UI
+✔ Production LOCKED
 ========================================
 */
 
 (function () {
 
-  // ========================================
-  // INIT GUARD
-  // ========================================
-  if (window.__ENTERPRISE_ERROR_BOUNDARY__) {
-    console.log("[ERROR BOUNDARY] Already Loaded");
-    return;
-  }
+  // ================= GUARD =================
+  if (window.__ENTERPRISE_ERROR_BOUNDARY__) return;
 
-  window.__ENTERPRISE_ERROR_BOUNDARY__ = true;
-
-  console.log("[ERROR BOUNDARY] Initializing...");
-
-  // ========================================
-  // STATE
-  // ========================================
-  const ERROR_STATE = {
-    totalErrors: 0,
-    totalWarnings: 0,
-    blockedLoops: 0,
-
-    lastError: null,
-    recentErrors: [],
-
-    initialized: false
+  window.__ENTERPRISE_ERROR_BOUNDARY__ = {
+    loaded: true,
+    version: "1.0"
   };
 
-  // ========================================
-  // CONFIG
-  // ========================================
-  const CONFIG = {
-    maxErrorsPerWindow: 20,
-    errorWindowMs: 5000,
-    maxRecursiveDepth: 5
-  };
+  console.log("[ERROR BOUNDARY] ACTIVE");
 
-  // ========================================
-  // SAFE LOGGER
-  // ========================================
-  function log(type, payload = {}) {
+  // ================= ERROR LOG =================
+  const LOG = [];
+  const MAX = 50;
 
-    const report = {
-      type,
-      timestamp: Date.now(),
-      ...payload
-    };
+  function push(err, ctx) {
 
-    console.error("[ERROR BOUNDARY]", report);
+    LOG.push({
+      message: err?.message || String(err),
+      stack: err?.stack || null,
+      ctx,
+      time: Date.now()
+    });
 
-    // SYSTEM EVENT HUB
+    if (LOG.length > MAX) LOG.shift();
+
+    console.error("[ERROR]", ctx, err);
+  }
+
+  // ================= GLOBAL HANDLERS =================
+  window.addEventListener("error", (e) => {
+    push(e.error || e.message, "window");
+    e.preventDefault?.();
+  });
+
+  window.addEventListener("unhandledrejection", (e) => {
+    push(e.reason, "promise");
+    e.preventDefault?.();
+  });
+
+  // ================= SAFE EXECUTE =================
+  function safe(fn, ctx = "safe") {
     try {
-
-      if (
-        typeof window.broadcastSystemEvent === "function"
-      ) {
-
-        window.broadcastSystemEvent(
-          "SYSTEM_EVENT",
-          report
-        );
-      }
-
-    } catch (_) {}
-
-    // DIAGNOSTICS CACHE
-    try {
-
-      window.__LAST_RUNTIME_ERROR__ = report;
-
-    } catch (_) {}
-  }
-
-  // ========================================
-  // FLOOD PROTECTION
-  // ========================================
-  function isErrorFlood() {
-
-    const now = Date.now();
-
-    ERROR_STATE.recentErrors =
-      ERROR_STATE.recentErrors.filter(
-        time =>
-          now - time <
-          CONFIG.errorWindowMs
-      );
-
-    return (
-      ERROR_STATE.recentErrors.length >=
-      CONFIG.maxErrorsPerWindow
-    );
-  }
-
-  // ========================================
-  // MAIN ERROR HANDLER
-  // ========================================
-  function handleRuntimeError(errorData) {
-
-    try {
-
-      ERROR_STATE.totalErrors++;
-
-      ERROR_STATE.lastError = errorData;
-
-      ERROR_STATE.recentErrors.push(
-        Date.now()
-      );
-
-      // FLOOD PROTECTION
-      if (isErrorFlood()) {
-
-        ERROR_STATE.blockedLoops++;
-
-        log("ERROR_FLOOD_BLOCKED", {
-          totalErrors:
-            ERROR_STATE.totalErrors
-        });
-
-        return;
-      }
-
-      log("RUNTIME_ERROR", errorData);
-
-    } catch (handlerErr) {
-
-      console.error(
-        "[ERROR BOUNDARY FAILURE]",
-        handlerErr
-      );
-    }
-  }
-
-  // ========================================
-  // WINDOW ERROR CAPTURE
-  // ========================================
-  function bindWindowErrors() {
-
-    window.addEventListener(
-      "error",
-      function (event) {
-
-        handleRuntimeError({
-          source: "window.onerror",
-          message: event.message,
-          filename: event.filename,
-          line: event.lineno,
-          column: event.colno
-        });
-
-      }
-    );
-  }
-
-  // ========================================
-  // PROMISE REJECTION CAPTURE
-  // ========================================
-  function bindPromiseRejections() {
-
-    window.addEventListener(
-      "unhandledrejection",
-      function (event) {
-
-        handleRuntimeError({
-          source:
-            "unhandledrejection",
-
-          reason:
-            String(
-              event.reason ||
-              "Unknown Promise Rejection"
-            )
-        });
-
-      }
-    );
-  }
-
-  // ========================================
-  // SAFE EXECUTION WRAPPER
-  // ========================================
-  function safeExecute(fn, fallback = null) {
-
-    try {
-
-      if (typeof fn !== "function") {
-        return fallback;
-      }
-
-      return fn();
-
+      return typeof fn === "function" ? fn() : null;
     } catch (err) {
-
-      handleRuntimeError({
-        source: "safeExecute",
-        message: err.message,
-        stack: err.stack
-      });
-
-      return fallback;
+      push(err, ctx);
+      return null;
     }
   }
 
-  // ========================================
-  // SAFE ASYNC WRAPPER
-  // ========================================
-  async function safeAsync(fn, fallback = null) {
+  // ================= MODULE WRAPPER =================
+  function wrap(fn, name = "module") {
 
-    try {
+    if (typeof fn !== "function") return fn;
 
-      if (typeof fn !== "function") {
-        return fallback;
-      }
-
-      return await fn();
-
-    } catch (err) {
-
-      handleRuntimeError({
-        source: "safeAsync",
-        message: err.message,
-        stack: err.stack
-      });
-
-      return fallback;
-    }
-  }
-
-  // ========================================
-  // MODULE WRAPPER
-  // ========================================
-  function protectFunction(fnName) {
-
-    if (
-      typeof window[fnName] !== "function"
-    ) {
-      return;
-    }
-
-    const original = window[fnName];
-
-    // prevent duplicate wrapping
-    if (
-      original.__errorBoundaryWrapped
-    ) {
-      return;
-    }
-
-    function wrapped(...args) {
+    return function (...args) {
 
       try {
-
-        return original.apply(
-          this,
-          args
-        );
-
+        return fn.apply(this, args);
       } catch (err) {
-
-        handleRuntimeError({
-          source:
-            "protectedFunction",
-
-          functionName: fnName,
-
-          message:
-            err.message,
-
-          stack:
-            err.stack
-        });
-
+        push(err, name);
         return null;
       }
-    }
-
-    wrapped.__errorBoundaryWrapped = true;
-    wrapped.__originalFunction = original;
-
-    window[fnName] = wrapped;
-  }
-
-  // ========================================
-  // CORE FUNCTION PROTECTION
-  // ========================================
-  function protectCriticalFunctions() {
-
-    const critical = [
-
-      // core
-      "handleNavigation",
-      "safeDashboardRun",
-      "initDashboard",
-
-      // pin
-      "executePinFlow",
-      "routePinRequest",
-
-      // rendering
-      "renderTable",
-      "loadPinRequests",
-
-      // system
-      "bootSystem"
-
-    ];
-
-    critical.forEach(protectFunction);
-  }
-
-  // ========================================
-  // WHITE SCREEN PREVENTION
-  // ========================================
-  function monitorMainUI() {
-
-    setInterval(function () {
-
-      try {
-
-        const body =
-          document.body;
-
-        if (!body) return;
-
-        const visible =
-          body.innerHTML.trim().length > 0;
-
-        if (!visible) {
-
-          log(
-            "WHITE_SCREEN_DETECTED",
-            {
-              message:
-                "Body content missing"
-            }
-          );
-        }
-
-      } catch (_) {}
-
-    }, 5000);
-  }
-
-  // ========================================
-  // REPORT
-  // ========================================
-  function getErrorBoundaryReport() {
-
-    return {
-
-      initialized:
-        ERROR_STATE.initialized,
-
-      totalErrors:
-        ERROR_STATE.totalErrors,
-
-      totalWarnings:
-        ERROR_STATE.totalWarnings,
-
-      blockedLoops:
-        ERROR_STATE.blockedLoops,
-
-      lastError:
-        ERROR_STATE.lastError
     };
   }
 
-  // ========================================
-  // INIT
-  // ========================================
-  function initErrorBoundary() {
+  // ================= FALLBACK UI =================
+  function fallbackUI() {
 
-    if (ERROR_STATE.initialized) {
-      return;
-    }
+    const el = document.getElementById("mainContent");
+    if (!el) return;
 
-    bindWindowErrors();
-
-    bindPromiseRejections();
-
-    protectCriticalFunctions();
-
-    monitorMainUI();
-
-    ERROR_STATE.initialized = true;
-
-    console.log(
-      "[ERROR BOUNDARY] ACTIVE"
-    );
+    el.innerHTML = `
+      <div style="padding:15px;background:#c0392b;color:#fff">
+        <b>System Error</b><br/>
+        Fallback UI Active
+      </div>
+    `;
   }
 
-  // ========================================
-  // GLOBAL EXPORTS
-  // ========================================
-  window.safeExecute =
-    safeExecute;
-
-  window.safeAsync =
-    safeAsync;
-
-  window.handleRuntimeError =
-    handleRuntimeError;
-
-  window.getErrorBoundaryReport =
-    getErrorBoundaryReport;
-
-  window.ENTERPRISE_ERROR_STATE =
-    ERROR_STATE;
-
-  // ========================================
-  // AUTO START
-  // ========================================
-  if (
-    document.readyState === "loading"
-  ) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      initErrorBoundary
-    );
-
-  } else {
-
-    initErrorBoundary();
-
+  // ================= API =================
+  function getLogs() {
+    return LOG;
   }
 
-  console.log(
-    "[ERROR BOUNDARY] READY"
-  );
+  function clearLogs() {
+    LOG.length = 0;
+  }
+
+  // ================= EXPORT =================
+  window.safeExecute = safe;
+  window.wrapModule = wrap;
+  window.getErrorLog = getLogs;
+  window.clearErrorLog = clearLogs;
+  window.renderFallbackUI = fallbackUI;
 
 })();
