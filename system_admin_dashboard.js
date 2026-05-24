@@ -455,8 +455,36 @@ window.__SYSTEM_ADMIN_DASHBOARD_MODULE__ = {
   time: Date.now()
 };
 
+/* ================= SAFE STARTUP ================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+
+    try {
+
+      initPage();
+      checkAuth();
+      bindEvents();
+      loadHome();
+
+      console.log(
+        "[SYSTEM ADMIN DASHBOARD] SAFE INIT COMPLETE"
+      );
+
+    } catch (err) {
+
+      console.error(
+        "[SYSTEM ADMIN DASHBOARD INIT ERROR]",
+        err
+      );
+    }
+  }
+);
+
 /* ================= START MODULE ================= */
 
 BOOT.start("system_admin_dashboard");
 
 console.log("[SYSTEM ADMIN DASHBOARD] MODULE LOADED OK");
+] MODULE LOADED OK");
