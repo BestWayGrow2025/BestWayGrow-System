@@ -156,8 +156,6 @@ function bindEvents() {
 
     btn.dataset.bound = "true";
 
-        if (clickLock) return;
-
         clickLock = true;
 
         buttons.forEach(function (b) {
