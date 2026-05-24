@@ -134,7 +134,17 @@ function bindEvents() {
 
   const buttons = document.querySelectorAll(".menu button");
 
-  buttons.forEach(function (btn) {
+ buttons.forEach(function (btn) {
+
+  // Prevent duplicate binding
+  if (btn.dataset.bound) return;
+
+  btn.dataset.bound = "true";
+
+  btn.addEventListener(
+    "click",
+    function () {
+
     btn.addEventListener("click", function () {
       if (clickLock) return;
 
@@ -202,7 +212,17 @@ function bindEvents() {
 /* ================= AUTO REFRESH ================= */
 
 function startAutoRefresh() {
-  dashboardAutoRefresh = setInterval(function () {
+
+  // Prevent duplicate intervals
+  if (dashboardAutoRefresh) {
+    clearInterval(
+      dashboardAutoRefresh
+    );
+  }
+
+  dashboardAutoRefresh =
+    setInterval(function () {
+
     const active =
       document.querySelector(".menu button.active");
 
