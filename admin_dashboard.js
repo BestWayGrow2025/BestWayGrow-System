@@ -156,10 +156,6 @@ function bindEvents() {
 
     btn.dataset.bound = "true";
 
-    btn.addEventListener(
-      "click",
-      function () {
-
         if (clickLock) return;
 
         clickLock = true;
