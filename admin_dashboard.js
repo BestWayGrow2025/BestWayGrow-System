@@ -156,8 +156,6 @@ function bindEvents() {
 
     btn.dataset.bound = "true";
 
-        clickLock = true;
-
         buttons.forEach(function (b) {
           b.classList.remove("active");
         });
@@ -220,8 +218,7 @@ function bindEvents() {
           clickLock = false;
 
         }, 250);
-      }
-    );
+    });
   });
 
   const homeBtn =
