@@ -40,12 +40,52 @@ function authPage() {
   // Login page only
 }
 
-// ================= EVENTS =================
-function bindEvents() {
-  const btn = document.getElementById("loginBtn");
+/* ================= EVENTS ================= */
 
-  if (btn) {
-    btn.addEventListener("click", submitAdminLogin);
+function bindEvents() {
+
+  const btn =
+    document.getElementById(
+      "loginBtn"
+    );
+
+  // Prevent duplicate binding
+  if (
+    btn &&
+    !btn.dataset.bound
+  ) {
+
+    btn.dataset.bound = "true";
+
+    btn.addEventListener(
+      "click",
+      submitAdminLogin
+    );
+  }
+
+  // Enter key support
+  const password =
+    document.getElementById(
+      "password"
+    );
+
+  if (
+    password &&
+    !password.dataset.enterbound
+  ) {
+
+    password.dataset.enterbound =
+      "true";
+
+    password.addEventListener(
+      "keypress",
+      function (e) {
+
+        if (e.key === "Enter") {
+          submitAdminLogin();
+        }
+      }
+    );
   }
 }
 
