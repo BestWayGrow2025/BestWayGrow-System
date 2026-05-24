@@ -156,69 +156,77 @@ function bindEvents() {
 
     btn.dataset.bound = "true";
 
-        buttons.forEach(function (b) {
-          b.classList.remove("active");
-        });
+    btn.addEventListener("click", function () {
 
-        btn.classList.add("active");
+      if (clickLock) return;
 
-        try {
+      clickLock = true;
 
-          const page =
-            btn.dataset.page;
+      buttons.forEach(function (b) {
+        b.classList.remove("active");
+      });
 
-          switch (page) {
+      btn.classList.add("active");
 
-            case "home":
-              loadHome();
-              break;
+      try {
 
-            case "users":
-              loadUsers();
-              break;
+        const page =
+          btn.dataset.page;
 
-            case "pins":
-              loadPinsUI();
-              break;
+        switch (page) {
 
-            case "wallet":
-              loadWalletSafe();
-              break;
+          case "home":
+            loadHome();
+            break;
 
-            case "income":
-              loadIncomeSafe();
-              break;
+          case "users":
+            loadUsers();
+            break;
 
-            case "system":
-              loadSystemSafe();
-              break;
-          }
+          case "pins":
+            loadPinsUI();
+            break;
 
-        } catch (err) {
+          case "wallet":
+            loadWalletSafe();
+            break;
 
-          console.error(
-            "[ADMIN DASHBOARD ERROR]",
-            err
-          );
+          case "income":
+            loadIncomeSafe();
+            break;
 
-          const main =
-            document.getElementById(
-              "mainContent"
-            );
-
-          if (main) {
-
-            main.innerHTML =
-              '<p style="color:red;">Failed to load section</p>';
-          }
+          case "system":
+            loadSystemSafe();
+            break;
         }
 
-        setTimeout(function () {
+      } catch (err) {
 
-          clickLock = false;
+        console.error(
+          "[ADMIN DASHBOARD ERROR]",
+          err
+        );
 
-        }, 250);
+        const main =
+          document.getElementById(
+            "mainContent"
+          );
+
+        if (main) {
+
+          main.innerHTML =
+            '<p style="color:red;">Failed to load section</p>';
+        }
+      }
+
+      setTimeout(function () {
+
+        clickLock = false;
+
+      }, 250);
+
     });
+
   });
 
   const homeBtn =
