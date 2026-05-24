@@ -122,87 +122,118 @@ function redirectLogin() {
 /* ================= EVENTS ================= */
 
 function bindEvents() {
+
   if (menuBound) return;
+
   menuBound = true;
 
-  const logoutBtn = document.getElementById("logoutBtn");
+  const logoutBtn =
+    document.getElementById("logoutBtn");
 
-  if (logoutBtn && !logoutBtn.dataset.bound) {
-    logoutBtn.dataset.bound = "true";
-    logoutBtn.addEventListener("click", logout);
+  if (
+    logoutBtn &&
+    !logoutBtn.dataset.bound
+  ) {
+
+    logoutBtn.dataset.bound =
+      "true";
+
+    logoutBtn.addEventListener(
+      "click",
+      logout
+    );
   }
 
-  const buttons = document.querySelectorAll(".menu button");
+  const buttons =
+    document.querySelectorAll(
+      ".menu button"
+    );
 
- buttons.forEach(function (btn) {
+  buttons.forEach(function (btn) {
 
-  // Prevent duplicate binding
-  if (btn.dataset.bound) return;
+    // Prevent duplicate binding
+    if (btn.dataset.bound) return;
 
-  btn.dataset.bound = "true";
+    btn.dataset.bound = "true";
 
-  btn.addEventListener(
-    "click",
-    function () {
+    btn.addEventListener(
+      "click",
+      function () {
 
-    btn.addEventListener("click", function () {
-      if (clickLock) return;
+        if (clickLock) return;
 
-      clickLock = true;
+        clickLock = true;
 
-      buttons.forEach(function (b) {
-        b.classList.remove("active");
-      });
+        buttons.forEach(function (b) {
+          b.classList.remove("active");
+        });
 
-      btn.classList.add("active");
+        btn.classList.add("active");
 
-      try {
-        const page = btn.dataset.page;
+        try {
 
-        switch (page) {
-          case "home":
-            loadHome();
-            break;
+          const page =
+            btn.dataset.page;
 
-          case "users":
-            loadUsers();
-            break;
+          switch (page) {
 
-          case "pins":
-            loadPinsUI();
-            break;
+            case "home":
+              loadHome();
+              break;
 
-          case "wallet":
-            loadWalletSafe();
-            break;
+            case "users":
+              loadUsers();
+              break;
 
-          case "income":
-            loadIncomeSafe();
-            break;
+            case "pins":
+              loadPinsUI();
+              break;
 
-          case "system":
-            loadSystemSafe();
-            break;
+            case "wallet":
+              loadWalletSafe();
+              break;
+
+            case "income":
+              loadIncomeSafe();
+              break;
+
+            case "system":
+              loadSystemSafe();
+              break;
+          }
+
+        } catch (err) {
+
+          console.error(
+            "[ADMIN DASHBOARD ERROR]",
+            err
+          );
+
+          const main =
+            document.getElementById(
+              "mainContent"
+            );
+
+          if (main) {
+
+            main.innerHTML =
+              '<p style="color:red;">Failed to load section</p>';
+          }
         }
-      } catch (err) {
-        console.error("[ADMIN DASHBOARD ERROR]", err);
 
-        const main = document.getElementById("mainContent");
+        setTimeout(function () {
 
-        if (main) {
-          main.innerHTML =
-            '<p style="color:red;">Failed to load section</p>';
-        }
+          clickLock = false;
+
+        }, 250);
       }
-
-      setTimeout(function () {
-        clickLock = false;
-      }, 250);
-    });
+    );
   });
 
   const homeBtn =
-    document.querySelector('.menu button[data-page="home"]');
+    document.querySelector(
+      '.menu button[data-page="home"]'
+    );
 
   if (homeBtn) {
     homeBtn.classList.add("active");
@@ -215,6 +246,7 @@ function startAutoRefresh() {
 
   // Prevent duplicate intervals
   if (dashboardAutoRefresh) {
+
     clearInterval(
       dashboardAutoRefresh
     );
@@ -223,25 +255,33 @@ function startAutoRefresh() {
   dashboardAutoRefresh =
     setInterval(function () {
 
-    const active =
-      document.querySelector(".menu button.active");
+      const active =
+        document.querySelector(
+          ".menu button.active"
+        );
 
-    if (!active) return;
+      if (!active) return;
 
-    const page = active.dataset.page;
+      const page =
+        active.dataset.page;
 
-    if (page === "users") {
-      renderUsers();
-    }
+      if (page === "users") {
+        renderUsers();
+      }
 
-    if (page === "pins") {
-      renderPins();
-    }
+      if (page === "pins") {
+        renderPins();
+      }
 
-    if (page === "system" && typeof loadSystem === "function") {
-      loadSystem();
-    }
-  }, 5000);
+      if (
+        page === "system" &&
+        typeof loadSystem === "function"
+      ) {
+
+        loadSystem();
+      }
+
+    }, 5000);
 }
 
 /* ================= HOME ================= */
