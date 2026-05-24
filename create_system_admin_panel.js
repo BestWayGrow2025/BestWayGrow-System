@@ -55,11 +55,22 @@ CREATE SYSTEM ADMIN PANEL v1.0
       </div>
     `;
 
-    const btn = document.getElementById("createSysAdminBtn");
+ const btn =
+  document.getElementById(
+    "createSysAdminBtn"
+  );
 
-    if (!btn) return;
+if (!btn) return;
 
-    btn.addEventListener("click", function () {
+/* Prevent duplicate binding */
+
+if (btn.dataset.bound) return;
+
+btn.dataset.bound = "true";
+
+btn.addEventListener(
+  "click",
+  function () {
 
       const username =
         document.getElementById("sysAdminUsername")?.value.trim();
