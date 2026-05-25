@@ -115,17 +115,17 @@ function connectSystemModule(page) {
         );
 
       // ================= PRODUCT MASTER =================
-      case "productmaster":
+    case "productmaster":
 
-        return safeCall(
-          loadRealModule,
-          false,
-          {
-            html: "product_master.html",
-            js: "product_master.js"
-          }
-        );
-
+  return safeCall(
+    loadRealModule,
+    false,
+    {
+      html: "product_master_connector.html",
+      js: "product_master_connector.js"
+    }
+  );
+        
       // ================= TREE VIEW =================
       case "tree":
 
