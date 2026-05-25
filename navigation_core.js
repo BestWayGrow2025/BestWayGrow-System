@@ -21,11 +21,6 @@ NAVIGATION CORE v2.1 FINAL
 
   window.__NAVIGATION_CORE__ = true;
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    initNavigationCore
-  );
-
 })();
 
 /* ================= INIT ================= */
@@ -41,11 +36,6 @@ function initNavigationCore() {
   if (menu.__NAV_BOUND__) return;
 
   menu.__NAV_BOUND__ = true;
-
-  menu.addEventListener(
-    "click",
-    routeClick
-  );
 
   console.log(
     "[NAV CORE] READY v2.1"
