@@ -395,47 +395,20 @@ console.log(
 
 /* ================= SAFE STARTUP ================= */
 
-function bootSafe() {
+try {
 
-  const start = () => {
+  checkAuth();
 
-    try {
-
-      initPage();
-      checkAuth();
-      bindEvents();
-
-      console.log(
-        "[SUPER ADMIN CREATE SYSTEM ADMIN] SAFE INIT COMPLETE"
-      );
-
-    } catch (err) {
-
-      console.error(
-        "[SUPER ADMIN INIT ERROR]",
-        err
-      );
-    }
-  };
-
-if (
-  window.__CORE_READY__ ||
-  window.__CORE_SYSTEM_LOADED__
-) {
-
-  start();
-  return;
-}
-  
-  window.addEventListener(
-    "CORE_READY",
-    start,
-    { once: true }
-  );
+  bindEvents();
 
   console.log(
-    "[SUPER ADMIN CREATE SYSTEM ADMIN] WAITING FOR CORE_READY"
+    "[SUPER ADMIN CREATE SYSTEM ADMIN] ACTIVE"
+  );
+
+} catch (err) {
+
+  console.error(
+    "[SUPER ADMIN INIT ERROR]",
+    err
   );
 }
-
-bootSafe();
