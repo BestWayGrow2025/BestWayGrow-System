@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SUPER ADMIN CREATE SYSTEM ADMIN v4.1
+SUPER ADMIN CREATE SYSTEM ADMIN v4.2
 ENTERPRISE MODULE FINAL
 ========================================
 ✔ Dashboard injected module safe
@@ -10,6 +10,8 @@ ENTERPRISE MODULE FINAL
 ✔ Event binding stabilized
 ✔ Dynamic loader compatible
 ✔ Production ready
+✔ Create button fixed
+✔ Re-render safe
 ========================================
 */
 
@@ -36,10 +38,6 @@ function initPage() {
 
     console.error(
       "[SUPER ADMIN] core_system.js missing"
-    );
-
-    alert(
-      "core_system.js missing"
     );
 
     throw new Error("STOP");
@@ -137,42 +135,33 @@ function redirectLogin() {
     "super_admin_login.html";
 }
 
-/* ================= EVENTS ================= */
+/* ================= MESSAGE ================= */
 
-function bindEvents() {
+function showMsg(text) {
 
-  const btn =
+  const msg =
     document.getElementById(
-      "createBtn"
+      "msg"
     );
 
-  if (!btn) {
+  if (msg) {
 
-    console.warn(
-      "[SUPER ADMIN] createBtn missing"
-    );
-
-    return;
+    msg.innerText = text;
   }
+}
 
-  // Prevent duplicate bindings
-  if (btn.__bound__) return;
+/* ================= PASSWORD ================= */
 
-  btn.__bound__ = true;
+function encodePassword(p) {
 
-  btn.addEventListener(
-    "click",
-    function () {
+  try {
 
-      safeClick(
-        createSystemAdmin
-      );
-    }
-  );
+    return btoa(p);
 
-  console.log(
-    "[SUPER ADMIN] BUTTON BOUND"
-  );
+  } catch (e) {
+
+    return p;
+  }
 }
 
 /* ================= SAFE CLICK ================= */
@@ -209,38 +198,13 @@ function safeClick(fn) {
   );
 }
 
-/* ================= MESSAGE ================= */
-
-function showMsg(text) {
-
-  const msg =
-    document.getElementById(
-      "msg"
-    );
-
-  if (msg) {
-
-    msg.innerText = text;
-  }
-}
-
-/* ================= PASSWORD ================= */
-
-function encodePassword(p) {
-
-  try {
-
-    return btoa(p);
-
-  } catch (e) {
-
-    return p;
-  }
-}
-
 /* ================= CREATE SYSTEM ADMIN ================= */
 
 function createSystemAdmin() {
+
+  console.log(
+    "[SUPER ADMIN] CREATE CLICKED"
+  );
 
   const id =
     document.getElementById(
@@ -362,6 +326,70 @@ function createSystemAdmin() {
   );
 }
 
+/* ================= EVENTS ================= */
+
+function bindEvents() {
+
+  const btn =
+    document.getElementById(
+      "createBtn"
+    );
+
+  if (!btn) {
+
+    console.warn(
+      "[SUPER ADMIN] createBtn missing"
+    );
+
+    return;
+  }
+
+  // REMOVE OLD CLICK
+  btn.onclick = null;
+
+  // REMOVE OLD FLAG
+  btn.__bound__ = false;
+
+  // ADD NEW CLICK
+  btn.onclick = function () {
+
+    safeClick(
+      createSystemAdmin
+    );
+  };
+
+  btn.__bound__ = true;
+
+  console.log(
+    "[SUPER ADMIN] BUTTON BOUND OK"
+  );
+}
+
+/* ================= MODULE START ================= */
+
+function startModule() {
+
+  try {
+
+    initPage();
+
+    checkAuth();
+
+    bindEvents();
+
+    console.log(
+      "[SUPER ADMIN CREATE SYSTEM ADMIN] ACTIVE"
+    );
+
+  } catch (err) {
+
+    console.error(
+      "[SUPER ADMIN INIT ERROR]",
+      err
+    );
+  }
+}
+
 /* ================= EXPORTS ================= */
 
 window.createSystemAdmin =
@@ -369,6 +397,9 @@ window.createSystemAdmin =
 
 window.showMsg =
   showMsg;
+
+window.startSuperAdminCreateSystemAdmin =
+  startModule;
 
 /* ================= MODULE FLAGS ================= */
 
@@ -393,22 +424,6 @@ console.log(
   "[SUPER ADMIN CREATE SYSTEM ADMIN] MODULE LOADED OK"
 );
 
-/* ================= SAFE STARTUP ================= */
+/* ================= AUTO START ================= */
 
-try {
-
-  checkAuth();
-
-  bindEvents();
-
-  console.log(
-    "[SUPER ADMIN CREATE SYSTEM ADMIN] ACTIVE"
-  );
-
-} catch (err) {
-
-  console.error(
-    "[SUPER ADMIN INIT ERROR]",
-    err
-  );
-}
+startModule();
