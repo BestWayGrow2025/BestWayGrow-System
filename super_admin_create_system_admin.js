@@ -18,14 +18,6 @@ let lock = false;
 
 console.log("[SUPER ADMIN] FILE EXECUTION STARTED");
 
-/* ================= BOOT REGISTRATION ================= */
-
-BOOT.register("super_admin_create_system_admin", function () {
-  initPage();
-  checkAuth();
-  bindEvents();
-});
-
 /* ================= INIT ================= */
 
 function initPage() {
