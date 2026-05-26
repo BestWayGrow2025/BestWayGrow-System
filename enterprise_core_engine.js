@@ -2,7 +2,7 @@
 
 /*
 ========================================
-ENTERPRISE CORE ENGINE v1.1 FINAL
+ENTERPRISE CORE ENGINE v1.2 FINAL
 CENTRAL SYSTEM ORCHESTRATION LAYER
 ========================================
 ✔ Module registry system
@@ -12,6 +12,8 @@ CENTRAL SYSTEM ORCHESTRATION LAYER
 ✔ Safe execution router
 ✔ Unified routing fix (CRITICAL)
 ✔ UI sync guaranteed
+✔ Connector registry added
+✔ Dashboard routing stabilized
 ✔ Production stable
 ========================================
 */
@@ -33,52 +35,115 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
   /* ================= REGISTER MODULE ================= */
 
   function register(name, fn) {
+
     if (!name || typeof fn !== "function") {
-      console.warn("[CORE ENGINE] Invalid module registration:", name);
+
+      console.warn(
+        "[CORE ENGINE] Invalid module registration:",
+        name
+      );
+
       return;
     }
 
     state.modules[name] = fn;
-    console.log("[CORE ENGINE] Registered module:", name);
+
+    console.log(
+      "[CORE ENGINE] Registered module:",
+      name
+    );
   }
 
-  /* ================= MAIN EXECUTION (FIXED CORE) ================= */
+  /* ================= MAIN EXECUTION ================= */
 
   function run(name, ...args) {
+
     try {
 
       let result;
 
-      // 1. Registered modules (highest priority)
+      // ====================================
+      // 1. REGISTERED MODULES
+      // ====================================
+
       if (state.modules[name]) {
-        result = state.modules[name](...args);
+
+        result =
+          state.modules[name](...args);
       }
 
-      // 2. Global function fallback
-      else if (typeof window[name] === "function") {
-        result = window[name](...args);
+      // ====================================
+      // 2. GLOBAL FUNCTION FALLBACK
+      // ====================================
+
+      else if (
+        typeof window[name] ===
+        "function"
+      ) {
+
+        result =
+          window[name](...args);
       }
 
-      // 3. Super Admin Module Loader sync (CRITICAL FIX)
-      else if (typeof window.executeSuperAdminModule === "function") {
-        result = window.executeSuperAdminModule(name, ...args);
+      // ====================================
+      // 3. CONNECTOR FALLBACK
+      // ====================================
+
+      else if (
+        typeof window.connectSystemModule ===
+        "function"
+      ) {
+
+        result =
+          window.connectSystemModule(
+            name,
+            ...args
+          );
       }
+
+      // ====================================
+      // 4. SUPER ADMIN MODULE LOADER
+      // ====================================
+
+      else if (
+        typeof window.executeSuperAdminModule ===
+        "function"
+      ) {
+
+        result =
+          window.executeSuperAdminModule(
+            name,
+            ...args
+          );
+      }
+
+      // ====================================
+      // 5. NOT FOUND
+      // ====================================
 
       else {
-        console.warn("[CORE ENGINE] Module not found:", name);
-        return;
-      }
 
-      // 🔥 CRITICAL UI SYNC (ENSURES BUTTONS WORK)
-      if (typeof window.executeSuperAdminModule === "function") {
-        window.executeSuperAdminModule(name, ...args);
+        console.warn(
+          "[CORE ENGINE] Module not found:",
+          name
+        );
+
+        return false;
       }
 
       return result;
 
     } catch (err) {
-      console.error("[CORE ENGINE ERROR]", name, err);
+
+      console.error(
+        "[CORE ENGINE ERROR]",
+        name,
+        err
+      );
+
       state.health = "DEGRADED";
+
+      return false;
     }
   }
 
@@ -94,21 +159,41 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
 
     state.events.push(event);
 
-    console.log("[CORE EVENT]", event);
+    console.log(
+      "[CORE EVENT]",
+      event
+    );
 
-    if (typeof window.dispatchEvent === "function") {
+    if (
+      typeof window.dispatchEvent ===
+      "function"
+    ) {
+
       window.dispatchEvent(
-        new CustomEvent(eventName, { detail: payload })
+        new CustomEvent(
+          eventName,
+          {
+            detail: payload
+          }
+        )
       );
     }
 
-    const list = state.listeners[eventName] || [];
+    const list =
+      state.listeners[eventName] || [];
 
     list.forEach(fn => {
+
       try {
+
         fn(payload);
+
       } catch (e) {
-        console.error("[CORE LISTENER ERROR]", e);
+
+        console.error(
+          "[CORE LISTENER ERROR]",
+          e
+        );
       }
     });
   }
@@ -116,21 +201,36 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
   /* ================= LISTEN ================= */
 
   function on(eventName, fn) {
-    if (!state.listeners[eventName]) {
+
+    if (
+      !state.listeners[eventName]
+    ) {
+
       state.listeners[eventName] = [];
     }
 
-    state.listeners[eventName].push(fn);
+    state.listeners[eventName]
+      .push(fn);
   }
 
   /* ================= STATUS ================= */
 
   function status() {
+
     return {
-      modules: Object.keys(state.modules).length,
-      events: state.events.length,
-      health: state.health,
-      mode: state.mode
+      modules:
+        Object.keys(
+          state.modules
+        ).length,
+
+      events:
+        state.events.length,
+
+      health:
+        state.health,
+
+      mode:
+        state.mode
     };
   }
 
@@ -140,11 +240,16 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
 
     let ok = true;
 
-    Object.keys(state.modules).forEach(m => {
-      if (!state.modules[m]) ok = false;
-    });
+    Object.keys(state.modules)
+      .forEach(m => {
 
-    state.health = ok ? "OK" : "WARNING";
+        if (!state.modules[m]) {
+          ok = false;
+        }
+      });
+
+    state.health =
+      ok ? "OK" : "WARNING";
 
     return state.health;
   }
@@ -152,22 +257,127 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
   /* ================= SAFE CALL ================= */
 
   function safeCall(fn, fallback) {
+
     try {
-      if (typeof fn === "function") {
+
+      if (
+        typeof fn === "function"
+      ) {
+
         return fn();
       }
+
       return fallback;
+
     } catch (e) {
-      console.error("[SAFE CALL ERROR]", e);
+
+      console.error(
+        "[SAFE CALL ERROR]",
+        e
+      );
+
       return fallback;
     }
   }
 
   /* ================= TRIGGER ================= */
 
-  function trigger(eventName, payload) {
-    emit(eventName, payload);
+  function trigger(
+    eventName,
+    payload
+  ) {
+
+    emit(
+      eventName,
+      payload
+    );
   }
+
+  /* ================= PRE-REGISTERED CONNECTORS ================= */
+
+  register(
+    "home",
+    () =>
+      connectSystemModule("home")
+  );
+
+  register(
+    "create",
+    () =>
+      connectSystemModule("create")
+  );
+
+  register(
+    "users",
+    () =>
+      connectSystemModule("users")
+  );
+
+  register(
+    "system",
+    () =>
+      connectSystemModule("system")
+  );
+
+  register(
+    "pinmaster",
+    () =>
+      connectSystemModule("pinmaster")
+  );
+
+  register(
+    "productmaster",
+    () =>
+      connectSystemModule("productmaster")
+  );
+
+  register(
+    "rankmaster",
+    () =>
+      connectSystemModule("rankmaster")
+  );
+
+  register(
+    "incomecontrol",
+    () =>
+      connectSystemModule("incomecontrol")
+  );
+
+  register(
+    "audit",
+    () =>
+      connectSystemModule("audit")
+  );
+
+  register(
+    "health",
+    () =>
+      connectSystemModule("health")
+  );
+
+  register(
+    "backup",
+    () =>
+      connectSystemModule("backup")
+  );
+
+  register(
+    "escrow",
+    () =>
+      connectSystemModule("escrow")
+  );
+
+  register(
+    "reports",
+    () =>
+      connectSystemModule("reports")
+  );
+
+  register(
+    "tree",
+    () =>
+      connectSystemModule("tree")
+  );
 
   /* ================= PUBLIC API ================= */
 
@@ -186,8 +396,11 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
 
 /* ================= GLOBAL EXPORT ================= */
 
-window.ENTERPRISE_CORE_ENGINE = window.__ENTERPRISE_CORE_ENGINE__;
+window.ENTERPRISE_CORE_ENGINE =
+  window.__ENTERPRISE_CORE_ENGINE__;
 
 /* ================= READY ================= */
 
-console.log("[ENTERPRISE CORE ENGINE] READY");
+console.log(
+  "[ENTERPRISE CORE ENGINE] READY"
+);
