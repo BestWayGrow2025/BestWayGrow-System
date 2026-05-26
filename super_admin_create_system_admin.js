@@ -198,6 +198,30 @@ window.__SUPER_ADMIN_MODULE__ = {
 
 console.log("[SUPER ADMIN CREATE SYSTEM ADMIN] MODULE LOADED OK");
 
-/* ================= START MODULE ================= */
+/* ================= SAFE STARTUP ================= */
 
-BOOT.start("super_admin_create_system_admin");
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+
+    try {
+
+      initPage();
+
+      checkAuth();
+
+      bindEvents();
+
+      console.log(
+        "[SUPER ADMIN CREATE SYSTEM ADMIN] SAFE INIT COMPLETE"
+      );
+
+    } catch (err) {
+
+      console.error(
+        "[SUPER ADMIN INIT ERROR]",
+        err
+      );
+    }
+  }
+);
