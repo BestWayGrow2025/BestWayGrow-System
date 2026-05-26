@@ -418,11 +418,15 @@ function bootSafe() {
     }
   };
 
-  if (window.__CORE_READY__) {
-    start();
-    return;
-  }
+if (
+  window.__CORE_READY__ ||
+  window.__CORE_SYSTEM_LOADED__
+) {
 
+  start();
+  return;
+}
+  
   window.addEventListener(
     "CORE_READY",
     start,
