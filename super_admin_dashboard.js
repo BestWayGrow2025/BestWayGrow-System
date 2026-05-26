@@ -8,11 +8,9 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
 ✔ Button click ALWAYS works
 ✔ Fixed CORE routing compatibility
 ✔ Event-safe navigation
-✔ Pending route queue support
-✔ SYSTEM_READY compatible
-✔ Logout fully fixed
-✔ Duplicate initialization protected
-✔ Production hardened
+✔ BACK button fix applied
+✔ Pending route cleanup
+✔ Production stable
 ========================================
 */
 
@@ -39,7 +37,6 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
   ======================================== */
 
   function getCore() {
-
     return (
       window.ENTERPRISE_CORE_ENGINE ||
       window.__ENTERPRISE_CORE_ENGINE__ ||
@@ -59,105 +56,42 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
 
     try {
 
-      // ====================================
       // PRIMARY ENGINE
-      // ====================================
-
-      if (
-        CORE &&
-        typeof CORE.run === "function"
-      ) {
-
+      if (CORE && typeof CORE.run === "function") {
         CORE.run(page);
-
-        console.log(
-          "[DASHBOARD] ROUTED VIA CORE.run:",
-          page
-        );
-
+        console.log("[DASHBOARD] ROUTED VIA CORE.run:", page);
         return true;
       }
 
-      // ====================================
       // SECONDARY ENGINE METHODS
-      // ====================================
-
-      if (
-        CORE &&
-        typeof CORE.execute === "function"
-      ) {
-
+      if (CORE && typeof CORE.execute === "function") {
         CORE.execute(page);
-
-        console.log(
-          "[DASHBOARD] ROUTED VIA CORE.execute:",
-          page
-        );
-
+        console.log("[DASHBOARD] ROUTED VIA CORE.execute:", page);
         return true;
       }
 
-      if (
-        CORE &&
-        typeof CORE.route === "function"
-      ) {
-
+      if (CORE && typeof CORE.route === "function") {
         CORE.route(page);
-
-        console.log(
-          "[DASHBOARD] ROUTED VIA CORE.route:",
-          page
-        );
-
+        console.log("[DASHBOARD] ROUTED VIA CORE.route:", page);
         return true;
       }
 
-      // ====================================
       // MODULE LOADER FALLBACK
-      // ====================================
-
-      if (
-        typeof window.executeSuperAdminModule ===
-        "function"
-      ) {
-
+      if (typeof window.executeSuperAdminModule === "function") {
         window.executeSuperAdminModule(page);
-
-        console.log(
-          "[DASHBOARD] ROUTED VIA MODULE LOADER:",
-          page
-        );
-
+        console.log("[DASHBOARD] ROUTED VIA MODULE LOADER:", page);
         return true;
       }
 
-      // ====================================
       // CONNECTOR FALLBACK
-      // ====================================
-
-      if (
-        typeof window.connectSystemModule ===
-        "function"
-      ) {
-
+      if (typeof window.connectSystemModule === "function") {
         window.connectSystemModule(page);
-
-        console.log(
-          "[DASHBOARD] ROUTED VIA CONNECTOR:",
-          page
-        );
-
+        console.log("[DASHBOARD] ROUTED VIA CONNECTOR:", page);
         return true;
       }
 
-      // ====================================
       // QUEUE UNTIL READY
-      // ====================================
-
-      console.warn(
-        "[DASHBOARD] CORE NOT READY - QUEUED:",
-        page
-      );
+      console.warn("[DASHBOARD] CORE NOT READY - QUEUED:", page);
 
       window.__PENDING_ROUTE__ =
         window.__PENDING_ROUTE__ || [];
@@ -168,12 +102,7 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
 
     } catch (err) {
 
-      console.error(
-        "[DASHBOARD ERROR]",
-        page,
-        err
-      );
-
+      console.error("[DASHBOARD ERROR]", page, err);
       return false;
     }
   }
@@ -183,7 +112,6 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
   ======================================== */
 
   function handleNavigation(page) {
-
     return safeRun(page);
   }
 
@@ -193,11 +121,8 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
 
   function setActiveButton(activeBtn) {
 
-    document
-      .querySelectorAll(".menu button.active")
-      .forEach(btn => {
-        btn.classList.remove("active");
-      });
+    document.querySelectorAll(".menu button.active")
+      .forEach(btn => btn.classList.remove("active"));
 
     if (activeBtn) {
       activeBtn.classList.add("active");
@@ -211,9 +136,7 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
   function bindButtons() {
 
     const buttons =
-      document.querySelectorAll(
-        ".menu button"
-      );
+      document.querySelectorAll(".menu button");
 
     buttons.forEach(btn => {
 
@@ -223,8 +146,7 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
 
       btn.addEventListener("click", function () {
 
-        const page =
-          this.dataset.page;
+        const page = this.dataset.page;
 
         if (!page) return;
 
@@ -234,10 +156,45 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
       });
     });
 
-    console.log(
-      "[DASHBOARD] BUTTONS WIRED:",
-      buttons.length
-    );
+    console.log("[DASHBOARD] BUTTONS WIRED:", buttons.length);
+  }
+
+  /* ========================================
+     BACK BUTTON FIX (NEW)
+  ======================================== */
+
+  function bindBackButton() {
+
+    const backBtn =
+      document.getElementById("backBtn");
+
+    if (!backBtn) return;
+
+    if (backBtn.__dashboardBound__) return;
+
+    backBtn.__dashboardBound__ = true;
+
+    backBtn.addEventListener("click", function () {
+
+      console.log("[DASHBOARD] BACK CLICKED");
+
+      try {
+
+        document.querySelectorAll(".menu button")
+          .forEach(btn => btn.classList.remove("active"));
+
+        safeRun("home");
+
+        if (window.__PENDING_ROUTE__) {
+          window.__PENDING_ROUTE__ = [];
+        }
+
+        console.log("[DASHBOARD] RETURNED TO HOME");
+
+      } catch (err) {
+        console.error("[BACK BUTTON ERROR]", err);
+      }
+    });
   }
 
   /* ========================================
@@ -247,9 +204,7 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
   function bindLogout() {
 
     const logoutBtn =
-      document.getElementById(
-        "logoutBtn"
-      );
+      document.getElementById("logoutBtn");
 
     if (!logoutBtn) return;
 
@@ -259,89 +214,38 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
 
     logoutBtn.addEventListener("click", function () {
 
-      console.log(
-        "[DASHBOARD] LOGOUT CLICKED"
-      );
+      console.log("[DASHBOARD] LOGOUT CLICKED");
 
       try {
 
-        // ================= EVENTS =================
-
         if (
           window.SYSTEM_EVENTS &&
-          typeof window.SYSTEM_EVENTS.emit ===
-          "function"
+          typeof window.SYSTEM_EVENTS.emit === "function"
         ) {
-
-          window.SYSTEM_EVENTS.emit(
-            "LOGOUT_REQUESTED",
-            {
-              time: Date.now()
-            }
-          );
+          window.SYSTEM_EVENTS.emit("LOGOUT_REQUESTED", {
+            time: Date.now()
+          });
         }
 
-        // ================= PREFERRED =================
-
-        if (
-          typeof window.logout ===
-          "function"
-        ) {
-
+        if (typeof window.logout === "function") {
           window.logout();
           return;
         }
 
-        // ================= SECONDARY =================
-
-        if (
-          typeof window.clearSession ===
-          "function"
-        ) {
-
+        if (typeof window.clearSession === "function") {
           window.clearSession();
         }
 
-        // ================= STORAGE CLEAN =================
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("sessionUser");
+        localStorage.removeItem("activeUser");
+        sessionStorage.clear();
 
-        try {
-
-          localStorage.removeItem(
-            "currentUser"
-          );
-
-          localStorage.removeItem(
-            "sessionUser"
-          );
-
-          localStorage.removeItem(
-            "activeUser"
-          );
-
-          sessionStorage.clear();
-
-        } catch (storageErr) {
-
-          console.warn(
-            "[DASHBOARD STORAGE WARNING]",
-            storageErr
-          );
-        }
-
-        // ================= REDIRECT =================
-
-        window.location.href =
-          "index.html";
+        window.location.href = "index.html";
 
       } catch (err) {
-
-        console.error(
-          "[DASHBOARD LOGOUT ERROR]",
-          err
-        );
-
-        window.location.href =
-          "index.html";
+        console.error("[DASHBOARD LOGOUT ERROR]", err);
+        window.location.href = "index.html";
       }
     });
   }
@@ -352,34 +256,17 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
 
   function flushPendingRoutes() {
 
-    const pending =
-      window.__PENDING_ROUTE__ || [];
+    const pending = window.__PENDING_ROUTE__ || [];
 
-    if (
-      !Array.isArray(pending) ||
-      pending.length === 0
-    ) {
-      return;
-    }
+    if (!Array.isArray(pending) || pending.length === 0) return;
 
-    console.log(
-      "[DASHBOARD] FLUSHING:",
-      pending.length
-    );
+    console.log("[DASHBOARD] FLUSHING:", pending.length);
 
     pending.forEach(page => {
-
       try {
-
         safeRun(page);
-
       } catch (err) {
-
-        console.error(
-          "[FLUSH ERROR]",
-          page,
-          err
-        );
+        console.error("[FLUSH ERROR]", page, err);
       }
     });
 
@@ -392,45 +279,27 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
 
   function updateWelcome() {
 
-    const el =
-      document.getElementById(
-        "welcome"
-      );
+    const el = document.getElementById("welcome");
 
     if (!el) return;
 
     try {
 
-      if (
-        typeof window.getCurrentUser ===
-        "function"
-      ) {
+      if (typeof window.getCurrentUser === "function") {
 
-        const user =
-          window.getCurrentUser();
+        const user = window.getCurrentUser();
 
-        if (
-          user &&
-          (user.username ||
-            user.userId)
-        ) {
-
+        if (user && (user.username || user.userId)) {
           el.textContent =
-            "Welcome, " +
-            (user.username ||
-              user.userId);
-
+            "Welcome, " + (user.username || user.userId);
           return;
         }
       }
 
-      el.textContent =
-        "Welcome, Super Admin";
+      el.textContent = "Welcome, Super Admin";
 
     } catch (err) {
-
-      el.textContent =
-        "Welcome, Super Admin";
+      el.textContent = "Welcome, Super Admin";
     }
   }
 
@@ -440,136 +309,83 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
 
   function loadDefaultPage() {
 
-    const content =
-      document.getElementById(
-        "mainContent"
-      );
+    const content = document.getElementById("mainContent");
 
-    if (
-      content &&
-      content.innerHTML.trim() !== ""
-    ) {
-      return;
-    }
+    if (content && content.innerHTML.trim() !== "") return;
 
     safeRun("home");
 
     const homeBtn =
-      document.querySelector(
-        '.menu button[data-page="home"]'
-      );
+      document.querySelector('.menu button[data-page="home"]');
 
     setActiveButton(homeBtn);
   }
 
   /* ========================================
-     INITIALIZATION
+     INIT
   ======================================== */
 
   function initDashboard() {
 
-    if (
-      window.__SUPER_ADMIN_DASHBOARD__
-        .initialized
-    ) {
-
+    if (window.__SUPER_ADMIN_DASHBOARD__.initialized) {
       flushPendingRoutes();
       return;
     }
 
-    console.log(
-      "[DASHBOARD] INIT START"
-    );
+    console.log("[DASHBOARD] INIT START");
 
     bindButtons();
-
     bindLogout();
-
+    bindBackButton();   // ✅ BACK BUTTON FIX ADDED HERE
     updateWelcome();
 
-    window.__SUPER_ADMIN_DASHBOARD__
-      .initialized = true;
+    window.__SUPER_ADMIN_DASHBOARD__.initialized = true;
 
     flushPendingRoutes();
-
     loadDefaultPage();
 
-    console.log(
-      "[DASHBOARD] ACTIVE"
-    );
+    console.log("[DASHBOARD] ACTIVE");
   }
 
   /* ========================================
-     BOOT WHEN READY
+     BOOT
   ======================================== */
 
   function bootWhenReady() {
 
-    if (
-      window.__SYSTEM_BOOT__ &&
-      window.__SYSTEM_BOOT__.ready
-    ) {
-
+    if (window.__SYSTEM_BOOT__ && window.__SYSTEM_BOOT__.ready) {
       initDashboard();
       return;
     }
 
-    if (
-      window.SYSTEM_EVENTS &&
-      typeof window.SYSTEM_EVENTS.on ===
-      "function"
-    ) {
-
-      window.SYSTEM_EVENTS.on(
-        "SYSTEM_READY",
-        initDashboard
-      );
-
+    if (window.SYSTEM_EVENTS && typeof window.SYSTEM_EVENTS.on === "function") {
+      window.SYSTEM_EVENTS.on("SYSTEM_READY", initDashboard);
       return;
     }
 
-    if (
-      document.readyState ===
-      "loading"
-    ) {
-
-      document.addEventListener(
-        "DOMContentLoaded",
-        initDashboard
-      );
-
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initDashboard);
     } else {
-
-      setTimeout(
-        initDashboard,
-        500
-      );
+      setTimeout(initDashboard, 500);
     }
   }
 
   /* ========================================
-     GLOBAL EXPORTS
+     EXPORTS
   ======================================== */
 
-  window.initDashboard =
-    initDashboard;
-
-  window.handleNavigation =
-    handleNavigation;
-
-  window.safeDashboardRun =
-    safeRun;
+  window.initDashboard = initDashboard;
+  window.handleNavigation = handleNavigation;
+  window.safeDashboardRun = safeRun;
 
   /* ========================================
-     STARTUP
+     START
   ======================================== */
 
   bootWhenReady();
 
   window.__DASHBOARD_LOADED__ = true;
 
-  console.log(
-    "[DASHBOARD] READY"
-  );
+  console.log("[DASHBOARD] READY");
 
 })();
