@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SUPER ADMIN CREATE SYSTEM ADMIN v4.2
+SUPER ADMIN CREATE SYSTEM ADMIN v4.3
 ENTERPRISE MODULE FINAL
 ========================================
 ✔ Dashboard injected module safe
@@ -12,6 +12,7 @@ ENTERPRISE MODULE FINAL
 ✔ Production ready
 ✔ Create button fixed
 ✔ Re-render safe
+✔ CORE dependency removed
 ========================================
 */
 
@@ -22,27 +23,6 @@ let lock = false;
 console.log(
   "[SUPER ADMIN] FILE EXECUTION STARTED"
 );
-
-/* ================= INIT ================= */
-
-function initPage() {
-
-  if (
-    typeof initCoreSystem ===
-    "function"
-  ) {
-
-    initCoreSystem();
-
-  } else {
-
-    console.error(
-      "[SUPER ADMIN] core_system.js missing"
-    );
-
-    throw new Error("STOP");
-  }
-}
 
 /* ================= AUTH CHECK ================= */
 
@@ -344,21 +324,14 @@ function bindEvents() {
     return;
   }
 
-  // REMOVE OLD CLICK
   btn.onclick = null;
 
-  // REMOVE OLD FLAG
-  btn.__bound__ = false;
-
-  // ADD NEW CLICK
   btn.onclick = function () {
 
     safeClick(
       createSystemAdmin
     );
   };
-
-  btn.__bound__ = true;
 
   console.log(
     "[SUPER ADMIN] BUTTON BOUND OK"
@@ -370,8 +343,6 @@ function bindEvents() {
 function startModule() {
 
   try {
-
-    initPage();
 
     checkAuth();
 
