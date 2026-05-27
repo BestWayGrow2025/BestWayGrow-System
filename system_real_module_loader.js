@@ -76,26 +76,30 @@ function loadScriptOnce(scriptFile) {
 
     try {
 
-      const existing = document.querySelector(
-        'script[data-system-module="' +
-        scriptFile +
-        '"]'
-      );
-
-      if (existing) {
-        resolve(true);
-        return;
-      }
+      // REMOVE OLD SCRIPT
+      document
+        .querySelectorAll(
+          'script[data-system-module="' +
+          scriptFile +
+          '"]'
+        )
+        .forEach(s => s.remove());
 
       const script =
         document.createElement("script");
 
-      script.src = scriptFile;
+      script.src =
+        scriptFile +
+        "?v=" +
+        Date.now();
+
       script.async = false;
+
       script.dataset.systemModule =
         scriptFile;
 
       script.onload = function () {
+
         resolve(true);
       };
 
