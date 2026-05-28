@@ -69,59 +69,57 @@ async function loadHtmlIntoMain(htmlFile) {
   }
 }
 
-// ================= SAFE SCRIPT LOAD =================
-function loadScriptOnce(scriptFile) {
+// ================= SAFE SCRIPT LOAD ================= function loadScriptOnce(scriptFile) {
+return new Promise((resolve, reject) => {
+try {
 
-  return new Promise((resolve, reject) => {
+  // ALREADY LOADED
+  const existing =
+    document.querySelector(
+      'script[data-system-module="' +
+      scriptFile +
+      '"]'
+    );
 
-    try {
+  if (existing) {
 
-      // REMOVE OLD SCRIPT
-      document
-        .querySelectorAll(
-          'script[data-system-module="' +
-          scriptFile +
-          '"]'
-        )
-        .forEach(s => s.remove());
+    resolve(true);
+    return;
+  }
 
-      const script =
-        document.createElement("script");
+  const script =
+    document.createElement("script");
 
-      script.src =
-        scriptFile +
-        "?v=" +
-        Date.now();
+  script.src = scriptFile;
 
-      script.async = false;
+  script.async = false;
 
-      script.dataset.systemModule =
-        scriptFile;
+  script.dataset.systemModule =
+    scriptFile;
 
-      script.onload = function () {
+  script.onload = function () {
 
-        resolve(true);
-      };
+    resolve(true);
+  };
 
-      script.onerror = function () {
+  script.onerror = function () {
 
-        reject(
-          new Error(
-            "Failed script load: " +
-            scriptFile
-          )
-        );
-      };
+    reject(
+      new Error(
+        "Failed script load: " +
+        scriptFile
+      )
+    );
+  };
 
-      document.body.appendChild(script);
+  document.body.appendChild(script);
 
-    } catch (err) {
+} catch (err) {
 
-      reject(err);
-    }
-
-  });
+  reject(err);
 }
+
+}); }
 
 // ================= GENERIC MODULE LOADER =================
 async function loadRealModule(config = {}) {
