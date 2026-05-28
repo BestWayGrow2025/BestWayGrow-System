@@ -307,19 +307,14 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
      DEFAULT PAGE
   ======================================== */
 
-  function loadDefaultPage() {
-
-    const content = document.getElementById("mainContent");
-
-    if (content && content.innerHTML.trim() !== "") return;
-
-    safeRun("home");
-
-    const homeBtn =
-      document.querySelector('.menu button[data-page="home"]');
-
-    setActiveButton(homeBtn);
-  }
+function loadDefaultPage() {
+// PREVENT FORCE HOME AFTER FIRST LOAD if (window.DEFAULT_HOME_LOADED) { return; }
+const content = document.getElementById("mainContent");
+if ( content && content.innerHTML.trim() !== "" ) { return; }
+window.DEFAULT_HOME_LOADED = true;
+safeRun("home");
+const homeBtn = document.querySelector( '.menu button[data-page="home"]' );
+setActiveButton(homeBtn); }
 
   /* ========================================
      INIT
