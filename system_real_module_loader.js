@@ -69,57 +69,61 @@ async function loadHtmlIntoMain(htmlFile) {
   }
 }
 
-// ================= SAFE SCRIPT LOAD ================= function loadScriptOnce(scriptFile) {
-return new Promise((resolve, reject) => {
-try {
+// ================= SAFE SCRIPT LOAD =================
+function loadScriptOnce(scriptFile) {
 
-  // ALREADY LOADED
-  const existing =
-    document.querySelector(
-      'script[data-system-module="' +
-      scriptFile +
-      '"]'
-    );
+  return new Promise((resolve, reject) => {
 
-  if (existing) {
+    try {
 
-    resolve(true);
-    return;
-  }
+      // ALREADY LOADED
+      const existing =
+        document.querySelector(
+          'script[data-system-module="' +
+          scriptFile +
+          '"]'
+        );
 
-  const script =
-    document.createElement("script");
+      if (existing) {
 
-  script.src = scriptFile;
+        resolve(true);
+        return;
+      }
 
-  script.async = false;
+      const script =
+        document.createElement("script");
 
-  script.dataset.systemModule =
-    scriptFile;
+      script.src = scriptFile;
 
-  script.onload = function () {
+      script.async = false;
 
-    resolve(true);
-  };
+      script.dataset.systemModule =
+        scriptFile;
 
-  script.onerror = function () {
+      script.onload = function () {
 
-    reject(
-      new Error(
-        "Failed script load: " +
-        scriptFile
-      )
-    );
-  };
+        resolve(true);
+      };
 
-  document.body.appendChild(script);
+      script.onerror = function () {
 
-} catch (err) {
+        reject(
+          new Error(
+            "Failed script load: " +
+            scriptFile
+          )
+        );
+      };
 
-  reject(err);
+      document.body.appendChild(script);
+
+    } catch (err) {
+
+      reject(err);
+    }
+
+  });
 }
-
-}); }
 
 // ================= GENERIC MODULE LOADER =================
 async function loadRealModule(config = {}) {
