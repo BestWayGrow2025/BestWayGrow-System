@@ -297,90 +297,85 @@ function login() {
     return;
   }
 
-  /* ================= SESSION ================= */
+ /* ================= SESSION ================= */
 
-  if (
-    typeof setSession !==
-    "function"
-  ) {
+if (
+  typeof setSession !==
+  "function"
+) {
 
-    alert(
-      "Session system missing"
-    );
-
-    return;
-  }
-
-  const now =
-    Date.now();
-
-  const sessionCreated =
-    setSession({
-
-      userId:
-        user.userId,
-
-      role:
-        user.role,
-
-      loginTime:
-        now,
-
-      lastActivity:
-        now
-    });
-
-  console.log(
-    "[SUPER ADMIN LOGIN] SESSION RESULT:",
-    sessionCreated
+  alert(
+    "Session system missing"
   );
 
-  console.log(
-    "[SUPER ADMIN LOGIN] SESSION CHECK:",
-    getSession()
-  );
+  return;
+}
 
-  if (!sessionCreated) {
+/*
+========================================
+IMPORTANT FIX
+========================================
+Send FULL USER OBJECT
+NOT partial session object
+because session_manager.js
+creates token from full user
+========================================
+*/
 
-    showMsg(
-      "❌ Session Creation Failed"
-    );
+const sessionCreated =
+  setSession(user);
 
-    return;
-  }
+console.log(
+  "[SUPER ADMIN LOGIN] SESSION RESULT:",
+  sessionCreated
+);
 
-  /* ================= ACTIVITY LOG ================= */
+console.log(
+  "[SUPER ADMIN LOGIN] SESSION CHECK:",
+  getSession()
+);
 
-  if (
-    typeof logActivity ===
-    "function"
-  ) {
-
-    try {
-
-      logActivity(
-        user.userId,
-        "super_admin",
-        "LOGIN",
-        "ADMIN"
-      );
-
-    } catch (e) {}
-  }
+if (!sessionCreated) {
 
   showMsg(
-    "✅ Login successful"
+    "❌ Session Creation Failed"
   );
 
-  setTimeout(
-    function () {
+  return;
+}
 
-      window.location.href =
-        "super_admin_dashboard.html";
+/* ================= ACTIVITY LOG ================= */
 
-    },
-    500
-  );
+if (
+  typeof logActivity ===
+  "function"
+) {
+
+  try {
+
+    logActivity(
+      user.userId,
+      "super_admin",
+      "LOGIN",
+      "ADMIN"
+    );
+
+  } catch (e) {}
+}
+
+showMsg(
+  "✅ Login successful"
+);
+
+setTimeout(
+  function () {
+
+    window.location.href =
+      "super_admin_dashboard.html";
+
+  },
+  500
+);
 }
 
 /* ================= MESSAGE ================= */
