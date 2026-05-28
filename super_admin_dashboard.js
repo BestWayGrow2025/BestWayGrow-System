@@ -303,16 +303,13 @@ SUPER ADMIN DASHBOARD v4.4 FINAL
     }
   }
 
-  /* ========================================
-     DEFAULT PAGE
-  ======================================== */
-
+/* ======================================== DEFAULT PAGE ======================================== */
 function loadDefaultPage() {
 // PREVENT FORCE HOME AFTER FIRST LOAD if (window.DEFAULT_HOME_LOADED) { return; }
 const content = document.getElementById("mainContent");
-if ( content && content.innerHTML.trim() !== "" ) { return; }
-window.DEFAULT_HOME_LOADED = true;
-safeRun("home");
+// CONTENT ALREADY EXISTS if ( content && content.innerHTML.trim() !== "" ) { return; }
+// LOCK DEFAULT HOME window.DEFAULT_HOME_LOADED = true;
+// LOAD HOME safeRun("home");
 const homeBtn = document.querySelector( '.menu button[data-page="home"]' );
 setActiveButton(homeBtn); }
 
