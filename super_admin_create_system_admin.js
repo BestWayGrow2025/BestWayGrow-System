@@ -28,17 +28,11 @@ console.log(
 
 function checkAuth() {
 
-  session =
-    typeof getSession ===
-    "function"
-
-      ? getSession()
-
-      : JSON.parse(
-          localStorage.getItem(
-            "loggedInSuperAdmin"
-          ) || "null"
-        );
+session =
+  typeof getSession ===
+  "function"
+    ? getSession()
+    : null;
 
   // SOFT FAIL ONLY
   if (
