@@ -219,6 +219,10 @@ function loadUnknownSystemModule(page) {
   }
 }
 
-// ================= EXPORT =================
+/* ================= EXPORT ================= */
+
 window.connectSystemModule =
   connectSystemModule;
+
+window.loadUnknownSystemModule =
+  loadUnknownSystemModule;
