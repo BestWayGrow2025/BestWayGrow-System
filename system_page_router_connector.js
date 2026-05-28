@@ -52,22 +52,26 @@ SYSTEM PAGE ROUTER CONNECTOR V2.0 FINAL
   }
 
   // ================= HANDLE NAVIGATION =================
-  function handlePageNavigation(e) {
+ function handlePageNavigation(e) {
 
-    const btn =
-      e.target.closest("[data-page]");
+  const btn =
+    e.target.closest("[data-page]");
 
-    if (!btn) return;
+  if (!btn) return;
 
-    e.preventDefault();
+  e.preventDefault();
 
-    const page =
-      btn.getAttribute("data-page");
+  e.stopPropagation();
 
-    if (!page) return;
+  e.stopImmediatePropagation();
 
-    openSystemPage(page);
-  }
+  const page =
+    btn.getAttribute("data-page");
+
+  if (!page) return;
+
+  openSystemPage(page);
+}
 
   // ================= OPEN PAGE =================
   function openSystemPage(page) {
