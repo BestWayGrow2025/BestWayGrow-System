@@ -301,11 +301,18 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
       connectSystemModule("home")
   );
 
-  register(
-    "create",
-    () =>
-      connectSystemModule("create")
-  );
+ register( "create", () => {
+if (
+  typeof loadCreateSystemAdminRealModule ===
+  "function"
+) {
+
+  return loadCreateSystemAdminRealModule();
+}
+
+return false;
+
+} );
 
   register(
     "users",
