@@ -293,25 +293,98 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
     );
   }
 
- /* ================= PRE-REGISTERED CONNECTORS ================= */
+/* ================= PRE-REGISTERED CONNECTORS ================= */
+
 register( "home", () => loadHomeDashboardModule() );
-register( "create", () => loadCreateSystemAdminRealModule() );
-register( "users", () => loadUsersRealModule() );
-register( "system", () => loadSystemAdminPanelModule() );
-register( "pinmaster", () => loadPinMasterRealModule() );
-register( "productmaster", () => true );
-register( "rankmaster", () => true );
-register( "incomecontrol", () => true );
-register( "audit", () => true );
-register( "health", () => true );
-register( "backup", () => true );
-register( "escrow", () => true );
-register( "reports", () => loadReportsRealModule() );
-register( "tree", () => true );
+
+register(
+  "create",
+  () => loadCreateSystemAdminRealModule()
+);
+
+register(
+  "users",
+  () => loadUsersRealModule()
+);
+
+register(
+  "system",
+  () => loadSystemAdminPanelModule()
+);
+
+register(
+  "pinmaster",
+  () => loadPinMasterRealModule()
+);
+
+register(
+  "productmaster",
+  () => true
+);
+
+register(
+  "rankmaster",
+  () => true
+);
+
+register(
+  "incomecontrol",
+  () => true
+);
+
+register(
+  "audit",
+  () => true
+);
+
+register(
+  "health",
+  () => true
+);
+
+register(
+  "backup",
+  () => true
+);
+
+register(
+  "escrow",
+  () => true
+);
+
+register(
+  "reports",
+  () => loadReportsRealModule()
+);
+
+register(
+  "tree",
+  () => true
+);
+
 /* ================= PUBLIC API ================= */
-return { register, run, emit, trigger, on, status, healthCheck, safeCall };
+
+return {
+  register,
+  run,
+  emit,
+  trigger,
+  on,
+  status,
+  healthCheck,
+  safeCall
+};
+
 })();
+
 /* ================= GLOBAL EXPORT ================= */
-window.ENTERPRISE_CORE_ENGINE = window.ENTERPRISE_CORE_ENGINE;
+
+window.ENTERPRISE_CORE_ENGINE =
+  window.__ENTERPRISE_CORE_ENGINE__;
+
 /* ================= READY ================= */
-console.log( "[ENTERPRISE CORE ENGINE] READY" );
+
+console.log(
+  "[ENTERPRISE CORE ENGINE] READY"
+);
+
