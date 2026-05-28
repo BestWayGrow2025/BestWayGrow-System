@@ -40,14 +40,17 @@ function checkAuth() {
           ) || "null"
         );
 
+  // SOFT FAIL ONLY
   if (
     !session ||
     !session.userId
   ) {
 
-    redirectLogin();
+    console.warn(
+      "[SUPER ADMIN AUTH] Session Missing"
+    );
 
-    throw new Error("STOP");
+    return false;
   }
 
   if (
@@ -56,9 +59,11 @@ function checkAuth() {
       "super_admin"
   ) {
 
-    redirectLogin();
+    console.warn(
+      "[SUPER ADMIN AUTH] Invalid Role"
+    );
 
-    throw new Error("STOP");
+    return false;
   }
 
   currentUser =
@@ -77,9 +82,11 @@ function checkAuth() {
       "super_admin"
   ) {
 
-    redirectLogin();
+    console.warn(
+      "[SUPER ADMIN AUTH] User Invalid"
+    );
 
-    throw new Error("STOP");
+    return false;
   }
 
   if (
@@ -89,30 +96,14 @@ function checkAuth() {
     ) !== "active"
   ) {
 
-    redirectLogin();
+    console.warn(
+      "[SUPER ADMIN AUTH] User Inactive"
+    );
 
-    throw new Error("STOP");
-  }
-}
-
-/* ================= REDIRECT ================= */
-
-function redirectLogin() {
-
-  if (
-    typeof destroySession ===
-    "function"
-  ) {
-
-    destroySession();
+    return false;
   }
 
-  localStorage.removeItem(
-    "loggedInSuperAdmin"
-  );
-
-  window.location.href =
-    "super_admin_login.html";
+  return true;
 }
 
 /* ================= MESSAGE ================= */
@@ -344,10 +335,20 @@ function startModule() {
 
   try {
 
-    checkAuth();
+const authOK =
+  checkAuth();
 
-    bindEvents();
+if (!authOK) {
 
+  showMsg(
+    "❌ Authentication Failed"
+  );
+
+  return;
+}
+
+bindEvents();
+    
     console.log(
       "[SUPER ADMIN CREATE SYSTEM ADMIN] ACTIVE"
     );
