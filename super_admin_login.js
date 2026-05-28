@@ -9,6 +9,7 @@ SUPER ADMIN LOGIN V4.1 FINAL STABLE
 ✔ Dashboard auth fixed
 ✔ No BOOT recursion
 ✔ Production stable
+✔ SESSION FIX APPLIED (CRITICAL)
 ========================================
 */
 
@@ -25,15 +26,11 @@ if (
   typeof window.ENTERPRISE_CORE_ENGINE.register ===
     "function"
 ) {
-
   window.ENTERPRISE_CORE_ENGINE.register(
     "super_admin_login",
     function () {
-
       initPage();
-
       bindEvents();
-
       loadPage();
     }
   );
@@ -44,11 +41,8 @@ if (
 document.addEventListener(
   "DOMContentLoaded",
   function () {
-
     initPage();
-
     bindEvents();
-
     loadPage();
   }
 );
@@ -56,131 +50,72 @@ document.addEventListener(
 /* ================= INIT ================= */
 
 function initPage() {
-
-  console.log(
-    "[SUPER ADMIN LOGIN] INIT"
-  );
+  console.log("[SUPER ADMIN LOGIN] INIT");
 }
 
 /* ================= EVENTS ================= */
 
 function bindEvents() {
+  const btn = document.getElementById("loginBtn");
 
-  const btn =
-    document.getElementById(
-      "loginBtn"
-    );
-
-  if (
-    btn &&
-    !btn.dataset.bound
-  ) {
-
+  if (btn && !btn.dataset.bound) {
     btn.dataset.bound = "true";
 
-    btn.addEventListener(
-      "click",
-      function () {
-
-        safeClick(login);
-      }
-    );
+    btn.addEventListener("click", function () {
+      safeClick(login);
+    });
   }
 
-  const password =
-    document.getElementById(
-      "password"
-    );
+  const password = document.getElementById("password");
 
-  if (
-    password &&
-    !password.dataset.bound
-  ) {
-
+  if (password && !password.dataset.bound) {
     password.dataset.bound = "true";
 
-    password.addEventListener(
-      "keypress",
-      function (e) {
-
-        if (e.key === "Enter") {
-
-          safeClick(login);
-        }
+    password.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        safeClick(login);
       }
-    );
+    });
   }
 }
 
 /* ================= AUTO REDIRECT ================= */
 
 function loadPage() {
-
   const session =
-    typeof getSession ===
-    "function"
-
+    typeof getSession === "function"
       ? getSession()
-
       : null;
 
-  if (
-    session &&
-    session.role ===
-      "super_admin"
-  ) {
-
-    window.location.href =
-      "super_admin_dashboard.html";
+  if (session && session.role === "super_admin") {
+    window.location.href = "super_admin_dashboard.html";
   }
 }
 
 /* ================= SAFE CLICK ================= */
 
 function safeClick(fn) {
-
   if (lock) return;
-
   lock = true;
 
   try {
-
     fn();
-
   } catch (err) {
-
-    console.error(
-      "[SUPER ADMIN LOGIN ERROR]",
-      err
-    );
-
-    showMsg(
-      "❌ System Error"
-    );
+    console.error("[SUPER ADMIN LOGIN ERROR]", err);
+    showMsg("❌ System Error");
   }
 
-  setTimeout(
-    function () {
-
-      lock = false;
-
-    },
-    500
-  );
+  setTimeout(function () {
+    lock = false;
+  }, 500);
 }
 
 /* ================= SAFE DECODE ================= */
 
 function safeDecode(value) {
-
   try {
-
-    return atob(
-      value || ""
-    );
-
+    return atob(value || "");
   } catch (e) {
-
     return value || "";
   }
 }
@@ -188,20 +123,11 @@ function safeDecode(value) {
 /* ================= USERS ================= */
 
 function getSafeUsers() {
-
   try {
-
-    return typeof getUsers ===
-      "function"
-
-      ? (
-          getUsers() || []
-        )
-
+    return typeof getUsers === "function"
+      ? (getUsers() || [])
       : [];
-
   } catch (e) {
-
     return [];
   }
 }
@@ -209,190 +135,110 @@ function getSafeUsers() {
 /* ================= LOGIN ================= */
 
 function login() {
-
   const userId =
-    document.getElementById(
-      "userId"
-    ).value.trim();
+    document.getElementById("userId").value.trim();
 
   const password =
-    document.getElementById(
-      "password"
-    ).value.trim();
+    document.getElementById("password").value.trim();
 
-  if (
-    !userId ||
-    !password
-  ) {
-
-    showMsg(
-      "⚠️ Enter ID & Password"
-    );
-
+  if (!userId || !password) {
+    showMsg("⚠️ Enter ID & Password");
     return;
   }
 
-  const users =
-    getSafeUsers();
+  const users = getSafeUsers();
 
-  const user =
-    users.find(function (u) {
-
-      return (
-        String(
-          u.userId || ""
-        ).toUpperCase() ===
-        userId.toUpperCase()
-      );
-    });
+  const user = users.find(function (u) {
+    return (
+      String(u.userId || "").toUpperCase() ===
+      userId.toUpperCase()
+    );
+  });
 
   if (!user) {
-
-    showMsg(
-      "❌ Invalid ID"
-    );
-
+    showMsg("❌ Invalid ID");
     return;
   }
 
-  if (
-    user.role !==
-    "super_admin"
-  ) {
-
-    showMsg(
-      "🚫 Access Denied"
-    );
-
+  if (user.role !== "super_admin") {
+    showMsg("🚫 Access Denied");
     return;
   }
 
-  if (
-    (
-      user.status ||
-      "active"
-    ) !== "active"
-  ) {
-
-    showMsg(
-      "🚫 Account inactive"
-    );
-
+  if ((user.status || "active") !== "active") {
+    showMsg("🚫 Account inactive");
     return;
   }
 
-  const storedPass =
-    safeDecode(
-      user.password
-    );
+  const storedPass = safeDecode(user.password);
 
-  if (
-    storedPass !== password
-  ) {
-
-    showMsg(
-      "❌ Wrong Password"
-    );
-
+  if (storedPass !== password) {
+    showMsg("❌ Wrong Password");
     return;
   }
 
- /* ================= SESSION ================= */
+  /* ================= SESSION FIX (CRITICAL) ================= */
 
-if (
-  typeof setSession !==
-  "function"
-) {
+  if (typeof setSession !== "function") {
+    alert("Session system missing");
+    return;
+  }
 
-  alert(
-    "Session system missing"
+  /*
+    FIX:
+    DO NOT pass full user object blindly
+    MUST match session_manager expected structure
+  */
+
+  const sessionCreated = setSession({
+    userId: user.userId,
+    role: user.role,
+    status: user.status || "active"
+  });
+
+  console.log(
+    "[SUPER ADMIN LOGIN] SESSION RESULT:",
+    sessionCreated
   );
 
-  return;
-}
-
-/*
-========================================
-IMPORTANT FIX
-========================================
-Send FULL USER OBJECT
-NOT partial session object
-because session_manager.js
-creates token from full user
-========================================
-*/
-
-const sessionCreated =
-  setSession(user);
-
-console.log(
-  "[SUPER ADMIN LOGIN] SESSION RESULT:",
-  sessionCreated
-);
-
-console.log(
-  "[SUPER ADMIN LOGIN] SESSION CHECK:",
-  getSession()
-);
-
-if (!sessionCreated) {
-
-  showMsg(
-    "❌ Session Creation Failed"
+  console.log(
+    "[SUPER ADMIN LOGIN] SESSION CHECK:",
+    getSession()
   );
 
-  return;
-}
+  if (!sessionCreated) {
+    showMsg("❌ Session Creation Failed");
+    return;
+  }
 
-/* ================= ACTIVITY LOG ================= */
+  /* ================= ACTIVITY LOG ================= */
 
-if (
-  typeof logActivity ===
-  "function"
-) {
+  if (typeof logActivity === "function") {
+    try {
+      logActivity(
+        user.userId,
+        "super_admin",
+        "LOGIN",
+        "ADMIN"
+      );
+    } catch (e) {}
+  }
 
-  try {
+  showMsg("✅ Login successful");
 
-    logActivity(
-      user.userId,
-      "super_admin",
-      "LOGIN",
-      "ADMIN"
-    );
-
-  } catch (e) {}
-}
-
-showMsg(
-  "✅ Login successful"
-);
-
-setTimeout(
-  function () {
-
-    window.location.href =
-      "super_admin_dashboard.html";
-
-  },
-  500
-);
+  setTimeout(function () {
+    window.location.href = "super_admin_dashboard.html";
+  }, 500);
 }
 
 /* ================= MESSAGE ================= */
 
 function showMsg(text) {
-
-  const msg =
-    document.getElementById(
-      "msg"
-    );
+  const msg = document.getElementById("msg");
 
   if (msg) {
-
     msg.innerText = text;
-
   } else {
-
     alert(text);
   }
 }
@@ -400,29 +246,18 @@ function showMsg(text) {
 /* ================= EXPORT ================= */
 
 window.SuperAdminLogin = {
-
   login: login,
-
   showMsg: showMsg
 };
 
 /* ================= FLAGS ================= */
 
-window.__SUPER_ADMIN_LOGIN__ =
-  true;
+window.__SUPER_ADMIN_LOGIN__ = true;
 
 window.__SUPER_ADMIN_LOGIN_MODULE__ = {
-
   loaded: true,
-
-  name:
-    "super_admin_login",
-
-  time:
-    Date.now()
+  name: "super_admin_login",
+  time: Date.now()
 };
 
-console.log(
-  "[SUPER ADMIN LOGIN] MODULE LOADED OK"
-);
-
+console.log("[SUPER ADMIN LOGIN] MODULE LOADED OK");
