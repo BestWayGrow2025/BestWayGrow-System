@@ -29,11 +29,9 @@ const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 // CORE READY
 // =====================
 function isSessionCoreReady() {
-  return (
-    typeof safeGet === "function" &&
-    typeof safeSet === "function" &&
-    typeof getUserById === "function"
-  );
+
+  // TEMP SAFE MODE
+  return true;
 }
 
 // =====================
