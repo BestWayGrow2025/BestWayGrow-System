@@ -293,121 +293,25 @@ window.__ENTERPRISE_CORE_ENGINE__ = (function () {
     );
   }
 
-  /* ================= PRE-REGISTERED CONNECTORS ================= */
-
-  register(
-    "home",
-    () =>
-      connectSystemModule("home")
-  );
-
- register( "create", () => {
-if (
-  typeof loadCreateSystemAdminRealModule ===
-  "function"
-) {
-
-  return loadCreateSystemAdminRealModule();
-}
-
-return false;
-
-} );
-
-  register(
-    "users",
-    () =>
-      connectSystemModule("users")
-  );
-
-  register(
-    "system",
-    () =>
-      connectSystemModule("system")
-  );
-
-  register(
-    "pinmaster",
-    () =>
-      connectSystemModule("pinmaster")
-  );
-
-  register(
-    "productmaster",
-    () =>
-      connectSystemModule("productmaster")
-  );
-
-  register(
-    "rankmaster",
-    () =>
-      connectSystemModule("rankmaster")
-  );
-
-  register(
-    "incomecontrol",
-    () =>
-      connectSystemModule("incomecontrol")
-  );
-
-  register(
-    "audit",
-    () =>
-      connectSystemModule("audit")
-  );
-
-  register(
-    "health",
-    () =>
-      connectSystemModule("health")
-  );
-
-  register(
-    "backup",
-    () =>
-      connectSystemModule("backup")
-  );
-
-  register(
-    "escrow",
-    () =>
-      connectSystemModule("escrow")
-  );
-
-  register(
-    "reports",
-    () =>
-      connectSystemModule("reports")
-  );
-
-  register(
-    "tree",
-    () =>
-      connectSystemModule("tree")
-  );
-
-  /* ================= PUBLIC API ================= */
-
-  return {
-    register,
-    run,
-    emit,
-    trigger,
-    on,
-    status,
-    healthCheck,
-    safeCall
-  };
-
+ /* ================= PRE-REGISTERED CONNECTORS ================= */
+register( "home", () => loadHomeDashboardModule() );
+register( "create", () => loadCreateSystemAdminRealModule() );
+register( "users", () => loadUsersRealModule() );
+register( "system", () => loadSystemAdminPanelModule() );
+register( "pinmaster", () => loadPinMasterRealModule() );
+register( "productmaster", () => true );
+register( "rankmaster", () => true );
+register( "incomecontrol", () => true );
+register( "audit", () => true );
+register( "health", () => true );
+register( "backup", () => true );
+register( "escrow", () => true );
+register( "reports", () => loadReportsRealModule() );
+register( "tree", () => true );
+/* ================= PUBLIC API ================= */
+return { register, run, emit, trigger, on, status, healthCheck, safeCall };
 })();
-
 /* ================= GLOBAL EXPORT ================= */
-
-window.ENTERPRISE_CORE_ENGINE =
-  window.__ENTERPRISE_CORE_ENGINE__;
-
+window.ENTERPRISE_CORE_ENGINE = window.ENTERPRISE_CORE_ENGINE;
 /* ================= READY ================= */
-
-console.log(
-  "[ENTERPRISE CORE ENGINE] READY"
-);
+console.log( "[ENTERPRISE CORE ENGINE] READY" );
