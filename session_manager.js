@@ -218,50 +218,50 @@ function getSession() {
       return null;
     }
 
-  // =========================
-  // SAFE USER RESOLVE (FINAL FIX)
-  // =========================
+    // =========================
+    // SAFE USER RESOLVE (FINAL FIX)
+    // =========================
 
-  // HARD DEPENDENCY CHECK
-  if (typeof window.getUserById !== "function") {
-    console.warn("[SESSION] CORE NOT READY - getUserById missing");
-    return null;
-  }
+    // HARD DEPENDENCY CHECK
+    if (typeof window.getUserById !== "function") {
+      console.warn("[SESSION] CORE NOT READY - getUserById missing");
+      return null;
+    }
 
-  let user;
+    let user;
 
-  try {
-    user = window.getUserById(session.userId);
-  } catch (e) {
-    console.error("[SESSION] USER FETCH FAILED:", e);
-    return null;
-  }
+    try {
+      user = window.getUserById(session.userId);
+    } catch (e) {
+      console.error("[SESSION] USER FETCH FAILED:", e);
+      return null;
+    }
 
-  if (!user) {
-    destroySession();
-    return null;
-  }
+    if (!user) {
+      destroySession();
+      return null;
+    }
 
-  if (user.status && user.status !== "active") {
-    destroySession();
-    return null;
-  }
+    if (user.status && user.status !== "active") {
+      destroySession();
+      return null;
+    }
 
-  // ROLE CHECK
-if (String(user.role || "") !== String(session.role || "")) {
-  destroySession();
-  return null;
-}
+    // ROLE CHECK
+    if (String(user.role || "") !== String(session.role || "")) {
+      destroySession();
+      return null;
+    }
 
-// TOKEN CHECK
-const expectedToken = generateSessionToken(user);
-if (session.token !== expectedToken) {
-  destroySession();
-  return null;
-}
+    // TOKEN CHECK
+    const expectedToken = generateSessionToken(user);
+    if (session.token !== expectedToken) {
+      destroySession();
+      return null;
+    }
 
-// ACTIVITY UPDATE
-session.lastActivity = Date.now();
+    // ACTIVITY UPDATE
+    session.lastActivity = Date.now();
 
     // TREE SCOPING ATTACHED
     session.treeScope = getTreeAccessScope();
