@@ -30,8 +30,25 @@ const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 // =====================
 function isSessionCoreReady() {
 
-  // TEMP SAFE MODE
-  return true;
+  try {
+
+    // CORE SYSTEM MUST BE READY FIRST
+    if (!window.__CORE_READY__) return false;
+
+    // REQUIRED DEPENDENCY
+    if (typeof window.getUserById !== "function") return false;
+
+    // STORAGE SAFETY
+    if (typeof localStorage === "undefined") return false;
+
+    return true;
+
+  } catch (e) {
+
+    console.error("[SESSION CORE READY ERROR]", e);
+
+    return false;
+  }
 }
 
 // =====================
