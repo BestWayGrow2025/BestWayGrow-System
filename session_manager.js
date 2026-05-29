@@ -221,21 +221,24 @@ function getSession() {
     // =========================
     // SAFE USER RESOLVE (FINAL FIX)
     // =========================
-    let user = null;
+    if (typeof getUserById !== "function") {
+  console.error("[SESSION] CRITICAL: getUserById missing");
+  return null;
+}
 
-    if (typeof getUserById === "function") {
-      try {
-        user = getUserById(session.userId);
-      } catch (e) {
-        console.error("[SESSION] USER FETCH FAILED:", e);
-        return null;
-      }
-    }
+let user;
 
-    if (!user) {
-      destroySession();
-      return null;
-    }
+try {
+  user = getUserById(session.userId);
+} catch (e) {
+  console.error("[SESSION] USER FETCH FAILED:", e);
+  return null;
+}
+
+if (!user) {
+  destroySession();
+  return null;
+}
 
     if (user.status && user.status !== "active") {
       destroySession();
