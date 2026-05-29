@@ -217,8 +217,18 @@ function getSession() {
       return null;
     }
 
-    // USER VALIDATION
-    const user = getUserById(session.userId);
+    // =========================
+    // SAFE USER VALIDATION FIX
+    // =========================
+    let user = null;
+
+    try {
+      user = getUserById(session.userId);
+    } catch (err) {
+      console.error("[SESSION] USER FETCH ERROR:", err);
+      return null;
+    }
+
     if (!user) {
       destroySession();
       return null;
@@ -245,7 +255,7 @@ function getSession() {
     // ACTIVITY REFRESH
     session.lastActivity = Date.now();
 
-    // 🧠 TREE SCOPING ATTACHED HERE (IMPORTANT FIX)
+    // TREE SCOPING
     session.treeScope = getTreeAccessScope();
 
     safeSet(SESSION_KEY, session);
