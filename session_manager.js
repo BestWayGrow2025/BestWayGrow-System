@@ -218,20 +218,20 @@ function getSession() {
       return null;
     }
 
-    // =========================
+   // =========================
 // SAFE USER RESOLVE (FINAL FIX)
 // =========================
 
-// 🚨 HARD DEPENDENCY CHECK (MANDATORY)
+// HARD DEPENDENCY CHECK
 if (typeof getUserById !== "function") {
-  console.error("[SESSION] CRITICAL: getUserById missing");
+  console.warn("[SESSION] getUserById not ready - delaying validation");
   return null;
 }
 
 let user;
 
 try {
-  user = getUserById(session.userId);
+  user = window.getUserById(session.userId);
 } catch (e) {
   console.error("[SESSION] USER FETCH FAILED:", e);
   return null;
@@ -241,7 +241,7 @@ if (!user) {
   destroySession();
   return null;
 }
-
+    
 if (user.status && user.status !== "active") {
   destroySession();
   return null;
