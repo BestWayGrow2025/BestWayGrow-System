@@ -170,7 +170,8 @@ function setSession(user) {
 function destroySession() {
 
   try {
-    let old = safeGet(SESSION_KEY, null);
+
+    const old = safeGet(SESSION_KEY, null);
 
     localStorage.setItem(
       SESSION_EVENT_KEY,
@@ -195,14 +196,14 @@ function getSession() {
 
     if (!isSessionCoreReady()) return null;
 
-    let session = safeGet(SESSION_KEY, null);
+    const session = safeGet(SESSION_KEY, null);
 
     if (!isValidSessionShape(session)) {
       destroySession();
       return null;
     }
 
-    // SYSTEM LOCK
+    // SYSTEM LOCK CHECK
     if (typeof getSystemSettings === "function") {
       const sys = getSystemSettings();
       if (sys?.lockMode === true) {
@@ -211,22 +212,24 @@ function getSession() {
       }
     }
 
-    // EXPIRY
+    // EXPIRY CHECK
     if (isSessionExpired(session)) {
       destroySession();
       return null;
     }
 
     // =========================
-    // SAFE USER VALIDATION FIX
+    // SAFE USER RESOLVE (FINAL FIX)
     // =========================
     let user = null;
 
-    try {
-      user = getUserById(session.userId);
-    } catch (err) {
-      console.error("[SESSION] USER FETCH ERROR:", err);
-      return null;
+    if (typeof getUserById === "function") {
+      try {
+        user = getUserById(session.userId);
+      } catch (e) {
+        console.error("[SESSION] USER FETCH FAILED:", e);
+        return null;
+      }
     }
 
     if (!user) {
@@ -252,10 +255,10 @@ function getSession() {
       return null;
     }
 
-    // ACTIVITY REFRESH
+    // ACTIVITY UPDATE
     session.lastActivity = Date.now();
 
-    // TREE SCOPING
+    // TREE SCOPING ATTACHED
     session.treeScope = getTreeAccessScope();
 
     safeSet(SESSION_KEY, session);
@@ -263,8 +266,11 @@ function getSession() {
     return session;
 
   } catch (err) {
-    console.error("getSession error:", err.message);
+
+    console.error("[SESSION] getSession error:", err);
+
     destroySession();
+
     return null;
   }
 }
