@@ -84,4 +84,4 @@ window.startDependencyMonitor = startDependencyMonitor;
 window.markDependenciesReady = markDependenciesReady;
 window.checkCoreDependencies = checkCoreDependencies;
 
-console.log("[BOOT GUARD] LOAD
+console.log("[BOOT GUARD] LOADED");
