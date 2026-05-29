@@ -219,9 +219,11 @@ function getSession() {
     }
 
     // =========================
-    // SAFE USER RESOLVE (FINAL FIX)
-    // =========================
-    if (typeof getUserById !== "function") {
+// SAFE USER RESOLVE (FINAL FIX)
+// =========================
+
+// 🚨 HARD DEPENDENCY CHECK (MANDATORY)
+if (typeof getUserById !== "function") {
   console.error("[SESSION] CRITICAL: getUserById missing");
   return null;
 }
@@ -240,26 +242,26 @@ if (!user) {
   return null;
 }
 
-    if (user.status && user.status !== "active") {
-      destroySession();
-      return null;
-    }
+if (user.status && user.status !== "active") {
+  destroySession();
+  return null;
+}
 
-    // ROLE CHECK
-    if (String(user.role || "") !== String(session.role || "")) {
-      destroySession();
-      return null;
-    }
+// ROLE CHECK
+if (String(user.role || "") !== String(session.role || "")) {
+  destroySession();
+  return null;
+}
 
-    // TOKEN CHECK
-    const expectedToken = generateSessionToken(user);
-    if (session.token !== expectedToken) {
-      destroySession();
-      return null;
-    }
+// TOKEN CHECK
+const expectedToken = generateSessionToken(user);
+if (session.token !== expectedToken) {
+  destroySession();
+  return null;
+}
 
-    // ACTIVITY UPDATE
-    session.lastActivity = Date.now();
+// ACTIVITY UPDATE
+session.lastActivity = Date.now();
 
     // TREE SCOPING ATTACHED
     session.treeScope = getTreeAccessScope();
