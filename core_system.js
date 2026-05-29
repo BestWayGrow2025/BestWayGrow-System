@@ -422,6 +422,24 @@ function initCoreSystem() {
     // Global readiness flags
     window.__CORE_READY__ = true;
 
+    // =========================
+    // DEPENDENCY GATE TRIGGER
+    // =========================
+
+    try {
+
+      if (typeof window.startDependencyMonitor === "function") {
+        window.startDependencyMonitor();
+      }
+
+      if (typeof window.markDependenciesReady === "function") {
+        window.markDependenciesReady();
+      }
+
+    } catch (e) {
+      console.warn("[CORE] Dependency guard hook failed:", e.message);
+    }
+
     // Native event
     window.dispatchEvent(new Event("CORE_READY"));
 
