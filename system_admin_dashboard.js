@@ -415,7 +415,9 @@ html += `
 `;
 
 });
-html += </table> </div>;
+html += `
+</table>
+`;
 const main = document.getElementById( "mainContent" );
 if (main) {
 main.innerHTML = html;
@@ -454,25 +456,17 @@ return;
 const main = document.getElementById( "mainContent" );
 if (!main) return;
 main.innerHTML = `
- <h3>PIN Management</h3>
-
-  <p>PIN module not loaded.</p>
-
-</div>
-
-`; }
+<h3>PIN Management</h3>
+<p>PIN module not loaded.</p>
+`;
 /* ================= SETTINGS ================= */
 function loadSettings() {
 const main = document.getElementById( "mainContent" );
 if (!main) return;
 main.innerHTML = `
- <h3>System Settings</h3>
-
-  <p>Settings module will be connected here.</p>
-
-</div>
-
-`; }
+<h3>System Settings</h3>
+<p>Settings module will be connected here.</p>
+`;
 /* ================= LOGOUT ================= */
 function logout() {
 redirectLogin(); }
