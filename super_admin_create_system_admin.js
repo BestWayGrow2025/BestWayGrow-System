@@ -21,7 +21,8 @@ let currentUser = null;
 let lock = false;
 
 console.log(
-  "[SUPER ADMIN] FILE EXECUTION STARTED"
+  "[SUPER ADMIN] FILE EXECUTION STARTED",
+  "BUILD-20260531-A"
 );
 
 /* ================= AUTH CHECK ================= */
@@ -390,7 +391,8 @@ window.__SUPER_ADMIN_MODULE__ = {
 };
 
 console.log(
-  "[SUPER ADMIN CREATE SYSTEM ADMIN] MODULE LOADED OK"
+  "[SUPER ADMIN CREATE SYSTEM ADMIN] MODULE LOADED OK",
+  "BUILD-20260531-A"
 );
 
 /* ================= AUTO START ================= */
