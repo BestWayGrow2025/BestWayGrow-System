@@ -1,14 +1,10 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-
   <meta charset="UTF-8">
-
   <title>Super Admin Dashboard</title>
-
   <link rel="icon" href="data:,">
-
 </head>
 
 <body>
@@ -16,79 +12,45 @@
 <div class="super-admin-dashboard-module">
 
   <header>
-
     <h2>👑 SUPER ADMIN MASTER CONTROL</h2>
-
     <p id="welcome"></p>
-
     <button id="backBtn">❤️ Back</button>
-
     <button id="logoutBtn">Logout</button>
-
   </header>
 
   <div class="menu">
 
     <button data-page="home">🏠 Home</button>
-
     <button data-page="create">👑 Create Sys Admin</button>
-
     <button data-page="users">👥 Users</button>
-
     <button data-page="system">⚙️ System</button>
-
     <button data-page="pinmaster">📌 PIN Master</button>
-
     <button data-page="productmaster">📦 Product Master</button>
-
     <button data-page="rankmaster">🏆 Rank Master</button>
-
     <button data-page="incomecontrol">💰 Income Control</button>
-
     <button data-page="audit">📜 Audit</button>
-
     <button data-page="health">🩺 Health</button>
-
     <button data-page="backup">💾 Backup</button>
-
     <button data-page="aigovernor">🤖 AI Governor</button>
-
     <button data-page="escrow">📦 Escrow Control</button>
-
     <button data-page="controlroom">🖥 Enterprise Control Room</button>
-
     <button data-page="businessintelligence">📊 Business Intelligence</button>
-
     <button data-page="strategicai">🧠 Strategic AI Advisor</button>
-
     <button data-page="auditblockchain">⛓ Enterprise Audit Blockchain</button>
-
     <button data-page="realtime">📡 Live System Realtime</button>
-
     <button data-page="payments">💳 Payment Gateway</button>
-
     <button data-page="orchestrator">🧩 Orchestrator Kernel</button>
-
     <button data-page="healthmonitor">🩺 Advanced Health Monitor</button>
-
     <button data-page="eventmonitor">📡 Event Monitor</button>
-
     <button data-page="eventstream">🌊 Event Stream</button>
-
     <button data-page="reports">📊 Reports</button>
-
     <button data-page="tree">🌳 Tree View</button>
-
     <button data-page="reset">♻️ Reset</button>
 
   </div>
 
   <div class="container">
-
-    <div id="mainContent" class="card">
-      Loading...
-    </div>
-
+    <div id="mainContent" class="card">Loading...</div>
   </div>
 
 </div>
@@ -102,19 +64,19 @@
 <!-- ================= CORE SYSTEM ================= -->
 <script src="core_system.js"></script>
 
-<!-- ================= ORCHESTRATOR KERNEL ================= -->
+<!-- ================= ORCHESTRATOR ================= -->
 <script src="system_orchestrator_kernel.js"></script>
 
-<!-- ================= AUTO WIRING LAYER ================= -->
+<!-- ================= AUTO WIRING ================= -->
 <script src="enterprise_auto_wiring_layer.js"></script>
 
 <!-- ================= BOOT GUARD ================= -->
 <script src="system_boot_dependency_guard.js"></script>
 
-<!-- ================= SESSION MANAGER ================= -->
+<!-- ================= SESSION ================= -->
 <script src="session_manager.js"></script>
 
-<!-- ================= SYSTEM CORE ================= -->
+<!-- ================= ENTERPRISE CORE ================= -->
 <script src="enterprise_core_engine.js"></script>
 
 <!-- ================= MODULE LOADERS ================= -->
@@ -124,53 +86,72 @@
 <!-- ================= ROUTER ================= -->
 <script src="system_page_router_connector.js"></script>
 
-<!-- ================= PASSIVE NAVIGATION ================= -->
+<!-- ================= NAVIGATION ================= -->
 <script src="navigation_core.js"></script>
 
-<!-- ================= PIN SYSTEM (NEW ADDED) ================= -->
+<!-- ===================================================== -->
+<!-- ================= PIN SYSTEM (FIXED ORDER) =========== -->
+<!-- ===================================================== -->
+
+<!-- CORE PIN FOUNDATION -->
 <script src="pin_action_types.js"></script>
 <script src="pin_execution_lock.js"></script>
 <script src="pin_event_bus.js"></script>
+
+<!-- ERROR SYSTEM -->
 <script src="pin_error_handler.js"></script>
 <script src="pin_error_recovery_engine.js"></script>
+
+<!-- FLOW SYSTEM -->
 <script src="pin_flow_controller.js"></script>
 <script src="pin_flow_map_visual.js"></script>
+
+<!-- MASTER ENGINE -->
 <script src="pin_master_system.js"></script>
 
+<!-- BOOTSTRAP LAYER -->
 <script src="pin_runtime_bootstrap.js"></script>
 <script src="pin_runtime_connector.js"></script>
 <script src="pin_system_initializer.js"></script>
 
+<!-- CONTROL LAYER -->
 <script src="pin_access_router.js"></script>
 <script src="pin_action_control.js"></script>
 <script src="pin_action_dispatcher.js"></script>
-<script src="pin_action_types.js"></script>
 
+<!-- ADMIN LAYER -->
 <script src="pin_admin_connector.js"></script>
 <script src="pin_system_admin_connector.js"></script>
 
+<!-- REQUEST ENGINE -->
 <script src="pin_request_processor_engine.js"></script>
 <script src="pin_request_queue_engine.js"></script>
+
+<!-- LIVE SYSTEM -->
 <script src="pin_live_bridge.js"></script>
 <script src="pin_live_orchestrator.js"></script>
 <script src="pin_live_request_panel.js"></script>
 
+<!-- BANK + UI -->
 <script src="pin_bank_system.js"></script>
 <script src="pin_ui_injector.js"></script>
 <script src="pin_ui_launcher.js"></script>
 
+<!-- SECURITY -->
 <script src="pin_permission_audit_layer.js"></script>
 <script src="pin_config_system.js"></script>
 
+<!-- GUARD + HEALTH -->
 <script src="pin_session_guard.js"></script>
 <script src="pin_system_guard.js"></script>
 <script src="pin_system_controller.js"></script>
 <script src="pin_system_health_monitor.js"></script>
 
+<!-- FINAL CONNECTOR -->
 <script src="pin_system_bootstrap_connector.js"></script>
 
 <!-- ================= DASHBOARD ================= -->
 <script src="super_admin_dashboard.js"></script>
 
 </body>
-</html>                  
+</html>
