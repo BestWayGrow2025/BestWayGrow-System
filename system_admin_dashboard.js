@@ -307,76 +307,68 @@ homeBtn.classList.add("active");
 /* ================= HOME ================= */
 function loadHome() {
 const users = typeof getUsers === "function" ? (getUsers() || []) : [];
+
 const officeUsers = users.filter(function (u) {
- return (
+  return (
     u.tree === "office" &&
     u.role === "user"
   );
 });
 
 const officeAdmins = users.filter(function (u) {
- return (
+  return (
     u.tree === "office" &&
     u.role === "admin"
   );
 });
 
 const fieldUsers = users.filter(function (u) {
- return (
+  return (
     u.tree === "field" &&
     u.role === "user"
   );
 });
 
 const fieldAdmins = users.filter(function (u) {
- return (
+  return (
     u.tree === "field" &&
     u.role === "admin"
   );
 });
 
 const rootAdmin = users.filter(function (u) {
- return (
+  return (
     u.role === "admin" &&
     u.adminType === "root_admin" &&
     u.tree === "field"
   );
 });
 
-const main = document.getElementById( "mainContent" );
+const main = document.getElementById("mainContent");
 if (!main) return;
+
 main.innerHTML = `
- <h3>Dashboard Overview</h3>
+<h3>Dashboard Overview</h3>
 
-  <div style="display:flex;flex-wrap:wrap;gap:15px;">
+<div style="display:flex;flex-wrap:wrap;gap:15px;">
 
-    <div style="flex:1;min-width:220px;">
+  <div style="flex:1;min-width:220px;">
+    <h4>Office</h4>
+    <p>Users: ${officeUsers.length}</p>
+    <p>Admins: ${officeAdmins.length}</p>
+  </div>
 
-      <h4>Office</h4>
-
-      <p>Users: ${officeUsers.length}</p>
-
-      <p>Admins: ${officeAdmins.length}</p>
-
-    </div>
-
-    <div style="flex:1;min-width:220px;">
-
-      <h4>Field</h4>
-
-      <p>Users: ${fieldUsers.length}</p>
-
-      <p>Admins: ${fieldAdmins.length}</p>
-
-      <p>Root Admin: ${rootAdmin.length}</p>
-
-    </div>
-
+  <div style="flex:1;min-width:220px;">
+    <h4>Field</h4>
+    <p>Users: ${fieldUsers.length}</p>
+    <p>Admins: ${fieldAdmins.length}</p>
+    <p>Root Admin: ${rootAdmin.length}</p>
   </div>
 
 </div>
+`;
+}
 
-`; }
 /* ================= USERS ================= */
 function loadUsers() {
 const users = typeof getUsers === "function" ? (getUsers() || []).filter( function (u) {
