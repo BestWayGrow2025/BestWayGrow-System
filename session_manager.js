@@ -38,6 +38,16 @@ function isSessionCoreReady() {
 
   try {
 
+    console.log(
+      "[SESSION CORE] __CORE_READY__ =",
+      window.__CORE_READY__
+    );
+
+    console.log(
+      "[SESSION CORE] getUserById =",
+      typeof window.getUserById
+    );
+
     // CORE SYSTEM MUST BE READY FIRST
     if (!window.__CORE_READY__) return false;
 
@@ -51,7 +61,10 @@ function isSessionCoreReady() {
 
   } catch (e) {
 
-    console.error("[SESSION CORE READY ERROR]", e);
+    console.error(
+      "[SESSION CORE READY ERROR]",
+      e
+    );
 
     return false;
   }
@@ -215,12 +228,17 @@ function destroySession() {
 // =====================
 function getSession() {
   try {
-console.log("[SESSION TRACE] START");
 
-    if (!isSessionCoreReady()) return null;
+    console.log("[SESSION TRACE] START");
+
+    if (!isSessionCoreReady()) {
+      console.log("[SESSION TRACE] CORE NOT READY");
+      return null;
+    }
 
     const session = safeGet(SESSION_KEY, null);
-console.log("[SESSION TRACE] STORAGE =", session);
+
+    console.log("[SESSION TRACE] STORAGE =", session);
 
     if (!isValidSessionShape(session)) {
   console.log("[SESSION TRACE] INVALID SESSION SHAPE", session);
