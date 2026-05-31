@@ -1,76 +1,87 @@
 "use strict";
+
+if (window.SYSTEM_ADMIN_DASHBOARD_LOADED) {
+  console.log("[SYSTEM ADMIN DASHBOARD] already loaded → skipping");
+  throw new Error("DUPLICATE LOAD BLOCKED");
+}
+window.SYSTEM_ADMIN_DASHBOARD_LOADED = true;
+
 /*
 SYSTEM ADMIN DASHBOARD v9.0 FINAL
 ✔ Router architecture compatible ✔ Safe standalone initialization ✔ Session validation ✔ Role protection ✔ Welcome banner ✔ Menu navigation ✔ Dashboard overview ✔ Users list ✔ Create Admin integration ✔ PIN module integration ✔ Settings placeholder ✔ Safe logout ✔ No BOOT dependency ✔ Production ready
 */
 console.log("[SYSTEM ADMIN DASHBOARD] FILE EXECUTION STARTED");
-let currentUser = null; let clickLock = false; let menuBound = false;
+
+/* ================= GLOBAL STATE (FIXED) ================= */
+window.currentUser = window.currentUser || null;
+window.clickLock = window.clickLock || false;
+window.menuBound = window.menuBound || false;
+
 /* ================= INIT ================= */
 function initPage() {
 if (typeof initCoreSystem === "function") {
-initCoreSystem();
-
+  initCoreSystem();
 } else {
-alert("❌ core_system.js missing");
+  alert("❌ core_system.js missing");
+  throw new Error("STOP");
+}
+}
 
-throw new Error("STOP");
-
-} }
 /* ================= AUTH ================= */
 function checkAuth() {
-const session = typeof getSession === "function" ? getSession() : JSON.parse( localStorage.getItem( "loggedInSystemAdmin" ) || "null" );
+const session = typeof getSession === "function"
+  ? getSession()
+  : JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
+
 if (!session || !session.userId) {
-redirectLogin();
-
-throw new Error("STOP");
-
+  redirectLogin();
+  throw new Error("STOP");
 }
-if ( session.role && session.role !== "system_admin" ) {
-redirectLogin();
 
-throw new Error("STOP");
-
+if (session.role && session.role !== "system_admin") {
+  redirectLogin();
+  throw new Error("STOP");
 }
-currentUser = typeof getUserById === "function" ? getUserById(session.userId) : session;
-if ( !currentUser || currentUser.role !== "system_admin" ) {
-redirectLogin();
 
-throw new Error("STOP");
+currentUser = typeof getUserById === "function"
+  ? getUserById(session.userId)
+  : session;
 
+if (!currentUser || currentUser.role !== "system_admin") {
+  redirectLogin();
+  throw new Error("STOP");
 }
+
 const status = currentUser.status || currentUser.accountStatus || "active";
+
 if (status !== "active") {
-redirectLogin();
-
-throw new Error("STOP");
-
+  redirectLogin();
+  throw new Error("STOP");
 }
-const welcome = document.getElementById("welcome");
-if (welcome) {
-welcome.innerText =
-  "Welcome " +
-  (currentUser.username ||
-    currentUser.userId) +
-  " (" +
-  currentUser.userId +
-  ")";
 
-} }
+const welcome = document.getElementById("welcome");
+
+if (welcome) {
+  welcome.innerText =
+    "Welcome " +
+    (currentUser.username || currentUser.userId) +
+    " (" + currentUser.userId + ")";
+}
+}
+
 /* ================= REDIRECT ================= */
 function redirectLogin() {
-if ( typeof destroySession === "function" ) {
-destroySession();
-
-} else if ( typeof clearSession === "function" ) {
-clearSession();
-
+if (typeof destroySession === "function") {
+  destroySession();
+} else if (typeof clearSession === "function") {
+  clearSession();
 } else {
-localStorage.removeItem(
-  "loggedInSystemAdmin"
-);
-
+  localStorage.removeItem("loggedInSystemAdmin");
 }
-window.location.href = "system_admin_login.html"; }
+
+window.location.href = "system_admin_login.html";
+}
+
 /* ================= EVENTS ================= */
 function bindEvents() {
 if (menuBound) return;
