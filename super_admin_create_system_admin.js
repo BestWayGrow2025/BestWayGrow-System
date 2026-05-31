@@ -28,11 +28,14 @@ console.log(
 
 function checkAuth() {
 
+console.log("[AUTH TEST] getSession exists:", typeof getSession);
+
 session =
-  typeof getSession ===
-  "function"
-    ? getSession()
+  typeof window.getSession === "function"
+    ? window.getSession()
     : null;
+
+console.log("[AUTH TEST] session =", session);
 
   // SOFT FAIL ONLY
   if (
