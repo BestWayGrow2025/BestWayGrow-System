@@ -214,14 +214,16 @@ function destroySession() {
 // GET SESSION (MAIN ENGINE)
 // =====================
 function getSession() {
-
   try {
+console.log("[SESSION TRACE] START");
 
     if (!isSessionCoreReady()) return null;
 
     const session = safeGet(SESSION_KEY, null);
+console.log("[SESSION TRACE] STORAGE =", session);
 
     if (!isValidSessionShape(session)) {
+  console.log("[SESSION TRACE] INVALID SESSION SHAPE", session);
       destroySession();
       return null;
     }
