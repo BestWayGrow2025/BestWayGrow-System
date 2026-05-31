@@ -1,5 +1,11 @@
 "use strict";
 
+console.log(
+  "[SESSION MANAGER VERSION CHECK]",
+  "V4.1",
+  new Date().toISOString()
+);
+
 /*
 ========================================
 SESSION MANAGER V4.1 (SYSTEM HARDENED FINAL + TREE INTEGRATION)
