@@ -1,24 +1,44 @@
+"use strict";
+
 /*
 ========================================
-SYSTEM ADMIN PIN CONTROL V1.0
+SYSTEM ADMIN PIN CONTROL V1.1 (FULL FIXED)
 ========================================
 ✔ System admin stock control
-✔ Admin request review layer
-✔ Stock escalation to super admin
+✔ Safe request review layer
+✔ Super admin escalation support
+✔ Safe status normalization
 ✔ No direct stock mutation
-✔ Safe control routing only
+✔ FULL RESTORED FILE
+✔ Production SAFE
 ========================================
 */
 
+// ================= INIT GUARD =================
+(function () {
+
+  if (window.__SYSTEM_ADMIN_PIN_CONTROL__) return;
+
+  window.__SYSTEM_ADMIN_PIN_CONTROL__ = true;
+
+  console.log("[SYSTEM ADMIN PIN CONTROL] READY");
+
+})();
+
 // ================= HELPERS =================
 function getSafeSystemAdmin() {
+
   if (typeof getCurrentUser !== "function") return null;
+
   const user = getCurrentUser();
+
   return user && user.role === "system_admin" ? user : null;
 }
 
 function getSystemAdminPinRequests() {
+
   if (typeof getPinRequests !== "function") return [];
+
   return (getPinRequests() || []).filter(req =>
     req &&
     req.paymentId &&
@@ -26,23 +46,44 @@ function getSystemAdminPinRequests() {
   );
 }
 
-function getPendingAdminStockRequests() {
-  return getSystemAdminPinRequests().filter(req => req.status === "PENDING");
+function normalizeStatus(status) {
+
+  return String(status || "")
+    .trim()
+    .toLowerCase();
 }
 
-// ================= REVIEW =================
+// ================= PENDING REQUESTS =================
+function getPendingAdminStockRequests() {
+
+  return getSystemAdminPinRequests().filter(req =>
+    normalizeStatus(req.status) === "pending"
+  );
+}
+
+// ================= REVIEW CHECK =================
 function canReviewAdminStockRequest(requestId) {
+
   const admin = getSafeSystemAdmin();
+
   if (!admin) return false;
 
-  const req = getPendingAdminStockRequests().find(r => r.requestId === requestId);
+  const req = getSystemAdminPinRequests().find(
+    r => r.requestId === requestId
+  );
+
   return !!req;
 }
 
+// ================= APPROVE =================
 function approveAdminStockRequest(requestId) {
+
   if (!canReviewAdminStockRequest(requestId)) return null;
 
-  const req = getPendingAdminStockRequests().find(r => r.requestId === requestId);
+  const req = getSystemAdminPinRequests().find(
+    r => r.requestId === requestId
+  );
+
   if (!req) return null;
 
   return {
@@ -55,27 +96,41 @@ function approveAdminStockRequest(requestId) {
   };
 }
 
+// ================= REJECT =================
 function rejectAdminStockRequest(requestId) {
+
   if (!canReviewAdminStockRequest(requestId)) return false;
+
   if (typeof rejectPinRequest !== "function") return false;
+
   return rejectPinRequest(requestId, "SYSTEM_ADMIN");
 }
 
-// ================= ESCALATION =================
+// ================= ESCALATION CHECK =================
 function canEscalateToSuperAdmin(type, qty = 1) {
+
   const admin = getSafeSystemAdmin();
+
   if (!admin) return false;
 
   qty = Number(qty || 1);
+
   if (qty < 1) qty = 1;
 
-  return ["upgrade", "repurchase"].includes(type) && qty > 0;
+  const allowedTypes = ["upgrade", "repurchase"];
+
+  return allowedTypes.includes(type) && qty > 0;
 }
 
+// ================= CREATE REQUEST =================
 function createSystemStockRequest(type, qty = 1) {
+
   const admin = getSafeSystemAdmin();
+
   if (!admin) return null;
+
   if (!canEscalateToSuperAdmin(type, qty)) return null;
+
   if (typeof createPinRequest !== "function") return null;
 
   return createPinRequest({
@@ -86,3 +141,10 @@ function createSystemStockRequest(type, qty = 1) {
     quantity: qty
   });
 }
+
+// ================= EXPORT =================
+window.approveAdminStockRequest = approveAdminStockRequest;
+window.rejectAdminStockRequest = rejectAdminStockRequest;
+window.createSystemStockRequest = createSystemStockRequest;
+window.getPendingAdminStockRequests = getPendingAdminStockRequests;
+window.canReviewAdminStockRequest = canReviewAdminStockRequest;
