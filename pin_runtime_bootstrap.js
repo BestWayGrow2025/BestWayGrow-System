@@ -4,12 +4,11 @@ PIN RUNTIME BOOTSTRAP V1.2 FINAL
 ✔ Forces global function registration ✔ Runtime dependency validation ✔ Prevents silent runtime failure ✔ Safe duplicate protection ✔ FAIL-FAST bootstrap safety ✔ Production LOCKED
 */
 // ================= INIT GUARD ================= (function () {
-if (window.PIN_RUNTIME_BOOTSTRAP) return;
+if (window.PIN_RUNTIME_BOOTSTRAP) { return; }
 window.PIN_RUNTIME_BOOTSTRAP = true;
 console.log("[PIN BOOTSTRAP] Initializing...");
 // ================= REGISTER GLOBALS ================= function registerGlobals() {
 const requiredFunctions = [
-
   "executePinFlow",
   "bindPinUI",
   "processPinRequestAuto",
@@ -18,7 +17,6 @@ const requiredFunctions = [
   "createPin",
   "assignPin",
   "usePin"
-
 ];
 
 requiredFunctions.forEach(function (fn) {
@@ -33,7 +31,6 @@ requiredFunctions.forEach(function (fn) {
     return;
   }
 
-  // keep function exposed globally
   window[fn] = window[fn];
 
 });
@@ -41,16 +38,14 @@ requiredFunctions.forEach(function (fn) {
 }
 // ================= VALIDATION ================= function validateSystem() {
 const required = [
-
   "executePinFlow",
   "bindPinUI",
   "processPinRequestAuto"
-
 ];
 
-const missing = required.filter(
-  fn => typeof window[fn] !== "function"
-);
+const missing = required.filter(function (fn) {
+  return typeof window[fn] !== "function";
+});
 
 if (missing.length > 0) {
 
