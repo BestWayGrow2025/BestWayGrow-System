@@ -17,70 +17,35 @@ PIN RUNTIME CONNECTOR V1.0
 ========================================
 */
 
-// ================= INIT GUARD =================
-(function () {
-
-  if (window.__PIN_RUNTIME_CONNECTOR__) {
-    return;
-  }
-
-  window.__PIN_RUNTIME_CONNECTOR__ = true;
-
-  initializePinRuntime();
-
-})();
-
 // ================= REQUIRED MODULES =================
 const PIN_RUNTIME_REQUIRED_MODULES = [
-
-  // SYSTEM
   "isPinFlowSystemSafe",
-
-  // SESSION
   "isPinSessionValid",
   "getPinSessionUserId",
   "getPinSessionRole",
-
-  // LOCK
   "executeWithPinLock",
-
-  // ERROR
   "executePinSafe",
-
-  // DISPATCH
   "dispatchPinAction",
-
-  // FLOW
   "executePinFlow"
 ];
 
 // ================= INITIALIZER =================
 function initializePinRuntime() {
 
-  const validation =
-    validatePinRuntimeModules();
+  const validation = validatePinRuntimeModules();
 
-  window.__PIN_RUNTIME_READY__ =
-    validation.ready;
-
-  window.__PIN_RUNTIME_STATUS__ =
-    validation;
+  window.__PIN_RUNTIME_READY__ = validation.ready;
+  window.__PIN_RUNTIME_STATUS__ = validation;
 
   if (!validation.ready) {
-
     console.error(
-      "[PIN RUNTIME]",
-      "Missing modules:",
+      "[PIN RUNTIME] Missing modules:",
       validation.missing
     );
-
     return false;
   }
 
-  console.log(
-    "[PIN RUNTIME] READY ✔"
-  );
-
+  console.log("[PIN RUNTIME] READY ✔");
   return true;
 }
 
@@ -89,17 +54,13 @@ function validatePinRuntimeModules() {
 
   const missing = [];
 
-  PIN_RUNTIME_REQUIRED_MODULES.forEach(
-    function (moduleName) {
+  PIN_RUNTIME_REQUIRED_MODULES.forEach(function (moduleName) {
 
-      if (
-        typeof window[moduleName] !==
-        "function"
-      ) {
-        missing.push(moduleName);
-      }
+    if (typeof window[moduleName] !== "function") {
+      missing.push(moduleName);
     }
-  );
+
+  });
 
   return {
     ready: missing.length === 0,
@@ -110,27 +71,24 @@ function validatePinRuntimeModules() {
 
 // ================= STATUS CHECK =================
 function isPinRuntimeReady() {
-
-  return (
-    window.__PIN_RUNTIME_READY__ === true
-  );
+  return window.__PIN_RUNTIME_READY__ === true;
 }
 
 // ================= STATUS FETCH =================
 function getPinRuntimeStatus() {
+  return window.__PIN_RUNTIME_STATUS__ || {
+    ready: false,
+    missing: [],
+    checkedAt: null
+  };
+}
 
-  return (
-    window.__PIN_RUNTIME_STATUS__ || {
-      ready: false,
-      missing: [],
-      checkedAt: null
-    }
-  );
+// ================= SAFE BOOT (NO AUTO EXECUTION) =================
+function bootPinRuntimeConnector() {
+  return initializePinRuntime();
 }
 
 // ================= EXPORT =================
-window.isPinRuntimeReady =
-  isPinRuntimeReady;
-
-window.getPinRuntimeStatus =
-  getPinRuntimeStatus;
+window.isPinRuntimeReady = isPinRuntimeReady;
+window.getPinRuntimeStatus = getPinRuntimeStatus;
+window.bootPinRuntimeConnector = bootPinRuntimeConnector;
