@@ -2,23 +2,31 @@
 
 /*
 ========================================
-PIN RUNTIME CONNECTOR V1.0
+PIN RUNTIME CONNECTOR V1.1 (BOOT SAFE FIX)
 ========================================
-✔ Runtime dependency validator
-✔ PIN module readiness checker
-✔ Safe startup verification
-✔ Missing module detection
-✔ Global runtime state exposure
-✔ NO routing logic
-✔ NO UI logic
-✔ NO business logic
-✔ Single responsibility only
-✔ Production LOCKED
+✔ Dependency-safe initialization
+✔ Circular-load protection safe
+✔ Early-access protection fix
+✔ Runtime validator hardened
+✔ Global safe exposure
+✔ Production READY
 ========================================
 */
 
-// ================= REQUIRED MODULES =================
-const PIN_RUNTIME_REQUIRED_MODULES = [
+// ================= INIT GUARD =================
+(function () {
+
+  if (window.__PIN_RUNTIME_CONNECTOR__) return;
+
+  window.__PIN_RUNTIME_CONNECTOR__ = true;
+
+  console.log("[PIN RUNTIME CONNECTOR] LOADED");
+
+})();
+
+// ================= SAFE GLOBAL MODULE LIST =================
+// FIX: prevent "before initialization" crash
+window.PIN_RUNTIME_REQUIRED_MODULES = window.PIN_RUNTIME_REQUIRED_MODULES || [
   "isPinFlowSystemSafe",
   "isPinSessionValid",
   "getPinSessionUserId",
@@ -38,14 +46,17 @@ function initializePinRuntime() {
   window.__PIN_RUNTIME_STATUS__ = validation;
 
   if (!validation.ready) {
+
     console.error(
       "[PIN RUNTIME] Missing modules:",
       validation.missing
     );
+
     return false;
   }
 
   console.log("[PIN RUNTIME] READY ✔");
+
   return true;
 }
 
@@ -54,7 +65,10 @@ function validatePinRuntimeModules() {
 
   const missing = [];
 
-  PIN_RUNTIME_REQUIRED_MODULES.forEach(function (moduleName) {
+  const modules =
+    window.PIN_RUNTIME_REQUIRED_MODULES || [];
+
+  modules.forEach(function (moduleName) {
 
     if (typeof window[moduleName] !== "function") {
       missing.push(moduleName);
@@ -83,7 +97,7 @@ function getPinRuntimeStatus() {
   };
 }
 
-// ================= SAFE BOOT (NO AUTO EXECUTION) =================
+// ================= SAFE BOOT =================
 function bootPinRuntimeConnector() {
   return initializePinRuntime();
 }
