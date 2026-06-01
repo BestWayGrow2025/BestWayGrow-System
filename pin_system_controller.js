@@ -3,7 +3,9 @@
 PIN SYSTEM CONTROLLER V2.0 FINAL
 ✔ Central traffic controller ✔ Single execution gateway ✔ Queue-based flow ✔ One-way execution only ✔ No business logic ✔ No UI rendering ✔ No routing modification ✔ Safe async execution ✔ Production LOCKED
 */
-// ================= INIT GUARD ================= (function () {
+// ================= INIT GUARD =================
+(function () {
+
 if (window.PIN_SYSTEM_CONTROLLER) {
     return;
 }
@@ -11,110 +13,124 @@ if (window.PIN_SYSTEM_CONTROLLER) {
 window.PIN_SYSTEM_CONTROLLER = true;
 
 })();
-// ================= QUEUE ================= const PIN_SYSTEM_QUEUE = [];
-// ================= PROCESS STATE ================= let PIN_SYSTEM_BUSY = false;
-// ================= ENTRY ================= function pinSystemExecute(actionType, payload = {}) {
-return enqueuePinTask(
-    actionType,
-    payload
-);
+// ================= QUEUE =================
+const PIN_SYSTEM_QUEUE = [];
+
+// ================= PROCESS STATE =================
+let PIN_SYSTEM_BUSY = false;
+
+// ================= ENTRY =================
+function pinSystemExecute(actionType, payload = {}) {
+
+    return enqueuePinTask(
+        actionType,
+        payload
+    );
 
 }
-// ================= ENQUEUE ================= function enqueuePinTask(actionType, payload = {}) {
-PIN_SYSTEM_QUEUE.push({
 
-    actionType: String(
-        actionType || ""
-    ).trim(),
+// ================= ENQUEUE =================
+function enqueuePinTask(actionType, payload = {}) {
 
-    payload: payload || {},
+    PIN_SYSTEM_QUEUE.push({
 
-    createdAt: Date.now()
+        actionType: String(
+            actionType || ""
+        ).trim(),
 
-});
+        payload: payload || {},
 
-processPinQueue();
+        createdAt: Date.now()
 
-return true;
+    });
+
+    processPinQueue();
+
+    return true;
 
 }
-// ================= PROCESSOR ================= async function processPinQueue() {
-// Prevent parallel execution
-if (PIN_SYSTEM_BUSY) {
-    return;
-}
+// ================= PROCESSOR =================
+async function processPinQueue() {
 
-PIN_SYSTEM_BUSY = true;
+    if (PIN_SYSTEM_BUSY) {
+        return;
+    }
 
-try {
+    PIN_SYSTEM_BUSY = true;
 
-    while (PIN_SYSTEM_QUEUE.length > 0) {
+    try {
 
-        const task =
-            PIN_SYSTEM_QUEUE.shift();
+        while (PIN_SYSTEM_QUEUE.length > 0) {
 
-        if (!task) {
-            continue;
+            const task =
+                PIN_SYSTEM_QUEUE.shift();
+
+            if (!task) {
+                continue;
+            }
+
+            try {
+
+                await executePinTask(
+                    task.actionType,
+                    task.payload
+                );
+
+            } catch (err) {
+
+                console.error(
+                    "[PIN SYSTEM CONTROLLER TASK ERROR]",
+                    err
+                );
+
+            }
+
         }
 
-        try {
+    } finally {
 
-            await executePinTask(
-                task.actionType,
-                task.payload
-            );
-
-        } catch (err) {
-
-            console.error(
-                "[PIN SYSTEM CONTROLLER TASK ERROR]",
-                err
-            );
-
-        }
+        PIN_SYSTEM_BUSY = false;
 
     }
 
-} finally {
-
-    PIN_SYSTEM_BUSY = false;
-
 }
+// ================= TASK EXECUTION =================
+async function executePinTask(
+    actionType,
+    payload
+) {
 
-}
-// ================= TASK EXECUTION ================= async function executePinTask( actionType, payload ) {
-// ================= VALIDATION =================
-if (!actionType) {
+    // ================= VALIDATION =================
+    if (!actionType) {
+
+        throw new Error(
+            "Missing actionType"
+        );
+
+    }
+
+    // PRIORITY 1
+    if (typeof routePinRequest === "function") {
+
+        return await routePinRequest(
+            actionType,
+            payload || {}
+        );
+
+    }
+
+    // PRIORITY 2
+    if (typeof executePinFlow === "function") {
+
+        return await executePinFlow(
+            actionType,
+            payload || {}
+        );
+
+    }
 
     throw new Error(
-        "Missing actionType"
-    );
-
-}
-
-// ==================================================
-// PRIORITY 1 → ROUTER
-// ==================================================
-if (typeof routePinRequest === "function") {
-
-    return await routePinRequest(
-        actionType,
-        payload || {}
-    );
-
-}
-
-// ==================================================
-// PRIORITY 2 → FLOW ENGINE
-// ==================================================
-if (typeof executePinFlow === "function") {
-
-    return await executePinFlow(
-        actionType,
-        payload || {}
-    );
-
-}
+        "No
 
 // ==================================================
 // FAILURE
@@ -124,4 +140,6 @@ throw new Error(
 );
 
 }
-// ================= EXPORT ================= window.pinSystemExecute = pinSystemExecute; window.enqueuePinTask = enqueuePinTask;
+// ================= EXPORT =================
+window.pinSystemExecute = pinSystemExecute;
+window.enqueuePinTask = enqueuePinTask;
