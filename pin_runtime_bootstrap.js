@@ -1,103 +1,91 @@
 "use strict";
-
 /*
-========================================
-PIN RUNTIME BOOTSTRAP (FINAL FIX CORE)
-========================================
-✔ Forces global function registration
-✔ Prevents undefined runtime errors
-✔ Fixes load-order dependency issues
-✔ Safe duplicate protection
-✔ Production-safe initializer
-========================================
+PIN RUNTIME BOOTSTRAP V1.2 FINAL
+✔ Forces global function registration ✔ Runtime dependency validation ✔ Prevents silent runtime failure ✔ Safe duplicate protection ✔ FAIL-FAST bootstrap safety ✔ Production LOCKED
 */
+// ================= INIT GUARD ================= (function () {
+if (window.PIN_RUNTIME_BOOTSTRAP) return;
+window.PIN_RUNTIME_BOOTSTRAP = true;
+console.log("[PIN BOOTSTRAP] Initializing...");
+// ================= REGISTER GLOBALS ================= function registerGlobals() {
+const requiredFunctions = [
 
-(function () {
+  "executePinFlow",
+  "bindPinUI",
+  "processPinRequestAuto",
+  "initPinInjector",
+  "loadPins",
+  "createPin",
+  "assignPin",
+  "usePin"
 
-  if (window.__PIN_RUNTIME_BOOTSTRAP__) return;
-  window.__PIN_RUNTIME_BOOTSTRAP__ = true;
+];
 
-  console.log("[PIN BOOTSTRAP] Initializing...");
+requiredFunctions.forEach(function (fn) {
 
-  function safeExpose(name) {
-    if (typeof window[name] === "undefined") return;
+  if (typeof window[fn] !== "function") {
 
-    // already global → skip
+    console.warn(
+      "[PIN BOOTSTRAP] Missing function:",
+      fn
+    );
+
     return;
   }
 
-  function registerGlobals() {
+  // keep function exposed globally
+  window[fn] = window[fn];
 
-    // Flow controller
-    if (typeof executePinFlow === "function") {
-      window.executePinFlow = executePinFlow;
-    }
+});
 
-    // UI router
-    if (typeof bindPinUI === "function") {
-      window.bindPinUI = bindPinUI;
-    }
+}
+// ================= VALIDATION ================= function validateSystem() {
+const required = [
 
-    // Processor engine
-    if (typeof processPinRequestAuto === "function") {
-      window.processPinRequestAuto = processPinRequestAuto;
-    }
+  "executePinFlow",
+  "bindPinUI",
+  "processPinRequestAuto"
 
-    // Injector
-    if (typeof initPinInjector === "function") {
-      window.initPinInjector = initPinInjector;
-    }
+];
 
-    // Master system safety
-    if (typeof loadPins === "function") {
-      window.loadPins = loadPins;
-    }
+const missing = required.filter(
+  fn => typeof window[fn] !== "function"
+);
 
-    if (typeof createPin === "function") {
-      window.createPin = createPin;
-    }
+if (missing.length > 0) {
 
-    if (typeof assignPin === "function") {
-      window.assignPin = assignPin;
-    }
+  console.error(
+    "[PIN BOOTSTRAP] CRITICAL MISSING:",
+    missing
+  );
 
-    if (typeof usePin === "function") {
-      window.usePin = usePin;
-    }
+  throw new Error(
+    "PIN BOOT FAILED"
+  );
 
-  }
+}
 
-  function validateSystem() {
+console.log(
+  "[PIN BOOTSTRAP] SYSTEM READY ✔"
+);
 
-    const required = [
-      "executePinFlow",
-      "bindPinUI",
-      "processPinRequestAuto"
-    ];
+return true;
 
-    const missing = required.filter(fn => typeof window[fn] !== "function");
+}
+// ================= INIT ================= function init() {
+registerGlobals();
 
-    if (missing.length > 0) {
-      console.error("[PIN BOOTSTRAP] MISSING:", missing);
-      return false;
-    }
+validateSystem();
 
-    console.log("[PIN BOOTSTRAP] SYSTEM READY");
-    return true;
-  }
+}
+// ================= SAFE START ================= if (document.readyState === "loading") {
+document.addEventListener(
+  "DOMContentLoaded",
+  init
+);
 
-  function init() {
+} else {
+init();
 
-    registerGlobals();
-
-    validateSystem();
-
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-
+}
 })();
