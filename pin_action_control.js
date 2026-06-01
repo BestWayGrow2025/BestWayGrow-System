@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 ========================================
 PIN ACTION CONTROL V1.1 (NORMALIZED - FIXED)
@@ -5,13 +7,16 @@ PIN ACTION CONTROL V1.1 (NORMALIZED - FIXED)
 ✔ Central action permission control
 ✔ Unified action dictionary (pin_action_types.js)
 ✔ Role-safe + status-safe validation
-✔ No logic change (only normalization)
-✔ INVALID ACTIONS REMOVED (VIEW, HOLD)
+✔ Global-safe PIN_ACTION dependency
+✔ No logic change (only stability fix)
+✔ Production SAFE
 ========================================
 */
 
 // ================= ACTIONS =================
-const PIN_ACTIONS = Object.values(PIN_ACTION);
+function getPinActions() {
+  return Object.values(window.PIN_ACTION || {});
+}
 
 // ================= HELPERS =================
 function getSafeRole() {
@@ -21,7 +26,7 @@ function getSafeRole() {
 }
 
 function isValidPinAction(action) {
-  return PIN_ACTIONS.includes(action);
+  return getPinActions().includes(action);
 }
 
 function normalizePinStatus(status) {
@@ -35,31 +40,31 @@ function canRoleAccessPinAction(role, action) {
   if (!isValidPinAction(action)) return false;
 
   const access = {
-    user: [PIN_ACTION.REQUEST],
+    user: [window.PIN_ACTION?.REQUEST],
 
     admin: [
-      PIN_ACTION.REQUEST,
-      PIN_ACTION.APPROVE,
-      PIN_ACTION.REJECT,
-      PIN_ACTION.ASSIGN
+      window.PIN_ACTION?.REQUEST,
+      window.PIN_ACTION?.APPROVE,
+      window.PIN_ACTION?.REJECT,
+      window.PIN_ACTION?.ASSIGN
     ],
 
     system_admin: [
-      PIN_ACTION.REQUEST,
-      PIN_ACTION.APPROVE,
-      PIN_ACTION.REJECT,
-      PIN_ACTION.ASSIGN,
-      PIN_ACTION.TRANSFER
+      window.PIN_ACTION?.REQUEST,
+      window.PIN_ACTION?.APPROVE,
+      window.PIN_ACTION?.REJECT,
+      window.PIN_ACTION?.ASSIGN,
+      window.PIN_ACTION?.TRANSFER
     ],
 
     super_admin: [
-      PIN_ACTION.REQUEST,
-      PIN_ACTION.APPROVE,
-      PIN_ACTION.REJECT,
-      PIN_ACTION.ASSIGN,
-      PIN_ACTION.TRANSFER,
-      PIN_ACTION.DELETE,
-      PIN_ACTION.OVERRIDE
+      window.PIN_ACTION?.REQUEST,
+      window.PIN_ACTION?.APPROVE,
+      window.PIN_ACTION?.REJECT,
+      window.PIN_ACTION?.ASSIGN,
+      window.PIN_ACTION?.TRANSFER,
+      window.PIN_ACTION?.DELETE,
+      window.PIN_ACTION?.OVERRIDE
     ]
   };
 
@@ -71,16 +76,16 @@ function canActionRunByStatus(action, status) {
   status = normalizePinStatus(status);
 
   const rules = {
-    [PIN_ACTION.REQUEST]: ["pending"],
+    [window.PIN_ACTION?.REQUEST]: ["pending"],
 
-    [PIN_ACTION.APPROVE]: ["pending"],
-    [PIN_ACTION.REJECT]: ["pending"],
+    [window.PIN_ACTION?.APPROVE]: ["pending"],
+    [window.PIN_ACTION?.REJECT]: ["pending"],
 
-    [PIN_ACTION.ASSIGN]: ["active", "pending"],
-    [PIN_ACTION.TRANSFER]: ["assigned"],
+    [window.PIN_ACTION?.ASSIGN]: ["active", "pending"],
+    [window.PIN_ACTION?.TRANSFER]: ["assigned"],
 
-    [PIN_ACTION.DELETE]: ["active"],
-    [PIN_ACTION.OVERRIDE]: ["pending", "active", "assigned", "used"]
+    [window.PIN_ACTION?.DELETE]: ["active"],
+    [window.PIN_ACTION?.OVERRIDE]: ["pending", "active", "assigned", "used"]
   };
 
   return (rules[action] || []).includes(status);
@@ -89,10 +94,10 @@ function canActionRunByStatus(action, status) {
 // ================= CONFIRM RULE =================
 function requiresPinActionConfirm(action) {
   return [
-    PIN_ACTION.REJECT,
-    PIN_ACTION.TRANSFER,
-    PIN_ACTION.DELETE,
-    PIN_ACTION.OVERRIDE
+    window.PIN_ACTION?.REJECT,
+    window.PIN_ACTION?.TRANSFER,
+    window.PIN_ACTION?.DELETE,
+    window.PIN_ACTION?.OVERRIDE
   ].includes(action);
 }
 
@@ -122,11 +127,11 @@ function canExecutePinAction(action, pin = {}, role = null) {
   if (!canRoleAccessPinAction(safeRole, action)) return false;
   if (!canActionRunByStatus(action, pin.status || "pending")) return false;
 
-  if (action === PIN_ACTION.DELETE) {
+  if (action === window.PIN_ACTION?.DELETE) {
     return canDeletePin(pin, safeRole);
   }
 
-  if (action === PIN_ACTION.OVERRIDE) {
+  if (action === window.PIN_ACTION?.OVERRIDE) {
     return canOverridePin(safeRole);
   }
 
@@ -144,3 +149,8 @@ function buildPinActionAudit(action, pin, performedBy, note = "") {
     time: new Date().toISOString()
   };
 }
+
+// ================= EXPORT =================
+window.canExecutePinAction = canExecutePinAction;
+window.isValidPinAction = isValidPinAction;
+window.buildPinActionAudit = buildPinActionAudit;
