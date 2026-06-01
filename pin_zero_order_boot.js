@@ -44,19 +44,26 @@
       });
 
       result.push(node);
+
     }
 
-    // run for all modules
+    // execute full graph
     Object.keys(MODULES).forEach(visit);
 
     return result;
   }
 
-  // expose safely
+  // SAFE EXPORT (IMPORTANT ADDITION)
   window.PIN_ZERO_ORDER_BOOT_API = {
     define,
     buildGraph,
     resolveOrder
+  };
+
+  // optional debug hook
+  window.PIN_ZERO_ORDER_BOOT_DEBUG = {
+    MODULES,
+    GRAPH
   };
 
 })();
