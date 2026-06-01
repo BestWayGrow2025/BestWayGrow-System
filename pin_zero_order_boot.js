@@ -22,9 +22,7 @@
   function buildGraph() {
 
     Object.keys(MODULES).forEach(name => {
-
       GRAPH[name] = MODULES[name].deps || [];
-
     });
 
   }
@@ -46,6 +44,19 @@
       });
 
       result.push(node);
-
     }
 
+    // run for all modules
+    Object.keys(MODULES).forEach(visit);
+
+    return result;
+  }
+
+  // expose safely
+  window.PIN_ZERO_ORDER_BOOT_API = {
+    define,
+    buildGraph,
+    resolveOrder
+  };
+
+})();
