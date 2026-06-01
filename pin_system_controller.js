@@ -3,9 +3,8 @@
 PIN SYSTEM CONTROLLER V2.0 FINAL
 ✔ Central traffic controller ✔ Single execution gateway ✔ Queue-based flow ✔ One-way execution only ✔ No business logic ✔ No UI rendering ✔ No routing modification ✔ Safe async execution ✔ Production LOCKED
 */
-// ================= INIT GUARD =================
-(function () {
-if (window.PIN_SYSTEM_CONTROLLER) return;
+// ================= INIT GUARD ================= (function () {
+if (window.PIN_SYSTEM_CONTROLLER) { return; }
 window.PIN_SYSTEM_CONTROLLER = true;
 })();
 // ================= QUEUE ================= const PIN_SYSTEM_QUEUE = [];
@@ -15,7 +14,9 @@ return enqueuePinTask( actionType, payload );
 }
 // ================= ENQUEUE ================= function enqueuePinTask(actionType, payload = {}) {
 PIN_SYSTEM_QUEUE.push({
-actionType: String(actionType || "").trim(),
+actionType: String(
+  actionType || ""
+).trim(),
 
 payload: payload || {},
 
@@ -26,15 +27,19 @@ processPinQueue();
 return true;
 }
 // ================= PROCESSOR ================= async function processPinQueue() {
-// Prevent parallel queue execution if (PIN_SYSTEM_BUSY) { return; }
+// Prevent parallel execution if (PIN_SYSTEM_BUSY) { return; }
 PIN_SYSTEM_BUSY = true;
 try {
-while (PIN_SYSTEM_QUEUE.length > 0) {
+while (
+  PIN_SYSTEM_QUEUE.length > 0
+) {
 
   const task =
     PIN_SYSTEM_QUEUE.shift();
 
-  if (!task) continue;
+  if (!task) {
+    continue;
+  }
 
   try {
 
