@@ -120,17 +120,14 @@ async function executePinTask(
     }
 
     // PRIORITY 2
-    if (typeof executePinFlow === "function") {
+if (typeof executePinFlow === "function") {
 
-        return await executePinFlow(
-            actionType,
-            payload || {}
-        );
+    return await executePinFlow(
+        actionType,
+        payload || {}
+    );
 
-    }
-
-    throw new Error(
-        "No
+}
 
 // ==================================================
 // FAILURE
@@ -140,6 +137,7 @@ throw new Error(
 );
 
 }
+
 // ================= EXPORT =================
 window.pinSystemExecute = pinSystemExecute;
 window.enqueuePinTask = enqueuePinTask;
