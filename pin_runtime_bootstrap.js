@@ -3,8 +3,7 @@
 PIN RUNTIME BOOTSTRAP V1.2 FINAL
 ✔ Forces global function registration ✔ Runtime dependency validation ✔ Prevents silent runtime failure ✔ Safe duplicate protection ✔ FAIL-FAST bootstrap safety ✔ Production LOCKED
 */
-// ================= INIT GUARD =================
-(function () {
+// ================= INIT GUARD ================= (function () {
 if (window.PIN_RUNTIME_BOOTSTRAP) { return; }
 window.PIN_RUNTIME_BOOTSTRAP = true;
 console.log("[PIN BOOTSTRAP] Initializing...");
