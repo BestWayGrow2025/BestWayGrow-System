@@ -3,7 +3,8 @@
 PIN SYSTEM CONTROLLER V2.0 FINAL
 ✔ Central traffic controller ✔ Single execution gateway ✔ Queue-based flow ✔ One-way execution only ✔ No business logic ✔ No UI rendering ✔ No routing modification ✔ Safe async execution ✔ Production LOCKED
 */
-// ================= INIT GUARD ================= (function () {
+// ================= INIT GUARD =================
+(function () {
 if (window.PIN_SYSTEM_CONTROLLER) return;
 window.PIN_SYSTEM_CONTROLLER = true;
 })();
