@@ -2,58 +2,96 @@
 
 /*
 ========================================
-PIN RUNTIME BOOTSTRAP V1.2 FINAL
+PIN RUNTIME BOOTSTRAP V1.3 FINAL SAFE
 ========================================
-✔ Forces global function registration
-✔ Runtime dependency validation
-✔ Prevents silent runtime failure
-✔ Safe duplicate protection
-✔ FAIL-FAST bootstrap safety
-✔ Production LOCKED
+✔ Contract-aware boot validation
+✔ Hard dependency enforcement
+✔ Fail-fast system integrity
+✔ Engine-safe global binding
+✔ UI + Core dependency verification
+✔ Production-safe bootstrap gate
 ========================================
 */
 
 (function () {
 
-  if (window.PIN_RUNTIME_BOOTSTRAP) {
-    return;
-  }
+  // ================= INIT GUARD =================
+  if (window.PIN_RUNTIME_BOOTSTRAP) return;
 
   window.PIN_RUNTIME_BOOTSTRAP = true;
 
   console.log("[PIN BOOTSTRAP] Initializing...");
 
-  function registerGlobals() {
+  // ================= CONTRACT SAFETY =================
+  function ensureContract() {
 
-    const requiredFunctions = [
-      "executePinFlow",
-      "bindPinUI",
-      "processPinRequestAuto",
-      "initPinInjector",
-      "loadPins",
-      "createPin",
-      "assignPin",
-      "usePin"
-    ];
+    if (!window.PIN_GLOBAL_CONTRACT) {
+      console.error("[PIN BOOTSTRAP] CONTRACT MISSING");
+      throw new Error("PIN GLOBAL CONTRACT NOT LOADED");
+    }
 
-    requiredFunctions.forEach(function (fn) {
+    return true;
+  }
 
-      if (typeof window[fn] !== "function") {
+  // ================= ENGINE RESOLUTION =================
+  function resolve(fnName) {
 
-        console.warn(
-          "[PIN BOOTSTRAP] Missing function:",
-          fn
-        );
+    // Prefer engine registry
+    if (window.PIN_ENGINE && typeof window.PIN_ENGINE[fnName] === "function") {
+      return window.PIN_ENGINE[fnName];
+    }
 
+    // Fallback global
+    if (typeof window[fnName] === "function") {
+      return window[fnName];
+    }
+
+    return null;
+  }
+
+  // ================= REQUIRED FUNCTIONS =================
+  const requiredFunctions = [
+    "executePinFlow",
+    "bindPinUI",
+    "processPinRequestAuto",
+    "initPinInjector",
+    "loadPins",
+    "createPin",
+    "assignPin",
+    "usePin"
+  ];
+
+  // ================= REGISTER / VALIDATE =================
+  function registerAndValidate() {
+
+    const missing = [];
+
+    requiredFunctions.forEach((fn) => {
+
+      const resolved = resolve(fn);
+
+      if (!resolved) {
+        missing.push(fn);
         return;
       }
 
-      window[fn] = window[fn];
+      // normalize into engine layer (preferred)
+      window.PIN_ENGINE = window.PIN_ENGINE || {};
+      window.PIN_ENGINE[fn] = resolved;
 
     });
 
+    if (missing.length > 0) {
+
+      console.error("[PIN BOOTSTRAP] CRITICAL MISSING FUNCTIONS:", missing);
+
+      throw new Error("PIN BOOT FAILED - MISSING DEPENDENCIES");
+    }
+
+    console.log("[PIN BOOTSTRAP] All dependencies resolved ✔");
   }
 
+  // ================= VALIDATION =================
   function validateSystem() {
 
     const required = [
@@ -62,47 +100,34 @@ PIN RUNTIME BOOTSTRAP V1.2 FINAL
       "processPinRequestAuto"
     ];
 
-    const missing = required.filter(function (fn) {
-
-      return typeof window[fn] !== "function";
-
-    });
+    const missing = required.filter(fn =>
+      typeof window.PIN_ENGINE?.[fn] !== "function"
+    );
 
     if (missing.length > 0) {
 
-      console.error(
-        "[PIN BOOTSTRAP] CRITICAL MISSING:",
-        missing
-      );
+      console.error("[PIN BOOTSTRAP] SYSTEM INVALID:", missing);
 
-      throw new Error(
-        "PIN BOOT FAILED"
-      );
-
+      throw new Error("PIN BOOT FAILED");
     }
 
-    console.log(
-      "[PIN BOOTSTRAP] SYSTEM READY ✔"
-    );
+    console.log("[PIN BOOTSTRAP] SYSTEM READY ✔");
 
     return true;
-
   }
 
+  // ================= INIT =================
   function init() {
 
-    registerGlobals();
-
+    ensureContract();
+    registerAndValidate();
     validateSystem();
-
   }
 
+  // ================= BOOT TRIGGER =================
   if (document.readyState === "loading") {
 
-    document.addEventListener(
-      "DOMContentLoaded",
-      init
-    );
+    document.addEventListener("DOMContentLoaded", init);
 
   } else {
 
