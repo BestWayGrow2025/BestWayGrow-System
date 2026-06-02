@@ -2,12 +2,13 @@
 
 /*
 ========================================
-PIN ENGINE GUARD v1.0 HARDENING
+PIN ENGINE GUARD v1.0 HARDENED + OBSERVABILITY
 ========================================
 ✔ Detects silent failures
 ✔ Wraps all engine calls
-✔ Standardizes error reporting
-✔ Ensures traceability
+✔ Standardized validation layer
+✔ Global failure event stream
+✔ Debug-ready execution tracing
 ========================================
 */
 
@@ -17,38 +18,74 @@ PIN ENGINE GUARD v1.0 HARDENING
 
   window.__PIN_ENGINE_GUARD__ = true;
 
+  // ================= SAFE CALL WRAPPER =================
   function safeCall(name, fn, args) {
 
     try {
 
       if (typeof fn !== "function") {
-        console.error("[PIN ENGINE] Missing function:", name);
+        console.error("[PIN ENGINE MISSING]", name);
         return { success: false, error: "MISSING_FUNCTION" };
       }
 
       const result = fn(...args);
 
-      // detect silent failure
       if (result === undefined) {
-        console.warn("[PIN ENGINE] No result returned:", name);
+        console.warn("[PIN ENGINE NO RESULT]", name);
       }
 
-      return {
+      const finalResult = {
         success: true,
         result
       };
+
+      // ================= GLOBAL FAILURE EVENT =================
+      window.broadcastPinEvent?.("PIN_ENGINE_RESULT", {
+        action: name,
+        success: true,
+        timestamp: Date.now()
+      });
+
+      return finalResult;
 
     } catch (err) {
 
       console.error("[PIN ENGINE ERROR]", name, err);
 
-      return {
+      const failure = {
         success: false,
         error: err.message || "UNKNOWN_ERROR"
       };
+
+      // ================= GLOBAL FAILURE EVENT =================
+      window.broadcastPinEvent?.("PIN_ENGINE_RESULT", {
+        action: name,
+        success: false,
+        error: failure.error,
+        timestamp: Date.now()
+      });
+
+      return failure;
     }
   }
 
+  // ================= VALIDATION PRE-CHECK =================
+  function validateEngineCall(name) {
+
+    const CORE = window.PIN_ENGINE || {};
+
+    if (!CORE[name]) {
+      console.error("[PIN VALIDATION] Missing:", name);
+      return false;
+    }
+
+    return true;
+  }
+
+  // ================= EXPORT =================
   window.pinEngineSafeCall = safeCall;
+  window.validateEngineCall = validateEngineCall;
+
+  console.log("[PIN ENGINE GUARD] READY ✔");
 
 })();
