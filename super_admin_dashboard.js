@@ -42,21 +42,19 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
 
     try {
 
-      // PRIMARY SYSTEM ROUTE
-      if (typeof window.dispatchPinAction === "function") {
+     // PRIMARY SYSTEM ROUTE (FIXED)
+if (typeof window.openSystemPage === "function") {
 
-        window.dispatchPinAction("NAVIGATE", {
-          page
-        });
+  window.openSystemPage(page);
 
-        window.broadcastPinEvent?.("DASHBOARD_NAVIGATION", {
-          page
-        });
+  window.broadcastPinEvent?.("DASHBOARD_NAVIGATION", {
+    page
+  });
 
-        console.log("[DASHBOARD] DISPATCHED:", page);
+  console.log("[DASHBOARD] ROUTED:", page);
 
-        return true;
-      }
+  return true;
+}
 
       // FALLBACK EVENT ONLY
       if (typeof window.broadcastPinEvent === "function") {
