@@ -55,10 +55,49 @@
 
 </div>
 
-<!-- ================= PIN SYSTEM EXTENSIONS ================= -->
+<!-- ================= SAFE STORAGE ================= -->
+<script src="safe_storage.js"></script>
 
-<!-- ENGINE CORE FIRST -->
-<script src="pin_engine_core.js"></script>
+<!-- ================= BOOT ================= -->
+<script src="boot_manager.js"></script>
+
+<!-- ================= CORE SYSTEM ================= -->
+<script src="core_system.js"></script>
+
+<!-- ================= ORCHESTRATOR ================= -->
+<script src="system_orchestrator_kernel.js"></script>
+
+<!-- ================= AUTO WIRING ================= -->
+<script src="enterprise_auto_wiring_layer.js"></script>
+
+<!-- ================= BOOT GUARD ================= -->
+<script src="system_boot_dependency_guard.js"></script>
+
+<!-- ================= SESSION ================= -->
+<script src="session_manager.js"></script>
+
+<!-- ================= ENTERPRISE CORE ================= -->
+<script src="enterprise_core_engine.js"></script>
+
+<!-- ================= MODULE LOADERS ================= -->
+<script src="system_real_module_loader.js"></script>
+<script src="system_module_connector.js"></script>
+
+<!-- ================= ROUTER ================= -->
+<script src="system_page_router_connector.js"></script>
+
+<!-- ================= NAVIGATION ================= -->
+<script src="navigation_core.js"></script>
+
+<!-- ================= PIN MODULE REGISTRY ================= -->
+<script src="pin_module_registry.js"></script>
+
+<!-- ================= GLOBAL CONTRACT ================= -->
+<script src="pin_global_contract.js"></script>
+
+<!-- ===================================================== -->
+<!-- ================= PIN SYSTEM CORE ==================== -->
+<!-- ===================================================== -->
 
 <!-- FOUNDATION -->
 <script src="pin_action_types.js"></script>
@@ -77,54 +116,62 @@
 <!-- MASTER ENGINE -->
 <script src="pin_master_system.js"></script>
 
-<!-- UI SYSTEM -->
+<!-- ================= UI SYSTEM ================= -->
 <script src="pin_ui_injector.js"></script>
 <script src="pin_ui_launcher.js"></script>
 <script src="pin_ui_binding.js"></script>
 <script src="pin_ui_action_bridge.js"></script>
 
-<!-- REQUEST + CONTROL -->
+<!-- ================= REQUEST + CONTROL ================= -->
 <script src="pin_access_router.js"></script>
 <script src="pin_action_control.js"></script>
 <script src="pin_action_dispatcher.js"></script>
 
-<!-- SAFETY LAYER -->
+<!-- ================= ENGINE CORE + SAFETY ================= -->
+<script src="pin_engine_core.js"></script>
 <script src="pin_engine_guard.js"></script>
 
-<!-- LIVE SYSTEM -->
+<!-- ================= STEP 5 (NEW HARDENING LAYER) ================= -->
+<script src="pin_auto_heal_engine.js"></script>
+<script src="pin_execution_replay_engine.js"></script>
+
+<!-- ================= LIVE SYSTEM ================= -->
 <script src="pin_live_bridge.js"></script>
 <script src="pin_live_orchestrator.js"></script>
 <script src="pin_live_request_panel.js"></script>
 <script src="pin_live_intelligence_layer.js"></script>
 
-<!-- MONITOR (AFTER LIVE SYSTEM) -->
+<!-- ================= MONITOR ================= -->
 <script src="pin_engine_monitor.js"></script>
 
-<!-- ADMIN -->
+<!-- ================= FAILURE DASHBOARD ================= -->
+<script src="pin_live_failure_dashboard.js"></script>
+
+<!-- ================= ADMIN ================= -->
 <script src="pin_admin_connector.js"></script>
 <script src="pin_system_admin_connector.js"></script>
 
-<!-- REQUEST ENGINE -->
+<!-- ================= REQUEST ENGINE ================= -->
 <script src="pin_request_processor_engine.js"></script>
 <script src="pin_request_queue_engine.js"></script>
 
-<!-- SECURITY -->
+<!-- ================= SECURITY ================= -->
 <script src="pin_bank_system.js"></script>
 <script src="pin_permission_audit_layer.js"></script>
 <script src="pin_config_system.js"></script>
 
-<!-- GUARDS -->
+<!-- ================= GUARDS ================= -->
 <script src="pin_session_guard.js"></script>
 <script src="pin_system_guard.js"></script>
 
-<!-- CONTROLLER -->
+<!-- ================= CONTROLLER ================= -->
 <script src="pin_system_controller.js"></script>
 <script src="pin_system_health_monitor.js"></script>
 
-<!-- FINALIZATION (MUST BE LAST LOGIC LAYER) -->
+<!-- ================= FINALIZATION ================= -->
 <script src="pin_system_finalization_layer.js"></script>
 
-<!-- BOOTSTRAP -->
+<!-- ================= BOOTSTRAP ================= -->
 <script src="pin_self_heal_layer.js"></script>
 <script src="pin_dependency_wiring_engine.js"></script>
 <script src="pin_runtime_bootstrap.js"></script>
@@ -132,39 +179,38 @@
 <script src="pin_system_initializer.js"></script>
 <script src="pin_system_bootstrap_connector.js"></script>
 
-<!-- CORE SYSTEM -->
+<!-- ================= CORE SYSTEM ================= -->
 <script src="core_system.js"></script>
 
-<!-- ORCHESTRATOR -->
+<!-- ================= ORCHESTRATOR ================= -->
 <script src="system_orchestrator_kernel.js"></script>
 
-<!-- AUTO WIRING -->
+<!-- ================= AUTO WIRING ================= -->
 <script src="enterprise_auto_wiring_layer.js"></script>
 
-<!-- BOOT + SESSION -->
+<!-- ================= BOOT ================= -->
 <script src="boot_manager.js"></script>
 <script src="system_boot_dependency_guard.js"></script>
+
+<!-- ================= SESSION ================= -->
 <script src="session_manager.js"></script>
 
-<!-- ENTERPRISE CORE -->
+<!-- ================= ENTERPRISE CORE ================= -->
 <script src="enterprise_core_engine.js"></script>
 
-<!-- MODULE SYSTEM -->
+<!-- ================= MODULE SYSTEM ================= -->
 <script src="system_real_module_loader.js"></script>
 <script src="system_module_connector.js"></script>
 
-<!-- ROUTER -->
+<!-- ================= ROUTER ================= -->
 <script src="system_page_router_connector.js"></script>
 <script src="navigation_core.js"></script>
 
-<!-- PIN REGISTRY + CONTRACT -->
+<!-- ================= REGISTRY ================= -->
 <script src="pin_module_registry.js"></script>
 <script src="pin_global_contract.js"></script>
 
-<!-- ENGINE EXTENSIONS -->
-<script src="pin_engine_monitor.js"></script>
-
-<!-- DASHBOARD -->
+<!-- ================= DASHBOARD ================= -->
 <script src="super_admin_dashboard.js"></script>
 
 </body>
