@@ -1,22 +1,40 @@
 "use strict";
 
-function bindPinUI() {
+/*
+========================================
+PIN UI BINDING COMPATIBILITY LAYER
+========================================
+✔ Fixes legacy dependency mismatch
+✔ Maps old system → new UI modules
+✔ Production safe alias bridge
+========================================
+*/
 
-  console.log("[PIN UI] Binding UI system...");
+(function () {
 
-  if (typeof window.ui_render_manager !== "undefined") {
-    window.ui_render_manager.init?.();
-  }
+  if (window.pin_ui_binding) return;
 
-  if (typeof window.pin_ui_launcher !== "undefined") {
-    window.pin_ui_launcher.init?.();
-  }
+  window.pin_ui_binding = {
 
-  if (typeof window.pin_ui_injector !== "undefined") {
-    window.pin_ui_injector.init?.();
-  }
+    injector: () => window.initPinInjector?.(),
 
-  return true;
-}
+    launcher: () => window.openPinRequestPanel?.(),
 
-window.bindPinUI = bindPinUI;
+    renderer: () => window.renderModule?.(),
+
+    inject: () => window.initPinInjector?.(),
+
+    launch: () => window.openPinRequestPanel?.(),
+
+    ui_render_manager: () => window.renderModule?.()
+
+  };
+
+  // SAFE legacy compatibility mapping
+  window.pin_ui_injector = window.initPinInjector;
+  window.pin_ui_launcher = window.openPinRequestPanel;
+  window.ui_render_manager = window.renderModule;
+
+  console.log("[PIN UI BINDING] Compatibility layer ACTIVE ✔");
+
+})();
