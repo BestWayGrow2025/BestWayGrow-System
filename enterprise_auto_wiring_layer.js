@@ -3,13 +3,13 @@
 /*
 ========================================
 ENTERPRISE AUTO WIRING LAYER v1.2
-ENTERPRISE FINAL STABLE
+ENTERPRISE FINAL STABLE (FIXED)
 ========================================
 ✔ Auto module discovery
 ✔ Core engine registration
 ✔ UI binding layer
-✔ Event auto linking
-✔ Navigation execution router
+✔ Event auto linking (SAFE ONLY)
+✔ Navigation execution router (DISABLED to prevent loop)
 ✔ Health monitoring
 ✔ Duplicate init protection
 ✔ Global init exposure
@@ -93,7 +93,7 @@ ENTERPRISE FINAL STABLE
     });
   }
 
-  /* ================= EVENT WIRING ================= */
+  /* ================= EVENT WIRING (SAFE MONITOR ONLY) ================= */
 
   function autoWireEvents() {
 
@@ -107,7 +107,6 @@ ENTERPRISE FINAL STABLE
     document.addEventListener("click", function (e) {
 
       const el = e.target.closest("[data-page]");
-
       if (!el || !el.dataset) return;
 
       const page = el.dataset.page;
@@ -154,7 +153,7 @@ ENTERPRISE FINAL STABLE
     }, 10000);
   }
 
-  /* ================= NAVIGATION TRACKING ================= */
+  /* ================= NAVIGATION TRACKING (SAFE LOG ONLY) ================= */
 
   function trackNavigationFlow() {
 
@@ -183,35 +182,11 @@ ENTERPRISE FINAL STABLE
     });
   }
 
-  /* ================= EXECUTION ROUTER ================= */
+  /* ================= EXECUTION ROUTER (DISABLED - PREVENT LOOP) ================= */
 
   function bindNavigationExecutor() {
-
-    const CORE = getCore();
-
-    if (
-      !CORE ||
-      typeof CORE.run !== "function" ||
-      typeof CORE.on !== "function"
-    ) {
-      return;
-    }
-
-    if (CORE.__navigationExecutorBound__) return;
-    CORE.__navigationExecutorBound__ = true;
-
-    CORE.on("NAVIGATION_CLICK", function (data) {
-
-      const page = data.page;
-
-      console.log("[ROUTER] EXECUTING:", page);
-
-      try {
-        CORE.run(page);
-      } catch (err) {
-        console.error("[ROUTER ERROR]", page, err);
-      }
-    });
+    // DISABLED to prevent double execution loop
+    return;
   }
 
   /* ================= INIT ================= */
@@ -236,14 +211,4 @@ ENTERPRISE FINAL STABLE
     window.__ENTERPRISE_AUTO_WIRING_LAYER__.initialized = true;
     window.__ENTERPRISE_AUTO_WIRING_LAYER__.status = "READY";
 
-    console.log("[AUTO WIRING] ACTIVE & CONNECTED");
-  }
-
-  /* ================= GLOBAL EXPORT ================= */
-
-  window.initAutoWiring = initAutoWiring;
-  window.getAutoWiringCore = getCore;
-
-  console.log("[AUTO WIRING LAYER] READY");
-
-})();
+    console.log("[AUTO
