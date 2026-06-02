@@ -2,14 +2,13 @@
 
 /*
 ========================================
-PIN ACTION DISPATCHER V1.2 FINAL SAFE
+PIN ACTION DISPATCHER V1.3 FINAL FIXED
 ========================================
-✔ Central action dispatcher
-✔ Contract-aware safety gate
-✔ Engine-gated execution model
-✔ No raw global dependency leaks
-✔ Boot-safe execution layer
-✔ Production hardened
+✔ NAVIGATE action fixed
+✔ Router bridge aligned
+✔ Engine-safe execution
+✔ No breaking changes to PIN system
+✔ Production stable routing support
 ========================================
 */
 
@@ -62,6 +61,28 @@ function dispatchPinAction(
   }
 
   actionType = normalizePinDispatcherAction(actionType);
+
+  // ==================================================
+  // NAVIGATION FIX (CRITICAL)
+  // ==================================================
+  if (actionType === "NAVIGATE") {
+
+    const page = payload.page;
+
+    if (!page) {
+      console.warn("[PIN DISPATCHER] NAVIGATE missing page");
+      return false;
+    }
+
+    // PRIMARY ROUTER (YOUR SYSTEM)
+    if (typeof window.openSystemPage === "function") {
+      window.openSystemPage(page);
+      return true;
+    }
+
+    console.warn("[PIN DISPATCHER] No router available for NAVIGATE");
+    return false;
+  }
 
   // ==================================================
   // REQUEST SYSTEM
@@ -175,7 +196,7 @@ function dispatchPinAction(
   }
 
   // ==================================================
-  // INVALID ACTION (SAFE FAIL)
+  // UNKNOWN ACTION SAFE FAIL
   // ==================================================
   console.warn("[PIN DISPATCHER] Unknown action:", actionType);
   return false;
@@ -195,7 +216,8 @@ function isValidPinDispatchAction(actionType) {
     "USE_PIN",
     "TRANSFER_PIN",
     "DELETE_PIN",
-    "OVERRIDE_PIN"
+    "OVERRIDE_PIN",
+    "NAVIGATE"
   ];
 
   return valid.includes(
