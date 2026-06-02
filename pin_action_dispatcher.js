@@ -2,12 +2,13 @@
 
 /*
 ========================================
-PIN ACTION DISPATCHER V1.3 FINAL FIXED
+PIN ACTION DISPATCHER V1.3 FINAL FIXED + HARDENED
 ========================================
 ✔ NAVIGATE action fixed
 ✔ Router bridge aligned
 ✔ Engine-safe execution
-✔ No breaking changes to PIN system
+✔ Silent failure protection added
+✔ Structured execution safety layer
 ✔ Production stable routing support
 ========================================
 */
@@ -32,11 +33,7 @@ function getPinEngine(name) {
 
   const fn = window.PIN_ENGINE[name];
 
-  if (typeof fn === "function") {
-    return fn;
-  }
-
-  return null;
+  return (typeof fn === "function") ? fn : null;
 }
 
 // ================= NORMALIZER =================
@@ -46,6 +43,39 @@ function normalizePinDispatcherAction(actionType) {
     .trim()
     .toUpperCase()
     .replace(/\s+/g, "_");
+}
+
+// ================= SAFE EXECUTION WRAPPER =================
+function safeExecute(name, fn, args = []) {
+
+  try {
+
+    if (typeof fn !== "function") {
+      console.error("[PIN ENGINE MISSING FUNCTION]", name);
+      return { success: false, error: "MISSING_FUNCTION" };
+    }
+
+    const result = fn(...args);
+
+    // detect silent failure
+    if (result === undefined) {
+      console.warn("[PIN ENGINE NO RESULT]", name);
+    }
+
+    return {
+      success: true,
+      result
+    };
+
+  } catch (err) {
+
+    console.error("[PIN ENGINE ERROR]", name, err);
+
+    return {
+      success: false,
+      error: err.message || "UNKNOWN_ERROR"
+    };
+  }
 }
 
 // ================= MAIN DISPATCH =================
@@ -74,7 +104,6 @@ function dispatchPinAction(
       return false;
     }
 
-    // PRIMARY ROUTER (YOUR SYSTEM)
     if (typeof window.openSystemPage === "function") {
       window.openSystemPage(page);
       return true;
@@ -94,12 +123,18 @@ function dispatchPinAction(
   ) {
 
     const fn = getPinEngine("createPinRequest");
-    if (!fn) throw new Error("PIN engine unavailable: createPinRequest");
 
-    return fn({
-      ...payload,
-      userId: context.userId || null
-    });
+    const res = safeExecute(
+      "createPinRequest",
+      fn,
+      [{
+        ...payload,
+        userId: context.userId || null
+      }]
+    );
+
+    if (!res.success) return false;
+    return res.result;
   }
 
   // ==================================================
@@ -111,9 +146,15 @@ function dispatchPinAction(
   ) {
 
     const fn = getPinEngine("processPinRequestAuto");
-    if (!fn) throw new Error("PIN engine unavailable: processPinRequestAuto");
 
-    return fn(payload.requestId);
+    const res = safeExecute(
+      "processPinRequestAuto",
+      fn,
+      [payload.requestId]
+    );
+
+    if (!res.success) return false;
+    return res.result;
   }
 
   // ==================================================
@@ -122,12 +163,18 @@ function dispatchPinAction(
   if (actionType === "REJECT_REQUEST") {
 
     const fn = getPinEngine("rejectPinRequest");
-    if (!fn) throw new Error("PIN engine unavailable: rejectPinRequest");
 
-    return fn(
-      payload.requestId,
-      context.userId || "SYSTEM"
+    const res = safeExecute(
+      "rejectPinRequest",
+      fn,
+      [
+        payload.requestId,
+        context.userId || "SYSTEM"
+      ]
     );
+
+    if (!res.success) return false;
+    return res.result;
   }
 
   // ==================================================
@@ -136,12 +183,18 @@ function dispatchPinAction(
   if (actionType === "ASSIGN_PIN") {
 
     const fn = getPinEngine("assignPin");
-    if (!fn) throw new Error("PIN engine unavailable: assignPin");
 
-    return fn(
-      payload.pinId,
-      payload.toId
+    const res = safeExecute(
+      "assignPin",
+      fn,
+      [
+        payload.pinId,
+        payload.toId
+      ]
     );
+
+    if (!res.success) return false;
+    return res.result;
   }
 
   // ==================================================
@@ -150,12 +203,18 @@ function dispatchPinAction(
   if (actionType === "USE_PIN") {
 
     const fn = getPinEngine("usePin");
-    if (!fn) throw new Error("PIN engine unavailable: usePin");
 
-    return fn(
-      payload.pinId,
-      context.userId || "SYSTEM"
+    const res = safeExecute(
+      "usePin",
+      fn,
+      [
+        payload.pinId,
+        context.userId || "SYSTEM"
+      ]
     );
+
+    if (!res.success) return false;
+    return res.result;
   }
 
   // ==================================================
@@ -164,13 +223,19 @@ function dispatchPinAction(
   if (actionType === "TRANSFER_PIN") {
 
     const fn = getPinEngine("transferPin");
-    if (!fn) throw new Error("PIN engine unavailable: transferPin");
 
-    return fn(
-      payload.pinId,
-      payload.fromId,
-      payload.toId
+    const res = safeExecute(
+      "transferPin",
+      fn,
+      [
+        payload.pinId,
+        payload.fromId,
+        payload.toId
+      ]
     );
+
+    if (!res.success) return false;
+    return res.result;
   }
 
   // ==================================================
@@ -179,9 +244,15 @@ function dispatchPinAction(
   if (actionType === "DELETE_PIN") {
 
     const fn = getPinEngine("deletePin");
-    if (!fn) throw new Error("PIN engine unavailable: deletePin");
 
-    return fn(payload.pinId);
+    const res = safeExecute(
+      "deletePin",
+      fn,
+      [payload.pinId]
+    );
+
+    if (!res.success) return false;
+    return res.result;
   }
 
   // ==================================================
@@ -190,9 +261,18 @@ function dispatchPinAction(
   if (actionType === "OVERRIDE_PIN") {
 
     const fn = getPinEngine("overridePin");
-    if (!fn) throw new Error("PIN engine unavailable: overridePin");
 
-    return fn(payload.pinId, context.userId || "SYSTEM");
+    const res = safeExecute(
+      "overridePin",
+      fn,
+      [
+        payload.pinId,
+        context.userId || "SYSTEM"
+      ]
+    );
+
+    if (!res.success) return false;
+    return res.result;
   }
 
   // ==================================================
