@@ -2,13 +2,14 @@
 
 /*
 ========================================
-PIN LIVE FAILURE DASHBOARD v1.1
-REAL-TIME DEBUG + RETRY SYSTEM
+PIN LIVE FAILURE DASHBOARD v1.2 FINAL
+REAL-TIME OBSERVABILITY + SAFE RETRY
 ========================================
-✔ Live failure stream
-✔ Retry failed actions
-✔ Debug console overlay
-✔ Event-driven updates
+✔ Stable UI overlay (fixed position)
+✔ Tracks FAIL + SUCCESS (optional toggle-ready)
+✔ Safe event wrapping (no override loss)
+✔ Retry system with full payload restore
+✔ Compatible with pin_engine_guard v1.1
 ========================================
 */
 
@@ -18,35 +19,40 @@ REAL-TIME DEBUG + RETRY SYSTEM
 
   window.__PIN_LIVE_FAILURE_DASHBOARD__ = true;
 
+  // ================= STATE =================
   const state = {
-    failures: [],
+    logs: [],
     listenersBound: false
   };
 
-  // ================= UI =================
+  // ================= UI CREATE =================
   function createUI() {
 
     if (document.getElementById("pinFailureDashboard")) return;
 
     const box = document.createElement("div");
     box.id = "pinFailureDashboard";
+
     box.style.cssText = `
       position:fixed;
       bottom:10px;
       right:10px;
-      width:320px;
-      max-height:400px;
+      width:340px;
+      max-height:420px;
       overflow:auto;
-      background:#111;
+      background:#0f0f0f;
       color:#fff;
       font-size:12px;
       padding:10px;
-      z-index:99999;
-      border:1px solid #444;
+      z-index:999999;
+      border:1px solid #333;
+      border-radius:8px;
     `;
 
     box.innerHTML = `
-      <h4>⚠ PIN FAILURE DASHBOARD</h4>
+      <div style="font-weight:bold;margin-bottom:8px;">
+        ⚠ PIN ENGINE LIVE DASHBOARD
+      </div>
       <div id="pinFailureList"></div>
     `;
 
@@ -59,68 +65,104 @@ REAL-TIME DEBUG + RETRY SYSTEM
     const list = document.getElementById("pinFailureList");
     if (!list) return;
 
-    list.innerHTML = state.failures.map((f, i) => `
-      <div style="border-bottom:1px solid #333;margin:5px 0;padding:5px;">
-        <b>${f.action}</b><br/>
-        <span style="color:red">${f.error || "UNKNOWN"}</span><br/>
-        <button onclick="window.__PIN_RETRY(${i})">RETRY</button>
+    list.innerHTML = state.logs.slice(-100).reverse().map((log, i) => `
+      <div style="
+        border-bottom:1px solid #222;
+        padding:6px;
+        margin-bottom:6px;
+      ">
+        <b>${log.action}</b><br/>
+        <span style="color:${log.success ? 'lime' : 'red'}">
+          ${log.success ? "SUCCESS" : "FAIL"}
+        </span><br/>
+        ${log.error ? `<span style="color:#ff6666">${log.error}</span><br/>` : ""}
+        
+        <button data-retry-index="${i}" style="margin-top:4px;">
+          RETRY
+        </button>
       </div>
     `).join("");
   }
 
-  // ================= RETRY =================
-  window.__PIN_RETRY = function (index) {
+  // ================= ADD LOG =================
+  function addLog(data) {
 
-    const item = state.failures[index];
-    if (!item) return;
+    state.logs.push({
+      ...data,
+      time: Date.now()
+    });
 
-    console.log("[PIN RETRY]", item);
-
-    if (typeof window.dispatchPinAction === "function") {
-      window.dispatchPinAction(
-        item.action,
-        item.payload,
-        item.context
-      );
+    if (state.logs.length > 500) {
+      state.logs.shift();
     }
-  };
 
-  // ================= LISTENER =================
-  function bind() {
+    render();
+  }
 
-    if (state.listenersBound) return;
-    state.listenersBound = true;
+  // ================= SAFE EVENT WRAPPER =================
+  function attachEventStream() {
 
-    window.broadcastPinEvent = window.broadcastPinEvent || function () {};
+    const original = window.broadcastPinEvent;
 
-    const old = window.broadcastPinEvent;
+    window.broadcastPinEvent = function (eventName, data) {
 
-    window.broadcastPinEvent = function (event, data) {
+      // preserve old behavior safely
+      if (typeof original === "function") {
+        original(eventName, data);
+      }
 
-      old(event, data);
+      if (eventName === "PIN_ENGINE_RESULT") {
 
-      if (event === "PIN_ENGINE_RESULT") {
-
-        if (!data.success) {
-
-          state.failures.push({
-            action: data.action,
-            error: data.error,
-            payload: data.payload || {},
-            context: data.context || {}
-          });
-
-          render();
-        }
+        addLog({
+          action: data.action,
+          success: data.success,
+          error: data.error || null,
+          payload: data.payload || null
+        });
       }
     };
   }
 
+  // ================= RETRY SYSTEM =================
+  function bindRetry() {
+
+    document.addEventListener("click", function (e) {
+
+      const btn = e.target.closest("[data-retry-index]");
+      if (!btn) return;
+
+      const index = parseInt(btn.getAttribute("data-retry-index"), 10);
+      const log = state.logs[state.logs.length - 1 - index];
+
+      if (!log) return;
+
+      console.log("[PIN DASHBOARD RETRY]", log);
+
+      if (typeof window.dispatchPinAction === "function") {
+
+        window.dispatchPinAction(
+          log.action,
+          log.payload || {},
+          {
+            userId: window.getCurrentUser?.()?.id || "SYSTEM"
+          }
+        );
+      }
+    });
+  }
+
   // ================= INIT =================
   function init() {
+
     createUI();
-    bind();
-    console.log("[PIN FAILURE DASHBOARD] READY");
+
+    if (!state.listenersBound) {
+      state.listenersBound = true;
+      attachEventStream();
+      bindRetry();
+    }
+
+    console.log("[PIN LIVE FAILURE DASHBOARD] READY ✔");
   }
 
   if (document.readyState === "loading") {
