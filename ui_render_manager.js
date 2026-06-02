@@ -2,25 +2,20 @@
 
 /*
 ========================================
-UI RENDER MANAGER v1.0 (ENTERPRISE FINAL)
+UI RENDER MANAGER v1.1 FINAL SAFE
 ========================================
 ✔ Centralized UI rendering authority
-✔ Prevents duplicate DOM injection
-✔ Prevents nested render contamination
-✔ Safe viewport replacement
-✔ Mounted module tracking
-✔ Duplicate mount prevention
-✔ Enterprise dashboard compatible
-✔ Diagnostics compatible
-✔ Production LOCKED
+✔ Contract-aware boot safety
+✔ Event bus integration enabled
+✔ Safe module lifecycle tracking
+✔ Controlled state mutation
+✔ Production-ready UI layer core
 ========================================
 */
 
 (function () {
 
-  // ========================================
-  // INIT GUARD
-  // ========================================
+  // ================= INIT GUARD =================
   if (window.__UI_RENDER_MANAGER__) {
     console.log("[UI RENDER] Already Loaded");
     return;
@@ -30,9 +25,13 @@ UI RENDER MANAGER v1.0 (ENTERPRISE FINAL)
 
   console.log("[UI RENDER] Initializing");
 
-  // ========================================
-  // INTERNAL STATE
-  // ========================================
+  // ================= CONTRACT SAFETY =================
+  if (!window.PIN_GLOBAL_CONTRACT) {
+    console.error("[UI RENDER] Contract not loaded");
+    return;
+  }
+
+  // ================= INTERNAL STATE =================
   const UI_RENDER_STATE = {
 
     mountedModules: {},
@@ -41,23 +40,27 @@ UI RENDER MANAGER v1.0 (ENTERPRISE FINAL)
 
     renderCount: 0,
 
-    lastRenderAt: null
+    lastRenderAt: null,
+
+    history: []
   };
 
-  // ========================================
-  // MAIN VIEWPORT
-  // ========================================
+  // ================= VIEWPORT =================
   function getViewport() {
-
-    return (
-      document.getElementById("mainContent") ||
-      null
-    );
+    return document.getElementById("mainContent") || null;
   }
 
-  // ========================================
-  // SAFE HTML REPLACEMENT
-  // ========================================
+  // ================= EVENT EMITTER =================
+  function emit(eventName, payload = {}) {
+    if (typeof window.broadcastPinEvent === "function") {
+      window.broadcastPinEvent(eventName, {
+        ...payload,
+        timestamp: Date.now()
+      });
+    }
+  }
+
+  // ================= SAFE VIEWPORT REPLACEMENT =================
   function replaceViewport(content = "") {
 
     const viewport = getViewport();
@@ -74,6 +77,10 @@ UI RENDER MANAGER v1.0 (ENTERPRISE FINAL)
       UI_RENDER_STATE.renderCount++;
       UI_RENDER_STATE.lastRenderAt = Date.now();
 
+      emit("UI_VIEWPORT_REPLACED", {
+        renderCount: UI_RENDER_STATE.renderCount
+      });
+
       return true;
 
     } catch (err) {
@@ -83,44 +90,28 @@ UI RENDER MANAGER v1.0 (ENTERPRISE FINAL)
     }
   }
 
-  // ========================================
-  // CLEAR VIEWPORT
-  // ========================================
+  // ================= CLEAR VIEWPORT =================
   function clearViewport() {
-
     return replaceViewport("");
   }
 
-  // ========================================
-  // PREVENT DUPLICATE MODULE MOUNT
-  // ========================================
+  // ================= MODULE TRACKING =================
   function isMounted(moduleId) {
-
     return !!UI_RENDER_STATE.mountedModules[moduleId];
   }
 
-  // ========================================
-  // REGISTER MOUNT
-  // ========================================
   function registerMount(moduleId) {
-
     UI_RENDER_STATE.mountedModules[moduleId] = {
       mounted: true,
       timestamp: Date.now()
     };
   }
 
-  // ========================================
-  // UNREGISTER MOUNT
-  // ========================================
   function unregisterMount(moduleId) {
-
     delete UI_RENDER_STATE.mountedModules[moduleId];
   }
 
-  // ========================================
-  // SAFE MODULE RENDER
-  // ========================================
+  // ================= SAFE MODULE RENDER =================
   function renderModule(moduleId, html = "") {
 
     if (!moduleId) {
@@ -128,191 +119,104 @@ UI RENDER MANAGER v1.0 (ENTERPRISE FINAL)
       return false;
     }
 
-    // Prevent duplicate same-page rendering
+    // Prevent duplicate render
     if (
       UI_RENDER_STATE.currentPage === moduleId &&
       isMounted(moduleId)
     ) {
-
-      console.log(
-        "[UI RENDER] Duplicate Render Prevented:",
-        moduleId
-      );
-
+      console.log("[UI RENDER] Duplicate Render Prevented:", moduleId);
       return false;
     }
 
     try {
 
-      // Clear previous state
+      // Track history BEFORE overwrite
+      if (UI_RENDER_STATE.currentPage) {
+        UI_RENDER_STATE.history.push(UI_RENDER_STATE.currentPage);
+      }
+
+      // Clear only module state (not full system reset)
       UI_RENDER_STATE.mountedModules = {};
 
-      // Replace viewport
+      emit("UI_RENDER_START", { moduleId });
+
+      // Render
       replaceViewport(html);
 
-      // Register new mount
       registerMount(moduleId);
 
-      // Set active page
       UI_RENDER_STATE.currentPage = moduleId;
 
-      console.log(
-        "[UI RENDER] Mounted:",
-        moduleId
-      );
+      emit("UI_RENDER_COMPLETE", { moduleId });
+
+      console.log("[UI RENDER] Mounted:", moduleId);
 
       return true;
 
     } catch (err) {
 
-      console.error(
-        "[UI RENDER MODULE ERROR]",
-        err
-      );
+      console.error("[UI RENDER MODULE ERROR]", err);
+
+      emit("UI_RENDER_ERROR", {
+        moduleId,
+        error: err.message
+      });
 
       return false;
     }
   }
 
-  // ========================================
-  // SAFE COMPONENT INJECTION
-  // ========================================
-  function mountComponent(
-    targetId,
-    html = "",
-    options = {}
-  ) {
+  // ================= COMPONENT MOUNT =================
+  function mountComponent(targetId, html = "", options = {}) {
 
     try {
 
-      const target =
-        document.getElementById(targetId);
+      const target = document.getElementById(targetId);
 
       if (!target) {
-        console.warn(
-          "[UI RENDER] Component Target Missing:",
-          targetId
-        );
+        console.warn("[UI RENDER] Component Target Missing:", targetId);
         return false;
       }
 
-      const mode =
-        options.mode || "replace";
+      const mode = options.mode || "replace";
 
-      // Replace
       if (mode === "replace") {
         target.innerHTML = html;
       }
 
-      // Append
       else if (mode === "append") {
-
-        const wrapper =
-          document.createElement("div");
-
+        const wrapper = document.createElement("div");
         wrapper.innerHTML = html;
-
         target.appendChild(wrapper);
       }
+
+      emit("UI_COMPONENT_MOUNTED", {
+        targetId,
+        mode
+      });
 
       return true;
 
     } catch (err) {
 
-      console.error(
-        "[UI COMPONENT ERROR]",
-        err
-      );
+      console.error("[UI COMPONENT ERROR]", err);
+
+      emit("UI_COMPONENT_ERROR", {
+        targetId,
+        error: err.message
+      });
 
       return false;
     }
   }
 
-  // ========================================
-  // ACTIVE PAGE
-  // ========================================
-  function getCurrentPage() {
-
-    return UI_RENDER_STATE.currentPage;
-  }
-
-  // ========================================
-  // RENDER STATUS
-  // ========================================
+  // ================= STATUS =================
   function getRenderStatus() {
 
     return {
 
-      currentPage:
-        UI_RENDER_STATE.currentPage,
+      currentPage: UI_RENDER_STATE.currentPage,
 
-      renderCount:
-        UI_RENDER_STATE.renderCount,
+      renderCount: UI_RENDER_STATE.renderCount,
 
-      lastRenderAt:
-        UI_RENDER_STATE.lastRenderAt,
-
-      mountedModules:
-        Object.keys(
-          UI_RENDER_STATE.mountedModules
-        )
-    };
-  }
-
-  // ========================================
-  // DIAGNOSTICS SUPPORT
-  // ========================================
-  function renderDiagnosticsCard() {
-
-    const status = getRenderStatus();
-
-    return `
-      <div class="ui-render-diagnostics">
-
-        <h3>🎨 UI Render Manager</h3>
-
-        <p>
-          <strong>Current Page:</strong>
-          ${status.currentPage || "None"}
-        </p>
-
-        <p>
-          <strong>Render Count:</strong>
-          ${status.renderCount}
-        </p>
-
-        <p>
-          <strong>Mounted Modules:</strong>
-          ${status.mountedModules.join(", ") || "None"}
-        </p>
-
-      </div>
-    `;
-  }
-
-  // ========================================
-  // GLOBAL EXPORTS
-  // ========================================
-  window.renderModule = renderModule;
-
-  window.replaceViewport = replaceViewport;
-
-  window.clearViewport = clearViewport;
-
-  window.mountComponent = mountComponent;
-
-  window.unregisterMount = unregisterMount;
-
-  window.getCurrentRenderedPage = getCurrentPage;
-
-  window.getUIRenderStatus = getRenderStatus;
-
-  window.renderDiagnosticsCard =
-    renderDiagnosticsCard;
-
-  window.UI_RENDER_STATE =
-    UI_RENDER_STATE;
-
-  console.log("[UI RENDER] READY");
-
-})();
+      lastRenderAt: UI_RENDER_STATE.lastRender
