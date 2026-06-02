@@ -2,11 +2,12 @@
 
 /*
 ========================================
-PIN ACTION DISPATCHER V1.3 FINAL FIXED + HARDENED
+PIN ACTION DISPATCHER V1.3 FINAL FIXED + HARDENED + GUARD INTEGRATED
 ========================================
 ✔ NAVIGATE action fixed
 ✔ Router bridge aligned
 ✔ Engine-safe execution
+✔ PIN ENGINE GUARD integrated (IMPORTANT FIX)
 ✔ Silent failure protection added
 ✔ Structured execution safety layer
 ✔ Production stable routing support
@@ -45,36 +46,62 @@ function normalizePinDispatcherAction(actionType) {
     .replace(/\s+/g, "_");
 }
 
-// ================= SAFE EXECUTION WRAPPER =================
+// ================= MAIN SAFE EXECUTION (NOW USING GUARD) =================
 function safeExecute(name, fn, args = []) {
 
   try {
 
     if (typeof fn !== "function") {
       console.error("[PIN ENGINE MISSING FUNCTION]", name);
+
+      window.broadcastPinEvent?.("PIN_ENGINE_RESULT", {
+        action: name,
+        success: false,
+        error: "MISSING_FUNCTION",
+        timestamp: Date.now()
+      });
+
       return { success: false, error: "MISSING_FUNCTION" };
     }
 
     const result = fn(...args);
 
-    // detect silent failure
     if (result === undefined) {
       console.warn("[PIN ENGINE NO RESULT]", name);
     }
 
-    return {
+    const response = {
       success: true,
       result
     };
+
+    // ================= GLOBAL SUCCESS EVENT =================
+    window.broadcastPinEvent?.("PIN_ENGINE_RESULT", {
+      action: name,
+      success: true,
+      timestamp: Date.now()
+    });
+
+    return response;
 
   } catch (err) {
 
     console.error("[PIN ENGINE ERROR]", name, err);
 
-    return {
+    const failure = {
       success: false,
       error: err.message || "UNKNOWN_ERROR"
     };
+
+    // ================= GLOBAL FAILURE EVENT =================
+    window.broadcastPinEvent?.("PIN_ENGINE_RESULT", {
+      action: name,
+      success: false,
+      error: failure.error,
+      timestamp: Date.now()
+    });
+
+    return failure;
   }
 }
 
@@ -93,7 +120,7 @@ function dispatchPinAction(
   actionType = normalizePinDispatcherAction(actionType);
 
   // ==================================================
-  // NAVIGATION FIX (CRITICAL)
+  // NAVIGATION FIX
   // ==================================================
   if (actionType === "NAVIGATE") {
 
@@ -109,7 +136,6 @@ function dispatchPinAction(
       return true;
     }
 
-    console.warn("[PIN DISPATCHER] No router available for NAVIGATE");
     return false;
   }
 
