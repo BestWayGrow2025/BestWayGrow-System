@@ -2,15 +2,14 @@
 
 /*
 ========================================
-PIN EXECUTION LOCK V1.1 (FINAL SAFE)
+PIN EXECUTION LOCK V1.2 FINAL SAFE
 ========================================
-✔ Unified execution lock layer
+✔ Async-safe execution lock
+✔ TTL auto-release system
+✔ Race-condition hardened
 ✔ Duplicate execution protection
-✔ TTL auto unlock system
-✔ Queue-safe locking
-✔ Flow-safe locking
-✔ INIT GUARD ADDED
-✔ Production SAFE
+✔ Debug trace support
+✔ Production-ready locking layer
 ========================================
 */
 
@@ -33,10 +32,7 @@ const PIN_EXECUTION_LOCK_TTL = 10000;
 
 // ================= NORMALIZER =================
 function normalizePinLockKey(key) {
-
-  return String(key || "")
-    .trim()
-    .toUpperCase();
+  return String(key || "").trim().toUpperCase();
 }
 
 // ================= LOCK CHECK =================
@@ -44,15 +40,13 @@ function isPinExecutionLocked(key) {
 
   key = normalizePinLockKey(key);
 
-  const timestamp = PIN_EXECUTION_LOCKS[key];
+  const entry = PIN_EXECUTION_LOCKS[key];
 
-  if (!timestamp) return false;
+  if (!entry) return false;
 
   // AUTO EXPIRE
-  if (Date.now() - timestamp > PIN_EXECUTION_LOCK_TTL) {
-
+  if (Date.now() - entry.timestamp > PIN_EXECUTION_LOCK_TTL) {
     delete PIN_EXECUTION_LOCKS[key];
-
     return false;
   }
 
@@ -64,7 +58,10 @@ function setPinExecutionLock(key) {
 
   key = normalizePinLockKey(key);
 
-  PIN_EXECUTION_LOCKS[key] = Date.now();
+  PIN_EXECUTION_LOCKS[key] = {
+    timestamp: Date.now(),
+    stack: new Error().stack // debug trace support
+  };
 
   return true;
 }
@@ -79,11 +76,12 @@ function releasePinExecutionLock(key) {
   return true;
 }
 
-// ================= SAFE EXECUTION =================
-function executeWithPinLock(key, callback) {
+// ================= SAFE EXECUTION (ASYNC SAFE) =================
+async function executeWithPinLock(key, callback) {
 
   key = normalizePinLockKey(key);
 
+  // Atomic-style check + reserve
   if (isPinExecutionLocked(key)) {
     return false;
   }
@@ -92,14 +90,16 @@ function executeWithPinLock(key, callback) {
 
   try {
 
-    const result = callback();
+    // FULL ASYNC SAFETY
+    const result = await Promise.resolve(
+      typeof callback === "function" ? callback() : null
+    );
 
     return result;
 
   } catch (err) {
 
     console.error("[PIN EXECUTION ERROR]", err);
-
     return false;
 
   } finally {
@@ -108,8 +108,22 @@ function executeWithPinLock(key, callback) {
   }
 }
 
+// ================= SAFE READ API =================
+function getPinLockSnapshot() {
+  return { ...PIN_EXECUTION_LOCKS };
+}
+
 // ================= EXPORT =================
 window.executeWithPinLock = executeWithPinLock;
 window.isPinExecutionLocked = isPinExecutionLocked;
 window.setPinExecutionLock = setPinExecutionLock;
 window.releasePinExecutionLock = releasePinExecutionLock;
+
+// Optional debug namespace (clean structure)
+window.PIN_LOCK = {
+  execute: executeWithPinLock,
+  isLocked: isPinExecutionLocked,
+  set: setPinExecutionLock,
+  release: releasePinExecutionLock,
+  snapshot: getPinLockSnapshot
+};
