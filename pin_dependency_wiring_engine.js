@@ -6,20 +6,23 @@
   window.PIN_DEP_WIRING_ENGINE = true;
 
   const DEP_MAP = {
+
     pin_ui_binding: [
       "pin_ui_injector",
-      "pin_ui_launcher",
-      "ui_render_manager"
+      "pin_ui_launcher"
     ],
+
     pin_runtime_bootstrap: [
       "bindPinUI",
       "executePinFlow",
       "processPinRequestAuto"
     ],
+
     pin_system_controller: [
       "executePinFlow",
       "routePinRequest"
     ]
+
   };
 
   function wire() {
@@ -33,7 +36,6 @@
 
       deps.forEach(dep => {
 
-        // ✅ FIXED CHECK
         if (typeof window[dep] !== "function") {
 
           ok = false;
