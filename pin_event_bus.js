@@ -2,13 +2,14 @@
 
 /*
 ========================================
-PIN EVENT BUS V1.1 (FINAL STABLE CORE)
+PIN EVENT BUS V1.2 FINAL SAFE
 ========================================
-✔ Single event broadcast layer
+✔ Event emission + subscription system
+✔ Contract-aware safety gate
 ✔ SYSTEM_EVENTS bridge support
-✔ Safe fallback structure
-✔ Duplicate-safe initialization
-✔ Production locked
+✔ Native DOM fallback
+✔ Full bidirectional event system
+✔ Production-ready event backbone
 ========================================
 */
 
@@ -19,17 +20,55 @@ PIN EVENT BUS V1.1 (FINAL STABLE CORE)
 
   window.__PIN_EVENT_BUS__ = true;
 
-  // ================= EVENT EMITTER =================
+  console.log("[PIN EVENT BUS] READY");
+
+  // ================= LISTENERS STORE =================
+  const listeners = {};
+
+  // ================= SUBSCRIBE =================
+  function on(eventName, callback) {
+
+    if (!eventName || typeof callback !== "function") {
+      return false;
+    }
+
+    if (!listeners[eventName]) {
+      listeners[eventName] = [];
+    }
+
+    listeners[eventName].push(callback);
+
+    return true;
+  }
+
+  // ================= EMIT =================
   function emit(eventName, payload = {}) {
 
     try {
+
+      // ================= CONTRACT SAFETY =================
+      if (!window.PIN_GLOBAL_CONTRACT) {
+        console.error("[PIN EVENT BUS] Contract not loaded");
+        return false;
+      }
 
       const eventPayload = {
         ...payload,
         timestamp: Date.now()
       };
 
-      // ================= PRIMARY EVENT SYSTEM =================
+      // ================= INTERNAL LISTENERS =================
+      if (listeners[eventName]) {
+        listeners[eventName].forEach(fn => {
+          try {
+            fn(eventPayload);
+          } catch (err) {
+            console.error("[PIN EVENT LISTENER ERROR]", err);
+          }
+        });
+      }
+
+      // ================= SYSTEM EVENTS BRIDGE =================
       if (
         window.SYSTEM_EVENTS &&
         typeof window.SYSTEM_EVENTS.emit === "function"
@@ -38,7 +77,7 @@ PIN EVENT BUS V1.1 (FINAL STABLE CORE)
         return true;
       }
 
-      // ================= FALLBACK EVENT SYSTEM =================
+      // ================= DOM FALLBACK =================
       if (typeof window.dispatchEvent === "function") {
 
         window.dispatchEvent(
@@ -55,14 +94,23 @@ PIN EVENT BUS V1.1 (FINAL STABLE CORE)
     } catch (err) {
 
       console.error("[PIN EVENT BUS ERROR]", err);
-
       return false;
     }
   }
 
+  // ================= SNAPSHOT =================
+  function getListenersSnapshot() {
+    return JSON.parse(JSON.stringify(listeners));
+  }
+
   // ================= EXPORT =================
   window.broadcastPinEvent = emit;
+  window.subscribePinEvent = on;
 
-  console.log("[PIN EVENT BUS] READY");
+  window.PIN_EVENT_BUS = {
+    emit,
+    on,
+    snapshot: getListenersSnapshot
+  };
 
 })();
