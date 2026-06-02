@@ -2,13 +2,14 @@
 
 /*
 ========================================
-PIN ENGINE GUARD v1.0 HARDENED + OBSERVABILITY
+PIN ENGINE GUARD v1.1 HARDENED + OBSERVABILITY
 ========================================
 ✔ Detects silent failures
-✔ Wraps all engine calls
+✔ Wraps all engine calls safely
 ✔ Standardized validation layer
-✔ Global failure event stream
-✔ Debug-ready execution tracing
+✔ Global event stream (SUCCESS + FAIL)
+✔ Consistent execution tracing
+✔ Dispatcher-safe output contract
 ========================================
 */
 
@@ -18,31 +19,71 @@ PIN ENGINE GUARD v1.0 HARDENED + OBSERVABILITY
 
   window.__PIN_ENGINE_GUARD__ = true;
 
+  // ================= VALIDATION =================
+  function validateEngineCall(name) {
+
+    const CORE = window.PIN_ENGINE || {};
+
+    if (!CORE[name]) {
+      console.error("[PIN VALIDATION] Missing:", name);
+
+      window.broadcastPinEvent?.("PIN_ENGINE_RESULT", {
+        action: name,
+        success: false,
+        error: "MISSING_FUNCTION",
+        timestamp: Date.now()
+      });
+
+      return false;
+    }
+
+    return true;
+  }
+
   // ================= SAFE CALL WRAPPER =================
-  function safeCall(name, fn, args) {
+  function safeCall(name, fn, args = []) {
 
     try {
 
+      // VALIDATION FIRST
+      if (!validateEngineCall(name)) {
+        return {
+          success: false,
+          error: "VALIDATION_FAILED"
+        };
+      }
+
       if (typeof fn !== "function") {
         console.error("[PIN ENGINE MISSING]", name);
+
+        window.broadcastPinEvent?.("PIN_ENGINE_RESULT", {
+          action: name,
+          success: false,
+          error: "MISSING_FUNCTION",
+          timestamp: Date.now()
+        });
+
         return { success: false, error: "MISSING_FUNCTION" };
       }
 
       const result = fn(...args);
 
-      if (result === undefined) {
+      const success = result !== undefined;
+
+      if (!success) {
         console.warn("[PIN ENGINE NO RESULT]", name);
       }
 
       const finalResult = {
-        success: true,
+        success,
         result
       };
 
-      // ================= GLOBAL FAILURE EVENT =================
+      // ================= GLOBAL EVENT STREAM =================
       window.broadcastPinEvent?.("PIN_ENGINE_RESULT", {
         action: name,
-        success: true,
+        success,
+        result: result ?? null,
         timestamp: Date.now()
       });
 
@@ -57,7 +98,6 @@ PIN ENGINE GUARD v1.0 HARDENED + OBSERVABILITY
         error: err.message || "UNKNOWN_ERROR"
       };
 
-      // ================= GLOBAL FAILURE EVENT =================
       window.broadcastPinEvent?.("PIN_ENGINE_RESULT", {
         action: name,
         success: false,
@@ -67,19 +107,6 @@ PIN ENGINE GUARD v1.0 HARDENED + OBSERVABILITY
 
       return failure;
     }
-  }
-
-  // ================= VALIDATION PRE-CHECK =================
-  function validateEngineCall(name) {
-
-    const CORE = window.PIN_ENGINE || {};
-
-    if (!CORE[name]) {
-      console.error("[PIN VALIDATION] Missing:", name);
-      return false;
-    }
-
-    return true;
   }
 
   // ================= EXPORT =================
