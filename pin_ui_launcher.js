@@ -2,21 +2,20 @@
 
 /*
 ========================================
-PIN UI LAUNCHER V1.1 (PRODUCTION FIXED CORE)
+PIN UI LAUNCHER V1.2 FINAL SAFE
 ========================================
-✔ Central UI launcher layer
-✔ Safe modal rendering
-✔ Router-safe execution (NO inline JS routing)
-✔ Event-safe button binding
-✔ Stable lifecycle control
-✔ Clean separation from router
-✔ Production locked
+✔ Contract-safe UI launcher
+✔ Dispatcher-only execution
+✔ Event bus integrated
+✔ No business logic in UI
+✔ Injector-compatible design
+✔ Single modal authority layer
 ========================================
 */
 
-// ================= INIT GUARD =================
 (function () {
 
+  // ================= INIT GUARD =================
   if (window.__PIN_UI_LAUNCHER__) return;
 
   window.__PIN_UI_LAUNCHER__ = true;
@@ -28,8 +27,14 @@ PIN UI LAUNCHER V1.1 (PRODUCTION FIXED CORE)
 // ================= INIT =================
 function initPinUILauncher() {
 
-  createModalRoot();
+  if (!window.PIN_GLOBAL_CONTRACT) {
+    console.error("[PIN UI LAUNCHER] Contract missing");
+    return;
+  }
 
+  window.broadcastPinEvent?.("PIN_UI_LAUNCHER_READY", {});
+
+  createModalRoot();
 }
 
 // ================= ROOT =================
@@ -43,14 +48,14 @@ function createModalRoot() {
   document.body.appendChild(root);
 }
 
-// ================= MODAL =================
+// ================= MODAL RENDER =================
 function renderPinModal(title, bodyHTML) {
 
   const root = document.getElementById("pinModalRoot");
   if (!root) return false;
 
   root.innerHTML = `
-    <div id="pinModalOverlay" style="
+    <div style="
       position:fixed;
       inset:0;
       background:rgba(0,0,0,0.45);
@@ -66,25 +71,14 @@ function renderPinModal(title, bodyHTML) {
         max-width:500px;
         border-radius:10px;
         padding:20px;
-        box-shadow:0 10px 30px rgba(0,0,0,0.2);
       ">
 
-        <div style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          margin-bottom:15px;
-        ">
-          <h3 style="margin:0;">${title}</h3>
-
-          <button onclick="window.closePinModal()">
-            ✖
-          </button>
+        <div style="display:flex;justify-content:space-between;">
+          <h3>${title}</h3>
+          <button onclick="window.closePinModal()">✖</button>
         </div>
 
-        <div>
-          ${bodyHTML}
-        </div>
+        ${bodyHTML}
 
       </div>
 
@@ -98,119 +92,107 @@ function renderPinModal(title, bodyHTML) {
 function closePinModal() {
 
   const root = document.getElementById("pinModalRoot");
-  if (!root) return;
+  if (root) root.innerHTML = "";
 
-  root.innerHTML = "";
+  window.broadcastPinEvent?.("PIN_MODAL_CLOSED", {});
 }
 
-// ================= SAFE ROUTE CALL =================
-function safeRoute(action, payload) {
+// ================= SAFE DISPATCH =================
+function execute(action, payload = {}) {
 
-  if (typeof window.routePinRequest !== "function") {
-    console.error("Router not available");
+  if (!window.dispatchPinAction) {
+    console.error("[PIN UI LAUNCHER] Dispatcher not available");
     return false;
   }
 
-  return window.routePinRequest(action, payload);
+  window.broadcastPinEvent?.("PIN_ACTION_TRIGGERED", {
+    action,
+    payload
+  });
+
+  return window.dispatchPinAction(action, payload);
 }
 
-// ================= REQUEST PANEL =================
+// ================= PANELS =================
 function openPinRequestPanel(payload = {}) {
 
-  return renderPinModal(
+  renderPinModal(
     "📌 Request PIN",
     `
-      <p>Create new PIN request</p>
+      <p>Submit PIN Request</p>
 
-      <button id="submitRequestBtn">
-        Submit Request
-      </button>
+      <button onclick="window.__pinSubmitRequest()">Submit</button>
     `
   );
+
+  window.broadcastPinEvent?.("PIN_UI_OPEN", { type: "REQUEST" });
 }
 
-// ================= APPROVE PANEL =================
 function openApprovePanel(payload = {}) {
 
-  return renderPinModal(
-    "✅ Approve PIN Request",
+  renderPinModal(
+    "✅ Approve Request",
     `
-      <p>Approve request:</p>
+      <p>Request ID: ${payload.requestId || "-"}</p>
 
-      <b>${payload.requestId || "-"}</b>
-
-      <br><br>
-
-      <button id="approveBtn">
-        Approve Now
+      <button onclick="window.__pinApprove('${payload.requestId || ""}')">
+        Approve
       </button>
     `
   );
+
+  window.broadcastPinEvent?.("PIN_UI_OPEN", { type: "APPROVE" });
 }
 
-// ================= ASSIGN PANEL =================
 function openAssignPinPanel(payload = {}) {
 
-  return renderPinModal(
+  renderPinModal(
     "🎯 Assign PIN",
     `
-      <p>Assign PIN to user</p>
+      <input id="assignToId" placeholder="User ID" style="width:100%;padding:10px;" />
 
-      <input
-        id="assignToId"
-        placeholder="Enter User ID"
-        style="width:100%;padding:10px;margin-bottom:10px;"
-      />
-
-      <button id="assignBtn">
-        Assign PIN
+      <button onclick="window.__pinAssign('${payload.pinId || ""}')">
+        Assign
       </button>
     `
   );
+
+  window.broadcastPinEvent?.("PIN_UI_OPEN", { type: "ASSIGN" });
 }
 
-// ================= EVENT BINDING (AFTER MODAL RENDER) =================
-document.addEventListener("click", function (e) {
+// ================= GLOBAL SAFE HANDLERS =================
+window.__pinSubmitRequest = function () {
 
-  // REQUEST
-  if (e.target && e.target.id === "submitRequestBtn") {
+  execute("REQUEST_PIN", {
+    type: "upgrade",
+    amount: 100,
+    paymentId: "AUTO_" + Date.now(),
+    quantity: 1
+  });
 
-    safeRoute("REQUEST_PIN", {
-      type: "upgrade",
-      amount: 100,
-      paymentId: "PAY_" + Date.now(),
-      quantity: 1
-    });
+  closePinModal();
+};
 
-    closePinModal();
-  }
+window.__pinApprove = function (requestId) {
 
-  // APPROVE
-  if (e.target && e.target.id === "approveBtn") {
+  execute("APPROVE_REQUEST", {
+    requestId
+  });
 
-    const reqId = document.querySelector("b")?.innerText || "";
+  closePinModal();
+};
 
-    safeRoute("APPROVE_REQUEST", {
-      requestId: reqId,
-      __directExecute: true
-    });
+window.__pinAssign = function (pinId) {
 
-    closePinModal();
-  }
+  const toId = document.getElementById("assignToId")?.value || "";
 
-  // ASSIGN
-  if (e.target && e.target.id === "assignBtn") {
+  execute("ASSIGN_PIN", {
+    pinId,
+    toId
+  });
 
-    const toId = document.getElementById("assignToId")?.value || "";
-
-    safeRoute("ASSIGN_PIN", {
-      pinId: "PIN001",
-      toId: toId
-    });
-
-    closePinModal();
-  }
-});
+  closePinModal();
+};
 
 // ================= EXPORT =================
 window.renderPinModal = renderPinModal;
