@@ -5,7 +5,7 @@
 SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
 ========================================
 ✔ Contract-first enforcement
-✔ Dispatcher-based routing only
+✔ Router-based navigation only
 ✔ Event-bus integrated
 ✔ No legacy engine references
 ✔ Bootstrap connector compliant
@@ -28,7 +28,6 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
 
   // ================= CONTRACT SAFETY =================
   function ensureContract() {
-
     if (!window.PIN_GLOBAL_CONTRACT) {
       console.error("[DASHBOARD] CONTRACT MISSING");
       throw new Error("DASHBOARD BLOCKED: NO CONTRACT");
@@ -37,39 +36,34 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
 
   // ================= SAFE DISPATCH =================
   function dispatch(page) {
-
     if (!page) return false;
 
     try {
 
-     // PRIMARY SYSTEM ROUTE (FIXED)
-if (typeof window.openSystemPage === "function") {
+      // ✅ PRIMARY ROUTE (FIXED)
+      if (typeof window.openSystemPage === "function") {
 
-  window.openSystemPage(page);
+        window.openSystemPage(page);
 
-  window.broadcastPinEvent?.("DASHBOARD_NAVIGATION", {
-    page
-  });
+        window.broadcastPinEvent?.("DASHBOARD_NAVIGATION", {
+          page
+        });
 
-  console.log("[DASHBOARD] ROUTED:", page);
+        console.log("[DASHBOARD] ROUTED:", page);
+        return true;
+      }
 
-  return true;
-}
-
-      // FALLBACK EVENT ONLY
+      // ❌ FALLBACK EVENT ONLY
       if (typeof window.broadcastPinEvent === "function") {
 
         window.broadcastPinEvent("NAVIGATE_REQUEST", { page });
-
         return true;
       }
 
       console.warn("[DASHBOARD] NO ROUTER AVAILABLE");
-
       return false;
 
     } catch (err) {
-
       console.error("[DASHBOARD ERROR]", err);
       return false;
     }
@@ -77,7 +71,6 @@ if (typeof window.openSystemPage === "function") {
 
   // ================= UI STATE =================
   function setActiveButton(btn) {
-
     document.querySelectorAll(".menu button.active")
       .forEach(b => b.classList.remove("active"));
 
@@ -86,21 +79,17 @@ if (typeof window.openSystemPage === "function") {
 
   // ================= BUTTON BIND =================
   function bindButtons() {
-
     document.querySelectorAll(".menu button").forEach(btn => {
 
       if (btn.__bound__) return;
-
       btn.__bound__ = true;
 
       btn.addEventListener("click", function () {
 
         const page = this.dataset.page;
-
         if (!page) return;
 
         setActiveButton(this);
-
         dispatch(page);
       });
     });
@@ -108,28 +97,22 @@ if (typeof window.openSystemPage === "function") {
 
   // ================= BACK =================
   function bindBack() {
-
     const back = document.getElementById("backBtn");
 
     if (!back || back.__bound__) return;
-
     back.__bound__ = true;
 
     back.addEventListener("click", function () {
-
       setActiveButton(null);
-
       dispatch("home");
     });
   }
 
   // ================= LOGOUT =================
   function bindLogout() {
-
     const logout = document.getElementById("logoutBtn");
 
     if (!logout || logout.__bound__) return;
-
     logout.__bound__ = true;
 
     logout.addEventListener("click", function () {
@@ -145,28 +128,23 @@ if (typeof window.openSystemPage === "function") {
 
       localStorage.clear();
       sessionStorage.clear();
-
       window.location.href = "index.html";
     });
   }
 
   // ================= PENDING ROUTES =================
   function flushPending() {
-
     const pending = window.__PENDING_ROUTE__ || [];
 
     if (!Array.isArray(pending) || pending.length === 0) return;
 
     pending.forEach(p => dispatch(p));
-
     window.__PENDING_ROUTE__ = [];
   }
 
   // ================= WELCOME =================
   function updateWelcome() {
-
     const el = document.getElementById("welcome");
-
     if (!el) return;
 
     const user = window.getCurrentUser?.();
@@ -179,7 +157,6 @@ if (typeof window.openSystemPage === "function") {
 
   // ================= DEFAULT PAGE =================
   function loadDefault() {
-
     if (window.__DEFAULT_LOADED__) return;
 
     const content = document.getElementById("mainContent");
@@ -198,9 +175,7 @@ if (typeof window.openSystemPage === "function") {
 
   // ================= INIT =================
   function init() {
-
     try {
-
       ensureContract();
 
       bindButtons();
@@ -217,14 +192,12 @@ if (typeof window.openSystemPage === "function") {
       console.log("[DASHBOARD] ACTIVE");
 
     } catch (err) {
-
       console.error("[DASHBOARD INIT FAILED]", err);
     }
   }
 
   // ================= BOOT =================
   function boot() {
-
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", init);
     } else {
