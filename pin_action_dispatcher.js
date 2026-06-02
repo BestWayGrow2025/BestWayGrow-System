@@ -2,17 +2,14 @@
 
 /*
 ========================================
-PIN ACTION DISPATCHER V1.1 (FULL FIXED)
+PIN ACTION DISPATCHER V1.2 FINAL SAFE
 ========================================
 ✔ Central action dispatcher
-✔ Safe normalization (system-compatible)
-✔ One-way execution mapping
-✔ Engine delegation only
-✔ NO session logic
-✔ NO permission logic
-✔ NO UI logic
-✔ FULL SAFE RESTORED FILE
-✔ Production READY
+✔ Contract-aware safety gate
+✔ Engine-gated execution model
+✔ No raw global dependency leaks
+✔ Boot-safe execution layer
+✔ Production hardened
 ========================================
 */
 
@@ -26,6 +23,22 @@ PIN ACTION DISPATCHER V1.1 (FULL FIXED)
   console.log("[PIN ACTION DISPATCHER] READY");
 
 })();
+
+// ================= ENGINE GATE =================
+function getPinEngine(name) {
+
+  if (!window.PIN_ENGINE) {
+    window.PIN_ENGINE = {};
+  }
+
+  const fn = window.PIN_ENGINE[name];
+
+  if (typeof fn === "function") {
+    return fn;
+  }
+
+  return null;
+}
 
 // ================= NORMALIZER =================
 function normalizePinDispatcherAction(actionType) {
@@ -43,6 +56,11 @@ function dispatchPinAction(
   context = {}
 ) {
 
+  // ================= CONTRACT SAFETY =================
+  if (!window.PIN_GLOBAL_CONTRACT) {
+    throw new Error("PIN GLOBAL CONTRACT NOT LOADED");
+  }
+
   actionType = normalizePinDispatcherAction(actionType);
 
   // ==================================================
@@ -54,11 +72,10 @@ function dispatchPinAction(
     actionType === "ADMIN_STOCK_REQUEST"
   ) {
 
-    if (typeof createPinRequest !== "function") {
-      throw new Error("PIN request engine unavailable");
-    }
+    const fn = getPinEngine("createPinRequest");
+    if (!fn) throw new Error("PIN engine unavailable: createPinRequest");
 
-    return createPinRequest({
+    return fn({
       ...payload,
       userId: context.userId || null
     });
@@ -72,11 +89,10 @@ function dispatchPinAction(
     actionType === "PROCESS_REQUEST"
   ) {
 
-    if (typeof processPinRequestAuto !== "function") {
-      throw new Error("PIN processor unavailable");
-    }
+    const fn = getPinEngine("processPinRequestAuto");
+    if (!fn) throw new Error("PIN engine unavailable: processPinRequestAuto");
 
-    return processPinRequestAuto(payload.requestId);
+    return fn(payload.requestId);
   }
 
   // ==================================================
@@ -84,11 +100,10 @@ function dispatchPinAction(
   // ==================================================
   if (actionType === "REJECT_REQUEST") {
 
-    if (typeof rejectPinRequest !== "function") {
-      throw new Error("PIN rejection engine unavailable");
-    }
+    const fn = getPinEngine("rejectPinRequest");
+    if (!fn) throw new Error("PIN engine unavailable: rejectPinRequest");
 
-    return rejectPinRequest(
+    return fn(
       payload.requestId,
       context.userId || "SYSTEM"
     );
@@ -99,11 +114,10 @@ function dispatchPinAction(
   // ==================================================
   if (actionType === "ASSIGN_PIN") {
 
-    if (typeof assignPin !== "function") {
-      throw new Error("PIN assignment engine unavailable");
-    }
+    const fn = getPinEngine("assignPin");
+    if (!fn) throw new Error("PIN engine unavailable: assignPin");
 
-    return assignPin(
+    return fn(
       payload.pinId,
       payload.toId
     );
@@ -114,11 +128,10 @@ function dispatchPinAction(
   // ==================================================
   if (actionType === "USE_PIN") {
 
-    if (typeof usePin !== "function") {
-      throw new Error("PIN usage engine unavailable");
-    }
+    const fn = getPinEngine("usePin");
+    if (!fn) throw new Error("PIN engine unavailable: usePin");
 
-    return usePin(
+    return fn(
       payload.pinId,
       context.userId || "SYSTEM"
     );
@@ -129,11 +142,10 @@ function dispatchPinAction(
   // ==================================================
   if (actionType === "TRANSFER_PIN") {
 
-    if (typeof transferPin !== "function") {
-      throw new Error("PIN transfer engine unavailable");
-    }
+    const fn = getPinEngine("transferPin");
+    if (!fn) throw new Error("PIN engine unavailable: transferPin");
 
-    return transferPin(
+    return fn(
       payload.pinId,
       payload.fromId,
       payload.toId
@@ -145,11 +157,10 @@ function dispatchPinAction(
   // ==================================================
   if (actionType === "DELETE_PIN") {
 
-    if (typeof deletePin !== "function") {
-      throw new Error("PIN delete engine unavailable");
-    }
+    const fn = getPinEngine("deletePin");
+    if (!fn) throw new Error("PIN engine unavailable: deletePin");
 
-    return deletePin(payload.pinId);
+    return fn(payload.pinId);
   }
 
   // ==================================================
@@ -157,20 +168,20 @@ function dispatchPinAction(
   // ==================================================
   if (actionType === "OVERRIDE_PIN") {
 
-    if (typeof overridePin !== "function") {
-      throw new Error("PIN override engine unavailable");
-    }
+    const fn = getPinEngine("overridePin");
+    if (!fn) throw new Error("PIN engine unavailable: overridePin");
 
-    return overridePin(payload.pinId, context.userId);
+    return fn(payload.pinId, context.userId || "SYSTEM");
   }
 
   // ==================================================
-  // INVALID ACTION
+  // INVALID ACTION (SAFE FAIL)
   // ==================================================
-  throw new Error("Unknown PIN action: " + actionType);
+  console.warn("[PIN DISPATCHER] Unknown action:", actionType);
+  return false;
 }
 
-// ================= SAFE VALIDATOR =================
+// ================= VALIDATOR =================
 function isValidPinDispatchAction(actionType) {
 
   const valid = [
