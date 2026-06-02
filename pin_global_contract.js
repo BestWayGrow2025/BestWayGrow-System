@@ -2,32 +2,35 @@
 
 (function () {
 
-  if (window.__PIN_GLOBAL_CONTRACT__) return;
-  window.__PIN_GLOBAL_CONTRACT__ = true;
-
-  function safe(fn) {
-    return typeof fn === "function" ? fn : () => {};
+  if (window.PIN_GLOBAL_CONTRACT) {
+    console.log("[PIN CONTRACT] Already Loaded");
+    return;
   }
 
-  // ================= UI LAYER (SINGLE SOURCE) =================
-  window.pin_ui = {
-    injector: safe(window.initPinInjector),
-    launcher: safe(window.openPinRequestPanel),
-    approve: safe(window.openApprovePanel),
-    assign: safe(window.openAssignPinPanel)
-  };
+  function safe(fn) {
+    return typeof fn === "function" ? fn : function () {};
+  }
 
-  // ================= RENDER LAYER =================
-  window.ui_render_manager = {
-    render: safe(window.renderModule),
-    status: safe(window.getUIRenderStatus),
-    clear: safe(window.clearViewport)
-  };
+  window.PIN_GLOBAL_CONTRACT = {
 
-  // ================= SYSTEM LAYER =================
-  window.pin_system = {
-    execute: safe(window.pinSystemExecute),
-    enqueue: safe(window.enqueuePinTask)
+    ui: {
+      injector: safe(window.initPinInjector),
+      launcher: safe(window.openPinRequestPanel),
+      approve: safe(window.openApprovePanel),
+      assign: safe(window.openAssignPinPanel)
+    },
+
+    render: {
+      render: safe(window.renderModule),
+      status: safe(window.getUIRenderStatus),
+      clear: safe(window.clearViewport)
+    },
+
+    system: {
+      execute: safe(window.pinSystemExecute),
+      enqueue: safe(window.enqueuePinTask)
+    }
+
   };
 
   console.log("[PIN CONTRACT] GLOBAL EXPORT LOCKED ✔");
