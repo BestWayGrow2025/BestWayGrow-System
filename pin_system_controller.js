@@ -1,60 +1,55 @@
 "use strict";
+
 /*
-PIN SYSTEM CONTROLLER V2.0 FINAL
-✔ Central traffic controller ✔ Single execution gateway ✔ Queue-based flow ✔ One-way execution only ✔ No business logic ✔ No UI rendering ✔ No routing modification ✔ Safe async execution ✔ Production LOCKED
+PIN SYSTEM CONTROLLER V2.1 FINAL SAFE
+✔ Central traffic controller
+✔ Queue-based execution
+✔ Boot-safe engine resolution
+✔ Contract-aware execution gate
+✔ Production hardened
 */
+
 // ================= INIT GUARD =================
 (function () {
 
-if (window.PIN_SYSTEM_CONTROLLER) {
-    return;
-}
+    if (window.PIN_SYSTEM_CONTROLLER) {
+        return;
+    }
 
-window.PIN_SYSTEM_CONTROLLER = true;
+    window.PIN_SYSTEM_CONTROLLER = true;
 
 })();
+
 // ================= QUEUE =================
 const PIN_SYSTEM_QUEUE = [];
 
-// ================= PROCESS STATE =================
+// ================= STATE =================
 let PIN_SYSTEM_BUSY = false;
 
 // ================= ENTRY =================
 function pinSystemExecute(actionType, payload = {}) {
-
-    return enqueuePinTask(
-        actionType,
-        payload
-    );
-
+    return enqueuePinTask(actionType, payload);
 }
 
 // ================= ENQUEUE =================
 function enqueuePinTask(actionType, payload = {}) {
 
     PIN_SYSTEM_QUEUE.push({
-
-        actionType: String(
-            actionType || ""
-        ).trim(),
-
+        actionType: String(actionType || "").trim(),
         payload: payload || {},
-
         createdAt: Date.now()
-
     });
 
-    processPinQueue();
+    // safe async scheduling (prevents burst recursion issues)
+    queueMicrotask(processPinQueue);
 
     return true;
-
 }
+
 // ================= PROCESSOR =================
 async function processPinQueue() {
 
-    if (PIN_SYSTEM_BUSY) {
-        return;
-    }
+    if (PIN_SYSTEM_BUSY) return;
 
     PIN_SYSTEM_BUSY = true;
 
@@ -62,82 +57,65 @@ async function processPinQueue() {
 
         while (PIN_SYSTEM_QUEUE.length > 0) {
 
-            const task =
-                PIN_SYSTEM_QUEUE.shift();
-
-            if (!task) {
-                continue;
-            }
+            const task = PIN_SYSTEM_QUEUE.shift();
+            if (!task) continue;
 
             try {
-
-                await executePinTask(
-                    task.actionType,
-                    task.payload
-                );
-
+                await executePinTask(task.actionType, task.payload);
             } catch (err) {
-
-                console.error(
-                    "[PIN SYSTEM CONTROLLER TASK ERROR]",
-                    err
-                );
-
+                console.error("[PIN SYSTEM CONTROLLER TASK ERROR]", err);
             }
 
         }
 
     } finally {
-
         PIN_SYSTEM_BUSY = false;
-
     }
-
 }
+
 // ================= TASK EXECUTION =================
-async function executePinTask(
-    actionType,
-    payload
-) {
+async function executePinTask(actionType, payload) {
 
-    // ================= VALIDATION =================
+    // ================= CONTRACT SAFETY =================
+    if (!window.PIN_GLOBAL_CONTRACT) {
+        throw new Error("PIN GLOBAL CONTRACT NOT LOADED");
+    }
+
     if (!actionType) {
-
-        throw new Error(
-            "Missing actionType"
-        );
-
+        throw new Error("Missing actionType");
     }
 
-    // PRIORITY 1
-    if (typeof routePinRequest === "function") {
+    // ================= ENGINE RESOLUTION =================
 
-        return await routePinRequest(
-            actionType,
-            payload || {}
-        );
-
+    // Priority 1: explicit router
+    if (typeof window.routePinRequest === "function") {
+        return await window.routePinRequest(actionType, payload || {});
     }
 
-    // PRIORITY 2
-if (typeof executePinFlow === "function") {
+    // Priority 2: execution flow engine
+    if (typeof window.executePinFlow === "function") {
+        return await window.executePinFlow(actionType, payload || {});
+    }
 
-    return await executePinFlow(
-        actionType,
-        payload || {}
-    );
+    // Priority 3: global execution engine (safe fallback)
+    if (typeof window.PIN_EXECUTION_ENGINE === "function") {
+        return await window.PIN_EXECUTION_ENGINE(actionType, payload || {});
+    }
 
+    console.warn("[PIN SYSTEM] No execution engine registered yet");
+    return false;
 }
 
-// ==================================================
-// FAILURE
-// ==================================================
-throw new Error(
-    "No PIN execution engine available"
-);
-
-}
-
-// ================= EXPORT =================
+// ================= SAFE GLOBAL ACCESS =================
 window.pinSystemExecute = pinSystemExecute;
 window.enqueuePinTask = enqueuePinTask;
+
+// Optional debug exposure (safe namespace)
+window.PIN_SYSTEM = {
+    get queue() {
+        return PIN_SYSTEM_QUEUE;
+    },
+    isBusy() {
+        return PIN_SYSTEM_BUSY;
+    }
+};
