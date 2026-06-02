@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SYSTEM REAL MODULE LOADER V2.0 FINAL
+SYSTEM REAL MODULE LOADER V2.1 FINAL
 ========================================
 ✔ Loads REAL dashboard modules
 ✔ Connector-compatible
@@ -11,6 +11,7 @@ SYSTEM REAL MODULE LOADER V2.0 FINAL
 ✔ No business logic
 ✔ No dashboard recursion
 ✔ Asset loader only (FIXED)
+✔ SAFE renderModule bridge support
 ========================================
 */
 
@@ -49,7 +50,7 @@ async function loadHtmlIntoMain(htmlFile) {
 
     const html = await response.text();
 
-    // ✅ FIX: DO NOT directly overwrite DOM if renderer exists
+    // ================= SAFE RENDER BRIDGE =================
     if (typeof window.renderModule === "function") {
       window.renderModule("module", html);
     } else {
@@ -82,6 +83,7 @@ function loadScriptOnce(scriptFile) {
       }
 
       const script = document.createElement("script");
+
       script.src = scriptFile;
       script.async = false;
       script.dataset.systemModule = scriptFile;
