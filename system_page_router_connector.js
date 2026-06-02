@@ -2,16 +2,14 @@
 
 /*
 ========================================
-SYSTEM PAGE ROUTER CONNECTOR V2.0 FINAL
+SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
 ========================================
 ✔ Central page navigation authority
 ✔ Single routing execution
 ✔ No duplicate listeners
-✔ No direct business logic
+✔ No dispatcher dependency for navigation
 ✔ Loader-safe architecture
-✔ Works with module connector
-✔ Works with UI render manager
-✔ Dashboard-safe rendering
+✔ Stable module switching
 ✔ Enterprise production stable
 ========================================
 */
@@ -43,113 +41,84 @@ SYSTEM PAGE ROUTER CONNECTOR V2.0 FINAL
 
     menu.__PAGE_ROUTER_BOUND__ = true;
 
-    menu.addEventListener(
-      "click",
-      handlePageNavigation
-    );
+    menu.addEventListener("click", handlePageNavigation);
 
     console.log("[PAGE ROUTER] READY");
   }
 
   // ================= HANDLE NAVIGATION =================
- function handlePageNavigation(e) {
+  function handlePageNavigation(e) {
 
-  const btn =
-    e.target.closest("[data-page]");
+    const btn = e.target.closest("[data-page]");
+    if (!btn) return;
 
-  if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
 
-  e.preventDefault();
+    const page = btn.getAttribute("data-page");
+    if (!page) return;
 
-  e.stopPropagation();
+    openSystemPage(page);
+  }
 
-  e.stopImmediatePropagation();
-
-  const page =
-    btn.getAttribute("data-page");
-
-  if (!page) return;
-
-  openSystemPage(page);
-}
-
-  // ================= OPEN PAGE =================
+  // ================= OPEN PAGE (FIXED CORE) =================
   function openSystemPage(page) {
 
     try {
 
-      // ================= MAIN CONNECTOR =================
-      if (
-        typeof window.connectSystemModule ===
-        "function"
-      ) {
+      if (!page) return false;
+
+      // 🧠 PREVENT DOUBLE LOADS
+      if (window.__CURRENT_PAGE__ === page) {
+        console.log("[PAGE ROUTER] Already on page:", page);
+        return false;
+      }
+
+      window.__CURRENT_PAGE__ = page;
+
+      // ================= PRIMARY CONNECTOR =================
+      if (typeof window.connectSystemModule === "function") {
 
         window.connectSystemModule(page);
 
-        console.log(
-          "[PAGE ROUTER] MODULE CONNECTED:",
-          page
-        );
+        console.log("[PAGE ROUTER] MODULE CONNECTED:", page);
 
         return true;
       }
 
-      // ================= SECONDARY LOADER =================
-      if (
-        typeof window.loadSystemModule ===
-        "function"
-      ) {
+      // ================= FALLBACK LOADER =================
+      if (typeof window.loadSystemModule === "function") {
 
         window.loadSystemModule(page);
 
-        console.log(
-          "[PAGE ROUTER] MODULE LOADED:",
-          page
-        );
+        console.log("[PAGE ROUTER] MODULE LOADED:", page);
 
         return true;
       }
 
-      // ================= SAFE FALLBACK =================
-      const main =
-        document.getElementById("mainContent");
+      // ================= SAFE FALLBACK UI =================
+      const main = document.getElementById("mainContent");
 
       if (!main) {
-        console.warn(
-          "[PAGE ROUTER] mainContent Missing"
-        );
+        console.warn("[PAGE ROUTER] mainContent Missing");
         return false;
       }
 
       main.innerHTML = `
         <div class="page-router-fallback">
-
-          <h3>
-            ⚠ Module Loader Missing
-          </h3>
-
-          <p>
-            Unable to load page:
-            <b>${page}</b>
-          </p>
-
+          <h3>⚠ Module Loader Missing</h3>
+          <p>Unable to load page: <b>${page}</b></p>
         </div>
       `;
 
-      console.warn(
-        "[PAGE ROUTER] Loader Missing For:",
-        page
-      );
+      console.warn("[PAGE ROUTER] Loader Missing For:", page);
 
       return false;
 
     } catch (err) {
 
-      console.error(
-        "[PAGE ROUTER ERROR]",
-        err
-      );
-
+      console.error("[PAGE ROUTER ERROR]", err);
       return false;
     }
   }
@@ -157,10 +126,7 @@ SYSTEM PAGE ROUTER CONNECTOR V2.0 FINAL
   // ================= AUTO INIT =================
   if (document.readyState === "loading") {
 
-    document.addEventListener(
-      "DOMContentLoaded",
-      initSystemPageRouter
-    );
+    document.addEventListener("DOMContentLoaded", initSystemPageRouter);
 
   } else {
 
@@ -168,7 +134,6 @@ SYSTEM PAGE ROUTER CONNECTOR V2.0 FINAL
   }
 
   // ================= EXPORT =================
-  window.openSystemPage =
-    openSystemPage;
+  window.openSystemPage = openSystemPage;
 
 })();
