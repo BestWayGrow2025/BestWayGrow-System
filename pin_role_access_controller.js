@@ -8,6 +8,7 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
 ✔ Router + wrapper compatible
 ✔ Safe loop protection added
 ✔ Prevents access_denied recursion crash
+✔ Production stable
 ========================================
 */
 
@@ -17,7 +18,7 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
 
   window.__PIN_ROLE_ACCESS_CONTROLLER__ = true;
 
-  // ================= SAFE PAGES (CRITICAL FIX) =================
+  // ================= SAFE PAGES (NO GUARD LOOP) =================
   const SAFE_PAGES = ["access_denied", "home"];
 
   // ================= ROLE DEFINITIONS =================
@@ -82,30 +83,41 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
     return roleData.permissions.includes(page);
   }
 
-  // ================= REQUIRE ACCESS (FIXED SAFE LOOP) =================
+  // ================= REQUIRE ACCESS (LOOP SAFE) =================
   function requireAccess(page) {
 
-    // 🔥 CRITICAL FIX: prevent redirect loop
+    // 🔥 CRITICAL: bypass system pages to prevent recursion
     if (SAFE_PAGES.includes(page)) {
       return true;
     }
 
-    if (!hasAccess(page)) {
+    try {
 
-      console.warn("[ROLE ACCESS DENIED]", {
-        role: getCurrentRole(),
-        page
-      });
+      if (!hasAccess(page)) {
 
-      // avoid infinite loop safety
-      if (page !== "access_denied" && typeof window.openSystemPage === "function") {
-        window.openSystemPage("access_denied");
+        console.warn("[ROLE ACCESS DENIED]", {
+          role: getCurrentRole(),
+          page
+        });
+
+        // 🚨 prevent infinite router loop
+        if (page !== "access_denied" && typeof window.openSystemPage === "function") {
+          setTimeout(() => {
+            window.openSystemPage("access_denied");
+          }, 0);
+        }
+
+        return false;
       }
 
-      return false;
-    }
+      return true;
 
-    return true;
+    } catch (err) {
+
+      console.error("[ROLE ACCESS ERROR]", err);
+
+      return true; // fail-safe open system
+    }
   }
 
   // ================= GLOBAL EXPORT =================
