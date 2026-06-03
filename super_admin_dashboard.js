@@ -34,18 +34,25 @@ SUPER ADMIN DASHBOARD v5.0 FINAL CLEAN (FIXED)
     return true;
   }
 
-  // ================= ROLE CHECK =================
- function checkAccess(page) {
-  return true;
-}
+// ================= ROLE CHECK =================
+function checkAccess(page) {
+
+  try {
 
     if (window.PIN_ROLE_ACCESS?.requireAccess) {
       return window.PIN_ROLE_ACCESS.requireAccess(page);
     }
 
     return true;
-  }
 
+  } catch (err) {
+
+    console.warn("[DASHBOARD] ROLE CHECK FAILED → SAFE MODE", err);
+
+    return true;
+  }
+}
+  
   // ================= NAVIGATION =================
   function dispatch(page) {
 
