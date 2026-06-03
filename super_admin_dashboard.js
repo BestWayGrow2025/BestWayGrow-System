@@ -2,12 +2,11 @@
 
 /*
 ========================================
-SUPER ADMIN DASHBOARD v5.0 FINAL CLEAN (FIXED)
+SUPER ADMIN DASHBOARD v5.0 FINAL STABLE
 ========================================
-✔ Role-based access integrated
-✔ Router-only navigation
-✔ Contract-safe execution (NON BLOCKING)
-✔ Event delegation binding (GLOBAL SAFE)
+✔ Role-safe navigation
+✔ Router-only execution
+✔ Safe contract handling
 ✔ No duplicate bindings
 ✔ Production stable
 ========================================
@@ -21,7 +20,7 @@ SUPER ADMIN DASHBOARD v5.0 FINAL CLEAN (FIXED)
   window.__SUPER_ADMIN_DASHBOARD__ = {
     loaded: true,
     initialized: false,
-    version: "5.0-fixed"
+    version: "5.0"
   };
 
   console.log("[SUPER ADMIN DASHBOARD] LOADING");
@@ -29,30 +28,19 @@ SUPER ADMIN DASHBOARD v5.0 FINAL CLEAN (FIXED)
   // ================= CONTRACT SAFETY =================
   function ensureContract() {
     if (!window.PIN_GLOBAL_CONTRACT) {
-      console.warn("[DASHBOARD] Contract missing - SAFE MODE CONTINUES");
+      console.warn("[DASHBOARD] Contract missing - SAFE MODE");
     }
     return true;
   }
 
-// ================= ROLE CHECK =================
-function checkAccess(page) {
-
-  try {
-
+  // ================= ROLE CHECK =================
+  function checkAccess(page) {
     if (window.PIN_ROLE_ACCESS?.requireAccess) {
       return window.PIN_ROLE_ACCESS.requireAccess(page);
     }
-
-    return true;
-
-  } catch (err) {
-
-    console.warn("[DASHBOARD] ROLE CHECK FAILED → SAFE MODE", err);
-
     return true;
   }
-}
-  
+
   // ================= NAVIGATION =================
   function dispatch(page) {
 
@@ -61,7 +49,6 @@ function checkAccess(page) {
     try {
 
       if (!checkAccess(page)) {
-
         console.warn("[DASHBOARD] ACCESS DENIED:", page);
 
         window.broadcastPinEvent?.("ACCESS_DENIED", {
@@ -73,7 +60,6 @@ function checkAccess(page) {
       }
 
       if (typeof window.openSystemPage === "function") {
-
         window.openSystemPage(page);
 
         window.broadcastPinEvent?.("DASHBOARD_NAVIGATION", {
@@ -84,20 +70,16 @@ function checkAccess(page) {
         return true;
       }
 
-      window.broadcastPinEvent?.("NAVIGATE_REQUEST", { page });
-
       console.warn("[DASHBOARD] ROUTER MISSING");
-
       return false;
 
     } catch (err) {
-
       console.error("[DASHBOARD ERROR]", err);
       return false;
     }
   }
 
-  // ================= UI HELPERS =================
+  // ================= UI =================
   function setActiveButton(btn) {
 
     document.querySelectorAll("[data-page]")
@@ -106,7 +88,7 @@ function checkAccess(page) {
     if (btn) btn.classList.add("active");
   }
 
-  // ================= BUTTON BIND (FIXED GLOBAL DELEGATION) =================
+  // ================= BUTTON BIND =================
   function bindButtons() {
 
     if (document.__dashBound__) return;
@@ -123,14 +105,12 @@ function checkAccess(page) {
       setActiveButton(btn);
       dispatch(page);
     });
-
   }
 
   // ================= BACK =================
   function bindBack() {
 
     const back = document.getElementById("backBtn");
-
     if (!back || back.__bound__) return;
 
     back.__bound__ = true;
@@ -145,7 +125,6 @@ function checkAccess(page) {
   function bindLogout() {
 
     const logout = document.getElementById("logoutBtn");
-
     if (!logout || logout.__bound__) return;
 
     logout.__bound__ = true;
@@ -212,7 +191,6 @@ function checkAccess(page) {
       console.log("[SUPER ADMIN DASHBOARD] ACTIVE");
 
     } catch (err) {
-
       console.error("[DASHBOARD INIT FAILED]", err);
     }
   }
@@ -232,7 +210,6 @@ function checkAccess(page) {
   window.safeDashboardRun = dispatch;
   window.handleNavigation = dispatch;
 
-  // ================= START =================
   boot();
 
   window.__DASHBOARD_LOADED__ = true;
