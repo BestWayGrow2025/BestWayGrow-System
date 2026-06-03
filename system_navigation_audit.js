@@ -2,15 +2,13 @@
 
 /*
 ========================================
-SYSTEM NAVIGATION AUDIT v1.1 ENTERPRISE
+SYSTEM NAVIGATION AUDIT v1.2 ENTERPRISE FIXED
 ========================================
 ✔ Tracks all page navigation
-✔ Records user role
-✔ Records requested page
-✔ Records loaded page
-✔ Stores audit history
-✔ Super Admin diagnostics
-✔ Clean guard architecture
+✔ Prevents infinite access_denied loops
+✔ Adds system page blocking guard
+✔ Stable event emission
+✔ Production safe
 ========================================
 */
 
@@ -22,6 +20,9 @@ SYSTEM NAVIGATION AUDIT v1.1 ENTERPRISE
 
   const MAX_LOGS = 500;
 
+  // 🔥 CRITICAL FIX: prevent system loop pages from re-auditing
+  const BLOCK_AUDIT = ["access_denied"];
+
   // ================= STATE =================
   const STATE = {
     logs: []
@@ -29,15 +30,20 @@ SYSTEM NAVIGATION AUDIT v1.1 ENTERPRISE
 
   // ================= ROLE =================
   function getRole() {
-
     return (
       window.PIN_ROLE_ACCESS?.getCurrentRole?.() ||
       "USER"
     );
   }
 
-  // ================= RECORD =================
-  function record(action, page, status) {
+  // ================= CORE AUDIT FUNCTION (NEW UNIFIED) =================
+  function audit(page, status = "PENDING", action = "EVENT") {
+
+    // 🔥 BLOCK LOOPING SYSTEM PAGES
+    if (BLOCK_AUDIT.includes(page)) {
+      console.warn("[NAV AUDIT] SKIPPED SYSTEM PAGE:", page);
+      return;
+    }
 
     const entry = {
       action,
@@ -54,65 +60,41 @@ SYSTEM NAVIGATION AUDIT v1.1 ENTERPRISE
     }
 
     if (typeof window.broadcastPinEvent === "function") {
-
       window.broadcastPinEvent(
         "SYSTEM_NAVIGATION_AUDIT",
         entry
       );
     }
 
-    console.log(
-      "[NAV AUDIT]",
-      action,
-      page,
-      status
-    );
+    console.log("[NAV AUDIT]", action, page, status);
   }
 
-  // ================= REQUEST =================
+  // ================= WRAPPERS =================
   function navigationRequested(page) {
-
-    record(
-      "REQUESTED",
-      page,
-      "PENDING"
-    );
+    audit(page, "PENDING", "REQUESTED");
   }
 
-  // ================= SUCCESS =================
   function navigationLoaded(page) {
-
-    record(
-      "LOADED",
-      page,
-      "SUCCESS"
-    );
+    audit(page, "SUCCESS", "LOADED");
   }
 
-  // ================= FAILURE =================
   function navigationFailed(page) {
-
-    record(
-      "FAILED",
-      page,
-      "FAILED"
-    );
+    audit(page, "FAILED", "FAILED");
   }
 
   // ================= GET LOGS =================
   function getLogs() {
-
     return [...STATE.logs];
   }
 
   // ================= CLEAR =================
   function clearLogs() {
-
     STATE.logs.length = 0;
   }
 
   // ================= EXPORT =================
   window.SYSTEM_NAVIGATION_AUDIT = {
+    audit,
     navigationRequested,
     navigationLoaded,
     navigationFailed,
@@ -120,8 +102,6 @@ SYSTEM NAVIGATION AUDIT v1.1 ENTERPRISE
     clearLogs
   };
 
-  console.log(
-    "[SYSTEM NAVIGATION AUDIT] READY ✔"
-  );
+  console.log("[SYSTEM NAVIGATION AUDIT] READY ✔ FIXED v1.2");
 
 })();
