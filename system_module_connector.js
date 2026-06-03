@@ -114,29 +114,41 @@ function connectSystemModule(page) {
           loadReportsRealModule
         );
 
-      // ================= PRODUCT MASTER =================
-    case "productmaster":
+     // ================= PRODUCT MASTER =================
+case "productmaster":
 
-  return safeCall(
-    loadRealModule,
-    false,
-    {
-      html: "product_master_connector.html",
-      js: "product_master_connector.js"
-    }
-  );
-        
-      // ================= TREE VIEW =================
-      case "tree":
+    return safeCall(
+      loadRealModule,
+      false,
+      {
+        html: "product_master_connector.html",
+        js: "product_master_connector.js"
+      }
+    );
 
-        return safeCall(
-          loadRealModule,
-          false,
-          {
-            html: "user_tree.html",
-            js: "tree_system.js"
-          }
-        );
+  // ================= RANK MASTER =================
+  case "rankmaster":
+
+    return safeCall(
+      loadRealModule,
+      false,
+      {
+        html: "rank_master.html",
+        js: "rank_master_view.js"
+      }
+    );
+
+  // ================= TREE VIEW =================
+  case "tree":
+
+    return safeCall(
+      loadRealModule,
+      false,
+      {
+        html: "user_tree.html",
+        js: "tree_system.js"
+      }
+    );
 
       // ================= AUDIT =================
       case "audit":
