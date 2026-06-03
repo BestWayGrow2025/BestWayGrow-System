@@ -2,20 +2,23 @@
 
 /*
 ========================================
-PIN ROLE ACCESS CONTROLLER v1.1 FIXED
+PIN ROLE ACCESS CONTROLLER v1.1 FINAL FIX
 ========================================
-✔ Normalized roles
-✔ Safe session handling
-✔ Router compatible
-✔ No loop issues
+✔ Centralized role system
+✔ Safe loop protection added
+✔ access_denied recursion fixed
+✔ SAFE_PAGES integrated
+✔ Stable export
 ========================================
 */
 
 (function () {
 
   if (window.__PIN_ROLE_ACCESS_CONTROLLER__) return;
-
   window.__PIN_ROLE_ACCESS_CONTROLLER__ = true;
+
+  // ================= SAFE PAGES =================
+  const SAFE_PAGES = ["access_denied", "home"];
 
   // ================= ROLE MATRIX =================
   const ROLE_MATRIX = {
@@ -59,16 +62,9 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
     }
   };
 
-  // ================= ROLE NORMALIZATION FIX =================
+  // ================= CURRENT ROLE =================
   function getCurrentRole() {
-
-    const user = window.getCurrentUser?.();
-
-    if (!user?.role) return "USER";
-
-    return String(user.role)
-      .toUpperCase()
-      .replace(/-/g, "_"); // 🔥 FIX: super_admin → SUPER_ADMIN
+    return window.getCurrentUser?.()?.role || "USER";
   }
 
   // ================= ACCESS CHECK =================
@@ -79,15 +75,18 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
 
     if (!roleData) return false;
 
-    if (roleData.permissions.includes("*")) {
-      return true;
-    }
+    if (roleData.permissions.includes("*")) return true;
 
     return roleData.permissions.includes(page);
   }
 
   // ================= REQUIRE ACCESS =================
   function requireAccess(page) {
+
+    // 🔥 CRITICAL FIX: prevent infinite loop
+    if (SAFE_PAGES.includes(page)) {
+      return true;
+    }
 
     if (!hasAccess(page)) {
 
@@ -96,7 +95,7 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
         page
       });
 
-      if (page !== "access_denied" && window.openSystemPage) {
+      if (page !== "access_denied" && typeof window.openSystemPage === "function") {
         window.openSystemPage("access_denied");
       }
 
@@ -121,6 +120,6 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
     ROLE_MATRIX
   };
 
-  console.log("[PIN ROLE ACCESS CONTROLLER] READY ✔ FIXED");
+  console.log("[PIN ROLE ACCESS CONTROLLER] READY ✔ FINAL FIXED");
 
 })();
