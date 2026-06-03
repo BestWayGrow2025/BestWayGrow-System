@@ -2,12 +2,12 @@
 
 /*
 ========================================
-PIN ROLE ACCESS CONTROLLER v1.0
+PIN ROLE ACCESS CONTROLLER v1.0 FIXED
 ========================================
 ✔ Centralized role system
-✔ Module-level permission control
-✔ Router + dispatcher compatible
-✔ Security enforcement layer
+✔ Router + wrapper compatible
+✔ Safe global export fixed
+✔ No SAFE MODE mismatch
 ========================================
 */
 
@@ -59,12 +59,12 @@ PIN ROLE ACCESS CONTROLLER v1.0
     }
   };
 
-  // ================= CURRENT USER ROLE =================
+  // ================= CURRENT ROLE =================
   function getCurrentRole() {
     return window.getCurrentUser?.()?.role || "USER";
   }
 
-  // ================= CHECK ACCESS =================
+  // ================= ACCESS CHECK =================
   function hasAccess(page) {
 
     const role = getCurrentRole();
@@ -79,7 +79,7 @@ PIN ROLE ACCESS CONTROLLER v1.0
     return roleData.permissions.includes(page);
   }
 
-  // ================= GUARD FUNCTION =================
+  // ================= REQUIRE ACCESS =================
   function requireAccess(page) {
 
     if (!hasAccess(page)) {
@@ -99,7 +99,14 @@ PIN ROLE ACCESS CONTROLLER v1.0
     return true;
   }
 
-  // ================= EXPORT =================
+  // ================= GLOBAL EXPORT (IMPORTANT FIX) =================
+  window.PIN_ROLE_ACCESS_CONTROLLER = {
+    getCurrentRole,
+    hasAccess,
+    requireAccess,
+    ROLE_MATRIX
+  };
+
   window.PIN_ROLE_ACCESS = {
     getCurrentRole,
     hasAccess,
@@ -107,6 +114,6 @@ PIN ROLE ACCESS CONTROLLER v1.0
     ROLE_MATRIX
   };
 
-  console.log("[PIN ROLE ACCESS CONTROLLER] READY ✔");
+  console.log("[PIN ROLE ACCESS CONTROLLER] READY ✔ FIXED");
 
 })();
