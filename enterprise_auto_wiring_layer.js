@@ -211,4 +211,11 @@ ENTERPRISE FINAL STABLE (FIXED)
     window.__ENTERPRISE_AUTO_WIRING_LAYER__.initialized = true;
     window.__ENTERPRISE_AUTO_WIRING_LAYER__.status = "READY";
 
-    console.log("[AUTO
+    console.log("[AUTO WIRING] INIT COMPLETE ✔");
+  }
+
+  /* ================= EXPORT ================= */
+
+  window.initAutoWiring = initAutoWiring;
+
+})();
