@@ -2,122 +2,49 @@
 
 /*
 ========================================
-PIN ROLE ACCESS (LIGHTWEIGHT LAYER)
+PIN ROLE ACCESS (WRAPPER LAYER ONLY)
 ========================================
-✔ Pure permission checker only
-✔ No routing logic
-✔ No controller duplication
-✔ Used by pin_role_access_controller.js
+✔ No duplication of controller logic
+✔ Uses pin_role_access_controller.js
+✔ Safe alias for router compatibility
 ========================================
 */
 
 (function () {
 
-  if (window.__PIN_ROLE_ACCESS__) return;
+  if (window.__PIN_ROLE_ACCESS_WRAPPER__) return;
 
-  window.__PIN_ROLE_ACCESS__ = true;
+  window.__PIN_ROLE_ACCESS_WRAPPER__ = true;
 
-  // ================= ROLE MAP =================
-  const ROLE_MATRIX = {
-
-    SUPER_ADMIN: {
-      allowed: ["*"] // full access
-    },
-
-    SYSTEM_ADMIN: {
-      allowed: [
-        "home",
-        "users",
-        "system",
-        "pinmaster",
-        "productmaster",
-        "rankmaster",
-        "incomecontrol",
-        "audit",
-        "health",
-        "backup",
-        "escrow",
-        "controlroom",
-        "businessintelligence",
-        "strategicai",
-        "auditblockchain",
-        "realtime",
-        "payments",
-        "orchestrator",
-        "healthmonitor",
-        "eventmonitor",
-        "reports",
-        "tree"
-      ]
-    },
-
-    ADMIN: {
-      allowed: [
-        "home",
-        "users",
-        "pinmaster",
-        "incomecontrol",
-        "audit",
-        "health",
-        "reports",
-        "tree"
-      ]
-    },
-
-    USER: {
-      allowed: [
-        "home",
-        "profile",
-        "transactions",
-        "reports",
-        "tree"
-      ]
-    }
-  };
-
-  // ================= CURRENT ROLE =================
-  function getRole() {
-
-    return (
-      window.__USER_ROLE__ ||
-      localStorage.getItem("userRole") ||
-      "USER"
-    );
-  }
-
-  // ================= ACCESS CHECK =================
+  // ================= DELEGATE TO CONTROLLER =================
   function requireAccess(page) {
 
-    const role = getRole();
+    if (!window.PIN_ROLE_ACCESS_CONTROLLER?.requireAccess) {
 
-    const rules = ROLE_MATRIX[role];
+      console.error("[ROLE WRAPPER] Controller missing");
 
-    if (!rules) {
-      console.warn("[PIN ROLE] Unknown role:", role);
       return false;
     }
 
-    // SUPER ADMIN bypass
-    if (rules.allowed.includes("*")) {
-      return true;
+    return window.PIN_ROLE_ACCESS_CONTROLLER.requireAccess(page);
+  }
+
+  function getRole() {
+
+    if (window.PIN_ROLE_ACCESS_CONTROLLER?.getCurrentRole) {
+      return window.PIN_ROLE_ACCESS_CONTROLLER.getCurrentRole();
     }
 
-    const allowed = rules.allowed.includes(page);
-
-    if (!allowed) {
-      console.warn("[PIN ROLE] ACCESS DENIED:", role, page);
-    }
-
-    return allowed;
+    return "USER";
   }
 
   // ================= EXPORT =================
   window.PIN_ROLE_ACCESS = {
+
     requireAccess,
-    getRole,
-    ROLE_MATRIX
+    getRole
   };
 
-  console.log("[PIN ROLE ACCESS] READY ✔");
+  console.log("[PIN ROLE ACCESS WRAPPER] READY ✔");
 
 })();
