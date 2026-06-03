@@ -2,12 +2,13 @@
 
 /*
 ========================================
-PIN ENGINE MONITOR v1.0
+PIN ENGINE MONITOR v1.1 (HARDENED)
 ========================================
 ✔ Live engine execution tracking
-✔ PIN_ENGINE_RESULT listener
+✔ Safe event stream listener
 ✔ Failure + success analytics
-✔ Debug stream for admin panel
+✔ Memory-safe log buffer
+✔ Standardized dashboard rule enforcement
 ========================================
 */
 
@@ -26,16 +27,27 @@ PIN ENGINE MONITOR v1.0
     logs: []
   };
 
+  // ================= STANDARD DASHBOARD RULE =================
+  // 🚨 ENFORCED GLOBAL RULE FOR ALL MODULES
+  window.__PIN_DASHBOARD_RULE__ = {
+    renderTarget: "mainContent",
+    allowedRender: "innerHTML_ONLY",
+    forbidden: [
+      "document.body.innerHTML +=",
+      "document.body.appendChild",
+      "document.createElement + append (outside mainContent)"
+    ]
+  };
+
   // ================= LOG ENTRY =================
   function pushLog(entry) {
 
     state.logs.push(entry);
 
     if (state.logs.length > 200) {
-      state.logs.shift(); // prevent memory leak
+      state.logs.shift();
     }
 
-    // optional UI hook
     if (typeof window.renderPinEngineMonitorUI === "function") {
       window.renderPinEngineMonitorUI(state);
     }
@@ -49,16 +61,13 @@ PIN ENGINE MONITOR v1.0
       return;
     }
 
-    window.broadcastPinEvent("PIN_ENGINE_MONITOR_READY", {
-      timestamp: Date.now()
-    });
-
     console.log("[PIN ENGINE MONITOR] LISTENING ✔");
 
-    // Subscribe via patching global handler (safe fallback)
     const original = window.broadcastPinEvent;
 
     window.broadcastPinEvent = function (event, data) {
+
+      const result = original(event, data);
 
       if (event === "PIN_ENGINE_RESULT") {
 
@@ -82,13 +91,13 @@ PIN ENGINE MONITOR v1.0
         });
       }
 
-      return original(event, data);
+      return result;
     };
   }
 
-  // ================= GET STATE =================
+  // ================= STATE ACCESS =================
   function getState() {
-    return state;
+    return { ...state };
   }
 
   // ================= RESET =================
@@ -110,4 +119,3 @@ PIN ENGINE MONITOR v1.0
   initListener();
 
 })();
-
