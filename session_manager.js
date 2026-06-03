@@ -1,4 +1,4 @@
- CODE "use strict";
+ "use strict";
 
 console.log(
   "[SESSION MANAGER VERSION CHECK]",
