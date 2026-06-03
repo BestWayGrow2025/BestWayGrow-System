@@ -2,8 +2,10 @@
 
 /*
 ========================================
-SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
-+ STEP 1 FIX (UI RESET HARDENED)
+SYSTEM PAGE ROUTER CONNECTOR V2.2 FINAL
++ ROLE SECURITY INTEGRATION (STEP 4)
++ UI RESET HARDENED
++ SINGLE SOURCE OF TRUTH FLOW
 ========================================
 */
 
@@ -19,7 +21,7 @@ SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
 
   console.log("[PAGE ROUTER] Initializing");
 
-  // ================= UI RESET (FIX ADDED) =================
+  // ================= UI RESET =================
   function clearMainContent() {
 
     const main = document.getElementById("mainContent");
@@ -29,11 +31,19 @@ SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
       return;
     }
 
-    // HARD RESET (prevents stacking dashboards)
     main.innerHTML = "";
-
-    // optional cleanup marker
     main.removeAttribute("data-loaded-module");
+  }
+
+  // ================= ROLE CHECK WRAPPER =================
+  function checkAccess(page) {
+
+    if (!window.PIN_ROLE_ACCESS?.requireAccess) {
+      console.warn("[PAGE ROUTER] ROLE SYSTEM NOT LOADED");
+      return true; // fail-safe mode
+    }
+
+    return window.PIN_ROLE_ACCESS.requireAccess(page);
   }
 
   // ================= INIT =================
@@ -46,7 +56,6 @@ SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
       return;
     }
 
-    // Prevent duplicate binding
     if (menu.__PAGE_ROUTER_BOUND__) return;
 
     menu.__PAGE_ROUTER_BOUND__ = true;
@@ -56,7 +65,7 @@ SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
     console.log("[PAGE ROUTER] READY");
   }
 
-  // ================= HANDLE NAVIGATION =================
+  // ================= NAVIGATION HANDLER =================
   function handlePageNavigation(e) {
 
     const btn = e.target.closest("[data-page]");
@@ -72,23 +81,29 @@ SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
     openSystemPage(page);
   }
 
-  // ================= OPEN PAGE =================
+  // ================= MAIN ROUTER EXECUTION =================
   function openSystemPage(page) {
 
     try {
 
-      // 🔥 STEP 1 FIX APPLIED HERE (CRITICAL)
-      clearMainContent();
-
       if (!page) return false;
 
-      // prevent reload spam
+      // ================= ROLE SECURITY GATE (STEP 4) =================
+      if (!checkAccess(page)) {
+        console.warn("[PAGE ROUTER] ACCESS DENIED:", page);
+        return false;
+      }
+
+      // ================= PREVENT RELOAD =================
       if (window.__CURRENT_PAGE__ === page) {
         console.log("[PAGE ROUTER] Already on page:", page);
         return false;
       }
 
       window.__CURRENT_PAGE__ = page;
+
+      // ================= UI RESET =================
+      clearMainContent();
 
       // ================= PRIMARY CONNECTOR =================
       if (typeof window.connectSystemModule === "function") {
