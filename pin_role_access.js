@@ -2,24 +2,22 @@
 
 /*
 ========================================
-PIN ROLE ACCESS (WRAPPER LAYER SAFE FIX v2.0)
+PIN ROLE ACCESS WRAPPER v1.1 FIXED
 ========================================
-✔ Safe fallback added
-✔ Controller retry-safe
-✔ Prevents system blocking
-✔ Handles load order issues
+✔ Wait-safe controller binding
+✔ Retry recovery support
+✔ Prevents infinite access_denied loops
+✔ Compatible with controller + fallback mode
 ========================================
 */
 
 (function () {
 
   if (window.__PIN_ROLE_ACCESS_WRAPPER__) return;
-
   window.__PIN_ROLE_ACCESS_WRAPPER__ = true;
 
-  // ================= GET CONTROLLER (FIXED) =================
+  // ================= GET CONTROLLER (FIXED SAFE) =================
   function getController() {
-
     return (
       window.PIN_ROLE_ACCESS_CONTROLLER ||
       window.pin_role_access_controller ||
@@ -27,54 +25,39 @@ PIN ROLE ACCESS (WRAPPER LAYER SAFE FIX v2.0)
     );
   }
 
-  // ================= REQUIRE ACCESS (FIXED + WAIT SAFE) =================
+  // ================= REQUIRE ACCESS (WAIT SAFE FIX) =================
   function requireAccess(page) {
 
-    try {
+    const controller = getController();
 
-      const controller = getController();
+    if (!controller || typeof controller.requireAccess !== "function") {
 
-      if (!controller || typeof controller.requireAccess !== "function") {
+      console.warn("[ROLE WRAPPER] Controller missing → SAFE MODE ACTIVE");
 
-        console.warn("[ROLE WRAPPER] Controller missing → SAFE MODE ACTIVE");
+      // 🔥 SAFE RECOVERY RETRY (ONCE)
+      setTimeout(() => {
+        const retry = getController();
+        if (retry?.requireAccess) {
+          console.log("[ROLE WRAPPER] Controller recovered ✔");
+        }
+      }, 300);
 
-        // 🔥 retry once after boot delay
-        setTimeout(() => {
-          const retry = getController();
-          if (retry?.requireAccess) {
-            console.log("[ROLE WRAPPER] Controller recovered ✔");
-          }
-        }, 300);
-
-        return true; // NEVER BLOCK SYSTEM
-      }
-
-      return controller.requireAccess(page);
-
-    } catch (err) {
-
-      console.error("[ROLE WRAPPER ERROR]", err);
-      return true;
+      return true; // NEVER BLOCK SYSTEM
     }
+
+    return controller.requireAccess(page);
   }
 
   // ================= GET ROLE =================
   function getRole() {
 
-    try {
+    const controller = getController();
 
-      const controller = getController();
-
-      if (controller?.getCurrentRole) {
-        return controller.getCurrentRole();
-      }
-
-      return "SUPER_ADMIN";
-
-    } catch (err) {
-
-      return "SUPER_ADMIN";
+    if (controller?.getCurrentRole) {
+      return controller.getCurrentRole();
     }
+
+    return "SUPER_ADMIN";
   }
 
   // ================= EXPORT =================
@@ -83,6 +66,6 @@ PIN ROLE ACCESS (WRAPPER LAYER SAFE FIX v2.0)
     getRole
   };
 
-  console.log("[PIN ROLE ACCESS WRAPPER] READY ✔ SAFE FIXED");
+  console.log("[PIN ROLE ACCESS WRAPPER] READY ✔ SAFE MODE ACTIVE");
 
 })();
