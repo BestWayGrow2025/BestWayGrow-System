@@ -2,14 +2,14 @@
 
 /*
 ========================================
-SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
+SUPER ADMIN DASHBOARD v5.0 FINAL CLEAN
 ========================================
-✔ Contract-first enforcement
-✔ Router-based navigation only
-✔ Event-bus integrated
-✔ No legacy engine references
-✔ Bootstrap connector compliant
-✔ Safe UI state handling
+✔ Role-based access integrated
+✔ Router-only navigation
+✔ Contract-safe execution
+✔ Event-bus support
+✔ No duplicate bindings
+✔ Production stable
 ========================================
 */
 
@@ -21,56 +21,78 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
   window.__SUPER_ADMIN_DASHBOARD__ = {
     loaded: true,
     initialized: false,
-    version: "4.5"
+    version: "5.0"
   };
 
-  console.log("[DASHBOARD] LOADING");
+  console.log("[SUPER ADMIN DASHBOARD] LOADING");
 
   // ================= CONTRACT SAFETY =================
   function ensureContract() {
     if (!window.PIN_GLOBAL_CONTRACT) {
-      console.error("[DASHBOARD] CONTRACT MISSING");
-      throw new Error("DASHBOARD BLOCKED: NO CONTRACT");
+      throw new Error("DASHBOARD BLOCKED: CONTRACT MISSING");
     }
   }
 
-  // ================= SAFE DISPATCH =================
+  // ================= ROLE CHECK =================
+  function checkAccess(page) {
+
+    if (window.PIN_ROLE_ACCESS?.requireAccess) {
+      return window.PIN_ROLE_ACCESS.requireAccess(page);
+    }
+
+    return true; // fallback safe mode
+  }
+
+  // ================= NAVIGATION =================
   function dispatch(page) {
+
     if (!page) return false;
 
     try {
 
-      // ✅ PRIMARY ROUTE (FIXED)
+      // ================= ROLE GATE =================
+      if (!checkAccess(page)) {
+        console.warn("[DASHBOARD] ACCESS DENIED:", page);
+
+        window.broadcastPinEvent?.("ACCESS_DENIED", {
+          page,
+          time: Date.now()
+        });
+
+        return false;
+      }
+
+      // ================= ROUTER FIRST =================
       if (typeof window.openSystemPage === "function") {
 
         window.openSystemPage(page);
 
         window.broadcastPinEvent?.("DASHBOARD_NAVIGATION", {
-          page
+          page,
+          time: Date.now()
         });
 
-        console.log("[DASHBOARD] ROUTED:", page);
         return true;
       }
 
-      // ❌ FALLBACK EVENT ONLY
-      if (typeof window.broadcastPinEvent === "function") {
+      // ================= EVENT FALLBACK =================
+      window.broadcastPinEvent?.("NAVIGATE_REQUEST", { page });
 
-        window.broadcastPinEvent("NAVIGATE_REQUEST", { page });
-        return true;
-      }
+      console.warn("[DASHBOARD] ROUTER MISSING");
 
-      console.warn("[DASHBOARD] NO ROUTER AVAILABLE");
       return false;
 
     } catch (err) {
+
       console.error("[DASHBOARD ERROR]", err);
+
       return false;
     }
   }
 
-  // ================= UI STATE =================
+  // ================= UI HELPERS =================
   function setActiveButton(btn) {
+
     document.querySelectorAll(".menu button.active")
       .forEach(b => b.classList.remove("active"));
 
@@ -79,27 +101,35 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
 
   // ================= BUTTON BIND =================
   function bindButtons() {
-    document.querySelectorAll(".menu button").forEach(btn => {
 
-      if (btn.__bound__) return;
-      btn.__bound__ = true;
+    const menu = document.querySelector(".menu");
 
-      btn.addEventListener("click", function () {
+    if (!menu) return;
 
-        const page = this.dataset.page;
-        if (!page) return;
+    if (menu.__bound__) return;
+    menu.__bound__ = true;
 
-        setActiveButton(this);
-        dispatch(page);
-      });
+    menu.addEventListener("click", function (e) {
+
+      const btn = e.target.closest("[data-page]");
+      if (!btn) return;
+
+      const page = btn.getAttribute("data-page");
+      if (!page) return;
+
+      setActiveButton(btn);
+      dispatch(page);
     });
+
   }
 
   // ================= BACK =================
   function bindBack() {
+
     const back = document.getElementById("backBtn");
 
     if (!back || back.__bound__) return;
+
     back.__bound__ = true;
 
     back.addEventListener("click", function () {
@@ -110,9 +140,11 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
 
   // ================= LOGOUT =================
   function bindLogout() {
+
     const logout = document.getElementById("logoutBtn");
 
     if (!logout || logout.__bound__) return;
+
     logout.__bound__ = true;
 
     logout.addEventListener("click", function () {
@@ -121,29 +153,16 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
         time: Date.now()
       });
 
-      if (typeof window.logout === "function") {
-        window.logout();
-        return;
-      }
-
       localStorage.clear();
       sessionStorage.clear();
+
       window.location.href = "index.html";
     });
   }
 
-  // ================= PENDING ROUTES =================
-  function flushPending() {
-    const pending = window.__PENDING_ROUTE__ || [];
-
-    if (!Array.isArray(pending) || pending.length === 0) return;
-
-    pending.forEach(p => dispatch(p));
-    window.__PENDING_ROUTE__ = [];
-  }
-
   // ================= WELCOME =================
   function updateWelcome() {
+
     const el = document.getElementById("welcome");
     if (!el) return;
 
@@ -155,13 +174,10 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
         : "Welcome, Super Admin";
   }
 
-  // ================= DEFAULT PAGE =================
+  // ================= DEFAULT LOAD =================
   function loadDefault() {
+
     if (window.__DEFAULT_LOADED__) return;
-
-    const content = document.getElementById("mainContent");
-
-    if (content && content.innerHTML.trim()) return;
 
     window.__DEFAULT_LOADED__ = true;
 
@@ -175,7 +191,9 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
 
   // ================= INIT =================
   function init() {
+
     try {
+
       ensureContract();
 
       bindButtons();
@@ -186,18 +204,19 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
 
       window.__SUPER_ADMIN_DASHBOARD__.initialized = true;
 
-      flushPending();
       loadDefault();
 
-      console.log("[DASHBOARD] ACTIVE");
+      console.log("[SUPER ADMIN DASHBOARD] ACTIVE");
 
     } catch (err) {
+
       console.error("[DASHBOARD INIT FAILED]", err);
     }
   }
 
   // ================= BOOT =================
   function boot() {
+
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", init);
     } else {
@@ -215,6 +234,6 @@ SUPER ADMIN DASHBOARD v4.5 SYSTEM ALIGNED
 
   window.__DASHBOARD_LOADED__ = true;
 
-  console.log("[DASHBOARD] READY");
+  console.log("[SUPER ADMIN DASHBOARD] READY");
 
 })();
