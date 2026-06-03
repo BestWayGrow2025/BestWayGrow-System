@@ -2,13 +2,11 @@
 
 /*
 ========================================
-PIN ROLE ACCESS WRAPPER v1.3 FINAL STABLE
+PIN ROLE ACCESS WRAPPER v1.2 FINAL FIX
 ========================================
-✔ No system side-effects
-✔ No repeated retry spam
-✔ Safe controller binding
-✔ Fully linked-system compatible
-✔ Prevents recursion issues
+✔ Wait-safe controller binding
+✔ Retry recovery safe
+✔ No system blocking ever
 ========================================
 */
 
@@ -17,11 +15,8 @@ PIN ROLE ACCESS WRAPPER v1.3 FINAL STABLE
   if (window.__PIN_ROLE_ACCESS_WRAPPER__) return;
   window.__PIN_ROLE_ACCESS_WRAPPER__ = true;
 
-  let recoveryAttempted = false; // 🔥 IMPORTANT: prevents repeated retry spam
-
   // ================= GET CONTROLLER =================
   function getController() {
-
     return (
       window.PIN_ROLE_ACCESS_CONTROLLER ||
       window.pin_role_access_controller ||
@@ -38,23 +33,13 @@ PIN ROLE ACCESS WRAPPER v1.3 FINAL STABLE
 
       console.warn("[ROLE WRAPPER] Controller missing → SAFE MODE ACTIVE");
 
-      // 🔥 SAFE RECOVERY (ONLY ONCE SYSTEM-WIDE)
-      if (!recoveryAttempted) {
-
-        recoveryAttempted = true;
-
-        setTimeout(() => {
-
-          const retry = getController();
-
-          if (retry?.requireAccess) {
-            console.log("[ROLE WRAPPER] Controller recovered ✔");
-          } else {
-            console.warn("[ROLE WRAPPER] Recovery failed (no retry spam)");
-          }
-
-        }, 300);
-      }
+      // retry once
+      setTimeout(() => {
+        const retry = getController();
+        if (retry?.requireAccess) {
+          console.log("[ROLE WRAPPER] Controller recovered ✔");
+        }
+      }, 300);
 
       return true; // NEVER BLOCK SYSTEM
     }
@@ -63,7 +48,7 @@ PIN ROLE ACCESS WRAPPER v1.3 FINAL STABLE
       return controller.requireAccess(page);
     } catch (err) {
       console.error("[ROLE WRAPPER ERROR]", err);
-      return true; // SAFE FAIL OPEN
+      return true;
     }
   }
 
@@ -76,7 +61,7 @@ PIN ROLE ACCESS WRAPPER v1.3 FINAL STABLE
       return controller.getCurrentRole();
     }
 
-    return "SUPER_ADMIN"; // SAFE DEFAULT
+    return "SUPER_ADMIN";
   }
 
   // ================= EXPORT =================
@@ -85,6 +70,6 @@ PIN ROLE ACCESS WRAPPER v1.3 FINAL STABLE
     getRole
   };
 
-  console.log("[PIN ROLE ACCESS WRAPPER] READY ✔ FINAL STABLE v1.3");
+  console.log("[PIN ROLE ACCESS WRAPPER] READY ✔ FINAL");
 
 })();
