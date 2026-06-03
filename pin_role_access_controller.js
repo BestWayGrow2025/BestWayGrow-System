@@ -2,12 +2,12 @@
 
 /*
 ========================================
-PIN ROLE ACCESS CONTROLLER v1.0 FIXED
+PIN ROLE ACCESS CONTROLLER v1.1 FIXED
 ========================================
 ✔ Centralized role system
 ✔ Router + wrapper compatible
-✔ Safe global export fixed
-✔ No SAFE MODE mismatch
+✔ Safe loop protection added
+✔ Prevents access_denied recursion crash
 ========================================
 */
 
@@ -16,6 +16,9 @@ PIN ROLE ACCESS CONTROLLER v1.0 FIXED
   if (window.__PIN_ROLE_ACCESS_CONTROLLER__) return;
 
   window.__PIN_ROLE_ACCESS_CONTROLLER__ = true;
+
+  // ================= SAFE PAGES (CRITICAL FIX) =================
+  const SAFE_PAGES = ["access_denied", "home"];
 
   // ================= ROLE DEFINITIONS =================
   const ROLE_MATRIX = {
@@ -79,8 +82,13 @@ PIN ROLE ACCESS CONTROLLER v1.0 FIXED
     return roleData.permissions.includes(page);
   }
 
-  // ================= REQUIRE ACCESS =================
+  // ================= REQUIRE ACCESS (FIXED SAFE LOOP) =================
   function requireAccess(page) {
+
+    // 🔥 CRITICAL FIX: prevent redirect loop
+    if (SAFE_PAGES.includes(page)) {
+      return true;
+    }
 
     if (!hasAccess(page)) {
 
@@ -89,7 +97,8 @@ PIN ROLE ACCESS CONTROLLER v1.0 FIXED
         page
       });
 
-      if (typeof window.openSystemPage === "function") {
+      // avoid infinite loop safety
+      if (page !== "access_denied" && typeof window.openSystemPage === "function") {
         window.openSystemPage("access_denied");
       }
 
@@ -99,7 +108,7 @@ PIN ROLE ACCESS CONTROLLER v1.0 FIXED
     return true;
   }
 
-  // ================= GLOBAL EXPORT (IMPORTANT FIX) =================
+  // ================= GLOBAL EXPORT =================
   window.PIN_ROLE_ACCESS_CONTROLLER = {
     getCurrentRole,
     hasAccess,
@@ -114,6 +123,6 @@ PIN ROLE ACCESS CONTROLLER v1.0 FIXED
     ROLE_MATRIX
   };
 
-  console.log("[PIN ROLE ACCESS CONTROLLER] READY ✔ FIXED");
+  console.log("[PIN ROLE ACCESS CONTROLLER] READY ✔ FIXED SAFE MODE");
 
 })();
