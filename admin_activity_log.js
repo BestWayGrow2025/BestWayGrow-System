@@ -1,13 +1,34 @@
+"use strict";
+
 let session = null;
 let currentUser = null;
 let lock = false;
 
-document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  authPage();
-  bindEvents();
-  loadLogs();
-});
+initActivityLogPage();
+
+function initActivityLogPage() {
+
+  try {
+
+    initPage();
+    authPage();
+    bindEvents();
+    loadLogs();
+
+  } catch (err) {
+
+    console.error(
+      "[ACTIVITY LOG INIT ERROR]",
+      err
+    );
+
+  }
+
+}
+
+function initPage() {
+  ...
+}
 
 function initPage() {
   if (typeof initCoreSystem === "function") {
