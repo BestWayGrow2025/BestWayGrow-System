@@ -4,11 +4,10 @@
 ========================================
 PIN ROLE ACCESS CONTROLLER v1.1 FIXED
 ========================================
-✔ Centralized role system
-✔ Router + wrapper compatible
-✔ Safe loop protection added
-✔ Prevents access_denied recursion crash
-✔ Production stable
+✔ Normalized roles
+✔ Safe session handling
+✔ Router compatible
+✔ No loop issues
 ========================================
 */
 
@@ -18,10 +17,7 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
 
   window.__PIN_ROLE_ACCESS_CONTROLLER__ = true;
 
-  // ================= SAFE PAGES (NO GUARD LOOP) =================
-  const SAFE_PAGES = ["access_denied", "home"];
-
-  // ================= ROLE DEFINITIONS =================
+  // ================= ROLE MATRIX =================
   const ROLE_MATRIX = {
 
     SUPER_ADMIN: {
@@ -63,9 +59,16 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
     }
   };
 
-  // ================= CURRENT ROLE =================
+  // ================= ROLE NORMALIZATION FIX =================
   function getCurrentRole() {
-    return window.getCurrentUser?.()?.role || "USER";
+
+    const user = window.getCurrentUser?.();
+
+    if (!user?.role) return "USER";
+
+    return String(user.role)
+      .toUpperCase()
+      .replace(/-/g, "_"); // 🔥 FIX: super_admin → SUPER_ADMIN
   }
 
   // ================= ACCESS CHECK =================
@@ -83,44 +86,27 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
     return roleData.permissions.includes(page);
   }
 
-  // ================= REQUIRE ACCESS (LOOP SAFE) =================
+  // ================= REQUIRE ACCESS =================
   function requireAccess(page) {
 
-    // 🔥 CRITICAL: bypass system pages to prevent recursion
-    if (SAFE_PAGES.includes(page)) {
-      return true;
-    }
+    if (!hasAccess(page)) {
 
-    try {
+      console.warn("[ROLE ACCESS DENIED]", {
+        role: getCurrentRole(),
+        page
+      });
 
-      if (!hasAccess(page)) {
-
-        console.warn("[ROLE ACCESS DENIED]", {
-          role: getCurrentRole(),
-          page
-        });
-
-        // 🚨 prevent infinite router loop
-        if (page !== "access_denied" && typeof window.openSystemPage === "function") {
-          setTimeout(() => {
-            window.openSystemPage("access_denied");
-          }, 0);
-        }
-
-        return false;
+      if (page !== "access_denied" && window.openSystemPage) {
+        window.openSystemPage("access_denied");
       }
 
-      return true;
-
-    } catch (err) {
-
-      console.error("[ROLE ACCESS ERROR]", err);
-
-      return true; // fail-safe open system
+      return false;
     }
+
+    return true;
   }
 
-  // ================= GLOBAL EXPORT =================
+  // ================= EXPORT =================
   window.PIN_ROLE_ACCESS_CONTROLLER = {
     getCurrentRole,
     hasAccess,
@@ -135,6 +121,6 @@ PIN ROLE ACCESS CONTROLLER v1.1 FIXED
     ROLE_MATRIX
   };
 
-  console.log("[PIN ROLE ACCESS CONTROLLER] READY ✔ FIXED SAFE MODE");
+  console.log("[PIN ROLE ACCESS CONTROLLER] READY ✔ FIXED");
 
 })();
