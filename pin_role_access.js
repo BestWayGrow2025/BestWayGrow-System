@@ -2,13 +2,13 @@
 
 /*
 ========================================
-PIN ROLE ACCESS WRAPPER v1.2 STABLE FIX
+PIN ROLE ACCESS WRAPPER v1.3 FINAL STABLE
 ========================================
-✔ Wait-safe controller binding
-✔ Retry-safe recovery
-✔ Prevents access_denied loop crash
-✔ Fully compatible with controller
-✔ Safe fallback guaranteed
+✔ No system side-effects
+✔ No repeated retry spam
+✔ Safe controller binding
+✔ Fully linked-system compatible
+✔ Prevents recursion issues
 ========================================
 */
 
@@ -17,7 +17,9 @@ PIN ROLE ACCESS WRAPPER v1.2 STABLE FIX
   if (window.__PIN_ROLE_ACCESS_WRAPPER__) return;
   window.__PIN_ROLE_ACCESS_WRAPPER__ = true;
 
-  // ================= GET CONTROLLER (SAFE + STABLE) =================
+  let recoveryAttempted = false; // 🔥 IMPORTANT: prevents repeated retry spam
+
+  // ================= GET CONTROLLER =================
   function getController() {
 
     return (
@@ -36,16 +38,23 @@ PIN ROLE ACCESS WRAPPER v1.2 STABLE FIX
 
       console.warn("[ROLE WRAPPER] Controller missing → SAFE MODE ACTIVE");
 
-      // 🔥 SAFE RECOVERY (NON BLOCKING, ONCE)
-      setTimeout(() => {
+      // 🔥 SAFE RECOVERY (ONLY ONCE SYSTEM-WIDE)
+      if (!recoveryAttempted) {
 
-        const retry = getController();
+        recoveryAttempted = true;
 
-        if (retry?.requireAccess) {
-          console.log("[ROLE WRAPPER] Controller recovered ✔");
-        }
+        setTimeout(() => {
 
-      }, 300);
+          const retry = getController();
+
+          if (retry?.requireAccess) {
+            console.log("[ROLE WRAPPER] Controller recovered ✔");
+          } else {
+            console.warn("[ROLE WRAPPER] Recovery failed (no retry spam)");
+          }
+
+        }, 300);
+      }
 
       return true; // NEVER BLOCK SYSTEM
     }
@@ -76,6 +85,6 @@ PIN ROLE ACCESS WRAPPER v1.2 STABLE FIX
     getRole
   };
 
-  console.log("[PIN ROLE ACCESS WRAPPER] READY ✔ STABLE FIXED");
+  console.log("[PIN ROLE ACCESS WRAPPER] READY ✔ FINAL STABLE v1.3");
 
 })();
