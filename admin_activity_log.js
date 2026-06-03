@@ -27,18 +27,20 @@ function initActivityLogPage() {
 }
 
 function initPage() {
-  ...
-}
 
-function initPage() {
   if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
-  }
-}
 
+    initCoreSystem();
+
+  } else {
+
+    alert("core_system.js missing");
+
+    throw new Error("STOP");
+
+  }
+
+}
 function authPage() {
   if (typeof protectPage === "function") {
     currentUser = protectPage({
