@@ -21,21 +21,18 @@ PIN ROLE ACCESS (WRAPPER LAYER SAFE FIX)
 
     try {
 
-      // CASE 1: Controller exists
       if (window.PIN_ROLE_ACCESS_CONTROLLER?.requireAccess) {
         return window.PIN_ROLE_ACCESS_CONTROLLER.requireAccess(page);
       }
 
-      // CASE 2: SAFE FALLBACK (PREVENT SYSTEM LOCK)
       console.warn("[ROLE WRAPPER] Controller missing → SAFE MODE ACTIVE");
 
-      return true; // IMPORTANT: do not block system
+      return true; // NEVER BLOCK SYSTEM
 
     } catch (err) {
 
       console.error("[ROLE WRAPPER ERROR]", err);
-
-      return true; // fail-safe open access
+      return true;
     }
   }
 
@@ -51,7 +48,6 @@ PIN ROLE ACCESS (WRAPPER LAYER SAFE FIX)
       return "SUPER_ADMIN";
 
     } catch (err) {
-
       return "SUPER_ADMIN";
     }
   }
