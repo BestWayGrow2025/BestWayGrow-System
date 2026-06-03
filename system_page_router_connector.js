@@ -3,14 +3,7 @@
 /*
 ========================================
 SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
-========================================
-✔ Central page navigation authority
-✔ Single routing execution
-✔ No duplicate listeners
-✔ No dispatcher dependency for navigation
-✔ Loader-safe architecture
-✔ Stable module switching
-✔ Enterprise production stable
++ STEP 1 FIX (UI RESET HARDENED)
 ========================================
 */
 
@@ -25,6 +18,23 @@ SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
   window.__SYSTEM_PAGE_ROUTER__ = true;
 
   console.log("[PAGE ROUTER] Initializing");
+
+  // ================= UI RESET (FIX ADDED) =================
+  function clearMainContent() {
+
+    const main = document.getElementById("mainContent");
+
+    if (!main) {
+      console.warn("[ROUTER] mainContent missing");
+      return;
+    }
+
+    // HARD RESET (prevents stacking dashboards)
+    main.innerHTML = "";
+
+    // optional cleanup marker
+    main.removeAttribute("data-loaded-module");
+  }
 
   // ================= INIT =================
   function initSystemPageRouter() {
@@ -62,14 +72,17 @@ SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
     openSystemPage(page);
   }
 
-  // ================= OPEN PAGE (FIXED CORE) =================
+  // ================= OPEN PAGE =================
   function openSystemPage(page) {
 
     try {
 
+      // 🔥 STEP 1 FIX APPLIED HERE (CRITICAL)
+      clearMainContent();
+
       if (!page) return false;
 
-      // 🧠 PREVENT DOUBLE LOADS
+      // prevent reload spam
       if (window.__CURRENT_PAGE__ === page) {
         console.log("[PAGE ROUTER] Already on page:", page);
         return false;
@@ -81,9 +94,7 @@ SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
       if (typeof window.connectSystemModule === "function") {
 
         window.connectSystemModule(page);
-
         console.log("[PAGE ROUTER] MODULE CONNECTED:", page);
-
         return true;
       }
 
@@ -91,9 +102,7 @@ SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
       if (typeof window.loadSystemModule === "function") {
 
         window.loadSystemModule(page);
-
         console.log("[PAGE ROUTER] MODULE LOADED:", page);
-
         return true;
       }
 
@@ -125,11 +134,8 @@ SYSTEM PAGE ROUTER CONNECTOR V2.1 FINAL
 
   // ================= AUTO INIT =================
   if (document.readyState === "loading") {
-
     document.addEventListener("DOMContentLoaded", initSystemPageRouter);
-
   } else {
-
     initSystemPageRouter();
   }
 
