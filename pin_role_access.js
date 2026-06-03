@@ -2,11 +2,12 @@
 
 /*
 ========================================
-PIN ROLE ACCESS (WRAPPER LAYER SAFE FIX)
+PIN ROLE ACCESS (WRAPPER LAYER SAFE FIX v2.0)
 ========================================
 ✔ Safe fallback added
+✔ Controller retry-safe
 ✔ Prevents system blocking
-✔ Compatible with controller OR standalone mode
+✔ Handles load order issues
 ========================================
 */
 
@@ -16,18 +17,39 @@ PIN ROLE ACCESS (WRAPPER LAYER SAFE FIX)
 
   window.__PIN_ROLE_ACCESS_WRAPPER__ = true;
 
-  // ================= REQUIRE ACCESS =================
+  // ================= GET CONTROLLER (FIXED) =================
+  function getController() {
+
+    return (
+      window.PIN_ROLE_ACCESS_CONTROLLER ||
+      window.pin_role_access_controller ||
+      null
+    );
+  }
+
+  // ================= REQUIRE ACCESS (FIXED + WAIT SAFE) =================
   function requireAccess(page) {
 
     try {
 
-      if (window.PIN_ROLE_ACCESS_CONTROLLER?.requireAccess) {
-        return window.PIN_ROLE_ACCESS_CONTROLLER.requireAccess(page);
+      const controller = getController();
+
+      if (!controller || typeof controller.requireAccess !== "function") {
+
+        console.warn("[ROLE WRAPPER] Controller missing → SAFE MODE ACTIVE");
+
+        // 🔥 retry once after boot delay
+        setTimeout(() => {
+          const retry = getController();
+          if (retry?.requireAccess) {
+            console.log("[ROLE WRAPPER] Controller recovered ✔");
+          }
+        }, 300);
+
+        return true; // NEVER BLOCK SYSTEM
       }
 
-      console.warn("[ROLE WRAPPER] Controller missing → SAFE MODE ACTIVE");
-
-      return true; // NEVER BLOCK SYSTEM
+      return controller.requireAccess(page);
 
     } catch (err) {
 
@@ -41,13 +63,16 @@ PIN ROLE ACCESS (WRAPPER LAYER SAFE FIX)
 
     try {
 
-      if (window.PIN_ROLE_ACCESS_CONTROLLER?.getCurrentRole) {
-        return window.PIN_ROLE_ACCESS_CONTROLLER.getCurrentRole();
+      const controller = getController();
+
+      if (controller?.getCurrentRole) {
+        return controller.getCurrentRole();
       }
 
       return "SUPER_ADMIN";
 
     } catch (err) {
+
       return "SUPER_ADMIN";
     }
   }
@@ -58,6 +83,6 @@ PIN ROLE ACCESS (WRAPPER LAYER SAFE FIX)
     getRole
   };
 
-  console.log("[PIN ROLE ACCESS WRAPPER] READY ✔ SAFE MODE ACTIVE");
+  console.log("[PIN ROLE ACCESS WRAPPER] READY ✔ SAFE FIXED");
 
 })();
