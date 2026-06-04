@@ -61,4 +61,3 @@ function rejectEscrow(id) {
 window.loadEscrowAdminPanel = loadEscrowAdminPanel;
 window.approveEscrow = approveEscrow;
 window.rejectEscrow = rejectEscrow;
-
