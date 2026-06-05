@@ -82,6 +82,9 @@ function markDependenciesReady() {
 
 window.waitForDependencies = function (cb) {
 
+  if (window.__WAIT_DEP_READY__) return;
+  window.__WAIT_DEP_READY__ = true;
+
   if (typeof cb !== "function") return;
 
   if (checkCoreDependencies()) {
@@ -90,12 +93,10 @@ window.waitForDependencies = function (cb) {
   }
 
   const interval = setInterval(() => {
-
     if (checkCoreDependencies()) {
       clearInterval(interval);
       cb();
     }
-
   }, 50);
 };
   if (checkCoreDependencies()) {
