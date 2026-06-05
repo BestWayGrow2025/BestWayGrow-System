@@ -77,7 +77,7 @@ function markDependenciesReady() {
 }
 
 // =====================
-// WAIT HELPER (ADD HERE)
+// WAIT HELPER (FINAL SAFE)
 // =====================
 
 window.waitForDependencies = function (cb) {
