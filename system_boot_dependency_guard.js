@@ -81,6 +81,23 @@ function markDependenciesReady() {
 // =====================
 
 window.waitForDependencies = function (cb) {
+
+  if (typeof cb !== "function") return;
+
+  if (checkCoreDependencies()) {
+    cb();
+    return;
+  }
+
+  const interval = setInterval(() => {
+
+    if (checkCoreDependencies()) {
+      clearInterval(interval);
+      cb();
+    }
+
+  }, 50);
+};
   if (checkCoreDependencies()) {
     cb();
     return;
