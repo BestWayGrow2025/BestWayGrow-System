@@ -204,6 +204,19 @@ ENTERPRISE FINAL STABLE (FIXED)
     autoWireEvents();
     patchGlobalRoutes();
     trackNavigationFlow();
+    // ================= ORCHESTRATOR STARTUP =================
+
+if (
+  typeof window.initPinLiveOrchestrator === "function"
+) {
+  window.initPinLiveOrchestrator();
+}
+
+if (
+  typeof window.initAIOrchestrator === "function"
+) {
+  window.initAIOrchestrator();
+}
     startHealthMonitor();
     bindNavigationExecutor();
 
