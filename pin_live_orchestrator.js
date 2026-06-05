@@ -230,7 +230,9 @@ window.__PIN_LIVE_SYSTEM_ACTIVE__ = true;
 
   window.__PIN_LIVE_ORCHESTRATOR__ = true;
 
-  initPinLiveOrchestrator();
+  console.log(
+    "[PIN LIVE ORCHESTRATOR] Registered"
+  );
 
 })();
 
