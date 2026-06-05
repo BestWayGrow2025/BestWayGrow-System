@@ -77,6 +77,24 @@ function markDependenciesReady() {
 }
 
 // =====================
+// WAIT HELPER (ADD HERE)
+// =====================
+
+window.waitForDependencies = function (cb) {
+  if (checkCoreDependencies()) {
+    cb();
+    return;
+  }
+
+  const interval = setInterval(() => {
+    if (checkCoreDependencies()) {
+      clearInterval(interval);
+      cb();
+    }
+  }, 50);
+};
+
+// =====================
 // EXPORT
 // =====================
 
