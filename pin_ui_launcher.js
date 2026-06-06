@@ -15,12 +15,18 @@ PIN UI LAUNCHER V1.2 FINAL SAFE
 
 (function () {
 
-  // ================= INIT GUARD =================
-  if (window.__PIN_UI_LAUNCHER__) return;
+  if (
+    window.__PIN_UI_LAUNCHER__ &&
+    window.__PIN_UI_LAUNCHER__.initialized
+  ) {
+    return;
+  }
 
-  window.__PIN_UI_LAUNCHER__ = true;
-
-  document.addEventListener("DOMContentLoaded", initPinUILauncher);
+  window.__PIN_UI_LAUNCHER__ = {
+    initialized: true,
+    ready: false,
+    timestamp: Date.now()
+  };
 
 })();
 
