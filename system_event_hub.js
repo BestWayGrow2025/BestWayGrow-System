@@ -38,13 +38,13 @@ SYSTEM EVENT HUB v2.2 (BOOT MANAGER COMPATIBLE)
   // ================= GLOBAL HELPERS =================
   exposeGlobalHub(BUS);
 
-  // ================= INIT =================
+// ================= INIT FUNCTION =================
+function initSystemEventHubLayer() {
+
   initSystemEventHub(BUS);
 
-  // ================= ENTERPRISE CORE CONNECTION =================
-  connectEnterpriseToEventHub(BUS);
-
   console.log("[EVENT HUB] READY");
+}
 
 })();
 
@@ -217,6 +217,7 @@ function connectEnterpriseToEventHub(bus) {
 
     // Prevent duplicate wiring
     if (window.__EVENT_HUB_CORE_CONNECTED__) return;
+
     window.__EVENT_HUB_CORE_CONNECTED__ = true;
 
     const core =
@@ -231,25 +232,21 @@ function connectEnterpriseToEventHub(bus) {
 
     console.log("[EVENT HUB] WIRING ENTERPRISE CORE");
 
-    // PIN EVENTS
     bus.on("PIN_EVENT", function (data) {
       core.analyze?.(data);
       window.__AUTOPILOT__?.decide?.(data);
     });
 
-    // PAYOUT EVENTS
     bus.on("PAYOUT_EVENT", function (data) {
       core.analyze?.(data);
       window.__AUTOPILOT__?.optimize?.(data);
     });
 
-    // BANK EVENTS
     bus.on("BANK_UPDATE", function (data) {
       core.analyze?.(data);
       window.__SELF_LEARNING__?.learn?.(data);
     });
 
-    // SYSTEM EVENTS
     bus.on("SYSTEM_EVENT", function (data) {
       core.analyze?.(data);
       window.__AUTO_WIRING__?.adjust?.(data);
@@ -258,22 +255,15 @@ function connectEnterpriseToEventHub(bus) {
     console.log("[EVENT HUB] ENTERPRISE CORE CONNECTED");
   }
 
-  // If system already ready, connect immediately
-  if (window.__SYSTEM_BOOT__ && window.__SYSTEM_BOOT__.ready) {
-    wireCore();
-    return;
-  }
-
-  // Wait for SYSTEM_READY from boot_manager.js
-  if (window.SYSTEM_EVENTS &&
-      typeof window.SYSTEM_EVENTS.on === "function") {
-
-    window.SYSTEM_EVENTS.on("SYSTEM_READY", function () {
-      wireCore();
-    });
-
-  } else {
-    // Fallback if boot manager not yet available
-    setTimeout(wireCore, 1000);
-  }
+  return wireCore;
 }
+
+/* ========================================
+   GLOBAL EXPORTS
+======================================== */
+
+window.initSystemEventHubLayer =
+  initSystemEventHubLayer;
+
+window.connectEnterpriseToEventHub =
+  connectEnterpriseToEventHub;
