@@ -16,9 +16,18 @@ PIN RUNTIME BOOTSTRAP V1.3 FINAL SAFE
 (function () {
 
   // ================= INIT GUARD =================
-  if (window.PIN_RUNTIME_BOOTSTRAP) return;
+  if (
+  window.__PIN_RUNTIME_BOOTSTRAP__ &&
+  window.__PIN_RUNTIME_BOOTSTRAP__.initialized
+) {
+  return;
+}
 
-  window.PIN_RUNTIME_BOOTSTRAP = true;
+window.__PIN_RUNTIME_BOOTSTRAP__ = {
+  initialized: true,
+  ready: false,
+  timestamp: Date.now()
+};
 
   console.log("[PIN BOOTSTRAP] Initializing...");
 
@@ -124,15 +133,8 @@ PIN RUNTIME BOOTSTRAP V1.3 FINAL SAFE
     validateSystem();
   }
 
-  // ================= BOOT TRIGGER =================
-  if (document.readyState === "loading") {
+ // ================= EXPORT =================
 
-    document.addEventListener("DOMContentLoaded", init);
-
-  } else {
-
-    init();
-
-  }
+window.initPinRuntimeBootstrap = init;
 
 })();
