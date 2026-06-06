@@ -3,12 +3,7 @@
 /*
 ========================================
 SYSTEM BOOT CONTROLLER v1.0 FINAL
-SINGLE ENTRY POINT FOR ENTIRE SYSTEM
-========================================
-✔ Prevents race conditions
-✔ Enforces boot order
-✔ Blocks early execution
-✔ Production stable boot sequencing
+SINGLE ENTRY POINT (CLEAN STABLE)
 ========================================
 */
 
@@ -19,43 +14,7 @@ SINGLE ENTRY POINT FOR ENTIRE SYSTEM
 
   console.log("[BOOT CONTROLLER] INITIALIZING");
 
-  // ================= BOOT SEQUENCE =================
-
-  function bootSystem() {
-
-    console.log("[BOOT] SEQUENCE START");
-
-    // STEP 1 — DEPENDENCY GATE
-    if (typeof window.startDependencyMonitor === "function") {
-      window.startDependencyMonitor();
-    }
-
-    waitForDependencies(() => {
-
-      console.log("[BOOT] DEPENDENCIES READY");
-
-      // STEP 2 — SESSION SYSTEM
-      safeStart(() => window.getSession?.(), "SESSION");
-
-      // STEP 3 — AUTO WIRING
-      safeStart(() => window.initAutoWiring?.(), "AUTO_WIRING");
-
-      // STEP 4 — ORCHESTRATOR
-      safeStart(() => window.initOrchestrator?.(), "ORCHESTRATOR");
-
-      // STEP 5 — EVENT SYSTEM
-      safeStart(() => window.initPinLiveOrchestrator?.(), "PIN_LIVE");
-
-      safeStart(() => window.initAIOrchestrator?.(), "AI_ORCHESTRATOR");
-
-      // STEP 6 — ROUTER ENABLE
-      safeStart(() => window.initSystemPageRouter?.(), "ROUTER");
-
-      console.log("[BOOT] SYSTEM FULLY STABLE ✔");
-    });
-  }
-
-  // ================= SAFE START WRAPPER =================
+  // ================= SAFE START =================
   function safeStart(fn, name) {
     try {
       if (typeof fn === "function") {
@@ -83,15 +42,48 @@ SINGLE ENTRY POINT FOR ENTIRE SYSTEM
     }, 50);
   }
 
-  // ================= INIT =================
+  // ================= BOOT SYSTEM =================
+  function bootSystem() {
+
+    console.log("[BOOT] SEQUENCE START");
+
+    // ONLY START DEPENDENCY MONITOR
+    safeStart(() => window.startDependencyMonitor?.(), "DEPENDENCY_MONITOR");
+
+    waitForDependencies(() => {
+
+      console.log("[BOOT] DEPENDENCIES READY");
+
+      // SESSION
+      safeStart(() => window.getSession?.(), "SESSION_READY");
+
+      // AUTO WIRING
+      safeStart(() => window.initAutoWiring?.(), "AUTO_WIRING");
+
+      // ORCHESTRATOR
+      safeStart(() => window.initOrchestrator?.(), "ORCHESTRATOR");
+
+      // PIN LIVE
+      safeStart(() => window.initPinLiveOrchestrator?.(), "PIN_LIVE");
+
+      // AI ORCHESTRATOR
+      safeStart(() => window.initAIOrchestrator?.(), "AI");
+
+      // ROUTER
+      safeStart(() => window.initSystemPageRouter?.(), "ROUTER");
+
+      console.log("[BOOT] SYSTEM FULLY STABLE ✔");
+    });
+  }
+
+  // ================= INIT (ONLY ENTRY) =================
   function init() {
     bootSystem();
   }
 
-  // ================= EXPORT =================
   window.initSystemBoot = init;
 
-  // AUTO START ONLY THIS FILE
+  // ❌ IMPORTANT: DO NOT AUTO BOOT ANY MODULE HERE EXCEPT THIS
   document.addEventListener("DOMContentLoaded", init);
 
 })();
