@@ -17,8 +17,18 @@ SYSTEM MODULE VERIFIER v1.1 ENTERPRISE
 (function () {
 
   // ================= GUARD =================
-  if (window.__SYSTEM_MODULE_VERIFIER__) return;
-  window.__SYSTEM_MODULE_VERIFIER__ = true;
+if (
+  window.__SYSTEM_MODULE_VERIFIER__ &&
+  window.__SYSTEM_MODULE_VERIFIER__.initialized
+) {
+  return;
+}
+
+window.__SYSTEM_MODULE_VERIFIER__ = {
+  initialized: true,
+  ready: false,
+  timestamp: Date.now()
+};
 
   // ================= STATE =================
   const STATE = {
@@ -103,9 +113,5 @@ SYSTEM MODULE VERIFIER v1.1 ENTERPRISE
     verify,
     getState
   };
-
-  console.log(
-    "[SYSTEM MODULE VERIFIER] READY ✔"
-  );
 
 })();
