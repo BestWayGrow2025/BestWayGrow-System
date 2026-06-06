@@ -113,4 +113,10 @@ window.acquireSystemLock = acquireSystemLock;
 window.releaseSystemLock = releaseSystemLock;
 window.executeWithSystemLock = executeWithSystemLock;
 
-window.__INTEGRATION_LOCK_ACTIVE__ = true;
+/* ================= INTEGRATION LOCK STATE FLAG ================= */
+
+window.__INTEGRATION_LOCK_ACTIVE__ = {
+  initialized: true,
+  ready: false,
+  timestamp: Date.now()
+};
