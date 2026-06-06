@@ -3,15 +3,14 @@
 /*
 ========================================
 ENTERPRISE AUTO WIRING LAYER v1.2
-PASSIVE MODULE ONLY (BOOT SAFE)
+PASSIVE MODULE (BOOT CONTROLLER ONLY)
 ========================================
-✔ Auto module discovery (NO AUTO RUN)
-✔ Core engine registration (ON DEMAND ONLY)
-✔ UI binding layer (SAFE)
-✔ Event wiring (LISTENER ONLY)
-✔ Health monitor (FUNCTION ONLY)
-✔ NO INIT CALLS
-✔ NO SELF EXECUTION
+✔ Auto module discovery
+✔ Core engine registration
+✔ UI binding layer
+✔ Event wiring (SAFE ONLY)
+✔ Health monitoring (manual trigger only)
+✔ NO AUTO INIT
 ========================================
 */
 
@@ -29,11 +28,9 @@ PASSIVE MODULE ONLY (BOOT SAFE)
   let healthInterval = null;
 
   function getCore() {
-    return (
-      window.ENTERPRISE_CORE_ENGINE ||
-      window.__ENTERPRISE_CORE_ENGINE__ ||
-      null
-    );
+    return window.ENTERPRISE_CORE_ENGINE ||
+           window.__ENTERPRISE_CORE_ENGINE__ ||
+           null;
   }
 
   const MODULE_MAP = [
@@ -77,7 +74,7 @@ PASSIVE MODULE ONLY (BOOT SAFE)
     if (document.__autoWiringClickBound__) return;
     document.__autoWiringClickBound__ = true;
 
-    document.addEventListener("click", (e) => {
+    document.addEventListener("click", function (e) {
       const el = e.target.closest("[data-page]");
       if (!el) return;
 
@@ -109,7 +106,7 @@ PASSIVE MODULE ONLY (BOOT SAFE)
       try {
         CORE.healthCheck();
       } catch (err) {
-        console.error("[AUTO HEALTH ERROR]", err);
+        console.error(err);
       }
     }, 10000);
   }
@@ -117,12 +114,12 @@ PASSIVE MODULE ONLY (BOOT SAFE)
   function trackNavigationFlow() {
 
     const CORE = getCore();
-    if (!CORE || typeof CORE.emit !== "function" || typeof CORE.on !== "function") return;
+    if (!CORE || typeof CORE.emit !== "function") return;
 
     if (CORE.__navigationTrackingBound__) return;
     CORE.__navigationTrackingBound__ = true;
 
-    CORE.on("NAVIGATION_CLICK", (data) => {
+    CORE.on("NAVIGATION_CLICK", function (data) {
       CORE.emit("SYSTEM_EVENT", {
         type: "navigation",
         page: data.page,
@@ -132,12 +129,14 @@ PASSIVE MODULE ONLY (BOOT SAFE)
   }
 
   function bindNavigationExecutor() {
-    // DISABLED ON PURPOSE (NO AUTO EXECUTION)
-    return;
+    // DISABLED (SAFE ARCHITECTURE RULE)
   }
 
-  // ONLY EXPORT FUNCTION (NO INIT)
-  window.initAutoWiring = function () {
+  // ================= PURE INIT (NO SIDE EFFECTS) =================
+  function initAutoWiring() {
+
+    if (window.__ENTERPRISE_AUTO_WIRING_LAYER__.initialized) return;
+
     autoRegisterModules();
     autoWireEvents();
     patchGlobalRoutes();
@@ -148,6 +147,8 @@ PASSIVE MODULE ONLY (BOOT SAFE)
     window.__ENTERPRISE_AUTO_WIRING_LAYER__.active = true;
     window.__ENTERPRISE_AUTO_WIRING_LAYER__.initialized = true;
     window.__ENTERPRISE_AUTO_WIRING_LAYER__.status = "READY";
-  };
+  }
+
+  window.initAutoWiring = initAutoWiring;
 
 })();
