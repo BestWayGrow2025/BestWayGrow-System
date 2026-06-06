@@ -17,8 +17,18 @@ SYSTEM FALLBACK RECOVERY v1.1 ENTERPRISE
 (function () {
 
   // ================= GUARD =================
-  if (window.__SYSTEM_FALLBACK_RECOVERY__) return;
-  window.__SYSTEM_FALLBACK_RECOVERY__ = true;
+if (
+  window.__SYSTEM_FALLBACK_RECOVERY__ &&
+  window.__SYSTEM_FALLBACK_RECOVERY__.initialized
+) {
+  return;
+}
+
+window.__SYSTEM_FALLBACK_RECOVERY__ = {
+  initialized: true,
+  ready: false,
+  timestamp: Date.now()
+};
 
   let lastFailedPage = null;
 
@@ -63,8 +73,6 @@ SYSTEM FALLBACK RECOVERY v1.1 ENTERPRISE
         </button>
       </div>
     `;
-
-    bindRetry();
 
     emitFailure(page, reason);
 
@@ -128,15 +136,15 @@ SYSTEM FALLBACK RECOVERY v1.1 ENTERPRISE
     return lastFailedPage;
   }
 
-  // ================= EXPORT =================
-  window.SYSTEM_FALLBACK_RECOVERY = {
-    show,
-    retry,
-    getLastFailedPage
-  };
+ // ================= EXPORT =================
+window.SYSTEM_FALLBACK_RECOVERY = {
+  show,
+  retry,
+  bindRetry,
+  getLastFailedPage
+};
 
-  console.log(
-    "[SYSTEM FALLBACK RECOVERY] READY ✔"
-  );
+window.initSystemFallbackRecovery =
+  bindRetry;
 
 })();
