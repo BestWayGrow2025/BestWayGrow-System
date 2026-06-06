@@ -126,12 +126,14 @@ window.__PIN_RUNTIME_BOOTSTRAP__ = {
   }
 
   // ================= INIT =================
-  function init() {
+ function init() {
 
-    ensureContract();
-    registerAndValidate();
-    validateSystem();
-  }
+  ensureContract();
+  registerAndValidate();
+  validateSystem();
+
+  window.__PIN_RUNTIME_BOOTSTRAP__.ready = true;
+}
 
  // ================= EXPORT =================
 
