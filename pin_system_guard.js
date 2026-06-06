@@ -37,7 +37,6 @@ function isPinSystemSafeState() {
     return true;
 
   } catch (_) {
-
     return false;
   }
 }
@@ -54,7 +53,6 @@ function isPinIncomeSafeState() {
     return true;
 
   } catch (_) {
-
     return false;
   }
 }
@@ -63,28 +61,19 @@ function isPinIncomeSafeState() {
 function isPinFlowSystemSafe() {
 
   // CORE
-  if (!isPinCoreReady()) {
-    return false;
-  }
+  if (!isPinCoreReady()) return false;
 
   // SYSTEM
-  if (!isPinSystemSafeState()) {
-    return false;
-  }
+  if (!isPinSystemSafeState()) return false;
 
   // INCOME
-  if (!isPinIncomeSafeState()) {
-    return false;
-  }
+  if (!isPinIncomeSafeState()) return false;
 
   return true;
 }
 
 // ================= EXPORT =================
 window.isPinCoreReady = isPinCoreReady;
-
 window.isPinSystemSafeState = isPinSystemSafeState;
-
 window.isPinIncomeSafeState = isPinIncomeSafeState;
-
 window.isPinFlowSystemSafe = isPinFlowSystemSafe;
