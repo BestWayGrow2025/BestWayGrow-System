@@ -76,18 +76,21 @@ SINGLE ENTRY POINT (CLEAN STABLE)
     });
   }
 
-  // ================= INIT (ONLY ENTRY) =================
-  function init() {
-    bootSystem();
-  }
-
-  window.initSystemBoot = init;
-
-  // ❌ IMPORTANT: DO NOT AUTO BOOT ANY MODULE HERE EXCEPT THIS
- if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
+ // ================= INIT (ONLY ENTRY) =================
+function init() {
+  bootSystem();
 }
 
-})();
+window.initSystemBoot = init;
+
+// ================= SAFE BOOT TRIGGER =================
+function bootTrigger() {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+}
+
+// ONLY ONE ENTRY POINT
+bootTrigger();
