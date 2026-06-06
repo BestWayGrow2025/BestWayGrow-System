@@ -38,39 +38,46 @@ function requireAuth(allowedRoles = []) {
       return false;
     }
 
-    // ================= ROLE CHECK =================
-    if (
-      Array.isArray(allowedRoles) &&
-      allowedRoles.length > 0 &&
-      !allowedRoles.includes(session.role)
-    ) {
+   // ================= ROLE CHECK =================
+if (
+  Array.isArray(allowedRoles) &&
+  allowedRoles.length > 0 &&
+  !allowedRoles.includes(session.role)
+) {
 
-      window.__AUTH_FAILED__ = true;
+  window.__AUTH_FAILED__ = true;
 
-      alert("Access Denied");
-
-      // role-based redirect
-      switch (session.role) {
-
-        case "admin":
-          window.location.replace("admin_login.html");
-          break;
-
-        case "system_admin":
-          window.location.replace("system_admin_login.html");
-          break;
-
-        case "super_admin":
-          window.location.replace("super_admin_login.html");
-          break;
-
-        default:
-          window.location.replace("user_login.html");
+  window.dispatchEvent(
+    new CustomEvent("AUTH_DENIED", {
+      detail: {
+        role: session.role,
+        time: Date.now()
       }
+    })
+  );
 
-      return false;
-    }
+  // role-based redirect
+  switch (session.role) {
 
+    case "admin":
+      window.location.replace("admin_login.html");
+      break;
+
+    case "system_admin":
+      window.location.replace("system_admin_login.html");
+      break;
+
+    case "super_admin":
+      window.location.replace("super_admin_login.html");
+      break;
+
+    default:
+      window.location.replace("user_login.html");
+  }
+
+  return false;
+}
+    
     // ================= STATUS CHECK =================
     if (
       typeof session.status !== "undefined" &&
