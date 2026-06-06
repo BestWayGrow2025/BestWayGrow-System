@@ -11,8 +11,18 @@ SYSTEM NAVIGATION AUDIT v1.1 FINAL
 
 (function () {
 
-  if (window.__SYSTEM_NAVIGATION_AUDIT__) return;
-  window.__SYSTEM_NAVIGATION_AUDIT__ = true;
+if (
+  window.__SYSTEM_NAVIGATION_AUDIT__ &&
+  window.__SYSTEM_NAVIGATION_AUDIT__.initialized
+) {
+  return;
+}
+
+window.__SYSTEM_NAVIGATION_AUDIT__ = {
+  initialized: true,
+  ready: false,
+  timestamp: Date.now()
+};
 
   const MAX_LOGS = 500;
 
@@ -64,14 +74,17 @@ SYSTEM NAVIGATION AUDIT v1.1 FINAL
     record("FAILED", page, "FAILED");
   }
 
-  window.SYSTEM_NAVIGATION_AUDIT = {
-    navigationRequested,
-    navigationLoaded,
-    navigationFailed,
-    getLogs: () => [...STATE.logs],
-    clearLogs: () => (STATE.logs.length = 0)
-  };
+window.SYSTEM_NAVIGATION_AUDIT = {
+  navigationRequested,
+  navigationLoaded,
+  navigationFailed,
+  getLogs: () => [...STATE.logs],
+  clearLogs: () => (STATE.logs.length = 0)
+};
 
-  console.log("[SYSTEM NAVIGATION AUDIT] READY ✔ FINAL");
+window.initSystemNavigationAudit =
+  function () {
+    return true;
+  };
 
 })();
