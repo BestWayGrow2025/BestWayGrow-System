@@ -208,7 +208,7 @@ PIN_EVENT_BUS.on("PIN_REQUEST_UPDATED", function (data) {
   } catch (_) {}
 });
 
-// ================= GLOBAL EXPORT =================
+/* ================= GLOBAL EXPORT ================= */
 function exposeGlobalAPI() {
 
   window.onPinEvent = onPinEvent;
@@ -218,23 +218,23 @@ function exposeGlobalAPI() {
   window.initPinLiveOrchestrator = initPinLiveOrchestrator;
 }
 
-// ================= DIAGNOSTICS FLAG =================
-window.__PIN_LIVE_SYSTEM_ACTIVE__ = true;
+/* ================= PIN LIVE ORCHESTRATOR STATE FLAG ================= */
 
-// ================= GUARD =================
-(function () {
+window.__PIN_LIVE_SYSTEM_ACTIVE__ = {
+  initialized: true,
+  ready: false,
+  timestamp: Date.now()
+};
 
-  if (window.__PIN_LIVE_ORCHESTRATOR__) {
-    return;
-  }
+/* ================= PASSIVE LOAD GUARD ================= */
 
-  window.__PIN_LIVE_ORCHESTRATOR__ = true;
+window.__PIN_LIVE_ORCHESTRATOR__ = window.__PIN_LIVE_ORCHESTRATOR__ || {
+  loaded: true,
+  timestamp: Date.now()
+};
 
-  console.log(
-    "[PIN LIVE ORCHESTRATOR] Registered"
-  );
+console.log("[PIN LIVE ORCHESTRATOR] Registered");
 
-})();
+/* ================= FINAL CONFIRMATION ================= */
 
-// ================= FINAL CONFIRMATION =================
 console.log("[PIN LIVE ORCHESTRATOR] Fully Loaded");
