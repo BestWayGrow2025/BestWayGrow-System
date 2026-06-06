@@ -27,6 +27,9 @@
 
   function wire() {
 
+    const CORE = window.PIN_ENGINE;
+    if (!CORE) return false;   // ✅ REQUIRED FIX (your request)
+
     console.log("[PIN WIRING] Scanning dependencies...");
 
     Object.keys(DEP_MAP).forEach(target => {
@@ -37,7 +40,6 @@
       deps.forEach(dep => {
 
         if (typeof window[dep] !== "function") {
-
           ok = false;
 
           console.warn(
@@ -46,26 +48,25 @@
             "→",
             dep
           );
-
         }
 
       });
 
       if (ok) {
-
-        console.log(
-          "[PIN WIRING] OK:",
-          target
-        );
-
+        console.log("[PIN WIRING] OK:", target);
       }
 
     });
 
     console.log("[PIN WIRING] COMPLETE ✔");
 
+    return true;
   }
 
-  wire();
+  // ❌ NO AUTO EXECUTION
+  // wire();
+
+  // ONLY MANUAL EXPORT
+  window.runPinDependencyWire = wire;
 
 })();
