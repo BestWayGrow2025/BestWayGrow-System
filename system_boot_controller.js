@@ -84,6 +84,10 @@ SINGLE ENTRY POINT (CLEAN STABLE)
   window.initSystemBoot = init;
 
   // ❌ IMPORTANT: DO NOT AUTO BOOT ANY MODULE HERE EXCEPT THIS
+ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
 
 })();
