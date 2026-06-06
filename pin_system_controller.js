@@ -131,13 +131,3 @@ window.PIN_SYSTEM = {
         return PIN_SYSTEM_BUSY;
     }
 };
-
-// Optional debug exposure (safe namespace)
-window.PIN_SYSTEM = {
-    get queue() {
-        return PIN_SYSTEM_QUEUE;
-    },
-    isBusy() {
-        return PIN_SYSTEM_BUSY;
-    }
-};
