@@ -2,15 +2,19 @@
 
 /*
 ========================================
-SYSTEM BOOT DEPENDENCY GUARD v1.0
+SYSTEM BOOT DEPENDENCY GUARD v1.0 (FINAL CLEAN)
 ========================================
-✔ Prevents session_manager early execution failure
-✔ Ensures core functions are actually attached
-✔ Creates unified readiness flag
-✔ Fixes "getUserById missing" root cause
+✔ Passive monitor only
+✔ No auto execution
+✔ Boot-controller controlled
+✔ Safe dependency readiness detection
+✔ Event-based notification system
 ========================================
 */
 
+// =====================
+// GLOBAL FLAGS
+// =====================
 window.__DEPENDENCY_READY__ = false;
 window.__DEPENDENCY_CHECK_INTERVAL__ = null;
 
@@ -29,7 +33,7 @@ function checkCoreDependencies() {
 }
 
 // =====================
-// START MONITOR
+// START MONITOR (PASSIVE ONLY)
 // =====================
 function startDependencyMonitor() {
 
@@ -57,46 +61,47 @@ function startDependencyMonitor() {
 // =====================
 function markDependenciesReady() {
 
-  if (checkCoreDependencies()) {
+  if (!checkCoreDependencies()) return false;
 
-    window.__DEPENDENCY_READY__ = true;
+  window.__DEPENDENCY_READY__ = true;
 
-    if (window.__DEPENDENCY_CHECK_INTERVAL__) {
-      clearInterval(window.__DEPENDENCY_CHECK_INTERVAL__);
-      window.__DEPENDENCY_CHECK_INTERVAL__ = null;
-    }
-
-    window.dispatchEvent(new Event("DEPENDENCY_READY"));
-
-    console.log("[BOOT GUARD] MANUAL READY");
+  if (window.__DEPENDENCY_CHECK_INTERVAL__) {
+    clearInterval(window.__DEPENDENCY_CHECK_INTERVAL__);
+    window.__DEPENDENCY_CHECK_INTERVAL__ = null;
   }
+
+  window.dispatchEvent(new Event("DEPENDENCY_READY"));
+
+  console.log("[BOOT GUARD] MANUAL READY");
+
+  return true;
 }
 
 // =====================
-// WAIT HELPER (FINAL SAFE)
+// SAFE WAIT HELPER (FIXED)
 // =====================
 window.waitForDependencies = function (cb) {
 
-  if (window.__WAIT_DEP_READY__) return;
-  window.__WAIT_DEP_READY__ = true;
-
   if (typeof cb !== "function") return;
 
+  // immediate pass
   if (checkCoreDependencies()) {
     cb();
     return;
   }
 
   const interval = setInterval(() => {
+
     if (checkCoreDependencies()) {
       clearInterval(interval);
       cb();
     }
+
   }, 50);
 };
 
 // =====================
-// EXPORT
+// EXPORTS (PASSIVE ONLY)
 // =====================
 window.startDependencyMonitor = startDependencyMonitor;
 window.markDependenciesReady = markDependenciesReady;
