@@ -7,12 +7,30 @@ PIN UI BINDING COMPATIBILITY LAYER
 ✔ Fixes legacy dependency mismatch
 ✔ Maps old system → new UI modules
 ✔ Production safe alias bridge
+✔ Passive only
 ========================================
 */
 
 (function () {
 
-  if (window.pin_ui_binding) return;
+  if (
+    window.__PIN_UI_BINDING__ &&
+    window.__PIN_UI_BINDING__.initialized
+  ) {
+    return;
+  }
+
+  window.__PIN_UI_BINDING__ = {
+    initialized: true,
+    ready: false,
+    timestamp: Date.now()
+  };
+
+})();
+
+// ================= INIT =================
+
+function initPinUIBinding() {
 
   window.pin_ui_binding = {
 
@@ -30,11 +48,19 @@ PIN UI BINDING COMPATIBILITY LAYER
 
   };
 
-  // SAFE legacy compatibility mapping
-  window.pin_ui_injector = window.initPinInjector;
-  window.pin_ui_launcher = window.openPinRequestPanel;
-  window.ui_render_manager = window.renderModule;
+  window.pin_ui_injector =
+    window.initPinInjector;
 
-  console.log("[PIN UI BINDING] Compatibility layer ACTIVE ✔");
+  window.pin_ui_launcher =
+    window.openPinRequestPanel;
 
-})();
+  window.ui_render_manager =
+    window.renderModule;
+
+  window.__PIN_UI_BINDING__.ready = true;
+}
+
+// ================= EXPORT =================
+
+window.initPinUIBinding =
+  initPinUIBinding;
