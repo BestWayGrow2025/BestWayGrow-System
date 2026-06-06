@@ -18,6 +18,7 @@ PASSIVE ONLY (BOOT CONTROLLED)
   window.PIN_DEP_WIRING_ENGINE = true;
 
   const DEP_MAP = {
+
     pin_ui_binding: [
       "pin_ui_injector",
       "pin_ui_launcher"
@@ -45,10 +46,17 @@ PASSIVE ONLY (BOOT CONTROLLED)
       let ok = true;
 
       deps.forEach(dep => {
+
         if (typeof window[dep] !== "function") {
           ok = false;
-          console.warn("[PIN WIRING] Missing:", target, "→", dep);
+          console.warn(
+            "[PIN WIRING] Missing:",
+            target,
+            "→",
+            dep
+          );
         }
+
       });
 
       if (ok) {
@@ -60,7 +68,9 @@ PASSIVE ONLY (BOOT CONTROLLED)
     console.log("[PIN WIRING] COMPLETE ✔");
   }
 
-  // ✅ ONLY EXPORT — NO EXECUTION
+  // =========================
+  // ONLY EXPORT (NO AUTO RUN)
+  // =========================
   window.pinDependencyWire = wire;
 
 })();
