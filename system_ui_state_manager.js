@@ -18,8 +18,18 @@ SYSTEM UI STATE MANAGER v1.1 ENTERPRISE
 (function () {
 
   // ================= GUARD =================
-  if (window.__SYSTEM_UI_STATE_MANAGER__) return;
-  window.__SYSTEM_UI_STATE_MANAGER__ = true;
+if (
+  window.__SYSTEM_UI_STATE_MANAGER__ &&
+  window.__SYSTEM_UI_STATE_MANAGER__.initialized
+) {
+  return;
+}
+
+window.__SYSTEM_UI_STATE_MANAGER__ = {
+  initialized: true,
+  ready: false,
+  timestamp: Date.now()
+};
 
   // ================= STATE =================
   const STATE = {
@@ -107,19 +117,16 @@ SYSTEM UI STATE MANAGER v1.1 ENTERPRISE
     emit();
   }
 
-  // ================= EXPORT =================
-  window.SYSTEM_UI_STATE = {
-    update,
-    getState,
-    getCurrentPage,
-    getCurrentModule,
-    reset
-  };
+ // ================= EXPORT =================
+window.SYSTEM_UI_STATE = {
+  update,
+  getState,
+  getCurrentPage,
+  getCurrentModule,
+  reset
+};
 
-  initialize();
-
-  console.log(
-    "[SYSTEM UI STATE MANAGER] READY ✔"
-  );
+window.initSystemUIStateManager =
+  initialize;
 
 })();
