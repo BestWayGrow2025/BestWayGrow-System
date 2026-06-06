@@ -22,7 +22,8 @@ PIN ENGINE GUARD v1.1 HARDENED + OBSERVABILITY
   // ================= VALIDATION =================
   function validateEngineCall(name) {
 
-    const CORE = window.PIN_ENGINE || {};
+    const CORE = window.PIN_ENGINE;
+    if (!CORE) return false;
 
     if (!CORE[name]) {
       console.error("[PIN VALIDATION] Missing:", name);
@@ -67,7 +68,6 @@ PIN ENGINE GUARD v1.1 HARDENED + OBSERVABILITY
       }
 
       const result = fn(...args);
-
       const success = result !== undefined;
 
       if (!success) {
