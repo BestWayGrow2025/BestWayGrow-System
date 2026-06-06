@@ -167,6 +167,7 @@ function openAssignPinPanel(payload = {}) {
 }
 
 // ================= GLOBAL SAFE HANDLERS =================
+
 window.__pinSubmitRequest = function () {
 
   execute("REQUEST_PIN", {
@@ -190,7 +191,8 @@ window.__pinApprove = function (requestId) {
 
 window.__pinAssign = function (pinId) {
 
-  const toId = document.getElementById("assignToId")?.value || "";
+  const toId =
+    document.getElementById("assignToId")?.value || "";
 
   execute("ASSIGN_PIN", {
     pinId,
@@ -200,10 +202,26 @@ window.__pinAssign = function (pinId) {
   closePinModal();
 };
 
-// ================= EXPORT =================
-window.renderPinModal = renderPinModal;
-window.closePinModal = closePinModal;
+// ================= READY =================
 
-window.openPinRequestPanel = openPinRequestPanel;
-window.openApprovePanel = openApprovePanel;
-window.openAssignPinPanel = openAssignPinPanel;
+window.__PIN_UI_LAUNCHER__.ready = true;
+
+// ================= EXPORT =================
+
+window.initPinUILauncher =
+  initPinUILauncher;
+
+window.renderPinModal =
+  renderPinModal;
+
+window.closePinModal =
+  closePinModal;
+
+window.openPinRequestPanel =
+  openPinRequestPanel;
+
+window.openApprovePanel =
+  openApprovePanel;
+
+window.openAssignPinPanel =
+  openAssignPinPanel;
