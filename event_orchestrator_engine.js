@@ -266,5 +266,8 @@ window.executeAndDispatch =
 window.getEventOrchestratorStatus =
   getEventOrchestratorStatus;
 
-window.__EVENT_ORCHESTRATOR_ACTIVE__ =
-  true;
+window.__EVENT_ORCHESTRATOR_ACTIVE__ = {
+  initialized: true,
+  ready: false,
+  timestamp: Date.now()
+};
