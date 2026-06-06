@@ -12,11 +12,18 @@ PIN SYSTEM CONTROLLER V2.1 FINAL SAFE
 // ================= INIT GUARD =================
 (function () {
 
-    if (window.PIN_SYSTEM_CONTROLLER) {
+    if (
+        window.__PIN_SYSTEM_CONTROLLER__ &&
+        window.__PIN_SYSTEM_CONTROLLER__.initialized
+    ) {
         return;
     }
 
-    window.PIN_SYSTEM_CONTROLLER = true;
+    window.__PIN_SYSTEM_CONTROLLER__ = {
+        initialized: true,
+        ready: false,
+        timestamp: Date.now()
+    };
 
 })();
 
@@ -106,9 +113,24 @@ async function executePinTask(actionType, payload) {
     return false;
 }
 
-// ================= SAFE GLOBAL ACCESS =================
+// ================= READY =================
+
+window.__PIN_SYSTEM_CONTROLLER__.ready = true;
+
+// ================= EXPORT =================
+
 window.pinSystemExecute = pinSystemExecute;
 window.enqueuePinTask = enqueuePinTask;
+
+window.PIN_SYSTEM = {
+    get queue() {
+        return PIN_SYSTEM_QUEUE;
+    },
+
+    isBusy() {
+        return PIN_SYSTEM_BUSY;
+    }
+};
 
 // Optional debug exposure (safe namespace)
 window.PIN_SYSTEM = {
