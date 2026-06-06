@@ -60,7 +60,7 @@ PASSIVE ONLY (BOOT CONTROLLED)
     console.log("[PIN WIRING] COMPLETE ✔");
   }
 
-  // ONLY EXPORT — NO EXECUTION
+  // ✅ ONLY EXPORT — NO EXECUTION
   window.pinDependencyWire = wire;
 
 })();
