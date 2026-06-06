@@ -80,53 +80,38 @@ ENTERPRISE GUARANTEE LAYER (FIXED FINAL)
 
       if (!page) return false;
 
-      // ================= AUDIT =================
       window.SYSTEM_NAVIGATION_AUDIT?.navigationRequested(page);
 
-      // ================= ROLE SECURITY =================
       if (!checkAccess(page)) {
         window.SYSTEM_NAVIGATION_AUDIT?.navigationFailed(page);
         return false;
       }
 
-      // ================= PREVENT DOUBLE LOAD =================
       if (window.__CURRENT_PAGE__ === page) {
-        console.log("[PAGE ROUTER] Already on page:", page);
         return false;
       }
 
       window.__CURRENT_PAGE__ = page;
 
-      // ================= UI STATE =================
       window.SYSTEM_UI_STATE?.update({
         page,
         module: page
       });
 
-      // ================= RESET UI =================
       clearMainContent();
 
-      // ================= MAIN LOADER =================
       if (typeof window.connectSystemModule === "function") {
-
         window.connectSystemModule(page);
         verifyModule(page);
-
-        console.log("[PAGE ROUTER] CONNECTED:", page);
         return true;
       }
 
-      // ================= FALLBACK LOADER =================
       if (typeof window.loadSystemModule === "function") {
-
         window.loadSystemModule(page);
         verifyModule(page);
-
-        console.log("[PAGE ROUTER] LOADED:", page);
         return true;
       }
 
-      // ================= FINAL FALLBACK UI =================
       const main = document.getElementById("mainContent");
 
       if (main) {
@@ -137,8 +122,6 @@ ENTERPRISE GUARANTEE LAYER (FIXED FINAL)
           </div>
         `;
       }
-
-      window.SYSTEM_NAVIGATION_AUDIT?.navigationFailed(page);
 
       return false;
 
@@ -155,7 +138,7 @@ ENTERPRISE GUARANTEE LAYER (FIXED FINAL)
     }
   }
 
-  // ================= CLICK BIND (FIXED GLOBAL SAFE) =================
+  // ================= CLICK BIND =================
   function bindNavigation() {
 
     if (document.__routerBound__) return;
@@ -174,24 +157,15 @@ ENTERPRISE GUARANTEE LAYER (FIXED FINAL)
 
       openSystemPage(page);
     });
-
-    console.log("[PAGE ROUTER] CLICK BIND READY");
   }
 
   // ================= INIT =================
   function initSystemPageRouter() {
     bindNavigation();
-    console.log("[PAGE ROUTER] READY");
-  }
-
-  // ================= AUTO INIT =================
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initSystemPageRouter);
-  } else {
-    initSystemPageRouter();
   }
 
   // ================= EXPORT =================
   window.openSystemPage = openSystemPage;
+  window.initSystemPageRouter = initSystemPageRouter;
 
 })();
