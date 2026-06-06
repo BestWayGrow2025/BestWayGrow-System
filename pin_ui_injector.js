@@ -16,17 +16,18 @@ PIN UI AUTO INJECTOR V3.1 FINAL SAFE
 (function () {
 
   // ================= INIT GUARD =================
-  if (window.__PIN_UI_INJECTOR__) return;
-
-  window.__PIN_UI_INJECTOR__ = true;
-
-  // ================= CONTRACT SAFETY =================
-  if (!window.PIN_GLOBAL_CONTRACT) {
-    console.error("[PIN UI INJECTOR] Contract not loaded");
+  if (
+    window.__PIN_UI_INJECTOR__ &&
+    window.__PIN_UI_INJECTOR__.initialized
+  ) {
     return;
   }
 
-  document.addEventListener("DOMContentLoaded", initInjector);
+  window.__PIN_UI_INJECTOR__ = {
+    initialized: true,
+    ready: false,
+    timestamp: Date.now()
+  };
 
 })();
 
@@ -205,7 +206,12 @@ function observeDOMChanges() {
   });
 }
 
+// ================= READY =================
+
+window.__PIN_UI_INJECTOR__.ready = true;
+
 // ================= EXPORTS =================
+
 window.initPinInjector = initInjector;
 
 window.openPinRequestPanel = openPinRequestPanel;
