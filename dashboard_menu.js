@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 ========================================
 MENU SYSTEM SAFE BIND V2.0 (FINAL LOCKED)
@@ -12,8 +14,6 @@ MENU SYSTEM SAFE BIND V2.0 (FINAL LOCKED)
 ========================================
 */
 
-"use strict";
-
 // ================= SAFE PAGE FALLBACK =================
 function safePage(name) {
 
@@ -25,16 +25,13 @@ function safePage(name) {
 
     const main = document.getElementById("mainContent");
 
-    // ================= AUTH CHECK =================
     if (!session || !session.userId) {
       window.location.replace("user_login.html");
       return;
     }
 
-    // ================= TARGET CHECK =================
     if (!main) return;
 
-    // ================= FALLBACK CONTENT =================
     main.innerHTML = `
       <div class="info-box">
         <h3>${name}</h3>
@@ -82,7 +79,6 @@ function bindMenuSafe() {
 // ================= INIT CONTROLLER =================
 function initMenuBinding() {
 
-  // If route_guard already blocked page, do nothing
   if (
     typeof isAuthBlocked === "function" &&
     isAuthBlocked()
@@ -92,9 +88,6 @@ function initMenuBinding() {
 
   bindMenuSafe();
 }
-
-// ================= BOOT =================
-document.addEventListener("DOMContentLoaded", initMenuBinding);
 
 // ================= GLOBAL EXPORT =================
 window.bindMenuSafe = bindMenuSafe;
