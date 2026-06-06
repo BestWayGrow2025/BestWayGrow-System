@@ -15,11 +15,10 @@ AI ORCHESTRATOR (CONTROL INTELLIGENCE)
   if (window.__AI_ORCHESTRATOR__) return;
   window.__AI_ORCHESTRATOR__ = true;
 
-  document.addEventListener("DOMContentLoaded", initOrchestrator);
-
 })();
 
-function initOrchestrator() {
+// ================= INIT (PASSIVE ONLY) =================
+function initAIOrchestrator() {
 
   console.log("[AI ORCHESTRATOR] INITIALIZED");
 
@@ -43,9 +42,9 @@ function optimizeEventFlow(snapshot) {
   }
 }
 
-// ================= GLOBAL MODULE EXPORT (IMPORTANT FIX) =================
+// ================= GLOBAL MODULE EXPORT =================
 window.system_orchestrator_ai = {
-  init: initOrchestrator,
+  init: initAIOrchestrator,
   run: runOrchestrationCycle,
   optimize: optimizeEventFlow
 };
