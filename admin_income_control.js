@@ -19,14 +19,11 @@ let currentUser = null;
 initIncomeControlPage();
 
 function initIncomeControlPage() {
-
   try {
-
     initPage();
     authPage();
     bindEvents();
     loadPage();
-
   } catch (err) {
     console.error("[INCOME CONTROL INIT ERROR]", err);
   }
@@ -196,9 +193,7 @@ function setBinary(state) {
   alert("Binary " + (state ? "ENABLED" : "DISABLED"));
 }
 
----
-
-# ================= REALTIME SYSTEM BRIDGE =================
+/* ================= REALTIME SYSTEM BRIDGE ================= */
 (function connectIncomeControlToSystem() {
 
   function safeRefresh() {
