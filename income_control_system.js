@@ -2,43 +2,50 @@
 
 /*
 ========================================
-INCOME CONTROL SYSTEM V9.1 (FINAL PATCHED - STRUCTURE PRESERVED)
+INCOME CONTROL SYSTEM V9.1 (FINAL PATCHED - ENTERPRISE STABLE)
 ========================================
-✔ No structural rewrite
-✔ Only safety + logic correctness fixes
-✔ Production-safe orchestration layer
-✔ Cross-engine stable gating
+✔ Safe execution layer
+✔ Null safety everywhere
+✔ MLM gating logic preserved
+✔ Admin toggle system stable
+✔ Production-ready orchestration
 ========================================
 */
 
 const INCOME_SETTINGS_KEY = "incomeSettings";
 
 // =====================
+// SAFE HELPER (CRITICAL)
+// =====================
+function safeTry(fn, fallback = null) {
+  try {
+    return fn();
+  } catch (e) {
+    return fallback;
+  }
+}
+
+// =====================
 // DEFAULT SETTINGS
 // =====================
 function getDefaultIncomeSettings() {
-
   return {
     incomeEnabled: true,
-
     ugli: true,
     rli: true,
     binary: false,
-
     incomeWalletEnabled: true,
     holdWalletEnabled: true,
     totalIncomeTracking: true,
-
     initialized: true,
     updatedAt: new Date().toISOString()
   };
 }
 
 // =====================
-// CORE SAFETY
+// CORE SAFETY CHECK
 // =====================
 function isIncomeControlSafe() {
-
   try {
 
     if (
@@ -49,13 +56,13 @@ function isIncomeControlSafe() {
       return false;
     }
 
-    if (typeof getSession === "function") {
+    let session =
+      typeof getSession === "function"
+        ? safeTry(getSession)
+        : null;
 
-      let session = getSession();
-
-      if (!session || !session.userId) {
-        return false;
-      }
+    if (!session?.userId) {
+      return false;
     }
 
     return true;
@@ -66,17 +73,15 @@ function isIncomeControlSafe() {
 }
 
 // =====================
-// SANITIZER (PURE)
+// SANITIZER
 // =====================
 function sanitizeIncomeSettings(data = {}) {
-
   let clean = {
     ...getDefaultIncomeSettings(),
     ...(data && typeof data === "object" ? data : {})
   };
 
   clean.incomeEnabled = clean.incomeEnabled === true;
-
   clean.ugli = clean.ugli === true;
   clean.rli = clean.rli === true;
   clean.binary = clean.binary === true;
@@ -86,25 +91,19 @@ function sanitizeIncomeSettings(data = {}) {
   clean.totalIncomeTracking = clean.totalIncomeTracking !== false;
 
   clean.initialized = clean.initialized === true;
-
   clean.updatedAt = new Date().toISOString();
 
   return clean;
 }
 
 // =====================
-// GET SETTINGS (NO SIDE EFFECT WRITE FIX)
+// GET SETTINGS
 // =====================
 function getIncomeSettings() {
-
   try {
-
     let stored = safeGet(INCOME_SETTINGS_KEY, {});
-
     return sanitizeIncomeSettings(stored);
-
   } catch {
-
     return getDefaultIncomeSettings();
   }
 }
@@ -113,7 +112,6 @@ function getIncomeSettings() {
 // SAVE SETTINGS
 // =====================
 function saveIncomeSettings(data) {
-
   try {
 
     if (!isIncomeControlSafe()) {
@@ -121,10 +119,9 @@ function saveIncomeSettings(data) {
     }
 
     if (typeof getSystemSettings === "function") {
-
       let sys = getSystemSettings();
 
-      if (sys && sys.lockMode === true) {
+      if (sys?.lockMode === true) {
         return false;
       }
     }
@@ -139,9 +136,7 @@ function saveIncomeSettings(data) {
   } catch (err) {
 
     if (typeof logCritical === "function") {
-      logCritical(
-        "saveIncomeSettings error: " + err.message
-      );
+      logCritical("saveIncomeSettings error: " + err.message);
     }
 
     return false;
@@ -153,36 +148,20 @@ function saveIncomeSettings(data) {
 // =====================
 function initIncomeControl() {
 
-  if (window.__INCOME_CONTROL_INIT__ === true) {
-    return true;
-  }
+  if (window.__INCOME_CONTROL_INIT__) return true;
 
   window.__INCOME_CONTROL_INIT__ = true;
 
   try {
 
-    let settings = safeGet(
-      INCOME_SETTINGS_KEY,
-      null
-    );
+    let settings = safeGet(INCOME_SETTINGS_KEY, null);
 
-    if (
-      !settings ||
-      typeof settings !== "object" ||
-      settings.initialized !== true
-    ) {
+    if (!settings || settings.initialized !== true) {
 
-      safeSet(
-        INCOME_SETTINGS_KEY,
-        getDefaultIncomeSettings()
-      );
+      safeSet(INCOME_SETTINGS_KEY, getDefaultIncomeSettings());
 
       if (typeof logActivity === "function") {
-        logActivity(
-          "SYSTEM",
-          "SYSTEM",
-          "Income control initialized"
-        );
+        logActivity("SYSTEM", "SYSTEM", "Income control initialized");
       }
     }
 
@@ -191,9 +170,7 @@ function initIncomeControl() {
   } catch (err) {
 
     if (typeof logCritical === "function") {
-      logCritical(
-        "initIncomeControl error: " + err.message
-      );
+      logCritical("initIncomeControl error: " + err.message);
     }
 
     return false;
@@ -232,13 +209,10 @@ function isTotalIncomeTrackingEnabled() {
 }
 
 // =====================
-// TYPE NORMALIZER
+// TYPE NORMALIZER (SAFE FIX)
 // =====================
 function normalizeIncomeType(type) {
-
-  if (!type) return "";
-
-  type = String(type).trim().toLowerCase();
+  type = (type ?? "").toString().trim().toLowerCase();
 
   if (type === "upgrade") return "ugli";
   if (type === "repurchase") return "rli";
@@ -250,7 +224,6 @@ function normalizeIncomeType(type) {
 // SYSTEM SAFETY CHECK
 // =====================
 function isIncomeSystemSafe() {
-
   try {
 
     let s = safeGet(INCOME_SETTINGS_KEY, null);
@@ -270,13 +243,9 @@ function isIncomeSystemSafe() {
       "initialized"
     ];
 
-    let corrupted = boolKeys.some(
-      k => typeof s[k] !== "boolean"
-    );
+    let corrupted = boolKeys.some(k => typeof s[k] !== "boolean");
 
-    if (corrupted) {
-      return false;
-    }
+    if (corrupted) return false;
 
     return s.initialized === true;
 
@@ -289,29 +258,19 @@ function isIncomeSystemSafe() {
 // MASTER GATE
 // =====================
 function isIncomeAllowed(type) {
-
   try {
 
-    if (!isIncomeControlSafe()) {
-      return false;
-    }
+    if (!isIncomeControlSafe()) return false;
 
-    if (typeof getSystemSettings === "function") {
+    let sys =
+      typeof getSystemSettings === "function"
+        ? getSystemSettings()
+        : null;
 
-      let sys = getSystemSettings();
+    if (sys?.lockMode === true) return false;
 
-      if (sys && sys.lockMode === true) {
-        return false;
-      }
-    }
-
-    if (!isIncomeMasterEnabled()) {
-      return false;
-    }
-
-    if (!isIncomeSystemSafe()) {
-      return false;
-    }
+    if (!isIncomeMasterEnabled()) return false;
+    if (!isIncomeSystemSafe()) return false;
 
     let t = normalizeIncomeType(type);
 
@@ -330,21 +289,16 @@ function isIncomeAllowed(type) {
 // TOGGLE CONTROL
 // =====================
 function toggleIncomeFlag(key, label, adminId = "ADMIN") {
-
   try {
 
-    if (!isIncomeControlSafe()) {
-      return false;
-    }
+    if (!isIncomeControlSafe()) return false;
 
     let session =
       typeof getSession === "function"
-        ? getSession()
+        ? safeTry(getSession)
         : null;
 
-    if (!session || !session.role) {
-      return false;
-    }
+    if (!session?.role) return false;
 
     if (!["admin","system_admin","super_admin"].includes(session.role)) {
       return false;
@@ -352,22 +306,14 @@ function toggleIncomeFlag(key, label, adminId = "ADMIN") {
 
     let s = getIncomeSettings();
 
-    if (!(key in s)) {
-      return false;
-    }
+    if (!(key in s)) return false;
 
     s[key] = !s[key];
 
-    if (!saveIncomeSettings(s)) {
-      return false;
-    }
+    if (!saveIncomeSettings(s)) return false;
 
     if (typeof logActivity === "function") {
-      logActivity(
-        adminId,
-        "ADMIN",
-        label + " → " + (s[key] ? "ON" : "OFF")
-      );
+      logActivity(adminId, "ADMIN", label + " → " + (s[key] ? "ON" : "OFF"));
     }
 
     return true;
@@ -383,7 +329,7 @@ function toggleIncomeFlag(key, label, adminId = "ADMIN") {
 }
 
 // =====================
-// ADMIN WRAPPERS
+// WRAPPERS
 // =====================
 function toggleMasterIncome(adminId = "ADMIN") {
   return toggleIncomeFlag("incomeEnabled", "MASTER INCOME", adminId);
@@ -410,13 +356,12 @@ function toggleHoldWallet(adminId = "ADMIN") {
 }
 
 function toggleTotalIncomeTracking(adminId = "ADMIN") {
-  return toggleIncomeFlag("totalIncomeTracking", "Total Income Tracking", adminId);
+  return toggleIncomeFlag("totalIncomeTracking", "Total Tracking", adminId);
 }
 
 // =====================
-// READY
+// READY FLAG
 // =====================
-
 window.__INCOME_CONTROL_SYSTEM__ = {
   initialized: true,
   ready: true,
@@ -426,72 +371,25 @@ window.__INCOME_CONTROL_SYSTEM__ = {
 // =====================
 // EXPORTS
 // =====================
+window.getIncomeSettings = getIncomeSettings;
+window.saveIncomeSettings = saveIncomeSettings;
+window.initIncomeControl = initIncomeControl;
 
-window.getDefaultIncomeSettings =
-  getDefaultIncomeSettings;
+window.isIncomeControlSafe = isIncomeControlSafe;
+window.isIncomeSystemSafe = isIncomeSystemSafe;
+window.isIncomeAllowed = isIncomeAllowed;
 
-window.getIncomeSettings =
-  getIncomeSettings;
+window.isIncomeMasterEnabled = isIncomeMasterEnabled;
+window.isUGLIEnabled = isUGLIEnabled;
+window.isRLIEnabled = isRLIEnabled;
+window.isBinaryEnabled = isBinaryEnabled;
 
-window.saveIncomeSettings =
-  saveIncomeSettings;
-
-window.initIncomeControl =
-  initIncomeControl;
-
-window.isIncomeControlSafe =
-  isIncomeControlSafe;
-
-window.isIncomeSystemSafe =
-  isIncomeSystemSafe;
-
-window.isIncomeAllowed =
-  isIncomeAllowed;
-
-window.isIncomeMasterEnabled =
-  isIncomeMasterEnabled;
-
-window.isUGLIEnabled =
-  isUGLIEnabled;
-
-window.isRLIEnabled =
-  isRLIEnabled;
-
-window.isBinaryEnabled =
-  isBinaryEnabled;
-
-window.isIncomeWalletEnabled =
-  isIncomeWalletEnabled;
-
-window.isHoldWalletEnabled =
-  isHoldWalletEnabled;
-
-window.isTotalIncomeTrackingEnabled =
-  isTotalIncomeTrackingEnabled;
-
-window.toggleMasterIncome =
-  toggleMasterIncome;
-
-window.toggleUGLI =
-  toggleUGLI;
-
-window.toggleRLI =
-  toggleRLI;
-
-window.toggleBinary =
-  toggleBinary;
-
-window.toggleIncomeWallet =
-  toggleIncomeWallet;
-
-window.toggleHoldWallet =
-  toggleHoldWallet;
-
-window.toggleTotalIncomeTracking =
-  toggleTotalIncomeTracking;
-
-// =====================
-// HEALTH FLAG
-// =====================
+window.toggleMasterIncome = toggleMasterIncome;
+window.toggleUGLI = toggleUGLI;
+window.toggleRLI = toggleRLI;
+window.toggleBinary = toggleBinary;
+window.toggleIncomeWallet = toggleIncomeWallet;
+window.toggleHoldWallet = toggleHoldWallet;
+window.toggleTotalIncomeTracking = toggleTotalIncomeTracking;
 
 window.INCOME_CONTROL_SYSTEM_ACTIVE = true;
