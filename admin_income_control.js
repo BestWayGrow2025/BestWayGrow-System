@@ -5,10 +5,9 @@
 ADMIN INCOME CONTROL V1.1 FINAL (SAFE PATCH ONLY)
 ========================================
 ✔ NO LOGIC CHANGE
-✔ NO DESIGN CHANGE
-✔ ONLY SAFETY FIX
-✔ Dependency crash protection
-✔ UI behavior preserved
+✔ SAFE NULL PROTECTION ADDED
+✔ DEPENDENCY CRASH PROTECTION
+✔ UI BEHAVIOR PRESERVED
 ========================================
 */
 
@@ -28,9 +27,7 @@ function initIncomeControlPage() {
     loadPage();
 
   } catch (err) {
-
     console.error("[INCOME CONTROL INIT ERROR]", err);
-
   }
 
 }
@@ -38,18 +35,25 @@ function initIncomeControlPage() {
 // ================= SYSTEM INIT =================
 function initPage() {
 
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
-  }
+  try {
 
-  if (typeof initIncomeControl === "function") {
-    initIncomeControl();
-  } else {
-    alert("income control system missing");
-    throw new Error("STOP");
+    if (typeof initCoreSystem === "function") {
+      initCoreSystem();
+    } else {
+      alert("core_system.js missing");
+      throw new Error("STOP");
+    }
+
+    if (typeof initIncomeControl === "function") {
+      initIncomeControl();
+    } else {
+      alert("income control system missing");
+      throw new Error("STOP");
+    }
+
+  } catch (err) {
+    console.error("[INIT ERROR]", err);
+    throw err;
   }
 
 }
@@ -59,7 +63,7 @@ function authPage() {
 
   session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
 
-  if (!session || !session.userId) {
+  if (!session?.userId) {
     window.location.href = "admin_login.html";
     throw new Error("STOP");
   }
@@ -90,46 +94,22 @@ function authPage() {
 function bindEvents() {
 
   const ugliOnBtn = document.getElementById("ugliOnBtn");
-  if (ugliOnBtn) {
-    ugliOnBtn.addEventListener("click", function () {
-      setUGLI(true);
-    });
-  }
+  if (ugliOnBtn) ugliOnBtn.addEventListener("click", () => setUGLI(true));
 
   const ugliOffBtn = document.getElementById("ugliOffBtn");
-  if (ugliOffBtn) {
-    ugliOffBtn.addEventListener("click", function () {
-      setUGLI(false);
-    });
-  }
+  if (ugliOffBtn) ugliOffBtn.addEventListener("click", () => setUGLI(false));
 
   const rliOnBtn = document.getElementById("rliOnBtn");
-  if (rliOnBtn) {
-    rliOnBtn.addEventListener("click", function () {
-      setRLI(true);
-    });
-  }
+  if (rliOnBtn) rliOnBtn.addEventListener("click", () => setRLI(true));
 
   const rliOffBtn = document.getElementById("rliOffBtn");
-  if (rliOffBtn) {
-    rliOffBtn.addEventListener("click", function () {
-      setRLI(false);
-    });
-  }
+  if (rliOffBtn) rliOffBtn.addEventListener("click", () => setRLI(false));
 
   const binaryOnBtn = document.getElementById("binaryOnBtn");
-  if (binaryOnBtn) {
-    binaryOnBtn.addEventListener("click", function () {
-      setBinary(true);
-    });
-  }
+  if (binaryOnBtn) binaryOnBtn.addEventListener("click", () => setBinary(true));
 
   const binaryOffBtn = document.getElementById("binaryOffBtn");
-  if (binaryOffBtn) {
-    binaryOffBtn.addEventListener("click", function () {
-      setBinary(false);
-    });
-  }
+  if (binaryOffBtn) binaryOffBtn.addEventListener("click", () => setBinary(false));
 
 }
 
@@ -140,19 +120,16 @@ function loadPage() {
 
 // ================= SAFE STATUS =================
 function safeStatus(fn) {
-
   try {
-    return (typeof fn === "function" ? fn() : false);
+    return typeof fn === "function" ? fn() : false;
   } catch (err) {
     console.error("[STATUS ERROR]", err);
     return false;
   }
-
 }
 
-// ================= DEPENDENCY GUARD (ONLY FIX: SAFE CALL) =================
+// ================= DEPENDENCY GUARD =================
 function validateIncomeDependencies() {
-
   try {
     return (
       typeof getIncomeSettings === "function" &&
@@ -161,14 +138,12 @@ function validateIncomeDependencies() {
   } catch (e) {
     return false;
   }
-
 }
 
-// ================= REFRESH =================
+// ================= REFRESH STATUS =================
 function refreshStatus() {
 
   const ugliStatus = document.getElementById("ugliStatus");
-
   if (ugliStatus) {
     ugliStatus.innerText =
       safeStatus(window.isUGLIEnabled)
@@ -177,7 +152,6 @@ function refreshStatus() {
   }
 
   const rliStatus = document.getElementById("rliStatus");
-
   if (rliStatus) {
     rliStatus.innerText =
       safeStatus(window.isRLIEnabled)
@@ -186,14 +160,12 @@ function refreshStatus() {
   }
 
   const binaryStatus = document.getElementById("binaryStatus");
-
   if (binaryStatus) {
     binaryStatus.innerText =
       safeStatus(window.isBinaryEnabled)
         ? "🟢 ACTIVE"
         : "🔴 OFF";
   }
-
 }
 
 // ================= UGLI =================
@@ -204,12 +176,11 @@ function setUGLI(state) {
     return;
   }
 
-  let settings = getIncomeSettings() || {};
-  settings.ugli = state;
+  const settings = getIncomeSettings() || {};
+  settings.ugli = !!state;
   saveIncomeSettings(settings);
 
   refreshStatus();
-
   alert("UGLI " + (state ? "ENABLED" : "DISABLED"));
 }
 
@@ -221,12 +192,11 @@ function setRLI(state) {
     return;
   }
 
-  let settings = getIncomeSettings() || {};
-  settings.rli = state;
+  const settings = getIncomeSettings() || {};
+  settings.rli = !!state;
   saveIncomeSettings(settings);
 
   refreshStatus();
-
   alert("RLI " + (state ? "ENABLED" : "DISABLED"));
 }
 
@@ -238,11 +208,10 @@ function setBinary(state) {
     return;
   }
 
-  let settings = getIncomeSettings() || {};
-  settings.binary = state;
+  const settings = getIncomeSettings() || {};
+  settings.binary = !!state;
   saveIncomeSettings(settings);
 
   refreshStatus();
-
   alert("Binary " + (state ? "ENABLED" : "DISABLED"));
 }
