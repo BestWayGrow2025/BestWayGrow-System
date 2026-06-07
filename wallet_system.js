@@ -713,9 +713,14 @@ window.__WALLET_SYSTEM__ = {
 // EXPORTS
 // ===================================
 
-window.creditWallet = creditWallet;
-window.debitWallet = debitWallet;
-window.transferWallet = transferWallet;
+window.creditWallet =
+  creditWallet;
+
+window.debitWallet =
+  debitWallet;
+
+window.transferWallet =
+  transferWallet;
 
 window.getWalletBalance =
   getWalletBalance;
@@ -734,3 +739,12 @@ window.getTransactions =
 
 window.saveTransactions =
   saveTransactions;
+
+window.logTransaction =
+  logTransaction;
+
+window.commitWalletUpdate =
+  commitWalletUpdate;
+
+window.generateTxnRef =
+  generateTxnRef;
