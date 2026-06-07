@@ -48,11 +48,7 @@
 
 <!-- 🔥 CORE -->
 <script src="core_system.js"></script>
-
-<!-- 🔥 INCOME LOG -->
 <script src="income_log_system.js"></script>
-
-<!-- 🔥 WALLET -->
 <script src="wallet_system.js"></script>
 
 <script>
@@ -72,9 +68,9 @@ function loadSummary() {
   let user = getCurrentUser();
   if (!user) return;
 
-  let logs = getUserIncomeLogs(user.userId);
+  let logs = getUserIncomeLogs(user.userId) || [];
 
- let total = logs.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+  let total = logs.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
 
   document.getElementById("totalIncome").innerText = total.toFixed(2);
 
@@ -99,7 +95,7 @@ function loadIncomeLogs() {
 
   let type = document.getElementById("filterType").value;
 
-  let logs = getUserIncomeLogs(user.userId);
+  let logs = getUserIncomeLogs(user.userId) || [];
 
   if (type) {
     logs = logs.filter(l => l.type === type);
@@ -118,7 +114,7 @@ function loadIncomeLogs() {
     let row = document.createElement("tr");
 
     row.innerHTML = `
-      <td>${new Date(log.time).toLocaleString()}</td>
+      <td>${new Date(log.time || log.date).toLocaleString()}</td>
       <td>${log.type}</td>
       <td>₹${Number(log.amount).toFixed(2)}</td>
       <td>${log.sourceUser || "-"}</td>
