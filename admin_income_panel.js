@@ -62,7 +62,8 @@ function bindEvents() {
 }
 
 function loadAllIncome() {
-  let type = document.getElementById("filterType").value;
+  let filterEl = document.getElementById("filterType");
+let type = filterEl ? filterEl.value : "";
   let logs = [];
 
   try {
@@ -83,6 +84,7 @@ function loadAllIncome() {
 
 function renderIncomeTable(logs) {
   let table = document.getElementById("incomeTable");
+if (!table) return;
   let total = 0;
 
   table.innerHTML = "";
@@ -115,8 +117,12 @@ function renderIncomeTable(logs) {
 }
 
 function updateSummary(total, count) {
-  document.getElementById("totalPayout").innerText = total.toFixed(2);
-  document.getElementById("totalRecords").innerText = count;
+
+  const payout = document.getElementById("totalPayout");
+  const records = document.getElementById("totalRecords");
+
+  if (payout) payout.innerText = total.toFixed(2);
+  if (records) records.innerText = count;
 }
 
 (function connectIncomeToAdminPanel() {
