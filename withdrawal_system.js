@@ -653,15 +653,55 @@ logActivity(
 
 }
 return true; }
-// ===================== // EXPORTS // ===================== window.getWithdrawConfig = getWithdrawConfig;
-window.saveWithdrawConfig = saveWithdrawConfig;
-window.toggleWithdrawCharge = toggleWithdrawCharge;
-window.updateWithdrawChargePercent = updateWithdrawChargePercent;
-window.resetWithdrawConfig = resetWithdrawConfig;
-window.getWithdrawals = getWithdrawals;
-window.saveWithdrawals = saveWithdrawals;
-window.requestWithdraw = requestWithdraw;
-window.approveWithdraw = approveWithdraw;
-window.rejectWithdraw = rejectWithdraw;
-window.isWithdrawSystemSafe = isWithdrawSystemSafe;
+// =====================
+// READY
+// =====================
+
+window.__WITHDRAWAL_SYSTEM__ = {
+  initialized: true,
+  ready: true,
+  timestamp: Date.now()
+};
+
+// =====================
+// EXPORTS
+// =====================
+
+window.getWithdrawConfig =
+  getWithdrawConfig;
+
+window.saveWithdrawConfig =
+  saveWithdrawConfig;
+
+window.toggleWithdrawCharge =
+  toggleWithdrawCharge;
+
+window.updateWithdrawChargePercent =
+  updateWithdrawChargePercent;
+
+window.resetWithdrawConfig =
+  resetWithdrawConfig;
+
+window.getWithdrawals =
+  getWithdrawals;
+
+window.saveWithdrawals =
+  saveWithdrawals;
+
+window.requestWithdraw =
+  requestWithdraw;
+
+window.approveWithdraw =
+  approveWithdraw;
+
+window.rejectWithdraw =
+  rejectWithdraw;
+
+window.isWithdrawSystemSafe =
+  isWithdrawSystemSafe;
+
+// =====================
+// LEGACY HEALTH FLAG
+// =====================
+
 window.WITHDRAWAL_SYSTEM_ACTIVE = true;
