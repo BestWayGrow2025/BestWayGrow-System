@@ -109,3 +109,40 @@ function updateSummary(total, count) {
   document.getElementById("totalPayout").innerText = total.toFixed(2);
   document.getElementById("totalRecords").innerText = count;
 }
+
+(function connectIncomeToAdminPanel() {
+
+  function refresh() {
+    try {
+      loadAllIncome?.();
+    } catch (_) {}
+  }
+
+  function bind() {
+
+    if (!window.SYSTEM_EVENTS?.on) return;
+
+    // REAL-TIME INCOME UPDATES
+    window.SYSTEM_EVENTS.on("INCOME_UPDATED", refresh);
+    window.SYSTEM_EVENTS.on("INCOME_EVENT", refresh);
+    window.SYSTEM_EVENTS.on("INCOME_LOG_CREATED", refresh);
+    window.SYSTEM_EVENTS.on("HOLD_INCOME_RELEASED", refresh);
+    window.SYSTEM_EVENTS.on("INCOME_CREDIT", refresh);
+  }
+
+  // SAFE BOOT WAIT
+  if (window.SYSTEM_EVENTS?.emit) {
+    bind();
+  } else {
+
+    const timer = setInterval(() => {
+
+      if (window.SYSTEM_EVENTS?.emit) {
+        clearInterval(timer);
+        bind();
+      }
+
+    }, 50);
+  }
+
+})();
