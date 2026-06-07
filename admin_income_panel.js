@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
   loadAllIncome();
 });
 
+// ================= INIT =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
@@ -18,6 +19,7 @@ function initPage() {
   }
 }
 
+// ================= AUTH =================
 function authPage() {
   session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
 
@@ -47,6 +49,7 @@ function authPage() {
   }
 }
 
+// ================= EVENTS =================
 function bindEvents() {
 
   const filter = document.getElementById("filterType");
@@ -61,9 +64,12 @@ function bindEvents() {
   }
 }
 
+// ================= LOAD =================
 function loadAllIncome() {
-  let filterEl = document.getElementById("filterType");
-let type = filterEl ? filterEl.value : "";
+
+  const filterEl = document.getElementById("filterType");
+  const type = filterEl ? filterEl.value : "";
+
   let logs = [];
 
   try {
@@ -72,42 +78,45 @@ let type = filterEl ? filterEl.value : "";
     }
   } catch (err) {
     console.error("Load error:", err);
-    logs = [];
   }
 
+  // ✅ SAFE FILTER (FIXED)
   if (type) {
-    logs = logs.filter(log => log.type === type);
+    logs = logs.filter(log => log?.type === type);
   }
 
   renderIncomeTable(logs);
 }
 
+// ================= RENDER TABLE =================
 function renderIncomeTable(logs) {
-  let table = document.getElementById("incomeTable");
-if (!table) return;
-  let total = 0;
 
+  const table = document.getElementById("incomeTable");
+  if (!table) return;
+
+  let total = 0;
   table.innerHTML = "";
 
-  if (!logs.length) {
+  if (!logs || logs.length === 0) {
     table.innerHTML = "<tr><td colspan='6'>No Data</td></tr>";
     updateSummary(0, 0);
     return;
   }
 
   logs.slice().reverse().forEach(log => {
-    let amount = Number(log.amount) || 0;
+
+    const amount = Number(log?.amount) || 0;
     total += amount;
 
-    let row = document.createElement("tr");
+    const row = document.createElement("tr");
 
     row.innerHTML = `
-      <td>${log.time ? new Date(log.time).toLocaleString() : "-"}</td>
-      <td>${log.userId || "-"}</td>
-      <td>${log.type || "-"}</td>
+      <td>${log?.time ? new Date(log.time).toLocaleString() : "-"}</td>
+      <td>${log?.userId || "-"}</td>
+      <td>${log?.type || "-"}</td>
       <td>₹${amount.toFixed(2)}</td>
-      <td>${log.sourceUser || "-"}</td>
-      <td>${log.note || ""}</td>
+      <td>${log?.sourceUser || "-"}</td>
+      <td>${log?.note || ""}</td>
     `;
 
     table.appendChild(row);
@@ -116,15 +125,17 @@ if (!table) return;
   updateSummary(total, logs.length);
 }
 
+// ================= SUMMARY =================
 function updateSummary(total, count) {
 
   const payout = document.getElementById("totalPayout");
   const records = document.getElementById("totalRecords");
 
-  if (payout) payout.innerText = total.toFixed(2);
-  if (records) records.innerText = count;
+  if (payout) payout.innerText = (Number(total) || 0).toFixed(2);
+  if (records) records.innerText = count || 0;
 }
 
+// ================= REALTIME SYNC =================
 (function connectIncomeToAdminPanel() {
 
   function refresh() {
@@ -137,7 +148,6 @@ function updateSummary(total, count) {
 
     if (!window.SYSTEM_EVENTS?.on) return;
 
-    // REAL-TIME INCOME UPDATES
     window.SYSTEM_EVENTS.on("INCOME_UPDATED", refresh);
     window.SYSTEM_EVENTS.on("INCOME_EVENT", refresh);
     window.SYSTEM_EVENTS.on("INCOME_LOG_CREATED", refresh);
@@ -145,18 +155,14 @@ function updateSummary(total, count) {
     window.SYSTEM_EVENTS.on("INCOME_CREDIT", refresh);
   }
 
-  // SAFE BOOT WAIT
   if (window.SYSTEM_EVENTS?.emit) {
     bind();
   } else {
-
     const timer = setInterval(() => {
-
       if (window.SYSTEM_EVENTS?.emit) {
         clearInterval(timer);
         bind();
       }
-
     }, 50);
   }
 
