@@ -206,4 +206,8 @@ window.INCOME_EVENT_BRIDGE_ACTIVE = true;
 // AUTO INIT (ADD THIS LAST)
 // =====================
 
-initIncomeEventBridge();
+setTimeout(() => {
+  if (typeof initIncomeEventBridge === "function") {
+    initIncomeEventBridge();
+  }
+}, 0);
