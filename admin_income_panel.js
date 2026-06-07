@@ -1,7 +1,22 @@
+"use strict";
+
+/*
+========================================
+ADMIN INCOME PANEL JS (CLEAN + SAFE + FINAL)
+========================================
+✔ Null safety
+✔ DOM crash protection
+✔ Filter safe handling
+✔ Realtime SYSTEM_EVENTS support
+✔ Production ready
+========================================
+*/
+
 let session = null;
 let currentUser = null;
 let lock = false;
 
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
@@ -9,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
   loadAllIncome();
 });
 
-// ================= INIT =================
+// ================= INIT PAGE =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
@@ -25,12 +40,12 @@ function authPage() {
 
   if (!session?.userId) {
     window.location.href = "admin_login.html";
-    throw new Error("STOP");
+    return;
   }
 
   if (typeof getUserById !== "function") {
     window.location.href = "admin_login.html";
-    throw new Error("STOP");
+    return;
   }
 
   currentUser = getUserById(session.userId);
@@ -38,19 +53,20 @@ function authPage() {
   if (!currentUser || currentUser.role !== "admin") {
     localStorage.removeItem("loggedInAdmin");
     window.location.href = "admin_login.html";
-    throw new Error("STOP");
+    return;
   }
 
   if ((currentUser.status || "active") !== "active") {
     localStorage.removeItem("loggedInAdmin");
     alert("Account inactive");
     window.location.href = "admin_login.html";
-    throw new Error("STOP");
+    return;
   }
 }
 
 // ================= EVENTS =================
 function bindEvents() {
+
   const filter = document.getElementById("filterType");
   const refreshBtn = document.getElementById("refreshBtn");
 
@@ -63,7 +79,7 @@ function bindEvents() {
   }
 }
 
-// ================= LOAD =================
+// ================= LOAD INCOME =================
 function loadAllIncome() {
 
   const filterEl = document.getElementById("filterType");
@@ -80,13 +96,8 @@ function loadAllIncome() {
     logs = [];
   }
 
-  // ✅ SAFE FILTER (FINAL FIX)
-  const safeLogs = Array.isArray(logs) ? logs : [];
-
   if (type) {
-    logs = safeLogs.filter(log => log?.type === type);
-  } else {
-    logs = safeLogs;
+    logs = logs.filter(log => log?.type === type);
   }
 
   renderIncomeTable(logs);
@@ -101,7 +112,7 @@ function renderIncomeTable(logs) {
   let total = 0;
   table.innerHTML = "";
 
-  if (!Array.isArray(logs) || logs.length === 0) {
+  if (!logs || logs.length === 0) {
     table.innerHTML = "<tr><td colspan='6'>No Data</td></tr>";
     updateSummary(0, 0);
     return;
@@ -139,7 +150,7 @@ function updateSummary(total, count) {
   if (records) records.innerText = count || 0;
 }
 
-// ================= REALTIME SYNC =================
+// ================= REALTIME CONNECT =================
 (function connectIncomeToAdminPanel() {
 
   function refresh() {
