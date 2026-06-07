@@ -48,9 +48,11 @@
   <tbody id="incomeTable"></tbody>
 </table>
 
+<!-- CORE SYSTEM -->
 <script src="core_system.js"></script>
 <script src="income_log_system.js"></script>
 
+<!-- ADMIN LOGIC -->
 <script>
 
 let session = null;
@@ -65,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
   loadAllIncome();
 });
 
-// ================= INIT =================
+// ================= INIT PAGE =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
@@ -116,7 +118,7 @@ function bindEvents() {
   }
 }
 
-// ================= LOAD =================
+// ================= LOAD INCOME =================
 function loadAllIncome() {
 
   const filterEl = document.getElementById("filterType");
@@ -128,7 +130,9 @@ function loadAllIncome() {
     if (typeof getIncomeLogs === "function") {
       logs = getIncomeLogs() || [];
     }
-  } catch (_) {}
+  } catch (_) {
+    logs = [];
+  }
 
   if (type) {
     logs = logs.filter(l => l?.type === type);
@@ -184,7 +188,7 @@ function updateSummary(total, count) {
   if (records) records.innerText = count || 0;
 }
 
-// ================= REAL-TIME CONNECT =================
+// ================= REALTIME BRIDGE =================
 (function connectIncomeToAdminPanel() {
 
   function refresh() {
@@ -205,6 +209,7 @@ function updateSummary(total, count) {
   if (window.SYSTEM_EVENTS?.emit) {
     bind();
   } else {
+
     const timer = setInterval(() => {
       if (window.SYSTEM_EVENTS?.emit) {
         clearInterval(timer);
