@@ -23,7 +23,7 @@ function initPage() {
 function authPage() {
   session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
 
-  if (!session || !session.userId) {
+  if (!session?.userId) {
     window.location.href = "admin_login.html";
     throw new Error("STOP");
   }
@@ -51,7 +51,6 @@ function authPage() {
 
 // ================= EVENTS =================
 function bindEvents() {
-
   const filter = document.getElementById("filterType");
   const refreshBtn = document.getElementById("refreshBtn");
 
@@ -78,11 +77,16 @@ function loadAllIncome() {
     }
   } catch (err) {
     console.error("Load error:", err);
+    logs = [];
   }
 
-  // ✅ SAFE FILTER (FIXED)
+  // ✅ SAFE FILTER (FINAL FIX)
+  const safeLogs = Array.isArray(logs) ? logs : [];
+
   if (type) {
-    logs = logs.filter(log => log?.type === type);
+    logs = safeLogs.filter(log => log?.type === type);
+  } else {
+    logs = safeLogs;
   }
 
   renderIncomeTable(logs);
@@ -97,7 +101,7 @@ function renderIncomeTable(logs) {
   let total = 0;
   table.innerHTML = "";
 
-  if (!logs || logs.length === 0) {
+  if (!Array.isArray(logs) || logs.length === 0) {
     table.innerHTML = "<tr><td colspan='6'>No Data</td></tr>";
     updateSummary(0, 0);
     return;
