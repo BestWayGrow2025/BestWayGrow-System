@@ -37,7 +37,6 @@ PIN EVENT BUS V1.2 FINAL SAFE
     }
 
     listeners[eventName].push(callback);
-
     return true;
   }
 
@@ -46,7 +45,7 @@ PIN EVENT BUS V1.2 FINAL SAFE
 
     try {
 
-      // ================= CONTRACT SAFETY =================
+      // Contract safety check
       if (!window.PIN_GLOBAL_CONTRACT) {
         console.error("[PIN EVENT BUS] Contract not loaded");
         return false;
@@ -57,7 +56,7 @@ PIN EVENT BUS V1.2 FINAL SAFE
         timestamp: Date.now()
       };
 
-      // ================= INTERNAL LISTENERS =================
+      // internal listeners
       if (listeners[eventName]) {
         listeners[eventName].forEach(fn => {
           try {
@@ -68,7 +67,7 @@ PIN EVENT BUS V1.2 FINAL SAFE
         });
       }
 
-      // ================= SYSTEM EVENTS BRIDGE =================
+      // SYSTEM_EVENTS bridge
       if (
         window.SYSTEM_EVENTS &&
         typeof window.SYSTEM_EVENTS.emit === "function"
@@ -77,40 +76,35 @@ PIN EVENT BUS V1.2 FINAL SAFE
         return true;
       }
 
-      // ================= DOM FALLBACK =================
+      // DOM fallback
       if (typeof window.dispatchEvent === "function") {
-
         window.dispatchEvent(
-          new CustomEvent(eventName, {
-            detail: eventPayload
-          })
+          new CustomEvent(eventName, { detail: eventPayload })
         );
-
         return true;
       }
 
       return false;
 
     } catch (err) {
-
       console.error("[PIN EVENT BUS ERROR]", err);
       return false;
     }
   }
 
   // ================= SNAPSHOT =================
-  function getListenersSnapshot() {
+  function getSnapshot() {
     return JSON.parse(JSON.stringify(listeners));
   }
 
   // ================= EXPORT =================
-  window.broadcastPinEvent = emit;
   window.subscribePinEvent = on;
+  window.broadcastPinEvent = emit;
 
   window.PIN_EVENT_BUS = {
     emit,
     on,
-    snapshot: getListenersSnapshot
+    snapshot: getSnapshot
   };
 
 })();
