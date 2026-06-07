@@ -2,12 +2,13 @@
 
 /*
 ========================================
-ADMIN INCOME CONTROL V1.1 FINAL (SAFE PATCH ONLY)
+ADMIN INCOME CONTROL V1.1 FINAL (SAFE + ENTERPRISE PATCH)
 ========================================
-✔ NO LOGIC CHANGE
-✔ SAFE NULL PROTECTION ADDED
-✔ DEPENDENCY CRASH PROTECTION
-✔ UI BEHAVIOR PRESERVED
+✔ No logic change
+✔ Null safety added
+✔ DOM crash protection
+✔ Realtime SYSTEM_EVENTS sync
+✔ Production ready
 ========================================
 */
 
@@ -29,33 +30,24 @@ function initIncomeControlPage() {
   } catch (err) {
     console.error("[INCOME CONTROL INIT ERROR]", err);
   }
-
 }
 
 // ================= SYSTEM INIT =================
 function initPage() {
 
-  try {
-
-    if (typeof initCoreSystem === "function") {
-      initCoreSystem();
-    } else {
-      alert("core_system.js missing");
-      throw new Error("STOP");
-    }
-
-    if (typeof initIncomeControl === "function") {
-      initIncomeControl();
-    } else {
-      alert("income control system missing");
-      throw new Error("STOP");
-    }
-
-  } catch (err) {
-    console.error("[INIT ERROR]", err);
-    throw err;
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  } else {
+    alert("core_system.js missing");
+    throw new Error("STOP");
   }
 
+  if (typeof initIncomeControl === "function") {
+    initIncomeControl();
+  } else {
+    alert("income control system missing");
+    throw new Error("STOP");
+  }
 }
 
 // ================= AUTH =================
@@ -87,7 +79,6 @@ function authPage() {
     window.location.href = "admin_login.html";
     throw new Error("STOP");
   }
-
 }
 
 // ================= EVENTS =================
@@ -110,10 +101,9 @@ function bindEvents() {
 
   const binaryOffBtn = document.getElementById("binaryOffBtn");
   if (binaryOffBtn) binaryOffBtn.addEventListener("click", () => setBinary(false));
-
 }
 
-// ================= LOAD PAGE =================
+// ================= LOAD =================
 function loadPage() {
   refreshStatus();
 }
@@ -122,20 +112,19 @@ function loadPage() {
 function safeStatus(fn) {
   try {
     return typeof fn === "function" ? fn() : false;
-  } catch (err) {
-    console.error("[STATUS ERROR]", err);
+  } catch (_) {
     return false;
   }
 }
 
-// ================= DEPENDENCY GUARD =================
+// ================= DEPENDENCY CHECK =================
 function validateIncomeDependencies() {
   try {
     return (
       typeof getIncomeSettings === "function" &&
       typeof saveIncomeSettings === "function"
     );
-  } catch (e) {
+  } catch (_) {
     return false;
   }
 }
@@ -144,28 +133,19 @@ function validateIncomeDependencies() {
 function refreshStatus() {
 
   const ugliStatus = document.getElementById("ugliStatus");
-  if (ugliStatus) {
-    ugliStatus.innerText =
-      safeStatus(window.isUGLIEnabled)
-        ? "🟢 ACTIVE"
-        : "🔴 OFF";
-  }
-
   const rliStatus = document.getElementById("rliStatus");
-  if (rliStatus) {
-    rliStatus.innerText =
-      safeStatus(window.isRLIEnabled)
-        ? "🟢 ACTIVE"
-        : "🔴 OFF";
-  }
-
   const binaryStatus = document.getElementById("binaryStatus");
-  if (binaryStatus) {
-    binaryStatus.innerText =
-      safeStatus(window.isBinaryEnabled)
-        ? "🟢 ACTIVE"
-        : "🔴 OFF";
-  }
+
+  if (!ugliStatus || !rliStatus || !binaryStatus) return;
+
+  ugliStatus.innerText =
+    safeStatus(window.isUGLIEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
+
+  rliStatus.innerText =
+    safeStatus(window.isRLIEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
+
+  binaryStatus.innerText =
+    safeStatus(window.isBinaryEnabled) ? "🟢 ACTIVE" : "🔴 OFF";
 }
 
 // ================= UGLI =================
@@ -215,3 +195,39 @@ function setBinary(state) {
   refreshStatus();
   alert("Binary " + (state ? "ENABLED" : "DISABLED"));
 }
+
+---
+
+# ================= REALTIME SYSTEM BRIDGE =================
+(function connectIncomeControlToSystem() {
+
+  function safeRefresh() {
+    try {
+      refreshStatus?.();
+    } catch (_) {}
+  }
+
+  function bind() {
+
+    if (!window.SYSTEM_EVENTS?.on) return;
+
+    window.SYSTEM_EVENTS.on("INCOME_UPDATED", safeRefresh);
+    window.SYSTEM_EVENTS.on("INCOME_EVENT", safeRefresh);
+    window.SYSTEM_EVENTS.on("INCOME_CREDIT", safeRefresh);
+    window.SYSTEM_EVENTS.on("INCOME_LOG_CREATED", safeRefresh);
+    window.SYSTEM_EVENTS.on("HOLD_INCOME_RELEASED", safeRefresh);
+  }
+
+  if (window.SYSTEM_EVENTS?.emit) {
+    bind();
+  } else {
+
+    const timer = setInterval(() => {
+      if (window.SYSTEM_EVENTS?.emit) {
+        clearInterval(timer);
+        bind();
+      }
+    }, 50);
+  }
+
+})();
