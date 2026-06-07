@@ -15,17 +15,6 @@ INCOME EVENT BRIDGE V2.0 (PRODUCTION FINAL)
 ========================================
 */
 
-// ================= GUARD =================
-(function () {
-
-  if (window.__INCOME_EVENT_BRIDGE__) return;
-
-  window.__INCOME_EVENT_BRIDGE__ = true;
-
-  initIncomeEventBridge();
-
-})();
-
 // ================= INIT =================
 function initIncomeEventBridge() {
 
@@ -37,18 +26,16 @@ function initIncomeEventBridge() {
   }
 
   // Hook common income functions only if they exist
-  hookIncomeFunction("processIncome", "INCOME_PROCESSED");
-  hookIncomeFunction("creditIncome", "INCOME_CREDIT");
-  hookIncomeFunction("createIncomeLog", "INCOME_LOG_CREATED");
-  hookIncomeFunction("releaseHoldIncome", "HOLD_INCOME_RELEASED");
+ hookIncomeFunction("processIncome", "INCOME_PROCESSED");
+hookIncomeFunction("safeIncome", "INCOME_CREDIT");
+hookIncomeFunction("addIncomeLog", "INCOME_LOG_CREATED");
+hookIncomeFunction("releaseHoldIncome", "HOLD_INCOME_RELEASED");
 
   // Register global APIs and flags
   exposeIncomeBridgeAPI();
 
   // Attach default synchronization listeners
   bindDefaultIncomeSync();
-
-  console.log("[INCOME EVENT BRIDGE] Initialized");
 }
 
 // ================= SAFE HOOK =================
@@ -180,5 +167,37 @@ function exposeIncomeBridgeAPI() {
   window.initIncomeEventBridge = initIncomeEventBridge;
 }
 
-// ================= FINAL CONFIRMATION =================
-console.log("[INCOME EVENT BRIDGE] Global flags registered");
+  // =====================
+// READY
+// =====================
+
+window.__INCOME_EVENT_BRIDGE_SYSTEM__ = {
+  initialized: true,
+  ready: true,
+  timestamp: Date.now()
+};
+
+// =====================
+// EXPORTS
+// =====================
+
+window.initIncomeEventBridge =
+  initIncomeEventBridge;
+
+window.hookIncomeFunction =
+  hookIncomeFunction;
+
+window.bindDefaultIncomeSync =
+  bindDefaultIncomeSync;
+
+window.broadcastIncomeEvent =
+  broadcastIncomeEvent;
+
+window.exposeIncomeBridgeAPI =
+  exposeIncomeBridgeAPI;
+
+// =====================
+// HEALTH FLAG
+// =====================
+
+window.INCOME_EVENT_BRIDGE_ACTIVE = true;
