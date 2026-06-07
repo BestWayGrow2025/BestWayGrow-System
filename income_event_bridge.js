@@ -176,7 +176,7 @@ window.loadIncomeHistory = loadIncomeHistory;
 window.addIncome = addIncome;
 window.broadcastIncomeEvent = broadcastIncomeEvent;
 
-// ================= AUTO BOOT (ENTERPRISE) =================
+// ================= AUTO BOOT =================
 (function enterpriseBoot() {
 
   function start() {
