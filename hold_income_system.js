@@ -581,7 +581,49 @@ function startHoldProcessor() {
 }
 
 // =====================
-// INIT
+// READY
 // =====================
-startHoldProcessor();
+
+window.__HOLD_INCOME_SYSTEM__ = {
+  initialized: true,
+  ready: true,
+  timestamp: Date.now()
+};
+
+// =====================
+// EXPORTS
+// =====================
+
+window.getHoldIncome =
+  getHoldIncome;
+
+window.saveHoldIncome =
+  saveHoldIncome;
+
+window.addHoldIncome =
+  addHoldIncome;
+
+window.releaseHoldIncome =
+  releaseHoldIncome;
+
+window.releaseAllHoldIncome =
+  releaseAllHoldIncome;
+
+window.expireHoldIncome =
+  expireHoldIncome;
+
+window.getUserHoldSummary =
+  getUserHoldSummary;
+
+window.startHoldProcessor =
+  startHoldProcessor;
+
+window.isHoldSystemSafe =
+  isHoldSystemSafe;
+
+// =====================
+// HEALTH FLAG
+// =====================
+
+window.HOLD_INCOME_SYSTEM_ACTIVE = true;
 
