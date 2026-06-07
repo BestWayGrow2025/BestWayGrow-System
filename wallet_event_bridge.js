@@ -18,11 +18,18 @@ WALLET EVENT BRIDGE V2.0 (PRODUCTION FINAL)
 // ================= GUARD =================
 (function () {
 
-  if (window.__WALLET_EVENT_BRIDGE__) return;
+  if (
+    window.__WALLET_EVENT_BRIDGE__ &&
+    window.__WALLET_EVENT_BRIDGE__.initialized
+  ) {
+    return;
+  }
 
-  window.__WALLET_EVENT_BRIDGE__ = true;
-
-  initWalletEventBridge();
+  window.__WALLET_EVENT_BRIDGE__ = {
+    initialized: true,
+    ready: false,
+    timestamp: Date.now()
+  };
 
 })();
 
@@ -178,14 +185,22 @@ function exposeWalletBridgeAPI() {
   window.__WALLET_SYSTEM_ACTIVE__ = true;
   window.wallet_event_bridge_loaded = true;
 
-  // Required API for diagnostics
-  window.broadcastWalletEvent = broadcastWalletEvent;
-
-  // Initialization API
-  window.initWalletEventBridge = initWalletEventBridge;
 }
 
+// ================= READY =================
+
+window.__WALLET_EVENT_BRIDGE__.ready = true;
+
+// ================= EXPORT =================
+
+window.broadcastWalletEvent =
+  broadcastWalletEvent;
+
+window.initWalletEventBridge =
+  initWalletEventBridge;
+
 // ================= FINAL CONFIRMATION =================
+
 window.__WALLET_SYSTEM_ACTIVE__ = true;
 window.wallet_system_loaded = true;
 window.WALLET_SYSTEM_ACTIVE = true;
