@@ -2,99 +2,81 @@
 
 /*
 ========================================
-INCOME EVENT BRIDGE V2.0 (PRODUCTION FINAL)
+ENTERPRISE INCOME UNIFIED MODULE v1.0
 ========================================
-✔ Connects income engine functions to SYSTEM_EVENTS
-✔ Broadcasts income lifecycle events
-✔ Emits INCOME_EVENT for diagnostics
-✔ Dashboard + control sync ready
-✔ Safe wrapper only
-✔ Duplicate protection
-✔ Enterprise boot support
+✔ Income History System
+✔ Income Event Bridge Integration
+✔ SYSTEM_EVENTS Real-Time Sync
+✔ Wallet + Logs + Dashboard Update
+✔ Full Null Safety Protection
+✔ MLM Ready Architecture
 ========================================
 */
 
 // ================= INIT =================
-function initIncomeEventBridge() {
+function initIncomeSystem() {
 
-  if (
-    !window.SYSTEM_EVENTS ||
-    typeof window.SYSTEM_EVENTS.emit !== "function"
-  ) {
+  if (!window.SYSTEM_EVENTS || typeof window.SYSTEM_EVENTS.emit !== "function") {
+    console.warn("[INCOME] SYSTEM_EVENTS not ready");
     return;
   }
 
-  hookIncomeFunction("processIncome", "INCOME_PROCESSED");
-  hookIncomeFunction("safeIncome", "INCOME_CREDIT");
-  hookIncomeFunction("addIncomeLog", "INCOME_LOG_CREATED");
-  hookIncomeFunction("releaseHoldIncome", "HOLD_INCOME_RELEASED");
+  hook("processIncome", "INCOME_PROCESSED");
+  hook("safeIncome", "INCOME_CREDIT");
+  hook("addIncomeLog", "INCOME_LOG_CREATED");
+  hook("releaseHoldIncome", "HOLD_INCOME_RELEASED");
 
-  exposeIncomeBridgeAPI();
-  bindDefaultIncomeSync();
+  bindRealtimeSync();
 
-  console.log("[INCOME BRIDGE] INIT COMPLETE");
+  window.INCOME_SYSTEM_READY = true;
+
+  console.log("[INCOME] SYSTEM READY");
 }
 
 // ================= SAFE HOOK =================
-function hookIncomeFunction(fnName, eventName) {
+function hook(fnName, eventName) {
 
   if (typeof window[fnName] !== "function") return;
-  if (window[fnName].__eventBridgeWrapped) return;
+
+  if (window[fnName].__wrapped) return;
 
   const original = window[fnName];
 
   function wrapped(...args) {
 
-    try {
-      window.SYSTEM_EVENTS.emit(eventName + "_BEFORE", {
-        functionName: fnName,
-        args,
-        timestamp: Date.now()
-      });
-    } catch (_) {}
-
     const result = original.apply(this, args);
 
-    try {
-      window.SYSTEM_EVENTS.emit(eventName, {
-        functionName: fnName,
-        args,
-        result,
-        timestamp: Date.now()
-      });
-    } catch (_) {}
+    const payload = {
+      functionName: fnName,
+      eventName,
+      args,
+      result,
+      timestamp: Date.now()
+    };
 
-    try {
-      window.SYSTEM_EVENTS.emit("INCOME_EVENT", {
-        functionName: fnName,
-        eventName,
-        args,
-        result,
-        timestamp: Date.now()
-      });
-    } catch (_) {}
-
-    try {
-      window.SYSTEM_EVENTS.emit("INCOME_UPDATED", {
-        functionName: fnName,
-        eventName,
-        args,
-        result,
-        timestamp: Date.now()
-      });
-    } catch (_) {}
+    safeEmit(eventName + "_BEFORE", payload);
+    safeEmit(eventName, payload);
+    safeEmit("INCOME_EVENT", payload);
+    safeEmit("INCOME_UPDATED", payload);
 
     return result;
   }
 
-  wrapped.__eventBridgeWrapped = true;
-  wrapped.__originalFunction = original;
-
+  wrapped.__wrapped = true;
   window[fnName] = wrapped;
 }
 
-// ================= SYNC =================
-function bindDefaultIncomeSync() {
+// ================= SAFE EMIT =================
+function safeEmit(event, data) {
+  try {
+    if (window.SYSTEM_EVENTS?.emit) {
+      window.SYSTEM_EVENTS.emit(event, data);
+    }
+  } catch (_) {}
+}
+
+// ================= REALTIME SYNC =================
+function bindRealtimeSync() {
 
   if (typeof window.onSystemEvent !== "function") return;
 
@@ -104,78 +86,124 @@ function bindDefaultIncomeSync() {
     try { window.loadIncomeLogs?.(); } catch (_) {}
     try { window.refreshDashboardBalances?.(); } catch (_) {}
     try { window.refreshReports?.(); } catch (_) {}
-
   });
 }
 
-// ================= API =================
-function exposeIncomeBridgeAPI() {
+// ================= HISTORY SYSTEM =================
+function loadIncomeHistory() {
 
-  window.__INCOME_SYSTEM_ACTIVE__ = true;
-  window.income_event_bridge_loaded = true;
+  const user = getCurrentUser?.();
+  if (!user) return;
 
-  window.broadcastIncomeEvent = function (payload = {}) {
-    if (!window.SYSTEM_EVENTS) return;
+  const main = document.getElementById("mainContent");
+  if (!main) return;
 
-    window.SYSTEM_EVENTS.emit("INCOME_EVENT", {
-      ...payload,
-      timestamp: Date.now()
-    });
-  };
+  const history = user?.incomeHistory || [];
 
-  window.initIncomeEventBridge = initIncomeEventBridge;
+  let html = `
+    <h3>Income History</h3>
+    <table border="1" width="100%">
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Description</th>
+      </tr>
+  `;
+
+  if (!history.length) {
+    html += `<tr><td colspan="4">No Income Records</td></tr>`;
+  }
+
+  history.forEach(item => {
+
+    const date = item?.date || "-";
+    const type = item?.type || "-";
+    const amount = Number(item?.amount || 0);
+    const desc = item?.description || "-";
+
+    html += `
+      <tr>
+        <td>${date}</td>
+        <td>${type}</td>
+        <td>₹${amount}</td>
+        <td>${desc}</td>
+      </tr>
+    `;
+  });
+
+  html += `</table>`;
+  main.innerHTML = html;
 }
 
-// ================= FLAGS =================
-window.INCOME_EVENT_BRIDGE_ACTIVE = true;
-window.__INCOME_EVENT_BRIDGE_SYSTEM__ = {
-  initialized: true,
-  ready: true,
-  timestamp: Date.now()
-};
+// ================= ADD INCOME =================
+function addIncome(userId, type, amount, description = "") {
+
+  const safeAmount = Number(amount || 0);
+
+  let users = getUsers?.() || [];
+  let index = users.findIndex(u => u.userId === userId);
+
+  if (index === -1) return;
+
+  users[index].incomeHistory ||= [];
+
+  users[index].incomeHistory.push({
+    type: type || "-",
+    amount: safeAmount,
+    description: description || "",
+    date: new Date().toISOString()
+  });
+
+  users[index].wallet ||= {};
+  users[index].wallet.incomeBalance =
+    Number(users[index].wallet.incomeBalance || 0) + safeAmount;
+
+  saveUsers?.(users);
+}
+
+// ================= BROADCAST API =================
+function broadcastIncomeEvent(payload = {}) {
+  safeEmit("INCOME_EVENT", {
+    ...payload,
+    timestamp: Date.now()
+  });
+}
 
 // ================= EXPORTS =================
-window.initIncomeEventBridge = initIncomeEventBridge;
-window.hookIncomeFunction = hookIncomeFunction;
-window.bindDefaultIncomeSync = bindDefaultIncomeSync;
-window.exposeIncomeBridgeAPI = exposeIncomeBridgeAPI;
+window.initIncomeSystem = initIncomeSystem;
+window.loadIncomeHistory = loadIncomeHistory;
+window.addIncome = addIncome;
+window.broadcastIncomeEvent = broadcastIncomeEvent;
 
-// ================= AUTO BOOT ENTERPRISE =================
-(function enterpriseIncomeBoot() {
+// ================= AUTO BOOT (ENTERPRISE) =================
+(function enterpriseBoot() {
 
-  function safeInit() {
+  function start() {
 
-    try {
+    if (window.__INCOME_BOOTED__) return;
 
-      if (typeof window.initIncomeEventBridge !== "function") return;
-      if (window.__INCOME_EVENT_BRIDGE_BOOTED__) return;
+    window.__INCOME_BOOTED__ = true;
 
-      window.__INCOME_EVENT_BRIDGE_BOOTED__ = true;
+    initIncomeSystem();
 
-      window.initIncomeEventBridge();
-
-      console.log("[INCOME BRIDGE] ENTERPRISE BOOT COMPLETE");
-
-    } catch (err) {
-      console.error("[INCOME BRIDGE BOOT ERROR]", err);
-    }
+    console.log("[INCOME] ENTERPRISE BOOT COMPLETE");
   }
 
   if (window.SYSTEM_EVENTS?.on) {
 
-    window.SYSTEM_EVENTS.on("SYSTEM_READY", safeInit);
+    window.SYSTEM_EVENTS.on("SYSTEM_READY", start);
 
   } else {
 
-    const t = setInterval(() => {
+    const check = setInterval(() => {
 
       if (window.SYSTEM_EVENTS?.emit) {
-        clearInterval(t);
-        safeInit();
+        clearInterval(check);
+        start();
       }
 
     }, 50);
-
   }
 
 })();
