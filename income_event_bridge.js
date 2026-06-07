@@ -201,3 +201,9 @@ window.exposeIncomeBridgeAPI =
 // =====================
 
 window.INCOME_EVENT_BRIDGE_ACTIVE = true;
+
+// =====================
+// AUTO INIT (ADD THIS LAST)
+// =====================
+
+initIncomeEventBridge();
