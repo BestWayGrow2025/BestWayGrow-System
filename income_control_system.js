@@ -414,6 +414,84 @@ function toggleTotalIncomeTracking(adminId = "ADMIN") {
 }
 
 // =====================
-// INIT CALL
+// READY
 // =====================
-initIncomeControl();
+
+window.__INCOME_CONTROL_SYSTEM__ = {
+  initialized: true,
+  ready: true,
+  timestamp: Date.now()
+};
+
+// =====================
+// EXPORTS
+// =====================
+
+window.getDefaultIncomeSettings =
+  getDefaultIncomeSettings;
+
+window.getIncomeSettings =
+  getIncomeSettings;
+
+window.saveIncomeSettings =
+  saveIncomeSettings;
+
+window.initIncomeControl =
+  initIncomeControl;
+
+window.isIncomeControlSafe =
+  isIncomeControlSafe;
+
+window.isIncomeSystemSafe =
+  isIncomeSystemSafe;
+
+window.isIncomeAllowed =
+  isIncomeAllowed;
+
+window.isIncomeMasterEnabled =
+  isIncomeMasterEnabled;
+
+window.isUGLIEnabled =
+  isUGLIEnabled;
+
+window.isRLIEnabled =
+  isRLIEnabled;
+
+window.isBinaryEnabled =
+  isBinaryEnabled;
+
+window.isIncomeWalletEnabled =
+  isIncomeWalletEnabled;
+
+window.isHoldWalletEnabled =
+  isHoldWalletEnabled;
+
+window.isTotalIncomeTrackingEnabled =
+  isTotalIncomeTrackingEnabled;
+
+window.toggleMasterIncome =
+  toggleMasterIncome;
+
+window.toggleUGLI =
+  toggleUGLI;
+
+window.toggleRLI =
+  toggleRLI;
+
+window.toggleBinary =
+  toggleBinary;
+
+window.toggleIncomeWallet =
+  toggleIncomeWallet;
+
+window.toggleHoldWallet =
+  toggleHoldWallet;
+
+window.toggleTotalIncomeTracking =
+  toggleTotalIncomeTracking;
+
+// =====================
+// HEALTH FLAG
+// =====================
+
+window.INCOME_CONTROL_SYSTEM_ACTIVE = true;
