@@ -408,12 +408,8 @@ window.getTreeData =
 
 /* ================= REQUIRED FLAGS ================= */
 
-window.__TREE_ENGINE_ACTIVE__ =
-  true;
-window.__TREE_SYSTEM_ACTIVE__ =
-  true;
-
-console.log(
-  "[TREE SYSTEM] Global flags registered"
-);
-
+window.__TREE_SYSTEM__ = {
+  initialized: true,
+  ready: true,
+  timestamp: Date.now()
+};
