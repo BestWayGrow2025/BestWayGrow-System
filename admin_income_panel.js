@@ -48,8 +48,17 @@ function authPage() {
 }
 
 function bindEvents() {
-  document.getElementById("filterType").addEventListener("change", loadAllIncome);
-  document.getElementById("refreshBtn").addEventListener("click", loadAllIncome);
+
+  const filter = document.getElementById("filterType");
+  const refreshBtn = document.getElementById("refreshBtn");
+
+  if (filter) {
+    filter.addEventListener("change", loadAllIncome);
+  }
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", loadAllIncome);
+  }
 }
 
 function loadAllIncome() {
