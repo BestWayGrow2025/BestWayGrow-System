@@ -396,3 +396,47 @@ function addCriticalIncomeLog(message) {
     return false;
   }
 }
+
+// ===============================
+// READY
+// ===============================
+
+window.__INCOME_LOG_SYSTEM__ = {
+  initialized: true,
+  ready: true,
+  timestamp: Date.now()
+};
+
+// ===============================
+// EXPORTS
+// ===============================
+
+window.getIncomeLogs =
+  getIncomeLogs;
+
+window.saveIncomeLogs =
+  saveIncomeLogs;
+
+window.addIncomeLog =
+  addIncomeLog;
+
+window.getUserIncomeLogs =
+  getUserIncomeLogs;
+
+window.filterIncomeLogs =
+  filterIncomeLogs;
+
+window.clearIncomeLogs =
+  clearIncomeLogs;
+
+window.addCriticalIncomeLog =
+  addCriticalIncomeLog;
+
+window.generateIncomeLogId =
+  generateIncomeLogId;
+
+// ===============================
+// HEALTH FLAG
+// ===============================
+
+window.INCOME_LOG_SYSTEM_ACTIVE = true;
