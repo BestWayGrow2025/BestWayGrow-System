@@ -699,3 +699,38 @@ function getWalletBalance(userId) {
   );
 }
 
+// ===================================
+// READY
+// ===================================
+
+window.__WALLET_SYSTEM__ = {
+  initialized: true,
+  ready: true,
+  timestamp: Date.now()
+};
+
+// ===================================
+// EXPORTS
+// ===================================
+
+window.creditWallet = creditWallet;
+window.debitWallet = debitWallet;
+window.transferWallet = transferWallet;
+
+window.getWalletBalance =
+  getWalletBalance;
+
+window.getUserTransactions =
+  getUserTransactions;
+
+window.initWallet =
+  initWallet;
+
+window.normalizeWallet =
+  normalizeWallet;
+
+window.getTransactions =
+  getTransactions;
+
+window.saveTransactions =
+  saveTransactions;
