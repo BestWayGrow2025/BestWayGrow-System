@@ -63,6 +63,12 @@ function debitWallet(userId, amount) {
 }
 
 // ================= EXPORT =================
+window.__WALLET_ENGINE__ = {
+  initialized: true,
+  ready: true,
+  timestamp: Date.now()
+};
+
 window.creditWallet = creditWallet;
 window.debitWallet = debitWallet;
-window.__WALLET_ENGINE_ACTIVE__ = true;
+
