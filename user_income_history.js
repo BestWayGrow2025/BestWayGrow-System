@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 ========================================
 INCOME HISTORY SYSTEM (V1)
@@ -6,6 +8,7 @@ INCOME HISTORY SYSTEM (V1)
 ✔ Safe user handling
 ✔ Table-based history
 ✔ MLM ready structure
+✔ NULL SAFETY FIXED (PRODUCTION READY)
 ========================================
 */
 
@@ -14,8 +17,11 @@ function getSafeUser() {
   const user = getCurrentUser();
 
   if (!user) {
-    document.getElementById("mainContent").innerHTML =
-      "<div class='info-box'>Login Required</div>";
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML =
+        "<div class='info-box'>Login Required</div>";
+    }
     return null;
   }
 
@@ -44,17 +50,23 @@ function loadIncomeHistory() {
       </tr>
   `;
 
-  if (history.length === 0) {
+  if (!history.length) {
     html += `<tr><td colspan="4">No Income Records Found</td></tr>`;
   }
 
   history.forEach(item => {
+
+    const dateSafe = item?.date || "-";
+    const typeSafe = item?.type || "-";
+    const amountSafe = Number(item?.amount || 0);
+    const descSafe = item?.description || "-";
+
     html += `
       <tr>
-        <td>${item.date || "-"}</td>
-        <td>${item.type || "-"}</td>
-        <td>₹${item.amount || 0}</td>
-        <td>${item.description || "-"}</td>
+        <td>${dateSafe}</td>
+        <td>${typeSafe}</td>
+        <td>₹${amountSafe}</td>
+        <td>${descSafe}</td>
       </tr>
     `;
   });
@@ -64,8 +76,11 @@ function loadIncomeHistory() {
   main.innerHTML = html;
 }
 
-// ================= ADD INCOME (UTILITY FUTURE USE) =================
+// ================= ADD INCOME =================
 function addIncome(userId, type, amount, description = "") {
+
+  const safeAmount = Number(amount || 0);
+
   let users = typeof getUsers === "function" ? getUsers() : [];
   let index = users.findIndex(u => u.userId === userId);
 
@@ -76,16 +91,16 @@ function addIncome(userId, type, amount, description = "") {
   }
 
   users[index].incomeHistory.push({
-    type,
-    amount,
-    description,
+    type: type || "-",
+    amount: safeAmount,
+    description: description || "",
     date: new Date().toISOString()
   });
 
-  // wallet update sync
+  // wallet sync
   users[index].wallet = users[index].wallet || {};
   users[index].wallet.incomeBalance =
-    (users[index].wallet.incomeBalance || 0) + amount;
+    (Number(users[index].wallet.incomeBalance || 0) + safeAmount);
 
   if (typeof saveUsers === "function") {
     saveUsers(users);
