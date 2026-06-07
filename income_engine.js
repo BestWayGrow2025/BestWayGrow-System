@@ -303,3 +303,41 @@ function processIncome(type, userId, bv, sourceId = "") {
     setIncomeLock(execKey, false);
   }
 }
+
+// ===================================
+// READY
+// ===================================
+
+window.__INCOME_ENGINE__ = {
+  initialized: true,
+  ready: true,
+  timestamp: Date.now()
+};
+
+// ===================================
+// EXPORTS
+// ===================================
+
+window.safeIncome =
+  safeIncome;
+
+window.isCTORQualified =
+  isCTORQualified;
+
+window.distributeCTOR =
+  distributeCTOR;
+
+window.processUpgradeIncome =
+  processUpgradeIncome;
+
+window.processRepurchaseIncome =
+  processRepurchaseIncome;
+
+window.processIncome =
+  processIncome;
+
+// ===================================
+// HEALTH FLAG
+// ===================================
+
+window.INCOME_ENGINE_ACTIVE = true;
