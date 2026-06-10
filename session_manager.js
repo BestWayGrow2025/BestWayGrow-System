@@ -352,8 +352,6 @@ window.logoutSession = logoutSession;
 window.isAuthenticated = isAuthenticated;
 window.hasRole = hasRole;
 
-// =====================
-// GLOBAL COMPATIBILITY EXPORT (IMPORTANT FIX)
-// =====================
-window.safeGet = safeGet;
-window.safeSet = safeSet;
+// SESSION LOCAL HELPERS ONLY
+window.sessionSafeGet = safeGet;
+window.sessionSafeSet = safeSet;
