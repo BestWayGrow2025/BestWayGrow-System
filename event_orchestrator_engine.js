@@ -91,15 +91,18 @@ function executeEvent(eventName, handler, payload = {}) {
       return false;
     }
 
-    const result = handler(payload);
+   const result = handler(payload);
 
-    recordEventExecution({
-      eventName,
-      success: !!result,
-      details: { payload }
-    });
+recordEventExecution({
+  eventName,
+  success: true,
+  details: {
+    payload,
+    returned: result
+  }
+});
 
-    return result;
+return result;
 
   } catch (err) {
     recordEventExecution({
