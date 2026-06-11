@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 ========================================
 USER WALLET LEDGER MODULE (V1)
@@ -22,19 +24,27 @@ function getAllUsersSafe() {
 }
 
 // ================= LOAD WALLET LEDGER =================
-function loadWalletHistory() {
+function loadUserWalletHistory() {
+
   const user = getUserSafe();
   const main = document.getElementById("mainContent");
 
   if (!user || !main) return;
 
   const users = getAllUsersSafe();
-  const current = users.find(u => u.userId === user.userId);
 
-  const history = current?.wallet?.history || [];
+  const current = users.find(
+    u => u.userId === user.userId
+  );
+
+  const history =
+    current?.wallet?.history || [];
 
   let html = `
-    <div class="section-title">Wallet History</div>
+    <div class="section-title">
+      Wallet History
+    </div>
+
     <div class="info-box">
       <p><b>User ID:</b> ${user.userId}</p>
       <p><b>Current Balance:</b> ₹${current?.wallet?.balance || 0}</p>
@@ -50,9 +60,19 @@ function loadWalletHistory() {
   `;
 
   if (!history.length) {
-    html += `<tr><td colspan="4">No transactions found</td></tr>`;
+
+    html += `
+      <tr>
+        <td colspan="4">
+          No transactions found
+        </td>
+      </tr>
+    `;
+
   } else {
+
     history.forEach(tx => {
+
       html += `
         <tr>
           <td>${tx.date || "-"}</td>
@@ -70,5 +90,5 @@ function loadWalletHistory() {
 }
 
 // ================= GLOBAL EXPORT =================
-window.loadWalletHistory = loadWalletHistory;
-feat(wallet): add user_wallet_ledger module for wallet history view with safe fallback and session protection
+window.loadUserWalletHistory =
+  loadUserWalletHistory;
