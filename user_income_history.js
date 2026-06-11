@@ -76,37 +76,5 @@ function loadIncomeHistory() {
   main.innerHTML = html;
 }
 
-// ================= ADD INCOME =================
-function addIncome(userId, type, amount, description = "") {
-
-  const safeAmount = Number(amount || 0);
-
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  let index = users.findIndex(u => u.userId === userId);
-
-  if (index === -1) return;
-
-  if (!users[index].incomeHistory) {
-    users[index].incomeHistory = [];
-  }
-
-  users[index].incomeHistory.push({
-    type: type || "-",
-    amount: safeAmount,
-    description: description || "",
-    date: new Date().toISOString()
-  });
-
-  // wallet sync
-  users[index].wallet = users[index].wallet || {};
-  users[index].wallet.incomeBalance =
-    (Number(users[index].wallet.incomeBalance || 0) + safeAmount);
-
-  if (typeof saveUsers === "function") {
-    saveUsers(users);
-  }
-}
-
 // ================= EXPORT =================
 window.loadIncomeHistory = loadIncomeHistory;
-window.addIncome = addIncome;
