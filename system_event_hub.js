@@ -141,9 +141,15 @@ function hook(fnName, eventName, bus) {
 
   if (original.__systemEventHooked) return;
 
-  function wrapped(...args) {
+ function wrapped(...args) {
 
-    const result = original.apply(this, args);
+  let result;
+
+  try {
+
+    result = original.apply(this, args);
+
+  } finally {
 
     bus.emit(eventName, {
       functionName: fnName,
@@ -152,9 +158,10 @@ function hook(fnName, eventName, bus) {
       result,
       timestamp: Date.now()
     });
-
-    return result;
   }
+
+  return result;
+}
 
   wrapped.__systemEventHooked = true;
   wrapped.__originalFunction = original;
