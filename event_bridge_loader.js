@@ -21,9 +21,22 @@ EVENT BRIDGE LOADER V1.0 (FINAL)
   window.__EVENT_BRIDGE_LOADER__ = true;
 
   // Wait until DOM is ready, then bootstrap bridges
-  document.addEventListener("DOMContentLoaded", function () {
-    setTimeout(initEventBridgeLoader, 0);
-  });
+if (
+  document.readyState === "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+      setTimeout(initEventBridgeLoader, 0);
+    }
+  );
+
+} else {
+
+  setTimeout(initEventBridgeLoader, 0);
+
+}
 
 })();
 
