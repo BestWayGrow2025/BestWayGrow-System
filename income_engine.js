@@ -278,18 +278,23 @@ function processIncome(type, userId, bv, sourceId = "") {
 
     if (isIncomeLocked(execKey)) return false;
 
-    setIncomeLock(execKey, true);
-    markTxUsed(execKey);
+   setIncomeLock(execKey, true);
 
-    if (type === "upgrade") {
-      return processUpgradeIncome(userId, bv);
-    }
+let result = false;
 
-    if (type === "repurchase") {
-      return processRepurchaseIncome(userId, bv);
-    }
+if (type === "upgrade") {
+  result = processUpgradeIncome(userId, bv);
+}
 
-    return false;
+else if (type === "repurchase") {
+  result = processRepurchaseIncome(userId, bv);
+}
+
+if (result) {
+  markTxUsed(execKey);
+}
+
+return result;
 
   } catch (err) {
 
