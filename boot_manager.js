@@ -128,55 +128,56 @@ MASTER BOOT CONTROLLER v1.2 (ENTERPRISE FINAL)
   }
 
   // ================= BOOT SEQUENCE =================
-  function bootSystem() {
+function bootSystem() {
 
-    // Prevent re-entry
-    if (window.__SYSTEM_BOOT__.started) {
-      return;
-    }
+  // Prevent re-entry
+  if (window.__SYSTEM_BOOT__.started) {
+    return;
+  }
 
-    window.__SYSTEM_BOOT__.started = true;
-    window.__SYSTEM_BOOT__.startedAt = Date.now();
+  window.__SYSTEM_BOOT__.started = true;
+  window.__SYSTEM_BOOT__.startedAt = Date.now();
 
-    console.log("[BOOT] STARTING SYSTEM SEQUENCE...");
+  console.log("[BOOT] STARTING SYSTEM SEQUENCE...");
 
-    // STEP 1 → CORE
-    initCore();
+  // STEP 1 → CORE
+  initCore();
 
-    // STEP 2 → ORCHESTRATOR
-    initOrchestrator();
+  // STEP 2 → ORCHESTRATOR
+  initOrchestrator();
 
-    // STEP 3 → AUTO WIRING
-    initWiring();
+  // STEP 3 → AUTO WIRING
+  initWiring();
 
-    // STEP 4 → FINAL STABILIZATION
+  // STEP 4 → FINAL STABILIZATION
 
-const bootSuccess =
-  window.__SYSTEM_BOOT__.coreReady &&
-  window.__SYSTEM_BOOT__.orchestratorReady;
+  const bootSuccess =
+    window.__SYSTEM_BOOT__.coreReady &&
+    window.__SYSTEM_BOOT__.orchestratorReady;
 
-if (bootSuccess) {
+  if (bootSuccess) {
 
-  setTimeout(finalizeBoot, 400);
+    setTimeout(finalizeBoot, 400);
 
-} else {
+  } else {
 
-  console.error(
-    "[BOOT] SYSTEM STARTUP FAILED"
-  );
+    console.error(
+      "[BOOT] SYSTEM STARTUP FAILED"
+    );
+  }
 }
 
-  // ================= GLOBAL EXPORT =================
-  window.bootSystem = bootSystem;
+// ================= GLOBAL EXPORT =================
+window.bootSystem = bootSystem;
 
-  // ================= SAFE START =================
-  if (document.readyState === "loading") {
-    document.addEventListener(
-      "DOMContentLoaded",
-      bootSystem
-    );
-  } else {
-    bootSystem();
-  }
+// ================= SAFE START =================
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    bootSystem
+  );
+} else {
+  bootSystem();
+}
 
 })();
