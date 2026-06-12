@@ -150,8 +150,21 @@ MASTER BOOT CONTROLLER v1.2 (ENTERPRISE FINAL)
     initWiring();
 
     // STEP 4 → FINAL STABILIZATION
-    setTimeout(finalizeBoot, 400);
-  }
+
+const bootSuccess =
+  window.__SYSTEM_BOOT__.coreReady &&
+  window.__SYSTEM_BOOT__.orchestratorReady;
+
+if (bootSuccess) {
+
+  setTimeout(finalizeBoot, 400);
+
+} else {
+
+  console.error(
+    "[BOOT] SYSTEM STARTUP FAILED"
+  );
+}
 
   // ================= GLOBAL EXPORT =================
   window.bootSystem = bootSystem;
