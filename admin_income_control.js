@@ -213,16 +213,16 @@ function setBinary(state) {
     window.SYSTEM_EVENTS.on("HOLD_INCOME_RELEASED", safeRefresh);
   }
 
-  if (window.SYSTEM_EVENTS?.emit) {
-    bind();
-  } else {
+if (window.SYSTEM_EVENTS?.on) {
+  bind();
+}
 
-    const timer = setInterval(() => {
-      if (window.SYSTEM_EVENTS?.emit) {
-        clearInterval(timer);
-        bind();
-      }
-    }, 50);
+const timer = setInterval(() => {
+  if (window.SYSTEM_EVENTS?.on) {
+    clearInterval(timer);
+    bind();
+  }
+}, 50);
   }
 
 })();
