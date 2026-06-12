@@ -202,11 +202,16 @@ function createPinRequest({
 
     // ================= SESSION CHECK =================
     if (typeof getSession === "function") {
-      const session = getSession();
-      if (!session || !session.userId) {
-        throw new Error("Invalid session");
-      }
-    }
+  const session = getSession();
+
+  if (!session || !session.userId) {
+    throw new Error("Invalid session");
+  }
+
+  if (session.userId !== userId) {
+    throw new Error("User mismatch");
+  }
+}
 
     // ================= LOCK =================
     if (isRequestLocked(lockKey)) {
