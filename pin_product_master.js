@@ -138,9 +138,26 @@ function updatePinProduct(productId, updates = {}) {
 
   if (updates.pinName !== undefined) item.pinName = updates.pinName;
   if (updates.category !== undefined) item.category = updates.category;
-  if (updates.amount !== undefined) item.amount = Number(updates.amount) || item.amount;
-  if (updates.bv !== undefined) item.bv = Number(updates.bv) || item.bv;
-  if (updates.gstPercent !== undefined) item.gstPercent = Number(updates.gstPercent) || 0;
+ if (updates.amount !== undefined) {
+  const amount = Number(updates.amount);
+  if (!isNaN(amount) && amount > 0) {
+    item.amount = amount;
+  }
+}
+
+if (updates.bv !== undefined) {
+  const bv = Number(updates.bv);
+  if (!isNaN(bv) && bv > 0) {
+    item.bv = bv;
+  }
+}
+
+if (updates.gstPercent !== undefined) {
+  const gst = Number(updates.gstPercent);
+  if (!isNaN(gst) && gst >= 0) {
+    item.gstPercent = gst;
+  }
+}
 
   if (updates.allowTransfer !== undefined) item.allowTransfer = !!updates.allowTransfer;
   if (updates.allowUserRequest !== undefined) item.allowUserRequest = !!updates.allowUserRequest;
