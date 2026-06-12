@@ -170,15 +170,14 @@ function updateSummary(total, count) {
     window.SYSTEM_EVENTS.on("INCOME_CREDIT", refresh);
   }
 
-  if (window.SYSTEM_EVENTS?.emit) {
-    bind();
-  } else {
-    const timer = setInterval(() => {
-      if (window.SYSTEM_EVENTS?.emit) {
-        clearInterval(timer);
-        bind();
-      }
-    }, 50);
-  }
-
+ if (window.SYSTEM_EVENTS?.on) {
+  bind();
+} else {
+  const timer = setInterval(() => {
+    if (window.SYSTEM_EVENTS?.on) {
+      clearInterval(timer);
+      bind();
+    }
+  }, 50);
+}  
 })();
