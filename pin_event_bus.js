@@ -45,11 +45,14 @@ PIN EVENT BUS V1.2 FINAL SAFE
 
     try {
 
-      // Contract safety check
-      if (!window.PIN_GLOBAL_CONTRACT) {
-        console.error("[PIN EVENT BUS] Contract not loaded");
-        return false;
-      }
+    // Contract safety check
+if (
+  typeof window.PIN_GLOBAL_CONTRACT === "undefined" ||
+  window.PIN_GLOBAL_CONTRACT === null
+) {
+  console.error("[PIN EVENT BUS] Contract not loaded");
+  return false;
+}
 
       const eventPayload = {
         ...payload,
