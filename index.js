@@ -5,7 +5,6 @@ let lock = false;
 SYSTEM_EVENTS.on("SYSTEM_READY", function () {
   loadPage();
 });
-}
 
 function initPage() {
   setTimeout(() => {
