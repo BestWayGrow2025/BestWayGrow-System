@@ -2,72 +2,34 @@
 
 /*
 ========================================
-WALLET SYNC ENGINE V1.0 (BANK RECONCILIATION)
+WALLET SYNC ENGINE DISABLED
 ========================================
-✔ Wallet rebuilt from ledger only
-✔ No manual credit trust allowed
-✔ Fixes drift & duplication risk
+✔ wallet_system.js is source of truth
+✔ wallet_engine.js disabled
+✔ Prevents wallet overwrite risk
+✔ Prevents reconciliation conflicts
 ========================================
 */
 
-// ================= REBUILD =================
-function rebuildWalletFromLedger(userId) {
+console.warn(
+  "[WALLET SYNC ENGINE] Disabled - wallet_system.js is authoritative"
+);
 
-  try {
+function rebuildWalletFromLedger() {
 
-    if (!userId) return false;
+  console.warn(
+    "rebuildWalletFromLedger disabled"
+  );
 
-    const ledger = getLedgerState?.() || {};
-
-    let balance = 0;
-
-    for (const txId in ledger) {
-
-      const tx = ledger[txId];
-
-      if (tx.userId === userId) {
-        balance += Number(tx.amount || 0);
-      }
-
-    }
-
-    const wallets = getWallets?.() || {};
-
-    if (!wallets[userId]) {
-      wallets[userId] = {
-        balance: 0
-      };
-    }
-
-    wallets[userId].balance =
-      parseFloat(balance.toFixed(2));
-
-    saveWallets?.(wallets);
-
-    return true;
-
-  } catch (err) {
-
-    if (typeof logCritical === "function") {
-      logCritical(
-        "WALLET_SYNC_FAILED: " +
-        err.message
-      );
-    }
-
-    return false;
-  }
+  return false;
 }
-
-// ================= READY =================
 
 window.__WALLET_SYNC_ENGINE__ = {
   initialized: true,
   ready: true,
+  disabled: true,
   timestamp: Date.now()
 };
-
-// ================= EXPORT =================
 
 window.rebuildWalletFromLedger =
   rebuildWalletFromLedger;
