@@ -3,10 +3,9 @@ let currentUser = null;
 let lock = false;
 
 SYSTEM_EVENTS.on("SYSTEM_READY", function () {
-  if (typeof bootSystemReady === "function") {
-    bootSystemReady();
-  }
+  loadPage();
 });
+}
 
 function initPage() {
   setTimeout(() => {
