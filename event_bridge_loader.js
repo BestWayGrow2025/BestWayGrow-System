@@ -52,13 +52,19 @@ const EVENT_BRIDGE_INITIALIZERS = [
 function initEventBridgeLoader() {
 
   // SYSTEM_EVENTS must exist first
-  if (
-    typeof window.SYSTEM_EVENTS === "undefined" ||
-    typeof window.SYSTEM_EVENTS.emit !== "function"
-  ) {
-    console.warn("EVENT BRIDGE LOADER: SYSTEM_EVENTS not available");
-    return;
-  }
+ if (
+  typeof window.SYSTEM_EVENTS === "undefined" ||
+  typeof window.SYSTEM_EVENTS.emit !== "function"
+) {
+
+  console.warn(
+    "EVENT BRIDGE LOADER: SYSTEM_EVENTS not available"
+  );
+
+  setTimeout(initEventBridgeLoader, 500);
+
+  return;
+}
 
   EVENT_BRIDGE_INITIALIZERS.forEach(fnName => {
 
