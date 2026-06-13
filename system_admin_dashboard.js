@@ -136,9 +136,9 @@ btn.addEventListener(
           loadCreateAdmin();
           break;
 
-        case "pins":
-          loadPinsSafe();
-          break;
+       case "pinmaster":
+  loadPinsSafe();
+  break;
 
         case "settings":
           loadSettings();
