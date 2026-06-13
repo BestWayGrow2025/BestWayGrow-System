@@ -2,7 +2,7 @@ let session = null;
 let currentUser = null;
 let lock = false;
 
-document.addEventListener("DOMContentLoaded", function () {
+SYSTEM_EVENTS.on("SYSTEM_READY", function () {
   initPage();
   authPage();
   bindEvents();
