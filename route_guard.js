@@ -78,18 +78,31 @@ if (
   return false;
 }
     
-    // ================= STATUS CHECK =================
-    if (
-      typeof session.status !== "undefined" &&
-      session.status !== "active"
-    ) {
+   // ================= STATUS CHECK =================
 
-      window.__AUTH_FAILED__ = true;
-      window.location.replace("user_login.html");
-      return false;
-    }
+const currentUser =
+  typeof getCurrentUser === "function"
+    ? getCurrentUser()
+    : null;
 
-    // ================= AUTH PASSED =================
+if (
+  currentUser &&
+  (currentUser.accountStatus || currentUser.status || "active") !== "active"
+) {
+
+  window.__AUTH_FAILED__ = true;
+
+  if (typeof logoutSession === "function") {
+    logoutSession();
+  } else {
+    window.location.replace("user_login.html");
+  }
+
+  return false;
+}
+
+// ================= AUTH PASSED =================
+
     return true;
 
   } catch (err) {
