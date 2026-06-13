@@ -149,12 +149,13 @@ function bootSystem() {
   // STEP 3 → AUTO WIRING
   initWiring();
 
-  // STEP 4 → FINAL STABILIZATION
+ // STEP 4 → FINAL STABILIZATION
 
-  const bootSuccess =
-    window.__SYSTEM_BOOT__.coreReady &&
-    window.__SYSTEM_BOOT__.orchestratorReady;
-
+const bootSuccess =
+  window.__SYSTEM_BOOT__.coreReady &&
+  window.__SYSTEM_BOOT__.orchestratorReady &&
+  window.__SYSTEM_BOOT__.wiringReady;
+  
   if (bootSuccess) {
 
     setTimeout(finalizeBoot, 400);
