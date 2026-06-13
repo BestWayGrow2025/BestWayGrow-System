@@ -490,25 +490,12 @@ name: "system_admin_dashboard",
 time: Date.now() };
 /* ================= SAFE STARTUP ================= */
 SYSTEM_EVENTS.on("SYSTEM_READY", function () {
-try {
-
-  initPage();
-  checkAuth();
-  bindEvents();
-  loadHome();
-
-  console.log(
-    "[SYSTEM ADMIN DASHBOARD] SAFE INIT COMPLETE"
-  );
-
-} catch (err) {
-
-  console.error(
-    "[SYSTEM ADMIN DASHBOARD INIT ERROR]",
-    err
-  );
-}
-
+  try {
+    startAdminDashboard();
+    console.log("[SYSTEM ADMIN DASHBOARD] SAFE INIT COMPLETE");
+  } catch (err) {
+    console.error("[SYSTEM ADMIN DASHBOARD INIT ERROR]", err);
+  }
 });
-console.log( "[SYSTEM ADMIN DASHBOARD] MODULE LOADED OK" );
 
+console.log("[SYSTEM ADMIN DASHBOARD] MODULE LOADED OK");
