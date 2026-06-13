@@ -2,73 +2,24 @@
 
 /*
 ========================================
-WALLET ENGINE V1.0 (STATE ONLY)
+WALLET ENGINE DISABLED LAYER
 ========================================
-✔ Balance storage only
-✔ No business logic
-✔ No ledger knowledge
+✔ Prevents duplicate wallet conflict
+✔ wallet_system.js is primary
+✔ Repository compatibility preserved
+✔ No wallet function overrides
 ========================================
 */
 
-const WALLET_DB_KEY = "WALLET_STATE";
+console.warn(
+  "[WALLET ENGINE] Disabled - wallet_system.js is active"
+);
 
-// ================= GET =================
-function getWallets() {
-  try {
-    return JSON.parse(localStorage.getItem(WALLET_DB_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
+/* ================= READY ================= */
 
-// ================= SAVE =================
-function saveWallets(data) {
-  try {
-    localStorage.setItem(
-      WALLET_DB_KEY,
-      JSON.stringify(data && typeof data === "object" ? data : {})
-    );
-  } catch (e) {
-    if (typeof logCritical === "function") {
-      logCritical("WALLET_SAVE_FAILED: " + e.message);
-    }
-  }
-}
-
-// ================= CREDIT =================
-function creditWallet(userId, amount) {
-  const wallets = getWallets();
-
-  if (!wallets[userId]) {
-    wallets[userId] = { balance: 0 };
-  }
-
-  wallets[userId].balance += Number(amount);
-
-  saveWallets(wallets);
-  return true;
-}
-
-// ================= DEBIT =================
-function debitWallet(userId, amount) {
-  const wallets = getWallets();
-
-  if (!wallets[userId]) return false;
-  if (wallets[userId].balance < amount) return false;
-
-  wallets[userId].balance -= Number(amount);
-
-  saveWallets(wallets);
-  return true;
-}
-
-// ================= EXPORT =================
 window.__WALLET_ENGINE__ = {
   initialized: true,
   ready: true,
+  disabled: true,
   timestamp: Date.now()
 };
-
-window.creditWallet = creditWallet;
-window.debitWallet = debitWallet;
-
