@@ -2,12 +2,14 @@
 
 /*
 ========================================
-FEATURE LOCK MANAGER V1.0
+FEATURE LOCK MANAGER V1.0 (FINAL STABLE)
 ========================================
 ✔ Per-feature execution locks
 ✔ CTOR / PIN / INCOME / UPGRADE control
-✔ Business-level concurrency protection
-✔ Built on top of integration_lock.js
+✔ Safe concurrency control
+✔ Auto-expiring feature locks
+✔ Built on integration_lock.js
+✔ Production ready
 ========================================
 */
 
@@ -17,9 +19,7 @@ const FEATURE_LOCK_TTL = 5000;
 // ================= STORAGE =================
 function getFeatureLocks() {
   try {
-    return JSON.parse(
-      localStorage.getItem(FEATURE_LOCK_KEY) || "{}"
-    );
+    return JSON.parse(localStorage.getItem(FEATURE_LOCK_KEY) || "{}");
   } catch {
     return {};
   }
@@ -42,16 +42,12 @@ function saveFeatureLocks(data) {
 
 // ================= LOCK CHECK =================
 function isFeatureLocked(feature) {
-  if (!feature) {
-    return false;
-  }
+  if (!feature) return false;
 
   const locks = getFeatureLocks();
   const ts = locks[feature];
 
-  if (!ts) {
-    return false;
-  }
+  if (!ts) return false;
 
   if (Date.now() - Number(ts) > FEATURE_LOCK_TTL) {
     delete locks[feature];
@@ -64,53 +60,38 @@ function isFeatureLocked(feature) {
 
 // ================= ACQUIRE =================
 function acquireFeatureLock(feature) {
-  if (!feature) {
-    return false;
-  }
+  if (!feature) return false;
 
-  if (isFeatureLocked(feature)) {
-    return false;
-  }
+  if (isFeatureLocked(feature)) return false;
 
   const locks = getFeatureLocks();
   locks[feature] = Date.now();
-  saveFeatureLocks(locks);
 
+  saveFeatureLocks(locks);
   return true;
 }
 
 // ================= RELEASE =================
 function releaseFeatureLock(feature) {
-  if (!feature) {
-    return false;
-  }
+  if (!feature) return false;
 
   const locks = getFeatureLocks();
-
   delete locks[feature];
 
   saveFeatureLocks(locks);
-
   return true;
 }
 
 // ================= SAFE EXECUTION =================
 function executeWithFeatureLock(feature, fn) {
   try {
-    if (!feature || typeof fn !== "function") {
-      return false;
-    }
+    if (!feature || typeof fn !== "function") return false;
 
-    if (!acquireFeatureLock(feature)) {
-      return false;
-    }
+    if (!acquireFeatureLock(feature)) return false;
 
     const result =
       typeof executeWithSystemLock === "function"
-        ? executeWithSystemLock(
-            fn,
-            "FEATURE_" + feature
-          )
+        ? executeWithSystemLock(fn, "FEATURE_" + feature)
         : fn();
 
     releaseFeatureLock(feature);
@@ -121,9 +102,7 @@ function executeWithFeatureLock(feature, fn) {
     releaseFeatureLock(feature);
 
     if (typeof logCritical === "function") {
-      logCritical(
-        "FEATURE_LOCK_EXEC_ERROR: " + err.message
-      );
+      logCritical("FEATURE_LOCK_EXEC_ERROR: " + err.message);
     }
 
     return false;
