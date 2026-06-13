@@ -489,7 +489,7 @@ loaded: true,
 name: "system_admin_dashboard",
 time: Date.now() };
 /* ================= SAFE STARTUP ================= */
-document.addEventListener( "DOMContentLoaded", function () {
+SYSTEM_EVENTS.on("SYSTEM_READY", function () {
 try {
 
   initPage();
@@ -509,6 +509,6 @@ try {
   );
 }
 
-} );
+});
 console.log( "[SYSTEM ADMIN DASHBOARD] MODULE LOADED OK" );
 
