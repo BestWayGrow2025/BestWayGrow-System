@@ -87,8 +87,10 @@ function saveSystemConfig(config) {
       return false;
     }
 
-    safeSet(SYSTEM_CONFIG_KEY, config);
-    return true;
+    return safeSet(
+  SYSTEM_CONFIG_KEY,
+  config
+);
 
   } catch (err) {
     console.error("Save config error:", err.message);
