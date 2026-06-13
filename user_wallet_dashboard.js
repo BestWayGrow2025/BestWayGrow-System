@@ -49,7 +49,7 @@ function loadWallet() {
   `;
 }
 
-// ================= WALLET HISTORY (SAFE FIXED) =================
+// ================= WALLET HISTORY (WALLET SYSTEM SOURCE) =================
 function loadWalletHistory() {
   const user = getSafeUser();
   if (!user) return;
@@ -58,10 +58,10 @@ function loadWalletHistory() {
   if (!main) return;
 
   // 🔥 FIX: unified fallback sources
-  const history =
-    user.walletHistory ||
-    user.wallet?.history ||
-    [];
+ const history =
+  typeof getUserTransactions === "function"
+    ? getUserTransactions(user.userId)
+    : [];
 
   let html = `
     <div class="section-title">Wallet History</div>
