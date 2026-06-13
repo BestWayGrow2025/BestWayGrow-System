@@ -60,20 +60,41 @@ function isSystemLocked() {
 
 // ================= ACQUIRE LOCK =================
 function acquireSystemLock(context = "unknown") {
+
+  const lockId =
+    "LOCK_" +
+    Date.now() +
+    "_" +
+    Math.random().toString(36).slice(2);
+
   if (isSystemLocked()) {
     return false;
   }
 
   setGlobalLock({
+    id: lockId,
     context,
     timestamp: Date.now()
   });
 
-  return true;
+  const verify = getGlobalLock();
+
+  return verify && verify.id === lockId;
 }
 
 // ================= RELEASE LOCK =================
-function releaseSystemLock() {
+function releaseSystemLock(lockId = null) {
+
+  const current = getGlobalLock();
+
+  if (
+    lockId &&
+    current &&
+    current.id !== lockId
+  ) {
+    return false;
+  }
+
   clearGlobalLock();
   return true;
 }
