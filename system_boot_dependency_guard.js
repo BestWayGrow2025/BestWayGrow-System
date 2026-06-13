@@ -33,11 +33,29 @@ function checkCoreDependencies() {
 }
 
 // =====================
+// RESET MONITOR (NEW FIX)
+// =====================
+function resetDependencyMonitor() {
+
+  if (window.__DEPENDENCY_CHECK_INTERVAL__) {
+    clearInterval(window.__DEPENDENCY_CHECK_INTERVAL__);
+  }
+
+  window.__DEPENDENCY_CHECK_INTERVAL__ = null;
+  window.__DEPENDENCY_READY__ = false;
+
+  console.log("[BOOT GUARD] RESET COMPLETE");
+}
+
+// =====================
 // START MONITOR (PASSIVE ONLY)
 // =====================
 function startDependencyMonitor() {
 
   if (window.__DEPENDENCY_CHECK_INTERVAL__) return;
+
+  // safety reset before starting
+  resetDependencyMonitor();
 
   window.__DEPENDENCY_CHECK_INTERVAL__ = setInterval(() => {
 
@@ -78,13 +96,12 @@ function markDependenciesReady() {
 }
 
 // =====================
-// SAFE WAIT HELPER (FIXED)
+// SAFE WAIT HELPER
 // =====================
 window.waitForDependencies = function (cb) {
 
   if (typeof cb !== "function") return;
 
-  // immediate pass
   if (checkCoreDependencies()) {
     cb();
     return;
@@ -101,10 +118,12 @@ window.waitForDependencies = function (cb) {
 };
 
 // =====================
-// EXPORTS (PASSIVE ONLY)
+// EXPORTS
 // =====================
 window.startDependencyMonitor = startDependencyMonitor;
 window.markDependenciesReady = markDependenciesReady;
+window.resetDependencyMonitor = resetDependencyMonitor;
 window.checkCoreDependencies = checkCoreDependencies;
 
 console.log("[BOOT GUARD] LOADED ✔");
+
