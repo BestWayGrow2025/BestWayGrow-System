@@ -92,9 +92,10 @@ function safeRemove(key) {
 
 /* ================= EXPORTS ================= */
 
-window.safeSet = safeSet;
-window.safeGet = safeGet;
-window.safeRemove = safeRemove;
+window.safeSet = window.safeSet || safeSet;
+window.safeGet = window.safeGet || safeGet;
+window.safeRemove = window.safeRemove || safeRemove;
+
 
 console.log("[SAFE STORAGE] READY");
 
