@@ -3,10 +3,9 @@ let currentUser = null;
 let lock = false;
 
 SYSTEM_EVENTS.on("SYSTEM_READY", function () {
-  initPage();
-  authPage();
-  bindEvents();
-  loadPage();
+  if (typeof bootSystemReady === "function") {
+    bootSystemReady();
+  }
 });
 
 function initPage() {
