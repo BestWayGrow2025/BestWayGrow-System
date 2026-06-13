@@ -2,10 +2,15 @@ let session = null;
 let currentUser = null;
 let lock = false;
 
+/* ================= SYSTEM BOOT ENTRY ================= */
 SYSTEM_EVENTS.on("SYSTEM_READY", function () {
+  initPage();
+  authPage();
+  bindEvents();
   loadPage();
 });
 
+/* ================= INIT ================= */
 function initPage() {
   setTimeout(() => {
     if (typeof initCoreSystem === "function") {
@@ -16,11 +21,10 @@ function initPage() {
   }, 0);
 }
 
+/* ================= AUTH ================= */
 function authPage() {
   try {
-    if (typeof getSession === "function") {
-      session = getSession();
-    }
+    session = typeof getSession === "function" ? getSession() : null;
   } catch (e) {
     session = null;
   }
@@ -28,6 +32,7 @@ function authPage() {
   currentUser = session;
 }
 
+/* ================= EVENTS ================= */
 function bindEvents() {
   document.addEventListener("click", function (e) {
     if (e.target && e.target.id === "logoutBtn") {
@@ -36,27 +41,27 @@ function bindEvents() {
   });
 }
 
+/* ================= PAGE LOAD ================= */
 function loadPage() {
   loadSystemStatus();
   loadLoginArea();
 }
 
+/* ================= SYSTEM STATUS ================= */
 function loadSystemStatus() {
-  let box = document.getElementById("systemStatus");
-
+  const box = document.getElementById("systemStatus");
   if (!box) return;
 
   try {
-    let settings = {};
+    const settings =
+      typeof getSystemSettings === "function"
+        ? getSystemSettings() || {}
+        : {};
 
-    if (typeof getSystemSettings === "function") {
-      settings = getSystemSettings() || {};
-    }
-
-    let lockStatus = settings.lockMode ? "🔴 LOCKED" : "🟢 ACTIVE";
-    let regStatus = settings.registrationOpen === false ? "OFF" : "ON";
-    let upStatus = settings.upgradesOpen === false ? "OFF" : "ON";
-    let repStatus = settings.repurchaseOpen === false ? "OFF" : "ON";
+    const lockStatus = settings.lockMode ? "🔴 LOCKED" : "🟢 ACTIVE";
+    const regStatus = settings.registrationOpen === false ? "OFF" : "ON";
+    const upStatus = settings.upgradesOpen === false ? "OFF" : "ON";
+    const repStatus = settings.repurchaseOpen === false ? "OFF" : "ON";
 
     box.innerHTML = `
       <strong>System:</strong> ${lockStatus}<br>
@@ -69,9 +74,9 @@ function loadSystemStatus() {
   }
 }
 
+/* ================= LOGIN AREA ================= */
 function loadLoginArea() {
-  let loginArea = document.getElementById("loginArea");
-
+  const loginArea = document.getElementById("loginArea");
   if (!loginArea) return;
 
   if (!session) {
@@ -91,11 +96,9 @@ function loadLoginArea() {
   if (session.role === "super_admin") dashboardLink = "super_admin_dashboard.html";
 
   try {
-    if (typeof getUserById === "function" && session.role === "user") {
-      let user = getUserById(session.userId);
-      if (user) {
-        displayName = user.username || user.userId;
-      }
+    if (session.role === "user" && typeof getUserById === "function") {
+      const user = getUserById(session.userId);
+      if (user) displayName = user.username || user.userId;
     }
   } catch (e) {}
 
@@ -108,6 +111,7 @@ function loadLoginArea() {
   `;
 }
 
+/* ================= LOGOUT ================= */
 function handleLogout() {
   if (lock) return;
   lock = true;
@@ -115,10 +119,7 @@ function handleLogout() {
   try {
     if (typeof logoutSession === "function") {
       logoutSession();
-      return;
-    }
-
-    if (typeof clearSession === "function") {
+    } else if (typeof clearSession === "function") {
       clearSession();
     }
 
