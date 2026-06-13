@@ -37,8 +37,10 @@ function loadUserWalletHistory() {
     u => u.userId === user.userId
   );
 
-  const history =
-    current?.wallet?.history || [];
+ const history =
+  typeof getUserTransactions === "function"
+    ? getUserTransactions(user.userId)
+    : [];
 
   let html = `
     <div class="section-title">
@@ -75,10 +77,10 @@ function loadUserWalletHistory() {
 
       html += `
         <tr>
-          <td>${tx.date || "-"}</td>
+         <td>${tx.time || "-"}</td>
           <td>${tx.type || "-"}</td>
           <td>₹${tx.amount || 0}</td>
-          <td>${tx.remark || "-"}</td>
+          <td>${tx.reason || "-"}</td>
         </tr>
       `;
     });
