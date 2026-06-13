@@ -45,7 +45,7 @@ function initPage() {
     throw new Error("STOP");
   }
 
-  initCoreSystem();
+  // already initialized by boot_manager.js
 }
 
 /* ================= AUTH ================= */
@@ -187,7 +187,7 @@ function bindEvents() {
             loadUsers();
             break;
 
-          case "pins":
+         case "pinmaster":
             loadPinsUI();
             break;
 
