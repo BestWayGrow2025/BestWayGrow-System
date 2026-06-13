@@ -25,12 +25,16 @@ let dashboardAutoRefresh = null;
 
 /* ================= MODULE REGISTRATION ================= */
 
-BOOT.register("admin_dashboard", function () {
+function startAdminDashboard() {
   initPage();
   checkAuth();
   bindEvents();
   loadHome();
   startAutoRefresh();
+}
+
+SYSTEM_EVENTS.on("SYSTEM_READY", function () {
+  startAdminDashboard();
 });
 
 /* ================= INIT ================= */
@@ -483,7 +487,5 @@ window.__ADMIN_DASHBOARD_MODULE__ = {
 };
 
 /* ================= START MODULE ================= */
-
-BOOT.start("admin_dashboard");
 
 console.log("[ADMIN DASHBOARD] MODULE LOADED OK");
