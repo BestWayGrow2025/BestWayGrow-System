@@ -53,6 +53,16 @@ function checkSystemReadiness() {
 
   const interval = setInterval(() => {
 
+  attempts++;
+
+  if (attempts > 300) {
+
+    clearInterval(interval);
+
+    console.error(
+      "[PIN BOOT] Timeout waiting for dependencies"
+    );
+
     window.__PIN_BOOT_STATE__.coreReady =
       typeof window.__CORE_STATE__ !== "undefined";
 
