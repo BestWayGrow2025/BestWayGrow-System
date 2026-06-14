@@ -15,7 +15,7 @@ PIN ACTION CONTROL V1.1 (NORMALIZED - FIXED)
 
 // ================= ACTIONS =================
 function getPinActions() {
-  return Object.values(window.PIN_ACTION || Object.freeze({}));
+  return Object.values(window.PIN_ACTION || {});
 }
 
 // ================= HELPERS =================
