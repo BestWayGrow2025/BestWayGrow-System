@@ -187,10 +187,6 @@ function exposeWalletBridgeAPI() {
 
 }
 
-// ================= READY =================
-
-window.__WALLET_EVENT_BRIDGE__.ready = true;
-
 // ================= EXPORT =================
 
 window.broadcastWalletEvent =
@@ -209,16 +205,18 @@ console.log("[WALLET] HEALTH FLAG REGISTERED");
 
 (function walletBoot() {
 
-  function start() {
+function start() {
 
-    if (window.__WALLET_BOOTED__) return;
+  if (window.__WALLET_BOOTED__) return;
 
-    window.__WALLET_BOOTED__ = true;
+  window.__WALLET_BOOTED__ = true;
 
-    initWalletEventBridge();
+  initWalletEventBridge();
 
-    console.log("[WALLET EVENT BRIDGE] BOOT COMPLETE");
-  }
+  window.__WALLET_EVENT_BRIDGE__.ready = true;  
+
+  console.log("[WALLET EVENT BRIDGE] BOOT COMPLETE");
+}
 
   const wait = setInterval(() => {
 
