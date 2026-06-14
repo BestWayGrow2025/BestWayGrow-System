@@ -51,9 +51,11 @@ function startBootSequence() {
 // ================= READINESS CHECK =================
 function checkSystemReadiness() {
 
- const interval = setInterval(() => {
+  let attempts = 0;
 
-  attempts++;
+  const interval = setInterval(() => {
+
+    attempts++;
 
   if (attempts > 300) {
 
