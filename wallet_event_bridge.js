@@ -206,3 +206,29 @@ window.wallet_system_loaded = true;
 window.WALLET_SYSTEM_ACTIVE = true;
 
 console.log("[WALLET] HEALTH FLAG REGISTERED");
+
+(function walletBoot() {
+
+  function start() {
+
+    if (window.__WALLET_BOOTED__) return;
+
+    window.__WALLET_BOOTED__ = true;
+
+    initWalletEventBridge();
+
+    console.log("[WALLET EVENT BRIDGE] BOOT COMPLETE");
+  }
+
+  const wait = setInterval(() => {
+
+    if (window.SYSTEM_EVENTS?.on) {
+
+      clearInterval(wait);
+
+      window.SYSTEM_EVENTS.on("SYSTEM_READY", start);
+    }
+
+  }, 50);
+
+})();
