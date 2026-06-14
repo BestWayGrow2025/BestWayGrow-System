@@ -164,7 +164,6 @@ function processPinRequestAuto(requestId) {
     return false;
 
   } finally {
-
     delete PIN_PROCESSOR_LOCKS[lockKey];
   }
 }
