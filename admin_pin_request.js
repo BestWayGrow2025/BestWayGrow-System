@@ -6,11 +6,15 @@ let refreshTimer = null;
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
+
+  if (!currentUser) return;
+
   bindEvents();
   loadRequests();
   startAutoRefresh();
 });
 
+// ================= INIT =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
@@ -18,8 +22,13 @@ function initPage() {
     alert("core_system.js missing");
     throw new Error("STOP");
   }
+
+  session = typeof getSession === "function"
+    ? getSession()
+    : null;
 }
 
+// ================= AUTH =================
 function authPage() {
   currentUser = typeof protectPage === "function"
     ? protectPage({ role: "admin" })
@@ -27,22 +36,39 @@ function authPage() {
 
   if (!currentUser) {
     window.location.href = "admin_login.html";
-    throw new Error("Access denied");
+    return;
   }
 
-  session = {
-    userId: currentUser.userId,
-    role: currentUser.role
-  };
+  session = typeof getSession === "function"
+    ? getSession()
+    : {
+        userId: currentUser.userId || "UNKNOWN",
+        role: currentUser.role || "admin"
+      };
 }
 
+// ================= EVENTS =================
 function bindEvents() {
-  document.getElementById("refreshBtn").addEventListener("click", loadRequests);
-  document.getElementById("logoutBtn").addEventListener("click", logout);
+
+  const refreshBtn = document.getElementById("refreshBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", loadRequests);
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", logout);
+  }
 }
 
+// ================= LOAD REQUESTS =================
 function loadRequests() {
-  let table = document.getElementById("requestTable");
+
+  const table = document.getElementById("requestTable");
+
+  if (!table) return;
+
   table.innerHTML = "";
 
   let requests = [];
@@ -51,7 +77,7 @@ function loadRequests() {
     requests = typeof getPinRequests === "function"
       ? (getPinRequests() || [])
       : [];
-  } catch (e) {
+  } catch {
     requests = [];
   }
 
@@ -61,8 +87,10 @@ function loadRequests() {
   }
 
   requests.slice().reverse().forEach(function (request) {
+
     let status = (request.status || "pending").toLowerCase();
     let statusClass = getStatusClass(status);
+
     let actions = "-";
 
     if (status === "pending") {
@@ -88,6 +116,7 @@ function loadRequests() {
   });
 }
 
+// ================= STATUS CLASS =================
 function getStatusClass(status) {
   if (status === "pending") return "pending";
   if (status === "completed") return "completed";
@@ -96,64 +125,102 @@ function getStatusClass(status) {
   return "";
 }
 
+// ================= AUTO PROCESS =================
 function autoProcess(requestId) {
+
   if (lock) return;
   lock = true;
 
-  if (typeof processPinRequestAuto !== "function") {
-    alert("Processing system missing");
-    lock = false;
-    return;
-  }
-
   try {
-    processPinRequestAuto(requestId);
+
+    if (typeof executePinFlow === "function") {
+      executePinFlow("PROCESS_REQUEST", {
+        requestId,
+        mode: "AUTO"
+      });
+    } else if (typeof processPinRequestAuto === "function") {
+      processPinRequestAuto(requestId);
+    } else {
+      throw new Error("Processing system missing");
+    }
+
+    if (typeof logActivity === "function" && currentUser) {
+      logActivity(
+        currentUser.userId || "ADMIN",
+        "ADMIN",
+        "Auto processed PIN request " + requestId
+      );
+    }
+
     alert("✅ Auto processed");
     loadRequests();
+
   } catch (err) {
     alert(err.message || "Processing failed");
   }
 
-  setTimeout(function () {
+  setTimeout(() => {
     lock = false;
   }, 500);
 }
 
+// ================= REJECT =================
 function rejectReq(requestId) {
+
   if (lock) return;
   lock = true;
 
-  if (!confirm("Reject this request?")) {
-    lock = false;
-    return;
-  }
-
-  if (typeof rejectPinRequest !== "function") {
-    alert("Reject system missing");
-    lock = false;
-    return;
-  }
-
   try {
-    rejectPinRequest(requestId, currentUser.userId);
+
+    if (!confirm("Reject this request?")) {
+      lock = false;
+      return;
+    }
+
+    if (typeof executePinFlow === "function") {
+      executePinFlow("REJECT_REQUEST", {
+        requestId,
+        adminId: currentUser ? currentUser.userId : "ADMIN"
+      });
+    } else if (typeof rejectPinRequest === "function") {
+      rejectPinRequest(
+        requestId,
+        currentUser ? currentUser.userId : "ADMIN"
+      );
+    } else {
+      throw new Error("Reject system missing");
+    }
+
+    if (typeof logActivity === "function" && currentUser) {
+      logActivity(
+        currentUser.userId || "ADMIN",
+        "ADMIN",
+        "Rejected PIN request " + requestId
+      );
+    }
+
     alert("❌ Request Rejected");
     loadRequests();
+
   } catch (err) {
     alert(err.message || "Reject failed");
   }
 
-  setTimeout(function () {
+  setTimeout(() => {
     lock = false;
   }, 500);
 }
 
+// ================= AUTO REFRESH =================
 function startAutoRefresh() {
   refreshTimer = setInterval(function () {
     loadRequests();
   }, 3000);
 }
 
+// ================= LOGOUT =================
 function logout() {
+
   if (refreshTimer) {
     clearInterval(refreshTimer);
   }
