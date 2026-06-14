@@ -29,7 +29,7 @@ function startPinSystem() {
 
   try {
 
-    // ================= STEP 1: BOOT =================
+   // ================= STEP 1: BOOT =================
     if (typeof startPinBoot === "function") {
       startPinBoot();
     }
@@ -91,4 +91,3 @@ function isPinSystemReady() {
 // ================= EXPORT =================
 window.startPinSystem = startPinSystem;
 window.isPinSystemReady = isPinSystemReady;
-
