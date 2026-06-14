@@ -14,19 +14,27 @@ ADMIN PIN STOCK V1.0 (SAFE STOCK LAYER)
 
 // ================= HELPERS =================
 function getSafeAdmin() {
-  if (typeof getCurrentUser !== "function") return null;
-  const user = getCurrentUser();
-  return user && user.role === "admin" ? user : null;
+  if (typeof getSession !== "function") return null;
+
+  const session = getSession();
+
+  return session && session.role === "admin"
+    ? session
+    : null;
 }
 
 function getAdminPinStock() {
   const admin = getSafeAdmin();
   if (!admin) return { upgrade: 0, repurchase: 0 };
 
-  return {
-    upgrade: Number(admin.availableUpgradePins || 0),
-    repurchase: Number(admin.availableRepurchasePins || 0)
-  };
+  if (typeof getPinStock === "function") {
+    return getPinStock(admin.userId) || {
+      upgrade: 0,
+      repurchase: 0
+    };
+  }
+
+  return { upgrade: 0, repurchase: 0 };
 }
 
 function hasAdminPinStock(type, qty = 1) {
