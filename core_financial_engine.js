@@ -1,3 +1,5 @@
+"use strict"
+
 /*
 ========================================
 CORE FINANCIAL ENGINE V1.0 (CENTRALIZED BRAIN)
