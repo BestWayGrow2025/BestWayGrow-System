@@ -1,3 +1,5 @@
+"use strict"
+
 /*
 ========================================
 MONTHLY CLOSING ENGINE V1.0 (MASTER CLOSING ORCHESTRATOR)
