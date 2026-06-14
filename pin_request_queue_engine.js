@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 ========================================
 PIN REQUEST QUEUE ENGINE V9.0 (FINAL PATCH LOCK)
@@ -14,8 +16,6 @@ PIN REQUEST QUEUE ENGINE V9.0 (FINAL PATCH LOCK)
 ✔ Production stable
 ========================================
 */
-
-"use strict";
 
 // ================= CONFIG =================
 const PIN_QUEUE_RETRY_LIMIT = 3;
@@ -175,18 +175,12 @@ function processPinQueue() {
       if (realReq.status !== "PENDING") continue;
       if (realReq.queueLock === true) continue;
 
-      // LOCK REQUEST
       lockRequest(realReq);
 
       try {
-        // PROCESSOR ONLY
         processPinRequestAuto(realReq.requestId);
-
-        // REFRESH STATE AFTER PROCESSOR
         allRequests = getPinRequests() || [];
-
       } catch (err) {
-
         allRequests = getPinRequests() || [];
         realReq = allRequests.find(r => r.requestId === req.requestId);
 
@@ -201,7 +195,6 @@ function processPinQueue() {
         }
       }
 
-      // UNLOCK
       allRequests = getPinRequests() || [];
       realReq = allRequests.find(r => r.requestId === req.requestId);
 
