@@ -24,8 +24,8 @@ const PIN_LOG_LIMIT = 5000;
 /* ================= PIN TYPES ================= */
 
 const PIN_TYPE = {
-  UPGRADE: "upgrade",        // UGLI
-  REPURCHASE: "repurchase"   // RLI
+  UPGRADE: "upgrade",
+  REPURCHASE: "repurchase"
 };
 
 /* ================= EXEC LOCK SYSTEM ================= */
