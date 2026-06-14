@@ -15,7 +15,7 @@ PIN ACTION CONTROL V1.1 (NORMALIZED - FIXED)
 
 // ================= ACTIONS =================
 function getPinActions() {
-  return Object.values(window.PIN_ACTION || {});
+  return Object.values(window.PIN_ACTION || Object.freeze({}));
 }
 
 // ================= HELPERS =================
@@ -152,5 +152,10 @@ function buildPinActionAudit(action, pin, performedBy, note = "") {
 
 // ================= EXPORT =================
 window.canExecutePinAction = canExecutePinAction;
+window.canRoleAccessPinAction = canRoleAccessPinAction;
+window.canActionRunByStatus = canActionRunByStatus;
+window.requiresPinActionConfirm = requiresPinActionConfirm;
+window.canDeletePin = canDeletePin;
+window.canOverridePin = canOverridePin;
 window.isValidPinAction = isValidPinAction;
 window.buildPinActionAudit = buildPinActionAudit;
