@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 ========================================
 PIN ACTION TYPES (SINGLE SOURCE OF TRUTH)
@@ -9,6 +11,7 @@ PIN ACTION TYPES (SINGLE SOURCE OF TRUTH)
 */
 
 const PIN_ACTION = Object.freeze({
+
   // User layer
   REQUEST: "REQUEST_PIN",
 
@@ -24,20 +27,25 @@ const PIN_ACTION = Object.freeze({
   TRANSFER: "TRANSFER_PIN",
   DELETE: "DELETE_PIN",
   OVERRIDE: "OVERRIDE_PIN"
+
 });
 
 // ================= NORMALIZER =================
 function normalizePinAction(action) {
+
   return Object.values(PIN_ACTION).includes(action)
     ? action
     : null;
+
 }
 
 // ================= REVERSE LOOKUP =================
 function getPinActionKey(action) {
+
   return Object.keys(PIN_ACTION).find(
-    k => PIN_ACTION[k] === action
+    key => PIN_ACTION[key] === action
   ) || null;
+
 }
 
 // ================= EXPORT =================
