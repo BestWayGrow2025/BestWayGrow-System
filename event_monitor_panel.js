@@ -54,7 +54,13 @@ function initEventMonitorPanel() {
 // ================= HOOK EMITTER =================
 function hookEventEmitter() {
 
-  const bus = window.SYSTEM_EVENTS;
+ const bus =
+  (window.SYSTEM_EVENTS &&
+   typeof window.SYSTEM_EVENTS.emit === "function")
+    ? window.SYSTEM_EVENTS
+    : null;
+
+if (!bus) return;
 
   // Prevent duplicate wrapping
   if (bus.emit.__eventMonitorWrapped === true) {
