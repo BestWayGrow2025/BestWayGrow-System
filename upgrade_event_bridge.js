@@ -7,10 +7,9 @@ UPGRADE EVENT BRIDGE V1.0 (FINAL)
 ✔ Connects upgrade_engine.js to SYSTEM_EVENTS
 ✔ Broadcasts upgrade lifecycle events
 ✔ Supports wallet/income/rank sync
-✔ No business logic changes
 ✔ Safe wrapper only
 ✔ Duplicate-hook protection
-✔ Diagnostics-compatible broadcast function
+✔ Boot-safe lifecycle control
 ✔ Production LOCKED
 ========================================
 */
@@ -20,9 +19,11 @@ UPGRADE EVENT BRIDGE V1.0 (FINAL)
 
   if (window.__UPGRADE_EVENT_BRIDGE__) return;
 
-  window.__UPGRADE_EVENT_BRIDGE__ = true;
-
-  initUpgradeEventBridge();
+  window.__UPGRADE_EVENT_BRIDGE__ = {
+    initialized: true,
+    ready: false,
+    timestamp: Date.now()
+  };
 
 })();
 
@@ -30,8 +31,8 @@ UPGRADE EVENT BRIDGE V1.0 (FINAL)
 function initUpgradeEventBridge() {
 
   if (
-    typeof window.SYSTEM_EVENTS === "undefined" ||
-    typeof window.executeUpgrade !== "function"
+    !window.SYSTEM_EVENTS ||
+    typeof window.SYSTEM_EVENTS.emit !== "function"
   ) {
     return;
   }
@@ -42,8 +43,7 @@ function initUpgradeEventBridge() {
 // ================= HOOK =================
 function hookUpgradeFunction() {
 
-  // Prevent duplicate wrapping
-  if (window.executeUpgrade.__eventBridgeWrapped) {
+  if (!window.executeUpgrade || window.executeUpgrade.__eventBridgeWrapped) {
     return;
   }
 
@@ -51,7 +51,6 @@ function hookUpgradeFunction() {
 
   function wrappedExecuteUpgrade(...args) {
 
-    // BEFORE EVENT
     try {
       window.SYSTEM_EVENTS.emit("UPGRADE_BEFORE", {
         args,
@@ -59,10 +58,8 @@ function hookUpgradeFunction() {
       });
     } catch (_) {}
 
-    // EXECUTE ORIGINAL
     const result = original.apply(this, args);
 
-    // AFTER EVENT
     try {
       window.SYSTEM_EVENTS.emit("UPGRADE_COMPLETED", {
         args,
@@ -75,59 +72,66 @@ function hookUpgradeFunction() {
   }
 
   wrappedExecuteUpgrade.__eventBridgeWrapped = true;
-
   window.executeUpgrade = wrappedExecuteUpgrade;
 }
 
-// ================= OPTIONAL DEFAULT SYNC =================
-if (typeof window.onSystemEvent === "function") {
-
-  // Refresh dashboards after upgrade
-  window.onSystemEvent("UPGRADE_COMPLETED", function () {
-
-    try {
-      if (typeof window.refreshDashboardBalances === "function") {
-        window.refreshDashboardBalances();
-      }
-    } catch (_) {}
-
-    try {
-      if (typeof window.loadIncomeSummary === "function") {
-        window.loadIncomeSummary();
-      }
-    } catch (_) {}
-
-    try {
-      if (typeof window.refreshQualificationStatus === "function") {
-        window.refreshQualificationStatus();
-      }
-    } catch (_) {}
-  });
-}
-
-// ================= EXPORT =================
-window.initUpgradeEventBridge = initUpgradeEventBridge;
-
-// ================= GLOBAL REGISTRATION FIX =================
-
-// Required by diagnostics:
-// Missing Modules: broadcastUpgradeEvent
+// ================= GLOBAL BROADCAST =================
 window.broadcastUpgradeEvent = function (payload = {}) {
 
-  if (
-    window.SYSTEM_EVENTS &&
-    typeof window.SYSTEM_EVENTS.emit === "function"
-  ) {
-    window.SYSTEM_EVENTS.emit("UPGRADE_EVENT", {
-      ...payload,
-      timestamp: Date.now()
-    });
-  }
+  try {
+    if (window.SYSTEM_EVENTS?.emit) {
+      window.SYSTEM_EVENTS.emit("UPGRADE_EVENT", {
+        ...payload,
+        timestamp: Date.now()
+      });
+    }
+  } catch (_) {}
 
   console.log("[UPGRADE BRIDGE] Event broadcasted");
 };
 
-// Optional active flag
+// ================= EXPORT =================
+window.initUpgradeEventBridge = initUpgradeEventBridge;
 window.__UPGRADE_SYSTEM_ACTIVE__ = true;
 
-console.log("[UPGRADE BRIDGE] Global hooks registered");
+// ================= BOOT =================
+(function upgradeBoot() {
+
+  function start() {
+
+    if (window.__UPGRADE_BOOTED__) return;
+
+    window.__UPGRADE_BOOTED__ = true;
+
+    initUpgradeEventBridge();
+
+    // SAFE SYNC (after system ready)
+    if (window.onSystemEvent) {
+
+      window.onSystemEvent("UPGRADE_COMPLETED", function () {
+
+        try { window.refreshDashboardBalances?.(); } catch (_) {}
+        try { window.loadIncomeSummary?.(); } catch (_) {}
+        try { window.refreshQualificationStatus?.(); } catch (_) {}
+
+      });
+    }
+
+    console.log("[UPGRADE BRIDGE] BOOT COMPLETE");
+  }
+
+  const wait = setInterval(() => {
+
+    if (window.SYSTEM_EVENTS?.on && window.executeUpgrade) {
+
+      clearInterval(wait);
+
+      window.SYSTEM_EVENTS.on("SYSTEM_READY", start);
+
+      // SAFE BACKUP EXECUTION
+      start();
+    }
+
+  }, 50);
+
+})();
