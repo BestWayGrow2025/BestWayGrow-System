@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 ========================================
 CTOR ENGINE V1.0 (RANK-WISE CTOR DISTRIBUTION)
