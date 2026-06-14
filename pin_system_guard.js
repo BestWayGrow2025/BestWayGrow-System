@@ -1,5 +1,11 @@
 "use strict";
 
+(function () {
+
+  if (window.__PIN_SYSTEM_GUARD__) return;
+
+  window.__PIN_SYSTEM_GUARD__ = true;
+
 /*
 ========================================
 PIN SYSTEM GUARD V1.0
@@ -77,3 +83,7 @@ window.isPinCoreReady = isPinCoreReady;
 window.isPinSystemSafeState = isPinSystemSafeState;
 window.isPinIncomeSafeState = isPinIncomeSafeState;
 window.isPinFlowSystemSafe = isPinFlowSystemSafe;
+
+console.log("[PIN SYSTEM GUARD] READY ✔");
+
+})(); 
