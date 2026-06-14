@@ -52,18 +52,18 @@ PIN ROLE ACCESS WRAPPER v1.2 FINAL FIX
     }
   }
 
-  // ================= GET ROLE =================
-  function getRole() {
+ // ================= GET ROLE =================
+function getRole() {
 
-    const controller = getController();
+  const controller = getController();
 
-    if (controller?.getCurrentRole) {
-      return controller.getCurrentRole();
-    }
-
-    return "SUPER_ADMIN";
+  if (controller?.getCurrentRole) {
+    return controller.getCurrentRole();
   }
 
+  return null;
+}
+  
   // ================= EXPORT =================
   window.PIN_ROLE_ACCESS = {
     requireAccess,
