@@ -52,9 +52,6 @@ function resetDependencyMonitor() {
 // =====================
 function startDependencyMonitor() {
 
-  if (window.__DEPENDENCY_CHECK_INTERVAL__) return;
-
-  // safety reset before starting
   resetDependencyMonitor();
 
   window.__DEPENDENCY_CHECK_INTERVAL__ = setInterval(() => {
