@@ -50,8 +50,13 @@ function renderUI(el) {
 // ================= EVENT BIND =================
 function bindEvents() {
 
-  const hub = window.SYSTEM_EVENTS;
-  if (!hub) return;
+const hub =
+  (window.SYSTEM_EVENTS &&
+   typeof window.SYSTEM_EVENTS.on === "function")
+    ? window.SYSTEM_EVENTS
+    : null;
+
+if (!hub) return;
 
   const logBox = document.getElementById("eventStreamLog");
 
