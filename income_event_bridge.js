@@ -21,11 +21,6 @@ function initIncomeSystem() {
     return;
   }
 
-  if (!window.SYSTEM_EVENTS || typeof window.SYSTEM_EVENTS.emit !== "function") {
-    console.warn("[INCOME] SYSTEM_EVENTS not ready");
-    return;
-  }
-
   hook("processIncome", "INCOME_PROCESSED");
   hook("safeIncome", "INCOME_CREDIT");
   hook("addIncomeLog", "INCOME_LOG_CREATED");
@@ -197,13 +192,18 @@ window.broadcastIncomeEvent = broadcastIncomeEvent;
     console.log("[INCOME] ENTERPRISE BOOT COMPLETE");
   }
 
- const wait = setInterval(() => {
+const wait = setInterval(() => {
 
   if (window.SYSTEM_EVENTS?.on) {
 
     clearInterval(wait);
+
     window.SYSTEM_EVENTS.on("SYSTEM_READY", start);
 
+    // SAFE BACKUP: if already ready
+    if (window.SYSTEM_READY === true) {
+      start();
+    }
   }
 
 }, 50);
