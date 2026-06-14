@@ -5,6 +5,9 @@ let actionLock = false;
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
+
+  if (!admin?.userId) return;
+
   bindEvents();
   loadPage();
   startAutoRefresh();
@@ -45,6 +48,7 @@ function authPage() {
 
 // ================= EVENTS =================
 function bindEvents() {
+
   const backBtn = document.getElementById("backBtn");
   const refreshBtn = document.getElementById("refreshBtn");
 
@@ -95,7 +99,7 @@ function loadRequests() {
   const table = document.getElementById("withdrawTable");
   if (!table) return;
 
-  table.innerHTML = ""; // ✅ FIX APPLIED HERE
+  table.innerHTML = "";
 
   let requests = typeof getWithdrawals === "function"
     ? getWithdrawals()
