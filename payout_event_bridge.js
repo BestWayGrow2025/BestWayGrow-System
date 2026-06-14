@@ -236,15 +236,16 @@ console.log("[PAYOUT EVENT BRIDGE] Global flags registered");
 window.__PAYOUT_SYSTEM_ACTIVE__ = true;
 
 // Compatibility API expected by diagnostics
-window.broadcastPayoutEvent = function (payload = {}) {
+function broadcastPayoutEvent(payload = {}) {
 
-  if (window.SYSTEM_EVENTS?.emit) {
-    window.SYSTEM_EVENTS.emit("PAYOUT_EVENT", {
-      ...payload,
-      timestamp: Date.now()
-    });
-  }
-};
+  if (!window.SYSTEM_EVENTS?.emit) return;
+
+  window.SYSTEM_EVENTS.emit("PAYOUT_EVENT", {
+    ...payload,
+    timestamp: Date.now()
+  });
+}
+console.log("[PAYOUT] HEALTH FLAG REGISTERED");
 
 window.__PAYOUT_SYSTEM_ACTIVE__ = true;
 
