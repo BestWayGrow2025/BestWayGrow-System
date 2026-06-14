@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
   startAutoRefresh();
 });
 
+// ================= INIT =================
 function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
@@ -19,6 +20,7 @@ function initPage() {
   }
 }
 
+// ================= AUTH =================
 function authPage() {
   if (typeof protectPage !== "function") {
     window.location.href = "admin_login.html";
@@ -41,29 +43,45 @@ function authPage() {
   }
 }
 
+// ================= EVENTS =================
 function bindEvents() {
-  document.getElementById("backBtn").addEventListener("click", goBack);
-  document.getElementById("refreshBtn").addEventListener("click", loadPage);
+  const backBtn = document.getElementById("backBtn");
+  const refreshBtn = document.getElementById("refreshBtn");
+
+  if (backBtn) {
+    backBtn.addEventListener("click", goBack);
+  }
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", loadPage);
+  }
 }
 
+// ================= PAGE LOAD =================
 function loadPage() {
   loadSystemStatus();
   loadRequests();
 }
 
+// ================= BACK =================
 function goBack() {
   window.location.href = "admin_dashboard.html";
 }
 
+// ================= SYSTEM STATUS =================
 function loadSystemStatus() {
-  let s = (typeof getSystemSettings === "function")
+  let s = typeof getSystemSettings === "function"
     ? getSystemSettings()
     : {};
 
-  document.getElementById("systemStatus").innerHTML =
+  const el = document.getElementById("systemStatus");
+  if (!el) return;
+
+  el.innerHTML =
     `Withdraw System: ${s.withdrawStop ? "STOPPED 🔴" : "RUNNING 🟢"}`;
 }
 
+// ================= STATUS COLOR =================
 function getStatusColor(status) {
   if (status === "PENDING") return "orange";
   if (status === "APPROVED") return "green";
@@ -71,12 +89,17 @@ function getStatusColor(status) {
   return "black";
 }
 
+// ================= LOAD REQUESTS =================
 function loadRequests() {
-  let requests = (typeof getWithdrawals === "function")
+
+  const table = document.getElementById("withdrawTable");
+  if (!table) return;
+
+  table.innerHTML = ""; // ✅ FIX APPLIED HERE
+
+  let requests = typeof getWithdrawals === "function"
     ? getWithdrawals()
     : [];
-
-  let table = document.getElementById("withdrawTable");
 
   if (!requests.length) {
     table.innerHTML = "<tr><td colspan='9'>No requests</td></tr>";
@@ -111,12 +134,13 @@ function loadRequests() {
   }
 }
 
+// ================= APPROVE =================
 function approve(id) {
   if (actionLock) return;
   actionLock = true;
 
   try {
-    let s = (typeof getSystemSettings === "function")
+    let s = typeof getSystemSettings === "function"
       ? getSystemSettings()
       : {};
 
@@ -143,12 +167,13 @@ function approve(id) {
   }
 }
 
+// ================= REJECT =================
 function reject(id) {
   if (actionLock) return;
   actionLock = true;
 
   try {
-    let s = (typeof getSystemSettings === "function")
+    let s = typeof getSystemSettings === "function"
       ? getSystemSettings()
       : {};
 
@@ -175,6 +200,7 @@ function reject(id) {
   }
 }
 
+// ================= AUTO REFRESH =================
 function startAutoRefresh() {
   refreshTimer = setInterval(function () {
     loadPage();
