@@ -113,13 +113,6 @@ PIN ROLE ACCESS CONTROLLER v1.1 FINAL FIX
     ROLE_MATRIX
   };
 
-  window.PIN_ROLE_ACCESS = {
-    getCurrentRole,
-    hasAccess,
-    requireAccess,
-    ROLE_MATRIX
-  };
-
   console.log("[PIN ROLE ACCESS CONTROLLER] READY ✔ FINAL FIXED");
 
 })();
