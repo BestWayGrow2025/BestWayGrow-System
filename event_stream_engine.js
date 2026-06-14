@@ -60,7 +60,31 @@ function getEventStream() {
 
 function saveEventStream(data) {
   try {
-    localStorage.setItem(EVENT_STREAM_KEY, JSON.stringify(data || {}));
+
+    // ✅ ADD THIS BLOCK HERE (BEFORE STORAGE SAVE)
+    const keys = Object.keys(data || {});
+
+    if (keys.length > 500) {
+
+      const sorted = Object.values(data)
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 500);
+
+      const trimmed = {};
+
+      sorted.forEach(ev => {
+        trimmed[ev.eventId] = ev;
+      });
+
+      data = trimmed;
+    }
+
+    // ORIGINAL SAVE (UNCHANGED)
+    localStorage.setItem(
+      EVENT_STREAM_KEY,
+      JSON.stringify(data || {})
+    );
+
   } catch (e) {
     if (typeof logCritical === "function") {
       logCritical("EVENT_SAVE_FAILED: " + e.message);
