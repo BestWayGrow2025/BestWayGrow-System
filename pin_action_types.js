@@ -8,7 +8,7 @@ PIN ACTION TYPES (SINGLE SOURCE OF TRUTH)
 ========================================
 */
 
-const PIN_ACTION = {
+const PIN_ACTION = Object.freeze({
   // User layer
   REQUEST: "REQUEST_PIN",
 
@@ -24,7 +24,7 @@ const PIN_ACTION = {
   TRANSFER: "TRANSFER_PIN",
   DELETE: "DELETE_PIN",
   OVERRIDE: "OVERRIDE_PIN"
-};
+});
 
 // ================= NORMALIZER =================
 function normalizePinAction(action) {
@@ -39,3 +39,8 @@ function getPinActionKey(action) {
     k => PIN_ACTION[k] === action
   ) || null;
 }
+
+// ================= EXPORT =================
+window.PIN_ACTION = PIN_ACTION;
+window.normalizePinAction = normalizePinAction;
+window.getPinActionKey = getPinActionKey;
