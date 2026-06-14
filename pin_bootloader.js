@@ -16,6 +16,7 @@ PIN BOOTLOADER V1.0 (SYSTEM CORE START)
 // ================= BOOT STATE =================
 window.__PIN_BOOT_STATE__ = {
   started: false,
+  completed: false,
   coreReady: false,
   routerReady: false,
   uiReady: false,
@@ -36,12 +37,15 @@ window.__PIN_BOOT_STATE__ = {
 // ================= MAIN BOOT =================
 function startBootSequence() {
 
+  if (window.__PIN_BOOT_STATE__.started) {
+    return;
+  }
+
   console.log("[PIN BOOT] STARTING SEQUENCE...");
 
   window.__PIN_BOOT_STATE__.started = true;
 
   checkSystemReadiness();
-
 }
 
 // ================= READINESS CHECK =================
