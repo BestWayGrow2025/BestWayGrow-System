@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 ========================================
 QUALIFICATION ENGINE V1.0 (RANK & CTOR ELIGIBILITY CORE)
