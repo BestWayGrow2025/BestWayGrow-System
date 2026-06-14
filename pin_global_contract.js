@@ -2,10 +2,12 @@
 
 (function () {
 
-  if (window.PIN_GLOBAL_CONTRACT) {
+  if (window.__PIN_GLOBAL_CONTRACT__) {
     console.log("[PIN CONTRACT] Already Loaded");
     return;
   }
+
+  window.__PIN_GLOBAL_CONTRACT__ = true;
 
   function safe(fn) {
     return typeof fn === "function" ? fn : function () {};
