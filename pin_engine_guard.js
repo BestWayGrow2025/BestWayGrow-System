@@ -25,7 +25,7 @@ PIN ENGINE GUARD v1.1 HARDENED + OBSERVABILITY
     const CORE = window.PIN_ENGINE;
     if (!CORE) return false;
 
-    if (!CORE[name]) {
+    if (typeof CORE[name] !== "function") {
       console.error("[PIN VALIDATION] Missing:", name);
 
       window.broadcastPinEvent?.("PIN_ENGINE_RESULT", {
