@@ -192,19 +192,21 @@ window.broadcastIncomeEvent = broadcastIncomeEvent;
     console.log("[INCOME] ENTERPRISE BOOT COMPLETE");
   }
 
-const wait = setInterval(() => {
+  const wait = setInterval(() => {
 
-  if (window.SYSTEM_EVENTS?.on) {
+    if (window.SYSTEM_EVENTS?.on) {
 
-    clearInterval(wait);
+      clearInterval(wait);
 
-    window.SYSTEM_EVENTS.on("SYSTEM_READY", start);
+      // single listener only
+      window.SYSTEM_EVENTS.on("SYSTEM_READY", start);
 
-    // SAFE BACKUP: if already ready
-    if (window.SYSTEM_READY === true) {
-      start();
+      // SAFE BACKUP (ONLY if already fired system-wide flag exists)
+      if (window.__SYSTEM_READY__ === true) {
+        start();
+      }
     }
-  }
 
-}, 50);
+  }, 50);
+
 })();
