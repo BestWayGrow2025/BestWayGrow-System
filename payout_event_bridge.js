@@ -16,13 +16,31 @@ PAYOUT EVENT BRIDGE V2.0 (PRODUCTION FINAL)
 */
 
 // ================= GUARD =================
-(function () {
+(function payoutBoot() {
 
-  if (window.__PAYOUT_EVENT_BRIDGE__) return;
+  function start() {
 
-  window.__PAYOUT_EVENT_BRIDGE__ = true;
+    if (window.__PAYOUT_BOOTED__) return;
 
-  initPayoutEventBridge();
+    window.__PAYOUT_BOOTED__ = true;
+
+    initPayoutEventBridge();
+
+    console.log("[PAYOUT EVENT BRIDGE] BOOT COMPLETE");
+  }
+
+  const wait = setInterval(() => {
+
+    if (window.SYSTEM_EVENTS?.on) {
+
+      clearInterval(wait);
+
+      window.SYSTEM_EVENTS.on("SYSTEM_READY", start);
+
+      start(); // SAFE BACKUP
+    }
+
+  }, 50);
 
 })();
 
@@ -219,16 +237,15 @@ window.__PAYOUT_SYSTEM_ACTIVE__ = true;
 
 // Compatibility API expected by diagnostics
 window.broadcastPayoutEvent = function (payload = {}) {
-  try {
-    window.SYSTEM_EVENTS?.emit("PAYOUT_EVENT", {
+
+  if (window.SYSTEM_EVENTS?.emit) {
+    window.SYSTEM_EVENTS.emit("PAYOUT_EVENT", {
       ...payload,
       timestamp: Date.now()
     });
-  } catch (_) {}
+  }
 };
 
 window.__PAYOUT_SYSTEM_ACTIVE__ = true;
-window.payout_system_loaded = true;
-window.PAYOUT_SYSTEM_ACTIVE = true;
 
 console.log("[PAYOUT] HEALTH FLAG REGISTERED");
