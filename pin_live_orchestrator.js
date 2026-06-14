@@ -220,18 +220,17 @@ function exposeGlobalAPI() {
 
 /* ================= PIN LIVE ORCHESTRATOR STATE FLAG ================= */
 
-window.PIN_LIVE_SYSTEM_ACTIVE = {
-initialized: true,
-ready: true,
-timestamp: Date.now()
+window.__PIN_LIVE_SYSTEM_ACTIVE__ = {
+  initialized: true,
+  ready: true,
+  timestamp: Date.now()
 };
 
-/* ================= PASSIVE LOAD GUARD ================= */
-
-window.PIN_LIVE_ORCHESTRATOR = window.PIN_LIVE_ORCHESTRATOR || {
-loaded: true,
-timestamp: Date.now()
-};
+window.__PIN_LIVE_ORCHESTRATOR__ =
+  window.__PIN_LIVE_ORCHESTRATOR__ || {
+    loaded: true,
+    timestamp: Date.now()
+  };
 
 console.log("[PIN LIVE ORCHESTRATOR] Registered");
 
