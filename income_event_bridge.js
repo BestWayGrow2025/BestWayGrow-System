@@ -16,6 +16,11 @@ ENTERPRISE INCOME UNIFIED MODULE v1.0
 // ================= INIT =================
 function initIncomeSystem() {
 
+  if (!window.SYSTEM_EVENTS?.emit) {
+    console.warn("[INCOME] SYSTEM_EVENTS NOT READY");
+    return;
+  }
+
   if (!window.SYSTEM_EVENTS || typeof window.SYSTEM_EVENTS.emit !== "function") {
     console.warn("[INCOME] SYSTEM_EVENTS not ready");
     return;
@@ -139,7 +144,9 @@ function loadIncomeHistory() {
 // ================= ADD INCOME =================
 function addIncome(userId, type, amount, description = "") {
 
-  const safeAmount = Number(amount || 0);
+  const safeAmount = Number(amount);
+
+if (!isFinite(safeAmount) || safeAmount <= 0) return;
 
   let users = getUsers?.() || [];
   let index = users.findIndex(u => u.userId === userId);
@@ -190,20 +197,14 @@ window.broadcastIncomeEvent = broadcastIncomeEvent;
     console.log("[INCOME] ENTERPRISE BOOT COMPLETE");
   }
 
+ const wait = setInterval(() => {
+
   if (window.SYSTEM_EVENTS?.on) {
 
+    clearInterval(wait);
     window.SYSTEM_EVENTS.on("SYSTEM_READY", start);
 
-  } else {
-
-    const check = setInterval(() => {
-
-      if (window.SYSTEM_EVENTS?.emit) {
-        clearInterval(check);
-        start();
-      }
-
-    }, 50);
   }
 
+}, 50);
 })();
