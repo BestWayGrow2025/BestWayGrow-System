@@ -1,3 +1,5 @@
+"use strict";
+
 /*
 ========================================
 RANK ENGINE V1.0 (PERMANENT RANK STORAGE)
