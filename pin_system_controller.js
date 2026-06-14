@@ -48,7 +48,11 @@ function enqueuePinTask(actionType, payload = {}) {
     });
 
     // safe async scheduling (prevents burst recursion issues)
+    if (typeof queueMicrotask === "function") {
     queueMicrotask(processPinQueue);
+} else {
+    Promise.resolve().then(processPinQueue);
+}
 
     return true;
 }
