@@ -235,16 +235,9 @@ console.log("[PAYOUT EVENT BRIDGE] Global flags registered");
 // ================= HEALTH DASHBOARD FLAG =================
 window.__PAYOUT_SYSTEM_ACTIVE__ = true;
 
-// Compatibility API expected by diagnostics
-function broadcastPayoutEvent(payload = {}) {
-
-  if (!window.SYSTEM_EVENTS?.emit) return;
-
-  window.SYSTEM_EVENTS.emit("PAYOUT_EVENT", {
-    ...payload,
-    timestamp: Date.now()
-  });
-}
+// ================= COMPATIBILITY API =================
+// Diagnostics-compatible alias
+window.broadcastPayoutEvent = broadcastPayoutEvent;
 
 window.__PAYOUT_SYSTEM_ACTIVE__ = true;
 
