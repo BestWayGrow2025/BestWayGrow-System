@@ -51,7 +51,7 @@ function startBootSequence() {
 // ================= READINESS CHECK =================
 function checkSystemReadiness() {
 
-  const interval = setInterval(() => {
+ const interval = setInterval(() => {
 
   attempts++;
 
@@ -63,6 +63,9 @@ function checkSystemReadiness() {
       "[PIN BOOT] Timeout waiting for dependencies"
     );
 
+    return;
+  }
+   
     window.__PIN_BOOT_STATE__.coreReady =
       typeof window.__CORE_STATE__ !== "undefined";
 
