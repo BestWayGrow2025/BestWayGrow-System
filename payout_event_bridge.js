@@ -245,7 +245,6 @@ function broadcastPayoutEvent(payload = {}) {
     timestamp: Date.now()
   });
 }
-console.log("[PAYOUT] HEALTH FLAG REGISTERED");
 
 window.__PAYOUT_SYSTEM_ACTIVE__ = true;
 
