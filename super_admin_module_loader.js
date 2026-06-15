@@ -1,161 +1,203 @@
- <div class="super-admin-dashboard-module">
+"use strict";
 
-  <!-- ================= HEADER ================= -->
-  <header>
+/*
+========================================
+SUPER ADMIN MODULE LOADER vFINAL
+========================================
+✔ Module UI loader only
+✔ Page wiring + bindings
+✔ Works with ENTERPRISE_CORE_ENGINE
+✔ No business logic
+✔ No PIN / financial logic
+✔ Registry-safe structure
+========================================
+*/
 
-    <h2>👑 SUPER ADMIN MASTER CONTROL</h2>
+(function () {
 
-    <p id="welcome"></p>
+  console.log("[SUPER ADMIN MODULE LOADER] INIT");
 
-    <button id="logoutBtn">
-      Logout
-    </button>
+  // ================= CORE WAIT =================
+  function waitForCore(callback) {
 
-  </header>
+    const timer = setInterval(() => {
 
-  <!-- ================= MASTER NAVIGATION ================= -->
-  <nav class="menu">
+      if (
+        window.ENTERPRISE_CORE_ENGINE &&
+        typeof window.ENTERPRISE_CORE_ENGINE.register === "function"
+      ) {
+        clearInterval(timer);
+        callback();
+      }
 
-    <!-- CORE -->
-    <button data-page="home">
-      🏠 Home
-    </button>
+    }, 100);
 
-    <button data-page="create">
-      👑 Create Sys Admin
-    </button>
+  }
 
-    <button data-page="users">
-      👥 Users
-    </button>
+  // ================= PAGE REGISTRATION =================
+  function registerPages() {
 
-    <button data-page="system">
-      ⚙️ System
-    </button>
+    const CORE = window.ENTERPRISE_CORE_ENGINE;
+    if (!CORE) return;
 
-    <!-- BUSINESS -->
-    <button data-page="pinmaster">
-      📌 PIN Master
-    </button>
+    // ================= HOME =================
+    CORE.register("home", function () {
+      setContent(window.renderHome?.() || "<h2>🏠 Home</h2>");
+    });
 
-    <button data-page="productmaster">
-      📦 Product Master
-    </button>
+    // ================= CREATE ADMIN =================
+    CORE.register("create", function () {
+      setContent(window.renderCreateAdmin?.() || "<h2>👑 Create System Admin</h2>");
+    });
 
-    <button data-page="rankmaster">
-      🏆 Rank Master
-    </button>
+    // ================= USERS =================
+    CORE.register("users", function () {
+      setContent(window.renderUsers?.() || "<h2>👥 Users</h2>");
+    });
 
-    <button data-page="incomecontrol">
-      💰 Income Control
-    </button>
+    // ================= SYSTEM =================
+    CORE.register("system", function () {
+      setContent(window.renderSystem?.() || "<h2>⚙️ System Settings</h2>");
+    });
 
-    <!-- GOVERNANCE -->
-    <button data-page="audit">
-      📜 Audit
-    </button>
+    // ================= PIN =================
+    CORE.register("pinmaster", function () {
+      setContent(window.renderPINMaster?.() || "<h2>📌 PIN Master</h2>");
+    });
 
-    <button data-page="health">
-      🩺 Health
-    </button>
+    // ================= PRODUCT =================
+    CORE.register("productmaster", function () {
+      setContent(window.renderProductMaster?.() || "<h2>📦 Product Master</h2>");
+    });
 
-    <button data-page="backup">
-      💾 Backup
-    </button>
+    // ================= RANK =================
+    CORE.register("rankmaster", function () {
+      setContent(window.renderRankMaster?.() || "<h2>🏆 Rank Master</h2>");
+    });
 
-    <button data-page="aigovernor">
-      🤖 AI Governor
-    </button>
+    // ================= INCOME =================
+    CORE.register("incomecontrol", function () {
+      setContent(window.renderIncomeControl?.() || "<h2>💰 Income Control</h2>");
+    });
 
-    <!-- FINANCIAL -->
-    <button data-page="escrow">
-      📦 Escrow Control
-    </button>
+    // ================= AUDIT =================
+    CORE.register("audit", function () {
+      setContent(window.renderAudit?.() || "<h2>📜 Audit Logs</h2>");
+    });
 
-    <!-- EXECUTIVE -->
-    <button data-page="controlroom">
-      🖥 Enterprise Control Room
-    </button>
+    // ================= HEALTH =================
+    CORE.register("health", function () {
+      setContent(window.renderHealth?.() || "<h2>🩺 System Health</h2>");
+    });
 
-    <button data-page="businessintelligence">
-      📊 Business Intelligence
-    </button>
+    // ================= BACKUP =================
+    CORE.register("backup", function () {
+      setContent(window.renderBackup?.() || "<h2>💾 Backup System</h2>");
+    });
 
-    <button data-page="strategicai">
-      🧠 Strategic AI Advisor
-    </button>
+    // ================= AI GOVERNOR =================
+    CORE.register("aigovernor", function () {
+      setContent(window.renderAIGovernor?.() || "<h2>🤖 AI Governor</h2>");
+    });
 
-    <!-- PLATFORM -->
-    <button data-page="auditblockchain">
-      ⛓ Enterprise Audit Blockchain
-    </button>
+    // ================= ESCROW =================
+    CORE.register("escrow", function () {
+      setContent(window.renderEscrow?.() || "<h2>📦 Escrow Control</h2>");
+    });
 
-    <button data-page="realtime">
-      📡 Live System Realtime
-    </button>
+    // ================= CONTROL ROOM =================
+    CORE.register("controlroom", function () {
+      setContent(window.renderControlRoom?.() || "<h2>🖥 Control Room</h2>");
+    });
 
-    <button data-page="payments">
-      💳 Payment Gateway
-    </button>
+    // ================= BUSINESS INTELLIGENCE =================
+    CORE.register("businessintelligence", function () {
+      setContent(window.renderBI?.() || "<h2>📊 Business Intelligence</h2>");
+    });
 
-    <button data-page="orchestrator">
-      🧩 Orchestrator Kernel
-    </button>
+    // ================= STRATEGIC AI =================
+    CORE.register("strategicai", function () {
+      setContent(window.renderStrategicAI?.() || "<h2>🧠 Strategic AI</h2>");
+    });
 
-    <button data-page="healthmonitor">
-      🩺 Advanced Health Monitor
-    </button>
+    // ================= AUDIT BLOCKCHAIN =================
+    CORE.register("auditblockchain", function () {
+      setContent(window.renderAuditChain?.() || "<h2>⛓ Audit Blockchain</h2>");
+    });
 
-    <!-- LIVE MONITORING -->
-    <button data-page="eventmonitor">
-      📡 Event Monitor
-    </button>
+    // ================= REALTIME =================
+    CORE.register("realtime", function () {
+      setContent(window.renderRealtime?.() || "<h2>📡 Realtime System</h2>");
+    });
 
-    <button data-page="eventstream">
-      🌊 Event Stream
-    </button>
+    // ================= PAYMENTS =================
+    CORE.register("payments", function () {
+      setContent(window.renderPayments?.() || "<h2>💳 Payment Gateway</h2>");
+    });
 
-    <!-- REPORTING -->
-    <button data-page="reports">
-      📊 Reports
-    </button>
+    // ================= ORCHESTRATOR =================
+    CORE.register("orchestrator", function () {
+      setContent(window.renderOrchestrator?.() || "<h2>🧩 Orchestrator Kernel</h2>");
+    });
 
-    <button data-page="tree">
-      🌳 Tree View
-    </button>
+    // ================= HEALTH MONITOR =================
+    CORE.register("healthmonitor", function () {
+      setContent(window.renderHealthMonitor?.() || "<h2>🩺 Health Monitor</h2>");
+    });
 
-    <!-- RESET -->
-    <button data-page="reset">
-      ♻️ Reset
-    </button>
+    // ================= EVENT MONITOR =================
+    CORE.register("eventmonitor", function () {
+      setContent(window.renderEventMonitor?.() || "<h2>📡 Event Monitor</h2>");
+    });
 
-  </nav>
+    // ================= EVENT STREAM =================
+    CORE.register("eventstream", function () {
+      setContent(window.renderEventStream?.() || "<h2>🌊 Event Stream</h2>");
+    });
 
-  <!-- ================= MAIN LAYOUT ================= -->
-  <main class="container">
+    // ================= REPORTS =================
+    CORE.register("reports", function () {
+      setContent(window.renderReports?.() || "<h2>📊 Reports</h2>");
+    });
 
-    <!-- ENTERPRISE VIEWPORT -->
-    <section id="dashboardViewport">
+    // ================= TREE =================
+    CORE.register("tree", function () {
+      setContent(window.renderTree?.() || "<h2>🌳 Tree View</h2>");
+    });
 
-      <!-- CENTRALIZED RENDER TARGET -->
-      <div id="mainContent">
+    // ================= RESET =================
+    CORE.register("reset", function () {
+      setContent(window.renderReset?.() || "<h2>♻️ System Reset</h2>");
+    });
 
-        <div class="dashboard-loading-state">
+    console.log("[SUPER ADMIN MODULE LOADER] REGISTRY READY");
+  }
 
-          <h3>
-            Initializing Enterprise Dashboard...
-          </h3>
+  // ================= CONTENT SETTER =================
+  function setContent(html) {
+    const el = document.getElementById("mainContent");
+    if (el) el.innerHTML = html;
+  }
 
-          <p>
-            Please wait while system modules load.
-          </p>
+  // ================= INIT =================
+  function init() {
 
-        </div>
+    try {
+      registerPages();
 
-      </div>
+      window.__SUPER_ADMIN_MODULE_LOADER__ = {
+        loaded: true,
+        initialized: true
+      };
 
-    </section>
+      console.log("[SUPER ADMIN MODULE LOADER] ACTIVE");
 
-  </main>
+    } catch (err) {
+      console.error("[MODULE LOADER ERROR]", err);
+    }
+  }
 
-</div>
+  // ================= BOOT =================
+  waitForCore(init);
+
+})();
