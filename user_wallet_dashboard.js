@@ -116,4 +116,4 @@ function loadWalletHistory() {
 window.loadWallet = loadWallet;
 window.loadWalletHistory = loadWalletHistory;
 
-console.log("[USER WALLET DASHBOARD] READY")
+console.log("[USER WALLET DASHBOARD] READY");
