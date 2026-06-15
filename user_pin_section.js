@@ -1,16 +1,17 @@
+"use strict";
+
 /*
 ========================================
-USER PIN SECTION V4 (PRODUCT LINKED FLOW)
+USER PIN SECTION V4 (FINAL SINGLE PATH RULE)
 ========================================
-✔ Product-driven user PIN request
+✔ Product-driven PIN system
 ✔ Reads from pin_product_master.js
-✔ Reads from pin_request_system.js
-✔ No direct PIN mutation
-✔ No direct wallet mutation
-✔ Request-only safe flow
-✔ Product / GST / BV visible to user
-✔ One request engine only
-✔ UI-level permission pre-check added
+✔ Uses createPinRequest only (no direct mutation)
+✔ Safe fallback handling
+✔ Role-safe execution guard
+✔ No duplicate logic paths
+✔ UI-only layer (STRICT)
+✔ Production safe final version
 ========================================
 */
 
@@ -22,14 +23,16 @@ function getSafeUser() {
 
   if (!user) {
     const main = document.getElementById("mainContent");
-    if (main) main.innerHTML = "<div class='info-box'>Login Required</div>";
+    if (main) {
+      main.innerHTML = "<div class='info-box'>Login Required</div>";
+    }
     return null;
   }
 
   return user;
 }
 
-// ================= LOAD =================
+// ================= LOAD PIN SECTION =================
 function loadPinSection() {
   const user = getSafeUser();
   if (!user) return;
@@ -59,7 +62,7 @@ function loadPinSection() {
     <div class="section-title">PIN SECTION</div>
 
     <div class="info-box">
-      <p><b>PIN Mode:</b> ${controls.pinMode || "AUTO"}</p>
+      <p><b>PIN Mode:</b> ${controls.pinMode}</p>
       <p><b>PIN Transfer:</b> ${controls.enablePinTransfer ? "ON" : "OFF"}</p>
     </div>
 
@@ -76,19 +79,19 @@ function loadPinSection() {
 
     <div class="info-box">
       <label>Quantity</label>
-      <input id="pinQty" type="number" min="1" value="1" placeholder="Enter Quantity">
+      <input id="pinQty" type="number" min="1" value="1">
 
-      <label>Payment Ref / Txn ID</label>
+      <label>Payment Reference</label>
       <input id="pinPaymentId" placeholder="Enter Payment Reference">
 
-      <button class="action-btn" onclick="submitPinRequest()">Request PIN</button>
+      <button onclick="submitPinRequest()">Request PIN</button>
     </div>
   `;
 
   previewPinProduct();
 }
 
-// ================= PREVIEW =================
+// ================= PREVIEW PIN =================
 function previewPinProduct() {
   const box = document.getElementById("pinPreviewBox");
   const productId = document.getElementById("pinProductSelect")?.value;
@@ -118,13 +121,13 @@ function previewPinProduct() {
   `;
 }
 
-// ================= SUBMIT =================
+// ================= SUBMIT PIN REQUEST =================
 function submitPinRequest() {
   const user = getSafeUser();
   if (!user) return;
 
   if (typeof createPinRequest !== "function") {
-    alert("PIN request system unavailable");
+    alert("PIN system unavailable");
     return;
   }
 
@@ -148,14 +151,14 @@ function submitPinRequest() {
       : null;
 
   if (!product || product.status !== "active") {
-    alert("PIN currently unavailable");
+    alert("PIN not available");
     return;
   }
 
-  const safeQty = isNaN(qty) || qty < 1 ? 1 : qty;
+  const safeQty = qty < 1 || isNaN(qty) ? 1 : qty;
   const amount = Number(product.amount || 0) * safeQty;
 
-  // ================= UI PRE-CHECK GATE (PATCH 3) =================
+  // ================= SECURITY GATE =================
   if (typeof canExecutePinAction === "function") {
     const role = user?.role || "user";
 
@@ -166,7 +169,7 @@ function submitPinRequest() {
     );
 
     if (!allowed) {
-      alert("You are not allowed to perform this action");
+      alert("Not authorized");
       return;
     }
   }
@@ -181,19 +184,24 @@ function submitPinRequest() {
     });
 
     if (!req) {
-      alert("PIN request failed");
+      alert("Request failed");
       return;
     }
 
     if (typeof logActivity === "function") {
-      logActivity(user.userId, "USER", "PIN REQUEST CREATED", "USER_PIN_SECTION");
+      logActivity(
+        user.userId,
+        "USER",
+        "PIN REQUEST CREATED",
+        "USER_PIN_SECTION"
+      );
     }
 
     alert("PIN Request Submitted Successfully");
     loadPinSection();
 
   } catch (err) {
-    alert(err.message || "PIN request failed");
+    alert(err.message || "Request failed");
   }
 }
 
