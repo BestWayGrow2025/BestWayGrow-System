@@ -2,72 +2,86 @@
 
 /*
 ========================================
-SYSTEM ADMIN CREATE ADMIN v3.0 FINAL BOOT
+SYSTEM ADMIN CREATE ADMIN v4.0 SINGLE PATH FINAL
 ========================================
-✔ Boot Architecture V2 compatible
-✔ Safe module registration
-✔ No global function collision
-✔ Production stable
+✔ Single execution path (DOMContentLoaded only)
+✔ Single session source (getSession only)
+✔ Core system dependency only
+✔ No BOOT layer dependency
+✔ Production safe architecture
 ========================================
 */
 
-console.log("[SYSTEM ADMIN CREATE ADMIN] FILE EXECUTION STARTED");
+console.log("[SYSTEM ADMIN CREATE ADMIN] INIT");
 
+// ================= GLOBAL STATE =================
 let session = null;
 let currentUser = null;
 let lock = false;
 
-/* ================= MODULE REGISTRATION ================= */
+// ================= INIT =================
+document.addEventListener("DOMContentLoaded", function () {
 
-BOOT.register("system_admin_create_admin", function () {
   initPage();
   checkAuth();
+
+  if (!currentUser || !currentUser.userId) return;
+
   bindEvents();
 });
 
-/* ================= INIT ================= */
-
+// ================= CORE INIT =================
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
+
+  if (typeof initCoreSystem !== "function") {
     alert("core_system.js missing");
     throw new Error("STOP");
   }
+
+  initCoreSystem();
 }
 
-/* ================= AUTH ================= */
-
+// ================= AUTH (SINGLE PATH ONLY) =================
 function checkAuth() {
-  session =
-    typeof getSession === "function"
-      ? getSession()
-      : JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
 
-  if (!session || !session.userId) {
+  // 🔒 SINGLE SOURCE OF TRUTH
+  session = getSession();
+
+  if (!session || session.role !== "system_admin") {
     redirectLogin();
-    throw new Error("STOP");
+    throw new Error("UNAUTHORIZED");
   }
 
-  currentUser =
-    typeof getUserById === "function"
-      ? getUserById(session.userId)
-      : null;
+  if (typeof getUserById !== "function") {
+    redirectLogin();
+    throw new Error("USER_SYSTEM_MISSING");
+  }
+
+  currentUser = getUserById(session.userId);
 
   if (!currentUser || currentUser.role !== "system_admin") {
     redirectLogin();
-    throw new Error("STOP");
+    throw new Error("INVALID_USER");
   }
 
   if ((currentUser.status || "active") !== "active") {
     redirectLogin();
-    throw new Error("STOP");
+    throw new Error("INACTIVE");
+  }
+
+  const welcome = document.getElementById("welcome");
+
+  if (welcome) {
+    welcome.innerText =
+      "Welcome " +
+      (currentUser.username || currentUser.userId) +
+      " (" + currentUser.userId + ")";
   }
 }
 
-/* ================= REDIRECT ================= */
-
+// ================= REDIRECT =================
 function redirectLogin() {
+
   if (typeof destroySession === "function") {
     destroySession();
   } else {
@@ -77,71 +91,71 @@ function redirectLogin() {
   window.location.href = "system_admin_login.html";
 }
 
-/* ================= EVENTS ================= */
-
+// ================= EVENTS =================
 function bindEvents() {
-  document.getElementById("adminType")
-    .addEventListener("change", toggleDepartments);
 
-  document.getElementById("createBtn")
-    .addEventListener("click", safeCreateAdmin);
+  const adminType = document.getElementById("adminType");
+  const createBtn = document.getElementById("createBtn");
+
+  if (adminType) {
+    adminType.addEventListener("change", toggleDepartments);
+  }
+
+  if (createBtn) {
+    createBtn.addEventListener("click", safeCreateAdmin);
+  }
 
   toggleDepartments();
 }
 
-/* ================= UI ================= */
-
+// ================= UI =================
 function toggleDepartments() {
-  let type = document.getElementById("adminType").value;
 
-  document.getElementById("deptBox").style.display =
-    type === "admin_b" ? "block" : "none";
+  const type = document.getElementById("adminType");
+  const deptBox = document.getElementById("deptBox");
+
+  if (!type || !deptBox) return;
+
+  deptBox.style.display =
+    type.value === "admin_b" ? "block" : "none";
 }
 
-/* ================= SAFE CREATE ================= */
-
+// ================= SAFE WRAPPER =================
 function safeCreateAdmin() {
+
   if (lock) return;
   lock = true;
 
   try {
     createAdmin();
   } catch (e) {
-    console.error("[SYSTEM ADMIN ERROR]", e);
+    console.error("[CREATE ADMIN ERROR]", e);
     showMsg("❌ System Error");
   }
 
-  setTimeout(function () {
-    lock = false;
-  }, 500);
+  setTimeout(() => lock = false, 500);
 }
 
-/* ================= CREATE ADMIN ================= */
-
+// ================= CREATE ADMIN =================
 function createAdmin() {
-  let adminId = document.getElementById("adminId").value.trim();
-  let name = document.getElementById("name").value.trim();
-  let password = document.getElementById("password").value.trim();
-  let adminType = document.getElementById("adminType").value;
+
+  const adminId = document.getElementById("adminId")?.value.trim();
+  const name = document.getElementById("name")?.value.trim();
+  const password = document.getElementById("password")?.value.trim();
+  const adminType = document.getElementById("adminType")?.value;
 
   if (!adminId || !name || !password) {
     showMsg("❌ Fill all fields");
     return;
   }
 
-  let users =
-    typeof getUsers === "function"
-      ? (getUsers() || [])
-      : [];
+  const users = getUsers?.() || [];
 
-  if (
-    users.find(function (u) {
-      return (
-        (u.userId || "").toLowerCase() ===
-        adminId.toLowerCase()
-      );
-    })
-  ) {
+  const exists = users.find(u =>
+    (u.userId || "").toLowerCase() === adminId.toLowerCase()
+  );
+
+  if (exists) {
     showMsg("⚠️ Admin already exists");
     return;
   }
@@ -150,26 +164,22 @@ function createAdmin() {
   let departments = [];
   let tree = "office";
 
-  /* Root Admin */
+  // ================= ROLE LOGIC =================
   if (adminType === "root_admin") {
     tree = "field";
     permissions = ["tree_root"];
     departments = ["all"];
   }
 
-  /* Admin A */
   if (adminType === "admin_a") {
     permissions = ["full_access"];
     departments = ["finance", "franchisee", "kyc"];
   }
 
-  /* Admin B */
   if (adminType === "admin_b") {
-    document
-      .querySelectorAll("#deptBox input:checked")
-      .forEach(function (cb) {
-        departments.push(cb.value);
-      });
+
+    document.querySelectorAll("#deptBox input:checked")
+      .forEach(cb => departments.push(cb.value));
 
     if (!departments.length) {
       showMsg("⚠️ Select departments");
@@ -179,19 +189,20 @@ function createAdmin() {
     permissions = ["department_access"];
   }
 
+  // ================= CREATE OBJECT =================
   users.push({
     userId: adminId,
     username: name,
     password: btoa(password),
 
     role: "admin",
-    adminType: adminType,
+    adminType,
 
-    tree: tree,
+    tree,
     hiddenAccount: true,
 
-    permissions: permissions,
-    departments: departments,
+    permissions,
+    departments,
 
     status: "active",
 
@@ -200,12 +211,14 @@ function createAdmin() {
     createdAt: Date.now()
   });
 
+  // ================= SAVE =================
   if (typeof saveUsers === "function") {
     saveUsers(users);
   } else {
     localStorage.setItem("users", JSON.stringify(users));
   }
 
+  // ================= LOG =================
   if (typeof logActivity === "function") {
     logActivity(adminId, "SYSTEM_ADMIN", "ADMIN CREATED");
   }
@@ -214,48 +227,39 @@ function createAdmin() {
   clearForm();
 }
 
-/* ================= CLEAR FORM ================= */
-
+// ================= CLEAR FORM =================
 function clearForm() {
-  document.getElementById("adminId").value = "";
-  document.getElementById("name").value = "";
-  document.getElementById("password").value = "";
-  document.getElementById("adminType").value = "root_admin";
 
-  document
-    .querySelectorAll("#deptBox input")
-    .forEach(function (cb) {
-      cb.checked = false;
-    });
+  const fields = ["adminId", "name", "password"];
+
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+
+  const type = document.getElementById("adminType");
+  if (type) type.value = "root_admin";
+
+  document.querySelectorAll("#deptBox input")
+    .forEach(cb => cb.checked = false);
 
   toggleDepartments();
 }
 
-/* ================= MESSAGE ================= */
-
+// ================= MESSAGE =================
 function showMsg(msg) {
-  document.getElementById("msg").innerText = msg;
+
+  const el = document.getElementById("msg");
+  if (el) el.innerText = msg;
 }
 
-/* ================= EXPORTS ================= */
-
+// ================= EXPORTS =================
 window.SystemAdminCreateAdmin = {
-  createAdmin: createAdmin,
-  showMsg: showMsg
+  createAdmin,
+  showMsg
 };
 
-/* ================= MODULE FLAGS ================= */
-
+// ================= MODULE FLAG =================
 window.__SYSTEM_ADMIN_CREATE_ADMIN__ = true;
 
-window.__SYSTEM_ADMIN_MODULE__ = {
-  loaded: true,
-  name: "system_admin_create_admin",
-  time: Date.now()
-};
-
-/* ================= START MODULE ================= */
-
-BOOT.start("system_admin_create_admin");
-
-console.log("[SYSTEM ADMIN CREATE ADMIN] MODULE LOADED OK");
+console.log("[SYSTEM ADMIN CREATE ADMIN] SINGLE PATH READY");
