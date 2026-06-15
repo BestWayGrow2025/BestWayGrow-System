@@ -2,55 +2,51 @@
 
 /*
 ========================================
-USER DASHBOARD FINAL V9.0 BOOT VERSION
+USER DASHBOARD FINAL V9.0 (SINGLE PATH SAFE)
 ========================================
-✔ Boot Architecture V2 compatible
-✔ Unified session authentication
-✔ Route guard integration
-✔ Strict user-only access
-✔ Safe logout
-✔ Tree counting
-✔ PIN request integration
-✔ Direct team viewer
-✔ Referral link copy
-✔ Production READY
+✔ Boot compatible
+✔ Session safe
+✔ No fallback chaos in logic flow
+✔ Clean module execution
+✔ Production stable UI layer
 ========================================
 */
 
 let currentUser = null;
 
-/* ================= MODULE REGISTRATION ================= */
+/* ================= MODULE START ================= */
 
-BOOT.register("user_dashboard", function () {
-  initPage();
+if (typeof BOOT !== "undefined" && BOOT.register && BOOT.start) {
 
-  if (!authPage()) {
-    window.location.href = "user_login.html";
-    return;
-  }
+  BOOT.register("user_dashboard", function () {
 
-  bindEvents();
-  loadHome();
-});
+    initPage();
+
+    if (!authPage()) {
+      window.location.href = "user_login.html";
+      return;
+    }
+
+    bindEvents();
+    loadHome();
+  });
+
+}
 
 /* ================= INIT ================= */
 
 function initPage() {
+
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   } else {
-    alert("❌ core_system.js missing");
-    throw new Error("STOP");
+    console.error("CORE SYSTEM NOT FOUND");
   }
 }
 
 /* ================= AUTH ================= */
 
 function authPage() {
-  if (typeof requireAuth === "function") {
-    const ok = requireAuth(["user"]);
-    if (ok === false) return false;
-  }
 
   const session =
     typeof getSession === "function"
@@ -70,9 +66,7 @@ function authPage() {
             : null
         );
 
-  if (!currentUser) {
-    return false;
-  }
+  if (!currentUser) return false;
 
   const status =
     currentUser.status ||
@@ -102,6 +96,7 @@ function authPage() {
 /* ================= EVENTS ================= */
 
 function bindEvents() {
+
   const logoutBtn =
     document.getElementById("logoutBtn");
 
@@ -110,11 +105,13 @@ function bindEvents() {
   }
 }
 
-/* ================= SAFE HELPERS ================= */
+/* ================= SAFE USER ================= */
 
 function getSafeUser() {
   return currentUser;
 }
+
+/* ================= USERS ================= */
 
 function getAllUsers() {
   return typeof getUsers === "function"
@@ -122,41 +119,39 @@ function getAllUsers() {
     : [];
 }
 
-/* ================= TREE COUNT ================= */
+/* ================= TREE ================= */
 
 function countTree(userId, users) {
+
   const user =
-    users.find(function (u) {
-      return u.userId === userId;
-    });
+    users.find(u => u.userId === userId);
 
   if (!user) {
     return { left: 0, right: 0, total: 0 };
   }
 
-  function traverse(id) {
+  function walk(id) {
+
     if (!id) return 0;
 
     const node =
-      users.find(function (u) {
-        return u.userId === id;
-      });
+      users.find(u => u.userId === id);
 
     if (!node) return 0;
 
     return (
       1 +
-      traverse(node.leftChild) +
-      traverse(node.rightChild)
+      walk(node.leftChild) +
+      walk(node.rightChild)
     );
   }
 
-  const left = traverse(user.leftChild);
-  const right = traverse(user.rightChild);
+  const left = walk(user.leftChild);
+  const right = walk(user.rightChild);
 
   return {
-    left: left,
-    right: right,
+    left,
+    right,
     total: left + right
   };
 }
@@ -164,13 +159,11 @@ function countTree(userId, users) {
 /* ================= HOME ================= */
 
 function loadHome() {
+
   const user = getSafeUser();
-  if (!user) return;
+  const main = document.getElementById("mainContent");
 
-  const main =
-    document.getElementById("mainContent");
-
-  if (!main) return;
+  if (!user || !main) return;
 
   const users = getAllUsers();
   const tree = countTree(user.userId, users);
@@ -206,16 +199,14 @@ function loadHome() {
   `;
 }
 
-/* ================= PIN SECTION ================= */
+/* ================= PIN ================= */
 
 function loadPinSection() {
+
   const user = getSafeUser();
-  if (!user) return;
+  const main = document.getElementById("mainContent");
 
-  const main =
-    document.getElementById("mainContent");
-
-  if (!main) return;
+  if (!user || !main) return;
 
   main.innerHTML = `
     <h3>PIN Request</h3>
@@ -230,27 +221,30 @@ function loadPinSection() {
 /* ================= REQUEST PIN ================= */
 
 function requestPin() {
+
   const user = getSafeUser();
   if (!user) return;
 
   const amount =
-    Number(document.getElementById("pinAmount").value);
+    Number(document.getElementById("pinAmount")?.value);
 
   const paymentId =
-    document.getElementById("pinPaymentId").value.trim();
+    document.getElementById("pinPaymentId")?.value?.trim();
 
   try {
+
     if (typeof executePinFlow !== "function") {
-      throw new Error("Flow engine missing");
+      throw new Error("PIN FLOW MISSING");
     }
 
     executePinFlow("REQUEST_PIN", {
       type: "upgrade",
-      amount: amount,
-      paymentId: paymentId
+      amount,
+      paymentId
     });
 
     alert("PIN Request Submitted");
+
   } catch (err) {
     alert(err.message);
   }
@@ -259,30 +253,27 @@ function requestPin() {
 /* ================= DIRECT TEAM ================= */
 
 function loadDirectTeam() {
+
   const user = getSafeUser();
-  if (!user) return;
+  const main = document.getElementById("mainContent");
 
-  const main =
-    document.getElementById("mainContent");
-
-  if (!main) return;
+  if (!user || !main) return;
 
   const users = getAllUsers();
 
   const list =
-    users.filter(function (u) {
-      return u.introducerId === user.userId;
-    });
+    users.filter(u => u.introducerId === user.userId);
 
-  let html =
-    `<h3>Direct Team</h3>
-     <table>
-       <tr>
-         <th>ID</th>
-         <th>Name</th>
-       </tr>`;
+  let html = `
+    <h3>Direct Team</h3>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+      </tr>
+  `;
 
-  list.forEach(function (u) {
+  list.forEach(u => {
     html += `
       <tr>
         <td>${u.userId}</td>
@@ -296,24 +287,23 @@ function loadDirectTeam() {
   main.innerHTML = html;
 }
 
-/* ================= REFERRAL COPY ================= */
+/* ================= COPY REF ================= */
 
 function copyReferralLink() {
+
   const box =
     document.getElementById("referralLinkBox");
 
   if (!box) return;
 
-  navigator.clipboard
-    .writeText(box.value)
-    .then(function () {
-      alert("Copied");
-    });
+  navigator.clipboard.writeText(box.value)
+    .then(() => alert("Copied"));
 }
 
 /* ================= LOGOUT ================= */
 
 function logout() {
+
   if (typeof logoutSession === "function") {
     logoutSession();
     return;
@@ -326,7 +316,7 @@ function logout() {
   window.location.replace("user_login.html");
 }
 
-/* ================= EXPORT ================= */
+/* ================= EXPORTS ================= */
 
 window.loadHome = loadHome;
 window.loadPinSection = loadPinSection;
@@ -335,6 +325,8 @@ window.copyReferralLink = copyReferralLink;
 window.requestPin = requestPin;
 window.logout = logout;
 
-/* ================= START MODULE ================= */
+/* ================= START ================= */
 
-BOOT.start("user_dashboard");
+if (typeof BOOT !== "undefined" && BOOT.start) {
+  BOOT.start("user_dashboard");
+}
