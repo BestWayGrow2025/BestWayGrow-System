@@ -1,174 +1,145 @@
-let session = null;
-let currentUser = null;
-let lock = false;
+"use strict";
 
-document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  authPage();
-  bindEvents();
-  loadCreateView();
-});
+/*
+========================================
+SYSTEM ADMIN PIN CONTROL V1.1 FINAL CLEAN
+========================================
+*/
 
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
-  }
+// ================= INIT GUARD =================
+(function () {
+
+  if (window.__SYSTEM_ADMIN_PIN_CONTROL__) return;
+
+  window.__SYSTEM_ADMIN_PIN_CONTROL__ = true;
+
+  console.log("[SYSTEM ADMIN PIN CONTROL] READY");
+
+})();
+
+// ================= SAFE ADMIN =================
+function getSafeSystemAdmin() {
+
+  if (typeof getSession !== "function") return null;
+
+  const session = getSession();
+
+  if (!session || session.role !== "system_admin") return null;
+
+  if (typeof getUserById !== "function") return null;
+
+  const user = getUserById(session.userId);
+
+  if (!user || user.role !== "system_admin") return null;
+
+  return user;
 }
 
-function authPage() {
-  session = typeof getSession === "function"
-    ? getSession("system_admin")
-    : JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
+// ================= REQUEST FETCH =================
+function getSystemAdminPinRequests() {
 
-  if (!session || session.role !== "system_admin") {
-    window.location.href = "system_admin_login.html";
-    throw new Error("STOP");
-  }
+  if (typeof getPinRequests !== "function") return [];
 
-  currentUser = typeof getUserById === "function"
-    ? getUserById(session.userId)
-    : null;
-
-  if (!currentUser || currentUser.role !== "system_admin") {
-    if (typeof clearSession === "function") clearSession("system_admin");
-    else localStorage.removeItem("loggedInSystemAdmin");
-
-    window.location.href = "system_admin_login.html";
-    throw new Error("STOP");
-  }
-
-  if ((currentUser.status || "active") !== "active") {
-    alert("Account inactive");
-
-    if (typeof clearSession === "function") clearSession("system_admin");
-    else localStorage.removeItem("loggedInSystemAdmin");
-
-    window.location.href = "system_admin_login.html";
-    throw new Error("STOP");
-  }
-
-  document.getElementById("welcome").innerText =
-    "Welcome " + (currentUser.username || "") + " (" + currentUser.userId + ")";
+  return (getPinRequests() || []).filter(req =>
+    req &&
+    req.paymentId &&
+    String(req.paymentId).startsWith("ADMIN_STOCK_")
+  );
 }
 
-function bindEvents() {
-  document.getElementById("logoutBtn").addEventListener("click", logout);
-  document.getElementById("createTabBtn").addEventListener("click", loadCreateView);
-  document.getElementById("allTabBtn").addEventListener("click", loadAllPins);
-  document.getElementById("availableTabBtn").addEventListener("click", loadAvailablePins);
-  document.getElementById("usedTabBtn").addEventListener("click", loadUsedPins);
+// ================= HELPER =================
+function findAdminRequest(requestId) {
+  return getSystemAdminPinRequests().find(
+    r => r.requestId === requestId
+  );
 }
 
-function getPins() {
-  return JSON.parse(localStorage.getItem("pins") || "[]");
+// ================= NORMALIZER =================
+function normalizeStatus(status) {
+  return String(status || "").trim().toLowerCase();
 }
 
-function savePins(pins) {
-  localStorage.setItem("pins", JSON.stringify(pins));
+// ================= PENDING =================
+function getPendingAdminStockRequests() {
+
+  return getSystemAdminPinRequests().filter(req =>
+    normalizeStatus(req.status) === "pending"
+  );
 }
 
-function loadCreateView() {
-  document.getElementById("contentArea").innerHTML = `
-    <div class="card">
-      <h3>Create PIN</h3>
-      <input id="amount" placeholder="Amount (e.g. 500)"><br>
-      <input id="qty" placeholder="Quantity"><br>
-      <button id="generateBtn">Generate</button>
-      <p id="msg"></p>
-    </div>
-  `;
+// ================= AUTH CHECK =================
+function canReviewAdminStockRequest(requestId) {
 
-  document.getElementById("generateBtn").addEventListener("click", createPins);
+  const admin = getSafeSystemAdmin();
+  if (!admin) return false;
+
+  const req = findAdminRequest(requestId);
+
+  return req && normalizeStatus(req.status) === "pending";
 }
 
-function loadAllPins() {
-  renderPins(getPins());
+// ================= APPROVE =================
+function approveAdminStockRequest(requestId) {
+
+  if (!canReviewAdminStockRequest(requestId)) return null;
+
+  const req = findAdminRequest(requestId);
+  if (!req) return null;
+
+  return {
+    requestId: req.requestId,
+    userId: req.userId,
+    type: req.type,
+    quantity: Number(req.quantity || 1),
+    status: "approved",
+    route: "SYSTEM_ADMIN_APPROVAL"
+  };
 }
 
-function loadAvailablePins() {
-  renderPins(getPins().filter(pin => !pin.used));
+// ================= REJECT =================
+function rejectAdminStockRequest(requestId) {
+
+  if (!canReviewAdminStockRequest(requestId)) return false;
+
+  if (typeof rejectPinRequest !== "function") return false;
+
+  return rejectPinRequest(requestId, "SYSTEM_ADMIN");
 }
 
-function loadUsedPins() {
-  renderPins(getPins().filter(pin => pin.used));
+// ================= ESCALATION =================
+function canEscalateToSuperAdmin(type, qty = 1) {
+
+  const admin = getSafeSystemAdmin();
+  if (!admin) return false;
+
+  const allowedTypes = ["upgrade", "repurchase"];
+
+  return allowedTypes.includes(type) && Number(qty || 1) > 0;
 }
 
-function createPins() {
-  if (lock) return;
-  lock = true;
+// ================= CREATE REQUEST =================
+function createSystemStockRequest(type, qty = 1) {
 
-  let amount = document.getElementById("amount").value.trim();
-  let qty = parseInt(document.getElementById("qty").value.trim());
+  const admin = getSafeSystemAdmin();
+  if (!admin) return null;
 
-  if (!amount || !qty || qty < 1) {
-    showMsg("Enter valid amount & qty");
-    lock = false;
-    return;
-  }
+  if (!canEscalateToSuperAdmin(type, qty)) return null;
 
-  let pins = getPins();
+  if (typeof createPinRequest !== "function") return null;
 
-  for (let i = 0; i < qty; i++) {
-    pins.push({
-      pin: "PIN" + Math.floor(Math.random() * 1000000000),
-      amount: amount,
-      used: false,
-      createdAt: Date.now(),
-      createdBy: currentUser.userId
-    });
-  }
-
-  savePins(pins);
-  showMsg("PIN Created");
-
-  lock = false;
+  return createPinRequest({
+    userId: admin.userId,
+    type,
+    amount: 0,
+    quantity: Number(qty || 1),
+    paymentId: "SYSTEM_STOCK_" + Date.now()
+  });
 }
 
-function renderPins(pins) {
-  if (!pins.length) {
-    document.getElementById("contentArea").innerHTML = `
-      <div class="card">
-        <h3>PIN List</h3>
-        <p>No PIN found</p>
-      </div>
-    `;
-    return;
-  }
-
-  let rows = pins.map(pin => `
-    <tr>
-      <td>${pin.pin}</td>
-      <td>${pin.amount}</td>
-      <td>${pin.used ? "USED" : "AVAILABLE"}</td>
-    </tr>
-  `).join("");
-
-  document.getElementById("contentArea").innerHTML = `
-    <div class="card">
-      <h3>PIN List</h3>
-      <table>
-        <tr>
-          <th>PIN</th>
-          <th>Amount</th>
-          <th>Status</th>
-        </tr>
-        ${rows}
-      </table>
-    </div>
-  `;
-}
-
-function showMsg(text) {
-  let msg = document.getElementById("msg");
-  if (msg) msg.innerText = text;
-}
-
-function logout() {
-  if (typeof clearSession === "function") clearSession("system_admin");
-  else localStorage.removeItem("loggedInSystemAdmin");
-
-  window.location.href = "system_admin_login.html";
-}
+// ================= EXPORTS =================
+window.approveAdminStockRequest = approveAdminStockRequest;
+window.rejectAdminStockRequest = rejectAdminStockRequest;
+window.createSystemStockRequest = createSystemStockRequest;
+window.getPendingAdminStockRequests = getPendingAdminStockRequests;
+window.canReviewAdminStockRequest = canReviewAdminStockRequest;
+window.getSystemAdminPinRequests = getSystemAdminPinRequests;
