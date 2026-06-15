@@ -2,19 +2,22 @@
 
 /*
 ========================================
-INCOME HISTORY SYSTEM (V1)
+INCOME HISTORY SYSTEM (FINAL V1 - SINGLE PATH RULE)
 ========================================
-✔ Income ledger display
-✔ Safe user handling
-✔ Table-based history
-✔ MLM ready structure
-✔ NULL SAFETY FIXED (PRODUCTION READY)
+✔ Safe session-based user loading
+✔ Null-safe income rendering
+✔ Ledger-style history output
+✔ UI-only responsibility (NO BUSINESS LOGIC)
+✔ Fully defensive production-safe design
 ========================================
 */
 
 // ================= SAFE USER =================
 function getSafeUser() {
-  const user = getCurrentUser();
+  const user =
+    typeof getCurrentUser === "function"
+      ? getCurrentUser()
+      : null;
 
   if (!user) {
     const main = document.getElementById("mainContent");
@@ -36,42 +39,55 @@ function loadIncomeHistory() {
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  const history = user.incomeHistory || [];
+  const history = Array.isArray(user.incomeHistory)
+    ? user.incomeHistory
+    : [];
 
   let html = `
     <div class="section-title">Income History</div>
 
     <table border="1" width="100%">
-      <tr>
-        <th>Date</th>
-        <th>Type</th>
-        <th>Amount</th>
-        <th>Description</th>
-      </tr>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
   `;
 
-  if (!history.length) {
-    html += `<tr><td colspan="4">No Income Records Found</td></tr>`;
-  }
-
-  history.forEach(item => {
-
-    const dateSafe = item?.date || "-";
-    const typeSafe = item?.type || "-";
-    const amountSafe = Number(item?.amount || 0);
-    const descSafe = item?.description || "-";
-
+  if (history.length === 0) {
     html += `
       <tr>
-        <td>${dateSafe}</td>
-        <td>${typeSafe}</td>
-        <td>₹${amountSafe}</td>
-        <td>${descSafe}</td>
+        <td colspan="4" style="text-align:center;">
+          No Income Records Found
+        </td>
       </tr>
     `;
-  });
+  } else {
+    history.forEach(item => {
+      const dateSafe = item?.date || "-";
+      const typeSafe = item?.type || "-";
+      const amountSafe = Number(item?.amount || 0);
+      const descSafe = item?.description || "-";
 
-  html += `</table>`;
+      html += `
+        <tr>
+          <td>${dateSafe}</td>
+          <td>${typeSafe}</td>
+          <td>₹${amountSafe}</td>
+          <td>${descSafe}</td>
+        </tr>
+      `;
+    });
+  }
+
+  html += `
+      </tbody>
+    </table>
+  `;
 
   main.innerHTML = html;
 }
