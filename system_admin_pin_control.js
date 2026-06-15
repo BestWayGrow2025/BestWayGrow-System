@@ -2,15 +2,14 @@
 
 /*
 ========================================
-SYSTEM ADMIN PIN CONTROL V1.1 (FULL FIXED)
+SYSTEM ADMIN PIN CONTROL V1.1 FINAL
 ========================================
 ✔ System admin stock control
 ✔ Safe request review layer
 ✔ Super admin escalation support
 ✔ Safe status normalization
 ✔ No direct stock mutation
-✔ FULL RESTORED FILE
-✔ Production SAFE
+✔ Production safe
 ========================================
 */
 
@@ -25,60 +24,58 @@ SYSTEM ADMIN PIN CONTROL V1.1 (FULL FIXED)
 
 })();
 
-// ================= HELPERS =================
+// ================= SAFE ADMIN =================
 function getSafeSystemAdmin() {
-
   if (typeof getCurrentUser !== "function") return null;
 
   const user = getCurrentUser();
+  if (!user) return null;
 
-  return user && user.role === "system_admin" ? user : null;
+  return user.role === "system_admin" ? user : null;
 }
 
+// ================= REQUEST FETCH =================
 function getSystemAdminPinRequests() {
 
-  if (typeof getPinRequests !== "function") return [];
+  const list =
+    typeof getPinRequests === "function"
+      ? getPinRequests()
+      : [];
 
-  return (getPinRequests() || []).filter(req =>
+  return (list || []).filter(req =>
     req &&
     req.paymentId &&
     String(req.paymentId).startsWith("ADMIN_STOCK_")
   );
 }
 
+// ================= NORMALIZER =================
 function normalizeStatus(status) {
-
-  return String(status || "")
-    .trim()
-    .toLowerCase();
+  return String(status || "").trim().toLowerCase();
 }
 
 // ================= PENDING REQUESTS =================
 function getPendingAdminStockRequests() {
-
   return getSystemAdminPinRequests().filter(req =>
     normalizeStatus(req.status) === "pending"
   );
 }
 
-// ================= REVIEW CHECK =================
+// ================= AUTH CHECK =================
 function canReviewAdminStockRequest(requestId) {
 
   const admin = getSafeSystemAdmin();
-
   if (!admin) return false;
 
   const req = getSystemAdminPinRequests().find(
     r => r.requestId === requestId
   );
 
-  return !!req;
+  return !!req && normalizeStatus(req.status) === "pending";
 }
 
-// ================= APPROVE =================
+// ================= APPROVE REQUEST =================
 function approveAdminStockRequest(requestId) {
-
-  if (!canReviewAdminStockRequest(requestId)) return null;
 
   const req = getSystemAdminPinRequests().find(
     r => r.requestId === requestId
@@ -86,17 +83,19 @@ function approveAdminStockRequest(requestId) {
 
   if (!req) return null;
 
+  if (!canReviewAdminStockRequest(requestId)) return null;
+
   return {
     requestId: req.requestId,
     userId: req.userId,
     type: req.type,
     quantity: Number(req.quantity || 1),
-    status: req.status,
-    route: "MANUAL_ASSIGN_REQUIRED"
+    status: req.status || "pending",
+    route: "SYSTEM_ADMIN_APPROVAL"
   };
 }
 
-// ================= REJECT =================
+// ================= REJECT REQUEST =================
 function rejectAdminStockRequest(requestId) {
 
   if (!canReviewAdminStockRequest(requestId)) return false;
@@ -106,27 +105,21 @@ function rejectAdminStockRequest(requestId) {
   return rejectPinRequest(requestId, "SYSTEM_ADMIN");
 }
 
-// ================= ESCALATION CHECK =================
+// ================= ESCALATION RULE =================
 function canEscalateToSuperAdmin(type, qty = 1) {
 
   const admin = getSafeSystemAdmin();
-
   if (!admin) return false;
-
-  qty = Number(qty || 1);
-
-  if (qty < 1) qty = 1;
 
   const allowedTypes = ["upgrade", "repurchase"];
 
-  return allowedTypes.includes(type) && qty > 0;
+  return allowedTypes.includes(type) && Number(qty || 1) > 0;
 }
 
-// ================= CREATE REQUEST =================
+// ================= CREATE STOCK REQUEST =================
 function createSystemStockRequest(type, qty = 1) {
 
   const admin = getSafeSystemAdmin();
-
   if (!admin) return null;
 
   if (!canEscalateToSuperAdmin(type, qty)) return null;
@@ -137,14 +130,15 @@ function createSystemStockRequest(type, qty = 1) {
     userId: admin.userId,
     type,
     amount: 0,
-    paymentId: "SYSTEM_STOCK_" + Date.now(),
-    quantity: qty
+    quantity: Number(qty || 1),
+    paymentId: "SYSTEM_STOCK_" + Date.now()
   });
 }
 
-// ================= EXPORT =================
+// ================= EXPORTS =================
 window.approveAdminStockRequest = approveAdminStockRequest;
 window.rejectAdminStockRequest = rejectAdminStockRequest;
 window.createSystemStockRequest = createSystemStockRequest;
 window.getPendingAdminStockRequests = getPendingAdminStockRequests;
 window.canReviewAdminStockRequest = canReviewAdminStockRequest;
+window.getSystemAdminPinRequests = getSystemAdminPinRequests;
