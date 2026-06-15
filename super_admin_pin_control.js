@@ -1,86 +1,171 @@
 "use strict";
 
-(function () {
+/*
+========================================
+SUPER ADMIN PIN CONTROL vFINAL CORE LAYER
+========================================
+✔ PIN approval logic
+✔ PIN request governance
+✔ Stock control interface
+✔ Super admin override layer
+✔ No UI / no registry logic
+✔ Pure business logic module
+========================================
+*/
 
-  function waitForCore(callback) {
+console.log("[SUPER ADMIN PIN CONTROL] INIT");
 
-    const timer = setInterval(() => {
+// ================= STATE =================
+let lock = false;
 
-      if (
-        window.ENTERPRISE_CORE_ENGINE &&
-        typeof window.ENTERPRISE_CORE_ENGINE.register === "function"
-      ) {
-        clearInterval(timer);
-        callback();
-      }
+// ================= CORE ACCESS =================
+function getCore() {
+  return window.ENTERPRISE_CORE_ENGINE || null;
+}
 
-    }, 100);
+// ================= AUTH GUARD =================
+function getSuperAdmin() {
+  const user = window.getCurrentUser?.();
+  return user?.role === "super_admin" ? user : null;
+}
 
+// ================= PIN REQUEST FETCH =================
+function getPinRequests() {
+
+  const list = window.getPinRequests?.() || [];
+
+  return list.filter(r =>
+    r && String(r.paymentId || "").startsWith("PIN_")
+  );
+}
+
+// ================= PENDING REQUESTS =================
+function getPendingRequests() {
+
+  return getPinRequests().filter(r =>
+    (r.status || "").toLowerCase() === "pending"
+  );
+}
+
+// ================= VALIDATION =================
+function canProcess(requestId) {
+
+  const admin = getSuperAdmin();
+  if (!admin) return false;
+
+  const req = getPinRequests().find(r => r.requestId === requestId);
+  if (!req) return false;
+
+  return req.status === "pending";
+}
+
+// ================= APPROVE =================
+function approveRequest(requestId) {
+
+  if (lock) return;
+  lock = true;
+
+  try {
+
+    if (!canProcess(requestId)) return false;
+
+    const req = getPinRequests().find(r => r.requestId === requestId);
+    if (!req) return false;
+
+    req.status = "approved";
+
+    window.savePinRequests?.();
+
+    window.logActivity?.(
+      getSuperAdmin()?.userId,
+      "SUPER_ADMIN",
+      "PIN APPROVED: " + requestId
+    );
+
+    return true;
+
+  } finally {
+    lock = false;
   }
+}
 
-  function initRegistry() {
+// ================= REJECT =================
+function rejectRequest(requestId) {
 
-    const CORE = window.ENTERPRISE_CORE_ENGINE;
+  if (lock) return;
+  lock = true;
 
-    if (!CORE) return;
+  try {
 
-    // ================= HOME =================
-    CORE.register("home", function () {
-      document.getElementById("mainContent").innerHTML =
-        window.renderHome?.() || "<h2>🏠 Home</h2>";
-    });
+    if (!canProcess(requestId)) return false;
 
-    // ================= CREATE =================
-    CORE.register("create", function () {
-      document.getElementById("mainContent").innerHTML =
-        window.renderCreateAdmin?.() || "<h2>👑 Create Admin</h2>";
-    });
+    const req = getPinRequests().find(r => r.requestId === requestId);
+    if (!req) return false;
 
-    // ================= USERS =================
-    CORE.register("users", function () {
-      document.getElementById("mainContent").innerHTML =
-        window.renderUsers?.() || "<h2>👥 Users</h2>";
-    });
+    req.status = "rejected";
 
-    // ================= SYSTEM =================
-    CORE.register("system", function () {
-      document.getElementById("mainContent").innerHTML =
-        window.renderSystem?.() || "<h2>⚙️ System</h2>";
-    });
+    window.savePinRequests?.();
 
-    // ================= PIN =================
-    CORE.register("pinmaster", function () {
-      document.getElementById("mainContent").innerHTML =
-        window.renderPINMaster?.() || "<h2>📌 PIN Master</h2>";
-    });
+    window.logActivity?.(
+      getSuperAdmin()?.userId,
+      "SUPER_ADMIN",
+      "PIN REJECTED: " + requestId
+    );
 
-    // ================= PRODUCT =================
-    CORE.register("productmaster", function () {
-      document.getElementById("mainContent").innerHTML =
-        window.renderProductMaster?.() || "<h2>📦 Product Master</h2>";
-    });
+    return true;
 
-    // ================= AUDIT =================
-    CORE.register("audit", function () {
-      document.getElementById("mainContent").innerHTML =
-        window.renderAudit?.() || "<h2>📜 Audit</h2>";
-    });
-
-    // ================= HEALTH =================
-    CORE.register("health", function () {
-      document.getElementById("mainContent").innerHTML =
-        window.renderHealth?.() || "<h2>🩺 Health</h2>";
-    });
-
-    // ================= BACKUP =================
-    CORE.register("backup", function () {
-      document.getElementById("mainContent").innerHTML =
-        window.renderBackup?.() || "<h2>💾 Backup</h2>";
-    });
-
-    console.log("[SUPER ADMIN PAGE REGISTRY] OPTION B READY");
+  } finally {
+    lock = false;
   }
+}
 
-  waitForCore(initRegistry);
+// ================= STOCK CONTROL =================
+function adjustPinStock(type, qty = 1) {
 
-})();
+  const admin = getSuperAdmin();
+  if (!admin) return false;
+
+  const stock = window.getPinStock?.() || {};
+
+  stock[type] = (stock[type] || 0) + Number(qty);
+
+  window.savePinStock?.(stock);
+
+  window.logActivity?.(
+    admin.userId,
+    "SUPER_ADMIN",
+    `PIN STOCK UPDATED ${type} +${qty}`
+  );
+
+  return true;
+}
+
+// ================= ESCALATION RULE =================
+function escalateToSystem(type, qty) {
+
+  const allowed = ["upgrade", "repurchase", "admin_stock"];
+
+  if (!allowed.includes(type)) return false;
+  if (qty <= 0) return false;
+
+  return window.createPinRequest?.({
+    userId: getSuperAdmin()?.userId,
+    type,
+    quantity: qty,
+    amount: 0,
+    paymentId: "SUPER_PIN_" + Date.now()
+  });
+}
+
+// ================= EXPORTS =================
+window.superAdminPinControl = {
+  approveRequest,
+  rejectRequest,
+  adjustPinStock,
+  escalateToSystem,
+  getPendingRequests
+};
+
+window.__SUPER_ADMIN_PIN_CONTROL_LOADED__ = true;
+
+console.log("[SUPER ADMIN PIN CONTROL] READY");
