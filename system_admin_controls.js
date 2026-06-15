@@ -1,11 +1,27 @@
 "use strict";
 
-let session = null;
+/*
+========================================
+SYSTEM ADMIN CONTROLS vFINAL SINGLE PATH
+========================================
+✔ One execution path (DOMContentLoaded only)
+✔ One session source (getSession only)
+✔ Core dependency only
+✔ No fallback auth chains
+✔ Safe toggle + admin control logic
+✔ Production ready clean module
+========================================
+*/
+
+console.log("[SYSTEM ADMIN CONTROLS] INIT");
+
+// ================= GLOBAL STATE =================
 let currentUser = null;
 let lock = false;
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
+
   try {
     initPage();
     authPage();
@@ -16,40 +32,39 @@ document.addEventListener("DOMContentLoaded", function () {
     loadPage();
 
   } catch (err) {
-    console.error("[SYSTEM ADMIN ERROR]", err);
+    console.error("[SYSTEM ADMIN CONTROLS ERROR]", err);
   }
 });
 
 // ================= CORE INIT =================
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
+
+  if (typeof initCoreSystem !== "function") {
     alert("core_system.js missing");
     throw new Error("STOP");
   }
+
+  initCoreSystem();
 }
 
-// ================= AUTH =================
+// ================= AUTH (SINGLE PATH ONLY) =================
 function authPage() {
 
-  try {
-    session = JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
-  } catch (e) {
-    session = null;
-  }
+  const session = getSession?.();
 
-  if (!session?.userId) {
+  if (!session?.userId || session.role !== "system_admin") {
     window.location.href = "system_admin_login.html";
     return;
   }
 
-  if (typeof protectPage === "function") {
-    currentUser = protectPage({ role: "system_admin" });
-  }
+  currentUser = getUserById?.(session.userId);
 
   if (!currentUser?.userId || currentUser.role !== "system_admin") {
-    localStorage.removeItem("loggedInSystemAdmin");
+    window.location.href = "system_admin_login.html";
+    return;
+  }
+
+  if ((currentUser.status || "active") !== "active") {
     window.location.href = "system_admin_login.html";
     return;
   }
@@ -63,21 +78,10 @@ function bindEvents() {
   const toggleRegisterBtn = document.getElementById("toggleRegisterBtn");
   const clearLogsBtn = document.getElementById("clearLogsBtn");
 
-  if (backBtn) {
-    backBtn.addEventListener("click", goBack);
-  }
-
-  if (toggleWithdrawBtn) {
-    toggleWithdrawBtn.addEventListener("click", toggleWithdrawSystem);
-  }
-
-  if (toggleRegisterBtn) {
-    toggleRegisterBtn.addEventListener("click", toggleRegisterSystem);
-  }
-
-  if (clearLogsBtn) {
-    clearLogsBtn.addEventListener("click", clearLogs);
-  }
+  if (backBtn) backBtn.addEventListener("click", goBack);
+  if (toggleWithdrawBtn) toggleWithdrawBtn.addEventListener("click", toggleWithdrawSystem);
+  if (toggleRegisterBtn) toggleRegisterBtn.addEventListener("click", toggleRegisterSystem);
+  if (clearLogsBtn) clearLogsBtn.addEventListener("click", clearLogs);
 }
 
 // ================= LOAD =================
@@ -94,11 +98,9 @@ function goBack() {
 // ================= SYSTEM STATUS =================
 function loadSystemStatus() {
 
-  const settings = typeof getSystemSettings === "function"
-    ? getSystemSettings()
-    : {};
-
+  const settings = getSystemSettings?.() || {};
   const el = document.getElementById("systemStatus");
+
   if (!el) return;
 
   el.innerHTML = `
@@ -110,7 +112,7 @@ function loadSystemStatus() {
 // ================= ADMINS =================
 function loadAdmins() {
 
-  const users = typeof getUsers === "function" ? getUsers() : [];
+  const users = getUsers?.() || [];
   const admins = users.filter(u => u.role === "admin");
 
   const table = document.getElementById("adminTable");
@@ -146,15 +148,10 @@ function toggleWithdrawSystem() {
 
   try {
 
-    const settings = typeof getSystemSettings === "function"
-      ? getSystemSettings()
-      : {};
-
+    const settings = getSystemSettings?.() || {};
     settings.withdrawOpen = !settings.withdrawOpen;
 
-    if (typeof saveSystemSettings === "function") {
-      saveSystemSettings(settings);
-    }
+    saveSystemSettings?.(settings);
 
     logAction("Toggled withdraw system");
     loadSystemStatus();
@@ -164,6 +161,7 @@ function toggleWithdrawSystem() {
   }
 }
 
+// ================= REGISTER TOGGLE =================
 function toggleRegisterSystem() {
 
   if (lock) return;
@@ -171,15 +169,10 @@ function toggleRegisterSystem() {
 
   try {
 
-    const settings = typeof getSystemSettings === "function"
-      ? getSystemSettings()
-      : {};
-
+    const settings = getSystemSettings?.() || {};
     settings.registrationOpen = !settings.registrationOpen;
 
-    if (typeof saveSystemSettings === "function") {
-      saveSystemSettings(settings);
-    }
+    saveSystemSettings?.(settings);
 
     logAction("Toggled registration system");
     loadSystemStatus();
@@ -197,16 +190,14 @@ function toggleAdminStatus(userId) {
 
   try {
 
-    const users = typeof getUsers === "function" ? getUsers() : [];
+    const users = getUsers?.() || [];
     const user = users.find(u => u.userId === userId);
 
     if (!user) return;
 
     user.status = user.status === "inactive" ? "active" : "inactive";
 
-    if (typeof saveUsers === "function") {
-      saveUsers(users);
-    }
+    saveUsers?.(users);
 
     logAction("Changed admin status: " + userId);
     loadAdmins();
@@ -229,6 +220,7 @@ function clearLogs() {
 
 // ================= LOGGING =================
 function logAction(action) {
+
   if (typeof logActivity === "function" && currentUser?.userId) {
     logActivity(currentUser.userId, "SYSTEM_ADMIN", action);
   }
