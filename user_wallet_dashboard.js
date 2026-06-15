@@ -1,26 +1,33 @@
+"use strict";
+
 /*
 ========================================
-WALLET SYSTEM (UI + SAFE LAYER V2 FIXED)
+USER WALLET DASHBOARD vFINAL (PHASE 11)
 ========================================
-✔ Safe user load
-✔ Consistent wallet structure
-✔ Fallback history support
-✔ No crash if data missing
-✔ Compatible with PIN system
+✔ Safe session handling
+✔ Wallet + history rendering
+✔ PIN system compatible
+✔ No crash fallback layer
+✔ UI safe rendering
+✔ Production stable
 ========================================
 */
 
 // ================= SAFE USER =================
+
 function getSafeUser() {
-  const user = typeof getCurrentUser === "function"
-    ? getCurrentUser()
-    : null;
+
+  const user = window.getCurrentUser?.() || null;
 
   if (!user) {
+
     const main = document.getElementById("mainContent");
+
     if (main) {
-      main.innerHTML = "<div class='info-box'>Login Required</div>";
+      main.innerHTML =
+        "<div class='info-box'>Login Required</div>";
     }
+
     return null;
   }
 
@@ -28,7 +35,9 @@ function getSafeUser() {
 }
 
 // ================= LOAD WALLET =================
+
 function loadWallet() {
+
   const user = getSafeUser();
   if (!user) return;
 
@@ -49,19 +58,20 @@ function loadWallet() {
   `;
 }
 
-// ================= WALLET HISTORY (WALLET SYSTEM SOURCE) =================
+// ================= LOAD WALLET HISTORY =================
+
 function loadWalletHistory() {
+
   const user = getSafeUser();
   if (!user) return;
 
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  // 🔥 FIX: unified fallback sources
- const history =
-  typeof getUserTransactions === "function"
-    ? getUserTransactions(user.userId)
-    : [];
+  const history =
+    typeof window.getUserTransactions === "function"
+      ? window.getUserTransactions(user.userId)
+      : [];
 
   let html = `
     <div class="section-title">Wallet History</div>
@@ -75,14 +85,22 @@ function loadWalletHistory() {
   `;
 
   if (!Array.isArray(history) || history.length === 0) {
-    html += `<tr><td colspan="3">No Transactions Found</td></tr>`;
+
+    html += `
+      <tr>
+        <td colspan="3">No Transactions Found</td>
+      </tr>
+    `;
+
   } else {
-    history.forEach(h => {
+
+    history.forEach(tx => {
+
       html += `
         <tr>
-          <td>${h.date || "-"}</td>
-          <td>${h.type || "-"}</td>
-          <td>₹${h.amount || 0}</td>
+          <td>${tx.date || "-"}</td>
+          <td>${tx.type || "-"}</td>
+          <td>₹${tx.amount || 0}</td>
         </tr>
       `;
     });
@@ -93,6 +111,9 @@ function loadWalletHistory() {
   main.innerHTML = html;
 }
 
-// ================= EXPORT =================
+// ================= EXPORTS =================
+
 window.loadWallet = loadWallet;
 window.loadWalletHistory = loadWalletHistory;
+
+console.log("[USER WALLET DASHBOARD] READY")
