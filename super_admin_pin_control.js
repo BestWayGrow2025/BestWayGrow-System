@@ -35,7 +35,8 @@ function getPinRequests() {
   const list = window.getPinRequests?.() || [];
 
   return list.filter(r =>
-    r && String(r.paymentId || "").startsWith("PIN_")
+    r &&
+    String(r.paymentId || "").startsWith("PIN_")
   );
 }
 
@@ -56,13 +57,13 @@ function canProcess(requestId) {
   const req = getPinRequests().find(r => r.requestId === requestId);
   if (!req) return false;
 
-  return req.status === "pending";
+  return (req.status || "").toLowerCase() === "pending";
 }
 
 // ================= APPROVE =================
 function approveRequest(requestId) {
 
-  if (lock) return;
+  if (lock) return false;
   lock = true;
 
   try {
@@ -92,7 +93,7 @@ function approveRequest(requestId) {
 // ================= REJECT =================
 function rejectRequest(requestId) {
 
-  if (lock) return;
+  if (lock) return false;
   lock = true;
 
   try {
@@ -127,7 +128,7 @@ function adjustPinStock(type, qty = 1) {
 
   const stock = window.getPinStock?.() || {};
 
-  stock[type] = (stock[type] || 0) + Number(qty);
+  stock[type] = (stock[type] || 0) + Number(qty || 0);
 
   window.savePinStock?.(stock);
 
@@ -141,17 +142,17 @@ function adjustPinStock(type, qty = 1) {
 }
 
 // ================= ESCALATION RULE =================
-function escalateToSystem(type, qty) {
+function escalateToSystem(type, qty = 1) {
 
   const allowed = ["upgrade", "repurchase", "admin_stock"];
 
   if (!allowed.includes(type)) return false;
-  if (qty <= 0) return false;
+  if (Number(qty) <= 0) return false;
 
   return window.createPinRequest?.({
     userId: getSuperAdmin()?.userId,
     type,
-    quantity: qty,
+    quantity: Number(qty),
     amount: 0,
     paymentId: "SUPER_PIN_" + Date.now()
   });
