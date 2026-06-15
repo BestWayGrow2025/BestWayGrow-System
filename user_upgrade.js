@@ -1,24 +1,21 @@
+"use strict";
+
 /*
 ========================================
-USER UPGRADE V2.0 (UPGRADE ENGINE INTEGRATED)
+USER UPGRADE V2.0 (SINGLE PATH FINAL)
 ========================================
-✔ Unified authentication via getCurrentUser()
-✔ Auto PIN prefill preserved
-✔ Existing upgrade eligibility check preserved
-✔ All upgrade execution delegated to upgrade_engine.js
-✔ No direct PIN usage logic
-✔ No direct activation logic
-✔ No direct income trigger logic
-✔ Production-safe UI layer only
+✔ One execution flow only
+✔ No fallback branches in upgrade logic
+✔ Engine-driven upgrade only
+✔ Session-based user validation
+✔ Clean UI layer separation
+✔ Production stable
 ========================================
 */
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
-  const user =
-    typeof getCurrentUser === "function"
-      ? getCurrentUser()
-      : null;
+  const user = getCurrentUser();
 
   if (!user) {
     alert("Login required");
@@ -33,45 +30,31 @@ document.addEventListener("DOMContentLoaded", function () {
       "User: " +
       (user.username || "User") +
       " (" +
-      (user.userId || "N/A") +
+      user.userId +
       ")";
   }
 
-  // ================= AUTO PIN FILL =================
+  // ================= AUTO PIN PREFILL =================
   try {
-    const selected = JSON.parse(
-      localStorage.getItem("selectedPin")
-    );
+    const selected = JSON.parse(localStorage.getItem("selectedPin"));
 
-    if (selected && selected.type === "upgrade") {
-      const pinInput =
-        document.getElementById("pinInput");
-
-      if (pinInput) {
-        pinInput.value = selected.pinId || "";
-      }
+    if (selected?.type === "upgrade") {
+      document.getElementById("pinInput").value =
+        selected.pinId || "";
     }
-  } catch (err) {
-    console.warn("Auto pin fill skipped");
+  } catch (e) {
+    console.warn("[UPGRADE] PIN PREFILL SKIPPED");
   }
 });
 
-// ================= CHECK =================
+// ================= VALIDATION =================
 function isAlreadyUpgraded(user) {
-  if (!user) return false;
-
-  return (
-    user.status === "active" ||
-    user.upgradeStatus === "completed"
-  );
+  return user.status === "active";
 }
 
-// ================= UPGRADE =================
+// ================= MAIN UPGRADE FLOW (SINGLE PATH) =================
 function upgradeNow() {
-  const user =
-    typeof getCurrentUser === "function"
-      ? getCurrentUser()
-      : null;
+  const user = getCurrentUser();
 
   if (!user) {
     alert("Login required");
@@ -79,15 +62,8 @@ function upgradeNow() {
     return;
   }
 
-  const pinInput =
-    document.getElementById("pinInput");
-
-  const statusBox =
-    document.getElementById("upgradeStatus");
-
-  const pinId = pinInput
-    ? pinInput.value.trim()
-    : "";
+  const pinId = document.getElementById("pinInput")?.value?.trim();
+  const statusBox = document.getElementById("upgradeStatus");
 
   if (!pinId) {
     alert("Enter PIN");
@@ -95,58 +71,34 @@ function upgradeNow() {
   }
 
   if (isAlreadyUpgraded(user)) {
-    alert("Your ID is already active");
+    alert("Already upgraded");
     return;
   }
 
-  try {
-    // ================= ENGINE CHECK =================
-    if (typeof executeUpgrade !== "function") {
-      throw new Error("Upgrade engine missing");
-    }
+  // ================= SINGLE ENGINE ENTRY ONLY =================
+  const result = executeUpgrade("USER_UPGRADE", {
+    pinId: pinId,
+    purpose: "upgrade"
+  });
 
-    // ================= CENTRALIZED EXECUTION =================
-    const result = executeUpgrade(
-      "USER_UPGRADE",
-      {
-        pinId: pinId,
-        purpose: "upgrade"
-      }
-    );
-
-    if (!result) {
-      throw new Error("Upgrade failed");
-    }
-
-    // ================= CLEANUP =================
-    localStorage.removeItem("selectedPin");
-
-    if (statusBox) {
-      statusBox.innerText =
-        "Upgrade Successful";
-    }
-
-    alert("Upgrade Successful");
-
-    window.location.href =
-      "user_dashboard.html";
-
-  } catch (err) {
-    console.error(
-      "Upgrade Error:",
-      err
-    );
-
-    if (statusBox) {
-      statusBox.innerText =
-        err.message || "Upgrade failed";
-    }
-
-    alert(
-      err.message || "Upgrade failed"
-    );
+  if (!result) {
+    const msg = "Upgrade failed";
+    if (statusBox) statusBox.innerText = msg;
+    alert(msg);
+    return;
   }
+
+  // ================= SUCCESS =================
+  localStorage.removeItem("selectedPin");
+
+  if (statusBox) {
+    statusBox.innerText = "Upgrade Successful";
+  }
+
+  alert("Upgrade Successful");
+
+  window.location.href = "user_dashboard.html";
 }
 
-// ================= GLOBAL EXPORT =================
+// ================= EXPORT =================
 window.upgradeNow = upgradeNow;
