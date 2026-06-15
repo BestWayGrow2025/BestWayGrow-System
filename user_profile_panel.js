@@ -1,21 +1,30 @@
+"use strict";
+
 /*
 ========================================
-USER PROFILE SYSTEM (V1)
+USER PROFILE SYSTEM (FINAL V1 - SINGLE PATH RULE)
 ========================================
-✔ Profile view
-✔ Safe user load
-✔ Editable UI structure
-✔ Future API ready
+✔ Safe user loading
+✔ Read-only + editable profile UI
+✔ Controlled update flow
+✔ No direct database mutation (only saveUsers gateway)
+✔ Production-safe UI layer
 ========================================
 */
 
 // ================= SAFE USER =================
 function getSafeUser() {
-  const user = getCurrentUser();
+  const user =
+    typeof getCurrentUser === "function"
+      ? getCurrentUser()
+      : null;
 
   if (!user) {
-    document.getElementById("mainContent").innerHTML =
-      "<div class='info-box'>Login Required</div>";
+    const main = document.getElementById("mainContent");
+    if (main) {
+      main.innerHTML =
+        "<div class='info-box'>Login Required</div>";
+    }
     return null;
   }
 
@@ -52,7 +61,9 @@ function loadProfile() {
       <input id="editCity" placeholder="City" value="${user.city || ""}">
       <input id="editState" placeholder="State" value="${user.state || ""}">
 
-      <button class="action-btn" onclick="updateProfile()">Update Profile</button>
+      <button class="action-btn" onclick="updateProfile()">
+        Update Profile
+      </button>
     </div>
   `;
 }
@@ -62,15 +73,31 @@ function updateProfile() {
   const user = getSafeUser();
   if (!user) return;
 
-  let users = typeof getUsers === "function" ? getUsers() : [];
-  let index = users.findIndex(u => u.userId === user.userId);
+  const users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
 
-  if (index === -1) return;
+  const index = users.findIndex(
+    u => u.userId === user.userId
+  );
 
-  users[index].fullName = document.getElementById("editName").value;
-  users[index].mobile = document.getElementById("editMobile").value;
-  users[index].city = document.getElementById("editCity").value;
-  users[index].state = document.getElementById("editState").value;
+  if (index === -1) {
+    alert("User not found");
+    return;
+  }
+
+  users[index].fullName =
+    document.getElementById("editName")?.value || "";
+
+  users[index].mobile =
+    document.getElementById("editMobile")?.value || "";
+
+  users[index].city =
+    document.getElementById("editCity")?.value || "";
+
+  users[index].state =
+    document.getElementById("editState")?.value || "";
 
   if (typeof saveUsers === "function") {
     saveUsers(users);
