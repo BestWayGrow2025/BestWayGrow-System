@@ -1,123 +1,219 @@
-let session = null;
+"use strict";
+
+/*
+========================================
+SYSTEM ADMIN CONTROLS vFINAL SINGLE PATH
+========================================
+✔ One execution path (DOMContentLoaded only)
+✔ One session source (getSession only)
+✔ Core dependency only
+✔ No fallback auth chains
+✔ Safe toggle + admin control logic
+✔ Production ready clean module
+========================================
+*/
+
+console.log("[SYSTEM ADMIN CONTROLS] INIT");
+
+// ================= GLOBAL STATE =================
 let currentUser = null;
 let lock = false;
 
+// ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  checkAuth();
-  bindEvents();
-  loadStatus();
+
+  try {
+    initPage();
+    authPage();
+
+    if (!currentUser?.userId) return;
+
+    bindEvents();
+    loadPage();
+
+  } catch (err) {
+    console.error("[SYSTEM ADMIN CONTROLS ERROR]", err);
+  }
 });
 
+// ================= CORE INIT =================
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
+
+  if (typeof initCoreSystem !== "function") {
     alert("core_system.js missing");
     throw new Error("STOP");
   }
+
+  initCoreSystem();
 }
 
-function checkAuth() {
-  session = JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null");
+// ================= AUTH (SINGLE PATH ONLY) =================
+function authPage() {
 
-  if (!session || !session.userId) {
-    window.location.href = "super_admin_login.html";
-    throw new Error("STOP");
+  const session = getSession?.();
+
+  if (!session?.userId || session.role !== "system_admin") {
+    window.location.href = "system_admin_login.html";
+    return;
   }
 
-  currentUser = getUserById(session.userId);
+  currentUser = getUserById?.(session.userId);
 
-  if (!currentUser || currentUser.role !== "super_admin") {
-    localStorage.removeItem("loggedInSuperAdmin");
-    window.location.href = "super_admin_login.html";
-    throw new Error("STOP");
+  if (!currentUser?.userId || currentUser.role !== "system_admin") {
+    window.location.href = "system_admin_login.html";
+    return;
   }
 
   if ((currentUser.status || "active") !== "active") {
-    localStorage.removeItem("loggedInSuperAdmin");
-    alert("Account inactive");
-    window.location.href = "super_admin_login.html";
-    throw new Error("STOP");
+    window.location.href = "system_admin_login.html";
+    return;
   }
 }
 
+// ================= EVENTS =================
 function bindEvents() {
-  document.getElementById("lockBtn").addEventListener("click", function () {
-    safeClick(function () { toggle("lockMode"); });
-  });
 
-  document.getElementById("queueBtn").addEventListener("click", function () {
-    safeClick(function () { toggle("queueStop"); });
-  });
+  const backBtn = document.getElementById("backBtn");
+  const toggleWithdrawBtn = document.getElementById("toggleWithdrawBtn");
+  const toggleRegisterBtn = document.getElementById("toggleRegisterBtn");
+  const clearLogsBtn = document.getElementById("clearLogsBtn");
 
-  document.getElementById("withdrawBtn").addEventListener("click", function () {
-    safeClick(function () { toggle("withdrawStop"); });
-  });
-
-  document.getElementById("adminBtn").addEventListener("click", function () {
-    safeClick(function () { toggle("adminAccess"); });
-  });
-
-  document.getElementById("registrationBtn").addEventListener("click", function () {
-    safeClick(function () { toggle("registrationOpen"); });
-  });
-
-  document.getElementById("clearLogsBtn").addEventListener("click", function () {
-    safeClick(clearLogs);
-  });
+  if (backBtn) backBtn.addEventListener("click", goBack);
+  if (toggleWithdrawBtn) toggleWithdrawBtn.addEventListener("click", toggleWithdrawSystem);
+  if (toggleRegisterBtn) toggleRegisterBtn.addEventListener("click", toggleRegisterSystem);
+  if (clearLogsBtn) clearLogsBtn.addEventListener("click", clearLogs);
 }
 
-function safeClick(fn) {
+// ================= LOAD =================
+function loadPage() {
+  loadSystemStatus();
+  loadAdmins();
+}
+
+// ================= NAV =================
+function goBack() {
+  window.location.href = "system_admin_dashboard.html";
+}
+
+// ================= SYSTEM STATUS =================
+function loadSystemStatus() {
+
+  const settings = getSystemSettings?.() || {};
+  const el = document.getElementById("systemStatus");
+
+  if (!el) return;
+
+  el.innerHTML = `
+    Withdraw System: ${settings.withdrawOpen ? "RUNNING 🟢" : "STOPPED 🔴"}<br>
+    Registration System: ${settings.registrationOpen ? "RUNNING 🟢" : "STOPPED 🔴"}
+  `;
+}
+
+// ================= ADMINS =================
+function loadAdmins() {
+
+  const users = getUsers?.() || [];
+  const admins = users.filter(u => u.role === "admin");
+
+  const table = document.getElementById("adminTable");
+  if (!table) return;
+
+  if (!admins.length) {
+    table.innerHTML = "<tr><td colspan='7'>No admins found</td></tr>";
+    return;
+  }
+
+  table.innerHTML = admins.map(u => `
+    <tr>
+      <td>${u.userId || "-"}</td>
+      <td>${u.username || "-"}</td>
+      <td>${u.role || "-"}</td>
+      <td>${u.adminType || "-"}</td>
+      <td>${u.tree || "-"}</td>
+      <td>${u.status || "active"}</td>
+      <td>
+        <button onclick="toggleAdminStatus('${u.userId}')" class="warn">
+          Toggle
+        </button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+// ================= TOGGLES =================
+function toggleWithdrawSystem() {
+
   if (lock) return;
   lock = true;
 
   try {
-    fn();
-  } catch (e) {
-    console.error(e);
-    alert("System Error");
-  }
+    const settings = getSystemSettings?.() || {};
+    settings.withdrawOpen = !settings.withdrawOpen;
 
-  setTimeout(function () {
+    saveSystemSettings?.(settings);
+
+    loadSystemStatus();
+
+  } finally {
     lock = false;
-  }, 300);
-}
-
-function loadStatus() {
-  let s = getSystemSettings() || {};
-
-  document.getElementById("status").innerHTML = `
-    Lock Mode: ${s.lockMode ? "🔴 ON" : "🟢 OFF"} <br>
-    Queue Stop: ${s.queueStop ? "🔴 ON" : "🟢 OFF"} <br>
-    Withdraw Stop: ${s.withdrawStop ? "🔴 ON" : "🟢 OFF"} <br>
-    Admin Access: ${s.adminAccess ? "🟢 ON" : "🔴 OFF"} <br>
-    Registration: ${s.registrationOpen ? "🟢 OPEN" : "🔴 CLOSED"}
-  `;
-}
-
-function toggle(key) {
-  let s = getSystemSettings() || {};
-
-  s[key] = !s[key];
-  saveSystemSettings(s);
-
-  if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Toggled " + key + " = " + s[key]);
   }
-
-  loadStatus();
 }
 
+// ================= REGISTER TOGGLE =================
+function toggleRegisterSystem() {
+
+  if (lock) return;
+  lock = true;
+
+  try {
+    const settings = getSystemSettings?.() || {};
+    settings.registrationOpen = !settings.registrationOpen;
+
+    saveSystemSettings?.(settings);
+
+    loadSystemStatus();
+
+  } finally {
+    lock = false;
+  }
+}
+
+// ================= ADMIN STATUS =================
+function toggleAdminStatus(userId) {
+
+  if (lock) return;
+  lock = true;
+
+  try {
+    const users = getUsers?.() || [];
+    const user = users.find(u => u.userId === userId);
+
+    if (!user) return;
+
+    user.status = user.status === "inactive" ? "active" : "inactive";
+
+    saveUsers?.(users);
+
+    loadAdmins();
+
+  } finally {
+    lock = false;
+  }
+}
+
+// ================= CLEAR LOGS =================
 function clearLogs() {
-  if (!confirm("Clear all logs?")) return;
+
+  if (!confirm("Clear all activity logs?")) return;
 
   localStorage.removeItem("activityLogs");
-  localStorage.removeItem("incomeLogs");
-
-  if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "SUPER_ADMIN", "Cleared All Logs");
-  }
-
   alert("Logs cleared");
+}
+
+// ================= LOGGING =================
+function logAction(action) {
+
+  if (typeof logActivity === "function" && currentUser?.userId) {
+    logActivity(currentUser.userId, "SYSTEM_ADMIN", action);
+  }
 }
