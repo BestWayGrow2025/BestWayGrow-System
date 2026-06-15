@@ -2,14 +2,16 @@
 
 /*
 ========================================
-SYSTEM ADMIN PIN CONTROL V1.1 FINAL
+SYSTEM ADMIN PIN CONTROL V1.1 FINAL CLEAN
 ========================================
-✔ System admin stock control
+✔ Single execution path only
+✔ Single session source (getSession)
+✔ Strict system_admin validation
 ✔ Safe request review layer
-✔ Super admin escalation support
-✔ Safe status normalization
-✔ No direct stock mutation
-✔ Production safe
+✔ No fallback auth chains
+✔ No direct mutation of PIN engine
+✔ Super admin escalation ready
+✔ Production safe architecture
 ========================================
 */
 
@@ -24,23 +26,30 @@ SYSTEM ADMIN PIN CONTROL V1.1 FINAL
 
 })();
 
-// ================= SAFE ADMIN =================
+// ================= SAFE SYSTEM ADMIN =================
 function getSafeSystemAdmin() {
-  if (typeof getCurrentUser !== "function") return null;
 
-  const user = getCurrentUser();
-  if (!user) return null;
+  const session = typeof getSession === "function"
+    ? getSession()
+    : null;
 
-  return user.role === "system_admin" ? user : null;
+  if (!session || session.role !== "system_admin") return null;
+
+  const user = typeof getUserById === "function"
+    ? getUserById(session.userId)
+    : null;
+
+  if (!user || user.role !== "system_admin") return null;
+
+  return user;
 }
 
-// ================= REQUEST FETCH =================
+// ================= FETCH PIN REQUESTS =================
 function getSystemAdminPinRequests() {
 
-  const list =
-    typeof getPinRequests === "function"
-      ? getPinRequests()
-      : [];
+  const list = typeof getPinRequests === "function"
+    ? getPinRequests()
+    : [];
 
   return (list || []).filter(req =>
     req &&
@@ -56,6 +65,7 @@ function normalizeStatus(status) {
 
 // ================= PENDING REQUESTS =================
 function getPendingAdminStockRequests() {
+
   return getSystemAdminPinRequests().filter(req =>
     normalizeStatus(req.status) === "pending"
   );
@@ -77,6 +87,9 @@ function canReviewAdminStockRequest(requestId) {
 // ================= APPROVE REQUEST =================
 function approveAdminStockRequest(requestId) {
 
+  const admin = getSafeSystemAdmin();
+  if (!admin) return null;
+
   const req = getSystemAdminPinRequests().find(
     r => r.requestId === requestId
   );
@@ -85,20 +98,23 @@ function approveAdminStockRequest(requestId) {
 
   if (!canReviewAdminStockRequest(requestId)) return null;
 
+  // SAFE OUTPUT ONLY (NO DIRECT MUTATION)
   return {
     requestId: req.requestId,
     userId: req.userId,
     type: req.type,
     quantity: Number(req.quantity || 1),
     status: req.status || "pending",
-    route: "SYSTEM_ADMIN_APPROVAL"
+    route: "SYSTEM_ADMIN_APPROVAL",
+    approvedBy: admin.userId
   };
 }
 
 // ================= REJECT REQUEST =================
 function rejectAdminStockRequest(requestId) {
 
-  if (!canReviewAdminStockRequest(requestId)) return false;
+  const admin = getSafeSystemAdmin();
+  if (!admin) return false;
 
   if (typeof rejectPinRequest !== "function") return false;
 
@@ -128,7 +144,7 @@ function createSystemStockRequest(type, qty = 1) {
 
   return createPinRequest({
     userId: admin.userId,
-    type,
+    type: type,
     amount: 0,
     quantity: Number(qty || 1),
     paymentId: "SYSTEM_STOCK_" + Date.now()
