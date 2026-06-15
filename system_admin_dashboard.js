@@ -1,24 +1,32 @@
 "use strict";
 
-if (window.SYSTEM_ADMIN_DASHBOARD_LOADED) {
-  console.log("[SYSTEM ADMIN DASHBOARD] already loaded → skipping");
-  throw new Error("DUPLICATE LOAD BLOCKED");
-}
-window.SYSTEM_ADMIN_DASHBOARD_LOADED = true;
+/*
+========================================
+SYSTEM ADMIN DASHBOARD vFINAL SINGLE PATH
+========================================
+✔ Single execution path (DOMContentLoaded only)
+✔ Single session source (getSession only)
+✔ Core system dependency only
+✔ No boot layer dependency
+✔ Clean event binding
+✔ Production safe architecture
+========================================
+*/
 
-console.log("[SYSTEM ADMIN DASHBOARD] FILE EXECUTION STARTED");
+console.log("[SYSTEM ADMIN DASHBOARD] INIT");
 
 // ================= GLOBAL STATE =================
-window.currentUser = window.currentUser || null;
-window.clickLock = window.clickLock || false;
-window.menuBound = window.menuBound || false;
+let currentUser = null;
+let clickLock = false;
+let menuBound = false;
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
+
   initPage();
   authPage();
 
-  if (!currentUser?.userId) return;
+  if (!currentUser || !currentUser.userId) return;
 
   bindEvents();
   loadHome();
@@ -26,49 +34,55 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // ================= CORE INIT =================
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
+
+  if (typeof initCoreSystem !== "function") {
     alert("core_system.js missing");
     throw new Error("STOP");
   }
+
+  initCoreSystem();
 }
 
-// ================= AUTH =================
+// ================= AUTH (SINGLE PATH ONLY) =================
 function authPage() {
-  const session = typeof getSession === "function"
-    ? getSession()
-    : JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
 
-  if (!session?.userId || session.role !== "system_admin") {
+  const session = getSession?.();
+
+  if (!session || session.role !== "system_admin") {
     redirectLogin();
     return;
   }
 
-  currentUser = typeof getUserById === "function"
-    ? getUserById(session.userId)
-    : session;
-
-  if (!currentUser?.userId) {
+  if (typeof getUserById !== "function") {
     redirectLogin();
     return;
   }
 
-  const status = currentUser.accountStatus || currentUser.status || "active";
-  if (status !== "active") {
+  currentUser = getUserById(session.userId);
+
+  if (!currentUser || currentUser.role !== "system_admin") {
+    redirectLogin();
+    return;
+  }
+
+  if ((currentUser.status || "active") !== "active") {
     redirectLogin();
     return;
   }
 
   const welcome = document.getElementById("welcome");
+
   if (welcome) {
     welcome.innerText =
-      `Welcome ${currentUser.username || currentUser.userId} (${currentUser.userId})`;
+      "Welcome " +
+      (currentUser.username || currentUser.userId) +
+      " (" + currentUser.userId + ")";
   }
 }
 
 // ================= REDIRECT =================
 function redirectLogin() {
+
   if (typeof destroySession === "function") {
     destroySession();
   } else {
@@ -80,6 +94,7 @@ function redirectLogin() {
 
 // ================= EVENTS =================
 function bindEvents() {
+
   if (menuBound) return;
   menuBound = true;
 
@@ -90,11 +105,13 @@ function bindEvents() {
     logoutBtn.addEventListener("click", logout);
   }
 
-  buttons.forEach(function (btn) {
+  buttons.forEach(btn => {
+
     if (btn.dataset.bound) return;
     btn.dataset.bound = "true";
 
     btn.addEventListener("click", function () {
+
       if (clickLock) return;
       clickLock = true;
 
@@ -105,6 +122,7 @@ function bindEvents() {
 
       try {
         switch (page) {
+
           case "home":
             loadHome();
             break;
@@ -129,29 +147,42 @@ function bindEvents() {
         console.error("[SYSTEM ADMIN DASHBOARD ERROR]", err);
       }
 
-      setTimeout(() => clickLock = false, 250);
+      setTimeout(() => {
+        clickLock = false;
+      }, 250);
     });
   });
 
-  const homeBtn = document.querySelector('.menu button[data-page="home"]');
-  if (homeBtn) homeBtn.classList.add("active");
+  const homeBtn =
+    document.querySelector('.menu button[data-page="home"]');
+
+  if (homeBtn) {
+    homeBtn.classList.add("active");
+  }
 }
 
 // ================= HOME =================
 function loadHome() {
-  const users = typeof getUsers === "function" ? getUsers() : [];
 
-  const officeUsers = users.filter(u => u.tree === "office" && u.role === "user");
-  const officeAdmins = users.filter(u => u.tree === "office" && u.role === "admin");
+  const users = getUsers?.() || [];
 
-  const fieldUsers = users.filter(u => u.tree === "field" && u.role === "user");
-  const fieldAdmins = users.filter(u => u.tree === "field" && u.role === "admin");
+  const officeUsers =
+    users.filter(u => u.tree === "office" && u.role === "user");
 
-  const rootAdmin = users.filter(
-    u => u.role === "admin" && u.adminType === "root_admin"
-  );
+  const officeAdmins =
+    users.filter(u => u.tree === "office" && u.role === "admin");
+
+  const fieldUsers =
+    users.filter(u => u.tree === "field" && u.role === "user");
+
+  const fieldAdmins =
+    users.filter(u => u.tree === "field" && u.role === "admin");
+
+  const rootAdmin =
+    users.filter(u => u.role === "admin" && u.adminType === "root_admin");
 
   const main = document.getElementById("mainContent");
+
   if (!main) return;
 
   main.innerHTML = `
@@ -178,9 +209,9 @@ function loadHome() {
 
 // ================= USERS =================
 function loadUsers() {
-  const users = typeof getUsers === "function"
-    ? (getUsers() || []).filter(u => !u.hiddenAccount)
-    : [];
+
+  const users =
+    (getUsers?.() || []).filter(u => !u.hiddenAccount);
 
   let html = `
     <h3>All Users</h3>
@@ -197,6 +228,7 @@ function loadUsers() {
   `;
 
   users.forEach(u => {
+
     html += `
       <tr>
         <td>${u.userId || "-"}</td>
@@ -213,6 +245,7 @@ function loadUsers() {
   html += `</table>`;
 
   const main = document.getElementById("mainContent");
+
   if (main) main.innerHTML = html;
 }
 
@@ -223,22 +256,30 @@ function loadCreateAdmin() {
 
 // ================= PIN =================
 function loadPinsSafe() {
+
   if (typeof loadPins === "function") {
     loadPins();
     return;
   }
 
   const main = document.getElementById("mainContent");
+
   if (main) {
-    main.innerHTML = `<h3>PIN Management</h3><p>PIN module not loaded.</p>`;
+    main.innerHTML =
+      `<h3>PIN Management</h3>
+       <p>PIN module not loaded.</p>`;
   }
 }
 
 // ================= SETTINGS =================
 function loadSettings() {
+
   const main = document.getElementById("mainContent");
+
   if (main) {
-    main.innerHTML = `<h3>System Settings</h3><p>Settings module will be connected here.</p>`;
+    main.innerHTML =
+      `<h3>System Settings</h3>
+       <p>Settings module will be connected here.</p>`;
   }
 }
 
@@ -247,7 +288,7 @@ function logout() {
   redirectLogin();
 }
 
-// ================= EXPORT =================
+// ================= EXPORTS =================
 window.loadHome = loadHome;
 window.loadUsers = loadUsers;
 window.loadCreateAdmin = loadCreateAdmin;
