@@ -2,45 +2,42 @@
 
 /*
 ========================================
-USER WALLET LEDGER MODULE (V1)
+USER WALLET HISTORY MODULE (FINAL CLEAN)
 ========================================
-✔ Wallet transaction history view
-✔ Safe fallback if wallet system missing
-✔ No backend dependency crash
-✔ Ready for integration with wallet_system.js
+✔ Single-path safe rendering
+✔ Session-based user resolution
+✔ Safe transaction fallback
+✔ No crash behavior
+✔ Production stable UI module
 ========================================
 */
 
 // ================= SAFE USER =================
-function getUserSafe() {
-  if (typeof getCurrentUser !== "function") return null;
-  return getCurrentUser();
+
+function getSafeUser() {
+
+  const user = window.getCurrentUser?.() || null;
+
+  return user;
 }
 
-// ================= SAFE GET USERS =================
-function getAllUsersSafe() {
-  if (typeof getUsers !== "function") return [];
-  return getUsers();
-}
+// ================= LOAD HISTORY =================
 
-// ================= LOAD WALLET LEDGER =================
 function loadUserWalletHistory() {
 
-  const user = getUserSafe();
+  const user = getSafeUser();
   const main = document.getElementById("mainContent");
 
   if (!user || !main) return;
 
-  const users = getAllUsersSafe();
+  const users = window.getUsers?.() || [];
 
   const current = users.find(
     u => u.userId === user.userId
   );
 
- const history =
-  typeof getUserTransactions === "function"
-    ? getUserTransactions(user.userId)
-    : [];
+  const history =
+    window.getUserTransactions?.(user.userId) || [];
 
   let html = `
     <div class="section-title">
@@ -49,7 +46,7 @@ function loadUserWalletHistory() {
 
     <div class="info-box">
       <p><b>User ID:</b> ${user.userId}</p>
-      <p><b>Current Balance:</b> ₹${current?.wallet?.balance || 0}</p>
+      <p><b>Balance:</b> ₹${current?.wallet?.balance || 0}</p>
     </div>
 
     <table>
@@ -61,13 +58,11 @@ function loadUserWalletHistory() {
       </tr>
   `;
 
-  if (!history.length) {
+  if (!Array.isArray(history) || history.length === 0) {
 
     html += `
       <tr>
-        <td colspan="4">
-          No transactions found
-        </td>
+        <td colspan="4">No transactions found</td>
       </tr>
     `;
 
@@ -77,7 +72,7 @@ function loadUserWalletHistory() {
 
       html += `
         <tr>
-         <td>${tx.time || "-"}</td>
+          <td>${tx.time || "-"}</td>
           <td>${tx.type || "-"}</td>
           <td>₹${tx.amount || 0}</td>
           <td>${tx.reason || "-"}</td>
@@ -91,6 +86,6 @@ function loadUserWalletHistory() {
   main.innerHTML = html;
 }
 
-// ================= GLOBAL EXPORT =================
-window.loadUserWalletHistory =
-  loadUserWalletHistory;
+// ================= EXPORT =================
+
+window.loadUserWalletHistory = loadUserWalletHistory;
