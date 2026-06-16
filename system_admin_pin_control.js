@@ -1,57 +1,75 @@
-"use strict";
+ "use strict";
 
 /*
 ========================================
-SYSTEM ADMIN PIN CONTROL V1.1 FINAL CLEAN
+SYSTEM ADMIN PIN CONTROL v1.2 FINAL SINGLE PATH
 ========================================
-✔ Single execution path only
-✔ Single session source (getSession)
-✔ Strict system_admin validation
-✔ Safe request review layer
+✔ One execution path (DOMContentLoaded only)
+✔ One session source (getSession only)
+✔ Core system dependency only
 ✔ No fallback auth chains
-✔ No direct mutation of PIN engine
-✔ Super admin escalation ready
-✔ Production safe architecture
+✔ Strict request validation
+✔ Safe approve/reject flow
+✔ Production stable module
 ========================================
 */
 
-// ================= INIT GUARD =================
-(function () {
+console.log("[SYSTEM ADMIN PIN CONTROL] INIT");
 
-  if (window.__SYSTEM_ADMIN_PIN_CONTROL__) return;
+// ================= INIT =================
+document.addEventListener("DOMContentLoaded", function () {
 
-  window.__SYSTEM_ADMIN_PIN_CONTROL__ = true;
+  try {
+    initPage();
+    checkAuth();
+    loadRequests();
+  } catch (err) {
+    console.error("[SYSTEM ADMIN PIN CONTROL ERROR]", err);
+  }
+});
 
-  console.log("[SYSTEM ADMIN PIN CONTROL] READY");
+// ================= CORE INIT =================
+function initPage() {
 
-})();
+  if (typeof initCoreSystem !== "function") {
+    alert("core_system.js missing");
+    throw new Error("STOP");
+  }
 
-// ================= SAFE SYSTEM ADMIN =================
-function getSafeSystemAdmin() {
-
-  const session = typeof getSession === "function"
-    ? getSession()
-    : null;
-
-  if (!session || session.role !== "system_admin") return null;
-
-  const user = typeof getUserById === "function"
-    ? getUserById(session.userId)
-    : null;
-
-  if (!user || user.role !== "system_admin") return null;
-
-  return user;
+  initCoreSystem();
 }
 
-// ================= FETCH PIN REQUESTS =================
+// ================= AUTH (SINGLE PATH ONLY) =================
+function checkAuth() {
+
+  const session = getSession?.();
+
+  if (!session || session.role !== "system_admin") {
+    window.location.href = "system_admin_login.html";
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const user = getUserById?.(session.userId);
+
+  if (!user || user.role !== "system_admin") {
+    window.location.href = "system_admin_login.html";
+    throw new Error("INVALID_USER");
+  }
+
+  if ((user.status || "active") !== "active") {
+    window.location.href = "system_admin_login.html";
+    throw new Error("INACTIVE");
+  }
+
+  window.__SYSTEM_ADMIN__ = user;
+}
+
+// ================= REQUEST FETCH =================
 function getSystemAdminPinRequests() {
 
-  const list = typeof getPinRequests === "function"
-    ? getPinRequests()
-    : [];
+  const list = getPinRequests?.() || [];
 
-  return (list || []).filter(req =>
+  return list.filter(req =>
     req &&
     req.paymentId &&
     String(req.paymentId).startsWith("ADMIN_STOCK_")
@@ -63,98 +81,111 @@ function normalizeStatus(status) {
   return String(status || "").trim().toLowerCase();
 }
 
-// ================= PENDING REQUESTS =================
-function getPendingAdminStockRequests() {
+// ================= LOAD REQUESTS =================
+function loadRequests() {
 
+  const pending = getPendingAdminStockRequests();
+
+  const el = document.getElementById("requestBox");
+  if (!el) return;
+
+  el.innerHTML = pending.length
+    ? pending.map(renderRequest).join("")
+    : "<p>No pending requests</p>";
+}
+
+// ================= PENDING =================
+function getPendingAdminStockRequests() {
   return getSystemAdminPinRequests().filter(req =>
     normalizeStatus(req.status) === "pending"
   );
 }
 
+// ================= RENDER =================
+function renderRequest(req) {
+
+  return `
+    <div class="request-card">
+      <p><b>ID:</b> ${req.requestId}</p>
+      <p><b>User:</b> ${req.userId}</p>
+      <p><b>Type:</b> ${req.type}</p>
+      <p><b>Qty:</b> ${req.quantity || 1}</p>
+
+      <button onclick="approve('${req.requestId}')">Approve</button>
+      <button onclick="reject('${req.requestId}')">Reject</button>
+    </div>
+  `;
+}
+
 // ================= AUTH CHECK =================
-function canReviewAdminStockRequest(requestId) {
+function canReview(requestId) {
 
-  const admin = getSafeSystemAdmin();
-  if (!admin) return false;
+  const user = window.__SYSTEM_ADMIN__;
+  if (!user) return false;
 
-  const req = getSystemAdminPinRequests().find(
-    r => r.requestId === requestId
-  );
+  const req = getSystemAdminPinRequests()
+    .find(r => r.requestId === requestId);
 
   return !!req && normalizeStatus(req.status) === "pending";
 }
 
-// ================= APPROVE REQUEST =================
-function approveAdminStockRequest(requestId) {
+// ================= APPROVE =================
+function approve(requestId) {
 
-  const admin = getSafeSystemAdmin();
-  if (!admin) return null;
+  if (!canReview(requestId)) return;
 
-  const req = getSystemAdminPinRequests().find(
-    r => r.requestId === requestId
-  );
+  const req = getSystemAdminPinRequests()
+    .find(r => r.requestId === requestId);
 
-  if (!req) return null;
+  if (!req) return;
 
-  if (!canReviewAdminStockRequest(requestId)) return null;
+  console.log("[APPROVED]", req);
 
-  // SAFE OUTPUT ONLY (NO DIRECT MUTATION)
-  return {
-    requestId: req.requestId,
-    userId: req.userId,
-    type: req.type,
-    quantity: Number(req.quantity || 1),
-    status: req.status || "pending",
-    route: "SYSTEM_ADMIN_APPROVAL",
-    approvedBy: admin.userId
-  };
+  if (typeof approvePinRequest === "function") {
+    approvePinRequest(requestId, "SYSTEM_ADMIN");
+  }
+
+  loadRequests();
 }
 
-// ================= REJECT REQUEST =================
-function rejectAdminStockRequest(requestId) {
+// ================= REJECT =================
+function reject(requestId) {
 
-  const admin = getSafeSystemAdmin();
-  if (!admin) return false;
+  if (!canReview(requestId)) return;
 
-  if (typeof rejectPinRequest !== "function") return false;
+  console.log("[REJECTED]", requestId);
 
-  return rejectPinRequest(requestId, "SYSTEM_ADMIN");
-}
+  if (typeof rejectPinRequest === "function") {
+    rejectPinRequest(requestId, "SYSTEM_ADMIN");
+  }
 
-// ================= ESCALATION RULE =================
-function canEscalateToSuperAdmin(type, qty = 1) {
-
-  const admin = getSafeSystemAdmin();
-  if (!admin) return false;
-
-  const allowedTypes = ["upgrade", "repurchase"];
-
-  return allowedTypes.includes(type) && Number(qty || 1) > 0;
+  loadRequests();
 }
 
 // ================= CREATE STOCK REQUEST =================
 function createSystemStockRequest(type, qty = 1) {
 
-  const admin = getSafeSystemAdmin();
-  if (!admin) return null;
+  const user = window.__SYSTEM_ADMIN__;
+  if (!user) return null;
 
-  if (!canEscalateToSuperAdmin(type, qty)) return null;
+  const allowed = ["upgrade", "repurchase"];
 
-  if (typeof createPinRequest !== "function") return null;
+  if (!allowed.includes(type)) return null;
+  if (qty <= 0) return null;
 
-  return createPinRequest({
-    userId: admin.userId,
-    type: type,
+  return createPinRequest?.({
+    userId: user.userId,
+    type,
     amount: 0,
-    quantity: Number(qty || 1),
+    quantity: qty,
     paymentId: "SYSTEM_STOCK_" + Date.now()
   });
 }
 
 // ================= EXPORTS =================
-window.approveAdminStockRequest = approveAdminStockRequest;
-window.rejectAdminStockRequest = rejectAdminStockRequest;
-window.createSystemStockRequest = createSystemStockRequest;
-window.getPendingAdminStockRequests = getPendingAdminStockRequests;
-window.canReviewAdminStockRequest = canReviewAdminStockRequest;
-window.getSystemAdminPinRequests = getSystemAdminPinRequests;
+window.systemAdminPinControl = {
+  approve,
+  reject,
+  createSystemStockRequest,
+  getPendingAdminStockRequests
+};
