@@ -1,191 +1,353 @@
- "use strict";
+"use strict";
 
 /*
 ========================================
-SYSTEM ADMIN PIN CONTROL v1.2 FINAL SINGLE PATH
+SUPER ADMIN DASHBOARD V1.0 FINAL SINGLE PATH
 ========================================
-✔ One execution path (DOMContentLoaded only)
-✔ One session source (getSession only)
-✔ Core system dependency only
-✔ No fallback auth chains
-✔ Strict request validation
-✔ Safe approve/reject flow
-✔ Production stable module
+✔ Super Admin only
+✔ One session source
+✔ One auth path
+✔ No System Admin dependency
+✔ No redirect contamination
+✔ Production stable
 ========================================
 */
 
-console.log("[SYSTEM ADMIN PIN CONTROL] INIT");
+console.log("[SUPER ADMIN DASHBOARD] LOADED");
 
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
+
+let dashboardReady = false;
+
+
+// ===============================
+// START
+// ===============================
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+
+    try {
+
+      initSuperAdminDashboard();
+
+    } catch (err) {
+
+      console.error(
+        "[SUPER ADMIN DASHBOARD ERROR]",
+        err
+      );
+
+    }
+
+  }
+);
+
+
+// ===============================
+// INIT
+// ===============================
+
+function initSuperAdminDashboard() {
+
+  if (dashboardReady) return;
+
+  dashboardReady = true;
+
+
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
+
+
+  if (!checkSuperAdminAuth()) {
+    return;
+  }
+
+
+  loadProfile();
+
+  bindEvents();
+
+  console.log(
+    "[SUPER ADMIN DASHBOARD] READY"
+  );
+}
+
+
+// ===============================
+// AUTH
+// ===============================
+
+function checkSuperAdminAuth() {
+
+  const session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
+
+
+  if (!session) {
+
+    window.location.href =
+      "super_admin_login.html";
+
+    return false;
+
+  }
+
+
+  if (session.role !== "super_admin") {
+
+    console.error(
+      "[SUPER ADMIN] INVALID ROLE",
+      session.role
+    );
+
+
+    window.location.href =
+      "super_admin_login.html";
+
+    return false;
+
+  }
+
+
+  const user =
+    typeof getUserById === "function"
+      ? getUserById(session.userId)
+      : null;
+
+
+  if (!user) {
+
+    window.location.href =
+      "super_admin_login.html";
+
+    return false;
+
+  }
+
+
+  if (user.role !== "super_admin") {
+
+    window.location.href =
+      "super_admin_login.html";
+
+    return false;
+
+  }
+
+
+  window.__CURRENT_SUPER_ADMIN__ = user;
+
+
+  return true;
+
+}
+
+
+// ===============================
+// PROFILE
+// ===============================
+
+function loadProfile() {
+
+
+  const user =
+    window.__CURRENT_SUPER_ADMIN__;
+
+
+  const welcome =
+    document.getElementById("welcome");
+
+
+  if (welcome && user) {
+
+    welcome.innerText =
+      "Welcome " + user.username;
+
+  }
+
+}
+
+
+// ===============================
+// EVENTS
+// ===============================
+
+function bindEvents() {
+
+
+  const logout =
+    document.getElementById("logoutBtn");
+
+
+  if (
+    logout &&
+    !logout.dataset.bound
+  ) {
+
+    logout.dataset.bound = "true";
+
+
+    logout.onclick =
+      logoutSuperAdmin;
+
+  }
+
+
+
+  const back =
+    document.getElementById("backBtn");
+
+
+  if (
+    back &&
+    !back.dataset.bound
+  ) {
+
+    back.dataset.bound = "true";
+
+
+    back.onclick =
+      function () {
+
+        window.history.back();
+
+      };
+
+  }
+
+
+  document
+    .querySelectorAll("[data-page]")
+    .forEach(function(button){
+
+
+      if (button.dataset.bound)
+        return;
+
+
+      button.dataset.bound = "true";
+
+
+      button.onclick =
+        function(){
+
+          openModule(
+            button.dataset.page
+          );
+
+        };
+
+
+    });
+
+}
+
+
+// ===============================
+// MODULE OPEN
+// ===============================
+
+function openModule(page) {
+
+
+  console.log(
+    "[SUPER ADMIN MODULE]",
+    page
+  );
+
+
+  if (
+    typeof window.openSystemPage ===
+    "function"
+  ) {
+
+    window.openSystemPage(page);
+
+    return;
+
+  }
+
+
+  const box =
+    document.getElementById(
+      "mainContent"
+    );
+
+
+  if (box) {
+
+    box.innerHTML =
+      "<h3>" +
+      page.toUpperCase() +
+      "</h3>";
+
+  }
+
+}
+
+
+// ===============================
+// LOGOUT
+// ===============================
+
+function logoutSuperAdmin(){
+
 
   try {
-    initPage();
-    checkAuth();
-    loadRequests();
-  } catch (err) {
-    console.error("[SYSTEM ADMIN PIN CONTROL ERROR]", err);
-  }
-});
 
-// ================= CORE INIT =================
-function initPage() {
 
-  if (typeof initCoreSystem !== "function") {
-    alert("core_system.js missing");
-    throw new Error("STOP");
-  }
+    if (
+      typeof logoutSession ===
+      "function"
+    ) {
 
-  initCoreSystem();
-}
+      logoutSession();
 
-// ================= AUTH (SINGLE PATH ONLY) =================
-function checkAuth() {
+      return;
 
-  const session = getSession?.();
+    }
 
-  if (!session || session.role !== "system_admin") {
-    window.location.href = "system_admin_login.html";
-    throw new Error("UNAUTHORIZED");
-  }
 
-  const user = getUserById?.(session.userId);
+  } catch(e){}
 
-  if (!user || user.role !== "system_admin") {
-    window.location.href = "system_admin_login.html";
-    throw new Error("INVALID_USER");
-  }
 
-  if ((user.status || "active") !== "active") {
-    window.location.href = "system_admin_login.html";
-    throw new Error("INACTIVE");
-  }
 
-  window.__SYSTEM_ADMIN__ = user;
-}
-
-// ================= REQUEST FETCH =================
-function getSystemAdminPinRequests() {
-
-  const list = getPinRequests?.() || [];
-
-  return list.filter(req =>
-    req &&
-    req.paymentId &&
-    String(req.paymentId).startsWith("ADMIN_STOCK_")
+  localStorage.removeItem(
+    "APP_SESSION"
   );
+
+
+  window.location.href =
+    "super_admin_login.html";
+
 }
 
-// ================= NORMALIZER =================
-function normalizeStatus(status) {
-  return String(status || "").trim().toLowerCase();
-}
 
-// ================= LOAD REQUESTS =================
-function loadRequests() {
+// ===============================
+// EXPORT
+// ===============================
 
-  const pending = getPendingAdminStockRequests();
+window.SuperAdminDashboard = {
 
-  const el = document.getElementById("requestBox");
-  if (!el) return;
+  init:
+    initSuperAdminDashboard,
 
-  el.innerHTML = pending.length
-    ? pending.map(renderRequest).join("")
-    : "<p>No pending requests</p>";
-}
+  logout:
+    logoutSuperAdmin,
 
-// ================= PENDING =================
-function getPendingAdminStockRequests() {
-  return getSystemAdminPinRequests().filter(req =>
-    normalizeStatus(req.status) === "pending"
-  );
-}
+  open:
+    openModule
 
-// ================= RENDER =================
-function renderRequest(req) {
-
-  return `
-    <div class="request-card">
-      <p><b>ID:</b> ${req.requestId}</p>
-      <p><b>User:</b> ${req.userId}</p>
-      <p><b>Type:</b> ${req.type}</p>
-      <p><b>Qty:</b> ${req.quantity || 1}</p>
-
-      <button onclick="approve('${req.requestId}')">Approve</button>
-      <button onclick="reject('${req.requestId}')">Reject</button>
-    </div>
-  `;
-}
-
-// ================= AUTH CHECK =================
-function canReview(requestId) {
-
-  const user = window.__SYSTEM_ADMIN__;
-  if (!user) return false;
-
-  const req = getSystemAdminPinRequests()
-    .find(r => r.requestId === requestId);
-
-  return !!req && normalizeStatus(req.status) === "pending";
-}
-
-// ================= APPROVE =================
-function approve(requestId) {
-
-  if (!canReview(requestId)) return;
-
-  const req = getSystemAdminPinRequests()
-    .find(r => r.requestId === requestId);
-
-  if (!req) return;
-
-  console.log("[APPROVED]", req);
-
-  if (typeof approvePinRequest === "function") {
-    approvePinRequest(requestId, "SYSTEM_ADMIN");
-  }
-
-  loadRequests();
-}
-
-// ================= REJECT =================
-function reject(requestId) {
-
-  if (!canReview(requestId)) return;
-
-  console.log("[REJECTED]", requestId);
-
-  if (typeof rejectPinRequest === "function") {
-    rejectPinRequest(requestId, "SYSTEM_ADMIN");
-  }
-
-  loadRequests();
-}
-
-// ================= CREATE STOCK REQUEST =================
-function createSystemStockRequest(type, qty = 1) {
-
-  const user = window.__SYSTEM_ADMIN__;
-  if (!user) return null;
-
-  const allowed = ["upgrade", "repurchase"];
-
-  if (!allowed.includes(type)) return null;
-  if (qty <= 0) return null;
-
-  return createPinRequest?.({
-    userId: user.userId,
-    type,
-    amount: 0,
-    quantity: qty,
-    paymentId: "SYSTEM_STOCK_" + Date.now()
-  });
-}
-
-// ================= EXPORTS =================
-window.systemAdminPinControl = {
-  approve,
-  reject,
-  createSystemStockRequest,
-  getPendingAdminStockRequests
 };
+
+
+window.__SUPER_ADMIN_DASHBOARD__ = true;
+
+
+console.log(
+  "[SUPER ADMIN DASHBOARD] MODULE READY"
+);
