@@ -200,8 +200,8 @@ function destroySession() {
 
   try {
 
-    const old = safeGet(SESSION_KEY, null);
-
+    const old = sessionSafeGet(SESSION_KEY, null);
+   
     localStorage.setItem(
       SESSION_EVENT_KEY,
       JSON.stringify({
