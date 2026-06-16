@@ -173,7 +173,7 @@ function setSession(user) {
       initialized: true
     };
 
-    safeSet(SESSION_KEY, sessionData);
+   sessionSafeSet(SESSION_KEY, sessionData);
 
     localStorage.setItem(
       SESSION_EVENT_KEY,
@@ -225,7 +225,7 @@ function getSession() {
 
     if (!isSessionCoreReady()) return null;
 
-    const session = safeGet(SESSION_KEY, null);
+  const session = sessionSafeGet(SESSION_KEY, null);
 
     if (!isValidSessionShape(session)) {
       destroySession();
@@ -269,7 +269,7 @@ function getSession() {
     session.lastActivity = Date.now();
     session.treeScope = getTreeAccessScope(session);
 
-    safeSet(SESSION_KEY, session);
+    sessionSafeSet(SESSION_KEY, session);
 
     return session;
 
@@ -353,5 +353,5 @@ window.isAuthenticated = isAuthenticated;
 window.hasRole = hasRole;
 
 // SESSION LOCAL HELPERS ONLY
-window.sessionSafeGet = safeGet;
-window.sessionSafeSet = safeSet;
+window.sessionSafeGet = sessionSafeGet;
+window.sessionSafeSet = sessionSafeSet;
