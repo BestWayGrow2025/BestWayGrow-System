@@ -51,7 +51,7 @@ function isSessionCoreReady() {
 // =====================
 // STORAGE HELPERS (SAFE WRAP)
 // =====================
-function safeGet(key, fallback) {
+function sessionSafeGet(key, fallback) {
   try {
     const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : fallback;
@@ -60,7 +60,7 @@ function safeGet(key, fallback) {
   }
 }
 
-function safeSet(key, value) {
+function sessionSafeSet(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (_) {}
