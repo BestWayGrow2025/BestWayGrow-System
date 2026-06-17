@@ -54,27 +54,24 @@ function initSuperAdminDashboard() {
 
   dashboardReady = true;
 
-
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   }
 
+  if (!checkSuperAdminAuth()) {
+    return;
+  }
 
- if (!checkSuperAdminAuth()) {
-  return;
+  loadProfile();
+
+  bindEvents();
+
+  openModule("home");
+
+  console.log(
+    "[SUPER ADMIN DASHBOARD] READY"
+  );
 }
-
-loadProfile();
-
-bindEvents();
-
-openModule("home");
-
-console.log(
-  "[SUPER ADMIN DASHBOARD] READY"
-);
-}
-
 
 // ===============================
 // AUTH
