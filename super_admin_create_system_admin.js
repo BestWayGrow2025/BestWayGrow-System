@@ -342,37 +342,55 @@ function safeClick(fn) {
 
 /* ================= EVENTS ================= */
 
-
 function bindEvents() {
 
 
-  const btn =
-    document.getElementById(
-      "createBtn"
+  setTimeout(function(){
+
+
+    const btn =
+      document.getElementById(
+        "createBtn"
+      );
+
+
+    if (!btn) {
+
+      console.error(
+        "[CREATE ADMIN] BUTTON NOT FOUND"
+      );
+
+      return;
+
+    }
+
+
+
+    btn.onclick = null;
+
+
+
+    btn.onclick = function(){
+
+
+      safeClick(
+        createSystemAdmin
+      );
+
+
+    };
+
+
+
+    console.log(
+      "[CREATE ADMIN] BUTTON CONNECTED"
     );
 
 
-  if (!btn)
-    return;
-
-
-
-  btn.onclick=null;
-
-
-
-  btn.onclick=function(){
-
-    safeClick(
-      createSystemAdmin
-    );
-
-  };
+  },300);
 
 
 }
-
-
 
 /* ================= START ================= */
 
