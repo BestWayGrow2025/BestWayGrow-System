@@ -11,7 +11,7 @@ PIN MODULE REGISTRY v2.0 CLEAN FIX
 ========================================
 */
 
- (function () {
+(function () {
 
   if (window.__PIN_MODULE_REGISTRY_READY__) return;
   window.__PIN_MODULE_REGISTRY_READY__ = true;
@@ -20,9 +20,9 @@ PIN MODULE REGISTRY v2.0 CLEAN FIX
 
   window.PIN_MODULE_REGISTRY = REGISTRY;
 
-  // ================= ALIAS MAP (CRITICAL FIX) =================
+  // ================= ALIAS MAP =================
   const ALIASES = {
-    eventstream: "eventmonitor" // FIX FOR YOUR ERROR
+    eventstream: "eventmonitor"
   };
 
   // ================= REGISTER =================
@@ -34,19 +34,22 @@ PIN MODULE REGISTRY v2.0 CLEAN FIX
     }
 
     REGISTRY[name] = fn;
+
+    // Optional global exposure
     window[name] = fn;
 
     console.log("[PIN REGISTRY] Registered:", name);
+
     return true;
   }
 
-  // ================= GET (WITH ALIAS RESOLUTION) =================
+  // ================= GET =================
   function get(name) {
 
     if (!name) return null;
 
-    // resolve alias first
-    const resolved = ALIASES[name] || name;
+    const resolved =
+      ALIASES[name] || name;
 
     return REGISTRY[resolved] || null;
   }
@@ -56,20 +59,21 @@ PIN MODULE REGISTRY v2.0 CLEAN FIX
     return Object.keys(REGISTRY);
   }
 
-  // ================= VALIDATION HELPER =================
+  // ================= EXISTS =================
   function exists(name) {
     return !!get(name);
   }
 
-  // ================= GLOBAL EXPORT =================
- window.PIN = {
-  register,
-  get,
-  list,
-  exists
-};
+  // ================= EXPORT =================
+  window.PIN = {
+    register,
+    get,
+    list,
+    exists
+  };
 
-window.PIN_MODULE_REGISTRY = REGISTRY;
-  console.log("[PIN REGISTRY] READY ✔");
+  console.log(
+    "[PIN REGISTRY] READY ✔"
+  );
 
 })();
