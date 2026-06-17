@@ -60,18 +60,19 @@ function initSuperAdminDashboard() {
   }
 
 
-  if (!checkSuperAdminAuth()) {
-    return;
-  }
+ if (!checkSuperAdminAuth()) {
+  return;
+}
 
+loadProfile();
 
-  loadProfile();
+bindEvents();
 
-  bindEvents();
+openModule("home");
 
-  console.log(
-    "[SUPER ADMIN DASHBOARD] READY"
-  );
+console.log(
+  "[SUPER ADMIN DASHBOARD] READY"
+);
 }
 
 
