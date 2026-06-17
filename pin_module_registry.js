@@ -11,12 +11,14 @@ PIN MODULE REGISTRY v2.0 CLEAN FIX
 ========================================
 */
 
-(function () {
+ (function () {
 
-  if (window.PIN_MODULE_REGISTRY) return;
-  window.PIN_MODULE_REGISTRY = true;
+  if (window.__PIN_MODULE_REGISTRY_READY__) return;
+  window.__PIN_MODULE_REGISTRY_READY__ = true;
 
   const REGISTRY = {};
+
+  window.PIN_MODULE_REGISTRY = REGISTRY;
 
   // ================= ALIAS MAP (CRITICAL FIX) =================
   const ALIASES = {
@@ -60,13 +62,14 @@ PIN MODULE REGISTRY v2.0 CLEAN FIX
   }
 
   // ================= GLOBAL EXPORT =================
-  window.PIN = {
-    register,
-    get,
-    list,
-    exists
-  };
+ window.PIN = {
+  register,
+  get,
+  list,
+  exists
+};
 
+window.PIN_MODULE_REGISTRY = REGISTRY;
   console.log("[PIN REGISTRY] READY ✔");
 
 })();
