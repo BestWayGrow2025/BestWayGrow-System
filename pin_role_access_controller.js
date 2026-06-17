@@ -63,9 +63,15 @@ PIN ROLE ACCESS CONTROLLER v1.1 FINAL FIX
   };
 
   // ================= CURRENT ROLE =================
-  function getCurrentRole() {
-    return window.getCurrentUser?.()?.role || "USER";
-  }
+ function getCurrentRole() {
+
+  const role =
+    String(
+      window.getCurrentUser?.()?.role || "USER"
+    ).toUpperCase();
+
+  return role;
+}
 
   // ================= ACCESS CHECK =================
   function hasAccess(page) {
