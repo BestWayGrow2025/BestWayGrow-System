@@ -168,13 +168,20 @@ window.showMsg = showMsg;
 
 /* ================= FLAGS ================= */
 
-window.__SUPER_ADMIN_CREATE_SYSTEM_ADMIN__ = true;
-
 window.__SUPER_ADMIN_MODULE__ = {
   loaded: true,
   name: "super_admin_create_system_admin",
   time: Date.now()
 };
+
+if (window.PIN) {
+
+  PIN.register(
+    "create",
+    startSuperAdminCreateSystemAdmin
+  );
+
+}
 
 console.log("[SUPER ADMIN CREATE SYSTEM ADMIN] READY");
 
