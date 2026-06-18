@@ -122,8 +122,7 @@ case "incomecontrol":
     loadRealModule,
     false,
     {
-      html: "income_control.html",
-      initFunction: "initIncomeControl"
+      html: "income_control.html"
     }
   );
         
