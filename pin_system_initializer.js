@@ -3,9 +3,16 @@
 PIN SYSTEM INITIALIZER V1.0 (MASTER ENTRY)
 ✔ Single system entry point ✔ Orchestrates full PIN ecosystem startup ✔ Boot → Router → Injector → UI → Live Sync ✔ Clean enterprise initialization flow ✔ Prevents partial system load ✔ Production LOCKED
 */
-// ================= INIT GUARD ================= (function () {
-if (window.PIN_SYSTEM_INITIALIZER) return;
-window.PIN_SYSTEM_INITIALIZER = true;
+// ================= INIT GUARD =================
+
+(function () {
+
+  if (window.PIN_SYSTEM_INITIALIZER) {
+    return;
+  }
+
+  window.PIN_SYSTEM_INITIALIZER = true;
+
 })();
 // ================= MAIN START ================= function startPinSystem() {
 console.log("[PIN INIT] STARTING FULL SYSTEM...");
