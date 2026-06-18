@@ -107,14 +107,28 @@ function connectSystemModule(page) {
           loadPinMasterRealModule
         );
 
-      // ================= REPORTS =================
-      case "reports":
+     // ================= REPORTS =================
+case "reports":
 
-        return safeCall(
-          loadReportsRealModule
-        );
+  return safeCall(
+    loadReportsRealModule
+  );
 
-     // ================= PRODUCT MASTER =================
+
+// ================= INCOME CONTROL =================
+case "incomecontrol":
+
+  return safeCall(
+    loadRealModule,
+    false,
+    {
+      html: "income_control.html",
+      js: "income_control_system.js"
+    }
+  );
+
+
+// ================= PRODUCT MASTER =================
 case "productmaster":
 
     return safeCall(
