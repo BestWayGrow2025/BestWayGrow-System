@@ -248,13 +248,21 @@ async function loadRealModule(config={}) {
 
 
 
+const initFn =
+  config.init ||
+  config.initFunction;
+
 if(
-  config.init &&
-  typeof window[config.init]
-  === "function"
+  initFn &&
+  typeof window[initFn] === "function"
 ){
 
-  window[config.init]();
+  console.log(
+    "[MODULE INIT]",
+    initFn
+  );
+
+  window[initFn]();
 
 }
 
