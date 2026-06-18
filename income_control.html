@@ -2,6 +2,8 @@
 
 <h2>💰 Income Control</h2>
 
+
+<!-- SYSTEM STATUS -->
 <div class="card">
 
 <h3>System Status</h3>
@@ -13,27 +15,34 @@ Loading...
 </div>
 
 
+
+<!-- INCOME SETTINGS -->
 <div class="card">
 
 <h3>Income Settings</h3>
 
-<button onclick="toggleMasterIncome()">
+
+<button id="masterIncomeBtn">
 Master Income
 </button>
 
 
-<button onclick="toggleIncomeWallet()">
+<button id="incomeWalletBtn">
 Income Wallet
 </button>
 
 
-<button onclick="toggleTotalIncomeTracking()">
+<button id="totalTrackingBtn">
 Total Tracking
 </button>
+
 
 </div>
 
 
+
+
+<!-- HOLD INCOME -->
 <div class="card">
 
 <h3>Hold Income</h3>
@@ -45,47 +54,329 @@ Loading...
 </div>
 
 
+
+
+<!-- ENGINE STATUS -->
 <div class="card">
 
 <h3>Income Engine</h3>
 
+
 <p>
 Upgrade Income:
 <span id="upgradeStatus">
-Active
+Checking...
 </span>
 </p>
+
 
 <p>
 Repurchase Income:
 <span id="repurchaseStatus">
-Active
+Checking...
 </span>
 </p>
 
-</div>
 
 </div>
+
+
+</div>
+
+
+
 
 
 <style>
 
 .income-control-panel{
+
 padding:20px;
+
 }
+
+
 
 .card{
+
 background:white;
+
 padding:15px;
+
 margin:15px 0;
+
 border-radius:10px;
+
 box-shadow:0 3px 8px rgba(0,0,0,.1);
+
 }
+
+
 
 button{
+
 padding:10px;
+
 margin:5px;
+
 cursor:pointer;
+
+border-radius:6px;
+
 }
 
+
+
 </style>
+
+
+
+
+
+<script>
+
+
+(function(){
+
+
+function refreshIncomeControl(){
+
+
+try{
+
+
+if(typeof getIncomeSettings !== "function")
+return;
+
+
+
+const settings =
+getIncomeSettings();
+
+
+
+const status =
+document.getElementById(
+"incomeStatus"
+);
+
+
+
+if(status){
+
+status.innerHTML =
+settings.incomeEnabled
+?
+"🟢 Income System Active"
+:
+"🔴 Income System Disabled";
+
+}
+
+
+
+
+const hold =
+document.getElementById(
+"holdIncomeStatus"
+);
+
+
+
+if(hold){
+
+hold.innerHTML =
+settings.holdWalletEnabled
+?
+"🟢 Hold Income Active"
+:
+"🔴 Hold Income Disabled";
+
+}
+
+
+
+
+const upgrade =
+document.getElementById(
+"upgradeStatus"
+);
+
+
+
+if(upgrade){
+
+upgrade.innerHTML =
+settings.ugli
+?
+"🟢 Active"
+:
+"🔴 Disabled";
+
+}
+
+
+
+
+const repurchase =
+document.getElementById(
+"repurchaseStatus"
+);
+
+
+
+if(repurchase){
+
+repurchase.innerHTML =
+settings.rli
+?
+"🟢 Active"
+:
+"🔴 Disabled";
+
+}
+
+
+
+}
+catch(err){
+
+console.error(
+"[INCOME CONTROL UI ERROR]",
+err
+);
+
+}
+
+
+}
+
+
+
+
+
+function bindIncomeButtons(){
+
+
+const master =
+document.getElementById(
+"masterIncomeBtn"
+);
+
+
+if(master){
+
+master.onclick=function(){
+
+if(typeof toggleMasterIncome==="function"){
+
+toggleMasterIncome();
+
+refreshIncomeControl();
+
+}
+
+};
+
+}
+
+
+
+
+const wallet =
+document.getElementById(
+"incomeWalletBtn"
+);
+
+
+if(wallet){
+
+wallet.onclick=function(){
+
+if(typeof toggleIncomeWallet==="function"){
+
+toggleIncomeWallet();
+
+refreshIncomeControl();
+
+}
+
+};
+
+}
+
+
+
+
+
+const tracking =
+document.getElementById(
+"totalTrackingBtn"
+);
+
+
+if(tracking){
+
+tracking.onclick=function(){
+
+if(typeof toggleTotalIncomeTracking==="function"){
+
+toggleTotalIncomeTracking();
+
+refreshIncomeControl();
+
+}
+
+};
+
+}
+
+
+
+}
+
+
+
+
+
+window.initIncomeControlUI=function(){
+
+
+bindIncomeButtons();
+
+refreshIncomeControl();
+
+
+console.log(
+"[INCOME CONTROL UI] READY"
+);
+
+
+};
+
+
+
+if(
+document.readyState==="loading"
+){
+
+document.addEventListener(
+"DOMContentLoaded",
+window.initIncomeControlUI
+);
+
+}
+else{
+
+
+window.initIncomeControlUI();
+
+
+}
+
+
+
+})();
+
+
+</script>
