@@ -1,0 +1,91 @@
+<div class="income-control-panel">
+
+<h2>💰 Income Control</h2>
+
+<div class="card">
+
+<h3>System Status</h3>
+
+<p id="incomeStatus">
+Loading...
+</p>
+
+</div>
+
+
+<div class="card">
+
+<h3>Income Settings</h3>
+
+<button onclick="toggleMasterIncome()">
+Master Income
+</button>
+
+
+<button onclick="toggleIncomeWallet()">
+Income Wallet
+</button>
+
+
+<button onclick="toggleTotalIncomeTracking()">
+Total Tracking
+</button>
+
+</div>
+
+
+<div class="card">
+
+<h3>Hold Income</h3>
+
+<p id="holdIncomeStatus">
+Loading...
+</p>
+
+</div>
+
+
+<div class="card">
+
+<h3>Income Engine</h3>
+
+<p>
+Upgrade Income:
+<span id="upgradeStatus">
+Active
+</span>
+</p>
+
+<p>
+Repurchase Income:
+<span id="repurchaseStatus">
+Active
+</span>
+</p>
+
+</div>
+
+</div>
+
+
+<style>
+
+.income-control-panel{
+padding:20px;
+}
+
+.card{
+background:white;
+padding:15px;
+margin:15px 0;
+border-radius:10px;
+box-shadow:0 3px 8px rgba(0,0,0,.1);
+}
+
+button{
+padding:10px;
+margin:5px;
+cursor:pointer;
+}
+
+</style>
