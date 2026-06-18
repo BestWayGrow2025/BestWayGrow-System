@@ -123,10 +123,10 @@ case "incomecontrol":
     false,
     {
       html: "income_control.html",
-      js: "income_control_system.js"
+      js: "income_control_system.js",
+      initFunction: "initIncomeControl"
     }
   );
-
 
 // ================= PRODUCT MASTER =================
 case "productmaster":
