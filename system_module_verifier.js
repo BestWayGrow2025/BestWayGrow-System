@@ -1,7 +1,7 @@
 "use strict";
 /*
 SYSTEM MODULE VERIFIER v1.3 FINAL
-✔ Verifies module render ✔ Detects silent failures ✔ Supports async HTML loading ✔ Supports loadRealModule() ✔ Router compatible ✔ Enterprise safe
+✔ Verifies module render ✔ Detects silent failures ✔ Router compatible ✔ Enterprise safe ✔ Synchronous verification ✔ Production stable
 */
 (function () {
 if ( window.SYSTEM_MODULE_VERIFIER && window.SYSTEM_MODULE_VERIFIER.initialized ) { return; }
@@ -13,61 +13,46 @@ const main =
     "mainContent"
   );
 
+const result = {
+  page,
+  success: false,
+  reason: null,
+  timestamp: Date.now()
+};
+
 if (!main) {
 
-  const result = {
-    page,
-    success: false,
-    reason:
-      "MAIN_CONTENT_MISSING",
-    timestamp: Date.now()
-  };
+  result.reason =
+    "MAIN_CONTENT_MISSING";
 
   emit(result);
 
   return result;
 }
 
-setTimeout(function () {
+const content =
+  (main.innerHTML || "")
+  .trim();
 
-  const content =
-    (main.innerHTML || "")
-    .trim();
+if (!content) {
 
-  const result = {
-    page,
-    success: false,
-    reason: null,
-    timestamp: Date.now()
-  };
-
-  if (!content) {
-
-    result.reason =
-      "EMPTY_RENDER";
-
-    emit(result);
-
-    return;
-  }
-
-  result.success = true;
-
-  STATE.lastModule = page;
-  STATE.lastCheck =
-    result.timestamp;
+  result.reason =
+    "EMPTY_RENDER";
 
   emit(result);
 
-}, 300);
+  return result;
+}
 
-return {
-  page,
-  success: null,
-  reason:
-    "PENDING_ASYNC_RENDER",
-  timestamp: Date.now()
-};
+result.success = true;
+
+STATE.lastModule = page;
+STATE.lastCheck =
+  result.timestamp;
+
+emit(result);
+
+return result;
 
 }
 function emit(result) {
@@ -84,7 +69,7 @@ if (
 
 console.log(
   "[MODULE VERIFIER]",
-  result.success === true
+  result.success
     ? "PASS"
     : "FAIL",
   result.page,
@@ -101,5 +86,6 @@ return {
 };
 
 }
-window.SYSTEM_MODULE_VERIFIER = { verify, getState };
+window.SYSTEM_MODULE_VERIFIER = { initialized: true, ready: true, verify, getState };
 })();
+
