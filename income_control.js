@@ -193,21 +193,21 @@ refreshIncomeControl();
 
 
 
-window.initIncomeControlUI=function(){
+window.initIncomeControlUI = function(){
 
+    bindIncomeButtons();
 
-bindIncomeButtons();
+    refreshIncomeControl();
 
-refreshIncomeControl();
-
-
-console.log(
-"[INCOME CONTROL UI] READY"
-);
-
+    console.log(
+        "[INCOME CONTROL UI] READY"
+    );
 
 };
 
+console.log(
+    "[INCOME CONTROL UI FUNCTION REGISTERED]"
+);
 
 
 
