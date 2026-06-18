@@ -211,16 +211,4 @@ console.log(
 
 
 
-// AUTO START
-
-window.addEventListener(
-    "load",
-    function(){
-
-        window.initIncomeControlUI();
-
-    }
-);
-
-
 })();
