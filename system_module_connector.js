@@ -123,7 +123,7 @@ case "incomecontrol":
     false,
     {
       html: "income_control.html",
-      js: "income_control_system.js"
+      init: "initIncomeControlUI"
     }
   );
         
