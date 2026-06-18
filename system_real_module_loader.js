@@ -218,9 +218,7 @@ function loadScriptOnce(scriptFile) {
 
 async function loadRealModule(config={}) {
 
-
   try {
-
 
     if(!config.html){
 
@@ -230,13 +228,9 @@ async function loadRealModule(config={}) {
 
     }
 
-
-
     await loadHtmlIntoMain(
       config.html
     );
-
-
 
     if(config.js){
 
@@ -246,54 +240,43 @@ async function loadRealModule(config={}) {
 
     }
 
+    const initFn =
+      config.init ||
+      config.initFunction;
 
+    if(
+      initFn &&
+      typeof window[initFn] === "function"
+    ){
 
-const initFn =
-  config.init ||
-  config.initFunction;
+      console.log(
+        "[MODULE INIT]",
+        initFn
+      );
 
-if(
-  initFn &&
-  typeof window[initFn] === "function"
-){
+      window[initFn]();
 
-  console.log(
-    "[MODULE INIT]",
-    initFn
-  );
-
-  window[initFn]();
-
-}
-
-
+    }
 
     console.log(
       "[REAL MODULE LOADER] SUCCESS:",
       config.html
     );
 
-
-
     return true;
 
-
-
   } catch(err){
-
 
     console.error(
       "[REAL MODULE LOADER ERROR]",
       err
     );
 
-
     return false;
 
   }
 
 }
-
 
 
 // ========================================
