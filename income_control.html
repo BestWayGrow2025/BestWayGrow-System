@@ -112,25 +112,27 @@ function refreshIncomeControl(){
 try{
 
 
-if(typeof getIncomeSettings !== "function"){
+if(typeof window.getIncomeSettings !== "function"){
 
-console.warn(
-"[INCOME CONTROL] Waiting for income system..."
-);
+    console.warn(
+        "[INCOME CONTROL] Income engine not ready"
+    );
 
-setTimeout(
-refreshIncomeControl,
-500
-);
+    setTimeout(
+        refreshIncomeControl,
+        1000
+    );
 
-return;
+    return;
 
 }
 
 
 
 const settings =
-getIncomeSettings();
+window.getIncomeSettings();
+
+
 
 
 
@@ -150,6 +152,7 @@ settings.incomeEnabled
 "🔴 Income System Disabled";
 
 }
+
 
 
 
@@ -174,6 +177,7 @@ settings.holdWalletEnabled
 
 
 
+
 const upgrade =
 document.getElementById(
 "upgradeStatus"
@@ -190,6 +194,7 @@ settings.ugli
 "🔴 Disabled";
 
 }
+
 
 
 
@@ -212,6 +217,7 @@ settings.rli
 }
 
 
+
 }
 catch(err){
 
@@ -223,6 +229,7 @@ err
 }
 
 
+
 }
 
 
@@ -232,27 +239,34 @@ err
 function bindIncomeButtons(){
 
 
+
 const master =
 document.getElementById(
 "masterIncomeBtn"
 );
 
 
+
 if(master){
 
 master.onclick=function(){
 
-if(typeof toggleMasterIncome==="function"){
 
-toggleMasterIncome();
+if(typeof window.toggleMasterIncome === "function"){
+
+window.toggleMasterIncome();
 
 refreshIncomeControl();
 
 }
 
+
 };
 
 }
+
+
+
 
 
 
@@ -263,21 +277,27 @@ document.getElementById(
 );
 
 
+
 if(wallet){
 
 wallet.onclick=function(){
 
-if(typeof toggleIncomeWallet==="function"){
 
-toggleIncomeWallet();
+if(typeof window.toggleIncomeWallet === "function"){
+
+window.toggleIncomeWallet();
 
 refreshIncomeControl();
 
 }
 
+
 };
 
 }
+
+
+
 
 
 
@@ -288,21 +308,25 @@ document.getElementById(
 );
 
 
+
 if(tracking){
 
 tracking.onclick=function(){
 
-if(typeof toggleTotalIncomeTracking==="function"){
 
-toggleTotalIncomeTracking();
+if(typeof window.toggleTotalIncomeTracking === "function"){
+
+window.toggleTotalIncomeTracking();
 
 refreshIncomeControl();
 
 }
 
+
 };
 
 }
+
 
 
 }
@@ -327,13 +351,16 @@ console.log(
 );
 
 
+
 }
 catch(err){
+
 
 console.error(
 "[INCOME CONTROL UI INIT ERROR]",
 err
 );
+
 
 }
 
@@ -341,5 +368,31 @@ err
 };
 
 
+
+
+
+// AUTO START
+
+if(document.readyState === "loading"){
+
+
+document.addEventListener(
+"DOMContentLoaded",
+window.initIncomeControlUI
+);
+
+
+}
+else{
+
+
+window.initIncomeControlUI();
+
+
+}
+
+
+
 })();
+
 </script>
