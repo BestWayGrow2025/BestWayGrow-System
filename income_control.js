@@ -213,18 +213,14 @@ console.log(
 
 // AUTO START
 
-setTimeout(function(){
+window.addEventListener(
+    "load",
+    function(){
 
+        window.initIncomeControlUI();
 
-if(typeof window.initIncomeControlUI === "function"){
-
-window.initIncomeControlUI();
-
-}
-
-
-},100);
-
+    }
+);
 
 
 })();
