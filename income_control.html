@@ -337,62 +337,40 @@ refreshIncomeControl();
 
 window.initIncomeControlUI = function(){
 
-try{
+    try {
 
+        bindIncomeButtons();
 
-bindIncomeButtons();
+        refreshIncomeControl();
 
+        console.log(
+            "[INCOME CONTROL UI] READY"
+        );
 
-refreshIncomeControl();
+    } catch(err){
 
+        console.error(
+            "[INCOME CONTROL UI INIT ERROR]",
+            err
+        );
 
-console.log(
-"[INCOME CONTROL UI] READY"
-);
-
-
-
-}
-catch(err){
-
-
-console.error(
-"[INCOME CONTROL UI INIT ERROR]",
-err
-);
-
-
-}
-
+    }
 
 };
 
 
+// ================= FINAL MODULE START =================
 
+setTimeout(function(){
 
+    if(typeof window.initIncomeControlUI === "function"){
 
-// AUTO START
+        window.initIncomeControlUI();
 
-if(document.readyState === "loading"){
+    }
 
-
-document.addEventListener(
-"DOMContentLoaded",
-window.initIncomeControlUI
-);
-
-
-}
-else{
-
-
-window.initIncomeControlUI();
-
-
-}
-
+},100);
 
 
 })();
-
 </script>
