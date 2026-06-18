@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SYSTEM REAL MODULE LOADER V2.1 FINAL
+SYSTEM REAL MODULE LOADER V2.2 FINAL
 ========================================
 ✔ Loads REAL dashboard modules
 ✔ Connector-compatible
@@ -10,12 +10,15 @@ SYSTEM REAL MODULE LOADER V2.1 FINAL
 ✔ No routing logic
 ✔ No business logic
 ✔ No dashboard recursion
-✔ Asset loader only (FIXED)
+✔ Asset loader only
 ✔ SAFE renderModule bridge support
+✔ Income Control connector added
 ========================================
 */
 
+
 // ================= INIT GUARD =================
+
 (function () {
 
   if (window.__SYSTEM_REAL_MODULE_LOADER__) return;
@@ -26,202 +29,523 @@ SYSTEM REAL MODULE LOADER V2.1 FINAL
 
 })();
 
+
+
 // ================= MAIN CONTENT =================
+
 function getSystemMainContent() {
-  return document.getElementById("mainContent");
+
+  return document.getElementById(
+    "mainContent"
+  );
+
 }
 
+
+
 // ================= SAFE HTML LOAD =================
+
 async function loadHtmlIntoMain(htmlFile) {
 
   try {
 
-    const main = getSystemMainContent();
+
+    const main =
+      getSystemMainContent();
+
+
 
     if (!main) {
-      throw new Error("mainContent not found");
+
+      throw new Error(
+        "mainContent not found"
+      );
+
     }
 
-    const response = await fetch(htmlFile);
+
+
+    const response =
+      await fetch(htmlFile);
+
+
 
     if (!response.ok) {
-      throw new Error("Failed to load: " + htmlFile);
+
+      throw new Error(
+        "Failed to load: " + htmlFile
+      );
+
     }
 
-    const html = await response.text();
 
-    // ================= SAFE RENDER BRIDGE =================
-    if (typeof window.renderModule === "function") {
-      window.renderModule("module", html);
-    } else {
+
+    const html =
+      await response.text();
+
+
+
+    if (
+      typeof window.renderModule ===
+      "function"
+    ) {
+
+      window.renderModule(
+        "module",
+        html
+      );
+
+    }
+
+    else {
+
       main.innerHTML = html;
+
     }
+
+
 
     return true;
 
-  } catch (err) {
 
-    console.error("[REAL MODULE HTML LOAD ERROR]", err);
+
+  } catch(err) {
+
+
+    console.error(
+      "[REAL MODULE HTML LOAD ERROR]",
+      err
+    );
+
+
     return false;
+
   }
+
 }
+
+
 
 // ================= SAFE SCRIPT LOAD =================
+
 function loadScriptOnce(scriptFile) {
 
-  return new Promise((resolve, reject) => {
 
-    try {
+  return new Promise(
+    (resolve,reject)=>{
 
-      const existing = document.querySelector(
-        'script[data-system-module="' + scriptFile + '"]'
-      );
 
-      if (existing) {
-        resolve(true);
-        return;
+      try {
+
+
+        const existing =
+          document.querySelector(
+            'script[data-system-module="' +
+            scriptFile +
+            '"]'
+          );
+
+
+
+        if(existing){
+
+          resolve(true);
+
+          return;
+
+        }
+
+
+
+        const script =
+          document.createElement(
+            "script"
+          );
+
+
+
+        script.src =
+          scriptFile;
+
+
+
+        script.async =
+          false;
+
+
+
+        script.dataset.systemModule =
+          scriptFile;
+
+
+
+        script.onload =
+          ()=>resolve(true);
+
+
+
+        script.onerror =
+          ()=>reject(
+            new Error(
+              "Failed script load: " +
+              scriptFile
+            )
+          );
+
+
+
+        document.body.appendChild(
+          script
+        );
+
+
+
+      } catch(err){
+
+        reject(err);
+
       }
 
-      const script = document.createElement("script");
 
-      script.src = scriptFile;
-      script.async = false;
-      script.dataset.systemModule = scriptFile;
-
-      script.onload = () => resolve(true);
-
-      script.onerror = () => reject(
-        new Error("Failed script load: " + scriptFile)
-      );
-
-      document.body.appendChild(script);
-
-    } catch (err) {
-      reject(err);
     }
+  );
 
-  });
 }
+
+
 
 // ================= GENERIC MODULE LOADER =================
-async function loadRealModule(config = {}) {
+
+async function loadRealModule(config={}) {
+
 
   try {
 
-    if (!config.html) {
-      throw new Error("Missing html file");
+
+    if(!config.html){
+
+      throw new Error(
+        "Missing html file"
+      );
+
     }
 
-    // STEP 1 → HTML
-    await loadHtmlIntoMain(config.html);
 
-    // STEP 2 → JS
-    if (config.js) {
-      await loadScriptOnce(config.js);
+
+    await loadHtmlIntoMain(
+      config.html
+    );
+
+
+
+    if(config.js){
+
+      await loadScriptOnce(
+        config.js
+      );
+
     }
 
-    // STEP 3 → INIT
-    if (
+
+
+    if(
       config.initFunction &&
-      typeof window[config.initFunction] === "function"
-    ) {
+      typeof window[config.initFunction]
+      === "function"
+    ){
+
       window[config.initFunction]();
+
     }
 
-    console.log("[REAL MODULE LOADER] SUCCESS:", config.html);
+
+
+    console.log(
+      "[REAL MODULE LOADER] SUCCESS:",
+      config.html
+    );
+
+
 
     return true;
 
-  } catch (err) {
 
-    console.error("[REAL MODULE LOADER ERROR]", err);
+
+  } catch(err){
+
+
+    console.error(
+      "[REAL MODULE LOADER ERROR]",
+      err
+    );
+
+
     return false;
+
   }
+
 }
 
+
+
 // ========================================
-// HOME MODULE (SAFE)
+// HOME MODULE
 // ========================================
-function loadHomeDashboardModule() {
 
-  try {
+function loadHomeDashboardModule(){
 
-    const html = `
-      <div class="dashboard-home">
 
-        <h2>🏠 SUPER ADMIN CONTROL CENTER</h2>
+  const html = `
 
-        <p>Enterprise control layer active.</p>
+  <div class="dashboard-home">
 
-        <div style="margin-top:20px;padding:15px;border:1px solid #ddd;border-radius:8px;">
-          <h3>System Status</h3>
-          <ul>
-            <li>✔ Dashboard Active</li>
-            <li>✔ Routing Active</li>
-            <li>✔ Module Loader Active</li>
-            <li>✔ Enterprise Core Active</li>
-          </ul>
-        </div>
+  <h2>
+  🏠 SUPER ADMIN CONTROL CENTER
+  </h2>
 
-      </div>
-    `;
 
-    if (typeof window.renderModule === "function") {
-      window.renderModule("home", html);
-    } else {
-      const main = getSystemMainContent();
-      if (main) main.innerHTML = html;
-    }
+  <p>
+  Enterprise control layer active.
+  </p>
 
-    return true;
 
-  } catch (err) {
-    console.error("[HOME MODULE ERROR]", err);
-    return false;
+  <div>
+
+  <h3>
+  System Status
+  </h3>
+
+
+  <ul>
+
+  <li>✔ Dashboard Active</li>
+  <li>✔ Routing Active</li>
+  <li>✔ Module Loader Active</li>
+  <li>✔ Enterprise Core Active</li>
+
+  </ul>
+
+
+  </div>
+
+
+  </div>
+
+  `;
+
+
+
+  if(
+    typeof window.renderModule
+    === "function"
+  ){
+
+    window.renderModule(
+      "home",
+      html
+    );
+
   }
+
+  else {
+
+
+    const main =
+      getSystemMainContent();
+
+
+    if(main)
+      main.innerHTML = html;
+
+
+  }
+
+
+
+  return true;
+
 }
+
+
 
 // ================= MODULE WRAPPERS =================
-function loadCreateSystemAdminRealModule() {
-  return loadRealModule({
-    html: "super_admin_create_system_admin.html",
-    js: "super_admin_create_system_admin.js"
-  });
+
+
+function loadCreateSystemAdminRealModule(){
+
+ return loadRealModule({
+
+  html:
+  "super_admin_create_system_admin.html",
+
+  js:
+  "super_admin_create_system_admin.js"
+
+ });
+
 }
 
-function loadSystemAdminPanelModule() {
-  return loadRealModule({
-    html: "system_admin_dashboard.html",
-    js: "system_admin_dashboard.js"
-  });
+
+
+function loadSystemAdminPanelModule(){
+
+ return loadRealModule({
+
+  html:
+  "system_admin_dashboard.html",
+
+  js:
+  "system_admin_dashboard.js"
+
+ });
+
 }
 
-function loadPinMasterRealModule() {
-  return loadRealModule({
-    html: "admin_pin_panel.html",
-    js: "admin_pin_panel.js"
-  });
+
+
+function loadPinMasterRealModule(){
+
+ return loadRealModule({
+
+  html:
+  "admin_pin_panel.html",
+
+  js:
+  "admin_pin_panel.js"
+
+ });
+
 }
 
-function loadReportsRealModule() {
-  return loadRealModule({
-    html: "admin_reports.html",
-    js: "admin_reports.js"
-  });
+
+
+function loadReportsRealModule(){
+
+ return loadRealModule({
+
+  html:
+  "admin_reports.html",
+
+  js:
+  "admin_reports.js"
+
+ });
+
 }
 
-function loadUsersRealModule() {
-  return loadRealModule({
-    html: "registration_approval.html",
-    js: "registration_approval.js"
-  });
+
+
+function loadUsersRealModule(){
+
+ return loadRealModule({
+
+  html:
+  "registration_approval.html",
+
+  js:
+  "registration_approval.js"
+
+ });
+
 }
+
+
+
+// ================= INCOME CONTROL =================
+
+
+function loadIncomeControlRealModule(){
+
+
+  try{
+
+
+    if(
+      typeof window.initIncomeControl
+      === "function"
+    ){
+
+
+      const result =
+        window.initIncomeControl();
+
+
+
+      console.log(
+        "[INCOME CONTROL] ACTIVE",
+        result
+      );
+
+
+
+      return true;
+
+
+    }
+
+
+
+    console.error(
+      "[INCOME CONTROL] INIT FUNCTION NOT FOUND"
+    );
+
+
+
+    return false;
+
+
+
+  }catch(e){
+
+
+    console.error(
+      "[INCOME CONTROL ERROR]",
+      e
+    );
+
+
+
+    return false;
+
+
+  }
+
+
+}
+
+
+
 
 // ================= EXPORTS =================
-window.loadRealModule = loadRealModule;
-window.loadHomeDashboardModule = loadHomeDashboardModule;
-window.loadCreateSystemAdminRealModule = loadCreateSystemAdminRealModule;
-window.loadSystemAdminPanelModule = loadSystemAdminPanelModule;
-window.loadPinMasterRealModule = loadPinMasterRealModule;
-window.loadReportsRealModule = loadReportsRealModule;
-window.loadUsersRealModule = loadUsersRealModule;
+
+
+window.loadRealModule =
+loadRealModule;
+
+
+window.loadHomeDashboardModule =
+loadHomeDashboardModule;
+
+
+window.loadCreateSystemAdminRealModule =
+loadCreateSystemAdminRealModule;
+
+
+window.loadSystemAdminPanelModule =
+loadSystemAdminPanelModule;
+
+
+window.loadPinMasterRealModule =
+loadPinMasterRealModule;
+
+
+window.loadReportsRealModule =
+loadReportsRealModule;
+
+
+window.loadUsersRealModule =
+loadUsersRealModule;
+
+
+window.loadIncomeControlRealModule =
+loadIncomeControlRealModule;
