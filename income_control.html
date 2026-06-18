@@ -339,44 +339,43 @@ refreshIncomeControl();
 
 
 
-window.initIncomeControlUI=function(){
+window.initIncomeControlUI = function(){
 
+    try {
 
-bindIncomeButtons();
+        bindIncomeButtons();
 
-refreshIncomeControl();
+        refreshIncomeControl();
 
+        console.log(
+            "[INCOME CONTROL UI] READY"
+        );
 
-console.log(
-"[INCOME CONTROL UI] READY"
-);
+    } catch(err){
 
+        console.error(
+            "[INCOME CONTROL UI INIT ERROR]",
+            err
+        );
+
+    }
 
 };
 
 
-
+// AUTO START
 if(
-document.readyState==="loading"
+    document.readyState === "loading"
 ){
 
-document.addEventListener(
-"DOMContentLoaded",
-window.initIncomeControlUI
-);
+    document.addEventListener(
+        "DOMContentLoaded",
+        window.initIncomeControlUI
+    );
 
 }
 else{
 
-
-window.initIncomeControlUI();
-
+    window.initIncomeControlUI();
 
 }
-
-
-
-})();
-
-
-</script>
