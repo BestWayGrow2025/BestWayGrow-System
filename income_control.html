@@ -141,13 +141,21 @@ border-radius:6px;
 
 function refreshIncomeControl(){
 
-
 try{
 
+if(typeof getIncomeSettings !== "function"){
 
-if(typeof getIncomeSettings !== "function")
-return;
+    console.warn(
+        "[INCOME CONTROL] Waiting for income system..."
+    );
 
+    setTimeout(
+        refreshIncomeControl,
+        500
+    );
+
+    return;
+}
 
 
 const settings =
@@ -364,9 +372,7 @@ window.initIncomeControlUI = function(){
 
 
 // AUTO START
-if(
-    document.readyState === "loading"
-){
+if(document.readyState === "loading"){
 
     document.addEventListener(
         "DOMContentLoaded",
@@ -381,6 +387,5 @@ else{
 }
 
 
-})(); 
-
+})();
 </script>
