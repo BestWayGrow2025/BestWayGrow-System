@@ -21,36 +21,44 @@ Clean UI orchestration only
 let pinAdminLock = false;
 let pinRefreshTimer = null;
 
+
 // ================= INIT =================
+
 document.addEventListener("DOMContentLoaded", function () {
   initAdminPinPanel();
 });
 
+
 // ================= INIT PANEL =================
+
 function initAdminPinPanel() {
 
-  // Core system init
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   }
 
-  // Safe auth check (HARD STOP FIXED)
+
   const user = typeof protectPage === "function"
     ? protectPage({ role: "admin" })
     : null;
 
+
   if (!user) return;
+
 
   bindPinPanelEvents();
   refreshPinPanelStatus();
   loadPinRequests();
   startPinPanelAutoRefresh();
+
 }
 
 // ================= EVENTS =================
+
 function bindPinPanelEvents() {
 
   console.log("[PIN PANEL] EVENT BIND START");
+
 
   const filter = document.getElementById("filter");
 
@@ -74,9 +82,12 @@ function bindPinPanelEvents() {
 
     const btn = document.getElementById(id);
 
+
     if (!btn) {
+
       console.error("[PIN PANEL] Missing button:", id);
       return;
+
     }
 
 
@@ -97,7 +108,9 @@ function bindPinPanelEvents() {
       }
 
 
-      const result = executePinFlow(actions[id]);
+      const result = executePinFlow(
+        actions[id]
+      );
 
 
       console.log(
@@ -117,176 +130,317 @@ function bindPinPanelEvents() {
 
 }
 
+
 // ================= SAFE CLICK WRAPPER =================
+
 function safePinClick(fn) {
 
   if (pinAdminLock) return;
 
+
   pinAdminLock = true;
 
+
   try {
+
     fn();
+
   } catch (err) {
-    console.error("admin_pin_panel error:", err);
-    alert(err.message || "Action failed");
+
+    console.error(
+      "admin_pin_panel error:",
+      err
+    );
+
+    alert(
+      err.message || "Action failed"
+    );
+
   }
 
+
   setTimeout(() => {
+
     pinAdminLock = false;
+
   }, 500);
+
 }
 
 // ================= STATUS =================
+
 function refreshPinPanelStatus() {
 
   const up = document.getElementById("upgradeStatus");
   const rp = document.getElementById("repurchaseStatus");
 
+
   const upgrade = typeof getActivePinProducts === "function"
     ? getActivePinProducts("upgrade")
     : [];
+
 
   const repurchase = typeof getActivePinProducts === "function"
     ? getActivePinProducts("repurchase")
     : [];
 
+
   if (up) {
+
     up.innerText = upgrade.length
       ? `🟢 ACTIVE | ${upgrade.length} Product(s)`
       : "🔴 OFF";
+
   }
 
+
   if (rp) {
+
     rp.innerText = repurchase.length
       ? `🟢 ACTIVE | ${repurchase.length} Product(s)`
       : "🔴 OFF";
+
   }
+
 }
 
+
 // ================= LOAD REQUESTS =================
+
 function loadPinRequests() {
 
   const filterEl = document.getElementById("filter");
   const table = document.getElementById("reqTable");
 
+
   if (!table) return;
 
-  const filter = filterEl ? filterEl.value : "ALL";
+
+  const filter = filterEl
+    ? filterEl.value
+    : "ALL";
+
 
   const rows = typeof getPinRequests === "function"
     ? getPinRequests()
     : [];
 
+
   table.innerHTML = "";
 
+
   if (!rows.length) {
-    table.innerHTML = "<tr><td colspan='8'>No Requests</td></tr>";
+
+    table.innerHTML =
+      "<tr><td colspan='8'>No Requests</td></tr>";
+
     return;
+
   }
+
 
   rows.forEach(req => {
 
-    if (filter !== "ALL" && req.status !== filter) return;
 
-    const priority = req.priority || "YELLOW";
-    const qty = Number(req.quantity || 1);
+    if (
+      filter !== "ALL" &&
+      req.status !== filter
+    ) {
+      return;
+    }
+
+
+    const priority =
+      req.priority || "YELLOW";
+
+
+    const qty =
+      Number(req.quantity || 1);
+
 
     const color =
-      priority === "GREEN" ? "green" :
-      priority === "RED" ? "red" : "orange";
+      priority === "GREEN"
+        ? "green"
+        : priority === "RED"
+          ? "red"
+          : "orange";
+
 
     let actions = "-";
 
+
     if (req.status === "PENDING") {
+
       actions = `
-        <button onclick="approvePinRequest('${req.requestId}')">✔</button>
-        <button onclick="rejectAdminPinRequest('${req.requestId}')">✖</button>
-        <button onclick="forcePinRequest('${req.requestId}')">⚡</button>
+
+        <button onclick="approvePinRequest('${req.requestId}')">
+          ✔
+        </button>
+
+        <button onclick="rejectAdminPinRequest('${req.requestId}')">
+          ✖
+        </button>
+
+        <button onclick="forcePinRequest('${req.requestId}')">
+          ⚡
+        </button>
+
       `;
+
     }
 
+
     table.innerHTML += `
+
       <tr>
+
         <td>${req.requestId}</td>
+
         <td>${req.userId}</td>
+
         <td>${req.type}</td>
+
         <td>${qty}</td>
-        <td style="color:${color}">${priority}</td>
+
+        <td style="color:${color}">
+          ${priority}
+        </td>
+
         <td>${req.status}</td>
+
         <td>${req.paymentId || "-"}</td>
+
         <td>${actions}</td>
+
       </tr>
+
     `;
+
   });
+
 }
 
 // ================= APPROVE =================
+
 function approvePinRequest(requestId) {
 
   safePinClick(() => {
 
+
     if (typeof executePinFlow !== "function") {
-      throw new Error("Flow engine missing");
+
+      throw new Error(
+        "Flow engine missing"
+      );
+
     }
 
-    executePinFlow("PROCESS_REQUEST", {
-      requestId,
-      mode: "APPROVE"
-    });
+
+    executePinFlow(
+      "PROCESS_REQUEST",
+      {
+        requestId,
+        mode: "APPROVE"
+      }
+    );
+
 
     loadPinRequests();
+
   });
+
 }
 
+
 // ================= REJECT =================
+
 function rejectAdminPinRequest(requestId) {
 
   safePinClick(() => {
 
-    if (!confirm("Reject this request?")) return;
 
-    if (typeof executePinFlow !== "function") {
-      throw new Error("Flow engine missing");
+    if (!confirm("Reject this request?")) {
+      return;
     }
 
-    executePinFlow("REJECT_REQUEST", {
-      requestId
-    });
+
+    if (typeof executePinFlow !== "function") {
+
+      throw new Error(
+        "Flow engine missing"
+      );
+
+    }
+
+
+    executePinFlow(
+      "REJECT_REQUEST",
+      {
+        requestId
+      }
+    );
+
 
     loadPinRequests();
+
   });
+
 }
 
+
 // ================= FORCE PROCESS =================
+
 function forcePinRequest(requestId) {
 
   safePinClick(() => {
 
-    if (!confirm("Force process this request?")) return;
 
-    if (typeof executePinFlow !== "function") {
-      throw new Error("Flow engine missing");
+    if (!confirm("Force process this request?")) {
+      return;
     }
 
-    executePinFlow("PROCESS_REQUEST", {
-      requestId,
-      force: true
-    });
+
+    if (typeof executePinFlow !== "function") {
+
+      throw new Error(
+        "Flow engine missing"
+      );
+
+    }
+
+
+    executePinFlow(
+      "PROCESS_REQUEST",
+      {
+        requestId,
+        force: true
+      }
+    );
+
 
     loadPinRequests();
+
   });
+
 }
 
+
 // ================= DETAILS =================
+
 function viewPinRequestDetails(requestId) {
 
   const rows = typeof getPinRequests === "function"
     ? getPinRequests()
     : [];
 
-  const req = rows.find(r => r.requestId === requestId);
+
+  const req = rows.find(
+    r => r.requestId === requestId
+  );
+
 
   if (!req) return;
+
 
   alert(
 `ID: ${req.requestId}
@@ -299,17 +453,29 @@ Priority: ${req.priority || "YELLOW"}
 Status: ${req.status}
 Retry: ${req.retry || 0}`
   );
+
 }
+
 
 // ================= AUTO REFRESH =================
+
 function startPinPanelAutoRefresh() {
 
-  if (pinRefreshTimer) clearInterval(pinRefreshTimer);
+  if (pinRefreshTimer) {
+    clearInterval(pinRefreshTimer);
+  }
 
-  pinRefreshTimer = setInterval(loadPinRequests, 3000);
+
+  pinRefreshTimer = setInterval(
+    loadPinRequests,
+    3000
+  );
+
 }
 
+
 // ================= GLOBAL EXPORTS =================
+
 window.loadPinRequests = loadPinRequests;
 window.approvePinRequest = approvePinRequest;
 window.rejectAdminPinRequest = rejectAdminPinRequest;
