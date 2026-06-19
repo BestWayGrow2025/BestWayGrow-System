@@ -51,6 +51,46 @@ function bindPinPanelEvents() {
   if (filter) {
     filter.addEventListener("change", loadPinRequests);
   }
+
+
+  const startUpgradeBtn = document.getElementById("startUpgradeBtn");
+  const stopUpgradeBtn = document.getElementById("stopUpgradeBtn");
+
+  const startRepurchaseBtn = document.getElementById("startRepurchaseBtn");
+  const stopRepurchaseBtn = document.getElementById("stopRepurchaseBtn");
+
+
+  if (startUpgradeBtn) {
+    startUpgradeBtn.onclick = function () {
+      executePinFlow("START_UPGRADE");
+      refreshPinPanelStatus();
+    };
+  }
+
+
+  if (stopUpgradeBtn) {
+    stopUpgradeBtn.onclick = function () {
+      executePinFlow("STOP_UPGRADE");
+      refreshPinPanelStatus();
+    };
+  }
+
+
+  if (startRepurchaseBtn) {
+    startRepurchaseBtn.onclick = function () {
+      executePinFlow("START_REPURCHASE");
+      refreshPinPanelStatus();
+    };
+  }
+
+
+  if (stopRepurchaseBtn) {
+    stopRepurchaseBtn.onclick = function () {
+      executePinFlow("STOP_REPURCHASE");
+      refreshPinPanelStatus();
+    };
+  }
+
 }
 
 // ================= SAFE CLICK WRAPPER =================
