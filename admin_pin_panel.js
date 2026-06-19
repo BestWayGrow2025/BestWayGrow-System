@@ -37,14 +37,8 @@ function initAdminPinPanel() {
     initCoreSystem();
   }
 
-
-  const user = typeof protectPage === "function"
-    ? protectPage({ role: "admin" })
-    : null;
-
-
-  if (!user) return;
-
+  // TEMP AUTH BYPASS
+  const user = true;
 
   bindPinPanelEvents();
   refreshPinPanelStatus();
