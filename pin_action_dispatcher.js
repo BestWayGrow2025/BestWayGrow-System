@@ -301,28 +301,97 @@ function dispatchPinAction(
     return res.result;
   }
 
-  // ==================================================
-  // UNKNOWN ACTION SAFE FAIL
-  // ==================================================
-  console.warn("[PIN DISPATCHER] Unknown action:", actionType);
-  return false;
+ // ==================================================
+// START / STOP PIN PRODUCT CONTROL
+// ==================================================
+
+if (actionType === "START_UPGRADE") {
+
+  const fn = getPinEngine("startUpgrade");
+
+  const res = safeExecute(
+    "startUpgrade",
+    fn,
+    [payload]
+  );
+
+  return res.success;
 }
+
+
+if (actionType === "STOP_UPGRADE") {
+
+  const fn = getPinEngine("stopUpgrade");
+
+  const res = safeExecute(
+    "stopUpgrade",
+    fn,
+    [payload]
+  );
+
+  return res.success;
+}
+
+
+if (actionType === "START_REPURCHASE") {
+
+  const fn = getPinEngine("startRepurchase");
+
+  const res = safeExecute(
+    "startRepurchase",
+    fn,
+    [payload]
+  );
+
+  return res.success;
+}
+
+
+if (actionType === "STOP_REPURCHASE") {
+
+  const fn = getPinEngine("stopRepurchase");
+
+  const res = safeExecute(
+    "stopRepurchase",
+    fn,
+    [payload]
+  );
+
+  return res.success;
+}
+
+
+// ==================================================
+// UNKNOWN ACTION SAFE FAIL
+// ==================================================
+
+console.warn("[PIN DISPATCHER] Unknown action:", actionType);
+return false;
 
 // ================= VALIDATOR =================
 function isValidPinDispatchAction(actionType) {
 
   const valid = [
+
     "REQUEST_PIN",
     "SYSTEM_PIN_REQUEST",
     "ADMIN_STOCK_REQUEST",
+
     "APPROVE_REQUEST",
     "PROCESS_REQUEST",
     "REJECT_REQUEST",
+
     "ASSIGN_PIN",
     "USE_PIN",
     "TRANSFER_PIN",
     "DELETE_PIN",
     "OVERRIDE_PIN",
+
+    "START_UPGRADE",
+    "STOP_UPGRADE",
+    "START_REPURCHASE",
+    "STOP_REPURCHASE",
+
     "NAVIGATE"
   ];
 
