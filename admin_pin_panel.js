@@ -475,3 +475,9 @@ window.approvePinRequest = approvePinRequest;
 window.rejectAdminPinRequest = rejectAdminPinRequest;
 window.forcePinRequest = forcePinRequest;
 window.viewPinRequestDetails = viewPinRequestDetails;
+
+console.log("[PIN PANEL] MANUAL INIT");
+
+setTimeout(() => {
+  initAdminPinPanel();
+}, 100);
