@@ -301,7 +301,7 @@ function dispatchPinAction(
     return res.result;
   }
 
- // ==================================================
+// ==================================================
 // START / STOP PIN PRODUCT CONTROL
 // ==================================================
 
@@ -368,6 +368,9 @@ if (actionType === "STOP_REPURCHASE") {
 console.warn("[PIN DISPATCHER] Unknown action:", actionType);
 return false;
 
+}
+
+
 // ================= VALIDATOR =================
 function isValidPinDispatchAction(actionType) {
 
@@ -399,6 +402,7 @@ function isValidPinDispatchAction(actionType) {
     normalizePinDispatcherAction(actionType)
   );
 }
+
 
 // ================= EXPORT =================
 window.dispatchPinAction = dispatchPinAction;
