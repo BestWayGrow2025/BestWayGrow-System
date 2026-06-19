@@ -46,6 +46,8 @@ function initAdminPinPanel() {
 // ================= EVENTS =================
 function bindPinPanelEvents() {
 
+  console.log("BIND PIN EVENTS RUNNING");
+
   const filter = document.getElementById("filter");
 
   if (filter) {
@@ -61,34 +63,78 @@ function bindPinPanelEvents() {
 
 
   if (startUpgradeBtn) {
+
     startUpgradeBtn.onclick = function () {
+
+      console.log("UPGRADE START CLICKED");
+
+      if (typeof executePinFlow !== "function") {
+        console.error("executePinFlow missing");
+        return;
+      }
+
       executePinFlow("START_UPGRADE");
+
       refreshPinPanelStatus();
     };
+
   }
 
 
   if (stopUpgradeBtn) {
+
     stopUpgradeBtn.onclick = function () {
+
+      console.log("UPGRADE STOP CLICKED");
+
+      if (typeof executePinFlow !== "function") {
+        console.error("executePinFlow missing");
+        return;
+      }
+
       executePinFlow("STOP_UPGRADE");
+
       refreshPinPanelStatus();
     };
+
   }
 
 
   if (startRepurchaseBtn) {
+
     startRepurchaseBtn.onclick = function () {
+
+      console.log("REPURCHASE START CLICKED");
+
+      if (typeof executePinFlow !== "function") {
+        console.error("executePinFlow missing");
+        return;
+      }
+
       executePinFlow("START_REPURCHASE");
+
       refreshPinPanelStatus();
     };
+
   }
 
 
   if (stopRepurchaseBtn) {
+
     stopRepurchaseBtn.onclick = function () {
+
+      console.log("REPURCHASE STOP CLICKED");
+
+      if (typeof executePinFlow !== "function") {
+        console.error("executePinFlow missing");
+        return;
+      }
+
       executePinFlow("STOP_REPURCHASE");
+
       refreshPinPanelStatus();
     };
+
   }
 
 }
