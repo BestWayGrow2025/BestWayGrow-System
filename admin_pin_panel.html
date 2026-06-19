@@ -2,9 +2,13 @@
 
   <h2>PIN CONTROL PANEL</h2>
 
+
   <!-- ================= UPGRADE ================= -->
+
   <div class="box">
+
     <h3>Upgrade PIN</h3>
+
     <input type="number" id="up_bv" placeholder="BV"><br>
     <input type="number" id="up_amount" placeholder="Amount"><br>
     <input type="number" id="up_gst" placeholder="GST"><br>
@@ -13,11 +17,17 @@
     <button id="stopUpgradeBtn">STOP</button>
 
     <p id="upgradeStatus"></p>
+
   </div>
 
+
+
   <!-- ================= REPURCHASE ================= -->
+
   <div class="box">
+
     <h3>Repurchase PIN</h3>
+
     <input type="number" id="re_bv" placeholder="BV"><br>
     <input type="number" id="re_amount" placeholder="Amount"><br>
     <input type="number" id="re_gst" placeholder="GST"><br>
@@ -26,24 +36,37 @@
     <button id="stopRepurchaseBtn">STOP</button>
 
     <p id="repurchaseStatus"></p>
+
   </div>
 
+
+
   <!-- ================= REQUESTS ================= -->
+
   <div class="box">
+
     <h3>PIN Requests</h3>
 
+
     <select id="filter">
+
       <option value="ALL">All</option>
       <option value="PENDING">Pending</option>
       <option value="PROCESSING">Processing</option>
       <option value="COMPLETED">Completed</option>
       <option value="FAILED">Failed</option>
       <option value="REJECTED">Rejected</option>
+
     </select>
 
+
+
     <table>
+
       <thead>
+
         <tr>
+
           <th>ID</th>
           <th>User</th>
           <th>Type</th>
@@ -51,14 +74,19 @@
           <th>Priority</th>
           <th>Status</th>
           <th>Action</th>
+
         </tr>
+
       </thead>
 
+
       <tbody id="reqTable"></tbody>
+
+
     </table>
+
 
   </div>
 
-</div>
 
-<script src="admin_pin_panel.js"></script>
+</div>
