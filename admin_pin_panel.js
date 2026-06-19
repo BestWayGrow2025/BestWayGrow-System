@@ -3,9 +3,10 @@
 console.log("ADMIN_PIN_PANEL_JS LOADED");
 
 /*
+========================================
 ADMIN PIN PANEL V2.2
 FINAL PRODUCTION
-*/
+
 ✔ Admin PIN request control panel
 ✔ Uses unified executePinFlow engine
 ✔ Fully aligned with PIN_ACTION system
