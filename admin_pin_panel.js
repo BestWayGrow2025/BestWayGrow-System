@@ -46,96 +46,70 @@ function initAdminPinPanel() {
 // ================= EVENTS =================
 function bindPinPanelEvents() {
 
-  console.log("BIND PIN EVENTS RUNNING");
+  console.log("[PIN PANEL] EVENT BIND START");
 
   const filter = document.getElementById("filter");
 
   if (filter) {
-    filter.addEventListener("change", loadPinRequests);
+    filter.onchange = loadPinRequests;
   }
 
 
-  const startUpgradeBtn = document.getElementById("startUpgradeBtn");
-  const stopUpgradeBtn = document.getElementById("stopUpgradeBtn");
+  const actions = {
 
-  const startRepurchaseBtn = document.getElementById("startRepurchaseBtn");
-  const stopRepurchaseBtn = document.getElementById("stopRepurchaseBtn");
+    startUpgradeBtn: "START_UPGRADE",
+    stopUpgradeBtn: "STOP_UPGRADE",
+
+    startRepurchaseBtn: "START_REPURCHASE",
+    stopRepurchaseBtn: "STOP_REPURCHASE"
+
+  };
 
 
-  if (startUpgradeBtn) {
+  Object.keys(actions).forEach(id => {
 
-    startUpgradeBtn.onclick = function () {
+    const btn = document.getElementById(id);
 
-      console.log("UPGRADE START CLICKED");
+    if (!btn) {
+      console.error("[PIN PANEL] Missing button:", id);
+      return;
+    }
+
+
+    btn.onclick = function () {
+
+      console.log("[PIN ACTION]", actions[id]);
+
 
       if (typeof executePinFlow !== "function") {
-        console.error("executePinFlow missing");
+
+        console.error(
+          "[PIN PANEL] executePinFlow NOT FOUND"
+        );
+
+        alert("PIN Engine not loaded");
         return;
+
       }
 
-      executePinFlow("START_UPGRADE");
+
+      const result = executePinFlow(actions[id]);
+
+
+      console.log(
+        "[PIN RESULT]",
+        result
+      );
+
 
       refreshPinPanelStatus();
+
     };
 
-  }
+  });
 
 
-  if (stopUpgradeBtn) {
-
-    stopUpgradeBtn.onclick = function () {
-
-      console.log("UPGRADE STOP CLICKED");
-
-      if (typeof executePinFlow !== "function") {
-        console.error("executePinFlow missing");
-        return;
-      }
-
-      executePinFlow("STOP_UPGRADE");
-
-      refreshPinPanelStatus();
-    };
-
-  }
-
-
-  if (startRepurchaseBtn) {
-
-    startRepurchaseBtn.onclick = function () {
-
-      console.log("REPURCHASE START CLICKED");
-
-      if (typeof executePinFlow !== "function") {
-        console.error("executePinFlow missing");
-        return;
-      }
-
-      executePinFlow("START_REPURCHASE");
-
-      refreshPinPanelStatus();
-    };
-
-  }
-
-
-  if (stopRepurchaseBtn) {
-
-    stopRepurchaseBtn.onclick = function () {
-
-      console.log("REPURCHASE STOP CLICKED");
-
-      if (typeof executePinFlow !== "function") {
-        console.error("executePinFlow missing");
-        return;
-      }
-
-      executePinFlow("STOP_REPURCHASE");
-
-      refreshPinPanelStatus();
-    };
-
-  }
+  console.log("[PIN PANEL] EVENT BIND COMPLETE");
 
 }
 
