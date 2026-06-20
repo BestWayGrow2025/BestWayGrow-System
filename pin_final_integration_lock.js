@@ -8,71 +8,123 @@
 
 })();
 
+// ================= ARCHITECTURE ENFORCEMENT =================
 function enforcePinArchitecture() {
 
   try {
 
-    // ================= FLOW ENFORCEMENT =================
-    const required = [
+    // ================= REQUIRED FLAGS =================
+    const requiredFlags = [
       "__PIN_SYSTEM_INITIALIZER__",
       "__PIN_UI_LAUNCHER__",
-      "__PIN_UI_INJECTOR__",
+      "__PIN_UI_INJECTOR__"
+    ];
+
+    // ================= REQUIRED FUNCTIONS =================
+    const requiredFunctions = [
       "routePinRequest",
       "startLiveSync"
     ];
 
-    for (let i = 0; i < required.length; i++) {
+    // ================= CHECK FLAGS =================
+    for (let i = 0; i < requiredFlags.length; i++) {
 
-      const key = required[i];
+      const key = requiredFlags[i];
 
-      if (!window[key] && typeof window[key] !== "function") {
+      if (typeof window[key] === "undefined") {
 
-        console.warn("[PIN FINAL LOCK] MISSING:", key);
+        console.warn(
+          "[PIN FINAL LOCK] MISSING FLAG:",
+          key
+        );
 
         return false;
       }
     }
 
-    // ================= PREVENT MULTIPLE INIT =================
+    // ================= CHECK FUNCTIONS =================
+    for (let i = 0; i < requiredFunctions.length; i++) {
+
+      const fn = requiredFunctions[i];
+
+      if (typeof window[fn] !== "function") {
+
+        console.warn(
+          "[PIN FINAL LOCK] MISSING FUNCTION:",
+          fn
+        );
+
+        return false;
+      }
+    }
+
+    // ================= PREVENT MULTIPLE LOCK =================
     if (window.__PIN_LOCK_ACTIVE__) {
 
-      console.warn("[PIN FINAL LOCK] SYSTEM ALREADY LOCKED");
+      console.warn(
+        "[PIN FINAL LOCK] SYSTEM ALREADY LOCKED"
+      );
 
       return true;
     }
 
     window.__PIN_LOCK_ACTIVE__ = true;
 
-    // ================= FREEZE CRITICAL FLOW =================
-    Object.freeze(window.__PIN_SYSTEM_STATE__ || {});
+    // ================= FREEZE SYSTEM STATE =================
+    if (
+      window.__PIN_SYSTEM_STATE__ &&
+      typeof window.__PIN_SYSTEM_STATE__ === "object"
+    ) {
+      Object.freeze(window.__PIN_SYSTEM_STATE__);
+    }
 
-    console.log("[PIN FINAL LOCK] SYSTEM ARCHITECTURE LOCKED ✔");
+    console.log(
+      "[PIN FINAL LOCK] SYSTEM ARCHITECTURE LOCKED ✔"
+    );
 
     return true;
 
   } catch (err) {
 
-    console.error("[PIN FINAL LOCK ERROR]", err);
+    console.error(
+      "[PIN FINAL LOCK ERROR]",
+      err
+    );
 
     return false;
   }
 }
 
+// ================= SAFE MODE =================
 function startPinSafeMode() {
 
-  console.log("[PIN SAFE MODE] ACTIVATING...");
+  console.log(
+    "[PIN SAFE MODE] ACTIVATING..."
+  );
 
   enforcePinArchitecture();
 
-  if (typeof startRecoveryWatchdog === "function") {
-    startRecoveryWatchdog(10000);
+  if (
+    typeof window.startRecoveryWatchdog === "function"
+  ) {
+
+    window.startRecoveryWatchdog(10000);
   }
 
-  if (typeof checkSystemHealth === "function") {
-    setInterval(checkSystemHealth, 8000);
+  if (
+    typeof window.checkSystemHealth === "function"
+  ) {
+
+    setInterval(
+      window.checkSystemHealth,
+      8000
+    );
   }
 }
 
-window.enforcePinArchitecture = enforcePinArchitecture;
-window.startPinSafeMode = startPinSafeMode;
+// ================= EXPORTS =================
+window.enforcePinArchitecture =
+  enforcePinArchitecture;
 
+window.startPinSafeMode =
+  startPinSafeMode;
