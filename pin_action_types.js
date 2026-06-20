@@ -1,54 +1,20 @@
 "use strict";
-
 /*
-========================================
 PIN ACTION TYPES (SINGLE SOURCE OF TRUTH)
-========================================
-✔ Unified action taxonomy
-✔ Used by UI / Request / Master / Control
-✔ Prevents mismatched permission logic
-========================================
+✔ Unified action taxonomy ✔ Used by UI / Request / Master / Control ✔ Prevents mismatched permission logic ✔ Includes PIN Master Start/Stop actions
 */
-
 const PIN_ACTION = Object.freeze({
-
-  // User layer
-  REQUEST: "REQUEST_PIN",
-
-  // Request decision layer
-  APPROVE: "APPROVE_REQUEST",
-  REJECT: "REJECT_REQUEST",
-
-  // Execution layer
-  ASSIGN: "ASSIGN_PIN",
-  USE: "USE_PIN",
-
-  // Admin utilities
-  TRANSFER: "TRANSFER_PIN",
-  DELETE: "DELETE_PIN",
-  OVERRIDE: "OVERRIDE_PIN"
-
+// User layer REQUEST: "REQUEST_PIN",
+// Request decision layer APPROVE: "APPROVE_REQUEST", REJECT: "REJECT_REQUEST",
+// Execution layer ASSIGN: "ASSIGN_PIN", USE: "USE_PIN",
+// Admin utilities TRANSFER: "TRANSFER_PIN", DELETE: "DELETE_PIN", OVERRIDE: "OVERRIDE_PIN",
+// PIN Master Controls START_UPGRADE: "START_UPGRADE", STOP_UPGRADE: "STOP_UPGRADE",
+START_REPURCHASE: "START_REPURCHASE", STOP_REPURCHASE: "STOP_REPURCHASE"
 });
-
-// ================= NORMALIZER =================
-function normalizePinAction(action) {
-
-  return Object.values(PIN_ACTION).includes(action)
-    ? action
-    : null;
-
+// ================= NORMALIZER ================= function normalizePinAction(action) {
+return Object.values(PIN_ACTION).includes(action) ? action : null;
 }
-
-// ================= REVERSE LOOKUP =================
-function getPinActionKey(action) {
-
-  return Object.keys(PIN_ACTION).find(
-    key => PIN_ACTION[key] === action
-  ) || null;
-
+// ================= REVERSE LOOKUP ================= function getPinActionKey(action) {
+return Object.keys(PIN_ACTION).find( key => PIN_ACTION[key] === action ) || null;
 }
-
-// ================= EXPORT =================
-window.PIN_ACTION = PIN_ACTION;
-window.normalizePinAction = normalizePinAction;
-window.getPinActionKey = getPinActionKey;
+// ================= EXPORT ================= window.PIN_ACTION = PIN_ACTION; window.normalizePinAction = normalizePinAction; window.getPinActionKey = getPinActionKey;
