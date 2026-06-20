@@ -1,4 +1,22 @@
 "use strict";
+
+(function () {
+
+  if (window.__PIN_ACTION_PERMISSION_CONTROL__) return;
+
+  window.__PIN_ACTION_PERMISSION_CONTROL__ = true;
+
+  if (!window.PIN_ACTION) {
+
+    console.error(
+      "[PIN ACTION CONTROL] PIN_ACTION missing"
+    );
+
+    return;
+  }
+
+})();
+
 /*
 PIN ACTION CONTROL V1.2
 ✔ Central action permission control ✔ Unified action dictionary ✔ Role-safe validation ✔ Status-safe validation ✔ Supports PIN Master START/STOP actions ✔ Production SAFE
@@ -158,11 +176,35 @@ time:
 
 };
 }
-// ================= EXPORT ================= window.canExecutePinAction = canExecutePinAction;
-window.canRoleAccessPinAction = canRoleAccessPinAction;
-window.canActionRunByStatus = canActionRunByStatus;
-window.requiresPinActionConfirm = requiresPinActionConfirm;
-window.canDeletePin = canDeletePin;
-window.canOverridePin = canOverridePin;
-window.isValidPinAction = isValidPinAction;
-window.buildPinActionAudit = buildPinActionAudit;
+// ================= EXPORT =================
+
+Object.defineProperty(
+  window,
+  "canExecutePinAction",
+  {
+    value: canExecutePinAction,
+    writable: false,
+    configurable: false
+  }
+);
+
+window.canRoleAccessPinAction =
+  canRoleAccessPinAction;
+
+window.canActionRunByStatus =
+  canActionRunByStatus;
+
+window.requiresPinActionConfirm =
+  requiresPinActionConfirm;
+
+window.canDeletePin =
+  canDeletePin;
+
+window.canOverridePin =
+  canOverridePin;
+
+window.isValidPinAction =
+  isValidPinAction;
+
+window.buildPinActionAudit =
+  buildPinActionAudit;
