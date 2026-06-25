@@ -298,4 +298,4 @@ window.clearCriticalLogs = clearCriticalLogs;
 window.normalizeSource = normalizeSource;
 window.makeChecksum = makeChecksum;
 
-console.log("[ACTIVITY LOG] READY V7.3");
+console.log("[PLATFORM ACTIVITY AUDIT] READY V7.3");
