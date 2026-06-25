@@ -99,5 +99,5 @@ function login() {
     })
   );
 
-  window.location.href = "franchise_dashboard.html";
+  window.location.href = "system_franchise_dashboard.html";
 }
