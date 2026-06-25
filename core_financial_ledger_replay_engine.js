@@ -225,75 +225,70 @@ function replayFullSystem() {
 }
 
 // ========================================
-// VERIFY CURRENT WALLET STATE
+// SINGLE USER REPLAY
 // ========================================
-function verifyWalletIntegrity() {
+function replayUser(userId) {
   try {
-    if (
-      typeof getWallets !== "function" ||
-      typeof getLedger !== "function"
-    ) {
-      return {
-        valid: false,
-        reason: "DEPENDENCIES_MISSING"
+    const balances =
+      buildBalancesFromLedger();
+
+    if (!balances) {
+      return null;
+    }
+
+    const wallets =
+      getWallets?.() || {};
+
+    const balance =
+      Number(
+        balances[userId]?.balance || 0
+      );
+
+    if (!wallets[userId]) {
+      wallets[userId] = {
+        balance: 0
       };
     }
 
-    const currentWallets = getWallets();
-    const expectedWallets = buildBalancesFromLedger();
-
-    if (!expectedWallets) {
-      return {
-        valid: false,
-        reason: "REPLAY_BUILD_FAILED"
-      };
-    }
-
-    const mismatches = [];
-
-    const allUsers = new Set([
-      ...Object.keys(currentWallets || {}),
-      ...Object.keys(expectedWallets || {})
-    ]);
-
-    allUsers.forEach(function (userId) {
-      const current = Number(
-        currentWallets[userId]?.balance || 0
+    wallets[userId].balance =
+      parseFloat(
+        balance.toFixed(2)
       );
 
-      const expected = Number(
-        expectedWallets[userId]?.balance || 0
-      );
+    saveWallets?.(wallets);
 
-      if (
-        parseFloat(current.toFixed(2)) !==
-        parseFloat(expected.toFixed(2))
-      ) {
-        mismatches.push({
-          userId,
-          current,
-          expected
-        });
+    addReplayAudit({
+      action: "USER_REPLAY",
+      success: true,
+      details: {
+        userId
       }
     });
 
-    return {
-      valid: mismatches.length === 0,
-      mismatchCount: mismatches.length,
-      mismatches,
-      checkedAt: Date.now()
-    };
+    return wallets[userId];
+
   } catch (err) {
-    if (typeof logCritical === "function") {
+
+    addReplayAudit({
+      action: "USER_REPLAY",
+      success: false,
+      details: {
+        userId,
+        error: err.message
+      }
+    });
+
+    if (
+      typeof logCritical ===
+      "function"
+    ) {
       logCritical(
-        "WALLET_INTEGRITY_CHECK_FAILED: " + err.message
+        "USER_REPLAY_FAILED: " +
+        err.message
       );
     }
 
-    return {
-      valid: false,
-      reason: err.message
-    };
+    return null;
   }
 }
 
@@ -332,6 +327,9 @@ window.previewReplay =
 
 window.replayFullSystem =
   replayFullSystem;
+
+window.replayUser =
+  replayUser;
 
 window.verifyWalletIntegrity =
   verifyWalletIntegrity;
