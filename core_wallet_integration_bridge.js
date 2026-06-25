@@ -43,16 +43,12 @@ function initWalletEventBridge() {
     return;
   }
 
-  // Hook common wallet functions only if they exist
   hookWalletFunction("creditWallet", "WALLET_CREDIT");
   hookWalletFunction("debitWallet", "WALLET_DEBIT");
   hookWalletFunction("updateWalletBalance", "WALLET_UPDATE");
   hookWalletFunction("transferWallet", "WALLET_TRANSFER");
 
-  // Register global APIs and flags
   exposeWalletBridgeAPI();
-
-  // Attach default synchronization listeners
   bindDefaultWalletSync();
 
   console.log("[WALLET EVENT BRIDGE] Initialized");
@@ -65,7 +61,6 @@ function hookWalletFunction(fnName, eventName) {
     return;
   }
 
-  // Prevent duplicate wrapping
   if (window[fnName].__eventBridgeWrapped) {
     return;
   }
@@ -74,7 +69,6 @@ function hookWalletFunction(fnName, eventName) {
 
   function wrappedWalletFunction(...args) {
 
-    // BEFORE EVENT
     try {
       window.SYSTEM_EVENTS.emit(eventName + "_BEFORE", {
         functionName: fnName,
@@ -83,10 +77,8 @@ function hookWalletFunction(fnName, eventName) {
       });
     } catch (_) {}
 
-    // EXECUTE ORIGINAL FUNCTION
     const result = original.apply(this, args);
 
-    // MAIN EVENT
     try {
       window.SYSTEM_EVENTS.emit(eventName, {
         functionName: fnName,
@@ -96,7 +88,6 @@ function hookWalletFunction(fnName, eventName) {
       });
     } catch (_) {}
 
-    // GENERIC EVENT REQUIRED BY AUDIT/CONTROL CENTER
     try {
       window.SYSTEM_EVENTS.emit("WALLET_EVENT", {
         functionName: fnName,
@@ -107,7 +98,6 @@ function hookWalletFunction(fnName, eventName) {
       });
     } catch (_) {}
 
-    // BALANCE CHANGED EVENT
     try {
       window.SYSTEM_EVENTS.emit("WALLET_BALANCE_CHANGED", {
         functionName: fnName,
@@ -134,7 +124,6 @@ function bindDefaultWalletSync() {
     return;
   }
 
-  // Refresh dashboard balances
   window.onSystemEvent("WALLET_BALANCE_CHANGED", function () {
     try {
       if (typeof window.refreshDashboardBalances === "function") {
@@ -143,7 +132,6 @@ function bindDefaultWalletSync() {
     } catch (_) {}
   });
 
-  // Optional PIN bank synchronization
   window.onSystemEvent("WALLET_DEBIT", function (data) {
     try {
       if (typeof window.syncWalletToPinBank === "function") {
@@ -152,7 +140,6 @@ function bindDefaultWalletSync() {
     } catch (_) {}
   });
 
-  // Optional payout synchronization
   window.onSystemEvent("WALLET_CREDIT", function (data) {
     try {
       if (typeof window.syncWalletAfterPayout === "function") {
@@ -181,13 +168,10 @@ function broadcastWalletEvent(payload = {}) {
 // ================= EXPORT =================
 function exposeWalletBridgeAPI() {
 
-  // Required diagnostics flags
   window.__WALLET_SYSTEM_ACTIVE__ = true;
   window.wallet_event_bridge_loaded = true;
 
 }
-
-// ================= EXPORT =================
 
 window.broadcastWalletEvent =
   broadcastWalletEvent;
@@ -203,20 +187,24 @@ window.WALLET_SYSTEM_ACTIVE = true;
 
 console.log("[WALLET] HEALTH FLAG REGISTERED");
 
+// ================= AUTO BOOT =================
+
 (function walletBoot() {
 
-function start() {
+  function start() {
 
-  if (window.__WALLET_BOOTED__) return;
+    if (window.__WALLET_BOOTED__) return;
 
-  window.__WALLET_BOOTED__ = true;
+    window.__WALLET_BOOTED__ = true;
 
-  initWalletEventBridge();
+    initWalletEventBridge();
 
-  window.__WALLET_EVENT_BRIDGE__.ready = true;  
+    if (window.__WALLET_EVENT_BRIDGE__) {
+      window.__WALLET_EVENT_BRIDGE__.ready = true;
+    }
 
-  console.log("[WALLET EVENT BRIDGE] BOOT COMPLETE");
-}
+    console.log("[WALLET EVENT BRIDGE] BOOT COMPLETE");
+  }
 
   const wait = setInterval(() => {
 
