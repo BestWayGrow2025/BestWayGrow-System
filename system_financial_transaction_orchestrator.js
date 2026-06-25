@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 /*
 ========================================
@@ -14,8 +14,6 @@ CORE FINANCIAL ENGINE V1.0 (CENTRALIZED BRAIN)
 ✔ Production LOCKED CORE
 ========================================
 */
-
-"use strict";
 
 // ===============================
 // CORE ENTRY
