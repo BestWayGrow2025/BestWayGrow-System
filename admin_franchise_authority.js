@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Franchise Requests</title>
+  <title>Admin Franchise Authority</title>
   <link rel="icon" href="data:,">
   <style>
     body {
@@ -54,7 +54,7 @@
 <body>
 
   <div class="card">
-    <h2>Admin Franchise Requests</h2>
+    <h2>Admin Franchise Authority</h2>
     <button id="refreshBtn">Refresh</button>
     <button id="resetPasswordBtn">Reset User Password</button>
   </div>
@@ -66,6 +66,7 @@
 
   <script src="core_system.js"></script>
   <script src="session_manager.js"></script>
-  <script src="admin_franchise_requests.js"></script>
+  <script src="admin_franchise_authority.js"></script>
+
 </body>
 </html>
