@@ -24,12 +24,12 @@ function authPage() {
     JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
 
   if (!session || !session.userId) {
-    window.location.href = "super_admin_login.html";
+   window.location.href = "super_admin_auth.html";
     throw new Error("STOP");
   }
 
   if (typeof getUserById !== "function") {
-    window.location.href = "super_admin_login.html";
+  window.location.href = "super_admin_auth.html";
     throw new Error("STOP");
   }
 
@@ -40,7 +40,7 @@ function authPage() {
     (currentUser.role !== "super_admin" &&
       currentUser.role !== "system_admin")
   ) {
-    window.location.href = "super_admin_login.html";
+   window.location.href = "super_admin_auth.html";
     throw new Error("STOP");
   }
 }
