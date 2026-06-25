@@ -2,23 +2,23 @@
 
 /*
 ========================================
-SYSTEM CONTROL ROOM UI V1.0 (VISUAL OPS CENTER)
+PLATFORM CONTROL ROOM UI V1.0
 ========================================
-✔ Live system monitoring dashboard
-✔ Connects to Control Center + Event Hub
-✔ Real-time health + backup + audit visualization
-✔ Admin-level operations room UI
-✔ Read-only safe monitoring layer
-✔ Production-safe rendering engine
+✔ Platform monitoring dashboard
+✔ Live health monitoring
+✔ Audit visualization
+✔ Backup monitoring
+✔ Event monitoring
+✔ Production SAFE
 ========================================
 */
 
 // ================= GUARD =================
 (function () {
 
-  if (window.__SYSTEM_CONTROL_ROOM_UI__) return;
+  if (window.__PLATFORM_CONTROL_ROOM_UI__) return;
 
-  window.__SYSTEM_CONTROL_ROOM_UI__ = true;
+  window.__PLATFORM_CONTROL_ROOM_UI__ = true;
 
   document.addEventListener("DOMContentLoaded", initControlRoomUI);
 
@@ -40,7 +40,7 @@ function renderUI(container) {
 
   container.innerHTML = `
     <div style="padding:15px;">
-      <h3>🧠 CONTROL ROOM (LIVE OPS CENTER)</h3>
+      <h3>🧠 PLATFORM CONTROL ROOM</h3>
 
       <div id="crmHealth"></div>
       <div id="crmEvents"></div>
@@ -58,7 +58,9 @@ let UI_TIMER = null;
 
 function startLiveFeed() {
 
-  if (UI_TIMER) clearInterval(UI_TIMER);
+  if (UI_TIMER) {
+    clearInterval(UI_TIMER);
+  }
 
   UI_TIMER = setInterval(refreshUI, 3000);
 }
@@ -79,13 +81,13 @@ function renderHealth() {
   const el = document.getElementById("crmHealth");
   if (!el) return;
 
-  const health = window.collectSystemHealth
+  const health = typeof window.collectSystemHealth === "function"
     ? window.collectSystemHealth()
-    : null;
+    : {};
 
   el.innerHTML = `
     <h4>🩺 System Health</h4>
-    <pre>${JSON.stringify(health || {}, null, 2)}</pre>
+    <pre>${JSON.stringify(health, null, 2)}</pre>
   `;
 }
 
@@ -95,7 +97,7 @@ function renderEvents() {
   const el = document.getElementById("crmEvents");
   if (!el) return;
 
-  const snapshot = window.__SYSTEM_SNAPSHOT__ || {};
+  const snapshot = window.__PLATFORM_SNAPSHOT__ || {};
 
   el.innerHTML = `
     <h4>📡 Live Snapshot</h4>
@@ -111,7 +113,7 @@ function renderBackup() {
 
   el.innerHTML = `
     <h4>💾 Backup Status</h4>
-    <div>${window.__SYSTEM_BACKUP_MANAGER__ ? "ACTIVE" : "MISSING"}</div>
+    <div>${window.__PLATFORM_BACKUP_MANAGER__ ? "ACTIVE" : "MISSING"}</div>
   `;
 }
 
@@ -123,7 +125,7 @@ function renderAudit() {
 
   el.innerHTML = `
     <h4>📜 Audit Trail</h4>
-    <div>${window.__SYSTEM_AUDIT_TRAIL__ ? "ACTIVE" : "MISSING"}</div>
+    <div>${window.__PLATFORM_AUDIT_TRAIL__ ? "ACTIVE" : "MISSING"}</div>
   `;
 }
 
@@ -133,14 +135,12 @@ function renderAlerts() {
   const el = document.getElementById("crmAlerts");
   if (!el) return;
 
-  const hub = window.SYSTEM_EVENTS;
-
   el.innerHTML = `
     <h4>🚨 System Alerts</h4>
-    <div>${hub ? "LISTENING" : "DISCONNECTED"}</div>
+    <div>${window.SYSTEM_EVENTS ? "LISTENING" : "DISCONNECTED"}</div>
   `;
 }
 
-// ================= GLOBAL =================
+// ================= EXPORT =================
 window.refreshControlRoomUI = refreshUI;
 window.initControlRoomUI = initControlRoomUI;
