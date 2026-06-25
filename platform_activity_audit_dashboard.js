@@ -60,7 +60,10 @@ function bindEvents() {
 }
 
 function loadPage() {
-  document.getElementById("welcome").innerText =
+ let welcome = document.getElementById("welcome");
+
+if (welcome) {
+  welcome.innerText =
     "Logged in: " + currentUser.userId + " (" + currentUser.role + ")";
 }
 
