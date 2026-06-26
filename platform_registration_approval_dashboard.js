@@ -8,6 +8,8 @@ REGISTRATION APPROVAL DASHBOARD v1.0
 ✔ Safe integration with registration_queue.js
 ✔ Approve / Reject workflow
 ✔ Live refresh
+✔ Safe dependency checks
+✔ Production-ready
 ========================================
 */
 
@@ -16,7 +18,9 @@ document.addEventListener("DOMContentLoaded", function () {
   loadQueue();
 });
 
+// ================= INIT =================
 function initPage() {
+
   if (typeof getSession !== "function") {
     alert("Session system missing");
     return;
@@ -26,26 +30,34 @@ function initPage() {
 
   if (!session || session.role !== "admin") {
     alert("Access Denied");
+
+    // Replace with platform router if applicable
     window.location.href = "admin_login.html";
+    return;
   }
 }
 
+// ================= LOAD QUEUE =================
 function loadQueue() {
-  const tbody = document.getElementById("list");
 
+  const tbody = document.getElementById("list");
   if (!tbody) return;
 
-  const queue =
-    typeof getRegQueue === "function"
-      ? getRegQueue()
-      : [];
+  if (typeof getRegQueue !== "function") {
+    tbody.innerHTML =
+      '<tr><td colspan="6">Registration queue system missing.</td></tr>';
+    return;
+  }
+
+  const queue = getRegQueue() || [];
 
   tbody.innerHTML = "";
 
   queue.forEach(function (item, index) {
+
     if (item.status !== "PENDING") return;
 
-    const row = `
+    tbody.innerHTML += `
       <tr>
         <td>${item.mobile}</td>
         <td>${item.username}</td>
@@ -53,18 +65,36 @@ function loadQueue() {
         <td>${item.position}</td>
         <td>${item.status}</td>
         <td>
-          <button class="approve" onclick="approve(${index})">Approve</button>
-          <button class="reject" onclick="reject(${index})">Reject</button>
+          <button class="approve" onclick="approve(${index})">
+            Approve
+          </button>
+
+          <button class="reject" onclick="reject(${index})">
+            Reject
+          </button>
         </td>
       </tr>
     `;
-
-    tbody.innerHTML += row;
   });
+
+  if (tbody.innerHTML === "") {
+    tbody.innerHTML =
+      '<tr><td colspan="6">No pending registrations.</td></tr>';
+  }
 }
 
+// ================= APPROVE =================
 function approve(index) {
-  let queue = getRegQueue();
+
+  if (
+    typeof getRegQueue !== "function" ||
+    typeof saveRegQueue !== "function"
+  ) {
+    alert("Registration queue system missing.");
+    return;
+  }
+
+  const queue = getRegQueue();
 
   if (!queue[index]) return;
 
@@ -78,8 +108,18 @@ function approve(index) {
   loadQueue();
 }
 
+// ================= REJECT =================
 function reject(index) {
-  let queue = getRegQueue();
+
+  if (
+    typeof getRegQueue !== "function" ||
+    typeof saveRegQueue !== "function"
+  ) {
+    alert("Registration queue system missing.");
+    return;
+  }
+
+  const queue = getRegQueue();
 
   if (!queue[index]) return;
 
@@ -92,3 +132,8 @@ function reject(index) {
 
   loadQueue();
 }
+
+// ================= EXPORT =================
+window.loadQueue = loadQueue;
+window.approve = approve;
+window.reject = reject;
