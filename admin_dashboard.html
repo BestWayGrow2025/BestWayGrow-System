@@ -1,25 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>
+Admin Dashboard
+</title>
+
+<link rel="icon" href="data:,">
+
+<style>
+
+body{
+
+font-family:Arial;
+padding:20px;
+background:#f4f7f9;
+
+}
+
+
+.admin-dashboard-module{
+
+background:white;
+padding:20px;
+border-radius:10px;
+
+}
+
+
+.menu button{
+
+padding:10px;
+margin:5px;
+cursor:pointer;
+
+}
+
+
+.card{
+
+margin-top:20px;
+padding:20px;
+border:1px solid #ddd;
+border-radius:10px;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
 <div class="admin-dashboard-module">
 
-  <header>
-    <h2>👨‍💼 ADMIN DASHBOARD</h2>
-    <p id="welcome"></p>
-    <button id="logoutBtn">Logout</button>
-  </header>
 
-  <div class="menu">
+<header>
 
-    <button data-page="home">Home</button>
-    <button data-page="users">Users</button>
-    <button data-page="pinmaster">PIN</button>
-    <button data-page="system">System</button>
-    <button data-page="reports">Reports</button>
+<h2>
+👨‍💼 ADMIN DASHBOARD
+</h2>
 
-  </div>
 
-  <div class="container">
-    <div id="mainContent" class="card">
-      Loading...
-    </div>
-  </div>
+<p id="welcome"></p>
+
+
+<button id="logoutBtn">
+Logout
+</button>
+
+
+</header>
+
+
+
+<div class="menu">
+
+
+<button data-page="home">
+Home
+</button>
+
+
+<button data-page="users">
+Users
+</button>
+
+
+<button data-page="pinmaster">
+PIN
+</button>
+
+
+<button data-page="wallet">
+Wallet
+</button>
+
+
+<button data-page="income">
+Income
+</button>
+
+
+<button data-page="system">
+System
+</button>
+
+
+<button data-page="reports">
+Reports
+</button>
+
 
 </div>
+
+
+
+<div id="mainContent" class="card">
+
+Loading...
+
+</div>
+
+
+</div>
+
+
+
+<script src="admin_dashboard_controller.js"></script>
+
+
+</body>
+
+</html>
