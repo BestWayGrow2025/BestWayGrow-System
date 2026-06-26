@@ -1,85 +1,198 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>Admin Activity Logs</title>
-  <link rel="icon" href="data:,">
-  <style>
-    body {
-      font-family: Arial;
-      padding: 20px;
-      background: #f4f7f9;
-    }
 
-    h2 {
-      text-align: center;
-    }
+<title>
+Admin Activity Audit Dashboard
+</title>
 
-    .actions {
-      text-align: center;
-      margin-bottom: 15px;
-    }
+<link rel="icon" href="data:,">
 
-    .actions button {
-      padding: 8px 12px;
-      margin: 5px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-    }
+<style>
 
-    .box {
-      background: white;
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin: 15px auto;
-      border-radius: 10px;
-      max-width: 900px;
-    }
+body {
 
-    input, select {
-      padding: 8px;
-      margin: 5px;
-    }
+  font-family: Arial;
+  padding:20px;
+  background:#f4f7f9;
 
-    .log {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-    }
+}
 
-    .admin { color: green; }
-    .system { color: blue; }
-    .error { color: red; }
-  </style>
+
+h2 {
+
+  text-align:center;
+
+}
+
+
+.actions {
+
+  text-align:center;
+  margin-bottom:15px;
+
+}
+
+
+.actions button {
+
+  padding:8px 12px;
+  margin:5px;
+  cursor:pointer;
+  border:none;
+  border-radius:6px;
+
+}
+
+
+.box {
+
+  background:white;
+  border:1px solid #ddd;
+  padding:15px;
+  margin:15px auto;
+  border-radius:10px;
+  max-width:900px;
+
+}
+
+
+input,
+select {
+
+  padding:8px;
+  margin:5px;
+
+}
+
+
+.log {
+
+  padding:10px;
+  border-bottom:1px solid #eee;
+
+}
+
+
+.admin {
+
+  color:green;
+
+}
+
+
+.system {
+
+  color:blue;
+
+}
+
+
+.error {
+
+  color:red;
+
+}
+
+</style>
+
 </head>
+
+
 <body>
 
-<h2>📜 ADMIN ACTIVITY LOGS</h2>
+
+<h2>
+📜 ADMIN ACTIVITY AUDIT LOGS
+</h2>
+
+
 
 <div class="actions">
-  <button id="backBtn">⬅ Back</button>
-  <button id="refreshBtn">🔄 Refresh</button>
+
+<button id="backBtn">
+⬅ Back
+</button>
+
+
+<button id="refreshBtn">
+🔄 Refresh
+</button>
+
+
 </div>
+
+
 
 <div class="box">
-  <h3>Filter</h3>
-  <input id="filterUser" placeholder="User ID">
-  <select id="filterRole">
-    <option value="">All Roles</option>
-    <option value="ADMIN">Admin</option>
-    <option value="SYSTEM">System</option>
-    <option value="USER">User</option>
-  </select>
-  <input id="filterKeyword" placeholder="Search action">
-  <button id="applyBtn">Apply</button>
-  <button id="clearBtn">Clear Logs</button>
+
+<h3>
+Filter
+</h3>
+
+
+<input
+id="filterUser"
+placeholder="User ID"
+/>
+
+
+<select id="filterRole">
+
+<option value="">
+All Roles
+</option>
+
+<option value="ADMIN">
+Admin
+</option>
+
+<option value="SYSTEM_ADMIN">
+System Admin
+</option>
+
+<option value="USER">
+User
+</option>
+
+</select>
+
+
+<input
+id="filterKeyword"
+placeholder="Search action"
+/>
+
+
+<button id="applyBtn">
+Apply
+</button>
+
+
+<button id="clearBtn">
+Clear Logs
+</button>
+
+
 </div>
+
+
 
 <div class="box">
-  <div id="logs"></div>
+
+<div id="logs">
+
 </div>
 
-<script src="core_system.js"></script>
-<script src="session_manager.js"></script>
-<script src="admin_activity_log.js"></script>
+</div>
+
+
+
+<!-- Admin Activity Audit Controller -->
+<script src="admin_activity_audit_controller.js"></script>
+
+
 </body>
+
 </html>
