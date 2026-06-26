@@ -3,20 +3,10 @@ let currentUser = null;
 let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
   authPage();
   bindEvents();
   loadPage();
 });
-
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
-  }
-}
 
 function authPage() {
   session =
@@ -60,11 +50,12 @@ function bindEvents() {
 }
 
 function loadPage() {
- let welcome = document.getElementById("welcome");
+  let welcome = document.getElementById("welcome");
 
-if (welcome) {
-  welcome.innerText =
-    "Logged in: " + currentUser.userId + " (" + currentUser.role + ")";
+  if (welcome) {
+    welcome.innerText =
+      "Logged in: " + currentUser.userId + " (" + currentUser.role + ")";
+  }
 }
 
 function safeClick(fn) {
