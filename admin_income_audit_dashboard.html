@@ -1,108 +1,225 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>Admin Income Logs</title>
-  <link rel="icon" href="data:,">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f4f7f9;
-    }
 
-    .card {
-      background: #ffffff;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
+<title>
+Admin Income Audit Dashboard
+</title>
 
-    h2, h3 {
-      margin-top: 0;
-    }
+<link rel="icon" href="data:,">
 
-    select,
-    input,
-    button {
-      padding: 10px;
-      margin: 5px 5px 5px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
+<style>
 
-    button {
-      cursor: pointer;
-      border: none;
-      background: #007bff;
-      color: #fff;
-    }
+body{
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-    }
+font-family:Arial,sans-serif;
+margin:0;
+padding:20px;
+background:#f4f7f9;
 
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-      font-size: 13px;
-    }
+}
 
-    th {
-      background: #f1f1f1;
-    }
-  </style>
+
+.card{
+
+background:#fff;
+border-radius:10px;
+padding:20px;
+margin-bottom:20px;
+
+}
+
+
+select,
+input,
+button{
+
+padding:10px;
+margin:5px;
+
+}
+
+
+button{
+
+cursor:pointer;
+background:#007bff;
+color:white;
+border:none;
+border-radius:6px;
+
+}
+
+
+table{
+
+width:100%;
+border-collapse:collapse;
+
+}
+
+
+th,
+td{
+
+border:1px solid #ddd;
+padding:10px;
+text-align:center;
+
+}
+
+
+</style>
+
 </head>
+
+
 <body>
 
-  <div class="card">
-    <h2>Admin Income Logs</h2>
-  </div>
 
-  <div class="card">
-    <h3>Summary</h3>
-    <p>Total Payout: ₹<span id="totalPayout">0.00</span></p>
-    <p>Total Records: <span id="totalRecords">0</span></p>
-  </div>
+<div class="card">
 
-  <div class="card">
-    <h3>Filter</h3>
-    <select id="filterType">
-      <option value="">All</option>
-      <option value="upgrade">Upgrade</option>
-      <option value="repurchase">Repurchase</option>
-      <option value="ctor">CTOR</option>
-    </select>
+<h2>
+ADMIN INCOME AUDIT LOGS
+</h2>
 
-    <input id="filterUser" placeholder="User ID">
-    <button id="refreshBtn">Refresh</button>
-  </div>
+</div>
 
-  <div class="card">
-    <h3>Income Logs</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>User</th>
-          <th>Type</th>
-          <th>Amount</th>
-          <th>From</th>
-          <th>Note</th>
-        </tr>
-      </thead>
-      <tbody id="incomeTable"></tbody>
-    </table>
-  </div>
 
-  <script src="core_system.js"></script>
-  <script src="session_manager.js"></script>
-  <script src="admin_income_logs.js"></script>
+
+<div class="card">
+
+<h3>
+Summary
+</h3>
+
+
+<p>
+Total Payout:
+₹<span id="totalPayout">
+0.00
+</span>
+</p>
+
+
+<p>
+Total Records:
+<span id="totalRecords">
+0
+</span>
+</p>
+
+
+</div>
+
+
+
+<div class="card">
+
+
+<h3>
+Filter
+</h3>
+
+
+<select id="filterType">
+
+<option value="">
+All
+</option>
+
+<option value="upgrade">
+Upgrade
+</option>
+
+<option value="repurchase">
+Repurchase
+</option>
+
+<option value="ctor">
+CTOR
+</option>
+
+
+</select>
+
+
+<input
+id="filterUser"
+placeholder="User ID"
+/>
+
+
+<button id="refreshBtn">
+Refresh
+</button>
+
+
+</div>
+
+
+
+
+<div class="card">
+
+
+<table>
+
+
+<thead>
+
+<tr>
+
+<th>
+Date
+</th>
+
+<th>
+User
+</th>
+
+<th>
+Type
+</th>
+
+<th>
+Amount
+</th>
+
+<th>
+From
+</th>
+
+<th>
+Note
+</th>
+
+
+</tr>
+
+</thead>
+
+
+
+<tbody id="incomeTable">
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+
+<!-- Available controller only -->
+
+<script src="admin_income_audit_controller.js"></script>
+
+
 </body>
+
 </html>
 
