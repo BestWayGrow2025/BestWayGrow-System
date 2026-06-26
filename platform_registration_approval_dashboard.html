@@ -1,9 +1,17 @@
 <div class="registration-approval-module">
 
   <div class="box">
+
     <h2>REGISTRATION APPROVAL DASHBOARD</h2>
 
-    <table>
+    <div style="margin-bottom:15px;">
+      <button onclick="loadQueue()">
+        🔄 Refresh Queue
+      </button>
+    </div>
+
+    <table border="1" width="100%" style="border-collapse:collapse;">
+
       <thead>
         <tr>
           <th>Mobile</th>
@@ -15,8 +23,22 @@
         </tr>
       </thead>
 
-      <tbody id="list"></tbody>
+      <tbody id="list">
+
+        <tr>
+          <td colspan="6">
+            Loading registration requests...
+          </td>
+        </tr>
+
+      </tbody>
+
     </table>
+
   </div>
 
 </div>
+
+
+<!-- Registration Approval Controller -->
+<script src="platform_registration_approval_dashboard.js"></script>
