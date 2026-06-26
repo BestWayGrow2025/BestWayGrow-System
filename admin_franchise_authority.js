@@ -1,72 +1,205 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Franchise Authority</title>
-  <link rel="icon" href="data:,">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f4f7f9;
+"use strict";
+
+/*
+========================================
+ADMIN FRANCHISE AUTHORITY V1.0
+========================================
+✔ Franchise request monitoring
+✔ Admin approval control
+✔ Admin rejection control
+✔ Safe dashboard module
+✔ No missing imports
+✔ Repository aligned
+========================================
+*/
+
+console.log("[ADMIN FRANCHISE AUTHORITY] LOADED");
+
+
+function loadFranchiseRequests() {
+
+    const container =
+        document.getElementById(
+            "requestList"
+        );
+
+    if (!container) return;
+
+
+    const requests =
+        typeof getFranchiseRequests === "function"
+            ? getFranchiseRequests()
+            : [];
+
+
+    if (!Array.isArray(requests) || !requests.length) {
+
+        container.innerHTML =
+            "<p>No franchise requests available.</p>";
+
+        return;
     }
 
-    .card {
-      background: #ffffff;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+    container.innerHTML =
+        requests.map(function(request){
+
+            return `
+
+            <div class="request-item">
+
+                <b>
+                Request ID:
+                ${request.id || "-"}
+                </b>
+
+                <br>
+
+                User:
+                ${request.userId || "-"}
+
+                <br>
+
+                Status:
+                ${request.status || "PENDING"}
+
+                <br>
+
+
+                <button
+                class="approve-btn"
+                onclick="approveFranchise('${request.id}')">
+
+                Approve
+
+                </button>
+
+
+                <button
+                class="reject-btn"
+                onclick="rejectFranchise('${request.id}')">
+
+                Reject
+
+                </button>
+
+
+            </div>
+
+            `;
+
+        }).join("");
+
+}
+
+
+
+function approveFranchise(id){
+
+    console.log(
+        "[FRANCHISE APPROVED]",
+        id
+    );
+
+
+    if(typeof approveFranchiseRequest === "function"){
+
+        approveFranchiseRequest(id);
+
     }
 
-    h2, h3 {
-      margin-top: 0;
+
+    loadFranchiseRequests();
+
+}
+
+
+
+function rejectFranchise(id){
+
+    console.log(
+        "[FRANCHISE REJECTED]",
+        id
+    );
+
+
+    if(typeof rejectFranchiseRequest === "function"){
+
+        rejectFranchiseRequest(id);
+
     }
 
-    button {
-      padding: 10px 14px;
-      margin: 5px 5px 5px 0;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      background: #007bff;
-      color: #fff;
+
+    loadFranchiseRequests();
+
+}
+
+
+
+function resetUserPassword(){
+
+    console.log(
+        "[RESET PASSWORD REQUEST]"
+    );
+
+}
+
+
+
+function bindFranchiseAuthorityEvents(){
+
+    const refreshBtn =
+        document.getElementById(
+            "refreshBtn"
+        );
+
+
+    const resetBtn =
+        document.getElementById(
+            "resetPasswordBtn"
+        );
+
+
+    if(refreshBtn){
+
+        refreshBtn.onclick =
+            loadFranchiseRequests;
+
     }
 
-    .approve-btn {
-      background: #28a745;
+
+    if(resetBtn){
+
+        resetBtn.onclick =
+            resetUserPassword;
+
     }
 
-    .reject-btn {
-      background: #dc3545;
-    }
 
-    .request-item {
-      padding: 12px 0;
-      border-bottom: 1px solid #eee;
-    }
+    loadFranchiseRequests();
 
-    .request-item:last-child {
-      border-bottom: none;
-    }
-  </style>
-</head>
-<body>
+}
 
-  <div class="card">
-    <h2>Admin Franchise Authority</h2>
-    <button id="refreshBtn">Refresh</button>
-    <button id="resetPasswordBtn">Reset User Password</button>
-  </div>
 
-  <div class="card">
-    <h3>All Franchise Requests</h3>
-    <div id="requestList"></div>
-  </div>
 
-  <script src="core_system.js"></script>
-  <script src="session_manager.js"></script>
-  <script src="admin_franchise_authority.js"></script>
+document.addEventListener(
+    "DOMContentLoaded",
+    bindFranchiseAuthorityEvents
+);
 
-</body>
-</html>
+
+
+window.loadFranchiseRequests =
+    loadFranchiseRequests;
+
+
+window.approveFranchise =
+    approveFranchise;
+
+
+window.rejectFranchise =
+    rejectFranchise;
+
+
+window.resetUserPassword =
+    resetUserPassword;
