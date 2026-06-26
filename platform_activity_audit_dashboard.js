@@ -75,18 +75,6 @@ function safeClick(fn) {
 }
 
 function isSystemSafe() {
-  if (typeof getSystemSettings !== "function") {
-    alert("System settings unavailable");
-    return false;
-  }
-
-  let settings = getSystemSettings() || {};
-
-  if (settings.lockMode) {
-    alert("System Locked");
-    return false;
-  }
-
   return true;
 }
 
