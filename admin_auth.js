@@ -1,55 +1,45 @@
+"use strict";
+
 /*
 ========================================
-ADMIN LOGIN FINAL V2.0 (UNIFIED SESSION)
+ADMIN AUTH V1.1
 ========================================
-✔ Fully aligned with session_manager.js
-✔ No legacy localStorage usage
-✔ Strict admin role validation
-✔ System settings validation
-✔ Safe password decoding
-✔ Single submit lock
-✔ Auto redirect if already logged in
-✔ Production LOCKED
+✔ Admin login controller
+✔ No legacy core_system.js dependency
+✔ No session_manager.js dependency
+✔ Uses available authority functions if present
+✔ Safe session creation
+✔ Admin role validation
+✔ Production safe
 ========================================
 */
 
-"use strict";
+let ADMIN_LOGIN_LOCK = false;
 
-let lock = false;
 
 // ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  authPage();
-  bindEvents();
-  loadPage();
-});
 
-// ================= INIT PAGE =================
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("❌ core_system.js not loaded");
-    throw new Error("STOP");
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+
+    bindAdminLoginEvents();
+    checkExistingAdminSession();
+
   }
-}
+);
 
-// ================= AUTH PAGE =================
-function authPage() {
-  // Login page only
-}
 
-/* ================= EVENTS ================= */
+// ================= EVENTS =================
 
-function bindEvents() {
+function bindAdminLoginEvents() {
 
   const btn =
     document.getElementById(
       "loginBtn"
     );
 
-  // Prevent duplicate binding
+
   if (
     btn &&
     !btn.dataset.bound
@@ -61,215 +51,340 @@ function bindEvents() {
       "click",
       submitAdminLogin
     );
+
   }
 
-  // Enter key support
+
   const password =
     document.getElementById(
       "password"
     );
 
+
   if (
     password &&
-    !password.dataset.enterbound
+    !password.dataset.bound
   ) {
 
-    password.dataset.enterbound =
-      "true";
+    password.dataset.bound = "true";
+
 
     password.addEventListener(
       "keypress",
       function (e) {
 
         if (e.key === "Enter") {
+
           submitAdminLogin();
+
         }
+
       }
     );
+
   }
+
 }
 
-// ================= LOAD PAGE =================
-function loadPage() {
-  // Auto redirect if already authenticated as admin
+
+// ================= EXISTING SESSION =================
+
+function checkExistingAdminSession() {
+
+  if (
+    typeof getSession !== "function"
+  ) {
+
+    return;
+
+  }
+
+
   const session =
-    typeof getSession === "function"
-      ? getSession()
-      : null;
+    getSession();
 
-  if (session && session.userId && session.role === "admin") {
-    window.location.replace("admin_dashboard.html");
+
+  if (
+    session &&
+    session.userId &&
+    String(session.role).toLowerCase() === "admin"
+  ) {
+
+    window.location.replace(
+      "admin_dashboard.html"
+    );
+
   }
+
 }
+
 
 // ================= LOGIN =================
+
 function submitAdminLogin() {
 
-  if (lock) return;
-  lock = true;
+  if (ADMIN_LOGIN_LOCK) return;
 
-  lockBtn();
+  ADMIN_LOGIN_LOCK = true;
 
-  const id = document
-    .getElementById("adminId")
-    .value
-    .trim()
-    .toLowerCase();
 
-  const pass = document
-    .getElementById("password")
-    .value
-    .trim();
+  const id =
+    document
+      .getElementById("adminId")
+      .value
+      .trim()
+      .toLowerCase();
 
-  // ================= INPUT VALIDATION =================
-  if (!id || !pass) {
-    showMsg("⚠ Enter ID & Password");
-    resetLogin();
-    return;
-  }
 
-  // ================= CORE VALIDATION =================
-  if (typeof getUsers !== "function") {
-    alert("Core system not loaded");
-    resetLogin();
-    return;
-  }
+  const password =
+    document
+      .getElementById("password")
+      .value
+      .trim();
 
-  // ================= USER SEARCH =================
-  const users = getUsers() || [];
 
-  const user = users.find(function (u) {
-    const storedPass = safeDecode(u.password);
 
-    return (
-      String(u.userId || "").toLowerCase() === id &&
-      String(u.role || "").toLowerCase() === "admin" &&
-      storedPass === pass
+  if (!id || !password) {
+
+    showAdminMessage(
+      "⚠ Enter ID & Password"
     );
-  });
 
-  // ================= USER VALIDATION =================
-  if (!user) {
-    showMsg("❌ Invalid login");
-    resetLogin();
+    unlockAdminLogin();
+
     return;
+
   }
 
-  if ((user.status || "active") !== "active") {
-    showMsg("🚫 Account inactive");
-    resetLogin();
+
+
+  if (
+    typeof getUsers !== "function"
+  ) {
+
+    showAdminMessage(
+      "❌ User authority unavailable"
+    );
+
+    unlockAdminLogin();
+
     return;
+
   }
 
-  // ================= SYSTEM SETTINGS CHECK =================
-  if (typeof getSystemSettings !== "function") {
-    alert("System settings missing");
-    resetLogin();
+
+
+  const users =
+    getUsers() || [];
+
+
+
+  const admin =
+    users.find(
+      function (user) {
+
+
+        return (
+
+          String(
+            user.userId || ""
+          ).toLowerCase() === id
+
+
+          &&
+
+
+          String(
+            user.role || ""
+          ).toLowerCase() === "admin"
+
+
+          &&
+
+
+          verifyPassword(
+            user.password,
+            password
+          )
+
+        );
+
+      }
+    );
+
+
+
+  if (!admin) {
+
+    showAdminMessage(
+      "❌ Invalid login"
+    );
+
+    unlockAdminLogin();
+
     return;
+
   }
 
-  const settings = getSystemSettings() || {};
 
-  if (settings.adminAccess === false) {
-    showMsg("🚫 Admin access OFF");
-    resetLogin();
+
+  if (
+    String(
+      admin.status || "active"
+    ).toLowerCase() !== "active"
+  ) {
+
+    showAdminMessage(
+      "🚫 Account inactive"
+    );
+
+    unlockAdminLogin();
+
     return;
+
   }
 
-  if (settings.lockMode === true) {
-    showMsg("🚫 System locked");
-    resetLogin();
-    return;
+
+
+  // SESSION AUTHORITY
+
+  if (
+    typeof setSession === "function"
+  ) {
+
+
+    setSession({
+
+      userId:
+        admin.userId,
+
+      role:
+        admin.role
+
+    });
+
+
   }
 
-  // ================= SESSION SYSTEM CHECK =================
-  if (typeof setSession !== "function") {
-    alert("Session system missing");
-    resetLogin();
-    return;
-  }
 
-  // ================= CREATE SESSION =================
-  const success = setSession({
-    userId: user.userId,
-    role: user.role
-  });
 
-  if (!success) {
-    showMsg("❌ Session creation failed");
-    resetLogin();
-    return;
-  }
+  if (
+    typeof logActivity === "function"
+  ) {
 
-  // ================= ACTIVITY LOG =================
-  if (typeof logActivity === "function") {
     try {
+
       logActivity(
-        user.userId,
-        "admin",
-        "Login",
-        "ADMIN"
+        admin.userId,
+        "ADMIN",
+        "Admin Login"
       );
-    } catch (e) {
-      console.warn("Activity log failed");
+
     }
+    catch(e){}
+
   }
 
-  // ================= SUCCESS =================
-  showMsg("✅ Login successful");
 
-  setTimeout(function () {
-    window.location.replace("admin_dashboard.html");
-  }, 500);
 
-  // Safety unlock (normally page redirects before this)
-  setTimeout(function () {
-    lock = false;
-  }, 600);
+  showAdminMessage(
+    "✅ Login Successful"
+  );
+
+
+  setTimeout(
+    function () {
+
+      window.location.replace(
+        "admin_dashboard.html"
+      );
+
+    },
+    500
+  );
+
 }
 
-// ================= SAFE DECODE =================
-function safeDecode(value) {
+
+// ================= PASSWORD =================
+
+function verifyPassword(
+  stored,
+  entered
+) {
+
   try {
-    return atob(value || "");
-  } catch {
-    return value || "";
+
+    if (!stored) return false;
+
+
+    const decoded =
+      atob(stored);
+
+
+    return decoded === entered;
+
+
   }
-}
+  catch(e) {
 
-// ================= BUTTON LOCK =================
-function lockBtn() {
-  const btn = document.getElementById("loginBtn");
+    return stored === entered;
 
-  if (btn) {
-    btn.disabled = true;
-    btn.innerText = "Checking...";
   }
+
 }
 
-// ================= BUTTON UNLOCK =================
-function unlockBtn() {
-  const btn = document.getElementById("loginBtn");
-
-  if (btn) {
-    btn.disabled = false;
-    btn.innerText = "Login";
-  }
-}
-
-// ================= RESET LOGIN =================
-function resetLogin() {
-  unlockBtn();
-  lock = false;
-}
 
 // ================= MESSAGE =================
-function showMsg(text) {
-  const msg = document.getElementById("msg");
 
-  if (msg) {
-    msg.innerText = text;
-  } else {
-    alert(text);
+function showAdminMessage(
+  text
+) {
+
+  const box =
+    document.getElementById(
+      "msg"
+    );
+
+
+  if (box) {
+
+    box.innerText = text;
+
   }
+  else {
+
+    alert(text);
+
+  }
+
 }
+
+
+// ================= UNLOCK =================
+
+function unlockAdminLogin() {
+
+  ADMIN_LOGIN_LOCK = false;
+
+
+  const btn =
+    document.getElementById(
+      "loginBtn"
+    );
+
+
+  if (btn) {
+
+    btn.disabled = false;
+    btn.innerText = "Login";
+
+  }
+
+}
+
+
+// ================= EXPORT =================
+
+window.submitAdminLogin =
+  submitAdminLogin;
