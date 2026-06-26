@@ -1,106 +1,247 @@
+"use strict";
+
 /*
 ========================================
-🔎 CHECK STATUS V4.1 (PATCH FIX ONLY)
+PLATFORM STATUS AUDIT DASHBOARD V1.0
+========================================
+✔ Registration status checker
+✔ Safe queue lookup
+✔ Registered user lookup
+✔ Pending queue tracking
+✔ Production safe read-only dashboard
+✔ Platform naming aligned
 ========================================
 */
 
-let session = null;
-let currentUser = null;
-let lock = false;
+let STATUS_LOCK = false;
 
-// =====================
-// BOOT
-// =====================
+
+// ================= BOOT =================
+
 document.addEventListener("DOMContentLoaded", function () {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
 
-  bindEvents();
+  bindStatusEvents();
+
 });
 
-// =====================
-// EVENTS
-// =====================
-function bindEvents() {
-  const checkBtn = document.getElementById("checkBtn");
 
-  if (checkBtn) {
-    checkBtn.addEventListener("click", checkStatus);
+// ================= EVENTS =================
+
+function bindStatusEvents() {
+
+  const btn = document.getElementById("checkBtn");
+
+  if (btn) {
+    btn.addEventListener(
+      "click",
+      checkRegistrationStatus
+    );
   }
+
 }
 
-// =====================
-// SAFE QUEUE FETCH (PATCHED ONLY)
-// =====================
-function getQueue() {
+
+// ================= SAFE QUEUE =================
+
+function getRegistrationQueueSafe() {
+
   try {
-    if (typeof getRegQueue === "function") {
-      const q = getRegQueue();
-      return Array.isArray(q) ? q : [];
+
+    if (
+      typeof getRegQueue === "function"
+    ) {
+
+      const queue = getRegQueue();
+
+      return Array.isArray(queue)
+        ? queue
+        : [];
+
     }
 
-    const raw = localStorage.getItem("REG_QUEUE_DATA");
-    const parsed = JSON.parse(raw || "[]");
 
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
+    const raw =
+      localStorage.getItem(
+        "REG_QUEUE_DATA"
+      );
+
+
+    const parsed =
+      JSON.parse(raw || "[]");
+
+
+    return Array.isArray(parsed)
+      ? parsed
+      : [];
+
+
+  } catch (err) {
+
+    console.error(
+      "[STATUS DASHBOARD] Queue error",
+      err
+    );
+
     return [];
+
   }
+
 }
 
-// =====================
-// CHECK STATUS
-// =====================
-function checkStatus() {
-  if (lock) return;
-  lock = true;
+
+// ================= CHECK =================
+
+function checkRegistrationStatus() {
+
+  if (STATUS_LOCK) return;
+
+  STATUS_LOCK = true;
+
 
   try {
-    const mobile = document.getElementById("mobile").value.trim();
-    const resultBox = document.getElementById("result");
+
+    const mobileInput =
+      document.getElementById(
+        "mobile"
+      );
+
+
+    const resultBox =
+      document.getElementById(
+        "result"
+      );
+
+
+    if (!mobileInput || !resultBox) {
+      return;
+    }
+
+
+    const mobile =
+      mobileInput.value.trim();
+
 
     if (!mobile) {
-      resultBox.innerHTML = "⚠️ Enter mobile number";
+
+      resultBox.innerHTML =
+        "⚠️ Enter mobile number";
+
       return;
+
     }
 
-    const users = typeof getUsers === "function" ? getUsers() : [];
-    const queue = getQueue();
 
-    // ================= REGISTERED =================
-    const user = users.find(u => u.mobile === mobile);
+
+    const users =
+      typeof getUsers === "function"
+        ? getUsers() || []
+        : [];
+
+
+
+    const queue =
+      getRegistrationQueueSafe();
+
+
+
+    // REGISTERED USER
+
+    const user =
+      users.find(
+        u => u.mobile === mobile
+      );
+
 
     if (user) {
+
       resultBox.innerHTML = `
+
         ✅ <b>Registered</b><br><br>
-        User ID: ${user.userId || "N/A"}<br>
-        Name: ${user.username || "N/A"}<br>
-        Status: ${user.status || "active"}<br>
+
+        User ID:
+        ${user.userId || "N/A"}<br>
+
+        Name:
+        ${user.username || "N/A"}<br>
+
+        Status:
+        ${user.status || "ACTIVE"}
+
       `;
+
       return;
+
     }
 
-    // ================= PENDING =================
-    const pendingList = queue
-      .filter(q => q && q.status === "PENDING")
-      .sort((a, b) => (a.requestTime || 0) - (b.requestTime || 0));
 
-    const index = pendingList.findIndex(q => q.mobile === mobile);
 
-    if (index !== -1) {
+    // PENDING QUEUE
+
+    const pending =
+      queue
+      .filter(
+        q =>
+          q &&
+          q.status === "PENDING"
+      )
+      .sort(
+        (a,b)=>
+          (a.requestTime || 0)
+          -
+          (b.requestTime || 0)
+      );
+
+
+    const position =
+      pending.findIndex(
+        q =>
+          q.mobile === mobile
+      );
+
+
+    if (position !== -1) {
+
       resultBox.innerHTML = `
+
         ⏳ <b>Pending</b><br><br>
-        Queue Position: ${index + 1} / ${pendingList.length || 1}<br>
-        Status: Waiting for processing...
+
+        Queue Position:
+        ${position + 1}
+        /
+        ${pending.length}<br>
+
+        Status:
+        Waiting for approval
+
       `;
+
       return;
+
     }
 
-    // ================= NOT FOUND =================
-    resultBox.innerHTML = "❌ No record found";
 
-  } finally {
-    lock = false;
+
+    // NOT FOUND
+
+    resultBox.innerHTML =
+      "❌ No record found";
+
+
   }
+
+  finally {
+
+    STATUS_LOCK = false;
+
+  }
+
 }
+
+
+// ================= EXPORT =================
+
+window.checkRegistrationStatus =
+  checkRegistrationStatus;
+
+window.getRegistrationQueueSafe =
+  getRegistrationQueueSafe;
