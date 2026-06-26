@@ -1,160 +1,380 @@
 "use strict";
 
-let session = null;
-let currentUser = null;
-let lock = false;
+/*
+========================================
+ADMIN ACTIVITY AUDIT CONTROLLER V1.0
+========================================
+✔ Admin activity audit viewer
+✔ Safe admin authentication
+✔ Activity log filtering
+✔ Read-only audit monitoring
+✔ Platform naming aligned
+✔ Dashboard compatible
+========================================
+*/
 
-document.addEventListener("DOMContentLoaded", function () {
-  initActivityLogPage();
-});
+let adminAuditSession = null;
+let adminAuditUser = null;
+
 
 // ================= INIT =================
-function initActivityLogPage() {
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
+
+    initAdminActivityAudit();
+
+  }
+);
+
+
+// ================= CONTROLLER INIT =================
+
+function initAdminActivityAudit() {
+
   try {
-    initPage();
-    authPage();
 
-    if (!currentUser?.userId) return;
+    initAdminAuditPage();
 
-    bindEvents();
-    loadLogs();
+    authenticateAdminAudit();
+
+    if (!adminAuditUser?.userId) {
+      return;
+    }
+
+    bindAdminAuditEvents();
+
+    loadAdminActivityLogs();
+
 
   } catch (err) {
-    console.error("[ACTIVITY LOG INIT ERROR]", err);
+
+    console.error(
+      "[ADMIN ACTIVITY AUDIT ERROR]",
+      err
+    );
+
   }
+
 }
+
 
 // ================= CORE INIT =================
-function initPage() {
-  if (typeof initCoreSystem === "function") {
+
+function initAdminAuditPage() {
+
+  if (
+    typeof initCoreSystem === "function"
+  ) {
+
     initCoreSystem();
-  } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
+
   }
+
 }
+
 
 // ================= AUTH =================
-function authPage() {
-  if (typeof protectPage === "function") {
-    currentUser = protectPage({
-      role: "admin",
-      department: "report"
-    });
+
+function authenticateAdminAudit() {
+
+  if (
+    typeof protectPage === "function"
+  ) {
+
+    adminAuditUser =
+      protectPage({
+        role: "admin",
+        department: "report"
+      });
+
   }
 
-  if (!currentUser) {
-    window.location.href = "admin_login.html";
+
+  if (!adminAuditUser) {
+
+    window.location.href =
+      "admin_auth.html";
+
     return;
+
   }
 
-  session = {
-    userId: currentUser.userId || "UNKNOWN",
-    role: currentUser.role || "admin"
+
+  adminAuditSession = {
+
+    userId:
+      adminAuditUser.userId ||
+      "UNKNOWN",
+
+    role:
+      adminAuditUser.role ||
+      "admin"
+
   };
+
 }
+
 
 // ================= EVENTS =================
-function bindEvents() {
-  const backBtn = document.getElementById("backBtn");
-  const refreshBtn = document.getElementById("refreshBtn");
-  const applyBtn = document.getElementById("applyBtn");
-  const clearBtn = document.getElementById("clearBtn");
+
+function bindAdminAuditEvents() {
+
+  const backBtn =
+    document.getElementById(
+      "backBtn"
+    );
+
+  const refreshBtn =
+    document.getElementById(
+      "refreshBtn"
+    );
+
+  const applyBtn =
+    document.getElementById(
+      "applyBtn"
+    );
+
+  const clearBtn =
+    document.getElementById(
+      "clearBtn"
+    );
+
 
   if (backBtn) {
-    backBtn.addEventListener("click", goBack);
+
+    backBtn.onclick =
+      goAdminDashboard;
+
   }
+
 
   if (refreshBtn) {
-    refreshBtn.addEventListener("click", loadLogs);
+
+    refreshBtn.onclick =
+      loadAdminActivityLogs;
+
   }
+
 
   if (applyBtn) {
-    applyBtn.addEventListener("click", applyFilter);
+
+    applyBtn.onclick =
+      applyAdminAuditFilter;
+
   }
+
 
   if (clearBtn) {
-    clearBtn.addEventListener("click", clearLogs);
+
+    clearBtn.onclick =
+      clearAdminActivityLogs;
+
   }
+
 }
+
 
 // ================= NAV =================
-function goBack() {
-  window.location.href = "admin_dashboard.html";
+
+function goAdminDashboard() {
+
+  window.location.href =
+    "admin_dashboard.html";
+
 }
 
-// ================= ROLE UI =================
-function getRoleClass(role) {
-  if (role === "ADMIN") return "admin";
-  if (role === "SYSTEM") return "system";
-  if (role === "ERROR") return "error";
+
+// ================= ROLE DISPLAY =================
+
+function getAdminAuditRoleClass(role) {
+
+  if (role === "ADMIN")
+    return "admin";
+
+  if (role === "SYSTEM_ADMIN")
+    return "system";
+
+  if (role === "ERROR")
+    return "error";
+
   return "";
+
 }
+
 
 // ================= LOAD LOGS =================
-function loadLogs(customLogs = null) {
 
-  const container = document.getElementById("logs");
-  if (!container) return;
+function loadAdminActivityLogs(
+  customLogs = null
+) {
 
-  const logs = customLogs || (
-    typeof getActivityLogs === "function"
-      ? getActivityLogs()
-      : []
-  );
+  const container =
+    document.getElementById(
+      "logs"
+    );
 
-  if (!logs.length) {
-    container.innerHTML = "No activity logs found";
+
+  if (!container)
     return;
+
+
+  const logs =
+    customLogs ||
+    (
+      typeof getActivityLogs === "function"
+        ? getActivityLogs()
+        : []
+    );
+
+
+  if (!Array.isArray(logs) || !logs.length) {
+
+    container.innerHTML =
+      "No activity logs found";
+
+    return;
+
   }
+
 
   let html = "";
 
-  logs.slice().reverse().forEach(function (log) {
+
+  logs
+  .slice()
+  .reverse()
+  .forEach(function(log){
+
     html += `
-      <div class="log ${getRoleClass(log.role)}">
-        <b>${log.role || "-"}</b>
-        (${log.userId || "-"}) → ${log.action || "-"}<br>
-        <small>${
-          log.time ? new Date(log.time).toLocaleString() : "-"
-        }</small>
+
+      <div class="log ${getAdminAuditRoleClass(log.role)}">
+
+        <b>
+          ${log.role || "-"}
+        </b>
+
+        (${log.userId || "-"})
+
+        →
+        ${log.action || "-"}
+
+        <br>
+
+        <small>
+        ${
+          log.time
+          ? new Date(log.time)
+              .toLocaleString()
+          : "-"
+        }
+        </small>
+
       </div>
+
     `;
+
   });
 
-  container.innerHTML = html;
 
-  if (typeof logActivity === "function" && currentUser?.userId) {
-    logActivity(currentUser.userId, "ADMIN", "Viewed activity logs");
+  container.innerHTML =
+    html;
+
+
+  if (
+    typeof logActivity === "function" &&
+    adminAuditUser?.userId
+  ) {
+
+    logActivity(
+      adminAuditUser.userId,
+      "ADMIN",
+      "Viewed activity logs"
+    );
+
   }
+
 }
+
 
 // ================= FILTER =================
-function applyFilter() {
 
-  const userId = document.getElementById("filterUser")?.value?.trim() || "";
-  const role = document.getElementById("filterRole")?.value || "";
-  const keyword = document.getElementById("filterKeyword")?.value?.trim() || "";
+function applyAdminAuditFilter() {
 
-  const logs = typeof filterLogsAdvanced === "function"
-    ? filterLogsAdvanced({ userId, role, keyword })
-    : [];
+  const userId =
+    document.getElementById(
+      "filterUser"
+    )?.value?.trim() || "";
 
-  loadLogs(logs);
+
+  const role =
+    document.getElementById(
+      "filterRole"
+    )?.value || "";
+
+
+  const keyword =
+    document.getElementById(
+      "filterKeyword"
+    )?.value?.trim() || "";
+
+
+  const logs =
+    typeof filterLogsAdvanced === "function"
+      ? filterLogsAdvanced({
+          userId,
+          role,
+          keyword
+        })
+      : [];
+
+
+  loadAdminActivityLogs(logs);
+
 }
+
 
 // ================= CLEAR =================
-function clearLogs() {
 
-  if (!confirm("Delete all activity logs?")) return;
+function clearAdminActivityLogs() {
 
-  if (typeof clearActivityLogs === "function") {
-    clearActivityLogs();
-  } else {
-    localStorage.removeItem("activityLogs");
+
+  if (
+    !confirm(
+      "Delete all activity logs?"
+    )
+  ) {
+
+    return;
+
   }
 
-  loadLogs();
 
-  alert("Logs cleared");
+  if (
+    typeof clearActivityLogs === "function"
+  ) {
+
+    clearActivityLogs();
+
+  }
+
+
+  loadAdminActivityLogs();
+
+
+  alert(
+    "Logs cleared"
+  );
+
 }
+
+
+// ================= EXPORT =================
+
+window.initAdminActivityAudit =
+  initAdminActivityAudit;
+
+
+window.loadAdminActivityLogs =
+  loadAdminActivityLogs;
