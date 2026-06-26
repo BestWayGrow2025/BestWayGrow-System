@@ -1,55 +1,115 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>Check Status</title>
-  <link rel="icon" href="data:,">
-  <style>
-    body {
-      font-family: Arial;
-      padding: 20px;
-      background: #f5f7fb;
-    }
 
-    .box {
-      border: 1px solid #ccc;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 420px;
-      background: #fff;
-      margin: auto;
-    }
+<title>
+Registration Status Check
+</title>
 
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      box-sizing: border-box;
-    }
+<link rel="icon" href="data:,">
 
-    button {
-      padding: 10px 14px;
-      cursor: pointer;
-    }
+<style>
 
-    #result {
-      margin-top: 15px;
-      line-height: 1.6;
-    }
-  </style>
+body {
+
+  font-family: Arial, sans-serif;
+  padding:20px;
+  background:#f5f7fb;
+
+}
+
+
+.box {
+
+  border:1px solid #ccc;
+  padding:20px;
+  border-radius:10px;
+  max-width:420px;
+  background:#fff;
+  margin:auto;
+
+}
+
+
+input {
+
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  box-sizing:border-box;
+
+}
+
+
+button {
+
+  padding:10px 14px;
+  cursor:pointer;
+
+}
+
+
+#result {
+
+  margin-top:15px;
+  line-height:1.6;
+
+}
+
+</style>
+
 </head>
+
+
 <body>
 
-  <div class="box">
-    <h2>Check Registration Status</h2>
 
-    <input type="text" id="mobile" placeholder="Enter Mobile Number">
-    <button id="checkBtn">Check Status</button>
+<div class="box">
 
-    <div id="result"></div>
-  </div>
 
-  <script src="core_system.js"></script>
-  <script src="session_manager.js"></script>
-  <script src="check_status.js"></script>
+<h2>
+Check Registration Status
+</h2>
+
+
+<input
+type="text"
+id="mobile"
+placeholder="Enter Mobile Number"
+/>
+
+
+<button id="checkBtn">
+
+Check Status
+
+</button>
+
+
+
+<div id="result">
+
+</div>
+
+
+</div>
+
+
+
+<!-- Core Dependencies -->
+
+<script src="core_system.js"></script>
+
+<script src="session_manager.js"></script>
+
+
+
+<!-- Registration Status Dashboard -->
+
+<script src="platform_status_audit_dashboard.js"></script>
+
+
 </body>
+
 </html>
