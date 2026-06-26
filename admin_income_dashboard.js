@@ -1,183 +1,395 @@
-"use strict";
+ "use strict";
 
 /*
 ========================================
-ADMIN INCOME PANEL JS (CLEAN + SAFE + FINAL)
+ADMIN INCOME DASHBOARD CONTROLLER V2.0
 ========================================
-✔ Null safety
-✔ DOM crash protection
-✔ Filter safe handling
-✔ Realtime SYSTEM_EVENTS support
-✔ Production ready
+✔ Unified session authority compatible
+✔ No loggedInAdmin dependency
+✔ No core_system.js dependency
+✔ Safe DOM handling
+✔ Income log rendering
+✔ SYSTEM_EVENTS compatible
+✔ Window exports added
 ========================================
 */
 
 let session = null;
 let currentUser = null;
-let lock = false;
+let incomeLock = false;
+
 
 // ================= INIT =================
+
 document.addEventListener("DOMContentLoaded", function () {
+
   initPage();
-  authPage();
-  bindEvents();
-  loadAllIncome();
+
 });
 
-// ================= INIT PAGE =================
+
+// ================= INIT =================
+
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
-  }
+
+  authPage();
+
+  bindEvents();
+
+  loadAllIncome();
+
 }
+
 
 // ================= AUTH =================
+
 function authPage() {
-  session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
 
-  if (!session?.userId) {
-    window.location.href = "admin_login.html";
+  session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
+
+
+  if (!session || !session.userId) {
+
+    window.location.replace("admin_auth.html");
+
     return;
+
   }
 
-  if (typeof getUserById !== "function") {
-    window.location.href = "admin_login.html";
+
+  currentUser =
+    typeof getUserById === "function"
+      ? getUserById(session.userId)
+      : null;
+
+
+  if (
+    !currentUser ||
+    String(currentUser.role).toLowerCase() !== "admin"
+  ) {
+
+    window.location.replace("admin_auth.html");
+
     return;
+
   }
 
-  currentUser = getUserById(session.userId);
 
-  if (!currentUser || currentUser.role !== "admin") {
-    localStorage.removeItem("loggedInAdmin");
-    window.location.href = "admin_login.html";
+  const status =
+    currentUser.status ||
+    "active";
+
+
+  if (status !== "active") {
+
+    window.location.replace("admin_auth.html");
+
     return;
+
   }
 
-  if ((currentUser.status || "active") !== "active") {
-    localStorage.removeItem("loggedInAdmin");
-    alert("Account inactive");
-    window.location.href = "admin_login.html";
-    return;
-  }
 }
+
 
 // ================= EVENTS =================
+
 function bindEvents() {
 
-  const filter = document.getElementById("filterType");
-  const refreshBtn = document.getElementById("refreshBtn");
+
+  const filter =
+    document.getElementById("filterType");
+
+
+  const refresh =
+    document.getElementById("refreshBtn");
+
 
   if (filter) {
-    filter.addEventListener("change", loadAllIncome);
+
+    filter.addEventListener(
+      "change",
+      loadAllIncome
+    );
+
   }
 
-  if (refreshBtn) {
-    refreshBtn.addEventListener("click", loadAllIncome);
+
+  if (refresh) {
+
+    refresh.addEventListener(
+      "click",
+      loadAllIncome
+    );
+
   }
+
 }
 
+
 // ================= LOAD INCOME =================
+
 function loadAllIncome() {
 
-  const filterEl = document.getElementById("filterType");
-  const type = filterEl ? filterEl.value : "";
+
+  if (incomeLock) return;
+
+
+  incomeLock = true;
+
 
   let logs = [];
 
+
   try {
+
+
     if (typeof getIncomeLogs === "function") {
-      logs = getIncomeLogs() || [];
+
+      logs =
+        getIncomeLogs() || [];
+
     }
-  } catch (err) {
-    console.error("Load error:", err);
-    logs = [];
+
+
+  } catch(error) {
+
+    console.error(
+      "[INCOME LOAD ERROR]",
+      error
+    );
+
   }
+
+
+  const filter =
+    document.getElementById("filterType");
+
+
+  const type =
+    filter
+      ? filter.value
+      : "";
+
 
   if (type) {
-    logs = logs.filter(log => log?.type === type);
+
+    logs =
+      logs.filter(function(log){
+
+        return log.type === type;
+
+      });
+
   }
+
 
   renderIncomeTable(logs);
+
+
+  incomeLock = false;
+
 }
 
-// ================= RENDER TABLE =================
+
+// ================= TABLE =================
+
 function renderIncomeTable(logs) {
 
-  const table = document.getElementById("incomeTable");
+
+  const table =
+    document.getElementById("incomeTable");
+
+
   if (!table) return;
 
-  let total = 0;
+
   table.innerHTML = "";
 
-  if (!logs || logs.length === 0) {
-    table.innerHTML = "<tr><td colspan='6'>No Data</td></tr>";
-    updateSummary(0, 0);
+
+  let total = 0;
+
+
+  if (!logs.length) {
+
+
+    table.innerHTML =
+      "<tr><td colspan='6'>No Data</td></tr>";
+
+
+    updateSummary(
+      0,
+      0
+    );
+
+
     return;
+
   }
 
-  logs.slice().reverse().forEach(log => {
 
-    const amount = Number(log?.amount) || 0;
-    total += amount;
 
-    const row = document.createElement("tr");
+  logs
+    .slice()
+    .reverse()
+    .forEach(function(log){
 
-    row.innerHTML = `
-      <td>${log?.time ? new Date(log.time).toLocaleString() : "-"}</td>
-      <td>${log?.userId || "-"}</td>
-      <td>${log?.type || "-"}</td>
-      <td>₹${amount.toFixed(2)}</td>
-      <td>${log?.sourceUser || "-"}</td>
-      <td>${log?.note || ""}</td>
-    `;
 
-    table.appendChild(row);
-  });
+      const amount =
+        Number(log.amount) || 0;
 
-  updateSummary(total, logs.length);
+
+      total += amount;
+
+
+      const row =
+        document.createElement("tr");
+
+
+      row.innerHTML = `
+
+        <td>
+        ${
+          log.time
+          ? new Date(log.time).toLocaleString()
+          : "-"
+        }
+        </td>
+
+        <td>${log.userId || "-"}</td>
+
+        <td>${log.type || "-"}</td>
+
+        <td>
+        ₹${amount.toFixed(2)}
+        </td>
+
+        <td>
+        ${log.sourceUser || "-"}
+        </td>
+
+        <td>
+        ${log.note || ""}
+        </td>
+
+      `;
+
+
+      table.appendChild(row);
+
+
+    });
+
+
+
+  updateSummary(
+    total,
+    logs.length
+  );
+
 }
+
 
 // ================= SUMMARY =================
-function updateSummary(total, count) {
 
-  const payout = document.getElementById("totalPayout");
-  const records = document.getElementById("totalRecords");
+function updateSummary(
+  total,
+  count
+) {
 
-  if (payout) payout.innerText = (Number(total) || 0).toFixed(2);
-  if (records) records.innerText = count || 0;
+
+  const payout =
+    document.getElementById("totalPayout");
+
+
+  const records =
+    document.getElementById("totalRecords");
+
+
+  if (payout) {
+
+    payout.innerText =
+      Number(total || 0)
+      .toFixed(2);
+
+  }
+
+
+  if(records){
+
+    records.innerText =
+      count || 0;
+
+  }
+
 }
 
-// ================= REALTIME CONNECT =================
-(function connectIncomeToAdminPanel() {
 
-  function refresh() {
-    try {
-      loadAllIncome?.();
-    } catch (_) {}
-  }
 
-  function bind() {
+// ================= EVENTS BRIDGE =================
 
-    if (!window.SYSTEM_EVENTS?.on) return;
+(function(){
 
-    window.SYSTEM_EVENTS.on("INCOME_UPDATED", refresh);
-    window.SYSTEM_EVENTS.on("INCOME_EVENT", refresh);
-    window.SYSTEM_EVENTS.on("INCOME_LOG_CREATED", refresh);
-    window.SYSTEM_EVENTS.on("HOLD_INCOME_RELEASED", refresh);
-    window.SYSTEM_EVENTS.on("INCOME_CREDIT", refresh);
-  }
+function refresh(){
 
- if (window.SYSTEM_EVENTS?.on) {
-  bind();
-} else {
-  const timer = setInterval(() => {
-    if (window.SYSTEM_EVENTS?.on) {
-      clearInterval(timer);
-      bind();
-    }
-  }, 50);
-}  
+  loadAllIncome();
+
+}
+
+
+function connect(){
+
+
+ if(
+   window.SYSTEM_EVENTS &&
+   typeof window.SYSTEM_EVENTS.on === "function"
+ ){
+
+   window.SYSTEM_EVENTS.on(
+     "INCOME_UPDATED",
+     refresh
+   );
+
+
+   window.SYSTEM_EVENTS.on(
+     "INCOME_LOG_CREATED",
+     refresh
+   );
+
+ }
+
+}
+
+
+connect();
+
+
 })();
+
+
+
+// ================= EXPORTS =================
+
+window.loadAllIncome =
+  loadAllIncome;
+
+
+window.renderIncomeTable =
+  renderIncomeTable;
+
+
+window.updateIncomeSummary =
+  updateSummary;
+
+
+window.__ADMIN_INCOME_DASHBOARD__ = {
+
+ loaded:true,
+
+ file:"admin_income_dashboard.js",
+
+ time:Date.now()
+
+};
