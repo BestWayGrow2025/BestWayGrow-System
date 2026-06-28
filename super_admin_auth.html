@@ -13,17 +13,20 @@
 
     <h2>SUPER ADMIN LOGIN</h2>
 
-    <input id="userId"
-           placeholder="User ID"
-           style="width:100%;padding:10px;margin:8px 0;">
+    <input
+      id="userId"
+      placeholder="User ID"
+      style="width:100%;padding:10px;margin:8px 0;">
 
-    <input id="password"
-           type="password"
-           placeholder="Password"
-           style="width:100%;padding:10px;margin:8px 0;">
+    <input
+      id="password"
+      type="password"
+      placeholder="Password"
+      style="width:100%;padding:10px;margin:8px 0;">
 
-    <button id="loginBtn"
-            style="width:100%;padding:10px;">
+    <button
+      id="loginBtn"
+      style="width:100%;padding:10px;">
       Login
     </button>
 
@@ -31,18 +34,11 @@
 
   </div>
 
-  <!-- ================= BOOT MANAGER ================= -->
-  <script src="boot_manager.js"></script>
+  <!-- CORE -->
+  <script src="core_session_authority.js"></script>
 
-  <!-- ================= CORE SYSTEM ================= -->
-  <script src="core_system.js"></script>
-
-  <!-- ================= OPTIONAL SYSTEMS ================= -->
-  <script src="activity_log.js"></script>
-  <script src="session_manager.js"></script>
-
-  <!-- ================= LOGIN LOGIC ================= -->
-  <script src="super_admin_login.js"></script>
+  <!-- SUPER ADMIN AUTH -->
+  <script src="super_admin_auth.js"></script>
 
 </body>
 </html>
