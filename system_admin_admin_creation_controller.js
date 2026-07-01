@@ -88,7 +88,7 @@ function redirectLogin() {
     localStorage.removeItem("loggedInSystemAdmin");
   }
 
-  window.location.href = "system_admin_login.html";
+ window.location.href = "system_admin_auth.html";
 }
 
 // ================= EVENTS =================
