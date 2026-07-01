@@ -296,101 +296,57 @@ function loadSystemAdminList() {
 
 /* ================= SAFE CLICK ================= */
 
-
 function safeClick(fn) {
 
+  if (lock) return;
 
-  if (lock)
-    return;
-
-
-  lock=true;
-
+  lock = true;
 
   try {
 
     fn();
 
+  } catch (e) {
+
+    console.error("[SUPER ADMIN ERROR]", e);
+
+    showMsg("❌ System Error");
+
+  } finally {
+
+    setTimeout(() => {
+      lock = false;
+    }, 300);
+
   }
-
-  catch(e){
-
-    console.error(
-      "[SUPER ADMIN ERROR]",
-      e
-    );
-
-    showMsg(
-      "❌ System Error"
-    );
-
-  }
-
-
-  setTimeout(
-    ()=>{
-
-      lock=false;
-
-    },
-    300
-  );
 
 }
-
 
 
 /* ================= EVENTS ================= */
 
 function bindEvents() {
 
+  const btn = document.getElementById("createBtn");
 
-  setTimeout(function(){
+  if (!btn) {
 
+    console.error("[CREATE ADMIN] BUTTON NOT FOUND");
 
-    const btn =
-      document.getElementById(
-        "createBtn"
-      );
+    return;
 
+  }
 
-    if (!btn) {
+  btn.onclick = null;
 
-      console.error(
-        "[CREATE ADMIN] BUTTON NOT FOUND"
-      );
+  btn.onclick = function () {
+    safeClick(createSystemAdmin);
+  };
 
-      return;
-
-    }
-
-
-
-    btn.onclick = null;
-
-
-
-    btn.onclick = function(){
-
-
-      safeClick(
-        createSystemAdmin
-      );
-
-
-    };
-
-
-
-    console.log(
-      "[CREATE ADMIN] BUTTON CONNECTED"
-    );
-
-
-  },300);
-
+  console.log("[CREATE ADMIN] BUTTON CONNECTED");
 
 }
+
 
 /* ================= START ================= */
 
