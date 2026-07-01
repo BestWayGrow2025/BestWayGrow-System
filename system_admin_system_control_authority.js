@@ -53,19 +53,19 @@ function authPage() {
   const session = getSession?.();
 
   if (!session?.userId || session.role !== "system_admin") {
-    window.location.href = "system_admin_login.html";
+   window.location.href = "system_admin_auth.html";
     return;
   }
 
   currentUser = getUserById?.(session.userId);
 
   if (!currentUser?.userId || currentUser.role !== "system_admin") {
-    window.location.href = "system_admin_login.html";
+   window.location.href = "system_admin_auth.html";
     return;
   }
 
   if ((currentUser.status || "active") !== "active") {
-    window.location.href = "system_admin_login.html";
+   window.location.href = "system_admin_auth.html";
     return;
   }
 }
