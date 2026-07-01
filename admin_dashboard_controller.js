@@ -138,7 +138,7 @@ function redirectLogin() {
 }
 
 
-// ================= EVENTS =================
+ // ================= EVENTS =================
 
 function bindEvents() {
 
@@ -165,13 +165,14 @@ function bindEvents() {
     .querySelectorAll(".menu button")
     .forEach(function(btn){
 
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = "true";
 
       btn.onclick = function(){
 
-
         if(clickLock) return;
 
-        clickLock=true;
+        clickLock = true;
 
 
         document
@@ -196,41 +197,33 @@ function bindEvents() {
 
         switch(page){
 
-
           case "home":
             loadHome();
             break;
-
 
           case "users":
             loadUsers();
             break;
 
-
           case "pinmaster":
             loadPinsUI();
             break;
-
 
           case "wallet":
             loadWalletSafe();
             break;
 
-
           case "income":
             loadIncomeSafe();
             break;
-
 
           case "system":
             loadSystemSafe();
             break;
 
-
           case "reports":
             loadReportsSafe();
             break;
-
 
         }
 
@@ -238,15 +231,13 @@ function bindEvents() {
         setTimeout(
           function(){
 
-            clickLock=false;
+            clickLock = false;
 
           },
           200
         );
 
-
       };
-
 
     });
 
