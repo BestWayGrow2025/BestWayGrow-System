@@ -79,7 +79,8 @@ function bindEvents() {
   const clearLogsBtn = document.getElementById("clearLogsBtn");
 
   if (backBtn) backBtn.addEventListener("click", goBack);
-  if (toggleWithdrawBtn) backBtn && toggleWithdrawBtn.addEventListener("click", toggleWithdrawSystem);
+ if (toggleWithdrawBtn)
+  toggleWithdrawBtn.addEventListener("click", toggleWithdrawSystem);
   if (toggleRegisterBtn) toggleRegisterBtn.addEventListener("click", toggleRegisterSystem);
   if (clearLogsBtn) clearLogsBtn.addEventListener("click", clearLogs);
 }
