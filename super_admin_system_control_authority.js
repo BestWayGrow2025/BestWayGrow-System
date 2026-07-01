@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadPage();
 
   } catch (err) {
-    console.error("[SYSTEM ADMIN CONTROLS ERROR]", err);
+   console.error("[SUPER ADMIN SYSTEM CONTROL ERROR]", err);
   }
 });
 
@@ -214,6 +214,6 @@ function clearLogs() {
 function logAction(action) {
 
   if (typeof logActivity === "function" && currentUser?.userId) {
-    logActivity(currentUser.userId, "SYSTEM_ADMIN", action);
+   logActivity(currentUser.userId, "SUPER_ADMIN", action);
   }
 }
