@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SYSTEM ADMIN CONTROLS vFINAL SINGLE PATH
+SUPER ADMIN SYSTEM CONTROL AUTHORITY vFINAL SINGLE PATH
 ========================================
 ✔ One execution path (DOMContentLoaded only)
 ✔ One session source (getSession only)
@@ -13,7 +13,7 @@ SYSTEM ADMIN CONTROLS vFINAL SINGLE PATH
 ========================================
 */
 
-console.log("[SYSTEM ADMIN CONTROLS] INIT");
+console.log("[SUPER ADMIN SYSTEM CONTROL] INIT");
 
 // ================= GLOBAL STATE =================
 let currentUser = null;
@@ -52,20 +52,20 @@ function authPage() {
 
   const session = getSession?.();
 
-  if (!session?.userId || session.role !== "system_admin") {
-    window.location.href = "system_admin_login.html";
+  if (!session?.userId || session.role !== "super_admin") {
+    window.location.href = "super_admin_auth.html";
     return;
   }
 
   currentUser = getUserById?.(session.userId);
 
-  if (!currentUser?.userId || currentUser.role !== "system_admin") {
-    window.location.href = "system_admin_login.html";
+  if (!currentUser?.userId || currentUser.role !== "super_admin") {
+    window.location.href = "super_admin_auth.html";
     return;
   }
 
   if ((currentUser.status || "active") !== "active") {
-    window.location.href = "system_admin_login.html";
+    window.location.href = "super_admin_auth.html";
     return;
   }
 }
@@ -79,7 +79,7 @@ function bindEvents() {
   const clearLogsBtn = document.getElementById("clearLogsBtn");
 
   if (backBtn) backBtn.addEventListener("click", goBack);
-  if (toggleWithdrawBtn) toggleWithdrawBtn.addEventListener("click", toggleWithdrawSystem);
+  if (toggleWithdrawBtn) backBtn && toggleWithdrawBtn.addEventListener("click", toggleWithdrawSystem);
   if (toggleRegisterBtn) toggleRegisterBtn.addEventListener("click", toggleRegisterSystem);
   if (clearLogsBtn) clearLogsBtn.addEventListener("click", clearLogs);
 }
@@ -92,7 +92,7 @@ function loadPage() {
 
 // ================= NAV =================
 function goBack() {
-  window.location.href = "system_admin_dashboard.html";
+  window.location.href = "super_admin_dashboard.html";
 }
 
 // ================= SYSTEM STATUS =================
