@@ -47,7 +47,7 @@ function checkAuth() {
   // 🔒 SINGLE SOURCE OF TRUTH
   session = getSession();
 
-  if (!session || session.role !== "system_admin") {
+ if (!session || session.role !== "super_admin")
     redirectLogin();
     throw new Error("UNAUTHORIZED");
   }
@@ -59,7 +59,7 @@ function checkAuth() {
 
   currentUser = getUserById(session.userId);
 
-  if (!currentUser || currentUser.role !== "system_admin") {
+ if (!currentUser || currentUser.role !== "super_admin")
     redirectLogin();
     throw new Error("INVALID_USER");
   }
@@ -88,7 +88,7 @@ function redirectLogin() {
     localStorage.removeItem("loggedInSystemAdmin");
   }
 
- window.location.href = "system_admin_auth.html";
+window.location.href = "super_admin_auth.html"; 
 }
 
 // ================= EVENTS =================
@@ -129,20 +129,21 @@ function safeCreateAdmin() {
   try {
     createAdmin();
   } catch (e) {
-    console.error("[CREATE ADMIN ERROR]", e);
+    console.error("[CREATE SYSTEM ADMIN ERROR]", e);
     showMsg("❌ System Error");
   }
 
-  setTimeout(() => lock = false, 500);
+  setTimeout(() => {
+    lock = false;
+  }, 500);
 }
 
-// ================= CREATE ADMIN =================
+// ================= CREATE SYSTEM ADMIN =================
 function createAdmin() {
 
-  const adminId = document.getElementById("adminId")?.value.trim();
-  const name = document.getElementById("name")?.value.trim();
-  const password = document.getElementById("password")?.value.trim();
-  const adminType = document.getElementById("adminType")?.value;
+  const adminId = document.getElementById("sysId")?.value.trim();
+  const name = document.getElementById("sysName")?.value.trim();
+  const password = document.getElementById("sysPass")?.value.trim();
 
   if (!adminId || !name || !password) {
     showMsg("❌ Fill all fields");
@@ -156,110 +157,60 @@ function createAdmin() {
   );
 
   if (exists) {
-    showMsg("⚠️ Admin already exists");
+    showMsg("⚠️ System Admin already exists");
     return;
   }
 
-  let permissions = [];
-  let departments = [];
-  let tree = "office";
-
-  // ================= ROLE LOGIC =================
-  if (adminType === "root_admin") {
-    tree = "field";
-    permissions = ["tree_root"];
-    departments = ["all"];
-  }
-
-  if (adminType === "admin_a") {
-    permissions = ["full_access"];
-    departments = ["finance", "franchisee", "kyc"];
-  }
-
-  if (adminType === "admin_b") {
-
-    document.querySelectorAll("#deptBox input:checked")
-      .forEach(cb => departments.push(cb.value));
-
-    if (!departments.length) {
-      showMsg("⚠️ Select departments");
-      return;
-    }
-
-    permissions = ["department_access"];
-  }
-
-  // ================= CREATE OBJECT =================
   users.push({
     userId: adminId,
     username: name,
     password: btoa(password),
 
-    role: "admin",
-    adminType,
-
-    tree,
-    hiddenAccount: true,
-
-    permissions,
-    departments,
+    role: "system_admin",
 
     status: "active",
 
     createdBy: currentUser.userId,
-    createdByRole: "system_admin",
+    createdByRole: "super_admin",
     createdAt: Date.now()
   });
 
-  // ================= SAVE =================
   if (typeof saveUsers === "function") {
     saveUsers(users);
   } else {
     localStorage.setItem("users", JSON.stringify(users));
   }
 
-  // ================= LOG =================
-  if (typeof logActivity === "function") {
-    logActivity(adminId, "SYSTEM_ADMIN", "ADMIN CREATED");
-  }
-
-  showMsg("✅ Admin created successfully");
+  showMsg("✅ System Admin created successfully");
   clearForm();
 }
 
 // ================= CLEAR FORM =================
 function clearForm() {
 
-  const fields = ["adminId", "name", "password"];
-
-  fields.forEach(id => {
+  ["sysId", "sysName", "sysPass"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
-
-  const type = document.getElementById("adminType");
-  if (type) type.value = "root_admin";
-
-  document.querySelectorAll("#deptBox input")
-    .forEach(cb => cb.checked = false);
-
-  toggleDepartments();
 }
 
 // ================= MESSAGE =================
 function showMsg(msg) {
 
   const el = document.getElementById("msg");
-  if (el) el.innerText = msg;
+
+  if (el) {
+    el.innerText = msg;
+  }
 }
 
 // ================= EXPORTS =================
-window.SystemAdminCreateAdmin = {
+window.SuperAdminSystemAdminCreation = {
   createAdmin,
   showMsg
 };
 
 // ================= MODULE FLAG =================
-window.__SYSTEM_ADMIN_CREATE_ADMIN__ = true;
+window.__SUPER_ADMIN_SYSTEM_ADMIN_CREATION__ = true;
 
-console.log("[SYSTEM ADMIN CREATE ADMIN] SINGLE PATH READY");
+console.log("[SUPER ADMIN SYSTEM ADMIN CREATION] READY");
