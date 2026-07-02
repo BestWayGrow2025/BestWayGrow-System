@@ -1,3 +1,9 @@
+"use strict";
+
+// ================= GLOBAL STATE =================
+let session = null;
+let currentUser = null;
+
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
   initCoreSystem();
