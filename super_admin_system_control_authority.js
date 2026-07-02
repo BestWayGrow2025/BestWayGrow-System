@@ -39,10 +39,10 @@ document.addEventListener("DOMContentLoaded", function () {
 // ================= CORE INIT =================
 function initPage() {
 
-  if (typeof initCoreSystem !== "function") {
-   alert("core_initializer.js missing");
+ if (typeof initCoreSystem !== "function") {
+    alert("core_initializer.js missing");
     throw new Error("STOP");
-  }
+}
 
   initCoreSystem();
 }
