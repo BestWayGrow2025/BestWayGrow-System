@@ -1,6 +1,7 @@
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
   initCoreSystem();
+  checkAuth();
   loadAllPins();
 });
 
@@ -23,7 +24,7 @@ function handleCreatePin() {
       amount,
       bv,
       gst,
-      createdBy: "ADMIN"
+      createdBy: currentUser.userId
     });
 
     document.getElementById("createMsg").innerText =
@@ -47,7 +48,7 @@ function handleAssignPin() {
   }
 
   try {
-    assignPin(pinId, userId, "user", "ADMIN");
+    assignPin(pinId, userId, "user", currentUser.userId);
 
     document.getElementById("assignMsg").innerText = "✅ PIN Assigned";
 
@@ -68,7 +69,7 @@ function handleDeletePin() {
   }
 
   try {
-    deletePin(pinId, "ADMIN");
+    deletePin(pinId, currentUser.userId);
 
     document.getElementById("deleteMsg").innerText = "🗑️ PIN Deleted";
 
