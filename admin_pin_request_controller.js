@@ -6,10 +6,10 @@ let lock = false;
 let refreshTimer = null;
 
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
-  authPage();
+ initPage();
+checkAuth();
 
-  if (!currentUser) return;
+if (!currentUser) return;
 
   bindEvents();
   loadRequests();
