@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function initPage() {
 
   if (typeof initCoreSystem !== "function") {
-    alert("core_system.js missing");
+   alert("core_initializer.js missing");
     throw new Error("STOP");
   }
 
