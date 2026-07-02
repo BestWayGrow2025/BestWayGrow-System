@@ -64,19 +64,21 @@ if (!currentUser || currentUser.role !== "super_admin") {
     throw new Error("INVALID_USER");
 }
 
-  if ((currentUser.status || "active") !== "active") {
+ if ((currentUser.status || "active") !== "active") {
     redirectLogin();
     throw new Error("INACTIVE");
-  }
+}
+
+}
 
 // ================= REDIRECT =================
-function bindEvents() {
+function redirectLogin() {
 
-  const createBtn = document.getElementById("createBtn");
-
-  if (createBtn) {
-    createBtn.addEventListener("click", safeCreateAdmin);
+  if (typeof destroySession === "function") {
+    destroySession();
   }
+
+  window.location.href = "super_admin_auth.html";
 }
 
 // ================= EVENTS =================
