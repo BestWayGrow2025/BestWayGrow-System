@@ -47,7 +47,7 @@ function checkAuth() {
   // 🔒 SINGLE SOURCE OF TRUTH
   session = getSession();
 
-if (!session || session.role !== "super_admin") {
+if (!session || session.role !== "system_admin") {
     redirectLogin();
     throw new Error("UNAUTHORIZED");
 }
@@ -59,7 +59,7 @@ if (!session || session.role !== "super_admin") {
 
   currentUser = getUserById(session.userId);
 
-if (!currentUser || currentUser.role !== "super_admin") {
+if (!currentUser || currentUser.role !== "system_admin") {
     redirectLogin();
     throw new Error("INVALID_USER");
 }
@@ -78,7 +78,7 @@ function redirectLogin() {
     destroySession();
   }
 
-  window.location.href = "super_admin_auth.html";
+ window.location.href = "system_admin_auth.html";
 }
 
 // ================= EVENTS =================
@@ -112,10 +112,7 @@ function safeCreateAdmin() {
 // ================= CREATE SYSTEM ADMIN =================
 function createAdmin() {
 
-  const adminId = document.getElementById("sysId")?.value.trim();
-  const name = document.getElementById("sysName")?.value.trim();
-  const password = document.getElementById("sysPass")?.value.trim();
-
+ window.location.href = "system_admin_auth.html";
   if (!adminId || !name || !password) {
     showMsg("❌ Fill all fields");
     return;
