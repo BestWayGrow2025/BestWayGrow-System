@@ -39,10 +39,10 @@ document.addEventListener("DOMContentLoaded", function () {
 // ================= CORE INIT =================
 function initPage() {
 
-  if (typeof initCoreSystem !== "function") {
-    alert("core_system.js missing");
+ if (typeof initCoreSystem !== "function") {
+    alert("core_initializer.js missing");
     throw new Error("STOP");
-  }
+}
 
   initCoreSystem();
 }
@@ -153,7 +153,6 @@ function toggleWithdrawSystem() {
 
     saveSystemSettings?.(settings);
 
-    logAction("Toggled withdraw system");
     loadSystemStatus();
 
   } finally {
@@ -174,7 +173,6 @@ function toggleRegisterSystem() {
 
     saveSystemSettings?.(settings);
 
-    logAction("Toggled registration system");
     loadSystemStatus();
 
   } finally {
@@ -199,7 +197,6 @@ function toggleAdminStatus(userId) {
 
     saveUsers?.(users);
 
-    logAction("Changed admin status: " + userId);
     loadAdmins();
 
   } finally {
@@ -214,14 +211,6 @@ function clearLogs() {
 
   localStorage.removeItem("activityLogs");
 
-  logAction("Cleared activity logs");
   alert("Logs cleared");
 }
 
-// ================= LOGGING =================
-function logAction(action) {
-
-  if (typeof logActivity === "function" && currentUser?.userId) {
-    logActivity(currentUser.userId, "SYSTEM_ADMIN", action);
-  }
-}
