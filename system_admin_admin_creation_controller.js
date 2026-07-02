@@ -78,7 +78,6 @@ function redirectLogin() {
     destroySession();
   }
 
- window.location.href = "system_admin_auth.html";
 }
 
 // ================= EVENTS =================
@@ -100,7 +99,7 @@ function safeCreateAdmin() {
   try {
     createAdmin();
   } catch (e) {
-    console.error("[CREATE SYSTEM ADMIN ERROR]", e);
+    console.error("[CREATE ADMIN ERROR]", e);
     showMsg("❌ System Error");
   }
 
@@ -109,7 +108,7 @@ function safeCreateAdmin() {
   }, 500);
 }
 
-// ================= CREATE SYSTEM ADMIN =================
+// ================= CREATE ADMIN =================
 function createAdmin() {
 
  window.location.href = "system_admin_auth.html";
