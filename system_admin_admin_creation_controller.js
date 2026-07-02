@@ -47,10 +47,10 @@ function checkAuth() {
   // 🔒 SINGLE SOURCE OF TRUTH
   session = getSession();
 
- if (!session || session.role !== "super_admin")
+if (!session || session.role !== "super_admin") {
     redirectLogin();
     throw new Error("UNAUTHORIZED");
-  }
+}
 
   if (typeof getUserById !== "function") {
     redirectLogin();
@@ -59,65 +59,34 @@ function checkAuth() {
 
   currentUser = getUserById(session.userId);
 
- if (!currentUser || currentUser.role !== "super_admin")
+if (!currentUser || currentUser.role !== "super_admin") {
     redirectLogin();
     throw new Error("INVALID_USER");
-  }
+}
 
   if ((currentUser.status || "active") !== "active") {
     redirectLogin();
     throw new Error("INACTIVE");
   }
 
-  const welcome = document.getElementById("welcome");
-
-  if (welcome) {
-    welcome.innerText =
-      "Welcome " +
-      (currentUser.username || currentUser.userId) +
-      " (" + currentUser.userId + ")";
-  }
-}
-
 // ================= REDIRECT =================
-function redirectLogin() {
+function bindEvents() {
 
-  if (typeof destroySession === "function") {
-    destroySession();
-  } else {
-    localStorage.removeItem("loggedInSystemAdmin");
+  const createBtn = document.getElementById("createBtn");
+
+  if (createBtn) {
+    createBtn.addEventListener("click", safeCreateAdmin);
   }
-
-window.location.href = "super_admin_auth.html"; 
 }
 
 // ================= EVENTS =================
 function bindEvents() {
 
-  const adminType = document.getElementById("adminType");
   const createBtn = document.getElementById("createBtn");
-
-  if (adminType) {
-    adminType.addEventListener("change", toggleDepartments);
-  }
 
   if (createBtn) {
     createBtn.addEventListener("click", safeCreateAdmin);
   }
-
-  toggleDepartments();
-}
-
-// ================= UI =================
-function toggleDepartments() {
-
-  const type = document.getElementById("adminType");
-  const deptBox = document.getElementById("deptBox");
-
-  if (!type || !deptBox) return;
-
-  deptBox.style.display =
-    type.value === "admin_b" ? "block" : "none";
 }
 
 // ================= SAFE WRAPPER =================
