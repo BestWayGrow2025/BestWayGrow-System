@@ -11,7 +11,43 @@ document.addEventListener("DOMContentLoaded", function () {
   loadAllPins();
 });
 
+// ================= AUTH =================
+function checkAuth() {
 
+  session = getSession();
+
+  if (!session || session.role !== "admin") {
+    redirectLogin();
+    throw new Error("UNAUTHORIZED");
+  }
+
+  if (typeof getUserById !== "function") {
+    redirectLogin();
+    throw new Error("USER_SYSTEM_MISSING");
+  }
+
+  currentUser = getUserById(session.userId);
+
+  if (!currentUser || currentUser.role !== "admin") {
+    redirectLogin();
+    throw new Error("INVALID_USER");
+  }
+
+  if ((currentUser.status || "active") !== "active") {
+    redirectLogin();
+    throw new Error("INACTIVE");
+  }
+}
+
+// ================= REDIRECT =================
+function redirectLogin() {
+
+  if (typeof destroySession === "function") {
+    destroySession();
+  }
+
+  window.location.href = "admin_auth.html";
+}
 // ================= CREATE PIN =================
 function handleCreatePin() {
   let type = document.getElementById("pinType").value;
