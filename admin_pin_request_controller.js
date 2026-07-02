@@ -1,3 +1,5 @@
+"use strict";
+
 let session = null;
 let currentUser = null;
 let lock = false;
@@ -225,6 +227,9 @@ function logout() {
     clearInterval(refreshTimer);
   }
 
-  localStorage.removeItem("loggedInAdmin");
-  window.location.href = "admin_login.html";
+ if (typeof destroySession === "function") {
+  destroySession();
+}
+
+window.location.href = "admin_auth.html";
 }
