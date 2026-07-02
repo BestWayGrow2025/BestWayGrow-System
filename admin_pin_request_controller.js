@@ -31,22 +31,42 @@ function initPage() {
 }
 
 // ================= AUTH =================
-function authPage() {
-  currentUser = typeof protectPage === "function"
-    ? protectPage({ role: "admin" })
-    : null;
+function checkAuth() {
 
-  if (!currentUser) {
-    window.location.href = "admin_login.html";
-    return;
+  session = getSession();
+
+  if (!session || session.role !== "admin") {
+    redirectLogin();
+    throw new Error("UNAUTHORIZED");
   }
 
-  session = typeof getSession === "function"
-    ? getSession()
-    : {
-        userId: currentUser.userId || "UNKNOWN",
-        role: currentUser.role || "admin"
-      };
+  if (typeof getUserById !== "function") {
+    redirectLogin();
+    throw new Error("USER_SYSTEM_MISSING");
+  }
+
+  currentUser = getUserById(session.userId);
+
+  if (!currentUser || currentUser.role !== "admin") {
+    redirectLogin();
+    throw new Error("INVALID_USER");
+  }
+
+  if ((currentUser.status || "active") !== "active") {
+    redirectLogin();
+    throw new Error("INACTIVE");
+  }
+}
+
+
+// ================= REDIRECT =================
+function redirectLogin() {
+
+  if (typeof destroySession === "function") {
+    destroySession();
+  }
+
+  window.location.href = "admin_auth.html";
 }
 
 // ================= EVENTS =================
