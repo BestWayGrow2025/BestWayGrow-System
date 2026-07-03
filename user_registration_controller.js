@@ -42,8 +42,7 @@ function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
+   
   }
 }
 
