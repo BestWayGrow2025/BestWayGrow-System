@@ -212,3 +212,15 @@ console.log(
 
 
 })();
+
+
+
+// ================= START PAGE =================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    if (typeof window.initIncomeControlUI === "function") {
+        window.initIncomeControlUI();
+    }
+
+});
