@@ -2,25 +2,20 @@ let session = null;
 let currentUser = null;
 let refreshInterval = null;
 
-document.addEventListener("DOMContentLoaded", function () {
-  initPage();
+ document.addEventListener("DOMContentLoaded", function () {
   authPage();
   bindEvents();
   loadPage();
   startAutoRefresh();
 });
 
-function initPage() {
-  if (typeof initCoreSystem !== "function") {
-    alert("core_system.js missing");
+function forceLogout() {
+  if (typeof logoutSession === "function") {
+    logoutSession();
     return;
   }
-  initCoreSystem();
-}
 
-function forceLogout() {
-  localStorage.removeItem("loggedInAdmin");
-  window.location.href = "admin_login.html";
+  window.location.replace("admin_auth.html");
 }
 
 function authPage() {
