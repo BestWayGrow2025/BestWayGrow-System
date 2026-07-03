@@ -141,10 +141,15 @@ function submitRepurchase() {
     return;
   }
 
-  if (user.status !== "active" || user.upgradeStatus !== "completed") {
-    alert("Repurchase not allowed");
-    return;
-  }
+ const status =
+  user.accountStatus ||
+  user.status ||
+  "active";
+
+if (status !== "active" || user.upgradeStatus !== "completed") {
+  alert("Repurchase not allowed");
+  return;
+}
 
   const pinId =
     document.getElementById("pinInput")?.value?.trim();
