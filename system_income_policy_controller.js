@@ -355,14 +355,18 @@ window.toggleTotalIncomeTracking = toggleTotalIncomeTracking;
 // =====================
 window.INCOME_CONTROL_SYSTEM_ACTIVE = true;
 
- // =====================
+// =====================
 // AUTO INITIALIZE
 // =====================
 
-document.addEventListener("DOMContentLoaded", function () {
-
+function startIncomeControl() {
   if (typeof window.initIncomeControl === "function") {
     window.initIncomeControl();
   }
+}
 
-});
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startIncomeControl);
+} else {
+  startIncomeControl();
+}
