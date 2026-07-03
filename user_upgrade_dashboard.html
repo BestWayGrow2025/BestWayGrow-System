@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>User Upgrade</title>
 </head>
 <body>
@@ -10,27 +11,25 @@
   <p id="info"></p>
   <p id="upgradeStatus"></p>
 
-  <input type="text" id="pinInput" placeholder="Enter PIN"><br><br>
+  <input
+    type="text"
+    id="pinInput"
+    placeholder="Enter PIN"
+  >
 
-  <button onclick="upgradeNow()">Upgrade Now</button>
+  <br><br>
 
-  <!-- CORE -->
-  <script src="core_system.js"></script>
-  <script src="session_manager.js"></script>
+  <button onclick="upgradeNow()">
+    Upgrade Now
+  </button>
 
-  <!-- SYSTEM -->
-  <script src="active_system.js"></script>
+  <!-- Core -->
+  <script src="core_boot_manager.js"></script>
+  <script src="core_initializer.js"></script>
+  <script src="core_session_authority.js"></script>
 
-  <!-- PIN -->
-  <script src="pin_config_system.js"></script>
-  <script src="pin_master_system.js"></script>
-
-  <!-- TRIGGER SYSTEM -->
-  <script src="trigger_system.js"></script>
-
-  <!-- PAGE JS -->
-  <script src="user_upgrade.js"></script>
+  <!-- Page Controller -->
+  <script src="user_upgrade_execution_controller.js"></script>
 
 </body>
-</html>
 </html>
