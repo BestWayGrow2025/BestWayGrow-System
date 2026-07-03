@@ -32,6 +32,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function initPage() {
 
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
+
   authPage();
 
   bindEvents();
@@ -133,66 +137,50 @@ function bindEvents() {
 
 function loadAllIncome() {
 
-
   if (incomeLock) return;
-
 
   incomeLock = true;
 
-
-  let logs = [];
-
-
   try {
 
+    let logs = [];
 
     if (typeof getIncomeLogs === "function") {
+      logs = getIncomeLogs() || [];
+    }
 
-      logs =
-        getIncomeLogs() || [];
+    const filter =
+      document.getElementById("filterType");
+
+    const type =
+      filter
+        ? filter.value
+        : "";
+
+    if (type) {
+
+      logs = logs.filter(function (log) {
+        return log.type === type;
+      });
 
     }
 
+    renderIncomeTable(logs);
 
-  } catch(error) {
+  } catch (error) {
 
     console.error(
       "[INCOME LOAD ERROR]",
       error
     );
 
-  }
+  } finally {
 
-
-  const filter =
-    document.getElementById("filterType");
-
-
-  const type =
-    filter
-      ? filter.value
-      : "";
-
-
-  if (type) {
-
-    logs =
-      logs.filter(function(log){
-
-        return log.type === type;
-
-      });
+    incomeLock = false;
 
   }
-
-
-  renderIncomeTable(logs);
-
-
-  incomeLock = false;
 
 }
-
 
 // ================= TABLE =================
 
