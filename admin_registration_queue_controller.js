@@ -19,17 +19,39 @@ function forceLogout() {
 }
 
 function authPage() {
-  session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
 
-  if (!session || !session.userId) return forceLogout();
-  if (typeof getUserById !== "function") return forceLogout();
+  if (typeof getSession !== "function") {
+    return forceLogout();
+  }
 
-  currentUser = getUserById(session.userId);
+  session = getSession();
 
-  if (!currentUser || currentUser.role !== "admin") return forceLogout();
+  if (!session) {
+    return forceLogout();
+  }
 
-  const status = currentUser.accountStatus || currentUser.status || "active";
-  if (status !== "active") return forceLogout();
+  if (typeof getCurrentUser !== "function") {
+    return forceLogout();
+  }
+
+  currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    return forceLogout();
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("admin")) {
+    return forceLogout();
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return forceLogout();
+  }
 }
 
 function bindEvents() {
