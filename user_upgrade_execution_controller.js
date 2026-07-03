@@ -94,7 +94,6 @@ function loadPage() {
     console.warn("[UPGRADE] PIN PREFILL SKIPPED");
   }
 }
-});
 
 // ================= VALIDATION =================
 function isAlreadyUpgraded(user) {
