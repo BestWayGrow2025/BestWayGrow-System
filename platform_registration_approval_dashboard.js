@@ -1,26 +1,30 @@
-"use strict";
+ "use strict";
 
 /*
 ========================================
-REGISTRATION APPROVAL DASHBOARD v1.0
+PLATFORM REGISTRATION QUEUE MONITOR v2.0
 ========================================
-✔ Admin-controlled queue approval
-✔ Safe integration with registration_queue.js
-✔ Approve / Reject workflow
-✔ Live refresh
-✔ Safe dependency checks
-✔ Production-ready
+✔ Read-only registration queue monitor
+✔ Uses core_session_authority.js
+✔ Compatible with core_registration_queue_manager.js
+✔ Auto refresh
+✔ Queue status monitoring
+✔ Production Final
 ========================================
 */
 
+let session = null;
+let currentUser = null;
+let refreshTimer = null;
+
+// ================= START =================
 document.addEventListener("DOMContentLoaded", function () {
   authPage();
   loadQueue();
+  startAutoRefresh();
 });
 
-let session = null;
-let currentUser = null;
-
+// ================= LOGOUT =================
 function forceLogout() {
 
   if (typeof logoutSession === "function") {
@@ -31,6 +35,7 @@ function forceLogout() {
   window.location.replace("admin_auth.html");
 }
 
+// ================= AUTH =================
 function authPage() {
 
   if (typeof getSession !== "function") {
@@ -67,103 +72,90 @@ function authPage() {
   }
 }
 
+// ================= HTML ESCAPE =================
+function escapeHtml(value = "") {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 // ================= LOAD QUEUE =================
 function loadQueue() {
 
   const tbody = document.getElementById("list");
+
   if (!tbody) return;
 
   if (typeof getRegQueue !== "function") {
+
     tbody.innerHTML =
-      '<tr><td colspan="6">Registration queue system missing.</td></tr>';
+      '<tr><td colspan="8">Registration queue system not available.</td></tr>';
+
     return;
   }
 
   const queue = getRegQueue() || [];
 
+  if (!queue.length) {
+
+    tbody.innerHTML =
+      '<tr><td colspan="8">No registration requests found.</td></tr>';
+
+    return;
+  }
+
   tbody.innerHTML = "";
 
-  queue.forEach(function (item, index) {
+  queue.forEach(function (item) {
 
-    if (item.status !== "PENDING") return;
+    const requestTime =
+      item.requestTime
+        ? new Date(item.requestTime).toLocaleString()
+        : "N/A";
+
+    const retry =
+      item.retry || 0;
+
+    const error =
+      item.error || "-";
 
     tbody.innerHTML += `
       <tr>
-        <td>${item.mobile}</td>
-        <td>${item.username}</td>
-        <td>${item.email}</td>
-        <td>${item.position}</td>
-        <td>${item.status}</td>
-        <td>
-          <button class="approve" onclick="approve(${index})">
-            Approve
-          </button>
-
-          <button class="reject" onclick="reject(${index})">
-            Reject
-          </button>
-        </td>
+        <td>${escapeHtml(item.mobile || "")}</td>
+        <td>${escapeHtml(item.username || "")}</td>
+        <td>${escapeHtml(item.email || "")}</td>
+        <td>${escapeHtml(item.position || "")}</td>
+        <td>${escapeHtml(item.status || "")}</td>
+        <td>${requestTime}</td>
+        <td>${retry}</td>
+        <td>${escapeHtml(error)}</td>
       </tr>
     `;
   });
-
-  if (tbody.innerHTML === "") {
-    tbody.innerHTML =
-      '<tr><td colspan="6">No pending registrations.</td></tr>';
-  }
 }
 
-// ================= APPROVE =================
-function approve(index) {
+// ================= AUTO REFRESH =================
+function startAutoRefresh() {
 
-  if (
-    typeof getRegQueue !== "function" ||
-    typeof saveRegQueue !== "function"
-  ) {
-    alert("Registration queue system missing.");
-    return;
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
   }
 
-  const queue = getRegQueue();
-
-  if (!queue[index]) return;
-
-  queue[index].status = "APPROVED";
-  queue[index].approvedAt = Date.now();
-
-  saveRegQueue(queue);
-
-  alert("Approved");
-
-  loadQueue();
+  refreshTimer = setInterval(loadQueue, 10000);
 }
 
-// ================= REJECT =================
-function reject(index) {
+// ================= CLEANUP =================
+window.addEventListener("beforeunload", function () {
 
-  if (
-    typeof getRegQueue !== "function" ||
-    typeof saveRegQueue !== "function"
-  ) {
-    alert("Registration queue system missing.");
-    return;
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
   }
 
-  const queue = getRegQueue();
-
-  if (!queue[index]) return;
-
-  queue[index].status = "FAILED";
-  queue[index].error = "Rejected by admin";
-
-  saveRegQueue(queue);
-
-  alert("Rejected");
-
-  loadQueue();
-}
+});
 
 // ================= EXPORT =================
 window.loadQueue = loadQueue;
-window.approve = approve;
-window.reject = reject;
