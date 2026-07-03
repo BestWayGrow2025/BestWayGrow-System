@@ -354,3 +354,15 @@ window.toggleTotalIncomeTracking = toggleTotalIncomeTracking;
 // HEALTH FLAG
 // =====================
 window.INCOME_CONTROL_SYSTEM_ACTIVE = true;
+
+ // =====================
+// AUTO INITIALIZE
+// =====================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  if (typeof window.initIncomeControl === "function") {
+    window.initIncomeControl();
+  }
+
+});
