@@ -14,26 +14,56 @@ REGISTRATION APPROVAL DASHBOARD v1.0
 */
 
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
+  authPage();
   loadQueue();
 });
 
-// ================= INIT =================
-function initPage() {
+let session = null;
+let currentUser = null;
 
-  if (typeof getSession !== "function") {
-    alert("Session system missing");
+function forceLogout() {
+
+  if (typeof logoutSession === "function") {
+    logoutSession();
     return;
   }
 
-  const session = getSession();
+  window.location.replace("admin_auth.html");
+}
 
-  if (!session || session.role !== "admin") {
-    alert("Access Denied");
+function authPage() {
 
-    // Replace with platform router if applicable
-    window.location.href = "admin_login.html";
-    return;
+  if (typeof getSession !== "function") {
+    return forceLogout();
+  }
+
+  session = getSession();
+
+  if (!session) {
+    return forceLogout();
+  }
+
+  if (typeof getCurrentUser !== "function") {
+    return forceLogout();
+  }
+
+  currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    return forceLogout();
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("admin")) {
+    return forceLogout();
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return forceLogout();
   }
 }
 
