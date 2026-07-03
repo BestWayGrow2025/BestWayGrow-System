@@ -13,61 +13,74 @@ USER REPURCHASE V2.0 (SINGLE PATH FINAL)
 ========================================
 */
 
-/* ================= MODULE REGISTRATION ================= */
+// ================= INIT =================
 
-if (typeof BOOT !== "undefined" && BOOT.register) {
+let session = null;
+let currentUser = null;
 
-  BOOT.register("user_repurchase", function () {
+document.addEventListener("DOMContentLoaded", function () {
+  authPage();
+  loadPage();
+});
 
-    initPage();
+function forceLogout() {
 
-    if (!authPage()) return;
-
-    loadRepurchasePage();
-  });
-
-}
-
-/* ================= INIT ================= */
-
-function initPage() {
-
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    console.error("CORE SYSTEM MISSING");
+  if (typeof logoutSession === "function") {
+    logoutSession();
+    return;
   }
+
+  window.location.replace("user_login.html");
 }
 
-/* ================= AUTH ================= */
+// ================= AUTH =================
 
 function authPage() {
 
-  const user =
-    typeof getCurrentUser === "function"
-      ? getCurrentUser()
-      : null;
-
-  if (!user || !user.userId) {
-    alert("Login required");
-    window.location.href = "user_login.html";
-    return false;
+  if (typeof getSession !== "function") {
+    return forceLogout();
   }
 
-  return true;
+  session = getSession();
+
+  if (!session) {
+    return forceLogout();
+  }
+
+  if (typeof getCurrentUser !== "function") {
+    return forceLogout();
+  }
+
+  currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    return forceLogout();
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("user")) {
+    return forceLogout();
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return forceLogout();
+  }
 }
 
-/* ================= LOAD PAGE ================= */
+// ================= LOAD PAGE =================
 
-function loadRepurchasePage() {
+function loadPage() {
 
-  const user = getCurrentUser();
-  const main = document.getElementById("mainContent");
-
-  if (!user || !main) return;
+  const user = currentUser;
 
   const infoBox = document.getElementById("info");
   const statusBox = document.getElementById("repurchaseStatus");
+
+  if (!user) return;
 
   if (infoBox) {
     infoBox.innerText =
@@ -86,18 +99,20 @@ function loadRepurchasePage() {
   }
 
   // ================= AUTO PIN PREFILL =================
+
   try {
+
     const selected = JSON.parse(localStorage.getItem("selectedPin"));
 
     if (selected?.type === "repurchase") {
       document.getElementById("pinInput").value =
         selected.pinId || "";
     }
+
   } catch (e) {
     console.warn("[REPURCHASE] PIN PREFILL SKIPPED");
   }
 }
-
 /* ================= PIN VALIDATION ================= */
 
 function validatePin(pinId) {
@@ -114,14 +129,13 @@ function validatePin(pinId) {
 
   return true;
 }
-
 /* ================= SUBMIT REPURCHASE ================= */
 
 function submitRepurchase() {
 
-  const user = getCurrentUser();
+  const user = currentUser;
 
-  if (!user || !user.userId) {
+  if (!user) {
     alert("Login required");
     window.location.href = "user_login.html";
     return;
@@ -132,7 +146,8 @@ function submitRepurchase() {
     return;
   }
 
-  const pinId = document.getElementById("pinInput")?.value?.trim();
+  const pinId =
+    document.getElementById("pinInput")?.value?.trim();
 
   if (!validatePin(pinId)) return;
 
