@@ -39,11 +39,9 @@ document.addEventListener("click", function (e) {
 });
 
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-   
-  }
+  // Core boot is handled by:
+  // core_boot_manager.js
+  // core_initializer.js
 }
 
 function authPage() {
