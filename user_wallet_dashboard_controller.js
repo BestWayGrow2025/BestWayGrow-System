@@ -111,9 +111,19 @@ function loadWalletHistory() {
   main.innerHTML = html;
 }
 
-// ================= EXPORTS =================
+ // ================= EXPORTS =================
 
 window.loadWallet = loadWallet;
 window.loadWalletHistory = loadWalletHistory;
 
 console.log("[USER WALLET DASHBOARD] READY");
+
+// ================= AUTO INITIALIZE =================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  if (typeof window.loadWallet === "function") {
+    window.loadWallet();
+  }
+
+});
