@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>User Repurchase</title>
 </head>
 <body>
@@ -10,28 +11,30 @@
   <p id="info"></p>
   <p id="repurchaseStatus"></p>
 
-  <input type="text" id="pinInput" placeholder="Enter PIN"><br><br>
+  <input
+    type="text"
+    id="pinInput"
+    placeholder="Enter PIN"
+  >
 
-  <button type="button" onclick="submitRepurchase()">Repurchase Now</button>
+  <br><br>
+
+  <button
+    type="button"
+    onclick="submitRepurchase()"
+  >
+    Repurchase Now
+  </button>
 
   <!-- CORE -->
-  <script src="core_system.js"></script>
+  <script src="core_boot_manager.js"></script>
+  <script src="core_initializer.js"></script>
+  <script src="core_session_authority.js"></script>
 
-  <!-- SESSION -->
-  <script src="session_manager.js"></script>
-
-  <!-- SYSTEM -->
-  <script src="active_system.js"></script>
-
-  <!-- PIN -->
-  <script src="pin_config_system.js"></script>
-  <script src="pin_master_system.js"></script>
-
-  <!-- TRIGGER SYSTEM -->
-  <script src="trigger_system.js"></script>
-
-  <!-- PAGE JS -->
-  <script src="user_repurchase.js"></script>
+  <!-- REPURCHASE -->
+  <script src="core_upgrade_execution_engine.js"></script>
+  <script src="core_upgrade_event_bridge.js"></script>
+  <script src="user_repurchase_execution_controller.js"></script>
 
 </body>
 </html>
