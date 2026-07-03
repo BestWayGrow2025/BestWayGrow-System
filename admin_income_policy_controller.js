@@ -16,7 +16,9 @@ let session = null;
 let currentUser = null;
 
 // ================= INIT =================
-initIncomeControlPage();
+ document.addEventListener("DOMContentLoaded", function () {
+  initIncomeControlPage();
+});
 
 function initIncomeControlPage() {
   try {
@@ -35,7 +37,7 @@ function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   } else {
-    alert("core_system.js missing");
+    alert("core_initializer.js missing");
     throw new Error("STOP");
   }
 
@@ -50,7 +52,10 @@ function initPage() {
 // ================= AUTH =================
 function authPage() {
 
-  session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
+  session =
+  typeof getSession === "function"
+    ? getSession()
+    : null;
 
   if (!session?.userId) {
     window.location.href = "admin_login.html";
@@ -65,13 +70,11 @@ function authPage() {
   currentUser = getUserById(session.userId);
 
   if (!currentUser || currentUser.role !== "admin") {
-    localStorage.removeItem("loggedInAdmin");
     window.location.href = "admin_login.html";
     throw new Error("STOP");
   }
 
   if ((currentUser.status || "active") !== "active") {
-    localStorage.removeItem("loggedInAdmin");
     alert("Account inactive");
     window.location.href = "admin_login.html";
     throw new Error("STOP");
