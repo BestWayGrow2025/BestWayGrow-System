@@ -93,7 +93,7 @@ function loadQueue() {
   if (typeof getRegQueue !== "function") {
 
     tbody.innerHTML =
-      '<tr><td colspan="8">Registration queue system not available.</td></tr>';
+      '<tr><td colspan="9">Registration queue system not available.</td></tr>';
 
     return;
   }
@@ -103,14 +103,14 @@ function loadQueue() {
   if (!queue.length) {
 
     tbody.innerHTML =
-      '<tr><td colspan="8">No registration requests found.</td></tr>';
+      '<tr><td colspan="9">No registration requests found.</td></tr>';
 
     return;
   }
 
   tbody.innerHTML = "";
 
-  queue.forEach(function (item) {
+  queue.forEach(function (item, index) {
 
     const requestTime =
       item.requestTime
@@ -133,6 +133,14 @@ function loadQueue() {
         <td>${requestTime}</td>
         <td>${retry}</td>
         <td>${escapeHtml(error)}</td>
+        <td>
+          ${item.status === "PENDING"
+            ? `
+              <button class="approve" onclick="approve(${index})">Approve</button>
+              <button class="reject" onclick="reject(${index})">Reject</button>
+            `
+            : "-"}
+        </td>
       </tr>
     `;
   });
