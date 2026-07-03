@@ -86,6 +86,16 @@ function loadUserWalletHistory() {
   main.innerHTML = html;
 }
 
-// ================= EXPORT =================
+ // ================= EXPORT =================
 
 window.loadUserWalletHistory = loadUserWalletHistory;
+
+// ================= AUTO INITIALIZE =================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  if (typeof window.loadUserWalletHistory === "function") {
+    window.loadUserWalletHistory();
+  }
+
+});
