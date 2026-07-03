@@ -14,37 +14,86 @@ USER UPGRADE V2.0 (SINGLE PATH FINAL)
 */
 
 // ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
-  const user = getCurrentUser();
+let session = null;
+let currentUser = null;
 
-  if (!user) {
-    alert("Login required");
-    window.location.href = "user_login.html";
+document.addEventListener("DOMContentLoaded", function () {
+  authPage();
+  loadPage();
+});
+
+function forceLogout() {
+
+  if (typeof logoutSession === "function") {
+    logoutSession();
     return;
   }
+
+  window.location.replace("user_login.html");
+}
+
+function authPage() {
+
+  if (typeof getSession !== "function") {
+    return forceLogout();
+  }
+
+  session = getSession();
+
+  if (!session) {
+    return forceLogout();
+  }
+
+  if (typeof getCurrentUser !== "function") {
+    return forceLogout();
+  }
+
+  currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    return forceLogout();
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("user")) {
+    return forceLogout();
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return forceLogout();
+  }
+}
+
+function loadPage() {
 
   const infoBox = document.getElementById("info");
 
   if (infoBox) {
     infoBox.innerText =
       "User: " +
-      (user.username || "User") +
+      (currentUser.username || "User") +
       " (" +
-      user.userId +
+      currentUser.userId +
       ")";
   }
 
-  // ================= AUTO PIN PREFILL =================
   try {
+
     const selected = JSON.parse(localStorage.getItem("selectedPin"));
 
     if (selected?.type === "upgrade") {
       document.getElementById("pinInput").value =
         selected.pinId || "";
     }
+
   } catch (e) {
     console.warn("[UPGRADE] PIN PREFILL SKIPPED");
   }
+}
 });
 
 // ================= VALIDATION =================
@@ -54,7 +103,7 @@ function isAlreadyUpgraded(user) {
 
 // ================= MAIN UPGRADE FLOW (SINGLE PATH) =================
 function upgradeNow() {
-  const user = getCurrentUser();
+  const user = currentUser;
 
   if (!user) {
     alert("Login required");
