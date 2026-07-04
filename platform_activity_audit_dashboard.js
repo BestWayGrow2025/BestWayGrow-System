@@ -34,34 +34,49 @@ if ((currentUser.status || "active") !== "active") {
   throw new Error("AUTH FAILED");
 }
 function bindEvents() {
- const loadLogsBtn = document.getElementById("loadLogsBtn");
-const clearLogsBtn = document.getElementById("clearLogsBtn");
-const loadCriticalBtn = document.getElementById("loadCriticalBtn");
 
-if (loadLogsBtn) {
-  loadLogsBtn.addEventListener("click", function () {
-    safeClick(loadLogs);
-  });
-}
+  const loadLogsBtn =
+    document.getElementById("loadLogsBtn");
 
-if (clearLogsBtn) {
-  clearLogsBtn.addEventListener("click", function () {
-    safeClick(clearLogs);
-  });
-}
+  const clearLogsBtn =
+    document.getElementById("clearLogsBtn");
 
-if (loadCriticalBtn) {
-  loadCriticalBtn.addEventListener("click", function () {
-    safeClick(loadCritical);
-  });
+  const loadCriticalBtn =
+    document.getElementById("loadCriticalBtn");
+
+  if (loadLogsBtn) {
+    loadLogsBtn.addEventListener("click", function () {
+      safeClick(loadLogs);
+    });
+  }
+
+  if (clearLogsBtn) {
+    clearLogsBtn.addEventListener("click", function () {
+      safeClick(clearLogs);
+    });
+  }
+
+  if (loadCriticalBtn) {
+    loadCriticalBtn.addEventListener("click", function () {
+      safeClick(loadCritical);
+    });
+  }
+
 }
 function loadPage() {
-  let welcome = document.getElementById("welcome");
+
+  const welcome =
+    document.getElementById("welcome");
 
   if (welcome) {
     welcome.innerText =
-      "Logged in: " + currentUser.userId + " (" + currentUser.role + ")";
+      "Logged in: " +
+      currentUser.userId +
+      " (" +
+      currentUser.role +
+      ")";
   }
+
 }
 
 function safeClick(fn) {
