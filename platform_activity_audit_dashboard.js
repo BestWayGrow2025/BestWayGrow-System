@@ -9,34 +9,39 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function authPage() {
+
   session =
-    JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null") ||
-    JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
+    typeof getSession === "function"
+      ? getSession()
+      : null;
 
-if (!session || !session.userId) {
-  window.location.replace("super_admin_auth.html");
-  throw new Error("AUTH FAILED");
-}
-currentUser =
-  typeof getUserById === "function"
-    ? getUserById(session.userId)
-    : null;
+  if (!session || !session.userId) {
+    window.location.replace("super_admin_auth.html");
+    throw new Error("AUTH FAILED");
+  }
 
-if (
-  !currentUser ||
-  (
-    String(currentUser.role).toLowerCase() !== "super_admin" &&
-    String(currentUser.role).toLowerCase() !== "system_admin"
-  )
-) {
-  window.location.replace("super_admin_auth.html");
-  throw new Error("AUTH FAILED");
-}
+  currentUser =
+    typeof getUserById === "function"
+      ? getUserById(session.userId)
+      : null;
 
-if ((currentUser.status || "active") !== "active") {
-  window.location.replace("super_admin_auth.html");
-  throw new Error("AUTH FAILED");
-}
+  if (
+    !currentUser ||
+    (
+      String(currentUser.role).toLowerCase() !== "super_admin" &&
+      String(currentUser.role).toLowerCase() !== "system_admin"
+    )
+  ) {
+    window.location.replace("super_admin_auth.html");
+    throw new Error("AUTH FAILED");
+  }
+
+  if (
+    (currentUser.status || "active") !== "active"
+  ) {
+    window.location.replace("super_admin_auth.html");
+    throw new Error("AUTH FAILED");
+  }
 
 }
 function bindEvents() {
