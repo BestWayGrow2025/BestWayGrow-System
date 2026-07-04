@@ -2,6 +2,16 @@ let admin = null;
 let refreshTimer = null;
 let actionLock = false;
 
+function forceLogout() {
+
+  if (typeof logoutSession === "function") {
+    logoutSession();
+    return;
+  }
+
+  window.location.replace("admin_login.html");
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
   authPage();
@@ -25,27 +35,40 @@ function initPage() {
 
 // ================= AUTH =================
 function authPage() {
-  if (typeof protectPage !== "function") {
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
+
+  if (typeof getSession !== "function") {
+    return forceLogout();
   }
 
-  admin = protectPage({
-    role: "admin",
-    department: "finance"
-  });
+  session = getSession();
+
+  if (!session) {
+    return forceLogout();
+  }
+
+  if (typeof getCurrentUser !== "function") {
+    return forceLogout();
+  }
+
+  admin = getCurrentUser();
 
   if (!admin) {
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
+    return forceLogout();
   }
 
-  if ((admin.accountStatus || admin.status || "active") !== "active") {
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
+  if (typeof hasRole !== "function" || !hasRole("admin")) {
+    return forceLogout();
+  }
+
+  const status =
+    admin.accountStatus ||
+    admin.status ||
+    "active";
+
+  if (status !== "active") {
+    return forceLogout();
   }
 }
-
 // ================= EVENTS =================
 function bindEvents() {
 
