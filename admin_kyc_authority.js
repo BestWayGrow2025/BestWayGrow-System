@@ -74,7 +74,7 @@ function saveKYC(data) {
 
 function loadKYC() {
   let data = getKYC();
-  let container = document.getElementById("kycList");
+ if (!container) return;
 
   if (!data.length) {
     container.innerHTML = "No KYC requests found";
@@ -109,7 +109,10 @@ function approveKYC(requestId, userId) {
   lock = true;
 
   let data = getKYC();
-  let users = getUsers();
+ let users =
+  typeof getUsers === "function"
+    ? getUsers()
+    : [];
 
   let req = data.find(k => k.requestId === requestId);
   let user = users.find(u => u.userId === userId);
@@ -129,7 +132,9 @@ function approveKYC(requestId, userId) {
   user.kycApprovedTime = new Date().toISOString();
 
   saveKYC(data);
+ if (typeof saveUsers === "function") {
   saveUsers(users);
+}
 
   if (typeof logActivity === "function") {
     logActivity(currentUser.userId, "admin", "KYC approved: " + userId);
