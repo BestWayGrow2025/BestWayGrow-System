@@ -35,35 +35,45 @@ function initPage() {
 
 // ================= AUTH =================
 function authPage() {
-  try {
-  } catch (err) {
-    session = null;
-  }
 
-  if (!session || !session.userId) {
-    alert("Login required");
-    window.location.href = "user_login.html";
+  if (typeof getSession !== "function") {
+    window.location.replace("user_login.html");
     return;
   }
 
-  let user = null;
+  session = getSession();
 
-  try {
-    user = typeof getUserById === "function"
-      ? getUserById(session.userId)
-      : null;
-  } catch (err) {
-    user = null;
-  }
-
-  if (!user) {
-    alert("User not found");
-    localStorage.removeItem("loggedInUser");
-    window.location.href = "user_login.html";
+  if (!session) {
+    window.location.replace("user_login.html");
     return;
   }
 
- currentUser = getCurrentUser();
+  if (typeof getCurrentUser !== "function") {
+    window.location.replace("user_login.html");
+    return;
+  }
+
+  currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    window.location.replace("user_login.html");
+    return;
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("user")) {
+    window.location.replace("user_login.html");
+    return;
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
+    window.location.replace("user_login.html");
+    return;
+  }
 }
 
 // ================= EVENTS =================
