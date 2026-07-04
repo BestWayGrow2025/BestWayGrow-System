@@ -13,10 +13,14 @@ function authPage() {
     JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null") ||
     JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
 
- if (!session || !session.userId) {
+if (!session || !session.userId) {
   window.location.replace("super_admin_auth.html");
   throw new Error("AUTH FAILED");
 }
+currentUser =
+  typeof getUserById === "function"
+    ? getUserById(session.userId)
+    : null;
 
 if (
   !currentUser ||
@@ -32,6 +36,8 @@ if (
 if ((currentUser.status || "active") !== "active") {
   window.location.replace("super_admin_auth.html");
   throw new Error("AUTH FAILED");
+}
+
 }
 function bindEvents() {
 
@@ -112,7 +118,20 @@ function loadLogs() {
     return;
   }
 
-  let logs = filterLogsAdvanced({ userId, role, keyword, source });
+ const logs =
+  typeof filterLogsAdvanced === "function"
+    ? filterLogsAdvanced({
+        userId,
+        role,
+        keyword,
+        source
+      })
+    : [];
+
+const safeLogs =
+  Array.isArray(logs)
+    ? logs
+    : [];
 
   let html = `
     <table>
@@ -126,11 +145,11 @@ function loadLogs() {
       </tr>
   `;
 
-  if (!logs.length) {
+ if (!safeLogs.length) {
     html += `<tr><td colspan="6">No Logs</td></tr>`;
   }
 
-  logs.slice().reverse().forEach(function (log) {
+ safeLogs.slice().reverse().forEach(function (log) {
     html += `
       <tr>
         <td>${log.logId || "-"}</td>
@@ -180,7 +199,15 @@ function loadCritical() {
     return;
   }
 
-  let logs = getCriticalLogs();
+ const logs =
+  typeof getCriticalLogs === "function"
+    ? getCriticalLogs()
+    : [];
+
+const safeLogs =
+  Array.isArray(logs)
+    ? logs
+    : [];
 
   let html = `
     <table>
@@ -193,11 +220,11 @@ function loadCritical() {
       </tr>
   `;
 
-  if (!logs.length) {
+ if (!safeLogs.length) {
     html += `<tr><td colspan="5">No Critical Logs</td></tr>`;
   }
 
-  logs.slice().reverse().forEach(function (log) {
+ safeLogs.slice().reverse().forEach(function (log) {
     html += `
       <tr>
         <td>${log.id || "-"}</td>
