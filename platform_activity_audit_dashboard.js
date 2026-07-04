@@ -195,20 +195,21 @@ function clearLogs() {
 }
 
 function loadCritical() {
+
   if (!isSystemSafe()) return;
 
-if (typeof getCriticalLogs !== "function") {
-  document.getElementById("criticalTable").innerHTML =
-    "Critical log system unavailable";
-  return;
-}
+  if (typeof getCriticalLogs !== "function") {
+    document.getElementById("criticalTable").innerHTML =
+      "Critical log system unavailable";
+    return;
+  }
 
-const logs = getCriticalLogs();
+  const logs = getCriticalLogs();
 
-const safeLogs =
-  Array.isArray(logs)
-    ? logs
-    : [];
+  const safeLogs =
+    Array.isArray(logs)
+      ? logs
+      : [];
 
   let html = `
     <table>
@@ -221,23 +222,53 @@ const safeLogs =
       </tr>
   `;
 
- if (!safeLogs.length) {
-    html += `<tr><td colspan="5">No Critical Logs</td></tr>`;
-  }
-
- safeLogs.slice().reverse().forEach(function (log) {
+  if (!safeLogs.length) {
     html += `
       <tr>
-        <td>${log.id || "-"}</td>
-        <td>${log.userId || "-"}</td>
-        <td>${log.message || "-"}</td>
-        <td>${log.source || "-"}</td>
-        <td>${log.time ? new Date(log.time).toLocaleString() : "-"}</td>
+        <td colspan="5">
+          No Critical Logs
+        </td>
       </tr>
     `;
-  });
+  }
+
+  safeLogs
+    .slice()
+    .reverse()
+    .forEach(function (log) {
+
+      html += `
+        <tr>
+          <td>${log.id || "-"}</td>
+          <td>${log.userId || "-"}</td>
+          <td>${log.message || "-"}</td>
+          <td>${log.source || "-"}</td>
+          <td>
+            ${
+              log.time
+                ? new Date(log.time).toLocaleString()
+                : "-"
+            }
+          </td>
+        </tr>
+      `;
+
+    });
 
   html += `</table>`;
 
-  document.getElementById("criticalTable").innerHTML = html;
+  document.getElementById("criticalTable").innerHTML =
+    html;
+
 }
+
+// ================= EXPORT =================
+
+window.loadLogs =
+  loadLogs;
+
+window.clearLogs =
+  clearLogs;
+
+window.loadCritical =
+  loadCritical;
