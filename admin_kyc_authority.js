@@ -33,14 +33,12 @@ function authPage() {
     throw new Error("AUTH FAILED");
   }
 
-  if (
-    (currentUser.status || "active") !== "active"
-  ) {
+  if ((currentUser.status || "active") !== "active") {
     window.location.replace("admin_auth.html");
     throw new Error("AUTH FAILED");
   }
-
 }
+
 function bindEvents() {
 
   const backBtn = document.getElementById("backBtn");
@@ -53,7 +51,6 @@ function bindEvents() {
   if (refreshBtn) {
     refreshBtn.addEventListener("click", loadKYC);
   }
-
 }
 
 function loadPage() {
@@ -61,7 +58,7 @@ function loadPage() {
 }
 
 function goBack() {
- window.location.replace("admin_dashboard.html");
+  window.location.replace("admin_dashboard.html");
 }
 
 function getKYC() {
@@ -73,14 +70,12 @@ function saveKYC(data) {
 }
 
 function loadKYC() {
- const data = Array.isArray(getKYC())
-  ? getKYC()
-  : [];
 
-const container =
-  document.getElementById("kycList");
+  const dataRaw = getKYC();
+  const data = Array.isArray(dataRaw) ? dataRaw : [];
 
-if (!container) return;
+  const container = document.getElementById("kycList");
+  if (!container) return;
 
   if (!data.length) {
     container.innerHTML = "No KYC requests found";
@@ -113,31 +108,18 @@ if (!container) return;
 function approveKYC(requestId, userId) {
 
   if (lock) return;
-
   lock = true;
 
   try {
 
     const data = getKYC();
+    const users = typeof getUsers === "function" ? getUsers() : [];
 
-    const users =
-      typeof getUsers === "function"
-        ? getUsers()
-        : [];
+    const req = data.find(k => k.requestId === requestId);
+    const user = users.find(u => u.userId === userId);
 
-    const req =
-      data.find(k => k.requestId === requestId);
-
-    const user =
-      users.find(u => u.userId === userId);
-
-    if (!req) {
-      alert("Request not found");
-      return;
-    }
-
-    if (!user) {
-      alert("User not found");
+    if (!req || !user) {
+      alert("Request or User not found");
       return;
     }
 
@@ -162,29 +144,22 @@ function approveKYC(requestId, userId) {
     }
 
     alert("✅ KYC Approved");
-
     loadKYC();
 
   } finally {
-
     lock = false;
-
   }
-
 }
 
 function rejectKYC(requestId) {
 
   if (lock) return;
-
   lock = true;
 
   try {
 
     const data = getKYC();
-
-    const req =
-      data.find(k => k.requestId === requestId);
+    const req = data.find(k => k.requestId === requestId);
 
     if (!req) {
       alert("Request not found");
@@ -205,15 +180,11 @@ function rejectKYC(requestId) {
     }
 
     alert("❌ KYC Rejected");
-
     loadKYC();
 
   } finally {
-
     lock = false;
-
   }
-
 }
 
 window.loadKYC = loadKYC;
