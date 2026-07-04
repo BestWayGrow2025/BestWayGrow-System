@@ -109,68 +109,109 @@ if (!container) return;
 }
 
 function approveKYC(requestId, userId) {
+
   if (lock) return;
+
   lock = true;
 
-  let data = getKYC();
- let users =
-  typeof getUsers === "function"
-    ? getUsers()
-    : [];
+  try {
 
-  let req = data.find(k => k.requestId === requestId);
-  let user = users.find(u => u.userId === userId);
+    const data = getKYC();
 
-  if (!req) {
+    const users =
+      typeof getUsers === "function"
+        ? getUsers()
+        : [];
+
+    const req =
+      data.find(k => k.requestId === requestId);
+
+    const user =
+      users.find(u => u.userId === userId);
+
+    if (!req) {
+      alert("Request not found");
+      return;
+    }
+
+    if (!user) {
+      alert("User not found");
+      return;
+    }
+
+    req.status = "APPROVED";
+    req.approvedAt = new Date().toISOString();
+
+    user.kycStatus = "VERIFIED";
+    user.kycApprovedTime = new Date().toISOString();
+
+    saveKYC(data);
+
+    if (typeof saveUsers === "function") {
+      saveUsers(users);
+    }
+
+    if (typeof logActivity === "function") {
+      logActivity(
+        currentUser.userId,
+        "admin",
+        "KYC approved: " + userId
+      );
+    }
+
+    alert("✅ KYC Approved");
+
+    loadKYC();
+
+  } finally {
+
     lock = false;
-    return alert("Request not found");
+
   }
 
-  if (!user) {
-    lock = false;
-    return alert("User not found");
-  }
-
-  req.status = "APPROVED";
-  user.kycStatus = "VERIFIED";
-  user.kycApprovedTime = new Date().toISOString();
-
-  saveKYC(data);
- if (typeof saveUsers === "function") {
-  saveUsers(users);
-}
-
-  if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "admin", "KYC approved: " + userId);
-  }
-
-  alert("✅ KYC Approved");
-  lock = false;
-  loadKYC();
 }
 
 function rejectKYC(requestId) {
+
   if (lock) return;
+
   lock = true;
 
-  let data = getKYC();
-  let req = data.find(k => k.requestId === requestId);
+  try {
 
-  if (!req) {
+    const data = getKYC();
+
+    const req =
+      data.find(k => k.requestId === requestId);
+
+    if (!req) {
+      alert("Request not found");
+      return;
+    }
+
+    req.status = "REJECTED";
+    req.rejectedAt = new Date().toISOString();
+
+    saveKYC(data);
+
+    if (typeof logActivity === "function") {
+      logActivity(
+        currentUser.userId,
+        "admin",
+        "KYC rejected: " + requestId
+      );
+    }
+
+    alert("❌ KYC Rejected");
+
+    loadKYC();
+
+  } finally {
+
     lock = false;
-    return alert("Request not found");
+
   }
 
-  req.status = "REJECTED";
-  saveKYC(data);
-
-  if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "admin", "KYC rejected: " + requestId);
-  }
-
-  alert("❌ KYC Rejected");
-  lock = false;
-  loadKYC();
 }
 
 window.loadKYC = loadKYC;
