@@ -73,7 +73,9 @@ function saveKYC(data) {
 }
 
 function loadKYC() {
-  let data = getKYC();
+ const data = Array.isArray(getKYC())
+  ? getKYC()
+  : [];
 
 const container =
   document.getElementById("kycList");
