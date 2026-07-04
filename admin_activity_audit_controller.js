@@ -219,13 +219,14 @@ function loadAdminActivityLogs(
     return;
 
 
- const logs = Array.isArray(customLogs)
+const logs = Array.isArray(customLogs)
   ? customLogs
   : (
-      typeof getActivityLogs === "function"
-        ? getActivityLogs()
-        : []
-    );
+      typeof getActivityLogs === "function" &&
+      Array.isArray(getActivityLogs())
+    )
+      ? getActivityLogs()
+      : [];
 
   if (!Array.isArray(logs) || !logs.length) {
 
