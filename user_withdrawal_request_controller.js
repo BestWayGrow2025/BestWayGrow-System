@@ -36,7 +36,6 @@ function initPage() {
 // ================= AUTH =================
 function authPage() {
   try {
-    session = JSON.parse(localStorage.getItem("loggedInUser"));
   } catch (err) {
     session = null;
   }
@@ -64,7 +63,7 @@ function authPage() {
     return;
   }
 
-  currentUser = user.userId;
+ currentUser = getCurrentUser();
 }
 
 // ================= EVENTS =================
@@ -81,7 +80,7 @@ function loadPage() {
   const userIdEl = document.getElementById("userId");
 
   if (userIdEl && currentUser) {
-    userIdEl.innerText = currentUser;
+   userIdEl.innerText = currentUser.userId;
   }
 }
 
@@ -119,7 +118,7 @@ function submitWithdraw() {
   if (submitBtn) submitBtn.disabled = true;
 
   try {
-    requestWithdraw(currentUser, amount);
+   requestWithdraw(currentUser.userId, amount);
 
     msgBox.innerText = "✅ Withdraw request submitted";
     amountInput.value = "";
