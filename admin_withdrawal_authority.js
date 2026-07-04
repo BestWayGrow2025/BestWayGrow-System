@@ -1,3 +1,6 @@
+"use strict";
+
+let session = null;
 let admin = null;
 let refreshTimer = null;
 let actionLock = false;
