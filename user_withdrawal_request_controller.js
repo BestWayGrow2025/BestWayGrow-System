@@ -47,32 +47,27 @@ function initPage() {
 function authPage() {
 
   if (typeof getSession !== "function") {
-   return forceLogout();
-    return;
+    return forceLogout();
   }
 
   session = getSession();
 
   if (!session) {
     return forceLogout();
-    return;
   }
 
   if (typeof getCurrentUser !== "function") {
-   return forceLogout();
-    return;
+    return forceLogout();
   }
 
   currentUser = getCurrentUser();
 
   if (!currentUser) {
-   return forceLogout();
-    return;
+    return forceLogout();
   }
 
   if (typeof hasRole !== "function" || !hasRole("user")) {
-   return forceLogout();
-    return;
+    return forceLogout();
   }
 
   const status =
@@ -82,10 +77,8 @@ function authPage() {
 
   if (status !== "active") {
     return forceLogout();
-    return;
   }
 }
-
 // ================= EVENTS =================
 function bindEvents() {
   const submitBtn = document.getElementById("submitBtn");
