@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   loadPage();
 });
 
+// ================= AUTH =================
 function authPage() {
 
   session =
@@ -39,18 +40,14 @@ function authPage() {
   }
 }
 
+// ================= EVENTS =================
 function bindEvents() {
 
   const backBtn = document.getElementById("backBtn");
   const refreshBtn = document.getElementById("refreshBtn");
 
-  if (backBtn) {
-    backBtn.addEventListener("click", goBack);
-  }
-
-  if (refreshBtn) {
-    refreshBtn.addEventListener("click", loadKYC);
-  }
+  if (backBtn) backBtn.addEventListener("click", goBack);
+  if (refreshBtn) refreshBtn.addEventListener("click", loadKYC);
 }
 
 function loadPage() {
@@ -61,20 +58,25 @@ function goBack() {
   window.location.replace("admin_dashboard.html");
 }
 
+// ================= STORAGE =================
 function getKYC() {
-  return JSON.parse(localStorage.getItem("kycRequests") || "[]");
+  return Array.isArray(
+    JSON.parse(localStorage.getItem("kycRequests") || "[]")
+  )
+    ? JSON.parse(localStorage.getItem("kycRequests") || "[]")
+    : [];
 }
 
 function saveKYC(data) {
   localStorage.setItem("kycRequests", JSON.stringify(data));
 }
 
+// ================= LOAD =================
 function loadKYC() {
 
-  const dataRaw = getKYC();
-  const data = Array.isArray(dataRaw) ? dataRaw : [];
-
+  const data = getKYC();
   const container = document.getElementById("kycList");
+
   if (!container) return;
 
   if (!data.length) {
@@ -84,7 +86,7 @@ function loadKYC() {
 
   let html = "<ul>";
 
-  data.slice().reverse().forEach(function (k) {
+  data.slice().reverse().forEach(k => {
     html += `
       <li>
         <b>User:</b> ${k.userId} <br>
@@ -105,6 +107,7 @@ function loadKYC() {
   container.innerHTML = html;
 }
 
+// ================= APPROVE =================
 function approveKYC(requestId, userId) {
 
   if (lock) return;
@@ -119,7 +122,7 @@ function approveKYC(requestId, userId) {
     const user = users.find(u => u.userId === userId);
 
     if (!req || !user) {
-      alert("Request or User not found");
+      alert(req ? "User not found" : "Request not found");
       return;
     }
 
@@ -151,6 +154,7 @@ function approveKYC(requestId, userId) {
   }
 }
 
+// ================= REJECT =================
 function rejectKYC(requestId) {
 
   if (lock) return;
