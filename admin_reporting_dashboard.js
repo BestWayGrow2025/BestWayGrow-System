@@ -1,63 +1,82 @@
+"use strict";
+
+let session = null;
 let reportAdmin = null;
 let reportLock = false;
 
+function forceLogout() {
+
+  if (typeof logoutSession === "function") {
+    logoutSession();
+    return;
+  }
+
+  window.location.replace("admin_login.html");
+}
+
 // ================= INIT =================
-window.addEventListener("load", function () {
-  initAdminReportsPage();
-});
 
-function initAdminReportsPage() {
-  if (typeof initCoreSystem !== "function") {
-    alert("❌ core_system.js missing");
-    return;
-  }
+document.addEventListener("DOMContentLoaded", function () {
+  initPage();
+  authPage();
 
-  initCoreSystem();
-
-  let session = null;
-
-  if (typeof getSession === "function") {
-    session = getSession();
-  } else {
-    try {
-      session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
-    } catch {
-      session = null;
-    }
-  }
-
-  if (!session || !session.userId || session.role !== "admin") {
-    clearAdminReportsSession();
-    window.location.href = "admin_login.html";
-    return;
-  }
-
-  if (typeof getUserById !== "function") {
-    alert("❌ User system missing");
-    clearAdminReportsSession();
-    window.location.href = "admin_login.html";
-    return;
-  }
-
-  reportAdmin = getUserById(session.userId);
-
-  if (!reportAdmin || reportAdmin.role !== "admin") {
-    clearAdminReportsSession();
-    window.location.href = "admin_login.html";
-    return;
-  }
-
-  if ((reportAdmin.accountStatus || reportAdmin.status || "active") !== "active") {
-    clearAdminReportsSession();
-    window.location.href = "admin_login.html";
-    return;
-  }
+  if (!reportAdmin?.userId) return;
 
   bindAdminReportsEvents();
   loadAdminReportsPage();
 
   if (typeof logActivity === "function") {
     logActivity(reportAdmin.userId, "ADMIN", "Viewed Reports");
+  }
+});
+
+// ================= CORE INIT =================
+
+function initPage() {
+
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  } else {
+    alert("Core system missing");
+    throw new Error("STOP");
+  }
+}
+
+// ================= AUTH =================
+
+function authPage() {
+
+  if (typeof getSession !== "function") {
+    return forceLogout();
+  }
+
+  session = getSession();
+
+  if (!session) {
+    return forceLogout();
+  }
+
+  if (typeof getCurrentUser !== "function") {
+    return forceLogout();
+  }
+
+  reportAdmin = getCurrentUser();
+
+  if (!reportAdmin) {
+    return forceLogout();
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("admin")) {
+    return forceLogout();
+  }
+
+  const status =
+    reportAdmin.accountStatus ||
+    reportAdmin.status ||
+    "active";
+
+  if (status !== "active") {
+    return forceLogout();
   }
 }
 
