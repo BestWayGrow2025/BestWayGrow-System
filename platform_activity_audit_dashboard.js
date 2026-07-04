@@ -13,42 +13,48 @@ function authPage() {
     JSON.parse(localStorage.getItem("loggedInSuperAdmin") || "null") ||
     JSON.parse(localStorage.getItem("loggedInSystemAdmin") || "null");
 
-  if (!session || !session.userId) {
-   window.location.href = "super_admin_auth.html";
-    throw new Error("STOP");
-  }
-
-  if (typeof getUserById !== "function") {
-  window.location.href = "super_admin_auth.html";
-    throw new Error("STOP");
-  }
-
-  currentUser = getUserById(session.userId);
-
-  if (
-    !currentUser ||
-    (currentUser.role !== "super_admin" &&
-      currentUser.role !== "system_admin")
-  ) {
-   window.location.href = "super_admin_auth.html";
-    throw new Error("STOP");
-  }
+ if (!session || !session.userId) {
+  window.location.replace("super_admin_auth.html");
+  throw new Error("AUTH FAILED");
 }
 
+if (
+  !currentUser ||
+  (
+    String(currentUser.role).toLowerCase() !== "super_admin" &&
+    String(currentUser.role).toLowerCase() !== "system_admin"
+  )
+) {
+  window.location.replace("super_admin_auth.html");
+  throw new Error("AUTH FAILED");
+}
+
+if ((currentUser.status || "active") !== "active") {
+  window.location.replace("super_admin_auth.html");
+  throw new Error("AUTH FAILED");
+}
 function bindEvents() {
-  document.getElementById("loadLogsBtn").addEventListener("click", function () {
+ const loadLogsBtn = document.getElementById("loadLogsBtn");
+const clearLogsBtn = document.getElementById("clearLogsBtn");
+const loadCriticalBtn = document.getElementById("loadCriticalBtn");
+
+if (loadLogsBtn) {
+  loadLogsBtn.addEventListener("click", function () {
     safeClick(loadLogs);
   });
+}
 
-  document.getElementById("clearLogsBtn").addEventListener("click", function () {
+if (clearLogsBtn) {
+  clearLogsBtn.addEventListener("click", function () {
     safeClick(clearLogs);
   });
+}
 
-  document.getElementById("loadCriticalBtn").addEventListener("click", function () {
+if (loadCriticalBtn) {
+  loadCriticalBtn.addEventListener("click", function () {
     safeClick(loadCritical);
   });
 }
-
 function loadPage() {
   let welcome = document.getElementById("welcome");
 
