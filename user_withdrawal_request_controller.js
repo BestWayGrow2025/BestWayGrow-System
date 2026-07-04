@@ -18,6 +18,16 @@ let session = null;
 let currentUser = null;
 let lock = false;
 
+function forceLogout() {
+
+  if (typeof logoutSession === "function") {
+    logoutSession();
+    return;
+  }
+
+  window.location.replace("user_login.html");
+}
+
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
   initPage();
@@ -37,31 +47,31 @@ function initPage() {
 function authPage() {
 
   if (typeof getSession !== "function") {
-    window.location.replace("user_login.html");
+   return forceLogout();
     return;
   }
 
   session = getSession();
 
   if (!session) {
-    window.location.replace("user_login.html");
+    return forceLogout();
     return;
   }
 
   if (typeof getCurrentUser !== "function") {
-    window.location.replace("user_login.html");
+   return forceLogout();
     return;
   }
 
   currentUser = getCurrentUser();
 
   if (!currentUser) {
-    window.location.replace("user_login.html");
+   return forceLogout();
     return;
   }
 
   if (typeof hasRole !== "function" || !hasRole("user")) {
-    window.location.replace("user_login.html");
+   return forceLogout();
     return;
   }
 
@@ -71,7 +81,7 @@ function authPage() {
     "active";
 
   if (status !== "active") {
-    window.location.replace("user_login.html");
+    return forceLogout();
     return;
   }
 }
