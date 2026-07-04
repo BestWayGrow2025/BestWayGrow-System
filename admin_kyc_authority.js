@@ -74,7 +74,11 @@ function saveKYC(data) {
 
 function loadKYC() {
   let data = getKYC();
- if (!container) return;
+
+const container =
+  document.getElementById("kycList");
+
+if (!container) return;
 
   if (!data.length) {
     container.innerHTML = "No KYC requests found";
