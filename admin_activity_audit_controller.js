@@ -79,40 +79,38 @@ function initAdminAuditPage() {
 
 function authenticateAdminAudit() {
 
+  adminAuditSession =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
+
   if (
-    typeof protectPage === "function"
+    !adminAuditSession ||
+    !adminAuditSession.userId
   ) {
-
-    adminAuditUser =
-      protectPage({
-        role: "admin",
-        department: "report"
-      });
-
+    window.location.replace("admin_auth.html");
+    throw new Error("AUTH FAILED");
   }
 
+  adminAuditUser =
+    typeof getUserById === "function"
+      ? getUserById(adminAuditSession.userId)
+      : null;
 
-  if (!adminAuditUser) {
-
-    window.location.href =
-      "admin_auth.html";
-
-    return;
-
+  if (
+    !adminAuditUser ||
+    String(adminAuditUser.role).toLowerCase() !== "admin"
+  ) {
+    window.location.replace("admin_auth.html");
+    throw new Error("AUTH FAILED");
   }
 
-
-  adminAuditSession = {
-
-    userId:
-      adminAuditUser.userId ||
-      "UNKNOWN",
-
-    role:
-      adminAuditUser.role ||
-      "admin"
-
-  };
+  if (
+    (adminAuditUser.status || "active") !== "active"
+  ) {
+    window.location.replace("admin_auth.html");
+    throw new Error("AUTH FAILED");
+  }
 
 }
 
@@ -180,8 +178,9 @@ function bindAdminAuditEvents() {
 
 function goAdminDashboard() {
 
-  window.location.href =
-    "admin_dashboard.html";
+ window.location.replace(
+  "admin_dashboard.html"
+);
 
 }
 
@@ -220,14 +219,13 @@ function loadAdminActivityLogs(
     return;
 
 
-  const logs =
-    customLogs ||
-    (
+ const logs = Array.isArray(customLogs)
+  ? customLogs
+  : (
       typeof getActivityLogs === "function"
         ? getActivityLogs()
         : []
     );
-
 
   if (!Array.isArray(logs) || !logs.length) {
 
@@ -334,6 +332,8 @@ function applyAdminAuditFilter() {
 
 }
 
+window.applyAdminAuditFilter =
+  applyAdminAuditFilter;
 
 // ================= CLEAR =================
 
@@ -369,6 +369,8 @@ function clearAdminActivityLogs() {
 
 }
 
+window.clearAdminActivityLogs =
+  clearAdminActivityLogs;
 
 // ================= EXPORT =================
 
