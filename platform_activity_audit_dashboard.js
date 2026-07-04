@@ -113,20 +113,18 @@ function loadLogs() {
   let keyword = document.getElementById("keyword").value.trim();
   let source = document.getElementById("source").value;
 
-  if (typeof filterLogsAdvanced !== "function") {
-    document.getElementById("logTable").innerHTML = "Log system unavailable";
-    return;
-  }
+if (typeof filterLogsAdvanced !== "function") {
+  document.getElementById("logTable").innerHTML =
+    "Log system unavailable";
+  return;
+}
 
- const logs =
-  typeof filterLogsAdvanced === "function"
-    ? filterLogsAdvanced({
-        userId,
-        role,
-        keyword,
-        source
-      })
-    : [];
+const logs = filterLogsAdvanced({
+  userId,
+  role,
+  keyword,
+  source
+});
 
 const safeLogs =
   Array.isArray(logs)
@@ -194,15 +192,13 @@ function clearLogs() {
 function loadCritical() {
   if (!isSystemSafe()) return;
 
-  if (typeof getCriticalLogs !== "function") {
-    document.getElementById("criticalTable").innerHTML = "Critical log system unavailable";
-    return;
-  }
+if (typeof getCriticalLogs !== "function") {
+  document.getElementById("criticalTable").innerHTML =
+    "Critical log system unavailable";
+  return;
+}
 
- const logs =
-  typeof getCriticalLogs === "function"
-    ? getCriticalLogs()
-    : [];
+const logs = getCriticalLogs();
 
 const safeLogs =
   Array.isArray(logs)
