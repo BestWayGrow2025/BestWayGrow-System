@@ -3,46 +3,57 @@ let currentUser = null;
 let lock = false;
 
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
   authPage();
   bindEvents();
   loadPage();
 });
 
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    alert("core_system.js missing");
-    throw new Error("STOP");
-  }
-}
-
 function authPage() {
-  session = JSON.parse(localStorage.getItem("loggedInAdmin") || "null");
+
+  session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
 
   if (!session || !session.userId) {
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
+    window.location.replace("admin_auth.html");
+    throw new Error("AUTH FAILED");
   }
 
-  if (typeof protectPage === "function") {
-    currentUser = protectPage({
-      role: "admin",
-      department: "kyc"
-    });
+  currentUser =
+    typeof getUserById === "function"
+      ? getUserById(session.userId)
+      : null;
+
+  if (
+    !currentUser ||
+    String(currentUser.role).toLowerCase() !== "admin"
+  ) {
+    window.location.replace("admin_auth.html");
+    throw new Error("AUTH FAILED");
   }
 
-  if (!currentUser) {
-    localStorage.removeItem("loggedInAdmin");
-    window.location.href = "admin_login.html";
-    throw new Error("STOP");
+  if (
+    (currentUser.status || "active") !== "active"
+  ) {
+    window.location.replace("admin_auth.html");
+    throw new Error("AUTH FAILED");
   }
+
 }
-
 function bindEvents() {
-  document.getElementById("backBtn").addEventListener("click", goBack);
-  document.getElementById("refreshBtn").addEventListener("click", loadKYC);
+
+  const backBtn = document.getElementById("backBtn");
+  const refreshBtn = document.getElementById("refreshBtn");
+
+  if (backBtn) {
+    backBtn.addEventListener("click", goBack);
+  }
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", loadKYC);
+  }
+
 }
 
 function loadPage() {
@@ -50,7 +61,7 @@ function loadPage() {
 }
 
 function goBack() {
-  window.location.href = "admin_dashboard.html";
+ window.location.replace("admin_dashboard.html");
 }
 
 function getKYC() {
@@ -152,3 +163,7 @@ function rejectKYC(requestId) {
   lock = false;
   loadKYC();
 }
+
+window.loadKYC = loadKYC;
+window.approveKYC = approveKYC;
+window.rejectKYC = rejectKYC;
