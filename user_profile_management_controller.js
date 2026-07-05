@@ -78,9 +78,9 @@ function updateProfile() {
       ? getUsers()
       : [];
 
-  const index = users.findIndex(
-    u => u.userId === user.userId
-  );
+  const index = users.findIndex(function (u) {
+  return u.userId === user.userId;
+});
 
   if (index === -1) {
     alert("User not found");
@@ -99,14 +99,24 @@ function updateProfile() {
   users[index].state =
     document.getElementById("editState")?.value || "";
 
-  if (typeof saveUsers === "function") {
-    saveUsers(users);
-  }
-
-  alert("Profile Updated Successfully");
-
-  loadProfile();
+ if (typeof saveUsers === "function") {
+  saveUsers(users);
+   if (typeof setCurrentUser === "function") {
+  setCurrentUser(users[index]);
 }
+
+if (typeof logActivity === "function") {
+  logActivity(
+    user.userId,
+    user.role || "USER",
+    "Profile Updated",
+    "SYSTEM"
+  );
+}
+
+alert("Profile Updated Successfully");
+
+loadProfile();
 
 // ================= EXPORT =================
 window.loadProfile = loadProfile;
