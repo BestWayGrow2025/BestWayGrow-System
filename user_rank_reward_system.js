@@ -11,17 +11,24 @@ RANK & REWARD SYSTEM (V1)
 
 // ================= SAFE USER =================
 function getSafeUser() {
-  const user = getCurrentUser();
+  const user =
+    typeof getCurrentUser === "function"
+      ? getCurrentUser()
+      : null;
 
   if (!user) {
-    document.getElementById("mainContent").innerHTML =
-      "<div class='info-box'>Login Required</div>";
+    const main = document.getElementById("mainContent");
+
+    if (main) {
+      main.innerHTML =
+        "<div class='info-box'>Login Required</div>";
+    }
+
     return null;
   }
 
   return user;
 }
-
 // ================= CALCULATE RANK =================
 function calculateRank(totalTeam) {
   if (totalTeam >= 1000) return "DIAMOND";
@@ -40,7 +47,10 @@ function loadRankReward() {
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  const users = typeof getUsers === "function" ? getUsers() : [];
+ const users =
+  typeof getUsers === "function"
+    ? getUsers()
+    : [];
 
   // count total team using tree_system (safe fallback)
   let totalTeam = 0;
@@ -50,7 +60,19 @@ function loadRankReward() {
     totalTeam = tree.total || 0;
   }
 
-  const rank = calculateRank(totalTeam);
+ const rank = calculateRank(totalTeam);
+
+const index = users.findIndex(function (u) {
+  return u.userId === user.userId;
+});
+
+if (index !== -1) {
+  users[index].currentRank = rank;
+
+  if (typeof saveUsers === "function") {
+    saveUsers(users);
+  }
+}
 
   main.innerHTML = `
     <div class="section-title">Rank & Reward</div>
