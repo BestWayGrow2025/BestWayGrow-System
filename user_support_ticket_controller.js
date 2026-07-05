@@ -11,7 +11,10 @@ SUPPORT TICKET SYSTEM (V1)
 
 // ================= SAFE USER =================
 function getSafeUser() {
-  const user = getCurrentUser();
+ const user =
+  typeof getCurrentUser === "function"
+    ? getCurrentUser()
+    : null;
 
   if (!user) {
     document.getElementById("mainContent").innerHTML =
@@ -30,8 +33,11 @@ function loadSupportTickets() {
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  const tickets = user.supportTickets || [];
-
+ const tickets =
+  Array.isArray(user.supportTickets)
+    ? user.supportTickets
+    : [];
+  
   let html = `
     <div class="section-title">Support Tickets</div>
 
@@ -51,7 +57,10 @@ function loadSupportTickets() {
   if (tickets.length === 0) {
     html += `<p>No tickets found</p>`;
   } else {
-    tickets.forEach(t => {
+   tickets
+  .slice(0, 10)
+  .forEach(function (t) {
+
       html += `
         <div style="margin-bottom:10px;">
           <b>${t.title}</b><br>
@@ -82,7 +91,9 @@ function createTicket() {
   }
 
   let users = typeof getUsers === "function" ? getUsers() : [];
-  let index = users.findIndex(u => u.userId === user.userId);
+ let index = users.findIndex(function (u) {
+  return u.userId === user.userId;
+});
 
   if (index === -1) return;
 
@@ -97,13 +108,22 @@ function createTicket() {
     date: new Date().toISOString()
   });
 
-  if (typeof saveUsers === "function") {
-    saveUsers(users);
-  }
+ if (typeof saveUsers === "function") {
+  saveUsers(users);
+}
 
-  alert("Ticket Created Successfully");
+if (typeof logActivity === "function") {
+  logActivity(
+    user.userId,
+    user.role || "USER",
+    "Support Ticket Created",
+    "SYSTEM"
+  );
+}
 
-  loadSupportTickets();
+alert("Ticket Created Successfully");
+
+loadSupportTickets();
 }
 
 // ================= EXPORT =================
