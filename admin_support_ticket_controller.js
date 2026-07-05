@@ -49,24 +49,105 @@ function loadPage() {
 
   if (!main) return;
 
-  main.innerHTML = `
+  let users =
+    typeof getUsers === "function"
+      ? getUsers()
+      : [];
+
+  users =
+    Array.isArray(users)
+      ? users
+      : [];
+
+  let tickets = [];
+
+  users.forEach(function (user) {
+
+    const list =
+      Array.isArray(user.supportTickets)
+        ? user.supportTickets
+        : [];
+
+    list.forEach(function (ticket) {
+
+      tickets.push({
+        userId: user.userId,
+        title: ticket.title || "-",
+        message: ticket.message || "-",
+        status: ticket.status || "OPEN",
+        date: ticket.date || "-"
+      });
+
+    });
+
+  });
+
+  let html = `
     <div class="info-box">
+
       <h3>Support Ticket Management</h3>
 
-      <p>Support ticket management module is ready.</p>
+      <table>
 
-      <p>Features to be added:</p>
+        <tr>
+          <th>User</th>
+          <th>Subject</th>
+          <th>Message</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+  `;
 
-      <ul>
-        <li>View all user tickets</li>
-        <li>Search by User ID</li>
-        <li>Filter by status</li>
-        <li>Reply to ticket</li>
-        <li>Update ticket status</li>
-      </ul>
+  if (!tickets.length) {
+
+    html += `
+      <tr>
+        <td colspan="5">
+          No Support Tickets
+        </td>
+      </tr>
+    `;
+
+  } else {
+
+    tickets
+      .slice()
+      .reverse()
+      .forEach(function (ticket) {
+
+        html += `
+          <tr>
+            <td>${ticket.userId}</td>
+            <td>${ticket.title}</td>
+            <td>${ticket.message}</td>
+            <td>${ticket.status}</td>
+            <td>${ticket.date ? new Date(ticket.date).toLocaleString() : "-"}</td>
+          </tr>
+        `;
+
+      });
+
+  }
+
+  html += `
+      </table>
     </div>
   `;
+
+  main.innerHTML = html;
+
+  if (typeof logActivity === "function") {
+    logActivity(
+      currentUser.userId,
+      currentUser.role,
+      "Viewed Support Ticket Dashboard",
+      "ADMIN"
+    );
+  }
 
 }
 
 window.loadPage = loadPage;
+
+
+
