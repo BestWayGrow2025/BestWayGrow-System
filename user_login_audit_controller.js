@@ -11,11 +11,19 @@ LOGIN HISTORY SYSTEM (V1)
 
 // ================= SAFE USER =================
 function getSafeUser() {
-  const user = getCurrentUser();
+ const user =
+  typeof getCurrentUser === "function"
+    ? getCurrentUser()
+    : null;
 
   if (!user) {
-    document.getElementById("mainContent").innerHTML =
-      "<div class='info-box'>Login Required</div>";
+const main =
+  document.getElementById("mainContent");
+
+if (main) {
+  main.innerHTML =
+    "<div class='info-box'>Login Required</div>";
+}
     return null;
   }
 
@@ -30,7 +38,10 @@ function loadLoginHistory() {
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  const history = user.loginHistory || [];
+ const history =
+  Array.isArray(user.loginHistory)
+    ? user.loginHistory
+    : [];
 
   let html = `
     <div class="section-title">Login History</div>
@@ -48,7 +59,10 @@ function loadLoginHistory() {
     html += `<tr><td colspan="4">No Login Records Found</td></tr>`;
   }
 
-  history.forEach(l => {
+ history
+  .slice(0, 10)
+  .forEach(function (l) {
+    
     html += `
       <tr>
         <td>${l.date || "-"}</td>
@@ -82,9 +96,17 @@ function addLoginHistory(userId, device = "Web") {
     status: "SUCCESS"
   });
 
-  if (typeof saveUsers === "function") {
-    saveUsers(users);
-  }
+ if (typeof saveUsers === "function") {
+  saveUsers(users);
+}
+
+if (typeof logActivity === "function") {
+  logActivity(
+    userId,
+    "USER",
+    "User Login",
+    "SYSTEM"
+  );
 }
 
 // ================= EXPORT =================
