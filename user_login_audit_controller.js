@@ -96,7 +96,7 @@ function addLoginHistory(userId, device = "Web") {
     status: "SUCCESS"
   });
 
- if (typeof saveUsers === "function") {
+if (typeof saveUsers === "function") {
   saveUsers(users);
 }
 
@@ -109,7 +109,8 @@ if (typeof logActivity === "function") {
   );
 }
 
+}
+
 // ================= EXPORT =================
 window.loadLoginHistory = loadLoginHistory;
 window.addLoginHistory = addLoginHistory;
-
