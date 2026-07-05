@@ -102,9 +102,9 @@ function createTicket() {
 
   if (index === -1) return;
 
-  if (!users[index].supportTickets) {
-    users[index].supportTickets = [];
-  }
+  if (!Array.isArray(users[index].supportTickets)) {
+  users[index].supportTickets = [];
+}
 
   users[index].supportTickets.unshift({
     title,
