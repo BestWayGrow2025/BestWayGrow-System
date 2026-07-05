@@ -17,8 +17,13 @@ function getSafeUser() {
     : null;
 
   if (!user) {
-    document.getElementById("mainContent").innerHTML =
-      "<div class='info-box'>Login Required</div>";
+  const main =
+  document.getElementById("mainContent");
+
+if (main) {
+  main.innerHTML =
+    "<div class='info-box'>Login Required</div>";
+}
     return null;
   }
 
