@@ -27,46 +27,61 @@ function getSafeUser() {
 
 // ================= LOAD NOTIFICATIONS =================
 function loadNotifications() {
+
   const user = getSafeUser();
   if (!user) return;
 
-  const main = document.getElementById("mainContent");
+  const main =
+    document.getElementById("mainContent");
+
   if (!main) return;
 
- const notifications =
-  Array.isArray(user.notifications)
-    ? user.notifications
-    : [];
+  const notifications =
+    Array.isArray(user.notifications)
+      ? user.notifications
+      : [];
 
   let html = `
-    <div class="section-title">Notifications</div>
+    <div class="section-title">
+      Notifications
+    </div>
 
     <div class="info-box">
   `;
 
   if (notifications.length === 0) {
-    html += `<p>No notifications available</p>`;
+
+    html += `
+      <p>No notifications available</p>
+    `;
+
   } else {
-   const user =
-  typeof getCurrentUser === "function"
-    ? getCurrentUser()
-    : null;
-      html += `
-        <p>
-          <b>${n.title || "Alert"}:</b> ${n.message || ""}
-          <br>
-          <small>${n.date || ""}</small>
-        </p>
-        <hr>
-      `;
-    });
+
+    notifications
+      .slice(0, 10) // Display only latest 10 notifications
+      .forEach(function (n) {
+
+        html += `
+          <p>
+            <b>${n.title || "Alert"}:</b>
+            ${n.message || ""}
+            <br>
+            <small>${n.date || ""}</small>
+          </p>
+          <hr>
+        `;
+
+      });
+
   }
 
-  html += `</div>`;
+  html += `
+    </div>
+  `;
 
   main.innerHTML = html;
-}
 
+}
 // ================= ADD NOTIFICATION (UTILITY) =================
 function addNotification(userId, title, message) {
   let users = typeof getUsers === "function" ? getUsers() : [];
