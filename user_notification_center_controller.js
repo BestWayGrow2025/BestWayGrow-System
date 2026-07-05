@@ -11,7 +11,10 @@ NOTIFICATIONS SYSTEM (V1)
 
 // ================= SAFE USER =================
 function getSafeUser() {
-  const user = getCurrentUser();
+ const user =
+  typeof getCurrentUser === "function"
+    ? getCurrentUser()
+    : null;
 
   if (!user) {
     document.getElementById("mainContent").innerHTML =
@@ -30,7 +33,10 @@ function loadNotifications() {
   const main = document.getElementById("mainContent");
   if (!main) return;
 
-  const notifications = user.notifications || [];
+ const notifications =
+  Array.isArray(user.notifications)
+    ? user.notifications
+    : [];
 
   let html = `
     <div class="section-title">Notifications</div>
@@ -41,7 +47,10 @@ function loadNotifications() {
   if (notifications.length === 0) {
     html += `<p>No notifications available</p>`;
   } else {
-    notifications.forEach(n => {
+   const user =
+  typeof getCurrentUser === "function"
+    ? getCurrentUser()
+    : null;
       html += `
         <p>
           <b>${n.title || "Alert"}:</b> ${n.message || ""}
@@ -61,7 +70,9 @@ function loadNotifications() {
 // ================= ADD NOTIFICATION (UTILITY) =================
 function addNotification(userId, title, message) {
   let users = typeof getUsers === "function" ? getUsers() : [];
-  let index = users.findIndex(u => u.userId === userId);
+  let index = users.findIndex(function (u) {
+  return u.userId === userId;
+});
 
   if (index === -1) return;
 
