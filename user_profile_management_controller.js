@@ -87,7 +87,7 @@ function updateProfile() {
     return;
   }
 
-  users[index].fullName =
+   users[index].fullName =
     document.getElementById("editName")?.value || "";
 
   users[index].mobile =
@@ -99,24 +99,27 @@ function updateProfile() {
   users[index].state =
     document.getElementById("editState")?.value || "";
 
- if (typeof saveUsers === "function") {
-  saveUsers(users);
-   if (typeof setCurrentUser === "function") {
-  setCurrentUser(users[index]);
+  if (typeof saveUsers === "function") {
+    saveUsers(users);
+  }
+
+  if (typeof setCurrentUser === "function") {
+    setCurrentUser(users[index]);
+  }
+
+  if (typeof logActivity === "function") {
+    logActivity(
+      user.userId,
+      user.role || "USER",
+      "Profile Updated",
+      "SYSTEM"
+    );
+  }
+
+  alert("Profile Updated Successfully");
+
+  loadProfile();
 }
-
-if (typeof logActivity === "function") {
-  logActivity(
-    user.userId,
-    user.role || "USER",
-    "Profile Updated",
-    "SYSTEM"
-  );
-}
-
-alert("Profile Updated Successfully");
-
-loadProfile();
 
 // ================= EXPORT =================
 window.loadProfile = loadProfile;
