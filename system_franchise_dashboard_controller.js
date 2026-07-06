@@ -1,3 +1,5 @@
+"use strict";
+
 let session = null;
 let currentUser = null;
 let lock = false;
@@ -155,5 +157,5 @@ function logout() {
   }
 
   localStorage.removeItem("loggedInFranchise");
-  window.location.href = "franchise_login.html";
+  window.location.href = "system_franchise_auth.html";
 }
