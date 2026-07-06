@@ -168,9 +168,11 @@ function escalateToSystem(type, qty = 1) {
   if (!allowed.includes(type)) return false;
   if (Number(qty) <= 0) return false;
 
- if (typeof window.createPinRequest !== "function") {
+if (typeof window.createPinRequest !== "function") {
   return false;
 }
+
+return window.createPinRequest({
 
     userId: getSuperAdmin()?.userId,
     type,
