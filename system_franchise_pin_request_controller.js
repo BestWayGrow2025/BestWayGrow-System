@@ -1,3 +1,5 @@
+"use strict";
+
 let session = null;
 let currentUser = null;
 let lock = false;
@@ -13,7 +15,7 @@ function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   } else {
-    alert("core_system.js missing");
+   alert("core_initializer.js missing");
     throw new Error("STOP");
   }
 }
@@ -22,13 +24,13 @@ function authPage() {
   session = JSON.parse(localStorage.getItem("loggedInFranchise") || "null");
 
   if (!session || !session.userId) {
-    window.location.href = "franchise_login.html";
+   window.location.href = "system_franchise_auth.html";
     throw new Error("STOP");
   }
 
   if (typeof getUserById !== "function") {
     localStorage.removeItem("loggedInFranchise");
-    window.location.href = "franchise_login.html";
+  window.location.href = "system_franchise_auth.html";
     throw new Error("STOP");
   }
 
@@ -36,14 +38,14 @@ function authPage() {
 
   if (!currentUser || currentUser.role !== "franchise") {
     localStorage.removeItem("loggedInFranchise");
-    window.location.href = "franchise_login.html";
+    window.location.href = "system_franchise_auth.html";
     throw new Error("STOP");
   }
 
   if ((currentUser.status || "active") !== "active") {
     localStorage.removeItem("loggedInFranchise");
     alert("Account inactive");
-    window.location.href = "franchise_login.html";
+   window.location.href = "system_franchise_auth.html";
     throw new Error("STOP");
   }
 }
@@ -147,5 +149,5 @@ function loadRequests() {
 }
 
 function goBack() {
-  window.location.href = "franchise_dashboard.html";
+ window.location.href = "system_franchise_dashboard.html";
 }
