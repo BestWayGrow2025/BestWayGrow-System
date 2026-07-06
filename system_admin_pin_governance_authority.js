@@ -64,7 +64,10 @@ function checkAuth() {
     throw new Error("UNAUTHORIZED");
   }
 
-  const user = getUserById?.(session.userId);
+const user =
+  typeof getUserById === "function"
+    ? getUserById(session.userId)
+    : null;
 
   if (!user || user.role !== "system_admin") {
     window.location.href = "system_admin_login.html";
@@ -188,7 +191,11 @@ function createSystemStockRequest(type, qty = 1) {
   if (!allowed.includes(type)) return null;
   if (qty <= 0) return null;
 
-  return createPinRequest?.({
+ if (typeof createPinRequest !== "function") {
+  return null;
+}
+
+return createPinRequest({
     userId: user.userId,
     type,
     amount: 0,
