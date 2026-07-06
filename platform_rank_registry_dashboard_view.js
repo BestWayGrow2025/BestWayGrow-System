@@ -14,9 +14,9 @@ try {
     typeof getHighestRank !== "function"
   ) {
 
-    console.error(
-      "[RANK MASTER VIEW] rank_master.js missing"
-    );
+   console.error(
+  "[RANK MASTER VIEW] core_rank_master_registry.js missing"
+);
 
     return;
   }
