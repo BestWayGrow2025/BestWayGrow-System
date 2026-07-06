@@ -1,6 +1,6 @@
 "use strict";
 
-console.log("ADMIN_PIN_PANEL_JS LOADED");
+console.log("SYSTEM_ADMIN_PIN_REQUEST_DASHBOARD_JS LOADED");
 
 /*
 ========================================
