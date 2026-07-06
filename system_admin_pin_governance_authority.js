@@ -20,14 +20,26 @@ console.log("[SYSTEM ADMIN PIN CONTROL] INIT");
 document.addEventListener("DOMContentLoaded", function () {
 
   try {
+
     initPage();
     checkAuth();
+
+    if (
+      typeof getPinRequests !== "function" ||
+      typeof approvePinRequest !== "function" ||
+      typeof rejectPinRequest !== "function"
+    ) {
+      alert("PIN Governance Engine not initialized.");
+      return;
+    }
+
     loadRequests();
+
   } catch (err) {
     console.error("[SYSTEM ADMIN PIN CONTROL ERROR]", err);
   }
-});
 
+});
 // ================= CORE INIT =================
 function initPage() {
 
@@ -42,7 +54,10 @@ function initPage() {
 // ================= AUTH (SINGLE PATH ONLY) =================
 function checkAuth() {
 
-  const session = getSession?.();
+ const session =
+  typeof getSession === "function"
+    ? getSession()
+    : null;
 
   if (!session || session.role !== "system_admin") {
     window.location.href = "system_admin_login.html";
