@@ -25,14 +25,24 @@ function getCore() {
 
 // ================= AUTH GUARD =================
 function getSuperAdmin() {
-  const user = window.getCurrentUser?.();
-  return user?.role === "super_admin" ? user : null;
+
+  const user =
+    typeof window.getCurrentUser === "function"
+      ? window.getCurrentUser()
+      : null;
+
+  return user && user.role === "super_admin"
+    ? user
+    : null;
 }
 
 // ================= PIN REQUEST FETCH =================
 function getPinRequests() {
 
-  const list = window.getPinRequests?.() || [];
+  const list =
+  typeof window.getPinRequests === "function"
+    ? window.getPinRequests()
+    : [];
 
   return list.filter(r =>
     r &&
@@ -75,7 +85,9 @@ function approveRequest(requestId) {
 
     req.status = "approved";
 
-    window.savePinRequests?.();
+   if (typeof window.savePinRequests === "function") {
+  window.savePinRequests();
+}
 
     window.logActivity?.(
       getSuperAdmin()?.userId,
@@ -105,7 +117,9 @@ function rejectRequest(requestId) {
 
     req.status = "rejected";
 
-    window.savePinRequests?.();
+   if (typeof window.savePinRequests === "function") {
+  window.savePinRequests();
+}
 
     window.logActivity?.(
       getSuperAdmin()?.userId,
@@ -126,11 +140,16 @@ function adjustPinStock(type, qty = 1) {
   const admin = getSuperAdmin();
   if (!admin) return false;
 
-  const stock = window.getPinStock?.() || {};
+ const stock =
+  typeof window.getPinStock === "function"
+    ? window.getPinStock()
+    : {};
 
   stock[type] = (stock[type] || 0) + Number(qty || 0);
 
-  window.savePinStock?.(stock);
+ if (typeof window.savePinStock === "function") {
+  window.savePinStock(stock);
+}
 
   window.logActivity?.(
     admin.userId,
@@ -149,7 +168,10 @@ function escalateToSystem(type, qty = 1) {
   if (!allowed.includes(type)) return false;
   if (Number(qty) <= 0) return false;
 
-  return window.createPinRequest?.({
+ if (typeof window.createPinRequest !== "function") {
+  return false;
+}
+
     userId: getSuperAdmin()?.userId,
     type,
     quantity: Number(qty),
