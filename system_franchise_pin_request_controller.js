@@ -12,12 +12,9 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-   alert("core_initializer.js missing");
-    throw new Error("STOP");
-  }
+  // Core initialization is handled by
+  // core_boot_manager.js and core_initializer.js.
+  // No legacy initCoreSystem() call is required.
 }
 
 function authPage() {
