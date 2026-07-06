@@ -168,13 +168,15 @@ function escalateToSystem(type, qty = 1) {
   if (!allowed.includes(type)) return false;
   if (Number(qty) <= 0) return false;
 
-if (typeof window.createPinRequest !== "function") {
-  return false;
-}
+  const admin = getSuperAdmin();
+  if (!admin) return false;
 
-return window.createPinRequest({
+  if (typeof window.createPinRequest !== "function") {
+    return false;
+  }
 
-    userId: getSuperAdmin()?.userId,
+  return window.createPinRequest({
+    userId: admin.userId,
     type,
     quantity: Number(qty),
     amount: 0,
