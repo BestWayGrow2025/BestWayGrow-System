@@ -37,14 +37,27 @@ function initAdminPinPanel() {
     initCoreSystem();
   }
 
- checkAuth();
+if (typeof checkAuth === "function") {
+  checkAuth();
+}
 
-if (!currentUser) return;
+if (typeof currentUser === "undefined" || !currentUser) {
+  return;
+}
 
-  bindPinPanelEvents();
-  refreshPinPanelStatus();
-  loadPinRequests();
-  startPinPanelAutoRefresh();
+if (
+  typeof executePinFlow !== "function" ||
+  typeof getPinRequests !== "function" ||
+  typeof getActivePinProducts !== "function"
+) {
+  alert("PIN Engine not initialized.");
+  return;
+}
+
+bindPinPanelEvents();
+refreshPinPanelStatus();
+loadPinRequests();
+startPinPanelAutoRefresh();
 
 }
 
@@ -476,3 +489,11 @@ window.approvePinRequest = approvePinRequest;
 window.rejectAdminPinRequest = rejectAdminPinRequest;
 window.forcePinRequest = forcePinRequest;
 window.viewPinRequestDetails = viewPinRequestDetails;
+
+window.addEventListener("beforeunload", function () {
+
+  if (pinRefreshTimer) {
+    clearInterval(pinRefreshTimer);
+  }
+
+});
