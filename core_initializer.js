@@ -495,3 +495,9 @@ window.isSystemSafe = isSystemSafe;
 window.__CORE_SYSTEM_LOADED__ = true;
 
 console.log("[CORE] LOADED v10.2");
+
+document.addEventListener("DOMContentLoaded", function () {
+if (!window.CORE_READY) {
+initCoreSystem();
+}
+});
