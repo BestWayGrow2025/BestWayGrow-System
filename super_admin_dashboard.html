@@ -64,28 +64,28 @@
 <script src="core_boot_manager.js"></script>
 <script src="core_orchestrator_kernel.js"></script>
 <script src="core_enterprise_auto_wiring_layer.js"></script>
-<script src="system_boot_dependency_guard.js"></script>
+<script src="core_dependency_readiness_monitor.js"></script>
 <script src="core_enterprise_core_orchestrator.js"></script>
 
 <!-- MODULE SYSTEM -->
-<script src="system_real_module_loader.js"></script>
-<script src="system_module_connector.js"></script>
+<script src="core_module_asset_loader.js"></script>
+<script src="core_module_router.js"></script>
 
 <!-- ENTERPRISE GUARANTEE LAYER -->
-<script src="system_module_verifier.js"></script>
+<script src="core_module_render_validator.js"></script>
 <script src="system_navigation_audit_authority.js"></script>
 <script src="core_ui_state_manager.js"></script>
 <script src="core_fallback_recovery.js"></script>
 
 <!-- ROUTER -->
 <script src="system_page_router_connector.js"></script>
-<script src="navigation_core.js"></script>
+<script src="platform_dashboard_navigation_controller.js"></script>
 
 <!-- PIN CORE -->
 <script src="pin_module_registry.js"></script>
 <script src="pin_global_contract.js"></script>
 
- <!-- ================= ROLE ACCESS LAYER ================= -->
+<!-- ================= ROLE ACCESS LAYER ================= -->
 <script src="pin_role_access_controller.js"></script>
 <script src="pin_role_access.js"></script>
 
@@ -94,7 +94,6 @@
 
 <!-- CORE SYSTEM -->
 <script src="pin_action_types.js"></script>
-
 <script src="pin_execution_lock.js"></script>
 <script src="pin_event_bus.js"></script>
 <script src="pin_zero_order_boot.js"></script>
