@@ -369,17 +369,20 @@ function startModule() {
   }
 
 
+  setTimeout(() => {
 
-  bindEvents();
+    bindEvents();
+
+    loadSystemAdminList();
 
 
-  loadSystemAdminList();
+    console.log(
+      "[SUPER ADMIN CREATE SYSTEM ADMIN] ACTIVE"
+    );
 
 
+  }, 100);
 
-  console.log(
-    "[SUPER ADMIN CREATE SYSTEM ADMIN] ACTIVE"
-  );
 
 }
 
