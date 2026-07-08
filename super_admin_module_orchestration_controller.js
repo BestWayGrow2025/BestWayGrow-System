@@ -47,9 +47,24 @@ SUPER ADMIN MODULE LOADER vFINAL
 
     // ================= CREATE ADMIN =================
     CORE.register("create", function () {
-      setContent(window.renderCreateAdmin?.() || "<h2>👑 Create System Admin</h2>");
-    });
 
+  const html =
+    typeof window.renderCreateAdmin === "function"
+      ? window.renderCreateAdmin()
+      : "<h2>👑 Create System Admin</h2>";
+
+  setContent(html);
+
+  // Initialize the module after rendering
+  setTimeout(function () {
+
+    if (typeof window.startSuperAdminCreateSystemAdmin === "function") {
+      window.startSuperAdminCreateSystemAdmin();
+    }
+
+  }, 0);
+
+});
     // ================= USERS =================
     CORE.register("users", function () {
       setContent(window.renderUsers?.() || "<h2>👥 Users</h2>");
