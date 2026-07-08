@@ -339,9 +339,13 @@ function bindEvents() {
 
   btn.onclick = null;
 
-  btn.onclick = function () {
-    safeClick(createSystemAdmin);
-  };
+ btn.onclick = function () {
+
+  console.log("[CREATE BUTTON CLICKED]");
+
+  safeClick(createSystemAdmin);
+
+};
 
   console.log("[CREATE ADMIN] BUTTON CONNECTED");
 
