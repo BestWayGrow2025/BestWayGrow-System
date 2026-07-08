@@ -87,8 +87,7 @@ function checkSuperAdminAuth() {
 
   if (!session) {
 
-    window.location.href =
-      "super_admin_login.html";
+   window.location.href = "super_admin_auth.html";
 
     return false;
 
@@ -103,8 +102,7 @@ function checkSuperAdminAuth() {
     );
 
 
-    window.location.href =
-      "super_admin_login.html";
+   window.location.href = "super_admin_auth.html";
 
     return false;
 
@@ -119,9 +117,8 @@ function checkSuperAdminAuth() {
 
   if (!user) {
 
-    window.location.href =
-      "super_admin_login.html";
-
+   window.location.href = "super_admin_auth.html";
+    
     return false;
 
   }
@@ -129,8 +126,7 @@ function checkSuperAdminAuth() {
 
   if (user.role !== "super_admin") {
 
-    window.location.href =
-      "super_admin_login.html";
+   window.location.href = "super_admin_auth.html";
 
     return false;
 
