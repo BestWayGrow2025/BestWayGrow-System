@@ -506,4 +506,5 @@ console.log(
 
 
 
-startModule();
+// startModule(); 
+// Disabled: module starts after renderer injection
