@@ -10,10 +10,6 @@ window.renderCreateAdmin = function () {
 
 return `
 
-<!-- PASTE EVERYTHING FROM
-super_admin_system_admin_creation_dashboard.html
-BELOW THIS LINE -->
-
 <div class="box">
 
   <h2 style="text-align:center;">
