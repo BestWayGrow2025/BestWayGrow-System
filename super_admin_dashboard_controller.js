@@ -315,8 +315,7 @@ function logoutSuperAdmin(){
   );
 
 
-  window.location.href =
-    "super_admin_login.html";
+ window.location.href = "super_admin_auth.html";
 
 }
 
