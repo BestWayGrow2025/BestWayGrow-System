@@ -427,6 +427,71 @@ if (window.PIN) {
 }
 
 
+/* ================= CREATE MODULE LOADER ================= */
+
+window.loadCreateSystemAdminRealModule = function(){
+
+  try {
+
+    if (
+      typeof window.renderCreateAdmin === "function"
+    ) {
+
+      const box =
+        document.getElementById("mainContent");
+
+
+      if (box) {
+
+        box.innerHTML =
+          window.renderCreateAdmin();
+
+
+        if (
+          typeof window.startSuperAdminCreateSystemAdmin === "function"
+        ) {
+
+          window.startSuperAdminCreateSystemAdmin();
+
+        }
+
+
+        console.log(
+          "[CREATE MODULE] RENDER SUCCESS"
+        );
+
+
+        return true;
+
+      }
+
+    }
+
+
+    console.error(
+      "[CREATE ADMIN] RENDER FUNCTION NOT FOUND"
+    );
+
+
+    return false;
+
+
+  } catch(e) {
+
+
+    console.error(
+      "[CREATE MODULE ERROR]",
+      e
+    );
+
+
+    return false;
+
+  }
+
+};
+
+
 
 console.log(
  "[SUPER ADMIN CREATE SYSTEM ADMIN] READY"
