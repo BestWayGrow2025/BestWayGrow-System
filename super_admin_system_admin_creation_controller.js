@@ -454,13 +454,17 @@ window.loadCreateSystemAdminRealModule = function(){
           window.renderCreateAdmin();
 
 
-        if (
-          typeof window.startSuperAdminCreateSystemAdmin === "function"
-        ) {
+        setTimeout(() => {
 
-          window.startSuperAdminCreateSystemAdmin();
+          if (
+            typeof window.startSuperAdminCreateSystemAdmin === "function"
+          ) {
 
-        }
+            window.startSuperAdminCreateSystemAdmin();
+
+          }
+
+        }, 200);
 
 
         console.log(
