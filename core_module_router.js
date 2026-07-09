@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SYSTEM MODULE CONNECTOR V2.2 FINAL
+CORE MODULE ROUTER V1.0
 ========================================
 ✔ Pure connector layer
 ✔ One-way execution flow
@@ -20,11 +20,11 @@ SYSTEM MODULE CONNECTOR V2.2 FINAL
 // ================= INIT GUARD =================
 (function () {
 
-  if (window.__SYSTEM_MODULE_CONNECTOR__) return;
+  if (window.__CORE_MODULE_ROUTER__ ) return;
 
-  window.__SYSTEM_MODULE_CONNECTOR__ = true;
+  window.__CORE_MODULE_ROUTER__ = true;
 
-  console.log("[SYSTEM MODULE CONNECTOR] READY");
+ console.log("[CORE MODULE ROUTER] READY");
 
 })();
 
@@ -50,7 +50,7 @@ function safeCall(fn, fallback, ...args) {
 }
 
 // ================= MAIN CONNECTOR =================
-function connectSystemModule(page) {
+function connectCoreModule(page) {
 
   try {
 
@@ -247,8 +247,8 @@ function loadUnknownSystemModule(page) {
 
 /* ================= EXPORT ================= */
 
-window.connectSystemModule =
-  connectSystemModule;
+window.connectCoreModule =
+  connectCoreModule;
 
 window.loadUnknownSystemModule =
   loadUnknownSystemModule;
