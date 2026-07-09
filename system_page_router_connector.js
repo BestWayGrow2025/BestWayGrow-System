@@ -98,21 +98,21 @@ ENTERPRISE GUARANTEE LAYER (FIXED FINAL)
         module: page
       });
 
-      clearMainContent();
+ clearMainContent();
 
-      if (typeof window.connectSystemModule === "function") {
-        window.connectSystemModule(page);
-        verifyModule(page);
-        return true;
-      }
+if (typeof window.connectCoreModule === "function") {
+  window.connectCoreModule(page);
+  verifyModule(page);
+  return true;
+}
 
-      if (typeof window.loadSystemModule === "function") {
-        window.loadSystemModule(page);
-        verifyModule(page);
-        return true;
-      }
+if (typeof window.loadSystemModule === "function") {
+  window.loadSystemModule(page);
+  verifyModule(page);
+  return true;
+}
 
-      const main = document.getElementById("mainContent");
+const main = document.getElementById("mainContent");
 
       if (main) {
         main.innerHTML = `
