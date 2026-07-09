@@ -366,11 +366,11 @@ function loadCreateSystemAdminRealModule(){
 
  return loadRealModule({
 
-  html:
-  "super_admin_create_system_admin.html",
+ html:
+"super_admin_system_admin_creation_dashboard.html",
 
-  js:
-  "super_admin_create_system_admin.js"
+js:
+"super_admin_system_admin_creation_controller.js"
 
  });
 
@@ -382,12 +382,11 @@ function loadSystemAdminPanelModule(){
 
  return loadRealModule({
 
-  html:
-  "system_admin_dashboard.html",
+html:
+"system_admin_dashboard.html",
 
-  js:
-  "system_admin_dashboard.js"
-
+js:
+"system_admin_dashboard_controller.js"
  });
 
 }
@@ -396,15 +395,15 @@ function loadSystemAdminPanelModule(){
 
 function loadPinMasterRealModule(){
 
- return loadRealModule({
+  return loadRealModule({
 
-  html:
-  "admin_pin_panel.html",
+    html:
+    "system_admin_pin_request_panel.html",
 
-  js:
-  "admin_pin_panel.js"
+    js:
+    "system_admin_pin_request_dashboard.js"
 
- });
+  });
 
 }
 
@@ -412,29 +411,28 @@ function loadPinMasterRealModule(){
 
 function loadReportsRealModule(){
 
- return loadRealModule({
+  return loadRealModule({
 
-  html:
-  "admin_reports.html",
+    html:
+    "admin_reporting_dashboard.html",
 
-  js:
-  "admin_reports.js"
+    js:
+    "admin_reporting_dashboard.js"
 
- });
+  });
 
 }
-
 
 
 function loadUsersRealModule(){
 
  return loadRealModule({
 
-  html:
-  "registration_approval.html",
+ html:
+"platform_registration_approval_dashboard.html",
 
-  js:
-  "registration_approval.js"
+js:
+"platform_registration_approval_dashboard.js"
 
  });
 
