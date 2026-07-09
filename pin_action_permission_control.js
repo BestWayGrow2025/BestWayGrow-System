@@ -26,159 +26,249 @@ PIN ACTION CONTROL V1.2
 function getPinActions() {
     return Object.values(window.PIN_ACTION || {});
 }
-// ================= HELPERS ================= function getSafeRole() { if (typeof getCurrentUser !== "function") return null;
-const user = getCurrentUser();
-return user?.role || null; }
-function isValidPinAction(action) { return getPinActions().includes(action); }
+// ================= HELPERS =================
+
+function getSafeRole() {
+
+  if (typeof getCurrentUser !== "function") {
+    return null;
+  }
+
+  const user = getCurrentUser();
+
+  return user?.role || null;
+
+}
+
+function isValidPinAction(action) {
+
+  return getPinActions().includes(action);
+
+}
+
+function normalizePinStatus(status) {
+
+  return String(status || "").toLowerCase();
+
+}
 function normalizePinStatus(status) { return String(status || "").toLowerCase(); }
-// ================= ROLE ACCESS ================= function canRoleAccessPinAction(role, action) {
-role = String(role || "").toLowerCase();
-if (!isValidPinAction(action)) { return false; }
-const access = {
-user: [
-  window.PIN_ACTION?.REQUEST
-],
+// ================= ROLE ACCESS =================
 
-admin: [
-  window.PIN_ACTION?.REQUEST,
-  window.PIN_ACTION?.APPROVE,
-  window.PIN_ACTION?.REJECT,
-  window.PIN_ACTION?.ASSIGN
-],
+function canRoleAccessPinAction(role, action) {
 
-system_admin: [
-  window.PIN_ACTION?.REQUEST,
-  window.PIN_ACTION?.APPROVE,
-  window.PIN_ACTION?.REJECT,
-  window.PIN_ACTION?.ASSIGN,
-  window.PIN_ACTION?.TRANSFER
-],
+  role = String(role || "").toLowerCase();
 
-super_admin: [
+  if (!isValidPinAction(action)) {
+    return false;
+  }
 
-  window.PIN_ACTION?.REQUEST,
-  window.PIN_ACTION?.APPROVE,
-  window.PIN_ACTION?.REJECT,
-  window.PIN_ACTION?.ASSIGN,
-  window.PIN_ACTION?.TRANSFER,
-  window.PIN_ACTION?.DELETE,
-  window.PIN_ACTION?.OVERRIDE,
+  const access = {
 
-  window.PIN_ACTION?.START_UPGRADE,
-  window.PIN_ACTION?.STOP_UPGRADE,
+    user: [
+      window.PIN_ACTION?.REQUEST
+    ],
 
-  window.PIN_ACTION?.START_REPURCHASE,
-  window.PIN_ACTION?.STOP_REPURCHASE
+    admin: [
+      window.PIN_ACTION?.REQUEST,
+      window.PIN_ACTION?.APPROVE,
+      window.PIN_ACTION?.REJECT,
+      window.PIN_ACTION?.ASSIGN
+    ],
 
-]
+    system_admin: [
+      window.PIN_ACTION?.REQUEST,
+      window.PIN_ACTION?.APPROVE,
+      window.PIN_ACTION?.REJECT,
+      window.PIN_ACTION?.ASSIGN,
+      window.PIN_ACTION?.TRANSFER
+    ],
 
-};
-return (access[role] || []).includes(action); }
-// ================= STATUS ACCESS ================= function canActionRunByStatus(action, status) {
-status = normalizePinStatus(status);
-const rules = {
-[window.PIN_ACTION?.REQUEST]: [
-  "pending"
-],
+    super_admin: [
+      window.PIN_ACTION?.REQUEST,
+      window.PIN_ACTION?.APPROVE,
+      window.PIN_ACTION?.REJECT,
+      window.PIN_ACTION?.ASSIGN,
+      window.PIN_ACTION?.TRANSFER,
+      window.PIN_ACTION?.DELETE,
+      window.PIN_ACTION?.OVERRIDE,
+      window.PIN_ACTION?.START_UPGRADE,
+      window.PIN_ACTION?.STOP_UPGRADE,
+      window.PIN_ACTION?.START_REPURCHASE,
+      window.PIN_ACTION?.STOP_REPURCHASE
+    ]
 
-[window.PIN_ACTION?.APPROVE]: [
-  "pending"
-],
+  };
 
-[window.PIN_ACTION?.REJECT]: [
-  "pending"
-],
+  return (access[role] || []).includes(action);
 
-[window.PIN_ACTION?.ASSIGN]: [
-  "active",
-  "pending"
-],
-
-[window.PIN_ACTION?.TRANSFER]: [
-  "assigned"
-],
-
-[window.PIN_ACTION?.DELETE]: [
-  "active"
-],
-
-[window.PIN_ACTION?.OVERRIDE]: [
-  "pending",
-  "active",
-  "assigned",
-  "used"
-],
-
-[window.PIN_ACTION?.START_UPGRADE]: [
-  "pending"
-],
-
-[window.PIN_ACTION?.STOP_UPGRADE]: [
-  "pending"
-],
-
-[window.PIN_ACTION?.START_REPURCHASE]: [
-  "pending"
-],
-
-[window.PIN_ACTION?.STOP_REPURCHASE]: [
-  "pending"
-]
-
-};
-return (rules[action] || []).includes(status); }
-// ================= CONFIRM RULE ================= function requiresPinActionConfirm(action) {
-return [
-window.PIN_ACTION?.REJECT,
-window.PIN_ACTION?.TRANSFER,
-window.PIN_ACTION?.DELETE,
-window.PIN_ACTION?.OVERRIDE
-
-].includes(action);
 }
-// ================= DELETE SAFETY ================= function canDeletePin(pin, role) {
-if (!pin || typeof pin !== "object") { return false; }
-if ( String(role || "").toLowerCase() !== "super_admin" ) { return false; }
-return (
-normalizePinStatus(pin.status) === "active" &&
-!pin.ownerId &&
-!pin.assignedTo &&
-!pin.usedBy
+// ================= STATUS ACCESS =================
 
-);
+function canActionRunByStatus(action, status) {
+
+  status = normalizePinStatus(status);
+
+  const rules = {
+
+    [window.PIN_ACTION?.REQUEST]: [
+      "pending"
+    ],
+
+    [window.PIN_ACTION?.APPROVE]: [
+      "pending"
+    ],
+
+    [window.PIN_ACTION?.REJECT]: [
+      "pending"
+    ],
+
+    [window.PIN_ACTION?.ASSIGN]: [
+      "active",
+      "pending"
+    ],
+
+    [window.PIN_ACTION?.TRANSFER]: [
+      "assigned"
+    ],
+
+    [window.PIN_ACTION?.DELETE]: [
+      "active"
+    ],
+
+    [window.PIN_ACTION?.OVERRIDE]: [
+      "pending",
+      "active",
+      "assigned",
+      "used"
+    ],
+
+    [window.PIN_ACTION?.START_UPGRADE]: [
+      "pending"
+    ],
+
+    [window.PIN_ACTION?.STOP_UPGRADE]: [
+      "pending"
+    ],
+
+    [window.PIN_ACTION?.START_REPURCHASE]: [
+      "pending"
+    ],
+
+    [window.PIN_ACTION?.STOP_REPURCHASE]: [
+      "pending"
+    ]
+
+  };
+
+  return (rules[action] || []).includes(status);
+
 }
-// ================= OVERRIDE SAFETY ================= function canOverridePin(role) {
-return ( String(role || "").toLowerCase() === "super_admin" );
+// ================= CONFIRM RULE =================
+
+function requiresPinActionConfirm(action) {
+
+  return [
+
+    window.PIN_ACTION?.REJECT,
+    window.PIN_ACTION?.TRANSFER,
+    window.PIN_ACTION?.DELETE,
+    window.PIN_ACTION?.OVERRIDE
+
+  ].includes(action);
+
 }
-// ================= MAIN GUARD ================= function canExecutePinAction( action, pin = {}, role = null ) {
-const safeRole = role || getSafeRole();
-if (!safeRole) { return false; }
-if ( !canRoleAccessPinAction( safeRole, action ) ) { return false; }
-if ( !canActionRunByStatus( action, pin.status || "pending" ) ) { return false; }
-if ( action === window.PIN_ACTION?.DELETE ) { return canDeletePin( pin, safeRole ); }
-if ( action === window.PIN_ACTION?.OVERRIDE ) { return canOverridePin( safeRole ); }
-return true;
+// ================= DELETE SAFETY =================
+
+function canDeletePin(pin, role) {
+
+  if (!pin || typeof pin !== "object") {
+    return false;
+  }
+
+  if (String(role || "").toLowerCase() !== "super_admin") {
+    return false;
+  }
+
+  return (
+    normalizePinStatus(pin.status) === "active" &&
+    !pin.ownerId &&
+    !pin.assignedTo &&
+    !pin.usedBy
+  );
+
 }
-// ================= AUDIT ================= function buildPinActionAudit( action, pin, performedBy, note = "" ) {
-return {
-action,
+// ================= OVERRIDE SAFETY =================
 
-pinId:
-  pin?.pinId || "-",
+function canOverridePin(role) {
 
-status:
-  pin?.status || "-",
+  return (
+    String(role || "").toLowerCase() === "super_admin"
+  );
 
-performedBy:
-  performedBy || "SYSTEM",
+}
+// ================= MAIN GUARD =================
 
-note:
-  note || "",
+function canExecutePinAction(
+  action,
+  pin = {},
+  role = null
+) {
 
-time:
-  new Date().toISOString()
+  const safeRole = role || getSafeRole();
 
-};
+  if (!safeRole) {
+    return false;
+  }
+
+  if (!canRoleAccessPinAction(safeRole, action)) {
+    return false;
+  }
+
+  if (!canActionRunByStatus(action, pin.status || "pending")) {
+    return false;
+  }
+
+  if (action === window.PIN_ACTION?.DELETE) {
+    return canDeletePin(pin, safeRole);
+  }
+
+  if (action === window.PIN_ACTION?.OVERRIDE) {
+    return canOverridePin(safeRole);
+  }
+
+  return true;
+
+}
+// ================= AUDIT =================
+
+function buildPinActionAudit(
+  action,
+  pin,
+  performedBy,
+  note = ""
+) {
+
+  return {
+
+    action,
+
+    pinId:
+      pin?.pinId || "-",
+
+    status:
+      pin?.status || "-",
+
+    performedBy:
+      performedBy || "SYSTEM",
+
+    note:
+      note || "",
+
+    time:
+      new Date().toISOString()
+
+  };
+
 }
 // ================= EXPORT =================
 
