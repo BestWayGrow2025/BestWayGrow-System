@@ -122,9 +122,9 @@ case "incomecontrol":
     loadRealModule,
     false,
     {
-      html: "income_control.html",
-      js: "income_control.js",
-      init: "initIncomeControlUI"
+     html: "system_income_policy_dashboard.html",
+js: "system_income_policy_dashboard.js",
+init: "initIncomeControlUI"
     }
   );
         
@@ -147,8 +147,8 @@ case "productmaster":
       loadRealModule,
       false,
       {
-        html: "rank_master.html",
-        js: "rank_master_view.js"
+       html: "platform_rank_master_registry_dashboard.html",
+js: "platform_rank_registry_dashboard_view.js"
       }
     );
 
@@ -171,8 +171,8 @@ case "productmaster":
           loadRealModule,
           false,
           {
-            html: "admin_activity_log.html",
-            js: "admin_activity_log.js"
+           html: "platform_activity_audit_dashboard.html",
+js: "platform_activity_audit_dashboard.js"
           }
         );
 
@@ -183,8 +183,8 @@ case "productmaster":
           loadRealModule,
           false,
           {
-            html: "check_status.html",
-            js: "check_status.js"
+           html: "platform_status_audit_dashboard.html",
+js: "platform_status_audit_dashboard.js"
           }
         );
 
