@@ -131,14 +131,15 @@ init: "initIncomeControlUI"
 // ================= PRODUCT MASTER =================
 case "productmaster":
 
-    return safeCall(
-      loadRealModule,
-      false,
-      {
-        html: "product_master_connector.html",
-        js: "product_master_connector.js"
-      }
-    );
+  return safeCall(
+    loadRealModule,
+    false,
+    {
+      html: "product_master_connector.html",
+      js: "product_master_connector.js",
+      init: "initProductMasterConnector"
+    }
+  );
 
   // ================= RANK MASTER =================
   case "rankmaster":
