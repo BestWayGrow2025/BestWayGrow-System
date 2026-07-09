@@ -51,7 +51,7 @@ function normalizePinStatus(status) {
   return String(status || "").toLowerCase();
 
 }
-function normalizePinStatus(status) { return String(status || "").toLowerCase(); }
+
 // ================= ROLE ACCESS =================
 
 function canRoleAccessPinAction(role, action) {
