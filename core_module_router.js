@@ -189,16 +189,16 @@ js: "platform_status_audit_dashboard.js"
         );
 
       // ================= BACKUP =================
-      case "backup":
+     case "backup":
 
-        return safeCall(
-          loadRealModule,
-          false,
-          {
-            html: "system_backup_panel.html",
-            js: "system_backup_manager.js"
-          }
-        );
+  return safeCall(
+    loadRealModule,
+    false,
+    {
+      html: "platform_backup_management_dashboard.html",
+      js: "platform_backup_management_dashboard.js"
+    }
+  );
 
       // ================= DEFAULT =================
       default:
