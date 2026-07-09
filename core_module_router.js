@@ -57,15 +57,14 @@ function connectCoreModule(page) {
     const main =
       document.getElementById("mainContent");
 
-    if (!main) {
+   if (!main) {
 
-   console.error(
-  "[CORE MODULE ROUTER ERROR]",
-  err
-);
+  console.error(
+    "[CORE MODULE ROUTER] mainContent missing"
+  );
 
-      return false;
-    }
+  return false;
+}
 
     const route = String(page || "")
       .trim()
@@ -204,9 +203,9 @@ case "productmaster":
       // ================= DEFAULT =================
       default:
 
-        return loadUnknownSystemModule(
-          route
-        );
+       return loadUnknownCoreModule(
+  route
+);
     }
 
   } catch (err) {
@@ -221,7 +220,7 @@ case "productmaster":
 }
 
 // ================= UNKNOWN MODULE =================
-function loadUnknownCoreModule() (page) {
+function loadUnknownCoreModule(page) {
 
   try {
 
