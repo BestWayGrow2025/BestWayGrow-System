@@ -21,7 +21,11 @@
 PIN ACTION CONTROL V1.2
 ✔ Central action permission control ✔ Unified action dictionary ✔ Role-safe validation ✔ Status-safe validation ✔ Supports PIN Master START/STOP actions ✔ Production SAFE
 */
-// ================= ACTIONS ================= function getPinActions() { return Object.values(window.PIN_ACTION || {}); }
+// ================= ACTIONS =================
+
+function getPinActions() {
+    return Object.values(window.PIN_ACTION || {});
+}
 // ================= HELPERS ================= function getSafeRole() { if (typeof getCurrentUser !== "function") return null;
 const user = getCurrentUser();
 return user?.role || null; }
