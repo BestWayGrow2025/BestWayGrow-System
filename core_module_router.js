@@ -59,9 +59,10 @@ function connectCoreModule(page) {
 
     if (!main) {
 
-      console.error(
-        "[SYSTEM CONNECTOR] mainContent missing"
-      );
+   console.error(
+  "[CORE MODULE ROUTER ERROR]",
+  err
+);
 
       return false;
     }
@@ -160,7 +161,7 @@ case "productmaster":
       false,
       {
         html: "user_tree.html",
-        js: "tree_system.js"
+       js: "user_tree.js"
       }
     );
 
@@ -211,16 +212,16 @@ case "productmaster":
   } catch (err) {
 
     console.error(
-      "[SYSTEM MODULE CONNECTOR ERROR]",
-      err
-    );
+  "[CORE MODULE ROUTER ERROR]",
+  err
+);
 
     return false;
   }
 }
 
 // ================= UNKNOWN MODULE =================
-function loadUnknownSystemModule(page) {
+function loadUnknownCoreModule() (page) {
 
   try {
 
@@ -250,5 +251,4 @@ function loadUnknownSystemModule(page) {
 window.connectCoreModule =
   connectCoreModule;
 
-window.loadUnknownSystemModule =
-  loadUnknownSystemModule;
+window.loadUnknownCoreModule = loadUnknownCoreModule;
