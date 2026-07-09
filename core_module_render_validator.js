@@ -8,53 +8,47 @@ if ( window.SYSTEM_MODULE_VERIFIER && window.SYSTEM_MODULE_VERIFIER.initialized 
 window.SYSTEM_MODULE_VERIFIER = { initialized: true, ready: true, timestamp: Date.now() };
 const STATE = { lastModule: null, lastCheck: null };
 function verify(page) {
-const main =
-  document.getElementById(
-    "mainContent"
-  );
 
-const result = {
-  page,
-  success: false,
-  reason: null,
-  timestamp: Date.now()
-};
+  setTimeout(function () {
 
-if (!main) {
+    const main = document.getElementById("mainContent");
 
-  result.reason =
-    "MAIN_CONTENT_MISSING";
+    const result = {
+      page,
+      success: false,
+      reason: null,
+      timestamp: Date.now()
+    };
 
-  emit(result);
+    if (!main) {
 
-  return result;
-}
+      result.reason = "MAIN_CONTENT_MISSING";
+      emit(result);
+      return;
 
-const content =
-  (main.innerHTML || "")
-  .trim();
+    }
 
-if (!content) {
+    const content = (main.innerHTML || "").trim();
 
-  result.reason =
-    "EMPTY_RENDER";
+    if (!content) {
 
-  emit(result);
+      result.reason = "EMPTY_RENDER";
+      emit(result);
+      return;
 
-  return result;
-}
+    }
 
-result.success = true;
+    result.success = true;
 
-STATE.lastModule = page;
-STATE.lastCheck =
-  result.timestamp;
+    STATE.lastModule = page;
+    STATE.lastCheck = result.timestamp;
 
-emit(result);
+    emit(result);
 
-return result;
+  }, 100);
 
 }
+ 
 function emit(result) {
 if (
   typeof window.broadcastPinEvent ===
