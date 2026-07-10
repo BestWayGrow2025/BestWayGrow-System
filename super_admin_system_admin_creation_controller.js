@@ -441,53 +441,129 @@ window.loadCreateSystemAdminRealModule = function(){
   try {
 
     if (
-      typeof window.renderCreateAdmin === "function"
+      typeof window.renderCreateAdmin !== "function"
     ) {
 
-      const box =
-        document.getElementById("mainContent");
+      console.error(
+        "[CREATE ADMIN] RENDER FUNCTION NOT FOUND"
+      );
 
-
-      if (box) {
-
-        box.innerHTML =
-          window.renderCreateAdmin();
-
-
-        setTimeout(() => {
-
-          if (
-            typeof window.startSuperAdminCreateSystemAdmin === "function"
-          ) {
-
-            window.startSuperAdminCreateSystemAdmin();
-
-          }
-
-        }, 200);
-
-
-        console.log(
-          "[CREATE MODULE] RENDER SUCCESS"
-        );
-
-
-        return true;
-
-      }
+      return false;
 
     }
 
 
-    console.error(
-      "[CREATE ADMIN] RENDER FUNCTION NOT FOUND"
+    const box =
+      document.getElementById("mainContent");
+
+
+    if (!box) {
+
+      console.error(
+        "[CREATE ADMIN] mainContent missing"
+      );
+
+      return false;
+
+    }
+
+
+
+    // ================= RENDER =================
+
+    box.innerHTML =
+      window.renderCreateAdmin();
+
+
+
+    console.log(
+      "[CREATE MODULE] RENDER SUCCESS"
     );
 
 
-    return false;
+
+    // ================= START AFTER DOM READY =================
+
+    setTimeout(function(){
 
 
-  } catch(e) {
+      const btn =
+        document.getElementById(
+          "createBtn"
+        );
+
+
+      if (!btn) {
+
+        console.error(
+          "[CREATE ADMIN] CREATE BUTTON NOT FOUND AFTER RENDER"
+        );
+
+        return;
+
+      }
+
+
+
+      if (
+        typeof window.startSuperAdminCreateSystemAdmin ===
+        "function"
+      ) {
+
+
+        window.startSuperAdminCreateSystemAdmin();
+
+
+      }
+
+
+
+      // SAFETY REBIND
+
+      btn.onclick = function(){
+
+        console.log(
+          "[CREATE BUTTON CLICKED]"
+        );
+
+
+        if (
+          typeof window.createSystemAdmin ===
+          "function"
+        ) {
+
+          window.createSystemAdmin();
+
+        }
+        else {
+
+          console.error(
+            "[CREATE ADMIN] createSystemAdmin missing"
+          );
+
+        }
+
+
+      };
+
+
+
+      console.log(
+        "[CREATE ADMIN] BUTTON CONNECTED FINAL"
+      );
+
+
+
+    },300);
+
+
+
+    return true;
+
+
+
+  }
+  catch(e){
 
 
     console.error(
@@ -498,18 +574,14 @@ window.loadCreateSystemAdminRealModule = function(){
 
     return false;
 
+
   }
+
 
 };
 
 
 
 console.log(
- "[SUPER ADMIN CREATE SYSTEM ADMIN] READY"
+ "[SUPER ADMIN CREATE SYSTEM ADMIN LOADER READY]"
 );
-
-
-
-// startModule(); 
-// Disabled: module starts after renderer injection
-
