@@ -1,3 +1,7 @@
+"use strict";
+
+(function () {
+
 let session = null;
 let currentUser = null;
 let lock = false;
@@ -272,3 +276,5 @@ window.clearLogs =
 
 window.loadCritical =
   loadCritical;
+
+})();
