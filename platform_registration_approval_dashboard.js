@@ -2,21 +2,16 @@
 
 (function () {
 
-let session = null;
-let currentUser = null;
-let refreshTimer = null;
 /*
 ========================================
 PLATFORM REGISTRATION QUEUE MONITOR v2.0
 ========================================
-✔ Read-only registration queue monitor
-✔ Uses core_session_authority.js
-✔ Compatible with core_registration_queue_manager.js
-✔ Auto refresh
-✔ Queue status monitoring
-✔ Production Final
-========================================
+...
 */
+
+let session = null;
+let currentUser = null;
+let refreshTimer = null;
 
 // ================= START =================
 document.addEventListener("DOMContentLoaded", function () {
