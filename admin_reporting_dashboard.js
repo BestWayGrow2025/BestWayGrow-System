@@ -1,5 +1,7 @@
 "use strict";
 
+(function () {
+
 let session = null;
 let reportAdmin = null;
 let reportLock = false;
@@ -267,3 +269,5 @@ function clearAdminReportsSession() {
   localStorage.removeItem("loggedInSystemAdmin");
   localStorage.removeItem("loggedInSuperAdmin");
 }
+
+})();
