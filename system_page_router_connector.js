@@ -74,7 +74,7 @@ ENTERPRISE GUARANTEE LAYER (FIXED FINAL)
   }
 
   // ================= OPEN PAGE =================
-  function openSystemPage(page) {
+ async function openSystemPage(page) {
 
     try {
 
@@ -101,15 +101,15 @@ ENTERPRISE GUARANTEE LAYER (FIXED FINAL)
  clearMainContent();
 
 if (typeof window.connectCoreModule === "function") {
-  window.connectCoreModule(page);
-  verifyModule(page);
-  return true;
+ await window.connectCoreModule(page);
+verifyModule(page);
+return true;
 }
 
 if (typeof window.loadSystemModule === "function") {
-  window.loadSystemModule(page);
-  verifyModule(page);
-  return true;
+ await window.loadSystemModule(page);
+verifyModule(page);
+return true;
 }
 
 const main = document.getElementById("mainContent");
