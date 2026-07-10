@@ -36,7 +36,8 @@ SYSTEM MODULE VERIFIER v1.3 FINAL
   };
 
   // ================= VERIFY =================
-  function verify(page) {
+ async function verify(page) {
+  return new Promise(function (resolve) {
 
     setTimeout(function () {
 
@@ -58,9 +59,9 @@ SYSTEM MODULE VERIFIER v1.3 FINAL
         result.reason =
           "MAIN_CONTENT_MISSING";
 
-        emit(result);
-
-        return;
+emit(result);
+resolve(result);
+return;
       }
 
       // ---------- CONTENT ----------
@@ -73,9 +74,9 @@ SYSTEM MODULE VERIFIER v1.3 FINAL
         result.reason =
           "EMPTY_RENDER";
 
-        emit(result);
-
-        return;
+emit(result);
+resolve(result);
+return;
       }
 
       // ---------- SUCCESS ----------
@@ -85,7 +86,9 @@ SYSTEM MODULE VERIFIER v1.3 FINAL
       STATE.lastCheck =
         result.timestamp;
 
-      emit(result);
+     emit(result);
+resolve(result);
+return;
 
     }, 100);
 
