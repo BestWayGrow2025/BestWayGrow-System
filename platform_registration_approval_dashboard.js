@@ -1,5 +1,10 @@
- "use strict";
+"use strict";
 
+(function () {
+
+let session = null;
+let currentUser = null;
+let refreshTimer = null;
 /*
 ========================================
 PLATFORM REGISTRATION QUEUE MONITOR v2.0
@@ -12,10 +17,6 @@ PLATFORM REGISTRATION QUEUE MONITOR v2.0
 ✔ Production Final
 ========================================
 */
-
-let session = null;
-let currentUser = null;
-let refreshTimer = null;
 
 // ================= START =================
 document.addEventListener("DOMContentLoaded", function () {
@@ -167,3 +168,5 @@ window.addEventListener("beforeunload", function () {
 
 // ================= EXPORT =================
 window.loadQueue = loadQueue;
+
+})();
