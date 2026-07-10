@@ -1,16 +1,11 @@
 "use strict";
 
+(function () {
+
 /*
 ========================================
 SYSTEM ADMIN DASHBOARD vFINAL SINGLE PATH
-========================================
-✔ Single execution path (DOMContentLoaded only)
-✔ Single session source (getSession only)
-✔ Core system dependency only
-✔ No boot layer dependency
-✔ Clean event binding
-✔ Production safe architecture
-========================================
+...
 */
 
 console.log("[SYSTEM ADMIN DASHBOARD] INIT");
@@ -297,3 +292,5 @@ window.loadSettings = loadSettings;
 window.logout = logout;
 
 window.SYSTEM_ADMIN_DASHBOARD = true;
+
+})();
