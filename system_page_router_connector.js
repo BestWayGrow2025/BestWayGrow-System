@@ -83,6 +83,8 @@ ENTERPRISE GUARANTEE LAYER (ASYNC FIXED FINAL)
 
   async function verifyLoadedModule(page) {
 
+  try {
+
     if (
       !window.SYSTEM_MODULE_VERIFIER ||
       typeof window.SYSTEM_MODULE_VERIFIER.verify !== "function"
@@ -101,13 +103,24 @@ ENTERPRISE GUARANTEE LAYER (ASYNC FIXED FINAL)
       await window.SYSTEM_MODULE_VERIFIER.verify(page);
 
 
+    if (!result) {
+
+      console.warn(
+        "[PAGE ROUTER] EMPTY VERIFICATION RESULT",
+        page
+      );
+
+      return false;
+
+    }
+
+
     if (result.success) {
 
       window.SYSTEM_NAVIGATION_AUDIT
         ?.navigationLoaded(page);
 
-    } 
-    else {
+    } else {
 
       window.SYSTEM_NAVIGATION_AUDIT
         ?.navigationFailed(page);
@@ -125,8 +138,24 @@ ENTERPRISE GUARANTEE LAYER (ASYNC FIXED FINAL)
 
     return result.success;
 
+
+  } catch (err) {
+
+    console.error(
+      "[MODULE VERIFY ERROR]",
+      err
+    );
+
+
+    window.SYSTEM_NAVIGATION_AUDIT
+      ?.navigationFailed(page);
+
+
+    return false;
+
   }
 
+}
 
 
   // ================= OPEN PAGE =================
