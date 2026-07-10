@@ -1,5 +1,7 @@
 "use strict";
 
+(function () {
+
 /*
 ========================================
 USER TREE FINAL SIMPLE (L1 TO L30)
@@ -15,6 +17,7 @@ USER TREE FINAL SIMPLE (L1 TO L30)
 
 let session = null;
 let currentUser = null;
+
 
 /* ================= INIT ================= */
 
@@ -170,3 +173,5 @@ function renderLevelTable(level) {
 
 window.getUsersByLevel = getUsersByLevel;
 window.renderLevelTable = renderLevelTable;
+
+})();
