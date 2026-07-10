@@ -2,14 +2,14 @@
 
 /*
 ========================================
-SYSTEM PAGE ROUTER CONNECTOR V3.0
-ENTERPRISE GUARANTEE LAYER (FIXED FINAL)
+SYSTEM PAGE ROUTER CONNECTOR V3.1
+ENTERPRISE GUARANTEE LAYER (ASYNC FIXED FINAL)
 ========================================
 ✔ Role Security
 ✔ UI Reset
 ✔ Navigation Audit
 ✔ UI State Manager
-✔ Module Verification
+✔ Async Module Verification
 ✔ Fallback Recovery
 ✔ Safe Global Routing
 ✔ No DOM dependency on .menu
@@ -20,152 +20,348 @@ ENTERPRISE GUARANTEE LAYER (FIXED FINAL)
 (function () {
 
   // ================= GUARD =================
+
   if (window.SYSTEM_PAGE_ROUTER) {
     console.log("[PAGE ROUTER] Already Loaded");
     return;
   }
 
   window.SYSTEM_PAGE_ROUTER = true;
+
   console.log("[PAGE ROUTER] Initializing");
 
+
   // ================= UI RESET =================
+
   function clearMainContent() {
-    const main = document.getElementById("mainContent");
+
+    const main =
+      document.getElementById("mainContent");
 
     if (!main) {
-      console.warn("[ROUTER] mainContent missing");
+
+      console.warn(
+        "[ROUTER] mainContent missing"
+      );
+
       return;
     }
 
     main.innerHTML = "";
-    main.removeAttribute("data-loaded-module");
+
+    main.removeAttribute(
+      "data-loaded-module"
+    );
+
   }
 
+
+
   // ================= ROLE CHECK =================
+
   function checkAccess(page) {
-    if (!window.PIN_ROLE_ACCESS?.requireAccess) {
-      console.warn("[PAGE ROUTER] ROLE SYSTEM NOT LOADED");
+
+    if (
+      !window.PIN_ROLE_ACCESS?.requireAccess
+    ) {
+
+      console.warn(
+        "[PAGE ROUTER] ROLE SYSTEM NOT LOADED"
+      );
+
       return true;
+
     }
 
     return window.PIN_ROLE_ACCESS.requireAccess(page);
+
   }
+
+
 
   // ================= MODULE VERIFY =================
-  function verifyModule(page) {
-    setTimeout(function () {
 
-      const result = window.SYSTEM_MODULE_VERIFIER?.verify(page);
+  async function verifyLoadedModule(page) {
 
-      if (!result) return;
+    if (
+      !window.SYSTEM_MODULE_VERIFIER ||
+      typeof window.SYSTEM_MODULE_VERIFIER.verify !== "function"
+    ) {
 
-      if (result.success) {
-        window.SYSTEM_NAVIGATION_AUDIT?.navigationLoaded(page);
-      } else {
-        window.SYSTEM_NAVIGATION_AUDIT?.navigationFailed(page);
+      console.warn(
+        "[PAGE ROUTER] MODULE VERIFIER NOT READY"
+      );
 
-        window.SYSTEM_FALLBACK_RECOVERY?.show(
+      return true;
+
+    }
+
+
+    const result =
+      await window.SYSTEM_MODULE_VERIFIER.verify(page);
+
+
+    if (result.success) {
+
+      window.SYSTEM_NAVIGATION_AUDIT
+        ?.navigationLoaded(page);
+
+    } 
+    else {
+
+      window.SYSTEM_NAVIGATION_AUDIT
+        ?.navigationFailed(page);
+
+
+      window.SYSTEM_FALLBACK_RECOVERY
+        ?.show(
           page,
-          result.reason || "MODULE_VERIFICATION_FAILED"
+          result.reason ||
+          "MODULE_VERIFICATION_FAILED"
         );
-      }
 
-    }, 100);
+    }
+
+
+    return result.success;
+
   }
 
+
+
   // ================= OPEN PAGE =================
- async function openSystemPage(page) {
+
+  async function openSystemPage(page) {
+
 
     try {
 
-      if (!page) return false;
 
-      window.SYSTEM_NAVIGATION_AUDIT?.navigationRequested(page);
+      if (!page) {
+        return false;
+      }
+
+
+      window.SYSTEM_NAVIGATION_AUDIT
+        ?.navigationRequested(page);
+
+
 
       if (!checkAccess(page)) {
-        window.SYSTEM_NAVIGATION_AUDIT?.navigationFailed(page);
+
+
+        window.SYSTEM_NAVIGATION_AUDIT
+          ?.navigationFailed(page);
+
+
         return false;
+
       }
 
-      if (window.__CURRENT_PAGE__ === page) {
+
+
+      if (
+        window.__CURRENT_PAGE__ === page
+      ) {
+
         return false;
+
       }
+
+
 
       window.__CURRENT_PAGE__ = page;
 
-      window.SYSTEM_UI_STATE?.update({
-        page,
-        module: page
-      });
 
- clearMainContent();
 
-if (typeof window.connectCoreModule === "function") {
- await window.connectCoreModule(page);
-verifyModule(page);
-return true;
-}
+      window.SYSTEM_UI_STATE
+        ?.update({
 
-if (typeof window.loadSystemModule === "function") {
- await window.loadSystemModule(page);
-verifyModule(page);
-return true;
-}
+          page,
 
-const main = document.getElementById("mainContent");
+          module: page
 
-      if (main) {
-        main.innerHTML = `
-          <div style="padding:20px">
-            <h3>⚠ Module Loader Missing</h3>
-            <p>Page: <b>${page}</b></p>
-          </div>
-        `;
+        });
+
+
+
+      clearMainContent();
+
+
+
+      // ===== REAL MODULE LOADER =====
+
+      if (
+        typeof window.connectCoreModule === "function"
+      ) {
+
+
+        await window.connectCoreModule(page);
+
+
+        return await verifyLoadedModule(page);
+
+
       }
 
+
+
+      if (
+        typeof window.loadSystemModule === "function"
+      ) {
+
+
+        await window.loadSystemModule(page);
+
+
+        return await verifyLoadedModule(page);
+
+
+      }
+
+
+
+      const main =
+        document.getElementById(
+          "mainContent"
+        );
+
+
+
+      if (main) {
+
+
+        main.innerHTML = `
+
+          <div style="padding:20px">
+
+            <h3>
+              ⚠ Module Loader Missing
+            </h3>
+
+            <p>
+              Page:
+              <b>${page}</b>
+            </p>
+
+          </div>
+
+        `;
+
+      }
+
+
       return false;
 
-    } catch (err) {
 
-      console.error("[PAGE ROUTER ERROR]", err);
 
-      window.SYSTEM_FALLBACK_RECOVERY?.show(
-        page,
-        err?.message || "ROUTER_EXCEPTION"
+    }
+    catch(err) {
+
+
+      console.error(
+        "[PAGE ROUTER ERROR]",
+        err
       );
 
+
+      window.SYSTEM_FALLBACK_RECOVERY
+        ?.show(
+          page,
+          err?.message ||
+          "ROUTER_EXCEPTION"
+        );
+
+
       return false;
+
     }
+
+
   }
+
+
+
 
   // ================= CLICK BIND =================
+
+
   function bindNavigation() {
 
-    if (document.__routerBound__) return;
+
+    if (document.__routerBound__) {
+      return;
+    }
+
+
     document.__routerBound__ = true;
 
-    document.addEventListener("click", function (e) {
 
-      const btn = e.target.closest("[data-page]");
-      if (!btn) return;
 
-      e.preventDefault();
-      e.stopPropagation();
+    document.addEventListener(
+      "click",
+      function(e) {
 
-      const page = btn.getAttribute("data-page");
-      if (!page) return;
 
-      openSystemPage(page);
-    });
+        const btn =
+          e.target.closest(
+            "[data-page]"
+          );
+
+
+        if (!btn) {
+          return;
+        }
+
+
+        e.preventDefault();
+
+        e.stopPropagation();
+
+
+
+        const page =
+          btn.getAttribute(
+            "data-page"
+          );
+
+
+        if (!page) {
+          return;
+        }
+
+
+        openSystemPage(page);
+
+
+      }
+    );
+
   }
+
+
 
   // ================= INIT =================
+
+
   function initSystemPageRouter() {
+
     bindNavigation();
+
   }
 
+
+
   // ================= EXPORT =================
-  window.openSystemPage = openSystemPage;
-  window.initSystemPageRouter = initSystemPageRouter;
+
+
+  window.openSystemPage =
+    openSystemPage;
+
+
+  window.initSystemPageRouter =
+    initSystemPageRouter;
+
+
 
 })();
