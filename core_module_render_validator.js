@@ -36,61 +36,59 @@ SYSTEM MODULE VERIFIER v1.3 FINAL
   };
 
   // ================= VERIFY =================
- async function verify(page) {
-  return new Promise(function (resolve) {
+  async function verify(page) {
 
-    setTimeout(function () {
+    return new Promise(function (resolve) {
 
-      const main =
-        document.getElementById(
-          "mainContent"
-        );
+      setTimeout(function () {
 
-      const result = {
-        page,
-        success: false,
-        reason: null,
-        timestamp: Date.now()
-      };
+        const main =
+          document.getElementById("mainContent");
 
-      // ---------- MAIN CONTENT ----------
-      if (!main) {
+        const result = {
+          page,
+          success: false,
+          reason: null,
+          timestamp: Date.now()
+        };
 
-        result.reason =
-          "MAIN_CONTENT_MISSING";
+        // ---------- MAIN CONTENT ----------
+        if (!main) {
 
-emit(result);
-resolve(result);
-return;
-      }
+          result.reason = "MAIN_CONTENT_MISSING";
 
-      // ---------- CONTENT ----------
-      const content =
-        (main.innerHTML || "")
-          .trim();
+          emit(result);
+          resolve(result);
+          return;
 
-      if (!content) {
+        }
 
-        result.reason =
-          "EMPTY_RENDER";
+        // ---------- CONTENT ----------
+        const content =
+          (main.innerHTML || "").trim();
 
-emit(result);
-resolve(result);
-return;
-      }
+        if (!content) {
 
-      // ---------- SUCCESS ----------
-      result.success = true;
+          result.reason = "EMPTY_RENDER";
 
-      STATE.lastModule = page;
-      STATE.lastCheck =
-        result.timestamp;
+          emit(result);
+          resolve(result);
+          return;
 
-     emit(result);
-resolve(result);
-return;
+        }
 
-    }, 100);
+        // ---------- SUCCESS ----------
+        result.success = true;
+
+        STATE.lastModule = page;
+        STATE.lastCheck = result.timestamp;
+
+        emit(result);
+        resolve(result);
+
+      }, 100);
+
+    });
 
   }
 
@@ -124,11 +122,8 @@ return;
   function getState() {
 
     return {
-      lastModule:
-        STATE.lastModule,
-
-      lastCheck:
-        STATE.lastCheck
+      lastModule: STATE.lastModule,
+      lastCheck: STATE.lastCheck
     };
 
   }
@@ -137,11 +132,9 @@ return;
   window.SYSTEM_MODULE_VERIFIER = {
 
     initialized: true,
-
     ready: true,
 
     verify,
-
     getState
 
   };
