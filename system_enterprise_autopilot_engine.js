@@ -2,8 +2,7 @@
 
 /*
 ========================================
-ENTERPRISE AUTOPILOT ENGINE v1.0
-AI DECISION + SELF CONTROL LAYER
+CORE ENTERPRISE AUTOPILOT ENGINE
 ========================================
 ✔ Intelligent routing
 ✔ Auto module execution
@@ -13,7 +12,7 @@ AI DECISION + SELF CONTROL LAYER
 ========================================
 */
 
-console.log("[AUTOPILOT ENGINE] LOADED");
+console.log("[CORE ENTERPRISE AUTOPILOT] LOADED");
 
 /* ================= CORE ENGINE LINK ================= */
 
@@ -83,7 +82,7 @@ function execute(decision) {
     if (!CORE) return;
 
     if (decision.action === "SAFE_MODE") {
-      console.warn("[AUTOPILOT] SAFE MODE ACTIVATED");
+      console.warn("[CORE ENTERPRISE AUTOPILOT] SAFE MODE ACTIVATED");
       CORE.run("loadHome");
       return;
     }
@@ -92,7 +91,7 @@ function execute(decision) {
 
       AUTOPILOT.activeModule = decision.module;
 
-      console.log("[AUTOPILOT] Loading:", decision.module);
+      console.log("[CORE ENTERPRISE AUTOPILOT] Loading:", decision.module);
 
       CORE.run(decision.module);
 
@@ -104,7 +103,7 @@ function execute(decision) {
     }
 
   } catch (e) {
-    console.error("[AUTOPILOT ERROR]", e);
+  console.error("[CORE ENTERPRISE AUTOPILOT ERROR]", e);
     CORE.run("loadHome");
   }
 }
@@ -148,7 +147,7 @@ function autoRecover() {
 
     if (status.health === "DEGRADED") {
 
-      console.warn("[AUTOPILOT] RECOVERY TRIGGERED");
+      console.warn("[CORE ENTERPRISE AUTOPILOT] RECOVERY TRIGGERED");
 
       if (CORE && typeof CORE.run === "function") {
         CORE.run("loadHome");
@@ -169,7 +168,7 @@ function initAutopilot() {
   initAutopilotListener();
   autoRecover();
 
-  console.log("[AUTOPILOT ENGINE] ACTIVE");
+ console.log("[CORE ENTERPRISE AUTOPILOT] ACTIVE");
 
 }
 
