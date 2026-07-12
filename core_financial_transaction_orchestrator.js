@@ -2,7 +2,7 @@
 
 /*
 ========================================
-CORE FINANCIAL ENGINE V1.0 (CENTRALIZED BRAIN)
+CORE FINANCIAL TRANSACTION ORCHESTRATOR V1.0
 ========================================
 ✔ Single entry point for all financial execution
 ✔ Merges trigger + income + wallet + control
