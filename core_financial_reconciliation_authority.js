@@ -1,8 +1,8 @@
 "use strict";
 
-/*
+ /*
 ========================================
-RECONCILIATION ENGINE V1.0 (BANK AUDIT CONTROL)
+CORE FINANCIAL RECONCILIATION AUTHORITY
 ========================================
 ✔ Compares ledger-derived balances with live wallets
 ✔ Detects mismatches and missing accounts
