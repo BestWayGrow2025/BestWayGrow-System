@@ -1,18 +1,13 @@
 "use strict";
 
-/*
-========================================
-PRODUCT MASTER CONNECTOR (ESCROW LINK LAYER)
+ ========================================
+PLATFORM PRODUCT ESCROW CONNECTOR
 ========================================
 ✔ Connects Product Master → PIN Bank
 ✔ Escrow-based product creation
-✔ No direct product issuance
-✔ Approval flow enforced
-✔ Super Admin controlled release
-✔ Stock-safe architecture
-✔ Fully traceable system
+✔ Approval workflow
+✔ Business connector layer
 ========================================
-*/
 
 /* ================= ESCROW CREATE FOR PRODUCT ================= */
 
