@@ -2,9 +2,10 @@
 
 /*
 ========================================
-SYSTEM PAGE ROUTER CONNECTOR V3.1
-ENTERPRISE GUARANTEE LAYER (ASYNC FIXED FINAL)
+CORE PAGE ROUTER CONNECTOR V3.1
+ENTERPRISE GUARANTEE LAYER
 ========================================
+✔ Core framework router
 ✔ Role Security
 ✔ UI Reset
 ✔ Navigation Audit
@@ -21,14 +22,14 @@ ENTERPRISE GUARANTEE LAYER (ASYNC FIXED FINAL)
 
   // ================= GUARD =================
 
-  if (window.SYSTEM_PAGE_ROUTER) {
-    console.log("[PAGE ROUTER] Already Loaded");
+  if (window.CORE_PAGE_ROUTER) {
+    console.log("[CORE PAGE ROUTER] Already Loaded");
     return;
   }
 
-  window.SYSTEM_PAGE_ROUTER = true;
+  window.CORE_PAGE_ROUTER = true;
 
-  console.log("[PAGE ROUTER] Initializing");
+  console.log("[CORE PAGE ROUTER] Initializing");
 
 
   // ================= UI RESET =================
@@ -40,9 +41,7 @@ ENTERPRISE GUARANTEE LAYER (ASYNC FIXED FINAL)
 
     if (!main) {
 
-      console.warn(
-        "[ROUTER] mainContent missing"
-      );
+     console.warn("[CORE PAGE ROUTER] mainContent missing");
 
       return;
     }
@@ -65,9 +64,7 @@ ENTERPRISE GUARANTEE LAYER (ASYNC FIXED FINAL)
       !window.PIN_ROLE_ACCESS?.requireAccess
     ) {
 
-      console.warn(
-        "[PAGE ROUTER] ROLE SYSTEM NOT LOADED"
-      );
+    console.warn("[CORE PAGE ROUTER] ROLE SYSTEM NOT LOADED");
 
       return true;
 
@@ -90,9 +87,7 @@ ENTERPRISE GUARANTEE LAYER (ASYNC FIXED FINAL)
       typeof window.SYSTEM_MODULE_VERIFIER.verify !== "function"
     ) {
 
-      console.warn(
-        "[PAGE ROUTER] MODULE VERIFIER NOT READY"
-      );
+     console.warn("[CORE PAGE ROUTER] MODULE VERIFIER NOT READY");
 
       return true;
 
@@ -105,10 +100,7 @@ ENTERPRISE GUARANTEE LAYER (ASYNC FIXED FINAL)
 
     if (!result) {
 
-      console.warn(
-        "[PAGE ROUTER] EMPTY VERIFICATION RESULT",
-        page
-      );
+     console.warn("[CORE PAGE ROUTER] EMPTY VERIFICATION RESULT", page);
 
       return false;
 
