@@ -1,8 +1,8 @@
 "use strict";
 
-/*
+ /*
 ========================================
-AI GOVERNOR CORE (TOP LAYER)
+CORE AI GOVERNOR
 ========================================
 ✔ Controls system behavior
 ✔ Enforces safety rules
@@ -23,10 +23,10 @@ AI GOVERNOR CORE (TOP LAYER)
 // ================= INIT =================
 function initGovernor() {
 
-  console.log("[AI GOVERNOR] INITIALIZED");
+ console.log("[CORE AI GOVERNOR] INITIALIZED");
 
   if (!window.SYSTEM_EVENTS) {
-    console.warn("[GOVERNOR] Event Hub missing");
+   console.warn("[CORE AI GOVERNOR] Event Hub missing");
     return;
   }
 
@@ -101,7 +101,7 @@ function evaluateRisk(data) {
 
   if (!data) return;
 
-  console.warn("[GOVERNOR] RISK CHECK:", data);
+ console.warn("[CORE AI GOVERNOR] RISK CHECK:", data);
 
   if (data.level === "CRITICAL") {
     triggerFreeze("CRITICAL EVENT");
@@ -111,7 +111,7 @@ function evaluateRisk(data) {
 // ================= FREEZE =================
 function triggerFreeze(reason) {
 
-  console.error("[GOVERNOR FREEZE]", reason);
+ console.error("[CORE AI GOVERNOR FREEZE]", reason);
 
   if (window.SYSTEM_EVENTS) {
     window.SYSTEM_EVENTS.emit("SYSTEM_FREEZE", { reason });
