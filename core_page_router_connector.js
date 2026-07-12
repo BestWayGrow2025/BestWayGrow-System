@@ -280,10 +280,10 @@ ENTERPRISE GUARANTEE LAYER
     catch(err) {
 
 
-      console.error(
-        "[PAGE ROUTER ERROR]",
-        err
-      );
+     console.error(
+  "[CORE PAGE ROUTER ERROR]",
+  err
+);
 
 
       window.SYSTEM_FALLBACK_RECOVERY
