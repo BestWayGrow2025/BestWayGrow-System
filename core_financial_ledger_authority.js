@@ -1,14 +1,14 @@
 "use strict";
 
-/*
+ /*
 ========================================
-LEDGER AUTHORITY LAYER V1.0 (BANK CORE GATE)
+CORE FINANCIAL LEDGER AUTHORITY
 ========================================
 ✔ Single source of financial truth
 ✔ All credits/debits must pass here
 ✔ Prevents double spend & ghost credits
 ✔ Immutable audit chain entry
-✔ Wallet cannot be written directly anymore
+✔ Wallet cannot be written directly
 ========================================
 */
 
