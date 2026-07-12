@@ -54,7 +54,7 @@ function handleSnapshot(snapshot) {
 
   if (health === "CRITICAL") {
 
-    console.warn("[GOVERNOR] CRITICAL → SYSTEM THROTTLE");
+    console.warn("[CORE AI GOVERNOR] CRITICAL → SYSTEM THROTTLE");
 
     if (window.SystemOSMode) {
       window.SystemOSMode.setMode("FROZEN");
@@ -71,7 +71,7 @@ function handleSnapshot(snapshot) {
 
   if (health === "WARNING") {
 
-    console.warn("[GOVERNOR] WARNING → MONITOR MODE");
+   console.warn("[CORE AI GOVERNOR] WARNING → MONITOR MODE");
 
     if (window.SystemOSMode) {
       window.SystemOSMode.setMode("MONITOR");
