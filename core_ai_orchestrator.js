@@ -2,11 +2,11 @@
 
 /*
 ========================================
-AI ORCHESTRATOR (CONTROL INTELLIGENCE)
+CORE AI ORCHESTRATOR
 ========================================
-- Predicts system behavior
-- Optimizes performance
-- Balances load
+✔ Predicts system behavior
+✔ Optimizes performance
+✔ Balances system load
 ========================================
 */
 
@@ -20,7 +20,7 @@ AI ORCHESTRATOR (CONTROL INTELLIGENCE)
 // ================= INIT (PASSIVE ONLY) =================
 function initAIOrchestrator() {
 
-  console.log("[AI ORCHESTRATOR] INITIALIZED");
+ console.log("[CORE AI ORCHESTRATOR] INITIALIZED");
 
   setInterval(runOrchestrationCycle, 30000);
 }
@@ -38,7 +38,7 @@ function runOrchestrationCycle() {
 function optimizeEventFlow(snapshot) {
 
   if (snapshot.health && snapshot.health.overall === "GOOD") {
-    console.log("[ORCHESTRATOR] System stable - no optimization needed");
+   console.log("[CORE AI ORCHESTRATOR] System stable - no optimization needed");
   }
 }
 
