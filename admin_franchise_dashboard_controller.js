@@ -22,13 +22,13 @@ function authPage() {
   session = JSON.parse(localStorage.getItem("loggedInFranchise") || "null");
 
   if (!session || !session.userId) {
-    window.location.href = "system_franchise_auth.html";
+    window.location.href = "admin_franchise_auth.html";
     throw new Error("STOP");
   }
 
   if (typeof getUserById !== "function") {
     localStorage.removeItem("loggedInFranchise");
-   window.location.href = "system_franchise_auth.html";
+   window.location.href = "admin_franchise_auth.html";
     throw new Error("STOP");
   }
 
@@ -36,7 +36,7 @@ function authPage() {
 
   if (!currentUser || currentUser.role !== "franchise") {
     localStorage.removeItem("loggedInFranchise");
-   window.location.href = "system_franchise_auth.html";
+    window.location.href = "admin_franchise_auth.html";
     throw new Error("STOP");
   }
 
@@ -65,7 +65,7 @@ function loadPage() {
   loadUsers();
 
   if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "franchise", "Opened dashboard", "FRANCHISE");
+   logActivity(currentUser.userId, "admin_franchise", "Opened dashboard", "ADMIN_FRANCHISE");
   }
 
   refreshTimer = setInterval(function () {
@@ -150,9 +150,9 @@ function logout() {
   }
 
   if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "franchise", "Logout", "FRANCHISE");
+   logActivity(currentUser.userId, "admin_franchise", "Logout", "ADMIN_FRANCHISE");
   }
 
   localStorage.removeItem("loggedInFranchise");
-  window.location.href = "system_franchise_auth.html";
+  window.location.href = "admin_franchise_auth.html";
 }
