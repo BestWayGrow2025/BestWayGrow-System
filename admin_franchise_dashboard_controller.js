@@ -1,5 +1,16 @@
 "use strict";
 
+/*
+========================================
+ADMIN FRANCHISE DASHBOARD CONTROLLER V1.0
+========================================
+✔ Franchise Dashboard
+✔ Authentication Guard
+✔ User Monitoring
+✔ System Status
+========================================
+*/
+
 let session = null;
 let currentUser = null;
 let lock = false;
@@ -46,7 +57,7 @@ function authPage() {
   if (settings.franchiseAccess === false) {
     alert("🚫 Franchise access OFF by Super Admin");
     localStorage.removeItem("loggedInFranchise");
-  window.location.href = "system_franchise_auth.html";
+ window.location.href = "admin_franchise_auth.html";
     throw new Error("STOP");
   }
 }
