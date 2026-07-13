@@ -1,5 +1,16 @@
 "use strict";
 
+/*
+========================================
+ADMIN FRANCHISE PIN REQUEST CONTROLLER V1.0
+========================================
+✔ Admin Franchise PIN Request
+✔ Authentication Guard
+✔ PIN Request Creation
+✔ Request Tracking
+========================================
+*/
+
 let session = null;
 let currentUser = null;
 let lock = false;
@@ -21,13 +32,13 @@ function authPage() {
   session = JSON.parse(localStorage.getItem("loggedInFranchise") || "null");
 
   if (!session || !session.userId) {
-   window.location.href = "system_franchise_auth.html";
+  window.location.href = "admin_franchise_auth.html";
     throw new Error("STOP");
   }
 
   if (typeof getUserById !== "function") {
     localStorage.removeItem("loggedInFranchise");
-  window.location.href = "system_franchise_auth.html";
+ window.location.href = "admin_franchise_auth.html";
     throw new Error("STOP");
   }
 
@@ -35,14 +46,14 @@ function authPage() {
 
   if (!currentUser || currentUser.role !== "franchise") {
     localStorage.removeItem("loggedInFranchise");
-    window.location.href = "system_franchise_auth.html";
+   window.location.href = "admin_franchise_auth.html";
     throw new Error("STOP");
   }
 
   if ((currentUser.status || "active") !== "active") {
     localStorage.removeItem("loggedInFranchise");
     alert("Account inactive");
-   window.location.href = "system_franchise_auth.html";
+   window.location.href = "admin_franchise_auth.html";
     throw new Error("STOP");
   }
 }
@@ -146,5 +157,5 @@ function loadRequests() {
 }
 
 function goBack() {
- window.location.href = "system_franchise_dashboard.html";
+window.location.href = "admin_franchise_dashboard.html";
 }
