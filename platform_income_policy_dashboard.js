@@ -38,7 +38,7 @@ try{
 
 if(typeof window.getIncomeSettings !== "function"){
 
-    console.warn("[INCOME CONTROL] Waiting for income system...");
+   console.warn("[PLATFORM INCOME POLICY DASHBOARD] Waiting for income policy controller...");
 
     setTimeout(
         refreshIncomeControl,
