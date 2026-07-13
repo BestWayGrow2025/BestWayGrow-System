@@ -1,17 +1,18 @@
+"use strict";
+
 /*
 ========================================
-💳 PAYMENT REQUEST SYSTEM V6 (FINAL SAFE PATCH)
+PLATFORM PAYMENT REQUEST DASHBOARD V1.0
 ========================================
-✔ Core boot aligned
-✔ Session auth guarded
-✔ Request-only queue layer
-✔ No wallet mutation
-✔ No withdrawal mutation
-✔ Pending duplicate blocked
-✔ safeGet / safeSet aligned
-✔ Corruption-safe storage
-✔ UI-only financial intake
-✔ Production locked
+✔ Platform Payment Request Dashboard
+✔ Core Boot Aligned
+✔ Session Authentication Guard
+✔ Payment Request Queue
+✔ Pending Request Validation
+✔ No Wallet Mutation
+✔ No Withdrawal Mutation
+✔ Corruption-Safe Storage
+✔ Platform Dashboard Module
 ========================================
 */
 
@@ -53,7 +54,7 @@ function authPage() {
 
   if (!session || !session.userId) {
     alert("Login required");
-    window.location.href = "user_login.html";
+    window.location.href = "user_auth.html";
     return;
   }
 
