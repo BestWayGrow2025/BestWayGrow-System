@@ -1,5 +1,11 @@
 "use strict";
 
+/*
+========================================
+ADMIN FRANCHISE AUTH CONTROLLER
+========================================
+*/
+
 let session = null;
 let currentUser = null;
 let lock = false;
@@ -36,7 +42,7 @@ function loadPage() {
   );
 
   if (active && active.userId) {
-    window.location.href = "system_franchise_dashboard.html";
+    window.location.href = "admin_franchise_dashboard.html";
   }
 }
 
@@ -102,7 +108,7 @@ function login() {
       })
     );
 
-    window.location.replace("system_franchise_dashboard.html");
+    window.location.replace("admin_franchise_dashboard.html");
 
   } finally {
     lock = false;
