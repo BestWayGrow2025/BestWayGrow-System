@@ -185,13 +185,15 @@ SUPER ADMIN MODULE ORCHESTRATION CONTROLLER V1.0
       setContent(window.renderReset?.() || "<h2>♻️ System Reset</h2>");
     });
 
-    console.log("[SUPER ADMIN MODULE ORCHESTRATION CONTROLLER] REGISTRY READY");
+console.log("[SUPER ADMIN MODULE ORCHESTRATION CONTROLLER] REGISTRY READY");
 
-  // ================= CONTENT SETTER =================
-  function setContent(html) {
+} // <-- closes registerPages()
+
+// ================= CONTENT SETTER =================
+function setContent(html) {
     const el = document.getElementById("mainContent");
     if (el) el.innerHTML = html;
-  }
+}
 
   // ================= INIT =================
   function init() {
@@ -207,7 +209,7 @@ SUPER ADMIN MODULE ORCHESTRATION CONTROLLER V1.0
      console.log("[SUPER ADMIN MODULE ORCHESTRATION CONTROLLER] ACTIVE");
 
     } catch (err) {
-      console.error("[MODULE LOADER ERROR]", err);
+     console.error("[SUPER ADMIN MODULE ORCHESTRATION CONTROLLER ERROR]", err);
     }
   }
 
