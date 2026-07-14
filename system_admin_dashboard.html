@@ -1,3 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Admin Dashboard</title>
+  <link rel="icon" href="data:,">
+</head>
+
+<body>
+
 <div class="system-admin-dashboard-module">
 
   <header>
@@ -11,7 +22,7 @@
     <button data-page="home">Home</button>
     <button data-page="users">Users</button>
     <button data-page="create">Create Admin</button>
-   <button data-page="pinmaster">Pins</button>
+    <button data-page="pinmaster">Pins</button>
     <button data-page="settings">Settings</button>
 
   </div>
@@ -19,3 +30,13 @@
   <div id="mainContent"></div>
 
 </div>
+
+<!-- CORE -->
+<script src="core_initializer.js"></script>
+<script src="core_session_authority.js"></script>
+
+<!-- SYSTEM ADMIN -->
+<script src="system_admin_dashboard_controller.js"></script>
+
+</body>
+</html>
