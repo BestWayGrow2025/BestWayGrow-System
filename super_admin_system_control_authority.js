@@ -218,3 +218,17 @@ function logAction(action) {
    logActivity(currentUser.userId, "SUPER_ADMIN", action);
   }
 }
+
+// ================= EXPORT =================
+
+window.SuperAdminSystemControlAuthority = {
+    init: initPage,
+    reload: loadPage,
+    toggleWithdraw: toggleWithdrawSystem,
+    toggleRegistration: toggleRegisterSystem,
+    toggleAdmin: toggleAdminStatus
+};
+
+window.__SUPER_ADMIN_SYSTEM_CONTROL_AUTHORITY__ = true;
+
+console.log("[SUPER ADMIN SYSTEM CONTROL] READY");
