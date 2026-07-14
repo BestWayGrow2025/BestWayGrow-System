@@ -2,14 +2,14 @@
 
 /*
 ========================================
-SUPER ADMIN DASHBOARD V1.0 FINAL SINGLE PATH
+SUPER ADMIN DASHBOARD CONTROLLER V1.0
 ========================================
-✔ Super Admin only
-✔ One session source
-✔ One auth path
-✔ No System Admin dependency
-✔ No redirect contamination
-✔ Production stable
+✔ Super Admin Dashboard Controller
+✔ Super Admin Authentication
+✔ Dashboard Module Loader
+✔ Single Session Source
+✔ Single Authentication Path
+✔ Production Stable
 ========================================
 */
 
@@ -54,9 +54,6 @@ function initSuperAdminDashboard() {
 
   dashboardReady = true;
 
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
 
   if (!checkSuperAdminAuth()) {
     return;
