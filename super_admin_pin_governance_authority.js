@@ -185,7 +185,7 @@ function escalateToSystem(type, qty = 1) {
 }
 
 // ================= EXPORTS =================
-window.superAdminPinControl = {
+window.superAdminPinGovernanceAuthority = {
   approveRequest,
   rejectRequest,
   adjustPinStock,
