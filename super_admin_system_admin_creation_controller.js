@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SUPER ADMIN CREATE SYSTEM ADMIN v5.0 FINAL
+SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
 ========================================
 ✔ PIN Registry Connected
 ✔ Super Admin Auth Only
@@ -17,7 +17,7 @@ let session = null;
 let currentUser = null;
 let lock = false;
 
-console.log("[SUPER ADMIN CREATE SYSTEM ADMIN] INIT");
+console.log("[SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER] INIT");
 
 
 /* ================= AUTH CHECK ================= */
@@ -376,9 +376,7 @@ function startModule() {
     loadSystemAdminList();
 
 
-    console.log(
-      "[SUPER ADMIN CREATE SYSTEM ADMIN] ACTIVE"
-    );
+   console.log("[SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER] ACTIVE");
 
 
   }, 100);
@@ -407,18 +405,11 @@ window.showMsg =
 /* ================= MODULE FLAG ================= */
 
 
-window.__SUPER_ADMIN_MODULE__ = {
-
-  loaded:true,
-
-  name:
-  "super_admin_create_system_admin",
-
-  time:
-  Date.now()
-
+window.__SUPER_ADMIN_SYSTEM_ADMIN_CREATION_CONTROLLER__ = {
+    loaded: true,
+    initialized: true,
+    time: Date.now()
 };
-
 
 
 /* ================= PIN REGISTRY ================= */
@@ -582,6 +573,4 @@ window.loadCreateSystemAdminRealModule = function(){
 
 
 
-console.log(
- "[SUPER ADMIN CREATE SYSTEM ADMIN LOADER READY]"
-);
+console.log("[SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER] LOADER READY");
