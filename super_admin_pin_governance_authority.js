@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SUPER ADMIN PIN CONTROL vFINAL CORE LAYER
+SUPER ADMIN PIN GOVERNANCE AUTHORITY V1.0
 ========================================
 ✔ PIN approval logic
 ✔ PIN request governance
@@ -13,7 +13,7 @@ SUPER ADMIN PIN CONTROL vFINAL CORE LAYER
 ========================================
 */
 
-console.log("[SUPER ADMIN PIN CONTROL] INIT");
+console.log("[SUPER ADMIN PIN GOVERNANCE AUTHORITY] INIT");
 
 // ================= STATE =================
 let lock = false;
@@ -193,6 +193,6 @@ window.superAdminPinControl = {
   getPendingRequests
 };
 
-window.__SUPER_ADMIN_PIN_CONTROL_LOADED__ = true;
+window.__SUPER_ADMIN_PIN_GOVERNANCE_AUTHORITY__ = true;
 
-console.log("[SUPER ADMIN PIN CONTROL] READY");
+console.log("[SUPER ADMIN PIN GOVERNANCE AUTHORITY] READY");
