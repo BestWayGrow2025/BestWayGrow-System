@@ -37,8 +37,11 @@ SUPER ADMIN MODULE ORCHESTRATION CONTROLLER V1.0
   // ================= PAGE REGISTRATION =================
   function registerPages() {
 
-    const CORE = window.ENTERPRISE_CORE_ENGINE;
-    if (!CORE) return;
+   const CORE = window.ENTERPRISE_CORE_ENGINE;
+
+if (!CORE || typeof CORE.register !== "function") {
+    return;
+}
 
     // ================= HOME =================
     CORE.register("home", function () {
