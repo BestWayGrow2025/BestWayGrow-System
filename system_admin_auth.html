@@ -1,7 +1,7 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 <head>
-  <title>System Admin Login</title>
+  <title>System Admin Auth</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:,">
@@ -49,31 +49,34 @@
     }
   </style>
 </head>
+
 <body>
 
-  <div class="box">
-    <h2>SYSTEM ADMIN LOGIN</h2>
+<div class="box">
 
-    <input id="userId" placeholder="System Admin ID">
-    <input id="password" type="password" placeholder="Password">
+  <h2>SYSTEM ADMIN AUTH</h2>
 
-    <button id="loginBtn">Login</button>
+  <input id="userId" placeholder="System Admin ID">
 
-    <p id="msg"></p>
-  </div>
+  <input
+    id="password"
+    type="password"
+    placeholder="Password">
 
-  <!-- ================= BOOT MANAGER ================= -->
-  <script src="boot_manager.js"></script>
+  <button id="loginBtn">
+    Login
+  </button>
 
-  <!-- ================= CORE SYSTEM ================= -->
-  <script src="core_system.js"></script>
+  <p id="msg"></p>
 
-  <!-- ================= OPTIONAL SYSTEMS ================= -->
-  <script src="activity_log.js"></script>
-  <script src="session_manager.js"></script>
+</div>
 
-  <!-- ================= LOGIN LOGIC ================= -->
-  <script src="system_admin_login.js"></script>
+<!-- CORE -->
+<script src="core_initializer.js"></script>
+<script src="core_session_authority.js"></script>
+
+<!-- SYSTEM ADMIN AUTH -->
+<script src="system_admin_auth.js"></script>
 
 </body>
 </html>
