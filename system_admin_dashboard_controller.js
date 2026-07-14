@@ -84,7 +84,7 @@ function redirectLogin() {
     localStorage.removeItem("loggedInSystemAdmin");
   }
 
-  window.location.href = "system_admin_login.html";
+  window.location.href = "system_admin_auth.html";
 }
 
 // ================= EVENTS =================
@@ -244,11 +244,11 @@ function loadUsers() {
   if (main) main.innerHTML = html;
 }
 
-// ================= CREATE ADMIN =================
+ // ================= CREATE ADMIN =================
 function loadCreateAdmin() {
-  window.open("system_admin_create_admin.html", "_blank");
+  window.open("system_admin_admin_creation_dashboard.html", "_blank");
 }
-
+  
 // ================= PIN =================
 function loadPinsSafe() {
 
