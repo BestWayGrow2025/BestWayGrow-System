@@ -2,7 +2,7 @@
 
 /*
 ========================================
-SUPER ADMIN SYSTEM CONTROL AUTHORITY vFINAL SINGLE PATH
+SYSTEM ADMIN SYSTEM CONTROL AUTHORITY vFINAL SINGLE PATH
 ========================================
 ✔ One execution path (DOMContentLoaded only)
 ✔ One session source (getSession only)
@@ -13,7 +13,7 @@ SUPER ADMIN SYSTEM CONTROL AUTHORITY vFINAL SINGLE PATH
 ========================================
 */
 
-console.log("[SUPER ADMIN SYSTEM CONTROL] INIT");
+console.log("[SYSTEM ADMIN SYSTEM CONTROL] INIT");
 
 // ================= GLOBAL STATE =================
 let currentUser = null;
@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadPage();
 
   } catch (err) {
-   console.error("[SUPER ADMIN SYSTEM CONTROL ERROR]", err);
+   console.error("[SYSTEM ADMIN SYSTEM CONTROL ERROR]", err);
   }
 });
 
@@ -52,20 +52,20 @@ function authPage() {
 
   const session = getSession?.();
 
-  if (!session?.userId || session.role !== "super_admin") {
-    window.location.href = "super_admin_auth.html";
+  if (!session?.userId || session.role !== "system_admin") {
+   window.location.href = "system_admin_auth.html";
     return;
   }
 
   currentUser = getUserById?.(session.userId);
 
-  if (!currentUser?.userId || currentUser.role !== "super_admin") {
-    window.location.href = "super_admin_auth.html";
+  if (!currentUser?.userId || currentUser.role !== "system_admin" ) {
+   window.location.href = "system_admin_auth.html";
     return;
   }
 
   if ((currentUser.status || "active") !== "active") {
-    window.location.href = "super_admin_auth.html";
+   window.location.href = "system_admin_auth.html";
     return;
   }
 }
@@ -93,7 +93,7 @@ function loadPage() {
 
 // ================= NAV =================
 function goBack() {
-  window.location.href = "super_admin_dashboard.html";
+ window.location.href = "system_admin_dashboard.html"; 
 }
 
 // ================= SYSTEM STATUS =================
@@ -215,13 +215,13 @@ function clearLogs() {
 function logAction(action) {
 
   if (typeof logActivity === "function" && currentUser?.userId) {
-   logActivity(currentUser.userId, "SUPER_ADMIN", action);
+  logActivity(currentUser.userId, "SYSTEM_ADMIN", action); 
   }
 }
 
 // ================= EXPORT =================
 
-window.SuperAdminSystemControlAuthority = {
+window.SystemAdminSystemControlAuthority = {
     init: initPage,
     reload: loadPage,
     toggleWithdraw: toggleWithdrawSystem,
@@ -229,6 +229,6 @@ window.SuperAdminSystemControlAuthority = {
     toggleAdmin: toggleAdminStatus
 };
 
-window.__SUPER_ADMIN_SYSTEM_CONTROL_AUTHORITY__ = true;
+window.__SYSTEM_ADMIN_SYSTEM_CONTROL_AUTHORITY__ = true;
 
-console.log("[SUPER ADMIN SYSTEM CONTROL] READY");
+console.log("[SYSTEM ADMIN SYSTEM CONTROL] READY");
