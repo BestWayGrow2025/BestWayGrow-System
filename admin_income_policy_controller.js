@@ -58,25 +58,25 @@ function authPage() {
     : null;
 
   if (!session?.userId) {
-    window.location.href = "admin_login.html";
+   window.location.href = "admin_auth.html";
     throw new Error("STOP");
   }
 
   if (typeof getUserById !== "function") {
-    window.location.href = "admin_login.html";
+   window.location.href = "admin_auth.html";
     throw new Error("STOP");
   }
 
   currentUser = getUserById(session.userId);
 
   if (!currentUser || currentUser.role !== "admin") {
-    window.location.href = "admin_login.html";
+   window.location.href = "admin_auth.html";
     throw new Error("STOP");
   }
 
   if ((currentUser.status || "active") !== "active") {
     alert("Account inactive");
-    window.location.href = "admin_login.html";
+   window.location.href = "admin_auth.html";
     throw new Error("STOP");
   }
 }
