@@ -103,7 +103,18 @@
 <div id="contentArea">
 
   <div class="card">
-    ...
+
+    <h3>PIN Request Control</h3>
+
+    <label for="filter">Filter Requests</label>
+
+    <select id="filter">
+      <option value="ALL">All</option>
+      <option value="PENDING">Pending</option>
+      <option value="APPROVED">Approved</option>
+      <option value="REJECTED">Rejected</option>
+    </select>
+
   </div>
 
   <div class="card">
@@ -122,23 +133,50 @@
 
   </div>
 
+<div class="card">
+
+  <h3>PIN Controls</h3>
+
+  <button id="startUpgradeBtn">Start Upgrade PIN</button>
+  <button id="stopUpgradeBtn">Stop Upgrade PIN</button>
+
+  <br><br>
+
+  <button id="startRepurchaseBtn">Start Repurchase PIN</button>
+  <button id="stopRepurchaseBtn">Stop Repurchase PIN</button>
+
 </div>
-</html>
 
-  <div class="card">
+<div class="card">
 
-    <h3>PIN Request Control</h3>
+  <h3>PIN Requests</h3>
 
-    <label for="filter">Filter Requests</label>
+  <table>
 
-    <select id="filter">
-      <option value="ALL">All</option>
-      <option value="PENDING">Pending</option>
-      <option value="APPROVED">Approved</option>
-      <option value="REJECTED">Rejected</option>
-    </select>
+    <thead>
+      <tr>
+        <th>Request ID</th>
+        <th>User ID</th>
+        <th>Type</th>
+        <th>Qty</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th>Payment Ref</th>
+        <th>Action</th>
+      </tr>
+    </thead>
 
-  </div>
+    <tbody id="reqTable">
+      <tr>
+        <td colspan="8">Loading...</td>
+      </tr>
+    </tbody>
+
+  </table>
+
+  <p id="msg"></p>
+
+</div>
 
 </div>
 
