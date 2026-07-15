@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function initPage() {
 
   if (typeof initCoreSystem !== "function") {
-    alert("core_initializer.js missing");
+    alert("initCoreSystem() not available");
     throw new Error("STOP");
   }
 
@@ -245,4 +245,4 @@ window.SystemAdminCreateAdmin = {
 
 // ================= MODULE FLAG =================
 window.__SYSTEM_ADMIN_CREATE_ADMIN__ = true;
-console.log("[SUPER ADMIN SYSTEM ADMIN CREATION] READY");
+ console.log("[SYSTEM ADMIN CREATE ADMIN] READY");
