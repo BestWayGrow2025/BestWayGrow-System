@@ -55,55 +55,53 @@ function initIncomeAuditPage() {
 }
 
 
+function redirectLogin() {
+
+  if (typeof destroySession === "function") {
+    destroySession();
+  }
+
+  window.location.replace("admin_auth.html");
+
+}
+
+
 // ================= AUTH =================
 
-function authAdmin(){
+function authAdmin() {
 
-  const session =
-    typeof getSession === "function"
-      ? getSession()
-      : null;
-
-
-  if(
-    !session ||
-    !session.userId
-  ){
-
-    window.location.replace(
-      "admin_auth.html"
-    );
-
-    throw new Error(
-      "AUTH FAILED"
-    );
-
+  if (typeof getSession !== "function") {
+    return redirectLogin();
   }
 
+  const session = getSession();
 
-  const user =
-    typeof getUserById === "function"
-      ? getUserById(session.userId)
-      : null;
-
-
-  if(
-    !user ||
-    String(user.role).toLowerCase() !== "admin"
-  ){
-
-    window.location.replace(
-      "admin_auth.html"
-    );
-
-    throw new Error(
-      "ADMIN ONLY"
-    );
-
+  if (!session || !session.userId) {
+    return redirectLogin();
   }
 
+  if (typeof getCurrentUser !== "function") {
+    return redirectLogin();
+  }
 
-  currentAdminUser = user;
+  currentAdminUser = getCurrentUser();
+
+  if (!currentAdminUser) {
+    return redirectLogin();
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("admin")) {
+    return redirectLogin();
+  }
+
+  const status =
+    currentAdminUser.accountStatus ||
+    currentAdminUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return redirectLogin();
+  }
 
 }
 
