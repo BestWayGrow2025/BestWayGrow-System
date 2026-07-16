@@ -1,3 +1,18 @@
+"use strict";
+
+/*
+
+ADMIN ACTIVITY AUDIT CONTROLLER V1.0
+
+✔ Admin activity audit viewer
+✔ Safe admin authentication
+✔ Activity log filtering
+✔ Read-only audit monitoring
+✔ Platform naming aligned
+✔ Dashboard compatible
+
+*/
+
 let adminAuditSession = null;
 let adminAuditUser = null;
 
