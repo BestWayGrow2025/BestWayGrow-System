@@ -10,9 +10,9 @@ let refreshInterval = null;
 });
 
 function forceLogout() {
-  if (typeof logoutSession === "function") {
-    logoutSession();
-    return;
+
+  if (typeof destroySession === "function") {
+    destroySession();
   }
 
   window.location.replace("admin_auth.html");
