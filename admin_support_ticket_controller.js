@@ -6,38 +6,50 @@ document.addEventListener("DOMContentLoaded", function () {
   loadPage();
 });
 
+function redirectLogin() {
+
+  if (typeof destroySession === "function") {
+    destroySession();
+  }
+
+  window.location.replace("admin_auth.html");
+}
+
+// ================= AUTH =================
+
 function authPage() {
 
-  session =
-    typeof getSession === "function"
-      ? getSession()
-      : null;
+  if (typeof getSession !== "function") {
+    return redirectLogin();
+  }
+
+  session = getSession();
 
   if (!session || !session.userId) {
-    window.location.replace("super_admin_auth.html");
-    throw new Error("AUTH FAILED");
+    return redirectLogin();
   }
 
-  currentUser =
-    typeof getUserById === "function"
-      ? getUserById(session.userId)
-      : null;
-
-  if (
-    !currentUser ||
-    (
-      String(currentUser.role).toLowerCase() !== "super_admin" &&
-      String(currentUser.role).toLowerCase() !== "system_admin" &&
-      String(currentUser.role).toLowerCase() !== "admin"
-    )
-  ) {
-    window.location.replace("super_admin_auth.html");
-    throw new Error("AUTH FAILED");
+  if (typeof getCurrentUser !== "function") {
+    return redirectLogin();
   }
 
-  if ((currentUser.status || "active") !== "active") {
-    window.location.replace("super_admin_auth.html");
-    throw new Error("AUTH FAILED");
+  currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    return redirectLogin();
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("admin")) {
+    return redirectLogin();
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return redirectLogin();
   }
 
 }
