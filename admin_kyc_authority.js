@@ -8,6 +8,15 @@ document.addEventListener("DOMContentLoaded", function () {
   loadPage();
 });
 
+function redirectLogin() {
+
+  if (typeof destroySession === "function") {
+    destroySession();
+  }
+
+  window.location.replace("admin_auth.html");
+}
+
 // ================= AUTH =================
 function authPage() {
 
@@ -17,7 +26,7 @@ function authPage() {
       : null;
 
   if (!session || !session.userId) {
-    window.location.replace("admin_auth.html");
+    redirectLogin();
     throw new Error("AUTH FAILED");
   }
 
@@ -30,12 +39,12 @@ function authPage() {
     !currentUser ||
     String(currentUser.role).toLowerCase() !== "admin"
   ) {
-    window.location.replace("admin_auth.html");
+    redirectLogin();
     throw new Error("AUTH FAILED");
   }
 
   if ((currentUser.status || "active") !== "active") {
-    window.location.replace("admin_auth.html");
+    redirectLogin();
     throw new Error("AUTH FAILED");
   }
 }
