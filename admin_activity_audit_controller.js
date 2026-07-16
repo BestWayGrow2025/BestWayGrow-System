@@ -1,18 +1,3 @@
-"use strict";
-
-/*
-========================================
-ADMIN ACTIVITY AUDIT CONTROLLER V1.0
-========================================
-✔ Admin activity audit viewer
-✔ Safe admin authentication
-✔ Activity log filtering
-✔ Read-only audit monitoring
-✔ Platform naming aligned
-✔ Dashboard compatible
-========================================
-*/
-
 let adminAuditSession = null;
 let adminAuditUser = null;
 
@@ -47,7 +32,6 @@ function initAdminActivityAudit() {
 
     loadAdminActivityLogs();
 
-
   } catch (err) {
 
     console.error(
@@ -75,41 +59,51 @@ function initAdminAuditPage() {
 }
 
 
+function redirectLogin() {
+
+  if (typeof destroySession === "function") {
+    destroySession();
+  }
+
+  window.location.replace("admin_auth.html");
+}
+
+
 // ================= AUTH =================
 
 function authenticateAdminAudit() {
 
-  adminAuditSession =
-    typeof getSession === "function"
-      ? getSession()
-      : null;
-
-  if (
-    !adminAuditSession ||
-    !adminAuditSession.userId
-  ) {
-    window.location.replace("admin_auth.html");
-    throw new Error("AUTH FAILED");
+  if (typeof getSession !== "function") {
+    return redirectLogin();
   }
 
-  adminAuditUser =
-    typeof getUserById === "function"
-      ? getUserById(adminAuditSession.userId)
-      : null;
+  adminAuditSession = getSession();
 
-  if (
-    !adminAuditUser ||
-    String(adminAuditUser.role).toLowerCase() !== "admin"
-  ) {
-    window.location.replace("admin_auth.html");
-    throw new Error("AUTH FAILED");
+  if (!adminAuditSession || !adminAuditSession.userId) {
+    return redirectLogin();
   }
 
-  if (
-    (adminAuditUser.status || "active") !== "active"
-  ) {
-    window.location.replace("admin_auth.html");
-    throw new Error("AUTH FAILED");
+  if (typeof getCurrentUser !== "function") {
+    return redirectLogin();
+  }
+
+  adminAuditUser = getCurrentUser();
+
+  if (!adminAuditUser) {
+    return redirectLogin();
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("admin")) {
+    return redirectLogin();
+  }
+
+  const status =
+    adminAuditUser.accountStatus ||
+    adminAuditUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return redirectLogin();
   }
 
 }
