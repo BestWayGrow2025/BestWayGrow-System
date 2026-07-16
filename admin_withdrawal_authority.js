@@ -12,7 +12,7 @@ function forceLogout() {
     return;
   }
 
-  window.location.replace("admin_login.html");
+  window.location.replace("admin_auth.html");
 }
 
 document.addEventListener("DOMContentLoaded", function () {
