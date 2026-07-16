@@ -6,7 +6,7 @@ let session = null;
 let reportAdmin = null;
 let reportLock = false;
 
-function forceLogout() {
+function redirectLogin() {
 
   if (typeof logoutSession === "function") {
     logoutSession();
@@ -55,22 +55,22 @@ function authPage() {
   session = getSession();
 
   if (!session) {
-    return forceLogout();
-  }
+    return redirectLogin();
+}
 
   if (typeof getCurrentUser !== "function") {
-    return forceLogout();
-  }
+    return redirectLogin();
+}
 
   reportAdmin = getCurrentUser();
 
-  if (!reportAdmin) {
-    return forceLogout();
-  }
+ if (!reportAdmin) {
+    return redirectLogin();
+}
 
-  if (typeof hasRole !== "function" || !hasRole("admin")) {
-    return forceLogout();
-  }
+ if (typeof hasRole !== "function" || !hasRole("admin")) {
+    return redirectLogin();
+}
 
   const status =
     reportAdmin.accountStatus ||
@@ -78,8 +78,7 @@ function authPage() {
     "active";
 
   if (status !== "active") {
-    return forceLogout();
-  }
+    return redirectLogin();
 }
 
 // ================= EVENTS =================
