@@ -35,7 +35,7 @@ function checkAuth() {
 
   session = getSession();
 
-  if (!session || session.role !== "admin") {
+  if (!session || String(session.role).toLowerCase() !== "admin") {
     redirectLogin();
     throw new Error("UNAUTHORIZED");
   }
