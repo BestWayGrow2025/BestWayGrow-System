@@ -101,9 +101,6 @@ function findPlacement(sponsorId, position, users) {
 
 /* ================= EXPORT ================= */
 
-window.getChildren = getChildren;
-window.getLeftChild = getLeftChild;
-window.getRightChild = getRightChild;
 window.findPlacement = findPlacement;
 
 /* ================= FLAGS ================= */
