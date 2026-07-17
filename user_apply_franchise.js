@@ -17,8 +17,6 @@ function initPage() {
     initCoreSystem();
   }
 }
-
-// ================= AUTH =================
 // ================= AUTH =================
 function forceLogout() {
 
@@ -74,8 +72,6 @@ function bindEvents() {
     applyBtn.addEventListener("click", applyFranchise);
   }
 }
-
-// ================= LOAD PAGE =================
   // ================= LOAD PAGE =================
 function loadPage() {
 
