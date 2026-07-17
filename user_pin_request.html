@@ -1,156 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Request PIN</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    input, select { padding: 8px; margin: 5px 0; width: 250px; }
-    button { padding: 10px 15px; margin-top: 10px; cursor: pointer; }
-    .box { border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Request PIN</title>
+
+<link rel="icon" href="data:,">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background:#f4f7f9;
+  padding:20px;
+}
+
+.box {
+  background:#fff;
+  max-width:500px;
+  margin:20px auto;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+h2,h3 {
+  text-align:center;
+}
+
+.info-box {
+  background:#f8f9fa;
+  padding:15px;
+  border-radius:8px;
+  margin-top:10px;
+}
+
+input,
+select,
+button {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  box-sizing:border-box;
+}
+
+button {
+  cursor:pointer;
+}
+
+#mainContent {
+  max-width:500px;
+  margin:auto;
+}
+</style>
+
 </head>
+
 <body>
 
 <h2>Request PIN</h2>
 
-<div class="box">
-  <h3>⚠️ Important Notice</h3>
-  <p>• PIN is NOT generated instantly</p>
-  <p>• PIN will be issued after payment verification</p>
-  <p>• Request processed based on system priority queue</p>
-  <p>⏳ Time: Up to 24 hours</p>
-  <p><b>Do not submit multiple requests</b></p>
-</div>
+
+<div id="mainContent">
 
 <div class="box">
-  <h3>Submit Request</h3>
 
-  <!-- TYPE -->
-  <select id="type" onchange="handleTypeChange()">
-    <option value="upgrade">Upgrade</option>
-    <option value="repurchase">Repurchase</option>
-  </select><br>
+<h3>Important Notice</h3>
 
-  <!-- QUANTITY -->
-  <input type="number" id="quantity" value="1" min="1" oninput="updateAmount()" placeholder="Quantity"><br>
+<div class="info-box">
 
-  <!-- AMOUNT AUTO -->
-  <input type="number" id="amount" placeholder="Amount" readonly><br>
+<p>• PIN is not generated instantly</p>
 
-  <!-- PAYMENT -->
-  <input type="text" id="paymentId" placeholder="Payment ID"><br>
+<p>• Payment verification required</p>
 
-  <button onclick="submitRequest()">Request PIN</button>
+<p>• Request goes through approval queue</p>
 
-  <p id="msg"></p>
+<p>• Do not submit duplicate requests</p>
+
 </div>
+
+</div>
+
+</div>
+
 
 <!-- CORE -->
-<script src="core_system.js"></script>
+<script src="core_boot_manager.js"></script>
+<script src="core_initializer.js"></script>
+<script src="core_session_authority.js"></script>
 
-<!-- SYSTEM -->
+
+<!-- PIN ENGINE -->
 <script src="pin_request_system.js"></script>
+<script src="pin_product_master.js"></script>
+
+
+<!-- USER CONTROLLER -->
+<script src="user_pin_request_controller.js"></script>
+
 
 <script>
 
-// ================= CONFIG =================
-const PIN_PRICES = {
-  upgrade: 3000,
-  repurchase: 1000
-};
+document.addEventListener("DOMContentLoaded", function(){
 
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
-
-  if (typeof initCoreSystem === "function") {
+  if(typeof initCoreSystem === "function"){
     initCoreSystem();
   }
 
-  let session = JSON.parse(localStorage.getItem("loggedInUser"));
-
-  if (!session) {
-    alert("Login required");
-    window.location.href = "user_login.html";
-    return;
+  if(typeof loadPinSection === "function"){
+    loadPinSection();
   }
 
-  handleTypeChange(); // initial load
 });
 
-// ================= TYPE CHANGE =================
-function handleTypeChange() {
-
-  let type = document.getElementById("type").value;
-  let price = PIN_PRICES[type] || 0;
-
-  document.getElementById("quantity").value = 1;
-  document.getElementById("amount").value = price;
-}
-
-// ================= AMOUNT CALC =================
-function updateAmount() {
-
-  let type = document.getElementById("type").value;
-  let qty = Number(document.getElementById("quantity").value);
-
-  let price = PIN_PRICES[type] || 0;
-
-  if (qty < 1) qty = 1;
-
-  let total = qty * price;
-
-  document.getElementById("amount").value = total;
-}
-
-// ================= SUBMIT =================
-function submitRequest() {
-
-  let session = JSON.parse(localStorage.getItem("loggedInUser"));
-  if (!session) return;
-
-  let type = document.getElementById("type").value;
-  let qty = Number(document.getElementById("quantity").value);
-  let amount = Number(document.getElementById("amount").value);
-  let paymentId = document.getElementById("paymentId").value.trim();
-
-  if (!paymentId) {
-    alert("Enter Payment ID");
-    return;
-  }
-
-  if (qty < 1 || amount <= 0) {
-    alert("Invalid request");
-    return;
-  }
-
-  try {
-
-    let req = createPinRequest({
-      userId: session.userId,
-      type,
-      amount,
-      paymentId,
-      quantity: qty
-    });
-
-    document.getElementById("msg").innerHTML = `
-      ✅ Request Submitted<br>
-      ID: ${req.requestId}<br>
-      Quantity: ${req.quantity}<br>
-      Amount: ₹${req.amount}<br>
-      Time: ${new Date(req.createdAt).toLocaleString()}<br>
-      Status: ${req.status}
-    `;
-
-    // RESET
-    document.getElementById("paymentId").value = "";
-
-  } catch (err) {
-    alert(err.message || "Request failed");
-  }
-}
-
 </script>
+
 
 </body>
 </html>
