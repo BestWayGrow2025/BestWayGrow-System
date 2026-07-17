@@ -1,147 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User PIN Dashboard</title>
-  <link rel="icon" href="data:,">
+<title>User PIN Dashboard</title>
 
-  <style>
-    body {
-      font-family: Arial;
-      background:#f4f7f9;
-      text-align:center;
-      padding:20px;
-    }
+<link rel="icon" href="data:,">
 
-    .card {
-      background:#fff;
-      padding:20px;
-      margin:15px auto;
-      border-radius:10px;
-      max-width:500px;
-      box-shadow:0 4px 10px #ccc;
-    }
+<style>
+body{
+ font-family:Arial;
+ background:#f4f7f9;
+ text-align:center;
+ padding:20px;
+}
 
-    table {
-      width:100%;
-      border-collapse: collapse;
-    }
+.card{
+ background:#fff;
+ padding:20px;
+ margin:15px auto;
+ border-radius:10px;
+ max-width:500px;
+ box-shadow:0 2px 10px #ccc;
+}
 
-    th, td {
-      border:1px solid #ddd;
-      padding:8px;
-      font-size:13px;
-    }
+table{
+ width:100%;
+ border-collapse:collapse;
+}
 
-    .used { color:red; }
-    .available { color:green; }
+th,td{
+ border:1px solid #ddd;
+ padding:8px;
+}
 
-    button {
-      padding:8px 15px;
-      margin:10px;
-      background:#007bff;
-      color:#fff;
-      border:none;
-      border-radius:5px;
-      cursor:pointer;
-    }
-  </style>
+button{
+ padding:10px 15px;
+ cursor:pointer;
+}
+</style>
+
 </head>
 
 <body>
 
 <h2>💳 My PIN Dashboard</h2>
 
-<div class="card">
-  <button onclick="goTo('user_pin_activation.html')">Activate New PIN</button>
-</div>
 
 <div class="card">
-  <h3>📊 PIN List</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>PIN</th>
-        <th>Amount</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="pinTable"></tbody>
-  </table>
+
+<button id="activatePinBtn">
+Activate New PIN
+</button>
+
 </div>
 
-<script src="core_system.js"></script>
 
-<script>
+<div class="card">
 
-// INIT
-if (typeof initCoreSystem === "function") initCoreSystem();
-else { alert("core_system.js missing"); throw new Error("STOP"); }
+<h3>📊 PIN List</h3>
 
-// AUTH USER
-let session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+<table>
 
-if (!session || !session.userId) {
-  location.href = "user_login.html";
-  throw new Error("STOP");
-}
+<thead>
+<tr>
+<th>PIN</th>
+<th>Amount</th>
+<th>Status</th>
+</tr>
+</thead>
 
-let currentUser = getUserById(session.userId);
 
-if (!currentUser || currentUser.role !== "user") {
-  localStorage.removeItem("loggedInUser");
-  location.href = "user_login.html";
-  throw new Error("STOP");
-}
+<tbody id="pinTable">
 
-// STORAGE
-function getPins() {
-  return JSON.parse(localStorage.getItem("pins") || "[]");
-}
+</tbody>
 
-// LOAD PINS
-function loadPins() {
 
-  let pins = getPins();
+</table>
 
-  let userPins = pins.filter(p =>
-    p.ownerId === currentUser.userId ||
-    p.usedBy === currentUser.userId
-  );
+</div>
 
-  let table = document.getElementById("pinTable");
-  table.innerHTML = "";
 
-  if (!userPins.length) {
-    table.innerHTML = "<tr><td colspan='3'>No PINs Found</td></tr>";
-    return;
-  }
+<!-- CORE -->
+<script src="core_boot_manager.js"></script>
+<script src="core_initializer.js"></script>
+<script src="core_session_authority.js"></script>
 
-  userPins.forEach(p => {
 
-    let status = p.used ? "USED" : "AVAILABLE";
-    let cls = p.used ? "used" : "available";
+<!-- PIN SYSTEM -->
+<script src="pin_request_system.js"></script>
+<script src="pin_product_master.js"></script>
 
-    let row = document.createElement("tr");
 
-    row.innerHTML = `
-      <td>${p.pin}</td>
-      <td>₹${Number(p.amount || 0).toFixed(2)}</td>
-      <td class="${cls}">${status}</td>
-    `;
+<!-- PAGE CONTROLLER -->
+<script src="user_pin_dashboard_controller.js"></script>
 
-    table.appendChild(row);
-  });
-}
-
-// NAV
-function goTo(page) {
-  window.location.href = page;
-}
-
-// INIT LOAD
-loadPins();
-
-</script>
 
 </body>
 </html>
