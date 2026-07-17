@@ -31,7 +31,7 @@ function authPage() {
   }
 
   if (!session || !session.userId) {
-    window.location.href = "user_login.html";
+      window.location.href = "user_auth.html";
     return;
   }
 
@@ -48,14 +48,23 @@ function bindEvents() {
 }
 
 // ================= LOAD PAGE =================
+  // ================= LOAD PAGE =================
 function loadPage() {
-  let nameInput = document.getElementById("name");
+
+  const userIdEl = document.getElementById("userId");
+  const nameInput = document.getElementById("name");
+
+  if (userIdEl && currentUser) {
+    userIdEl.innerText = currentUser.userId;
+  }
 
   if (nameInput && currentUser) {
-    nameInput.value = currentUser.fullName || currentUser.username || "";
+    nameInput.value =
+      currentUser.fullName ||
+      currentUser.username ||
+      "";
   }
 }
-
 // ================= APPLY =================
 function applyFranchise() {
   if (lock) return;
