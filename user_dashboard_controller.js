@@ -37,13 +37,10 @@ if (typeof BOOT !== "undefined" && BOOT.register && BOOT.start) {
 
 function initPage() {
 
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    console.error("CORE SYSTEM NOT FOUND");
-  }
+ // Core initialization is handled by
+// core_boot_manager.js and core_initializer.js.
+// No legacy initCoreSystem() call is required.
 }
-
 /* ================= AUTH ================= */
 
 function authPage() {
