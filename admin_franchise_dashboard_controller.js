@@ -95,18 +95,32 @@ function bindEvents() {
 }
 
 function loadPage() {
+
   renderProfile();
+
   loadSystem();
+
   loadUsers();
 
   if (typeof logActivity === "function") {
-   logActivity(currentUser.userId, "admin_franchise", "Opened dashboard", "ADMIN_FRANCHISE");
+
+    logActivity(
+      currentUser.userId,
+      currentUser.role,
+      "Opened dashboard",
+      "FRANCHISE"
+    );
+
   }
 
   refreshTimer = setInterval(function () {
+
     loadSystem();
+
     loadUsers();
+
   }, 4000);
+
 }
 
 function renderProfile() {
