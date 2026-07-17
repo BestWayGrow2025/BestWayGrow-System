@@ -30,7 +30,7 @@ function forceLogout() {
     return;
   }
 
-  window.location.replace("user_login.html");
+ window.location.replace("user_auth.html");
 }
 
 // ================= AUTH =================
@@ -175,7 +175,7 @@ if (status !== "active" || user.upgradeStatus !== "completed") {
 
   alert("Repurchase Successful");
 
-  window.location.href = "user_dashboard.html";
+  window.location.href = "user_auth.html";
 }
 
 /* ================= EXPORT ================= */
