@@ -19,23 +19,51 @@ function initPage() {
 }
 
 // ================= AUTH =================
-function authPage() {
-  try {
-    if (typeof protectPage === "function") {
-      session = protectPage({ role: "user" });
-    } else {
-      session = JSON.parse(localStorage.getItem("loggedInUser"));
-    }
-  } catch (err) {
-    session = null;
-  }
+// ================= AUTH =================
+function forceLogout() {
 
-  if (!session || !session.userId) {
-      window.location.href = "user_auth.html";
+  if (typeof logoutSession === "function") {
+    logoutSession();
     return;
   }
 
-  currentUser = session;
+  window.location.replace("user_auth.html");
+}
+
+function authPage() {
+
+  if (typeof getSession !== "function") {
+    return forceLogout();
+  }
+
+  session = getSession();
+
+  if (!session) {
+    return forceLogout();
+  }
+
+  if (typeof getCurrentUser !== "function") {
+    return forceLogout();
+  }
+
+  currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    return forceLogout();
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("user")) {
+    return forceLogout();
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return forceLogout();
+  }
 }
 
 // ================= EVENTS =================
