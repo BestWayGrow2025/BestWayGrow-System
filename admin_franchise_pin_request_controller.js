@@ -28,34 +28,52 @@ function initPage() {
   // No legacy initCoreSystem() call is required.
 }
 
+function redirectLogin() {
+
+  if (typeof destroySession === "function") {
+    destroySession();
+  }
+
+  window.location.replace("admin_franchise_auth.html");
+
+}
+
 function authPage() {
-  session = JSON.parse(localStorage.getItem("loggedInFranchise") || "null");
+
+  if (typeof getSession !== "function") {
+    return redirectLogin();
+  }
+
+  session = getSession();
 
   if (!session || !session.userId) {
-  window.location.href = "admin_franchise_auth.html";
-    throw new Error("STOP");
+    return redirectLogin();
   }
 
-  if (typeof getUserById !== "function") {
-    localStorage.removeItem("loggedInFranchise");
- window.location.href = "admin_franchise_auth.html";
-    throw new Error("STOP");
+  if (typeof getCurrentUser !== "function") {
+    return redirectLogin();
   }
 
-  currentUser = getUserById(session.userId);
+  currentUser = getCurrentUser();
 
-  if (!currentUser || currentUser.role !== "franchise") {
-    localStorage.removeItem("loggedInFranchise");
-   window.location.href = "admin_franchise_auth.html";
-    throw new Error("STOP");
+  if (!currentUser) {
+    return redirectLogin();
   }
 
-  if ((currentUser.status || "active") !== "active") {
-    localStorage.removeItem("loggedInFranchise");
+  if (typeof hasRole !== "function" || !hasRole("franchise")) {
+    return redirectLogin();
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
     alert("Account inactive");
-   window.location.href = "admin_franchise_auth.html";
-    throw new Error("STOP");
+    return redirectLogin();
   }
+
 }
 
 function bindEvents() {
@@ -111,9 +129,14 @@ function submitRequest() {
   requests.push(newRequest);
   saveRequests(requests);
 
-  if (typeof logActivity === "function") {
-    logActivity(currentUser.userId, "franchise", "Created PIN Request", "FRANCHISE");
-  }
+if (typeof logActivity === "function") {
+  logActivity(
+    currentUser.userId,
+    currentUser.role,
+    "Created PIN Request",
+    "FRANCHISE"
+  );
+}
 
   alert("✅ PIN Request Submitted");
 
