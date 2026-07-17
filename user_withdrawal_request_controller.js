@@ -25,7 +25,7 @@ function forceLogout() {
     return;
   }
 
-  window.location.replace("user_login.html");
+   window.location.replace("user_auth.html");
 }
 
 // ================= INIT =================
