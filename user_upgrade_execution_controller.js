@@ -29,7 +29,7 @@ function forceLogout() {
     return;
   }
 
-  window.location.replace("user_login.html");
+ window.location.replace("user_auth.html");
 }
 
 function authPage() {
@@ -106,7 +106,7 @@ function upgradeNow() {
 
   if (!user) {
     alert("Login required");
-    window.location.href = "user_login.html";
+   window.location.href = "user_auth.html";
     return;
   }
 
