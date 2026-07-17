@@ -1,135 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>User Income Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>User Income History</title>
+  <link rel="icon" href="data:,">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f4f7f9;
+      color: #222;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #mainContent {
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .info-box {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    th {
+      background: #007bff;
+      color: #ffffff;
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>💰 My Income Dashboard</h2>
+<h2>My Income History</h2>
 
-<hr>
+<div id="mainContent">
 
-<!-- 🔹 SUMMARY -->
-<h3>Summary</h3>
+  <div class="info-box">
+    Loading Income History...
+  </div>
 
-<p>Total Income: ₹<span id="totalIncome">0</span></p>
-<p>Wallet Balance: ₹<span id="walletBalance">0</span></p>
-<p>Hold Income: ₹<span id="holdIncome">0</span></p>
+</div>
 
-<hr>
-
-<!-- 🔹 FILTER -->
-<h3>Filter</h3>
-
-<select id="filterType" onchange="loadIncomeLogs()">
-  <option value="">All</option>
-  <option value="upgrade">Upgrade</option>
-  <option value="repurchase">Repurchase</option>
-  <option value="ctor">CTOR</option>
-</select>
-
-<hr>
-
-<!-- 🔹 LOG TABLE -->
-<h3>Income Logs</h3>
-
-<table border="1" width="100%">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Type</th>
-      <th>Amount</th>
-      <th>From</th>
-      <th>Note</th>
-    </tr>
-  </thead>
-  <tbody id="incomeTable"></tbody>
-</table>
-
-<!-- 🔥 CORE -->
-<script src="core_system.js"></script>
-<script src="income_log_system.js"></script>
-<script src="wallet_system.js"></script>
-
-<script>
-
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", function () {
-
-  initCoreSystem();
-
-  loadSummary();
-  loadIncomeLogs();
-});
-
-// ================= SUMMARY =================
-function loadSummary() {
-
-  let user = getCurrentUser();
-  if (!user) return;
-
-  let logs = getUserIncomeLogs(user.userId) || [];
-
-  let total = logs.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
-
-  document.getElementById("totalIncome").innerText = total.toFixed(2);
-
-  // Wallet
-  if (typeof getWalletBalance === "function") {
-    document.getElementById("walletBalance").innerText =
-      getWalletBalance(user.userId).toFixed(2);
-  }
-
-  // Hold
-  if (typeof getHoldIncome === "function") {
-    document.getElementById("holdIncome").innerText =
-      getHoldIncome(user.userId).toFixed(2);
-  }
-}
-
-// ================= LOAD LOGS =================
-function loadIncomeLogs() {
-
-  let user = getCurrentUser();
-  if (!user) return;
-
-  let type = document.getElementById("filterType").value;
-
-  let logs = getUserIncomeLogs(user.userId) || [];
-
-  if (type) {
-    logs = logs.filter(l => l.type === type);
-  }
-
-  let table = document.getElementById("incomeTable");
-  table.innerHTML = "";
-
-  if (!logs.length) {
-    table.innerHTML = "<tr><td colspan='5'>No Income</td></tr>";
-    return;
-  }
-
-  logs.reverse().forEach(log => {
-
-    let row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${new Date(log.time || log.date).toLocaleString()}</td>
-      <td>${log.type}</td>
-      <td>₹${Number(log.amount).toFixed(2)}</td>
-      <td>${log.sourceUser || "-"}</td>
-      <td>${log.note || ""}</td>
-    `;
-
-    table.appendChild(row);
-  });
-}
-
+<!-- CORE -->
 <script src="core_boot_manager.js"></script>
 <script src="core_initializer.js"></script>
 <script src="core_session_authority.js"></script>
 
+<!-- CONTROLLER -->
 <script src="user_income_history_controller.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
+
+  if (typeof loadIncomeHistory === "function") {
+    loadIncomeHistory();
+  }
+
+});
+</script>
 
 </body>
 </html>
