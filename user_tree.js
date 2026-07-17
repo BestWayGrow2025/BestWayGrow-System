@@ -37,30 +37,51 @@ function initPage() {
 
 /* ================= AUTH ================= */
 
-function authPage() {
+function forceLogout() {
 
-  session = typeof getSession === "function"
-    ? getSession()
-    : null;
-
-  const container = document.getElementById("tree");
-
-  if (!session || !session.userId) {
-    if (container) {
-      container.innerHTML = "<div class='info-box'>Login Required</div>";
-    }
+  if (typeof logoutSession === "function") {
+    logoutSession();
     return;
   }
 
-  currentUser = typeof getUserById === "function"
-    ? getUserById(session.userId)
-    : null;
-
-  if (!currentUser && container) {
-    container.innerHTML = "<div class='info-box'>User Not Found</div>";
-  }
+  window.location.replace("user_auth.html");
 }
 
+function authPage() {
+
+  if (typeof getSession !== "function") {
+    return forceLogout();
+  }
+
+  session = getSession();
+
+  if (!session) {
+    return forceLogout();
+  }
+
+  if (typeof getCurrentUser !== "function") {
+    return forceLogout();
+  }
+
+  currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    return forceLogout();
+  }
+
+  if (typeof hasRole !== "function" || !hasRole("user")) {
+    return forceLogout();
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return forceLogout();
+  }
+}
 /* ================= UI ================= */
 
 function renderUI() {
