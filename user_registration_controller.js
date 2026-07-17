@@ -97,7 +97,7 @@ function generateShareLink(userId, position) {
     .slice(0, -1)
     .join("/");
 
-  return `${origin}${path}/user_register.html?ref=${userId}&pos=${position}`;
+ return `${origin}${path}/user_registration_dashboard.html?ref=${userId}&pos=${position}`;
 }
 
 function watchRegistrationStatus(
