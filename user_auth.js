@@ -25,13 +25,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // ================= INIT PAGE =================
 function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  } else {
-    console.error("core_system.js missing");
-  }
+  // Core initialization is handled by
+  // core_boot_manager.js and core_initializer.js.
+  // No legacy initCoreSystem() call is required.
 }
-
 // ================= AUTH CHECK =================
 function authPage() {
   session = typeof getSession === "function" ? getSession() : null;
@@ -139,7 +136,12 @@ function submitLogin() {
   // Activity log
   if (typeof logActivity === "function") {
     try {
-      logActivity(user.userId, "USER", "Login", "USER_LOGIN");
+     logActivity(
+  user.userId,
+  user.role,
+  "Login",
+  "USER_LOGIN"
+);
     } catch (e) {
       console.warn("Login log skipped");
     }
