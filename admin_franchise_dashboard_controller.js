@@ -29,37 +29,61 @@ function initPage() {
   // No legacy initCoreSystem() call is required.
 }
 
+function redirectLogin() {
+
+  if (typeof destroySession === "function") {
+    destroySession();
+  }
+
+  window.location.replace("admin_franchise_auth.html");
+
+}
+
 function authPage() {
-  session = JSON.parse(localStorage.getItem("loggedInFranchise") || "null");
+
+  if (typeof getSession !== "function") {
+    return redirectLogin();
+  }
+
+  session = getSession();
 
   if (!session || !session.userId) {
-    window.location.href = "admin_franchise_auth.html";
-    throw new Error("STOP");
+    return redirectLogin();
   }
 
-  if (typeof getUserById !== "function") {
-    localStorage.removeItem("loggedInFranchise");
-   window.location.href = "admin_franchise_auth.html";
-    throw new Error("STOP");
+  if (typeof getCurrentUser !== "function") {
+    return redirectLogin();
   }
 
-  currentUser = getUserById(session.userId);
+  currentUser = getCurrentUser();
 
-  if (!currentUser || currentUser.role !== "franchise") {
-    localStorage.removeItem("loggedInFranchise");
-    window.location.href = "admin_franchise_auth.html";
-    throw new Error("STOP");
+  if (!currentUser) {
+    return redirectLogin();
   }
 
-  let settings =
-    typeof getSystemSettings === "function" ? getSystemSettings() : {};
+  if (typeof hasRole !== "function" || !hasRole("franchise")) {
+    return redirectLogin();
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return redirectLogin();
+  }
+
+  const settings =
+    typeof getSystemSettings === "function"
+      ? getSystemSettings()
+      : {};
 
   if (settings.franchiseAccess === false) {
     alert("🚫 Franchise access OFF by Super Admin");
-    localStorage.removeItem("loggedInFranchise");
- window.location.href = "admin_franchise_auth.html";
-    throw new Error("STOP");
+    return redirectLogin();
   }
+
 }
 
 function bindEvents() {
@@ -153,7 +177,9 @@ function loadUsers() {
 }
 
 function logout() {
+
   if (lock) return;
+
   lock = true;
 
   if (refreshTimer) {
@@ -161,9 +187,14 @@ function logout() {
   }
 
   if (typeof logActivity === "function") {
-   logActivity(currentUser.userId, "admin_franchise", "Logout", "ADMIN_FRANCHISE");
+    logActivity(
+      currentUser.userId,
+      currentUser.role,
+      "Logout",
+      "FRANCHISE"
+    );
   }
 
-  localStorage.removeItem("loggedInFranchise");
-  window.location.href = "admin_franchise_auth.html";
+  redirectLogin();
+
 }
