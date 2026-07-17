@@ -8,7 +8,7 @@ TREE API LAYER V1.0 (CENTRAL CONTROL FIX)
 ✔ Removes duplication from UI files
 ✔ Role-safe tree access
 ✔ Introducer + Sponsor support
-✔ Works with tree_system.js
+✔ Works with core tree modules
 ✔ Production-ready architecture fix
 ========================================
 */
