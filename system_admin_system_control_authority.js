@@ -76,12 +76,18 @@ function bindEvents() {
   const backBtn = document.getElementById("backBtn");
   const toggleWithdrawBtn = document.getElementById("toggleWithdrawBtn");
   const toggleRegisterBtn = document.getElementById("toggleRegisterBtn");
-  const clearLogsBtn = document.getElementById("clearLogsBtn");
 
-  if (backBtn) backBtn.addEventListener("click", goBack);
-  if (toggleWithdrawBtn) toggleWithdrawBtn.addEventListener("click", toggleWithdrawSystem);
-  if (toggleRegisterBtn) toggleRegisterBtn.addEventListener("click", toggleRegisterSystem);
-  if (clearLogsBtn) clearLogsBtn.addEventListener("click", clearLogs);
+  if (backBtn) {
+    backBtn.addEventListener("click", goBack);
+  }
+
+  if (toggleWithdrawBtn) {
+    toggleWithdrawBtn.addEventListener("click", toggleWithdrawSystem);
+  }
+
+  if (toggleRegisterBtn) {
+    toggleRegisterBtn.addEventListener("click", toggleRegisterSystem);
+  }
 }
 
 // ================= LOAD =================
