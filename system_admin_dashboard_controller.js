@@ -78,10 +78,18 @@ function authPage() {
 // ================= REDIRECT =================
 function redirectLogin() {
 
-  if (typeof destroySession === "function") {
+  if (typeof logoutSession === "function") {
+
+    logoutSession();
+
+  } else if (typeof destroySession === "function") {
+
     destroySession();
+
   } else {
-    localStorage.removeItem("loggedInSystemAdmin");
+
+    localStorage.removeItem("APP_SESSION");
+
   }
 
   window.location.href = "system_admin_auth.html";
