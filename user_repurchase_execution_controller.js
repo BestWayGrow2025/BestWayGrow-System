@@ -173,9 +173,11 @@ if (status !== "active" || user.upgradeStatus !== "completed") {
 
   localStorage.removeItem("selectedPin");
 
- alert("Repurchase Successful");
+alert("Repurchase Successful");
 
 window.location.href = "user_dashboard.html";
+
+}
 
 /* ================= EXPORT ================= */
 
