@@ -135,11 +135,11 @@ function submitRepurchase() {
 
   const user = currentUser;
 
-  if (!user) {
-    alert("Login required");
-    window.location.href = "user_login.html";
-    return;
-  }
+ if (!user) {
+  alert("Login required");
+  window.location.href = "user_auth.html";
+  return;
+}
 
  const status =
   user.accountStatus ||
@@ -173,10 +173,9 @@ if (status !== "active" || user.upgradeStatus !== "completed") {
 
   localStorage.removeItem("selectedPin");
 
-  alert("Repurchase Successful");
+ alert("Repurchase Successful");
 
-  window.location.href = "user_auth.html";
-}
+window.location.href = "user_dashboard.html";
 
 /* ================= EXPORT ================= */
 
