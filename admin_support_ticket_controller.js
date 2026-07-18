@@ -1,10 +1,18 @@
 let session = null;
 let currentUser = null;
 
-document.addEventListener("DOMContentLoaded", function () {
+ document.addEventListener("DOMContentLoaded", function () {
+
+
+  if (typeof initCoreSystem === "function") {
+    initCoreSystem();
+  }
+
+
   authPage();
   loadPage();
 });
+
 
 function redirectLogin() {
 
