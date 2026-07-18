@@ -18,6 +18,10 @@ Clean UI orchestration only
 ========================================
 */
 
+// ================= GLOBAL STATE =================
+
+let currentUser = null;
+
 let pinAdminLock = false;
 let pinRefreshTimer = null;
 
@@ -61,83 +65,99 @@ startPinPanelAutoRefresh();
 
 }
 
+// ================= AUTH =================
+
+function checkAuth() {
+
+  const session = getSession?.();
+
+  if (!session || session.role !== "system_admin") {
+    logout();
+    return;
+  }
+
+  if (typeof getUserById !== "function") {
+    logout();
+    return;
+  }
+
+  currentUser = getUserById(session.userId);
+
+  if (!currentUser || currentUser.role !== "system_admin") {
+    logout();
+    return;
+  }
+
+  if ((currentUser.status || "active") !== "active") {
+    logout();
+    return;
+  }
+
+  const welcome = document.getElementById("welcome");
+
+  if (welcome) {
+    welcome.innerText =
+      "Welcome " +
+      (currentUser.username || currentUser.userId) +
+      " (" + currentUser.userId + ")";
+  }
+
+}
 // ================= EVENTS =================
 
 function bindPinPanelEvents() {
 
   console.log("[PIN PANEL] EVENT BIND START");
 
-
+  const logoutBtn = document.getElementById("logoutBtn");
   const filter = document.getElementById("filter");
+
+  if (logoutBtn) {
+    logoutBtn.onclick = logout;
+  }
 
   if (filter) {
     filter.onchange = loadPinRequests;
   }
 
-
   const actions = {
-
     startUpgradeBtn: "START_UPGRADE",
     stopUpgradeBtn: "STOP_UPGRADE",
-
     startRepurchaseBtn: "START_REPURCHASE",
     stopRepurchaseBtn: "STOP_REPURCHASE"
-
   };
-
 
   Object.keys(actions).forEach(id => {
 
     const btn = document.getElementById(id);
 
-
     if (!btn) {
-
       console.error("[PIN PANEL] Missing button:", id);
       return;
-
     }
-
 
     btn.onclick = function () {
 
       console.log("[PIN ACTION]", actions[id]);
 
-
       if (typeof executePinFlow !== "function") {
-
-        console.error(
-          "[PIN PANEL] executePinFlow NOT FOUND"
-        );
-
+        console.error("[PIN PANEL] executePinFlow NOT FOUND");
         alert("PIN Engine not loaded");
         return;
-
       }
 
+      const result = executePinFlow(actions[id]);
 
-      const result = executePinFlow(
-        actions[id]
-      );
-
-
-      console.log(
-        "[PIN RESULT]",
-        result
-      );
-
+      console.log("[PIN RESULT]", result);
 
       refreshPinPanelStatus();
-
     };
 
   });
 
-
   console.log("[PIN PANEL] EVENT BIND COMPLETE");
 
 }
-
 
 // ================= SAFE CLICK WRAPPER =================
 
@@ -481,6 +501,17 @@ function startPinPanelAutoRefresh() {
 
 }
 
+// ================= LOGOUT =================
+
+function logout() {
+
+  if (typeof destroySession === "function") {
+    destroySession();
+  }
+
+  window.location.href = "system_admin_auth.html";
+
+}
 
 // ================= GLOBAL EXPORTS =================
 
@@ -489,6 +520,7 @@ window.approvePinRequest = approvePinRequest;
 window.rejectAdminPinRequest = rejectAdminPinRequest;
 window.forcePinRequest = forcePinRequest;
 window.viewPinRequestDetails = viewPinRequestDetails;
+window.logout = logout;
 
 window.addEventListener("beforeunload", function () {
 
