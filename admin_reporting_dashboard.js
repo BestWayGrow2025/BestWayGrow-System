@@ -13,7 +13,7 @@ function redirectLogin() {
     return;
   }
 
-  window.location.replace("admin_login.html");
+ window.location.replace("admin_auth.html");
 }
 
 // ================= INIT =================
