@@ -203,14 +203,3 @@ function toggleAdminStatus(userId) {
     lock = false;
   }
 }
-
-// ================= CLEAR LOGS =================
-function clearLogs() {
-
-  if (!confirm("Clear all activity logs?")) return;
-
-  localStorage.removeItem("activityLogs");
-
-  alert("Logs cleared");
-}
-
