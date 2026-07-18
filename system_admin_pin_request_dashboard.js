@@ -41,11 +41,9 @@ function initAdminPinPanel() {
     initCoreSystem();
   }
 
-if (typeof checkAuth === "function") {
-  checkAuth();
-}
+checkAuth();
 
-if (typeof currentUser === "undefined" || !currentUser) {
+if (!currentUser) {
   return;
 }
 
