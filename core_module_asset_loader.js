@@ -364,20 +364,17 @@ function loadHomeDashboardModule(){
 // ================= MODULE WRAPPERS =================
 
 
-function loadCreateSystemAdminRealModule(){
+function loadCreateSystemAdminRealModule() {
 
- return loadRealModule({
+  return loadRealModule({
 
- html:
-"super_admin_system_admin_creation_dashboard.html",
+    html: "super_admin_system_admin_creation_dashboard.html",
 
-js:
-"super_admin_system_admin_creation_controller.js"
+    init: "startSuperAdminCreateSystemAdmin"
 
- });
+  });
 
 }
-
 
 
 function loadSystemAdminPanelModule(){
