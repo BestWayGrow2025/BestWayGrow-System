@@ -8,40 +8,9 @@ PLACEMENT ENGINE v1.0 (PRODUCTION)
 ✔ Safe left/right traversal
 ✔ Cycle protection
 ✔ Broken-node protection
-✔ Child helper functions
 ✔ Production LOCKED
 ========================================
 */
-
-/* ================= CHILD HELPERS ================= */
-
-function getChildren(userId, users) {
-  users = Array.isArray(users) ? users : [];
-
-  return users.filter(function (u) {
-    return u.sponsorId === userId;
-  });
-}
-
-function getLeftChild(userId, users) {
-  users = Array.isArray(users) ? users : [];
-
-  const user = users.find(function (u) {
-    return u.userId === userId;
-  });
-
-  return user ? user.leftChild : null;
-}
-
-function getRightChild(userId, users) {
-  users = Array.isArray(users) ? users : [];
-
-  const user = users.find(function (u) {
-    return u.userId === userId;
-  });
-
-  return user ? user.rightChild : null;
-}
 
 /* ================= PLACEMENT ENGINE ================= */
 
@@ -108,4 +77,3 @@ window.findPlacement = findPlacement;
 window.__PLACEMENT_ENGINE_ACTIVE__ = true;
 
 console.log("[PLACEMENT ENGINE] Active");
-
