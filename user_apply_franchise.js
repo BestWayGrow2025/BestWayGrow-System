@@ -5,18 +5,11 @@ let lock = false;
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
   authPage();
   bindEvents();
   loadPage();
 });
 
-// ================= CORE INIT =================
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
-}
 // ================= AUTH =================
 function forceLogout() {
 
@@ -72,7 +65,7 @@ function bindEvents() {
     applyBtn.addEventListener("click", applyFranchise);
   }
 }
-  // ================= LOAD PAGE =================
+// ================= LOAD PAGE =================
 function loadPage() {
 
   const userIdEl = document.getElementById("userId");
