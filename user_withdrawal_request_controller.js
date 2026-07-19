@@ -30,18 +30,10 @@ function forceLogout() {
 
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
   authPage();
   bindEvents();
   loadPage();
 });
-
-// ================= CORE INIT =================
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
-}
 
 // ================= AUTH =================
 function authPage() {
