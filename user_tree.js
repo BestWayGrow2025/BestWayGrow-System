@@ -22,18 +22,9 @@ let currentUser = null;
 /* ================= INIT ================= */
 
 document.addEventListener("DOMContentLoaded", function () {
-  initPage();
   authPage();
   renderUI();
 });
-
-/* ================= INIT CORE ================= */
-
-function initPage() {
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
-}
 
 /* ================= AUTH ================= */
 
