@@ -29,15 +29,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function initPinDashboard() {
 
-  if (typeof initCoreSystem === "function") {
-    initCoreSystem();
-  }
-
-
   if (!authPinDashboard()) {
     return;
   }
-
 
   bindPinDashboardEvents();
 
