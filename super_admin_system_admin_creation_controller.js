@@ -427,26 +427,62 @@ if (window.PIN) {
 
 /* ================= CREATE MODULE LOADER ================= */
 
-window.loadCreateSystemAdminRealModule = function(){
+function renderCreateAdmin() {
+
+  return `
+
+    <div class="section-title">
+      Create System Admin
+    </div>
+
+    <div id="msg"></div>
+
+    <div class="info-box">
+
+      <label>User ID</label>
+      <input
+        id="sysId"
+        type="text"
+        placeholder="Enter System Admin ID"
+      >
+
+      <label>Name</label>
+      <input
+        id="sysName"
+        type="text"
+        placeholder="Enter Name"
+      >
+
+      <label>Password</label>
+      <input
+        id="sysPass"
+        type="password"
+        placeholder="Enter Password"
+      >
+
+      <button
+        id="createBtn"
+        class="action-btn"
+      >
+        Create System Admin
+      </button>
+
+    </div>
+
+    <hr>
+
+    <div id="systemAdminList"></div>
+
+  `;
+
+}
+
+window.loadCreateSystemAdminRealModule = function () {
 
   try {
 
-    if (
-      typeof window.renderCreateAdmin !== "function"
-    ) {
-
-      console.error(
-        "[CREATE ADMIN] RENDER FUNCTION NOT FOUND"
-      );
-
-      return false;
-
-    }
-
-
     const box =
       document.getElementById("mainContent");
-
 
     if (!box) {
 
@@ -458,31 +494,21 @@ window.loadCreateSystemAdminRealModule = function(){
 
     }
 
-
-
     // ================= RENDER =================
 
     box.innerHTML =
-      window.renderCreateAdmin();
-
-
+      renderCreateAdmin();
 
     console.log(
       "[CREATE MODULE] RENDER SUCCESS"
     );
 
-
-
     // ================= START AFTER DOM READY =================
 
-    setTimeout(function(){
-
+    setTimeout(function () {
 
       const btn =
-        document.getElementById(
-          "createBtn"
-        );
-
+        document.getElementById("createBtn");
 
       if (!btn) {
 
@@ -494,29 +520,22 @@ window.loadCreateSystemAdminRealModule = function(){
 
       }
 
-
-
       if (
         typeof window.startSuperAdminCreateSystemAdmin ===
         "function"
       ) {
 
-
         window.startSuperAdminCreateSystemAdmin();
-
 
       }
 
-
-
       // SAFETY REBIND
 
-      btn.onclick = function(){
+      btn.onclick = function () {
 
         console.log(
           "[CREATE BUTTON CLICKED]"
         );
-
 
         if (
           typeof window.createSystemAdmin ===
@@ -525,8 +544,7 @@ window.loadCreateSystemAdminRealModule = function(){
 
           window.createSystemAdmin();
 
-        }
-        else {
+        } else {
 
           console.error(
             "[CREATE ADMIN] createSystemAdmin missing"
@@ -534,43 +552,29 @@ window.loadCreateSystemAdminRealModule = function(){
 
         }
 
-
       };
-
-
 
       console.log(
         "[CREATE ADMIN] BUTTON CONNECTED FINAL"
       );
 
-
-
-    },300);
-
-
+    }, 300);
 
     return true;
 
-
-
-  }
-  catch(e){
-
+  } catch (e) {
 
     console.error(
       "[CREATE MODULE ERROR]",
       e
     );
 
-
     return false;
-
 
   }
 
-
 };
 
-
-
-console.log("[SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER] LOADER READY");
+console.log(
+  "[SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER] LOADER READY"
+);
