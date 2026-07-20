@@ -370,6 +370,8 @@ function loadCreateSystemAdminRealModule() {
 
     html: "super_admin_system_admin_creation_dashboard.html",
 
+    js: "super_admin_system_admin_creation_controller.js",
+
     init: "startSuperAdminCreateSystemAdmin"
 
   });
