@@ -281,10 +281,6 @@ function loadSystemAdminList() {
         Status: ${admin.status}
         </p>
 
-        <p>
-        Created By: ${admin.createdBy}
-        </p>
-
       </div>
 
       `
@@ -337,20 +333,27 @@ function bindEvents() {
 
   }
 
+  // Remove old handlers
   btn.onclick = null;
 
- btn.onclick = function () {
+  // Clone button to remove any old listeners
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
 
-  console.log("[CREATE BUTTON CLICKED]");
+  // Bind only one click event
+  newBtn.addEventListener("click", function (e) {
 
-  safeClick(createSystemAdmin);
+    e.preventDefault();
 
-};
+    console.log("[CREATE BUTTON CLICKED]");
+
+    safeClick(createSystemAdmin);
+
+  });
 
   console.log("[CREATE ADMIN] BUTTON CONNECTED");
 
 }
-
 
 /* ================= START ================= */
 
