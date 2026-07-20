@@ -86,9 +86,6 @@ function encodePassword(p) {
 
 }
 
-
-/* ================= CREATE SYSTEM ADMIN ================= */
-
 /* ================= CREATE SYSTEM ADMIN ================= */
 
 function createSystemAdmin() {
@@ -324,7 +321,7 @@ function safeClick(fn) {
 
 /* ================= EVENTS ================= */
 
-function bindEvents() {
+function bindCreateSystemAdminEvents() {
 
   console.log("[BIND EVENTS START]");
 
@@ -367,11 +364,17 @@ function startModule() {
 
   }
 
- console.log("[TYPEOF bindEvents]", typeof bindEvents);
+console.log(
+  "[TYPEOF bindCreateSystemAdminEvents]",
+  typeof bindCreateSystemAdminEvents
+);
 
-console.log("[FUNCTION]", bindEvents);
+console.log(
+  "[FUNCTION]",
+  bindCreateSystemAdminEvents
+);
 
-bindEvents();
+bindCreateSystemAdminEvents();
 
 console.log("[BIND EVENTS DONE]");
 
