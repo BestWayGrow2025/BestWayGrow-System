@@ -452,7 +452,10 @@ window.SuperAdminSystemControlAuthority = {
 
 };
 
-// Global callback
+// ================= GLOBAL EXPORTS =================
+
+window.initPage =
+  initPage;
 
 window.toggleAdminStatus =
   toggleAdminStatus;
@@ -465,4 +468,3 @@ window.__SUPER_ADMIN_SYSTEM_CONTROL_AUTHORITY__ =
 console.log(
   "[SUPER ADMIN SYSTEM CONTROL] READY"
 );
-
