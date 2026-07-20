@@ -373,14 +373,15 @@ function loadCreateSystemAdminRealModule() {
 
 function loadSystemAdminPanelModule(){
 
- return loadRealModule({
+  return loadRealModule({
 
-html:
-"system_admin_dashboard.html",
+    html:
+    "super_admin_system_control_dashboard.html",
 
-js:
-"system_admin_dashboard_controller.js"
- });
+    js:
+    "super_admin_system_control_authority.js"
+
+  });
 
 }
 
