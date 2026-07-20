@@ -132,7 +132,6 @@ async function loadHtmlIntoMain(htmlFile) {
 
 function loadScriptOnce(scriptFile) {
 
-
   return new Promise(
     (resolve,reject)=>{
 
@@ -140,23 +139,23 @@ function loadScriptOnce(scriptFile) {
       try {
 
 
-       const existing =
-  Array.from(
-    document.scripts
-  ).some(
-    s =>
-      s.src &&
-      s.src.includes(scriptFile)
-  );
+        const existing =
+          Array.from(
+            document.scripts
+          ).some(
+            s =>
+              s.src &&
+              s.src.includes(scriptFile)
+          );
 
 
-if(existing){
+        if(existing){
 
-  resolve(true);
+          resolve(true);
 
-  return;
+          return;
 
-}
+        }
 
 
 
@@ -166,25 +165,20 @@ if(existing){
           );
 
 
-
         script.src =
           scriptFile;
-
 
 
         script.async =
           false;
 
 
-
         script.dataset.systemModule =
           scriptFile;
 
 
-
         script.onload =
           ()=>resolve(true);
-
 
 
         script.onerror =
@@ -196,11 +190,9 @@ if(existing){
           );
 
 
-
         document.body.appendChild(
           script
         );
-
 
 
       } catch(err){
@@ -214,7 +206,6 @@ if(existing){
   );
 
 }
-
 
 
 // ================= GENERIC MODULE LOADER =================
