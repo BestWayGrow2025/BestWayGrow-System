@@ -340,23 +340,17 @@ function bindEvents() {
 
   }
 
-  btn.style.border = "4px solid red";
-
-  btn.onclick = null;
+  console.log("[ATTACHING CLICK HANDLER]");
 
   btn.onclick = function () {
 
     console.log("[CREATE BUTTON CLICKED]");
 
-    safeClick(function () {
-
-      createSystemAdmin();
-
-    });
+    createSystemAdmin();
 
   };
 
-  console.log("[CREATE ADMIN] BUTTON CONNECTED");
+  console.log("[ONCLICK AFTER ASSIGN]", btn.onclick);
 
 }
 /* ================= START ================= */
