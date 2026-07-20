@@ -360,33 +360,29 @@ function bindEvents() {
 
 /* ================= START ================= */
 
-
 function startModule() {
 
+  console.log("[START MODULE]");
 
   if (!checkAuth()) {
 
-    showMsg(
-      "❌ Authentication Failed"
-    );
+    showMsg("❌ Authentication Failed");
 
     return;
 
   }
 
+  bindEvents();
 
-  setTimeout(() => {
+  console.log("[BIND EVENTS DONE]");
 
-    bindEvents();
+  loadSystemAdminList();
 
-    loadSystemAdminList();
+  console.log("[LIST LOADED]");
 
-
-   console.log("[SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER] ACTIVE");
-
-
-  }, 100);
-
+  console.log(
+    "[SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER] ACTIVE"
+  );
 
 }
 
