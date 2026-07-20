@@ -323,35 +323,38 @@ function safeClick(fn) {
 
 function bindEvents() {
 
-  const btn = document.getElementById("createBtn");
+  const btn =
+    document.getElementById("createBtn");
 
   if (!btn) {
 
-    console.error("[CREATE ADMIN] BUTTON NOT FOUND");
+    console.error(
+      "[CREATE ADMIN] BUTTON NOT FOUND"
+    );
 
     return;
 
   }
 
-  // Remove old handlers
   btn.onclick = null;
 
-  // Clone button to remove any old listeners
-  const newBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(newBtn, btn);
+  btn.onclick = function () {
 
-  // Bind only one click event
-  newBtn.addEventListener("click", function (e) {
+    console.log(
+      "[CREATE BUTTON CLICKED]"
+    );
 
-    e.preventDefault();
+    safeClick(function () {
 
-    console.log("[CREATE BUTTON CLICKED]");
+      createSystemAdmin();
 
-    safeClick(createSystemAdmin);
+    });
 
-  });
+  };
 
-  console.log("[CREATE ADMIN] BUTTON CONNECTED");
+  console.log(
+    "[CREATE ADMIN] BUTTON CONNECTED"
+  );
 
 }
 
