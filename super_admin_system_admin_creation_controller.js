@@ -367,9 +367,13 @@ function startModule() {
 
   }
 
-  bindEvents();
+ console.log("[TYPEOF bindEvents]", typeof bindEvents);
 
-  console.log("[BIND EVENTS DONE]");
+console.log("[FUNCTION]", bindEvents);
+
+bindEvents();
+
+console.log("[BIND EVENTS DONE]");
 
   loadSystemAdminList();
 
