@@ -23,32 +23,8 @@ let lock = false;
 
 // ================= INIT =================
 
-document.addEventListener("DOMContentLoaded", function () {
-
-  try {
-
-    initPage();
-
-    authPage();
-
-    if (!currentUser?.userId) return;
-
-    bindEvents();
-
-    loadPage();
-
-  }
-
-  catch (err) {
-
-    console.error(
-      "[SUPER ADMIN SYSTEM CONTROL ERROR]",
-      err
-    );
-
-  }
-
-});
+// Dynamic module loader calls initPage().
+// DOMContentLoaded is not used here.
 
 // ================= CORE =================
 
@@ -63,6 +39,14 @@ function initPage() {
   }
 
   initCoreSystem();
+
+  authPage();
+
+  if (!currentUser?.userId) return;
+
+  bindEvents();
+
+  loadPage();
 
 }
 
