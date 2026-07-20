@@ -89,8 +89,11 @@ function encodePassword(p) {
 
 /* ================= CREATE SYSTEM ADMIN ================= */
 
+/* ================= CREATE SYSTEM ADMIN ================= */
+
 function createSystemAdmin() {
 
+  console.log("[CREATE SYSTEM ADMIN CALLED]");
 
   const id =
     document.getElementById("sysId")
