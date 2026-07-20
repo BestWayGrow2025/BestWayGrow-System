@@ -371,20 +371,19 @@ function loadCreateSystemAdminRealModule() {
 }
 
 
-function loadSystemAdminPanelModule(){
+function loadSystemAdminPanelModule() {
 
   return loadRealModule({
 
-    html:
-    "super_admin_system_control_dashboard.html",
+    html: "super_admin_system_control_dashboard.html",
 
-    js:
-    "super_admin_system_control_authority.js"
+    js: "super_admin_system_control_authority.js",
+
+    init: "initPage"
 
   });
 
 }
-
 
 
 function loadPinMasterRealModule(){
