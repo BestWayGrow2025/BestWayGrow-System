@@ -326,6 +326,8 @@ function bindEvents() {
   const btn =
     document.getElementById("createBtn");
 
+  console.log("[BUTTON FOUND]", btn);
+
   if (!btn) {
 
     console.error(
@@ -335,6 +337,8 @@ function bindEvents() {
     return;
 
   }
+
+  btn.style.border = "4px solid red";
 
   btn.onclick = null;
 
@@ -357,7 +361,6 @@ function bindEvents() {
   );
 
 }
-
 /* ================= START ================= */
 
 function startModule() {
