@@ -1,5 +1,13 @@
 "use strict";
 
+console.count("SYSTEM CONTROL JS");
+
+if (window.__SYSTEM_CONTROL_TEST__) {
+  throw new Error("SECOND LOAD");
+}
+
+window.__SYSTEM_CONTROL_TEST__ = true;
+
 /*
 ========================================
 SUPER ADMIN SYSTEM CONTROL AUTHORITY
