@@ -326,6 +326,18 @@ function safeClick(fn) {
 
 function bindEvents() {
 
+  console.log("[BIND EVENTS START]");
+
+  const btn = document.getElementById("createBtn");
+
+  console.log("[BUTTON FOUND]", btn);
+
+  if (btn) {
+    btn.style.border = "4px solid red";
+  }
+
+  // existing code continues...
+}
   const btn =
     document.getElementById("createBtn");
 
