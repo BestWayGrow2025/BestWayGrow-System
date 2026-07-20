@@ -140,22 +140,23 @@ function loadScriptOnce(scriptFile) {
       try {
 
 
-        const existing =
-          document.querySelector(
-            'script[data-system-module="' +
-            scriptFile +
-            '"]'
-          );
+       const existing =
+  Array.from(
+    document.scripts
+  ).some(
+    s =>
+      s.src &&
+      s.src.includes(scriptFile)
+  );
 
 
+if(existing){
 
-        if(existing){
+  resolve(true);
 
-          resolve(true);
+  return;
 
-          return;
-
-        }
+}
 
 
 
