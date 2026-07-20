@@ -328,16 +328,13 @@ function bindEvents() {
 
   console.log("[BIND EVENTS START]");
 
-  const btn =
-    document.getElementById("createBtn");
+  const btn = document.getElementById("createBtn");
 
   console.log("[BUTTON FOUND]", btn);
 
   if (!btn) {
 
-    console.error(
-      "[CREATE ADMIN] BUTTON NOT FOUND"
-    );
+    console.error("[CREATE ADMIN] BUTTON NOT FOUND");
 
     return;
 
@@ -349,9 +346,7 @@ function bindEvents() {
 
   btn.onclick = function () {
 
-    console.log(
-      "[CREATE BUTTON CLICKED]"
-    );
+    console.log("[CREATE BUTTON CLICKED]");
 
     safeClick(function () {
 
@@ -361,9 +356,7 @@ function bindEvents() {
 
   };
 
-  console.log(
-    "[CREATE ADMIN] BUTTON CONNECTED"
-  );
+  console.log("[CREATE ADMIN] BUTTON CONNECTED");
 
 }
 /* ================= START ================= */
