@@ -231,3 +231,20 @@ Verification Result:
 All dependencies verified.
 No missing dependency identified.
 No duplicate dependency detected.
+♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️
+Module:
+Admin Franchise Authentication
+File:
+admin_franchise_auth_controller.js
+
+Dependencies:
+getUsers()
+localStorage
+
+Dependency Type:
+Authentication / Session Dependency
+
+Status:
+Verified
+Remarks:
+No missing dependency detected.
