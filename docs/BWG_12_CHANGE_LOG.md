@@ -187,3 +187,14 @@ Result:
 Production Ready
 No defects found.
 No code changes required.
+
+♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️
+## KB_020
+Verified: admin_income_policy_dashboard.html
+Documentation updated.
+--
+## KB_021
+Verified:  admin_income_policy_controller.js
+
+Documentation updated.
+Income Policy module completed.
