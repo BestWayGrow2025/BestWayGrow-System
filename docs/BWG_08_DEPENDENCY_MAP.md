@@ -304,3 +304,19 @@ quantity
 requestTable
 
 Output: Admin Franchise PIN Request Dashboard
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+File:  admin_franchise_pin_request_dashboard.html
+Repository Dependencies:
+core_boot_manager.js
+core_initializer.js
+core_session_authority.js
+admin_franchise_pin_request_controller.js
+
+Browser Dependencies:  document
+DOM Elements:
+backBtn
+quantity
+submitBtn
+equestTable
+
+Output:  Admin Franchise PIN Request Dashboard
