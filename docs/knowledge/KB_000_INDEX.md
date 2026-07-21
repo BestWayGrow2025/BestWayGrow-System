@@ -35,3 +35,5 @@ KB numbering follows the repository verification sequence.
 The Knowledge Base serves as the primary reference for debugging, maintenance, onboarding, and future development.
 Always consult the relevant KB document before modifying repository code.
 
+
+| KB_002 | admin_activity_audit_dashboard.html | KB_002_admin_activity_audit_dashboard.md | ✅ Verified |
