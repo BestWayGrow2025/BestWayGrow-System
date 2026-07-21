@@ -325,4 +325,28 @@ Verification Date: 2026-07-21
 Remarks: Franchise PIN Request Controller verified.
 No proven defects found.
 Code modification not required.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+Module Name:   Admin Franchise PIN Request Dashboard
+HTML File:   admin_franchise_pin_request_dashboard.html
+JavaScript File:   admin_franchise_pin_request_controller.js
+Entry Function:    DOMContentLoaded → initPage()
+Loaded By:   HTML script loader
+Router:   Admin Franchise PIN Request Flow
+Access Role:   Admin Franchise
+Purpose:
+Provides the Franchise PIN Request dashboard.
+Allows franchise users to create PIN requests.
+Displays submitted PIN request history.
+
+Dependencies:
+core_boot_manager.js
+core_initializer.js
+core_session_authority.js
+admin_franchise_pin_request_controller.js
+
+Exports:  None (HTML View)
+Current Status:   Verified
+Verification Date:  2026-07-21
+Remarks: HTML dashboard verified.
+Controller verified separately in KB_014.
 
