@@ -158,3 +158,39 @@ Pending:
 
 Last Updated:
 __________________
+
+==================================================
+TROUBLESHOOTING RECORD 001
+==================================================
+
+Module:
+Admin Activity Audit
+
+Repository File:
+admin_activity_audit_controller.js
+
+Common Symptoms:
+• Redirects immediately to admin_auth.html
+• Activity logs are not displayed
+• Filter returns no results
+• Clear Logs button does not work
+• Buttons are not responding
+
+Possible Causes:
+• getSession() unavailable
+• getCurrentUser() unavailable
+• hasRole() unavailable
+• getActivityLogs() unavailable
+• filterLogsAdvanced() unavailable
+• clearActivityLogs() unavailable
+• Missing required HTML element IDs
+• Required JavaScript loaded in the wrong order
+
+Verification Result:
+Module verified successfully.
+No proven defects found.
+
+Recommended Action:
+Verify dependencies first before modifying controller code.
+Follow the rule:
+Documentation First → Verification Second → Code Change Last.
