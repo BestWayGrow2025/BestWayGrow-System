@@ -231,5 +231,34 @@ Verification Date: 2026-07-21
 
 Remarks:  HTML view verified.
 Controller verification pending.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+Module Name:  Admin Franchise Authority
+HTML File:  admin_franchise_authority.html
+JavaScript File:  admin_franchise_authority.js
+
+Entry Function: bindFranchiseAuthorityEvents()
+Loaded By:  admin_franchise_authority.html
+Router:   Admin Franchise Authority Flow
+Access Role:  Admin
+
+Purpose:   Controls franchise request monitoring,
+approval, rejection, and authority actions.
+
+Dependencies:
+getFranchiseRequests()
+approveFranchiseRequest()
+rejectFranchiseRequest()
+
+Exports:
+loadFranchiseRequests()
+approveFranchise()
+rejectFranchise()
+resetUserPassword()
+
+Current Status:  Verified
+Verification Date:   2026-07-21
+Remarks: Controller verified. 
+External approval functions require separate verification.
+
 
 
