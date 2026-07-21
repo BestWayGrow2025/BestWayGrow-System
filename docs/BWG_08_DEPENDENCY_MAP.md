@@ -320,3 +320,27 @@ submitBtn
 equestTable
 
 Output:  Admin Franchise PIN Request Dashboard
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+File:  admin_income_audit_controller.js
+
+Repository Dependencies:
+getSession()
+destroySession()
+getCurrentUser()
+hasRole()
+getIncomeLogs()
+
+Browser Dependencies:
+document
+Window.location
+Date
+
+DOM Elements:
+filterType
+filterUser
+refreshBtn
+incomeTable
+totalPayout
+totalRecords
+
+Output:  Admin Income Audit Dashboard
