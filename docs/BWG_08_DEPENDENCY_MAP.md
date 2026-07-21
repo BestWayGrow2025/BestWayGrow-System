@@ -261,3 +261,12 @@ Dependency Type:    Authority / Data Operations
 Status:  Verified
 Remarks: External functions identified.
 No missing imports detected.
+
+♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️ 
+admin_franchise_dashboard.html
+Depends On:
+core_boot_manager.js
+core_initializer.js
+core_session_authority.js
+admin_franchise_dashboard_controller.js
+
