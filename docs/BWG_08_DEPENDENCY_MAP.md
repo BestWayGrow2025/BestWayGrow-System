@@ -173,4 +173,44 @@ Verification Result:
 All dependencies verified.
 No missing dependency identified.
 No duplicate dependency detected.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+Dependency Record
 
+Repository File:
+admin_dashboard_controller.js
+
+Depends On:
+
+- initCoreSystem()
+- getSession()
+- getUserById()
+- getUsers()
+- logoutSession()
+- getAdminTreeView()
+- setInterval()
+- clearInterval()
+- setTimeout()
+
+Required HTML IDs:
+
+- welcome
+- logoutBtn
+- mainContent
+- userTableBody
+
+Required CSS Selector:
+
+- .menu button
+
+Related Files:
+
+- admin_dashboard.html
+- admin_auth.html
+
+Verification Result:
+
+All dependencies verified.
+
+No missing dependency identified.
+
+No duplicate dependency detected.
