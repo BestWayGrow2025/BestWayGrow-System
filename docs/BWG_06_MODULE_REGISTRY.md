@@ -274,5 +274,49 @@ Verification Date:
 Remarks:
 HTML view verified.
 Controller verification pending separately.
+♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️
+Module Name:
+Admin Franchise Authentication
+
+HTML File:
+admin_franchise_auth.html
+
+JavaScript File:
+admin_franchise_auth_controller.js
+
+Entry Function:
+DOMContentLoaded
+
+Loaded By:
+admin_franchise_auth.html
+
+Router:
+Admin Franchise Authentication Flow
+
+Access Role:
+Franchise Admin
+
+Purpose:
+Handles franchise login authentication,
+credential validation, session creation,
+and redirect to franchise dashboard.
+
+Dependencies:
+getUsers()
+localStorage.loggedInFranchise
+
+Exports:
+None
+
+Current Status:
+Verified
+
+Verification Date:
+2026-07-21
+
+Remarks:
+Controller verified.
+No code modification required.
+
 
 
