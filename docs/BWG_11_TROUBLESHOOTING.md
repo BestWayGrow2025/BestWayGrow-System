@@ -369,3 +369,14 @@ Possible Causes:
 Related File:  admin_franchise_authority.js
 Resolution:    Verify dependency functions and data sources.
 
+♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️ 
+Issue:  Admin Franchise Dashboard does not load.
+Possible Causes:
+- Missing controller script.
+- Core boot files not loaded.
+- Session authority unavailable.
+
+Verification:
+Check script loading order.
+Verify controller loads without errors.
+
