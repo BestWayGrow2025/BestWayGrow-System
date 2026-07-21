@@ -175,12 +175,8 @@ No missing dependency identified.
 No duplicate dependency detected.
 ❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
 Dependency Record
-
-Repository File:
-admin_dashboard_controller.js
-
+Repository File:  admin_dashboard_controller.js
 Depends On:
-
 - initCoreSystem()
 - getSession()
 - getUserById()
@@ -198,21 +194,14 @@ Required HTML IDs:
 - mainContent
 - userTableBody
 
-Required CSS Selector:
-
-- .menu button
+Required CSS Selector:  .menu button
 
 Related Files:
-
 - admin_dashboard.html
 - admin_auth.html
 
-Verification Result:
-
-All dependencies verified.
-
+Verification Result:  All dependencies verified.
 No missing dependency identified.
-
 No duplicate dependency detected.
 
 ❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
@@ -269,4 +258,27 @@ core_boot_manager.js
 core_initializer.js
 core_session_authority.js
 admin_franchise_dashboard_controller.js
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+File:  admin_franchise_dashboard_controller.js
+
+Repository Dependencies:
+getSession()
+destroySession()
+getCurrentUser()
+hasRole()
+getSystemSettings()
+getUsers()
+logActivity()
+
+Browser Dependencies:
+document
+window.location
+setInterval()
+clearInterval()
+DOM Elements:
+logoutBtn
+profile
+system
+userList
+Output:  Admin Franchise Dashboard
 
