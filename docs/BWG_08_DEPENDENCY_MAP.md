@@ -344,3 +344,34 @@ totalPayout
 totalRecords
 
 Output:  Admin Income Audit Dashboard
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+Module:  Admin Income Dashboard
+Repository Dependencies:
+core_boot_manager.js
+core_initializer.js
+core_session_authority.js
+
+getSession()
+getUserById()
+getIncomeLogs()
+initCoreSystem()
+SYSTEM_EVENTS
+
+Browser Dependencies:
+document
+window
+Date
+console
+
+DOM Elements:
+filterType
+refreshBtn
+incomeTable
+totalPayout
+totalRecords
+
+Output:
+Admin Income Dashboard
+Income Summary
+Income Records
+Income Filter
