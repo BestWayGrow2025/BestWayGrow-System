@@ -231,3 +231,78 @@ verifyPassword()
 Verification Result
 Troubleshooting guide verified.
 No proven defects found.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+Troubleshooting Record
+
+Repository File:
+admin_dashboard_controller.js
+
+Issue:
+Dashboard redirects to login
+
+Check:
+
+- getSession()
+- Session role
+- Authentication
+
+---
+
+Issue:
+Welcome message missing
+
+Check:
+
+- welcome element
+- getUserById()
+
+---
+
+Issue:
+Menu buttons do not work
+
+Check:
+
+- .menu button
+- Event binding
+- data-page values
+
+---
+
+Issue:
+Users do not appear
+
+Check:
+
+- getUsers()
+- userTableBody
+- renderUsers()
+
+---
+
+Issue:
+Dashboard does not refresh
+
+Check:
+
+- startAutoRefresh()
+- setInterval()
+- Active menu button
+
+---
+
+Issue:
+Logout does not work
+
+Check:
+
+- logoutSession()
+- redirectLogin()
+
+---
+
+Verification Result
+
+Dashboard controller verified.
+
+No proven defects found.
