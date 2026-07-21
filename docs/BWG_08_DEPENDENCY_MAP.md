@@ -375,3 +375,39 @@ Admin Income Dashboard
 Income Summary
 Income Records
 Income Filter
+
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+## Admin Income Policy Dependencies
+### HTML  admin_income_policy_dashboard.html
+
+Loads:
+- core_boot_manager.js
+- core_initializer.js
+- core_session_authority.js
+- admin_income_policy_controller.js
+
+### Controller Dependencies
+Repository:
+- initCoreSystem()
+- initIncomeControl()
+- getSession()
+- getUserById()
+- getIncomeSettings()
+- saveIncomeSettings()
+- isUGLIEnabled()
+- isRLIEnabled()
+- isBinaryEnabled()
+
+Browser:
+- document
+- window
+- alert()
+- setInterval()
+- clearInterval()
+
+SYSTEM_EVENTS:
+- INCOME_UPDATED
+- INCOME_EVENT
+- INCOME_CREDIT
+- INCOME_LOG_CREATED
+- HOLD_INCOME_RELEASED
