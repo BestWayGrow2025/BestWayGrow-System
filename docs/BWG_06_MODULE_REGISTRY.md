@@ -269,4 +269,36 @@ Current Status:    Verified
 Verification Date: 2026-07-21
 Remarks: Dashboard HTML verified.
 Controller documented separately.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+Module Name:      admin Franchise Dashboard Controller
+JavaScript File:  admin_franchise_dashboard_controller.js
+Entry Function:   loadPage()
+
+Loaded By:     admin_franchise_dashboard.html
+Access Role:   Franchise Admin
+
+Purpose:
+Controls the Franchise Dashboard.
+Verifies authenticated franchise session.
+Displays franchise profile.
+Shows system status.
+Lists users under the franchise.
+Handles automatic dashboard refresh.
+Processes franchise logout.
+Dependencies:
+getSession()
+destroySession()
+getCurrentUser()
+hasRole()
+getSystemSettings()
+getUsers()
+logActivity()
+
+Exports:  None
+Current Status :  ✅ Verified
+Verification Date:   2026-07-21
+Remarks: Franchise Dashboard Controller verified.
+No proven defects found.
+Code modification not required.
+
 
