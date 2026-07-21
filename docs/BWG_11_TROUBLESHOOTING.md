@@ -194,3 +194,40 @@ Recommended Action:
 Verify dependencies first before modifying controller code.
 Follow the rule:
 Documentation First → Verification Second → Code Change Last.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+Troubleshooting Record
+Repository File: admin_auth.js
+Issue: Login button does not respond
+Check:
+loginBtn exists
+JavaScript loaded correctly
+Event binding completed
+
+Issue: Invalid login message
+Check:
+Administrator ID
+Password
+getUsers()
+verifyPassword()
+
+Issue: Immediate redirect to dashboard
+Check:
+Existing administrator session
+getSession()
+Session role
+
+Issue: Login succeeds but dashboard does not open
+Check:
+setSession()
+Redirect path
+Browser console
+
+Issue: Password verification fails
+Check:
+Stored password format
+Base64 decoding
+verifyPassword()
+
+Verification Result
+Troubleshooting guide verified.
+No proven defects found.
