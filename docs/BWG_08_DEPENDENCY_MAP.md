@@ -214,3 +214,19 @@ All dependencies verified.
 No missing dependency identified.
 
 No duplicate dependency detected.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+Dependency Record
+Repository File: admin_escrow_control_authority.js
+Depends On:
+getSession()
+loadEscrows()
+updateEscrowStatus()
+logActivity()
+Required HTML IDs:
+mainContent
+Related Files:
+admin_dashboard_controller.js
+Verification Result:
+All dependencies verified.
+No missing dependency identified.
+No duplicate dependency detected.
