@@ -102,3 +102,53 @@ Verification Status:
 Last Updated:
 
 __________________
+
+==================================================
+DEPENDENCY RECORD 001
+==================================================
+
+Repository File:
+admin_activity_audit_controller.js
+
+Module:
+Admin Activity Audit
+
+Internal Functions:
+initAdminActivityAudit()
+initAdminAuditPage()
+redirectLogin()
+authenticateAdminAudit()
+bindAdminAuditEvents()
+goAdminDashboard()
+getAdminAuditRoleClass()
+loadAdminActivityLogs()
+applyAdminAuditFilter()
+clearAdminActivityLogs()
+
+External Dependencies:
+initCoreSystem()
+getSession()
+destroySession()
+getCurrentUser()
+hasRole()
+getActivityLogs()
+filterLogsAdvanced()
+clearActivityLogs()
+logActivity()
+
+HTML Dependencies:
+admin_activity_audit_dashboard.html
+
+Required HTML Elements:
+backBtn
+refreshBtn
+applyBtn
+clearBtn
+logs
+filterUser
+filterRole
+filterKeyword
+
+Verification Status:
+Verified
+
