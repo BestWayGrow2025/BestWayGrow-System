@@ -260,5 +260,13 @@ Verification Date:   2026-07-21
 Remarks: Controller verified. 
 External approval functions require separate verification.
 
-
+♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️
+Module Name:   Admin Franchise Dashboard
+HTML File:     admin_franchise_dashboard.html
+JavaScript File:   admin_franchise_dashboard_controller.js
+Purpose :   Provides the Admin Franchise Dashboard interface.
+Current Status:    Verified
+Verification Date: 2026-07-21
+Remarks: Dashboard HTML verified.
+Controller documented separately.
 
