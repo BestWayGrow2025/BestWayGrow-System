@@ -329,9 +329,28 @@ updateEscrowStatus()
 rejectEscrow()
 
 Issue: Activity log missing
-Check:
-logActivity()
+Check:  logActivity()
 
 Verification Result
 Escrow authority verified.
 No proven defects found.
+♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️
+Issue:  Admin Franchise Login Failure
+
+Possible Causes:
+- Invalid Franchise ID
+- Invalid Password
+- User role not franchise
+- Account inactive
+- getUsers() unavailable
+
+Resolution:
+Verify user data,
+role assignment,
+password value,
+and user storage availability.
+
+Related File:
+admin_franchise_auth_controller.js
+
+Status: Documented
