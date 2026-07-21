@@ -151,4 +151,26 @@ filterKeyword
 
 Verification Status:
 Verified
+️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️
+Dependency Record
+Repository File: admin_auth.js
+Depends On:
+getSession()
+getUsers()
+setSession()
+logActivity()
+atob()
+setTimeout()
+Required HTML IDs:
+adminId
+password
+loginBtn
+msg
+Related Files:
+admin_auth.html
+admin_dashboard.html
+Verification Result:
+All dependencies verified.
+No missing dependency identified.
+No duplicate dependency detected.
 
