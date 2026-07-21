@@ -281,4 +281,26 @@ profile
 system
 userList
 Output:  Admin Franchise Dashboard
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+File:  admin_franchise_pin_request_controller.js
+Repository Dependencies:
+getSession()
+destroySession()
+getCurrentUser()
+hasRole()
+logActivity()
 
+Browser Dependencies:
+document
+window.location
+localStorage
+JSON
+Date
+
+DOM Elements:
+backBtn
+submitBtn
+quantity
+requestTable
+
+Output: Admin Franchise PIN Request Dashboard
