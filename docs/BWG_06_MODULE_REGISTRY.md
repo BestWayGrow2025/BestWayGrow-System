@@ -229,5 +229,50 @@ rejectEscrow()
 Current Status: ✅ Verified
 Verification Date: 2026-07-21
 Remarks: Escrow authority module verified. No proven defects found. Code modification not required.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+Module Name:
+Admin Franchise Authentication
+
+HTML File:
+admin_franchise_auth.html
+
+JavaScript File:
+admin_franchise_auth_controller.js
+
+Entry Function:
+To be verified from controller file
+
+Loaded By:
+HTML script loader
+
+Router:
+Admin Franchise Authentication Flow
+
+Access Role:
+Admin Franchise
+
+Purpose:
+Provides the Admin Franchise login interface.
+Collects Franchise ID and Password input
+and loads the authentication controller.
+
+Dependencies:
+core_boot_manager.js
+core_initializer.js
+core_session_authority.js
+admin_franchise_auth_controller.js
+
+Exports:
+None (HTML View)
+
+Current Status:
+Verified
+
+Verification Date:
+2026-07-21
+
+Remarks:
+HTML view verified.
+Controller verification pending separately.
 
 
