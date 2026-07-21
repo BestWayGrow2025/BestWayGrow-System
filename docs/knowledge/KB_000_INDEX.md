@@ -45,4 +45,5 @@ Always consult the relevant KB document before modifying repository code.
 | KB_005 | admin_dashboard.html | KB_005_admin_dashboard.html.md | ✅ Verified | 
 ❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
 | KB_006 | admin_dashboard_controller.js | KB_006_admin_dashboard_controller.js.md | ✅ Verified |
-
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+| KB_007 | admin_escrow_control_authority.js | KB_007_admin_escrow_control_authority.js.md | ✅ Verified |
