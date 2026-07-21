@@ -350,7 +350,22 @@ role assignment,
 password value,
 and user storage availability.
 
-Related File:
-admin_franchise_auth_controller.js
-
+Related File:  admin_franchise_auth_controller.js
 Status: Documented
+
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+Issue:  Franchise Requests Not Loading
+Possible Causes:
+- getFranchiseRequests() unavailable
+- Request data empty
+- Controller not loaded
+
+Issue:   Approve/Reject Not Working
+
+Possible Causes:
+- approveFranchiseRequest() missing
+- rejectFranchiseRequest() missing
+
+Related File:  admin_franchise_authority.js
+Resolution:    Verify dependency functions and data sources.
+
