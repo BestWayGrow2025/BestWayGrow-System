@@ -320,3 +320,9 @@ Verified:    admin_support_ticket_dashboard.html
 Verified:    admin_support_ticket_controller.js
 
 Documentation updated.
+♥️♥️♥️♥️❤️♥️♥️♥️♥️❤️❤️❤️♥️❤️❤️❤️ 
+## File Audit
+Verified:   admin_withdrawal_dashboard.html
+Verified:   admin_withdrawal_authority.js
+
+Documentation updated.
