@@ -523,3 +523,25 @@ Controller Dependencies
 
 Status   ✅ Verified
 Documentation updated.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Dependency Map
+Module
+Admin Support Ticket
+
+HTML Dependencies
+- core_boot_manager.js
+- core_initializer.js
+- core_session_authority.js
+- platform_activity_audit.js
+- admin_support_ticket_controller.js
+
+Controller Dependencies
+- initCoreSystem()
+- getSession()
+- getCurrentUser()
+- hasRole()
+- getUsers()
+- logActivity()
+
+Status  ✅ Verified
+Documentation updated.
