@@ -212,3 +212,11 @@ createPinRequest()
 
 Status ✅ Verified
 Documentation updated.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Routing Sequence
+System Initialization
+↓
+core_access_control_guard.js
+
+Status   ✅ Verified
+Documentation updated.
