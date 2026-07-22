@@ -458,3 +458,17 @@ Knowledge Base
 
 Status  ✅ Verified
 Documentation updated.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Module
+Admin Support Ticket
+
+Files
+- admin_support_ticket_dashboard.html
+- admin_support_ticket_controller.js
+
+Knowledge Base
+- KB_032
+- KB_033
+
+Status  ✅ Verified
+Documentation updated.
