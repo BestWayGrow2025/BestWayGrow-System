@@ -454,6 +454,26 @@ Browser:
 - assignPin()
 - deletePin()
 - loadPins()
+### Status  ✅ Verified
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Dependency Map
+Module   Admin PIN Request Management
+HTML Dependencies
+- core_boot_manager.js
+- core_initializer.js
+- core_session_authority.js
+- pin_master_system.js
+- admin_pin_request_controller.js
 
-### Status
-✅ Verified
+Controller Dependencies
+- initCoreSystem()
+- getSession()
+- getUserById()
+- destroySession()
+- getPinRequests()
+- executePinFlow()
+- processPinRequestAuto()
+- rejectPinRequest()
+- logActivity()
+Status  ✅ Verified
+Documentation updated.
