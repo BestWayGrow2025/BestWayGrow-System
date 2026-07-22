@@ -472,3 +472,17 @@ Knowledge Base
 
 Status  ✅ Verified
 Documentation updated.
+♥️♥️♥️♥️❤️♥️♥️♥️♥️❤️❤️❤️♥️❤️❤️❤️ 
+## Module
+Admin Withdrawal Management
+
+Files
+- admin_withdrawal_dashboard.html
+- admin_withdrawal_authority.js
+
+Knowledge Base
+- KB_034
+- KB_035
+
+Status ✅ Verified
+Documentation updated.
