@@ -1,75 +1,43 @@
-# KB_038_core_ai_governor.js
+# KB_038 — core_ai_governor.js
+
+## Purpose
+
+Provides the Core AI Governor responsible for monitoring overall system health, evaluating risk events, responding to critical snapshots, and initiating protective system actions when required.
 
 ---
 
-# Knowledge Base 038
+## File Information
 
-**File Name**
-core_ai_governor.js
-
-**Location**
-/core/core_ai_governor.js
-
-**Module Type**
-Core System Governor
-
-**Layer**
-Core
-
-**Purpose**
-The Core AI Governor supervises overall system health, evaluates risk conditions, controls operating modes based on system status, and coordinates protective actions through the central event system.
+- File Name: core_ai_governor.js
+- Layer: Core
+- Category: AI Governance
+- Status: ✅ Verified
 
 ---
 
-# Responsibilities
+## Responsibilities
 
-- Initialize the AI Governor.
-- Prevent duplicate initialization.
-- Listen for system health events.
-- Evaluate system risk levels.
-- Process control snapshots.
-- Change operating mode based on health status.
-- Trigger system freeze during critical conditions.
-- Emit governor actions.
-- Export public governor functions.
+- Initializes the Core AI Governor.
+- Prevents duplicate initialization.
+- Waits for DOMContentLoaded before startup.
+- Validates SYSTEM_EVENTS availability.
+- Registers system event listeners.
+- Monitors control snapshots.
+- Evaluates system alerts, warnings, and failures.
+- Switches system operating mode based on health.
+- Emits governor actions.
+- Triggers system freeze for critical events.
+- Exposes governor functions globally.
 
 ---
 
-# Entry Function
+## Entry Function
 
-```javascript
 initGovernor()
-```
 
 ---
 
-# Initialization Flow
-
-```text
-IIFE
-   ↓
-Duplicate Initialization Check
-   ↓
-DOMContentLoaded
-   ↓
-initGovernor()
-   ↓
-Bind Governor Signals
-   ↓
-Start Governor Loop
-```
-
----
-
-# Dependencies
-
-- SYSTEM_EVENTS
-- SystemOSMode
-- window.__SYSTEM_SNAPSHOT__
-
----
-
-# Events Consumed
+## Event Subscriptions
 
 - SYSTEM_ALERT
 - SYSTEM_FAILURE
@@ -78,20 +46,11 @@ Start Governor Loop
 
 ---
 
-# Events Produced
+## Global Export
 
-- GOVERNOR_ACTION
-- SYSTEM_FREEZE
-
----
-
-# Exported API
-
-```javascript
 window.system_ai_governor
-```
 
-Functions
+Exports:
 
 - init()
 - handleSnapshot()
@@ -101,9 +60,33 @@ Functions
 
 ---
 
-# Verification Checklist
+## Dependencies
 
-- ✅ File exists
-- ✅ Purpose verified
-- ✅ Entry function verified
-- ✅ Duplicate
+- SYSTEM_EVENTS
+- window.SystemOSMode
+- window.__SYSTEM_SNAPSHOT__
+
+---
+
+## Verification Summary
+
+- File exists
+- Duplicate initialization protection verified
+- Event registration verified
+- Snapshot handling verified
+- Risk evaluation verified
+- Freeze workflow verified
+- Global export verified
+- No proven defects found
+
+---
+
+## Verification Status
+
+✅ Verified
+
+Verification Date: 2026-07-22
+
+Code Changes: None
+
+Documentation Updated: Yes
