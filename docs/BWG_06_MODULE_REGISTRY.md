@@ -440,7 +440,21 @@ Knowledge Base
 - KB_028
 - KB_029
 
-Status
-✅ Verified
+Status ✅ Verified
+Documentation updated.
 
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Module
+
+Admin Reporting
+
+Files
+- admin_reporting_dashboard.html
+- admin_reporting_dashboard.js
+
+Knowledge Base
+- KB_030
+- KB_031
+
+Status  ✅ Verified
 Documentation updated.
