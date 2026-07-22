@@ -220,3 +220,21 @@ core_access_control_guard.js
 
 Status   ✅ Verified
 Documentation updated.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Routing Sequence
+System Startup
+↓
+core_ai_governor.js
+↓
+SYSTEM_EVENTS
+↓
+Risk Evaluation
+↓
+Governor Actions
+↓
+System Freeze / Monitor Mode
+
+Status
+✅ Verified
+
+Documentation updated.
