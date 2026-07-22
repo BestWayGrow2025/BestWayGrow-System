@@ -298,3 +298,11 @@ Checks Completed
 Verified:   admin_pin_request_dashboard.html
 Verified:   admin_pin_request_controller.js
 Documentation updated.
+
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## File Audit
+
+Verified:  admin_registration_queue_dashboard.html
+Verified:  admin_registration_queue_controller.js
+
+Documentation updated.
