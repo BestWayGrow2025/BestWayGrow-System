@@ -609,3 +609,20 @@ Dependencies
 (To be verified from repository)
 Status  ✅ Verified
 Documentation updated.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Dependency Map
+
+Module
+Core AI Governor
+
+Dependencies
+- SYSTEM_EVENTS
+- window.SystemOSMode
+- window.__SYSTEM_SNAPSHOT__
+
+Exports
+- window.system_ai_governor
+
+Status
+✅ Verified
+Documentation updated.
