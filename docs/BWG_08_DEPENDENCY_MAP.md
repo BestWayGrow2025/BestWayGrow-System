@@ -411,3 +411,27 @@ SYSTEM_EVENTS:
 - INCOME_CREDIT
 - INCOME_LOG_CREATED
 - HOLD_INCOME_RELEASED
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+## Admin KYC Module Dependencies
+### HTML  admin_kyc_dashboard.html
+Loads:
+- core_session_authority.js
+- admin_kyc_authority.js
+
+### Controller Dependencies
+Repository:
+- getSession()
+- destroySession()
+- getUserById()
+- getUsers()
+- saveUsers()
+- logActivity()
+
+Storage: - localStorage
+
+Browser:
+- document
+- window.location
+- JSON
+- Date
+- alert()
