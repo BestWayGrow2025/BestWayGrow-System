@@ -486,3 +486,14 @@ Knowledge Base
 
 Status ✅ Verified
 Documentation updated.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️
+## Module
+Admin PIN Stock Authority
+
+File   - admin_pin_request_authority.js
+
+Knowledge Base
+- KB_036
+
+Status  ✅ Verified
+Documentation updated.
