@@ -545,3 +545,33 @@ Controller Dependencies
 
 Status  ✅ Verified
 Documentation updated.
+♥️♥️♥️♥️❤️♥️♥️♥️♥️❤️❤️❤️♥️❤️❤️❤️ 
+
+♥️♥️♥️♥️❤️♥️♥️♥️♥️❤️❤️❤️♥️❤️❤️❤️ 
+## Dependency Map
+
+Module
+Admin Withdrawal Management
+
+HTML Dependencies
+- core_boot_manager.js
+- core_initializer.js
+- core_session_authority.js
+- core_wallet_transaction_authority.js
+- core_wallet_integration_bridge.js
+- core_withdrawal_lifecycle_manager.js
+- admin_withdrawal_authority.js
+
+Controller Dependencies
+- initCoreSystem()
+- getSession()
+- getCurrentUser()
+- hasRole()
+- getSystemSettings()
+- getWithdrawals()
+- approveWithdraw()
+- rejectWithdraw()
+- logActivity()
+
+Status  ✅ Verified
+Documentation updated.
