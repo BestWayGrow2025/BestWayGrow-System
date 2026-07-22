@@ -178,3 +178,23 @@ admin_support_ticket_controller.js
 
 Status  ✅ Verified
 Documentation updated.
+♥️♥️♥️♥️❤️♥️♥️♥️♥️❤️❤️❤️♥️❤️❤️❤️ 
+## Routing Sequence
+admin_withdrawal_dashboard.html
+↓
+core_boot_manager.js
+↓
+core_initializer.js
+↓
+core_session_authority.js
+↓
+core_wallet_transaction_authority.js
+↓
+core_wallet_integration_bridge.js
+↓
+core_withdrawal_lifecycle_manager.js
+↓
+admin_withdrawal_authority.js
+
+Status  ✅ Verified
+Documentation updated.
