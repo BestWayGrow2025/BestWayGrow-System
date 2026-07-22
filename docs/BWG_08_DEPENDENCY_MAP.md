@@ -477,3 +477,23 @@ Controller Dependencies
 - logActivity()
 Status  ✅ Verified
 Documentation updated.
+
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Dependency Map
+Module   Admin Registration Queue
+
+HTML Dependencies
+- core_boot_manager.js
+- core_initializer.js
+- core_session_authority.js
+- admin_registration_queue_controller.js
+
+Controller Dependencies
+- getSession()
+- getCurrentUser()
+- hasRole()
+- destroySession()
+- getRegQueue()
+
+Status  ✅ Verified
+Documentation updated.
