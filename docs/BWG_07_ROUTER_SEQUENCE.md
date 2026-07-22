@@ -162,3 +162,19 @@ admin_reporting_dashboard.js
 
 Status  ✅ Verified
 Documentation updated.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Routing Sequence
+admin_support_ticket_dashboard.html
+↓
+core_boot_manager.js
+↓
+core_initializer.js
+↓
+core_session_authority.js
+↓
+platform_activity_audit.js
+↓
+admin_support_ticket_controller.js
+
+Status  ✅ Verified
+Documentation updated.
