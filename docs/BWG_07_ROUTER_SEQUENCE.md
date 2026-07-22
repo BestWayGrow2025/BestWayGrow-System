@@ -129,3 +129,20 @@ pin_master_system.js
 admin_pin_request_controller.js
 Status  ✅ Verified
 Documentation updated.
+
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Routing Sequence
+admin_registration_queue_dashboard.html
+↓
+core_boot_manager.js
+↓
+core_initializer.js
+↓
+core_session_authority.js
+↓
+admin_registration_queue_controller.js
+
+Status ✅ Verified
+
+Documentation updated.
+
