@@ -198,3 +198,17 @@ admin_withdrawal_authority.js
 
 Status  ✅ Verified
 Documentation updated.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️
+## Routing Sequence
+Admin Dashboard / PIN Request Modules
+↓
+admin_pin_request_authority.js
+↓
+getSession()
+↓
+getPinStock()
+↓
+createPinRequest()
+
+Status ✅ Verified
+Documentation updated.
