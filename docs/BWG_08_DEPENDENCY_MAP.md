@@ -497,3 +497,29 @@ Controller Dependencies
 
 Status  ✅ Verified
 Documentation updated.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Dependency Map
+Module
+Admin Reporting
+
+HTML Dependencies
+- core_boot_manager.js
+- core_initializer.js
+- core_session_authority.js
+- core_reporting_engine.js
+- admin_reporting_dashboard.js
+
+Controller Dependencies
+- getSession()
+- getCurrentUser()
+- hasRole()
+- getUsers()
+- loadPins()
+- getIncomeLogs()
+- getCTORPool()
+- runCTORDistribution()
+- getPinTransactions()
+- getWithdrawals()
+
+Status   ✅ Verified
+Documentation updated.
