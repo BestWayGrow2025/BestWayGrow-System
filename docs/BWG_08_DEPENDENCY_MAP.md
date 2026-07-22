@@ -575,3 +575,26 @@ Controller Dependencies
 
 Status  ✅ Verified
 Documentation updated.
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️
+## Dependency Map
+Module   Admin PIN Stock Authority
+
+File
+- admin_pin_request_authority.js
+
+Dependencies
+- getSession()
+- getPinStock()
+- createPinRequest()
+
+Exports
+- getSafeAdmin()
+- getAdminPinStock()
+- hasAdminPinStock()
+- getAdminPinStockStatus()
+- canEscalatePinStock()
+- createAdminStockRequest()
+- getAdminStockView()
+
+Status   ✅ Verified
+Documentation updated.
