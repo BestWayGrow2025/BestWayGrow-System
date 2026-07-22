@@ -146,3 +146,19 @@ Status ✅ Verified
 
 Documentation updated.
 
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️ 
+## Routing Sequence
+admin_reporting_dashboard.html
+↓
+core_boot_manager.js
+↓
+core_initializer.js
+↓
+core_session_authority.js
+↓
+core_reporting_engine.js
+↓
+admin_reporting_dashboard.js
+
+Status  ✅ Verified
+Documentation updated.
