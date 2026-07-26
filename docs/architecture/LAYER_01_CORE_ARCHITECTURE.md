@@ -351,3 +351,36 @@ Execution protection includes:
 • Recovery monitoring.
 
 This standardized execution pipeline guarantees consistent, secure, traceable, and production-grade operation across the entire Enterprise Platform.
+
+# 10. CORE SECURITY ARCHITECTURE
+The Enterprise Core Security Architecture provides the centralized protection framework for the entire platform. Every request, service, controller, dashboard, financial operation, API call, and execution cycle passes through one or more security validation layers before execution is permitted.
+
+The Core Security Architecture is built on multiple coordinated protection mechanisms rather than a single security module.
+
+The security framework includes:
+
+• Authentication Layer
+Verifies user identity before allowing access to protected resources.
+
+• Session Protection Layer
+Ensures only valid enterprise sessions remain active throughout execution.
+
+• Authorization Layer
+Determines whether a user, administrator, or enterprise service has permission to perform a requested operation.
+
+• Execution Protection Layer
+Prevents duplicate execution, unauthorized execution, race conditions, and unsafe processing.
+
+• Financial Protection Layer
+Verifies financial integrity before allowing income processing, ledger updates, wallet transactions, withdrawals, payouts, or reward distribution.
+
+• Event Protection Layer
+Controls enterprise event generation, propagation, and execution to prevent unauthorized event manipulation.
+
+• Storage Protection Layer
+Protects persistent enterprise data through controlled storage access and validation.
+
+• Recovery Protection Layer
+Detects abnormal execution states and safely transfers system control to recovery services whenever required.
+
+The Enterprise Core Security Architecture follows a defense-in-depth strategy where multiple independent validation layers cooperate to ensure platform integrity, operational safety, financial consistency, and enterprise-grade protection.
