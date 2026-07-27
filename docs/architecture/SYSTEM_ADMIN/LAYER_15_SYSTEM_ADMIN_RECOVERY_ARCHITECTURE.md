@@ -1,3 +1,5 @@
+# docs/architecture/SYSTEM_ADMIN/LAYER_15_SYSTEM_ADMIN_RECOVERY_ARCHITECTURE.md
+
 # LAYER 15 — SYSTEM_ADMIN_RECOVERY_ARCHITECTURE
 
 ## Purpose
@@ -241,6 +243,140 @@ Dashboard restoration includes:
 
 ---
 
-# Business
- 
+# Business Recovery
 
+Business modules automatically recover:
+
+- Admin Creation
+- PIN Governance
+- PIN Requests
+- System Controls
+- Dashboard Modules
+
+---
+
+# Audit Recovery
+
+Every recovery event records:
+
+- Timestamp
+- Module
+- Failure Type
+- Recovery Action
+- Recovery Status
+- Administrator ID
+
+---
+
+# Recovery Security
+
+Recovery never bypasses:
+
+- Authentication
+- Authorization
+- Validation
+- Audit Logging
+- Repository Protection
+
+Security remains active throughout the recovery process.
+
+---
+
+# Dependency Chain
+
+Core Boot Manager
+
+↓
+
+Core Initializer
+
+↓
+
+Core Session Authority
+
+↓
+
+Core Recovery Manager
+
+↓
+
+System Admin Recovery Layer
+
+↓
+
+Business Modules
+
+↓
+
+Repositories
+
+↓
+
+Dashboard
+
+---
+
+# Repository Components
+
+Authentication
+
+- system_admin_auth.js
+
+Dashboard
+
+- system_admin_dashboard_controller.js
+
+Administrator Management
+
+- system_admin_admin_creation_controller.js
+
+PIN Governance
+
+- system_admin_pin_governance_authority.js
+
+PIN Requests
+
+- system_admin_pin_request_authority.js
+- system_admin_pin_request_dashboard.js
+
+System Control
+
+- system_admin_system_control_authority.js
+
+---
+
+# Knowledge Base Mapping
+
+Primary KB References
+
+- KB_213 — System Admin Admin Creation Controller
+- KB_216 — System Admin Authentication Controller
+- KB_218 — System Admin Dashboard Controller
+- KB_219 — System Admin PIN Governance Authority
+- KB_220 — System Admin PIN Request Authority
+- KB_222 — System Admin PIN Request Dashboard Controller
+- KB_224 — System Control Authority
+
+Related Enterprise Recovery KB
+
+- KB_229 — System Health Integrity Authority
+- KB_234 — System Self-Coherence Layer (SCL++)
+
+---
+
+# Recovery Principles
+
+- Automatic recovery whenever safe
+- Preserve enterprise data
+- Maintain authentication
+- Protect repositories
+- Validate every recovery step
+- Record every recovery event
+- Prevent inconsistent states
+- Support continuous enterprise operation
+
+---
+
+# Enterprise Architecture Summary
+
+The System Admin Recovery Architecture provides a resilient recovery framework for authentication, dashboard services, administrator management, PIN governance, financial operations, repositories, and system control. Working alongside the Core Recovery Manager, System Health Integrity Authority, and Self-Coherence Layer (SCL++), it ensures secure restoration of administrative services, protects enterprise data integrity, maintains complete auditability, and delivers production-grade operational continuity across the entire System Admin subsystem.
