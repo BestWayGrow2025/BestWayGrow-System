@@ -1,3 +1,5 @@
+# docs/architecture/SYSTEM_ADMIN/LAYER_01_SYSTEM_ADMIN_OVERVIEW.md
+
 # LAYER 01 — SYSTEM ADMIN OVERVIEW
 
 ---
@@ -211,4 +213,89 @@ This layer CANNOT
 
 ---
 
-# Core
+# Core Design Principles
+
+The System Admin architecture follows:
+
+- Single Entry
+- Single Authority
+- Central Session Validation
+- Role Based Access
+- Enterprise Security
+- Modular Architecture
+- Dynamic Loading
+- Audit First
+- Recovery Safe
+- Production Safe
+
+---
+
+# Repository Coverage
+
+This layer includes architecture for repositories including:
+
+- system_admin_auth.html
+- system_admin_auth.js
+- system_admin_dashboard.html
+- system_admin_dashboard_controller.js
+- system_admin_admin_creation_dashboard.html
+- system_admin_admin_creation_controller.js
+- system_admin_pin_governance_authority.js
+- system_admin_pin_request_authority.js
+- system_admin_pin_request_dashboard.html
+- system_admin_pin_request_dashboard.js
+- system_admin_pin_request_panel.html
+- system_admin_system_control_authority.js
+- system_admin_system_control_dashboard.html
+
+---
+
+# Related Knowledge Base
+
+## SYSTEM_ADMIN_PART_01.md
+
+- KB_213 — System Admin Admin Creation Controller
+- KB_214 — System Admin Admin Creation Dashboard
+- KB_215 — System Admin Authentication Interface
+- KB_216 — System Admin Authentication Controller
+- KB_217 — System Admin Dashboard Interface
+- KB_218 — System Admin Dashboard Controller
+- KB_219 — System Admin PIN Governance Authority
+
+---
+
+## SYSTEM_ADMIN_PART_02.md
+
+- KB_220 — System Admin PIN Request Authority
+- KB_221 — System Admin PIN Request Dashboard
+- KB_222 — System Admin PIN Request Dashboard Controller
+- KB_223 — System Admin PIN Request Panel
+- KB_224 — System Control Authority
+- KB_225 — System Control Dashboard
+- KB_226 — Strategic AI Advisor Integration
+
+---
+
+## SYSTEM_ADMIN_PART_03
+
+Enterprise integrations affecting System Administration:
+
+- KB_227 — Escrow Fraud Detection Authority
+- KB_228 — Escrow Intelligence Authority
+- KB_229 — System Health Integrity Authority
+- KB_230 — System Initialization Interface
+- KB_231 — Monthly Closing Engine
+- KB_232 — Payment Gateway Integration Bridge
+- KB_233 — Payout Integration Bridge
+- KB_234 — Self-Coherence Layer
+- KB_235 — Super Admin Escrow Governance Authority
+
+---
+
+# Layer Summary
+
+Layer 01 establishes the complete architectural foundation of the System Administrator domain.
+
+It defines the System Admin's role within the enterprise hierarchy, operational responsibilities, security boundaries, governance scope, major components, execution model, repository coverage, and associated Knowledge Base references.
+
+All remaining System Admin architecture layers expand upon this foundation while maintaining the platform's standardized enterprise architecture.
