@@ -1,3 +1,5 @@
+# docs/architecture/SYSTEM_ADMIN/LAYER_16_SYSTEM_ADMIN_MONITORING_ARCHITECTURE.md
+
 # LAYER 16 — SYSTEM_ADMIN_MONITORING_ARCHITECTURE
 
 ## Purpose
@@ -247,4 +249,107 @@ Unauthorized users cannot access monitoring information.
 
 # Audit Integration
 
-Every monitoring event records
+Every monitoring event records:
+
+- Timestamp
+- Event Type
+- Severity
+- Module
+- Administrator
+- System Status
+
+---
+
+# Dependency Chain
+
+Core Boot Manager
+
+↓
+
+Core Initializer
+
+↓
+
+Core Session Authority
+
+↓
+
+Health Monitoring
+
+↓
+
+System Admin Monitoring Layer
+
+↓
+
+Business Modules
+
+↓
+
+Dashboard
+
+---
+
+# Repository Components
+
+Authentication
+
+- system_admin_auth.js
+
+Dashboard
+
+- system_admin_dashboard_controller.js
+
+PIN Governance
+
+- system_admin_pin_governance_authority.js
+
+PIN Dashboard
+
+- system_admin_pin_request_dashboard.js
+
+System Control
+
+- system_admin_system_control_authority.js
+
+Health Services
+
+- system_health_integrity_authority.js
+
+---
+
+# Knowledge Base Mapping
+
+Primary KB References
+
+- KB_216 — System Admin Authentication Controller
+- KB_218 — System Admin Dashboard Controller
+- KB_219 — System Admin PIN Governance Authority
+- KB_222 — System Admin PIN Request Dashboard Controller
+- KB_224 — System Control Authority
+
+Related Enterprise Monitoring KB
+
+- KB_226 — Strategic AI Advisor
+- KB_229 — System Health Integrity Authority
+- KB_234 — System Self-Coherence Layer (SCL++)
+- KB_235 — Super Admin Escrow Governance Authority
+
+---
+
+# Monitoring Principles
+
+- Continuous observation
+- Real-time visibility
+- Enterprise health awareness
+- Repository integrity validation
+- Security-first monitoring
+- Financial transparency
+- Complete auditability
+- Production-grade reliability
+
+---
+
+# Enterprise Architecture Summary
+
+The System Admin Monitoring Architecture provides continuous enterprise supervision across authentication, dashboards, administrator management, PIN governance, financial operations, repositories, and system services. Integrated with the Core Health Monitoring Engine, Strategic AI Advisor, System Health Integrity Authority, and Self-Coherence Layer (SCL++), it delivers real-time operational visibility, early issue detection, secure monitoring, and production-grade enterprise observability while preserving platform integrity and administrative governance.
