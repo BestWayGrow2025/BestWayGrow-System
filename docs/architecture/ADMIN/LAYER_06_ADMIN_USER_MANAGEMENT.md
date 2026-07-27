@@ -1,7 +1,5 @@
 # LAYER 06 — ADMIN USER MANAGEMENT
-
 ---
-
 # 1. Purpose
 
 This document defines the User Management architecture of the Admin subsystem within the BWG Enterprise Platform.
