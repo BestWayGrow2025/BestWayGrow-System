@@ -1,320 +1,333 @@
-# LAYER 12 — ADMIN STORAGE ARCHITECTURE
+# LAYER 13 — ADMIN EVENT ARCHITECTURE
 
 ---
 
 # 1. Purpose
 
-This document defines the Storage Architecture of the Admin subsystem within the BWG Enterprise Platform.
+This document defines the Event Architecture of the Admin subsystem within the BWG Enterprise Platform.
 
-The Admin Storage Architecture establishes how administrative modules securely access, read, update, and synchronize enterprise data through centralized storage services while maintaining data integrity, consistency, and governance.
+The Admin Event Architecture enables real-time communication between administrative modules through the centralized Enterprise Event System. Rather than relying on constant polling or tightly coupled module interactions, events notify interested components whenever important business operations occur.
 
-The Admin layer is a consumer of enterprise storage and is not responsible for implementing storage infrastructure.
+This architecture improves synchronization, responsiveness, scalability, and maintainability.
 
 ---
 
 # 2. Architectural Position
 
-Enterprise storage hierarchy:
+Enterprise Event hierarchy:
 
 ```
-CORE STORAGE SERVICES
-          │
-          ▼
+CORE EVENT SYSTEM
+        │
+        ▼
 SUPER ADMIN
-          │
-          ▼
+        │
+        ▼
 SYSTEM ADMIN
-          │
-          ▼
+        │
+        ▼
 ADMIN
-          │
-          ▼
+        │
+        ▼
 BUSINESS MODULES
 ```
 
-Administrative modules interact only with approved storage services.
+The Admin subsystem consumes and publishes events through the centralized event infrastructure.
 
 ---
 
-# 3. Storage Objectives
+# 3. Event Objectives
 
-The Storage Architecture provides:
+The Event Architecture provides:
 
-- Centralized data access
-- Secure data retrieval
-- Controlled data updates
-- Repository consistency
-- Data synchronization
-- Storage abstraction
-- Enterprise governance
-- Scalable persistence
+- Real-time synchronization
+- Module communication
+- Automatic dashboard refresh
+- Business event notification
+- Decoupled architecture
+- Enterprise consistency
+- Scalable communication
+- Operational responsiveness
 
 ---
 
-# 4. Storage Layers
+# 4. Event Flow
 
-Administrative storage follows a layered architecture.
+Administrative events follow the standard enterprise workflow.
 
 ```
-Admin Module
-      │
-      ▼
-Business Controller
-      │
-      ▼
-Enterprise Storage APIs
-      │
-      ▼
-Core Storage Layer
-      │
-      ▼
-Persistent Repository
+Business Operation
+        │
+        ▼
+Event Published
+        │
+        ▼
+Core Event System
+        │
+        ▼
+Subscribed Modules
+        │
+        ▼
+Automatic Update
 ```
 
-Business modules never directly manage storage infrastructure.
+This eliminates unnecessary direct module dependencies.
 
 ---
 
-# 5. Storage Categories
+# 5. Event Categories
 
-The Admin subsystem works with multiple storage domains.
+The Admin subsystem interacts with multiple categories of events.
 
 Primary categories include:
 
-- User Repository
-- PIN Repository
-- Financial Records
-- Income Logs
-- Withdrawal Records
-- Escrow Records
-- Activity Logs
-- KYC Requests
-- Registration Queue
-- Support Tickets
-- Franchise Requests
-- System Settings
+- Authentication Events
+- User Events
+- PIN Events
+- Financial Events
+- Withdrawal Events
+- KYC Events
+- Registration Events
+- Reporting Events
+- Audit Events
+- System Events
 
 ---
 
-# 6. User Repository
+# 6. Authentication Events
 
-User storage contains enterprise user information.
+Authentication events include:
 
-Typical operations include:
+- Administrator Login
+- Administrator Logout
+- Session Created
+- Session Destroyed
+- Session Expired
 
-- User retrieval
-- User updates
-- Status management
-- Profile verification
-- Administrative review
-
-User identity remains centralized across the platform.
+These events maintain authentication consistency across the platform.
 
 ---
 
-# 7. PIN Repository
+# 7. User Events
 
-PIN storage manages the complete PIN lifecycle.
+User-related events include:
 
-Stored information includes:
+- User Created
+- User Updated
+- User Activated
+- User Suspended
+- User Status Changed
 
-- PIN inventory
-- PIN ownership
-- PIN status
-- Assignment records
-- Transaction history
-
-Administrative modules consume the PIN Master System rather than managing PIN storage directly.
+Subscribed modules automatically refresh when user information changes.
 
 ---
 
-# 8. Financial Storage
+# 8. PIN Events
 
-Financial repositories maintain:
+PIN-related events include:
 
-- Income records
-- Wallet transactions
-- Withdrawal requests
-- Escrow information
-- Financial summaries
+- PIN Created
+- PIN Assigned
+- PIN Deleted
+- PIN Request Submitted
+- PIN Request Approved
+- PIN Request Rejected
+- PIN Inventory Updated
 
-Financial integrity is preserved through centralized services.
-
----
-
-# 9. Audit Storage
-
-Activity storage maintains enterprise audit history.
-
-Stored events include:
-
-- Administrator login
-- Logout
-- Dashboard access
-- PIN operations
-- Financial actions
-- KYC approvals
-- Withdrawal decisions
-- Reporting access
-
-Audit storage is append-only from the operational perspective.
+PIN dashboards remain synchronized through these events.
 
 ---
 
-# 10. Compliance Storage
+# 9. Financial Events
 
-Compliance repositories contain:
+Financial events include:
 
-- KYC requests
-- Verification status
-- Administrative decisions
-- Approval history
-- Rejection history
+- Income Created
+- Income Updated
+- Wallet Updated
+- Escrow Updated
+- Financial Policy Changed
 
-Administrative modules access these repositories through approved APIs.
-
----
-
-# 11. Registration Storage
-
-Registration repositories manage:
-
-- Pending registrations
-- Approval status
-- Queue records
-- Administrative processing history
-
-Registration workflows remain synchronized across the enterprise.
+Financial dashboards automatically refresh after relevant updates.
 
 ---
 
-# 12. Reporting Storage
+# 10. Withdrawal Events
 
-Reporting modules retrieve information from multiple repositories.
+Withdrawal events include:
+
+- Withdrawal Requested
+- Withdrawal Approved
+- Withdrawal Rejected
+- Withdrawal Status Updated
+
+These events synchronize financial administration modules.
+
+---
+
+# 11. Compliance Events
+
+Compliance events include:
+
+- KYC Submitted
+- KYC Approved
+- KYC Rejected
+- Verification Updated
+
+Compliance dashboards receive immediate notification.
+
+---
+
+# 12. Registration Events
+
+Registration events include:
+
+- Registration Submitted
+- Registration Approved
+- Registration Rejected
+- Registration Queue Updated
+
+Registration dashboards remain synchronized without manual refresh.
+
+---
+
+# 13. Reporting Events
+
+Reporting modules respond to events such as:
+
+- Income Updated
+- User Updated
+- PIN Updated
+- Withdrawal Updated
+- CTOR Updated
+
+Business intelligence dashboards display current enterprise information.
+
+---
+
+# 14. Event Publishing
+
+Administrative modules publish events after successful operations.
+
+Typical workflow:
+
+```
+Operation Completed
+        │
+        ▼
+Publish Event
+        │
+        ▼
+Core Event System
+```
+
+Publishing occurs only after business validation succeeds.
+
+---
+
+# 15. Event Subscription
+
+Administrative modules subscribe only to relevant enterprise events.
 
 Examples include:
 
-- User statistics
-- Financial summaries
-- PIN inventory
-- Income reports
-- Withdrawal history
-- CTOR information
+- Income Dashboard
+- Reporting Dashboard
+- PIN Management
+- Withdrawal Dashboard
+- Activity Audit
+- Registration Queue
+- KYC Dashboard
 
-Reporting combines data but does not own storage.
+Each module listens only to events required for its operation.
 
 ---
 
-# 13. Storage Synchronization
+# 16. Automatic Dashboard Refresh
 
-Administrative modules synchronize through enterprise services.
+Events eliminate unnecessary manual refreshes.
+
+Example:
 
 ```
-Repository Update
-        │
-        ▼
-Storage Layer
-        │
-        ▼
-Event Publication
-        │
-        ▼
-Dashboard Refresh
+PIN Assigned
+      │
+      ▼
+PIN_UPDATED Event
+      │
+      ▼
+PIN Dashboard Refresh
 ```
 
-Synchronization keeps dashboards consistent.
+Users immediately see updated information.
 
 ---
 
-# 14. Storage Security
+# 17. Enterprise Dependencies
 
-Storage access is protected through:
+The Event Architecture depends upon:
 
-- Session validation
-- Role authorization
-- Repository permissions
-- Secure APIs
-- Controlled updates
-
-Unauthorized storage access is blocked.
-
----
-
-# 15. Enterprise Dependencies
-
-Administrative storage depends upon:
-
-- Core Storage Services
-- Core Session Authority
-- PIN Master System
-- Wallet Services
+- Core Event System
+- Core Initializer
+- Session Authority
 - Reporting Engine
 - Activity Audit
-- Event System
+- Financial Services
+- PIN Master System
 
-These dependencies provide centralized storage governance.
-
----
-
-# 16. Repository Integrity
-
-The Storage Architecture enforces:
-
-- Consistent identifiers
-- Controlled updates
-- Data validation
-- Duplicate prevention
-- Repository synchronization
-
-Integrity is maintained across all enterprise repositories.
-
----
-
-# 17. Repository Coverage
-
-Administrative storage interacts with:
-
-- Users
-- PINs
-- Income Logs
-- Wallet Data
-- Withdrawals
-- Escrow Records
-- Activity Logs
-- KYC Requests
-- Registration Queue
-- Support Tickets
-- Franchise Requests
-- System Configuration
-
-These repositories collectively support administrative operations.
+All event communication flows through these enterprise services.
 
 ---
 
 # 18. Architectural Characteristics
 
-The Storage Architecture emphasizes:
+The Event Architecture emphasizes:
 
-- Centralized persistence
-- Repository consistency
-- Secure access
-- Modular storage
-- Enterprise governance
-- Data integrity
-- Scalable architecture
+- Loose coupling
+- Real-time synchronization
+- Centralized communication
+- Modular design
+- Scalability
+- High responsiveness
+- Enterprise consistency
 
 ---
 
 # 19. Enterprise Alignment
 
-The Storage Architecture aligns with:
+The Event Architecture aligns with:
 
-- Core Storage Services
+- Core Event Framework
 - Core Security Framework
-- Session Authority
 - Reporting Engine
-- Activity Audit
+- Session Authority
 - Governance Model
-- Enterprise Data Standards
+- Enterprise Monitoring
+- Activity Audit
 
-This alignment
+This ensures standardized communication throughout the BWG Enterprise Platform.
+
+---
+
+# 20. Architectural Summary
+
+The Admin Event Architecture provides a centralized event-driven communication framework for administrative operations.
+
+By publishing and subscribing to enterprise events, administrative modules remain synchronized without direct dependencies, enabling:
+
+- Real-time updates
+- Automatic dashboard refresh
+- Modular communication
+- Scalable architecture
+- Consistent enterprise behavior
+- Improved maintainability
+
+This event-driven model forms a key component of the BWG Enterprise Architecture.
+
+---
+
+# 21. Next Layer
+
+**LAYER 14 — ADMIN FINANCIAL GOVERNANCE**
+
+The next document defines the financial governance architecture of the Admin subsystem, including financial authority, transaction oversight, withdrawal governance, income supervision, policy enforcement, audit controls, and enterprise financial compliance.
