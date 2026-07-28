@@ -16,7 +16,7 @@ This document defines the architecture of the **System Bank**, the highest-level
 
 The System Bank is responsible for managing enterprise-level financial resources, validating financial transactions, controlling fund movement between internal banking modules, maintaining accounting integrity, and acting as the central financial authority for all platform operations.
 
-The System Bank does **not** directly execute business operations. Instead, it authorizes, records, supervises, and reconciles enterprise financial activities performed by specialized financial modules.
+The System Bank does **not** directly execute business operations. Instead, it authorizes, records, supervises, reconciles, and secures enterprise financial activities performed by specialized financial modules.
 
 ---
 
@@ -29,11 +29,12 @@ The System Bank is responsible for:
 - Internal Bank Coordination
 - Financial Authorization
 - Settlement Processing
-- Ledger Synchronization
+- Enterprise Ledger Synchronization
 - Enterprise Accounting
-- Audit Support
 - Financial Reconciliation
+- Financial Audit Coordination
 - Financial Reporting
+- Enterprise Financial Security
 
 ---
 
@@ -46,17 +47,17 @@ The System Bank supervises:
 - PIN Bank
 - Product Bank
 - Escrow Bank
-- Income Wallet
-- Hold Wallet
-- Available Balance Ledger
+- Settlement Engine
+- Enterprise Ledger
 - Payout Reserve
 - TDS Ledger
+- Audit Ledger
 
 ---
 
 # Internal Structure
 
-The System Bank consists of:
+The System Bank consists of the following enterprise components.
 
 ## Master Operating Fund
 
@@ -65,56 +66,61 @@ Primary enterprise operating capital.
 Functions:
 
 - Company financial operations
-- Operational settlements
+- Enterprise operating expenses
 - Platform reserve management
+- Internal settlements
 
 ---
 
 ## Reserve Fund
 
-Financial reserve for platform stability.
+Dedicated financial reserve for enterprise stability.
 
 Functions:
 
 - Emergency reserve
 - Operational continuity
-- Risk protection
+- Risk management
+- Financial protection
 
 ---
 
 ## Settlement Engine
 
-Processes internal financial settlements.
+Responsible for coordinating internal financial settlements.
 
 Functions:
 
 - Internal reconciliation
 - Cross-bank settlement
 - Financial synchronization
+- Settlement verification
 
 ---
 
-## Accounting Ledger
+## Enterprise Ledger
 
-Maintains enterprise accounting records.
+Central accounting ledger for enterprise financial records.
 
 Functions:
 
-- Double-entry recording
-- Financial balancing
+- Double-entry accounting
+- Enterprise balancing
 - Ledger verification
+- Financial reconciliation
 
 ---
 
 ## Audit Ledger
 
-Stores permanent financial audit history.
+Permanent financial audit repository.
 
 Functions:
 
 - Immutable transaction history
 - Compliance records
 - Investigation support
+- Enterprise audit reporting
 
 ---
 
@@ -123,19 +129,21 @@ Functions:
 The System Bank authorizes:
 
 - Fund allocation
-- Bank synchronization
-- Internal settlements
-- Enterprise reconciliation
+- Internal bank synchronization
+- Enterprise settlements
 - Financial validation
+- Enterprise reconciliation
 - Reserve management
+- Internal financial transfers
 
 The System Bank does **not**:
 
 - Approve user registrations
 - Execute upgrades
 - Execute repurchases
-- Process business logic
-- Modify user genealogy
+- Execute business plans
+- Modify genealogy
+- Calculate business income
 
 ---
 
@@ -145,7 +153,8 @@ The System Bank does **not**:
 
 - Receives user deposits
 - Receives approved payouts
-- Shares transaction records
+- Maintains user financial balances
+- Shares financial transaction records
 
 ---
 
@@ -154,6 +163,7 @@ The System Bank does **not**:
 - Receives franchise deposits
 - Funds PIN purchases
 - Funds product purchases
+- Maintains franchise financial balances
 
 ---
 
@@ -161,6 +171,7 @@ The System Bank does **not**:
 
 - Receives validated PIN purchase funds
 - Allocates PIN inventory
+- Maintains PIN purchase accounting
 
 ---
 
@@ -168,13 +179,15 @@ The System Bank does **not**:
 
 - Receives validated product purchase funds
 - Allocates product inventory
+- Maintains product purchase accounting
 
 ---
 
 ## Escrow Bank
 
-- Holds protected funds
+- Holds protected financial transactions
 - Releases funds after approval
+- Maintains escrow accounting
 
 ---
 
@@ -195,7 +208,9 @@ System Bank Validation
         │
         ├────────► Escrow Bank
         │
-        └────────► Ledger Update
+        ├────────► Enterprise Ledger
+        │
+        └────────► Audit Ledger
 ```
 
 ---
@@ -207,11 +222,13 @@ The System Bank enforces:
 - Role-Based Authorization
 - Financial Validation
 - Transaction Verification
-- Ledger Integrity
+- Enterprise Ledger Integrity
 - Audit Logging
 - Exception Monitoring
 - Duplicate Transaction Protection
 - Financial Reconciliation
+- Fraud Detection Support
+- Financial Compliance Controls
 
 ---
 
@@ -227,9 +244,10 @@ Every System Bank operation records:
 - Timestamp
 - Approval Status
 - Reference ID
-- Audit Information
+- Operator Information
+- Audit Metadata
 
-Audit records are permanent and must never be deleted.
+Audit records are permanent and must never be modified or deleted.
 
 ---
 
@@ -244,33 +262,38 @@ The System Bank integrates with:
 - Franchise
 - PIN Bank
 - Product Bank
-- Escrow Engine
-- Wallet System
-- Ledger System
+- Escrow Bank
+- Wallet Architecture
+- Ledger Architecture
 - Income Engine
 - Payout Engine
 - Audit System
+- Security Framework
 
 ---
 
 # Design Principles
 
-The System Bank follows these principles:
+The System Bank follows these enterprise principles:
 
 - Single Financial Authority
-- Centralized Governance
-- Complete Traceability
+- Centralized Financial Governance
+- Complete Financial Traceability
 - Immutable Ledger Recording
 - Secure Internal Settlement
 - Enterprise Accounting Integrity
 - Separation of Banking and Business Logic
 - High Availability
-- Production-Grade Reliability
+- Enterprise Scalability
+- Production-Grade Financial Reliability
 
 ---
 
 # Layer Summary
 
-The System Bank is the enterprise financial authority of the BestWayGrow platform.
+The System Bank is the highest financial authority within the BestWayGrow enterprise platform.
 
-It coordinates all internal banking modules, validates financial operations, maintains accounting integrity, secures enterprise funds, records permanent audit history, and ensures every financial transaction follows a consistent, secure, and traceable execution model across the entire platform.
+It coordinates all internal banking modules, validates enterprise financial operations, maintains accounting integrity, secures enterprise funds, synchronizes financial ledgers, records permanent audit history, and ensures every financial transaction follows a consistent, secure, transparent, and enterprise-grade execution model across the entire platform.
+
+This architecture serves as the financial foundation upon which the User Bank, Franchise Bank, PIN Bank, Product Bank, Escrow Bank, Wallet Architecture, Ledger Architecture, Transaction Engine, Income Engine, and Payout Engine are built.
+
