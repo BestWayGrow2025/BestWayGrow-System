@@ -63,5 +63,74 @@
 ❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
 👉 REPOSITORY FILE: admin_franchise_auth.html 👉 KNOWLEDGE BASE: KB_008 👉 LAYER: Admin → Franchise Authentication Layer 👉 CATEGORY: Franchise Authentication Interface 👉 PURPOSE: Provides the secure login interface for Franchise Administrators, collects authentication credentials, and initializes the Franchise Administration authentication workflow. 👉 POSITION: Admin → Franchise Portal → Login Interface 👉 LOADED BY: Direct Browser Entry 👉 ENTRY FUNCTION: HTML Document Initialization (DOMContentLoaded handled by admin_franchise_auth_controller.js) 👉 DEPENDENCIES: core_boot_manager.js, core_initializer.js, core_session_authority.js, admin_franchise_auth_controller.js 👉 GLOBAL EXPORTS: None (UI document delegates all logic to the controller) 👉 USER INTERFACE: Displays Franchise ID input, Password input, Login button, and Authentication Status message panel. 👉 AUTHENTICATION FORM: Accepts Franchise Administrator credentials for secure session validation. 👉 CORE INITIALIZATION: Loads Core Boot Manager, Core Initializer, and Session Authority before executing Franchise Authentication Controller. 👉 CONTROLLER INTEGRATION: Delegates all authentication logic, session validation, credential verification, and login processing to admin_franchise_auth_controller.js. 👉 LAYOUT: Responsive centered authentication card with enterprise login styling for Franchise Administration access. 👉 SECURITY: Password field uses masked input and authentication processing is performed exclusively by the controller layer. 👉 NAVIGATION ROLE: Acts as the official entry page for Franchise Administrator authentication. 👉 STATUS: ✅ VERIFIED 👉 REMARKS: Enterprise Franchise Authentication Interface providing secure administrator login UI, controlled Core initialization sequence, controller-driven authentication workflow, and production-grade Franchise Administration access.
 ♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️
-👉 REPOSITORY FILE: admin_franchise_auth_controller.js 👉 KNOWLEDGE BASE: KB_009 👉 LAYER: Admin → Franchise Authentication Layer 👉 CATEGORY: Franchise Authentication Controller 👉 PURPOSE: Controls Franchise Administrator authentication, validates login credentials, manages Franchise login sessions, and securely redirects authenticated users to the Franchise Dashboard. 👉 POSITION: Admin → Franchise Portal → Authentication Controller 👉 LOADED BY: admin_franchise_auth.html 👉 ENTRY FUNCTION: DOMContentLoaded 👉 DEPENDENCIES: getUsers(), localStorage, core_boot_manager.js, core_initializer.js, core_session_authority.js 👉 GLOBAL EXPORTS: None 👉 INITIALIZATION: Executes page initialization, authentication setup, event binding, and existing session verification after page load. 👉 AUTHENTICATION: Validates Franchise ID, password, account role, and active account status before granting dashboard access. 👉 SESSION MANAGEMENT: Stores authenticated Franchise session using localStorage under the loggedInFranchise key and restores existing sessions automatically. 👉 LOGIN PROCESS: Searches repository users, verifies Franchise role, validates password (plain or Base64 decoded), confirms active status, and redirects successful logins to admin_franchise_dashboard.html. 👉 PASSWORD HANDLING: Supports Base64-decoded password verification through safeDecode() while maintaining compatibility with stored credentials. 👉 EVENT MANAGEMENT: Registers Login button click event and prevents duplicate login execution through request locking. 👉 AUTO REDIRECTION: Detects active Franchise login session and automatically redirects authenticated users to the Franchise Dashboard. 👉 SECURITY: Rejects invalid credentials, inactive accounts, unavailable user authority, and duplicate login attempts. 👉 STATUS: ✅ VERIFIED 👉 REMARKS: Enterprise Franchise Authentication Controller providing secure credential verification, session persistence, duplicate request protection, automatic dashboard redirection, and production-grade Franchise Administrator authentication.
-❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️
+👉 REPOSITORY FILE: admin_franchise_auth_controller.js
+👉 KNOWLEDGE BASE: KB_009
+👉 LAYER: Admin → Franchise Authentication Layer
+👉 CATEGORY: Franchise Authentication Controller
+👉 PURPOSE:
+Controls Franchise Administrator authentication, validates login credentials, manages Franchise login sessions, and securely redirects authenticated users to the Franchise Dashboard.
+
+👉 POSITION:Admin → Franchise Portal → Authentication Controller
+👉 LOADED BY:  admin_franchise_auth.html
+👉 ENTRY FUNCTION:   DOMContentLoaded
+
+👉 DEPENDENCIES:
+getUsers(), localStorage, core_boot_manager.js, core_initializer.js, core_session_authority.js
+👉 GLOBAL EXPORTS:   None
+👉 INITIALIZATION:
+Executes page initialization, authentication setup, event binding, and existing Franchise session verification after page load.
+👉 AUTHENTICATION:
+Validates Franchise ID, password, account role, and active account status before granting dashboard access.
+👉 USER VERIFICATION:
+Retrieves repository users through getUsers() and verifies:
+- Matching Franchise userId
+- Franchise role authorization
+- Valid password credentials
+- Active account status
+👉 PASSWORD HANDLING:
+Supports stored password compatibility through safeDecode() Base64-decoded verification while maintaining compatibility with existing credential storage format.
+👉 SESSION MANAGEMENT:
+Creates and stores authenticated Franchise session data using localStorage under the loggedInFranchise key.
+
+Stored session information:  - Franchise userId
+
+Existing active Franchise sessions are detected and automatically restored.
+👉 LOGIN PROCESS:
+Authentication workflow:
+1. Receive Franchise ID and Password input
+2. Validate required fields
+3. Load repository users
+4. Find matching Franchise account
+5. Verify password
+6. Confirm active status
+7. Store Franchise session
+8. Redirect to admin_franchise_dashboard.html
+👉 EVENT MANAGEMENT:
+Registers Login button click event and prevents duplicate authentication execution through login request locking.
+👉 AUTO REDIRECTION:
+Detects existing loggedInFranchise session and redirects authenticated Franchise users directly to the Franchise Dashboard.
+👉 SECURITY:
+Implements:
+- Invalid credential rejection
+- Franchise role validation
+- Active account verification
+- Missing user system protection
+- Duplicate login execution protection
+- Controlled dashboard access
+👉 CURRENT IMPLEMENTATION:
+Authentication currently depends on:
+- Repository user storage
+- getUsers() data access
+- localStorage session persistence
+- Controller-level credential validation
+👉 FUTURE INTEGRATION READY:
+Can be extended with:
+- Central authentication API
+- Advanced password hashing
+- Multi-factor authentication
+- Enterprise identity provider integration
+
+👉 STATUS:
+✅ VERIFIED
+👉 REMARKS:
+Enterprise Franchise Authentication Controller providing secure credential verification, repository user validation, localStorage session persistence, safeDecode password compatibility, duplicate login protection, automatic dashboard redirection, and production-aligned Franchise Administrator authentication workflow.
