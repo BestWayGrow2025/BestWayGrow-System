@@ -1,3 +1,4 @@
+# FRANCHISE_KNOWLEDGE_INDEX.md
 Document Name: FRANCHISE_KNOWLEDGE_INDEX.md  
 Documentation Type: Franchise Knowledge Base Master Index  
 Module: Franchise  
