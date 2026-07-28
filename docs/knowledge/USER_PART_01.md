@@ -1,3 +1,4 @@
+❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️♥️♥️♥️♥️❤️♥️♥️♥️♥️
 👉 REPOSITORY FILE: user_apply_franchise.js
 👉 KNOWLEDGE BASE: KB_236
 👉 LAYER: User → Franchise Application Layer
