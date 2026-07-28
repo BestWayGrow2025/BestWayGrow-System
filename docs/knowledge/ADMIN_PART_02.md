@@ -87,7 +87,150 @@ Enterprise Franchise Authority Controller providing centralized Franchise reques
 ♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️ 
 👉 REPOSITORY FILE: admin_franchise_dashboard.html 👉 KNOWLEDGE BASE: KB_012 👉 LAYER: Admin → Franchise Management Layer 👉 CATEGORY: Franchise Dashboard Interface 👉 PURPOSE: Provides the primary Franchise Administration dashboard for displaying Franchise profile information, system status, managed users, and administrative dashboard controls. 👉 POSITION: Admin → Franchise Administration → Franchise Dashboard 👉 LOADED BY: Franchise Login Authentication (admin_franchise_auth_controller.js) 👉 ENTRY FUNCTION: HTML Document Initialization (Controller handled by admin_franchise_dashboard_controller.js) 👉 DEPENDENCIES: core_boot_manager.js, core_initializer.js, core_session_authority.js, admin_franchise_dashboard_controller.js 👉 GLOBAL EXPORTS: None (Presentation layer only) 👉 USER INTERFACE: Displays Franchise Dashboard title, Logout button, Profile section, System Status section, and Users Under You management panel. 👉 PROFILE PANEL: Provides dedicated display area for authenticated Franchise profile information through the Profile container. 👉 SYSTEM STATUS PANEL: Displays operational system information and Franchise dashboard status through the System container. 👉 USER MANAGEMENT PANEL: Provides dynamic container for displaying users assigned under the authenticated Franchise account. 👉 LAYOUT: Enterprise card-based dashboard layout with modular administrative sections for scalable Franchise management. 👉 CONTROLLER INTEGRATION: All authentication, session validation, data retrieval, dashboard rendering, and business logic are handled by admin_franchise_dashboard_controller.js. 👉 SECURITY: Dashboard access and operational validation are enforced exclusively by the associated Franchise Dashboard Controller. 👉 STATUS: ✅ VERIFIED 👉 REMARKS: Enterprise Franchise Dashboard Interface providing authenticated Franchise administration, modular dashboard presentation, dynamic controller-driven content rendering, and production-grade Franchise Management architecture.
 ♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️ 
-👉 REPOSITORY FILE: admin_franchise_dashboard_controller.js 👉 KNOWLEDGE BASE: KB_013 👉 LAYER: Admin → Franchise Management Layer 👉 CATEGORY: Franchise Dashboard Controller 👉 PURPOSE: Controls Franchise Dashboard authentication, profile rendering, system status monitoring, downline user management, session validation, periodic dashboard refresh, and logout operations. 👉 POSITION: Admin → Franchise Administration → Dashboard Controller 👉 LOADED BY: admin_franchise_dashboard.html 👉 ENTRY FUNCTION: initPage(), authPage(), bindEvents(), loadPage() 👉 DEPENDENCIES: getSession(), destroySession(), getCurrentUser(), hasRole(), getSystemSettings(), getUsers(), logActivity(), core_boot_manager.js, core_initializer.js, core_session_authority.js 👉 GLOBAL EXPORTS: None (Controller operates through DOM event lifecycle) 👉 INITIALIZATION: Automatically initializes the Franchise Dashboard after DOM loading, validates session security, binds dashboard events, and loads operational data. 👉 AUTHENTICATION: Verifies authenticated Franchise session, validates active account status, confirms Franchise role authorization, and enforces system access restrictions before dashboard loading. 👉 PROFILE MANAGEMENT: Displays authenticated Franchise profile including User ID, Username, and Account Status. 👉 SYSTEM MONITORING: Continuously displays Registration Status, Franchise Access, Lock Mode, Queue Status, and Withdrawal Status using system configuration values. 👉 DOWNLINE MANAGEMENT: Retrieves and renders all directly introduced users with User ID, Name, Account Status, and Wallet Balance information. 👉 AUTO REFRESH: Automatically refreshes System Status and Downline User information every four seconds to maintain dashboard accuracy. 👉 ACTIVITY LOGGING: Records Franchise Dashboard opening and logout operations through the centralized activity logging mechanism. 👉 SESSION MANAGEMENT: Protects dashboard access through session verification and securely redirects unauthorized or inactive users to Franchise Login. 👉 LOGOUT WORKFLOW: Stops refresh timers, records logout activity, destroys the active session, and redirects to the Franchise Authentication page. 👉 SECURITY: Implements role verification, account validation, system permission enforcement, and secure session handling before allowing dashboard access. 👉 STATUS: ✅ VERIFIED 👉 REMARKS: Enterprise Franchise Dashboard Controller providing secure Franchise authentication, real-time operational monitoring, downline management, automated dashboard refresh, centralized activity logging, and production-grade Franchise Administration workflow.
+👉 REPOSITORY FILE: admin_franchise_dashboard_controller.js
+👉 KNOWLEDGE BASE: KB_013
+👉 LAYER: Admin → Franchise Management Layer
+👉 CATEGORY: Franchise Dashboard Controller
+👉 PURPOSE:
+Controls Franchise Dashboard authentication, profile rendering, system status monitoring, downline user management, session validation, periodic dashboard refresh, and logout operations.
+👉 POSITION:  Admin → Franchise Administration → Dashboard Controller
+👉 LOADED BY:   admin_franchise_dashboard.html
+👉 ENTRY FUNCTION:
+initPage()
+authPage()
+bindEvents()
+loadPage()
+
+👉 DEPENDENCIES:
+getSession()
+destroySession()
+getCurrentUser()
+hasRole()
+getSystemSettings()
+getUsers()
+logActivity()
+core_boot_manager.js
+core_initializer.js
+core_session_authority.js
+
+👉 GLOBAL EXPORTS:
+None
+(Controller operates through DOM lifecycle and dashboard events)
+
+👉 INITIALIZATION:
+Automatically initializes the Franchise Dashboard after DOM loading, performs authentication checks, binds dashboard controls, and loads operational information.
+
+👉 AUTHENTICATION:
+Validates:
+- Active Franchise session
+- Current user identity
+- Franchise role authorization
+- Account active status
+- Franchise system access permission
+
+Unauthorized users are redirected to:
+admin_franchise_auth.html
+
+👉 SESSION MANAGEMENT:
+Uses Core Session Authority functions:
+- getSession()
+- getCurrentUser()
+- destroySession()
+
+Protects dashboard access through controlled session validation.
+
+👉 PROFILE MANAGEMENT:
+Displays authenticated Franchise profile information:
+
+- Franchise User ID
+- Username
+- Account Status
+
+through the dashboard profile container.
+
+👉 SYSTEM MONITORING:
+Displays current platform operational settings:
+
+- Registration Status
+- Franchise Access Status
+- Lock Mode Status
+- Queue Status
+- Withdrawal Status
+
+using getSystemSettings().
+
+👉 DOWNLINE MANAGEMENT:
+Retrieves users through getUsers() and filters directly introduced users using:
+
+introducerId === currentUser.userId
+
+Displays:
+- User ID
+- User Name
+- Active Status
+- Wallet Balance
+
+👉 WALLET DISPLAY:
+Current implementation displays user wallet information from:
+
+user.wallet
+
+Future financial integration can connect with centralized wallet and ledger modules.
+
+👉 AUTO REFRESH:
+Automatically refreshes:
+- System status
+- Downline user information
+
+every 4000 milliseconds.
+
+Refresh process is controlled through refreshTimer.
+
+👉 ACTIVITY LOGGING:
+Records dashboard events through logActivity():
+
+- Dashboard opening
+- Franchise logout
+
+Future integration can connect with enterprise audit journal.
+
+👉 LOGOUT WORKFLOW:
+Logout process:
+
+1. Stop dashboard refresh timer
+2. Record logout activity
+3. Destroy active session
+4. Redirect to Franchise Authentication page
+
+👉 SECURITY:
+Implements:
+
+- Role verification
+- Session validation
+- Account status checking
+- Franchise access permission checking
+- Controlled logout handling
+
+👉 CURRENT IMPLEMENTATION:
+Uses:
+- Core session authority
+- Local repository user data
+- System settings provider
+- DOM-based dashboard rendering
+
+No direct financial transaction processing exists inside this controller.
+
+👉 FUTURE INTEGRATION READY:
+Can be extended with:
+
+- Franchise income dashboard
+- PIN inventory monitoring
+- Wallet settlement view
+- Financial ledger integration
+- Advanced franchise analytics
+👉 STATUS: ✅ VERIFIED
+👉 REMARKS:
+Enterprise Franchise Dashboard Controller providing secure Franchise authentication, real-time operational monitoring, introducer-based downline management, wallet visibility, automated dashboard refresh, centralized activity logging, secure session handling, and production-aligned Franchise Administration workflow.
 ♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️ 
 👉 REPOSITORY FILE: admin_franchise_pin_request_controller.js 👉 KNOWLEDGE BASE: KB_014 👉 LAYER: Admin → Franchise PIN Management Layer 👉 CATEGORY: Franchise PIN Request Controller 👉 PURPOSE: Controls Franchise PIN request creation, request tracking, authentication validation, request storage, and Franchise PIN request management operations. 👉 POSITION: Admin → Franchise Administration → PIN Request Controller 👉 LOADED BY: admin_franchise_pin_request_dashboard.html 👉 ENTRY FUNCTION: initPage(), authPage(), bindEvents(), loadPage() 👉 DEPENDENCIES: getSession(), destroySession(), getCurrentUser(), hasRole(), logActivity(), localStorage, core_boot_manager.js, core_initializer.js, core_session_authority.js 👉 GLOBAL EXPORTS: None (Controller operates through DOM lifecycle and registered event handlers) 👉 INITIALIZATION: Automatically initializes the Franchise PIN Request module after DOM loading, validates authentication, binds interface events, and loads existing PIN requests. 👉 AUTHENTICATION: Verifies authenticated Franchise session, validates Franchise role, confirms active account status, and redirects unauthorized users to Franchise Login. 👉 PIN REQUEST CREATION: Generates unique Request IDs, validates requested PIN quantity, creates new PIN request records, and stores them in localStorage. 👉 REQUEST STORAGE: Maintains Franchise PIN request records including Request ID, User ID, Quantity, Status, and Creation Timestamp. 👉 REQUEST TRACKING: Displays only PIN requests belonging to the authenticated Franchise account with reverse chronological ordering. 👉 EVENT MANAGEMENT: Registers Back and Submit button events for dashboard navigation and PIN request submission. 👉 ACTIVITY LOGGING: Records every successful Franchise PIN Request creation through the centralized activity logging mechanism. 👉 NAVIGATION: Provides secure return navigation from the PIN Request module back to the Franchise Dashboard. 👉 SECURITY: Restricts PIN request operations to authenticated Franchise users with valid active accounts. 👉 STATUS: ✅ VERIFIED 👉 REMARKS: Enterprise Franchise PIN Request Controller providing authenticated PIN request submission, request history management, secure local request persistence, activity auditing, and production-grade Franchise PIN Administration workflow.
 ♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️ 
