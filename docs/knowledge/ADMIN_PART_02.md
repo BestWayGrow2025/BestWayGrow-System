@@ -4,23 +4,86 @@
 👉 KNOWLEDGE BASE: KB_011
 👉 LAYER: Admin → Franchise Management Layer
 👉 CATEGORY: Franchise Authority Controller
-👉 PURPOSE: Manages Franchise request monitoring, processes administrator approval and rejection actions, refreshes Franchise request records, and controls Franchise Authority dashboard operations.
-👉 POSITION: Admin → Franchise Administration → Authority Controller
-👉 LOADED BY: admin_franchise_authority.html
-👉 ENTRY FUNCTION: bindFranchiseAuthorityEvents()
-👉 DEPENDENCIES: getFranchiseRequests(), approveFranchiseRequest(), rejectFranchiseRequest(), DOM API
-👉 GLOBAL EXPORTS: loadFranchiseRequests(), approveFranchise(), rejectFranchise(), resetUserPassword()
-👉 INITIALIZATION: Automatically binds interface events and loads Franchise requests after the DOM is fully initialized.
-👉 REQUEST MANAGEMENT: Retrieves all Franchise requests, renders request records, and updates the interface after every administrative action.
-👉 APPROVAL WORKFLOW: Executes Franchise approval through approveFranchiseRequest() and refreshes the request list immediately after processing.
-👉 REJECTION WORKFLOW: Executes Franchise rejection through rejectFranchiseRequest() and refreshes the request list after completion.
-👉 PASSWORD MANAGEMENT: Provides administrative password reset entry point through resetUserPassword() for future authority integration.
-👉 EVENT MANAGEMENT: Registers Refresh and Reset Password button events and initializes automatic request loading.
-👉 USER INTERFACE CONTROL: Dynamically generates Franchise request cards including Request ID, User ID, Status, Approve, and Reject controls.
-👉 LOGGING: Records approval, rejection, and password reset operations through console logging for operational monitoring.
-👉 SECURITY: Administrative actions execute only through dedicated authority functions when available.
+👉 PURPOSE:
+Manages Franchise request monitoring, processes administrator approval and rejection actions, refreshes Franchise request records, and controls Franchise Authority dashboard operations.
+👉 POSITION:  Admin → Franchise Administration → Authority Controller
+👉 LOADED BY:   admin_franchise_authority.html
+👉 ENTRY FUNCTION:   bindFranchiseAuthorityEvents()
+👉 DEPENDENCIES:
+getFranchiseRequests(), approveFranchiseRequest(), rejectFranchiseRequest(), DOM API
+
+👉 GLOBAL EXPORTS:
+loadFranchiseRequests()
+approveFranchise()
+rejectFranchise()
+resetUserPassword()
+
+👉 INITIALIZATION:
+Automatically binds interface events and loads Franchise requests after DOM initialization.
+
+👉 REQUEST MANAGEMENT:
+Retrieves Franchise request records through getFranchiseRequests(), dynamically renders request information, and refreshes the interface after administrative actions.
+
+👉 REQUEST DISPLAY:
+Generates Franchise request records containing:
+- Request ID
+- User ID
+- Request Status
+- Approve Action
+- Reject Action
+
+👉 APPROVAL WORKFLOW:
+Executes Franchise approval through approveFranchiseRequest() when the authority function is available and refreshes the request list after processing.
+
+👉 REJECTION WORKFLOW:
+Executes Franchise rejection through rejectFranchiseRequest() when the authority function is available and refreshes the request list after processing.
+
+👉 PASSWORD MANAGEMENT:
+Provides resetUserPassword() administrative entry point.
+
+CURRENT STATUS:
+- Password reset interface exists
+- Full password reset execution logic is not yet connected
+
+👉 EVENT MANAGEMENT:
+Registers:
+- Refresh button action
+- Reset Password button action
+and initializes automatic request loading.
+
+👉 LOGGING:
+Currently provides operational console logging for:
+- Franchise approval action
+- Franchise rejection action
+- Password reset request action
+Future integration can connect these events with centralized audit storage.
+
+👉 SECURITY:
+Administrative actions are executed only through dedicated authority functions when available.
+
+Current protection includes:
+- Controlled function execution
+- Limited authority exposure
+- Controller-based workflow separation
+
+👉 CURRENT IMPLEMENTATION:
+Uses:
+- DOM-based dashboard control
+- External Franchise request authority functions
+- Dynamic request rendering
+No direct database/API persistence exists in the current repository implementation.
+
+👉 FUTURE INTEGRATION READY:
+Can be extended with:
+- Admin permission matrix
+- Central audit journal integration
+- Approval authority hierarchy
+- Notification workflow
+- Enterprise request persistence layer
+
 👉 STATUS: ✅ VERIFIED
-👉 REMARKS: Enterprise Franchise Authority Controller providing centralized Franchise request management, approval and rejection workflows, administrative event handling, dynamic request rendering, and production-grade Franchise Administration control.
+👉 REMARKS:
+Enterprise Franchise Authority Controller providing centralized Franchise request monitoring, approval and rejection workflow handling, dynamic request rendering, controlled administrative actions, future audit integration readiness, and production-aligned Franchise Administration management.
 ♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️ 
 👉 REPOSITORY FILE: admin_franchise_dashboard.html 👉 KNOWLEDGE BASE: KB_012 👉 LAYER: Admin → Franchise Management Layer 👉 CATEGORY: Franchise Dashboard Interface 👉 PURPOSE: Provides the primary Franchise Administration dashboard for displaying Franchise profile information, system status, managed users, and administrative dashboard controls. 👉 POSITION: Admin → Franchise Administration → Franchise Dashboard 👉 LOADED BY: Franchise Login Authentication (admin_franchise_auth_controller.js) 👉 ENTRY FUNCTION: HTML Document Initialization (Controller handled by admin_franchise_dashboard_controller.js) 👉 DEPENDENCIES: core_boot_manager.js, core_initializer.js, core_session_authority.js, admin_franchise_dashboard_controller.js 👉 GLOBAL EXPORTS: None (Presentation layer only) 👉 USER INTERFACE: Displays Franchise Dashboard title, Logout button, Profile section, System Status section, and Users Under You management panel. 👉 PROFILE PANEL: Provides dedicated display area for authenticated Franchise profile information through the Profile container. 👉 SYSTEM STATUS PANEL: Displays operational system information and Franchise dashboard status through the System container. 👉 USER MANAGEMENT PANEL: Provides dynamic container for displaying users assigned under the authenticated Franchise account. 👉 LAYOUT: Enterprise card-based dashboard layout with modular administrative sections for scalable Franchise management. 👉 CONTROLLER INTEGRATION: All authentication, session validation, data retrieval, dashboard rendering, and business logic are handled by admin_franchise_dashboard_controller.js. 👉 SECURITY: Dashboard access and operational validation are enforced exclusively by the associated Franchise Dashboard Controller. 👉 STATUS: ✅ VERIFIED 👉 REMARKS: Enterprise Franchise Dashboard Interface providing authenticated Franchise administration, modular dashboard presentation, dynamic controller-driven content rendering, and production-grade Franchise Management architecture.
 ♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️♥️ 
