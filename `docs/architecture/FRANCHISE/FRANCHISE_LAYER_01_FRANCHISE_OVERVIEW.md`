@@ -1,0 +1,238 @@
+# FRANCHISE LAYER 01 — FRANCHISE OVERVIEW
+
+**Document Name:** FRANCHISE_LAYER_01_FRANCHISE_OVERVIEW.md  
+**Architecture Layer:** 01 — Franchise Overview  
+**Module:** Franchise Architecture  
+**Location:** `docs/architecture/FRANCHISE/FRANCHISE_LAYER_01_FRANCHISE_OVERVIEW.md`  
+**Status:** ✅ Verified Architecture  
+**Version:** 1.0  
+**Last Updated:** 2026-07-28
+
+---
+
+# Purpose
+
+This document defines the overall architecture of the BestWayGrow Franchise subsystem.
+
+The Franchise subsystem provides the operational framework for managing authorized franchise partners who support product distribution, PIN inventory management, customer assistance, financial transactions, and regional business operations.
+
+The Franchise system operates under the Admin governance structure and integrates with Financial, Inventory, Core, User, and Audit systems.
+
+---
+
+# Franchise Role Definition
+
+A Franchise is an authorized business operational unit responsible for:
+
+- PIN purchasing
+- Product purchasing
+- Inventory management
+- Customer support
+- Local business operations
+- Transaction processing
+- Regional service execution
+
+The Franchise does not control enterprise-level financial authority.
+
+All financial operations are governed through:
+
+- System Bank
+- Franchise Bank
+- Financial Architecture
+- Audit System
+
+---
+
+# Franchise Architecture Objectives
+
+The Franchise subsystem is designed to:
+
+- Provide controlled business expansion
+- Enable regional operations
+- Maintain inventory availability
+- Support user services
+- Provide transparent financial tracking
+- Ensure secure operations
+- Maintain complete audit history
+
+---
+
+# Franchise Hierarchy
+
+```text
+Super Admin
+      │
+      ▼
+System Admin
+      │
+      ▼
+Admin
+      │
+      ▼
+Franchise
+      │
+      ▼
+Users / Customers
+Franchise Core Modules
+The Franchise subsystem consists of:
+Franchise Application Module
+Responsible for:
+Application submission
+Applicant information
+Document collection
+Application tracking
+Franchise Approval Module
+Responsible for:
+Admin review
+Verification
+Approval decision
+Activation status
+Franchise Dashboard Module
+Responsible for:
+Franchise operations
+Reports
+Inventory view
+Transaction monitoring
+Business controls
+Franchise Financial Module
+Responsible for:
+Franchise Bank
+Fund management
+PIN purchase payment
+Product purchase payment
+Financial reporting
+Franchise Inventory Module
+Responsible for:
+PIN stock
+Product stock
+Used stock
+Unused stock
+Stock history
+Franchise Security Module
+Responsible for:
+Authentication
+Authorization
+Access control
+Activity monitoring
+Franchise Operational Flow
+Franchise Application
+          │
+          ▼
+Admin Verification
+          │
+          ▼
+Approval
+          │
+          ▼
+Franchise Account Creation
+          │
+          ▼
+Franchise Bank Activation
+          │
+          ▼
+PIN / Product Purchase
+          │
+          ▼
+Inventory Allocation
+          │
+          ▼
+User Service Operations
+          │
+          ▼
+Transaction Recording
+          │
+          ▼
+Audit Completion
+Franchise Financial Flow
+Payment Gateway
+        │
+        ▼
+Franchise Bank
+        │
+        ▼
+System Bank Validation
+        │
+        ▼
+PIN Bank / Product Bank
+        │
+        ▼
+Inventory Allocation
+        │
+        ▼
+Ledger Update
+        │
+        ▼
+Audit Record
+Franchise Dashboard Requirements
+The Franchise Dashboard must provide:
+PIN Management
+PIN Order Details
+Available PIN Stock
+Used PIN Details
+Unused PIN Details
+PIN Purchase History
+PIN Allocation History
+Product Management
+Product Order Details
+Product Stock Details
+Available Products
+Sold Products
+Product Purchase History
+Financial Management
+Franchise Bank Balance
+Fund Details
+Transaction History
+Purchase Records
+Settlement Records
+Reports
+Daily Activity Report
+Monthly Business Report
+Inventory Report
+Financial Report
+Audit Report
+Franchise System Integration
+The Franchise subsystem integrates with:
+Core System
+Admin System
+User System
+Financial Architecture
+Franchise Bank
+System Bank
+PIN Bank
+Product Bank
+Inventory System
+Transaction Engine
+Audit System
+Security Framework
+Security Principles
+The Franchise system follows:
+Admin Controlled Approval
+Role-Based Access
+Secure Financial Operations
+Inventory Protection
+Transaction Validation
+Complete Audit Logging
+Data Ownership
+Franchise owns:
+Franchise Profile
+Franchise Operational Data
+Franchise Inventory Records
+Franchise Transaction History
+System controls:
+Approval Status
+Financial Governance
+Audit Records
+Security Policies
+Design Principles
+The Franchise Architecture follows:
+Controlled Expansion
+Separation of Business and Financial Authority
+Complete Transparency
+Secure Operations
+Inventory Accuracy
+Financial Traceability
+Enterprise Scalability
+Layer Summary
+The Franchise Overview layer establishes the foundation of the BestWayGrow Franchise subsystem.
+It defines the franchise role, operational responsibilities, dashboard requirements, financial interaction, inventory management, security model, and integration points with the complete enterprise platform.
+This layer provides the base structure for all future Franchise Architecture layers.
