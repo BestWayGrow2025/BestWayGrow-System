@@ -2,7 +2,7 @@
 
 ## Coverage
 **CORE_PART_01 → CORE_PART_08**  
-**Knowledge Base Range:** KB_001 → KB_116  
+**Knowledge Base Range:** KB_037 → KB_116  
 
 ---
 
@@ -272,7 +272,7 @@ Boot System ↓ Authentication ↓ User & Tree System ↓ Rank & CTOR Engine ↓
 # 6. PRODUCTION VERIFICATION STATUS
 
 ✅ All CORE Parts Reviewed  
-✅ KB_001 → KB_116 Documented  
+✅ KB_037 → KB_116 Documented  
 ✅ Authority Separation Verified  
 ✅ Architecture Compliance Verified  
 ✅ Security Controls Verified  
