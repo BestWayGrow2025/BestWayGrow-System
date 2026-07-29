@@ -1,6 +1,6 @@
 # IMPLEMENTATION MASTER – ADMIN INDEX
 
-Version: 1.0
+Version: 2.0
 Status: MASTER IMPLEMENTATION DOCUMENT
 Subsystem: ADMIN
 Owner: BestWayGrow Project
