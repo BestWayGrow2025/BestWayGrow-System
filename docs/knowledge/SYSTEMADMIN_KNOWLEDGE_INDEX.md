@@ -34,7 +34,6 @@ Knowledge Base Range: KB_214 – KB_236
 
 Total Repository Files Documented: 23
 ---
-
 # System Admin Knowledge Coverage
 
 The System Admin Knowledge Base includes documentation for:
