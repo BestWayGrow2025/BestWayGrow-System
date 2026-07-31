@@ -12,7 +12,6 @@ Purpose: Single Source of Truth for all System Admin implementation planning, ve
 
 This document serves as the permanent implementation guide for the entire
 System Admin subsystem.
-
 It consolidates:
 
 - Knowledge Base verification
