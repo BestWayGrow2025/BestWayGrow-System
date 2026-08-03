@@ -1,153 +1,241 @@
 # PIN Layer 05 – PIN Approval Architecture
 
----
-
-# 1. Purpose
-
-The PIN Approval Architecture defines the enterprise approval framework for validating, reviewing, authorizing, or rejecting PIN requests before they proceed to allocation and activation. It ensures that every approval decision follows standardized business rules, role-based authority, and complete audit tracking.
+**Document:** docs/architecture/PIN/PIN_LAYER_05_PIN_APPROVAL_ARCHITECTURE.md
 
 ---
 
-# 2. Approval Objectives
+# Purpose
 
-The Approval Architecture provides:
+This layer defines the complete approval architecture for the PIN subsystem.
 
-- Centralized approval workflow
-- Role-based authorization
-- Secure request review
-- Controlled approval decisions
-- Rejection management
-- Approval transparency
-- Audit compliance
-- Enterprise consistency
-- Operational reliability
-- Scalable governance
+It explains how PIN requests move through enterprise approval workflows while maintaining security, auditability, financial integrity, and role-based authorization.
+
+This layer does not execute business logic. It documents the architectural approval model.
 
 ---
 
-# 3. Approval Scope
+# Responsibilities
 
-The approval process governs:
+The approval layer is responsible for:
 
-- Upgrade PIN requests
-- Repurchase PIN requests
-- Administrative approvals
-- Financial verification
-- Request eligibility
-- Inventory availability
-- Business rule compliance
-
----
-
-# 4. Approval Workflow
-
-The enterprise approval lifecycle consists of:
-
-- Request submission
-- Request review
-- Validation
-- Authorization
-- Approval decision
-- Rejection decision
-- Processing authorization
-- Audit recording
-- Status update
-
-Each request follows a controlled approval sequence.
+- Receiving validated PIN requests
+- Performing role verification
+- Enforcing approval permissions
+- Coordinating approval workflow
+- Preventing duplicate approvals
+- Maintaining approval audit trail
+- Triggering downstream allocation or rejection
+- Publishing approval events
 
 ---
 
-# 5. Approval Validation
+# Approval Scope
 
-Before approval, the system validates:
+Supported approval operations include:
 
-- Request authenticity
-- User eligibility
-- Active session
-- Role permissions
-- Product availability
-- Inventory availability
-- Business policy compliance
-- Financial readiness
-
-Only validated requests may proceed.
+- PIN Purchase Approval
+- Upgrade PIN Approval
+- Repurchase PIN Approval
+- Admin Stock Approval
+- System PIN Approval
+- Franchise PIN Approval
+- Bulk PIN Approval
+- Recovery Approval
 
 ---
 
-# 6. Approval Authority
+# Architectural Components
 
-Approval authority is controlled through enterprise roles:
+Primary repository files participating in approval include:
+
+- pin_request_system.js
+- pin_request_processor_engine.js
+- pin_request_queue_engine.js
+- pin_action_dispatcher.js
+- pin_action_permission_control.js
+- pin_role_access.js
+- pin_role_access_controller.js
+- pin_permission_audit_layer.js
+- pin_system_controller.js
+- pin_event_bus.js
+
+---
+
+# Approval Flow
+
+```
+Request Created
+        │
+        ▼
+Request Validation
+        │
+        ▼
+Permission Verification
+        │
+        ▼
+Role Verification
+        │
+        ▼
+Approval Decision
+        │
+ ┌──────┴────────┐
+ │               │
+ ▼               ▼
+Approved     Rejected
+ │               │
+ ▼               ▼
+Allocation    Close Request
+ │
+ ▼
+Event Broadcast
+ │
+ ▼
+Audit Logging
+```
+
+---
+
+# Role-Based Approval
+
+Approvals are restricted according to enterprise hierarchy.
+
+Typical approval levels include:
 
 - Super Admin
 - System Admin
 - Admin
+- Franchise (where applicable)
 
-Each role performs approvals according to predefined authorization policies.
-
----
-
-# 7. Approval Outcomes
-
-An approval process may result in:
-
-- Approved
-- Rejected
-- Returned for review
-- Cancelled
-- Processing authorized
-
-Every outcome is permanently recorded for auditing.
+Users cannot approve requests beyond their assigned authority.
 
 ---
 
-# 8. Approval Security
+# Approval Validation
 
-Enterprise approval security includes:
+Before approval:
 
-- Role-based authorization
-- Session validation
-- Permission verification
-- Duplicate approval prevention
-- Approval locking
-- Audit logging
-- Controlled execution
-- Exception isolation
-
-Approval actions cannot bypass enterprise security controls.
+- Request must exist
+- Request must be pending
+- User must have permission
+- Session must be valid
+- Approval must not already exist
+- Execution lock must be available
 
 ---
 
-# 9. Architecture Dependencies
+# Security Controls
 
-The Approval Architecture interacts with:
+Approval layer integrates with:
 
-- PIN Product Architecture
-- PIN Request Architecture
-- PIN Allocation Architecture
-- PIN Validation Architecture
-- PIN Financial Governance
-- PIN Monitoring Architecture
-- PIN Governance Model
+- Session Guard
+- Engine Guard
+- Permission Audit Layer
+- Execution Lock
+- Security Contract
+- Event Bus
 
-Each layer maintains independent responsibilities.
+These controls prevent:
 
----
-
-# 10. Enterprise Design Principles
-
-The Approval Architecture follows:
-
-- Centralized approval control
-- Secure authorization
-- Separation of responsibilities
-- Deterministic workflows
-- Read-only monitoring
-- Complete auditability
-- Enterprise scalability
-- Policy-driven governance
+- Unauthorized approvals
+- Duplicate processing
+- Concurrent execution
+- Approval replay
+- Session hijacking
 
 ---
 
-# 11. Architecture Summary
+# Event Integration
 
-The PIN Approval Architecture provides the enterprise decision-making framework for all PIN requests. It ensures every approval is securely validated, role-authorized, policy-compliant, fully auditable, and consistently executed before requests advance to allocation, activation, and subsequent stages of the PIN lifecycle.
+Approval events include:
+
+- APPROVAL_STARTED
+- APPROVAL_VALIDATED
+- APPROVAL_GRANTED
+- APPROVAL_REJECTED
+- APPROVAL_COMPLETED
+- APPROVAL_FAILED
+
+Events are published through the enterprise event bus.
+
+---
+
+# Failure Handling
+
+Failures include:
+
+- Permission denied
+- Invalid request
+- Session expired
+- Request already processed
+- Missing dependencies
+- Execution conflict
+
+Failures are routed to the centralized error handler.
+
+---
+
+# Monitoring
+
+Approval execution is monitored by:
+
+- Engine Monitor
+- System Health Monitor
+- Live Dashboard
+- Permission Audit Layer
+- Failure Dashboard
+
+---
+
+# Audit Trail
+
+Each approval records:
+
+- Request ID
+- PIN ID
+- Approver ID
+- Role
+- Timestamp
+- Decision
+- Execution result
+- Audit reference
+
+---
+
+# Integration
+
+Approval architecture integrates with:
+
+- Request Layer
+- Allocation Layer
+- Product Layer
+- Inventory Layer
+- UI Layer
+- Event Layer
+- Monitoring Layer
+- Security Layer
+
+---
+
+# Repository Relationship
+
+This document complements:
+
+- PIN_REQUEST_LIFECYCLE.md
+- PIN_EXECUTION_SEQUENCE.md
+- PIN_SECURITY_GUARD_FLOW.md
+- PIN_DEPENDENCY_FLOW.md
+- PIN_LAYER_ARCHITECTURE.md
+
+---
+
+# Architecture Status
+
+**Subsystem:** PIN
+
+**Layer:** 05 – Approval Architecture
+
+**Documentation Status:** Complete
+
+**Production Status:** Enterprise Ready
+
+**Last Updated:** August 2026
