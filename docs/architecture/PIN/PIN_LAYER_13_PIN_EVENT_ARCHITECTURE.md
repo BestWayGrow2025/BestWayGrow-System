@@ -1,305 +1,301 @@
-# PIN Layer 13 — Event Architecture
+# PIN Layer 13 – Event Architecture
 
-**Document:** `docs/architecture/PIN/PIN_LAYER_13_PIN_EVENT_ARCHITECTURE.md`
-
----
-
-# 1. Purpose
-
-The PIN Event Architecture defines the enterprise event-driven communication model used throughout the PIN Management System.
-
-Rather than allowing modules to call each other directly for every state change, the Event Layer provides a centralized mechanism for broadcasting system events, notifying interested components, and synchronizing the platform while preserving loose coupling between subsystems.
-
-This layer is responsible only for communication and observability.
-
-It never owns business rules, storage, routing decisions, permission enforcement, or user interface logic.
+**Document Location:** `docs/architecture/PIN/PIN_LAYER_13_PIN_EVENT_ARCHITECTURE.md`
 
 ---
 
-# 2. Objectives
+# Purpose
 
-The Event Architecture is responsible for:
+This document defines the Event Architecture of the PIN subsystem.
 
-- Standardized event broadcasting
-- Event subscription management
-- Module decoupling
-- Live synchronization
-- Runtime notifications
-- Dashboard synchronization
+The Event Layer provides centralized communication between PIN modules through controlled event publishing and event consumption, ensuring loose coupling, real-time monitoring, system transparency, and reliable workflow coordination.
+
+---
+
+# Event Architecture Objectives
+
+The Event Layer ensures:
+
+- Module communication without direct dependency
+- Real-time state updates
+- Workflow synchronization
+- Audit visibility
+- Error event tracking
 - Monitoring integration
-- Audit event propagation
-- Health status updates
-- Production-safe event coordination
+- Future scalability
 
 ---
 
-# 3. Architectural Position
+# Event Responsibilities
+
+The Event Layer manages:
+
+- Event creation
+- Event publishing
+- Event listening
+- Event routing
+- Event logging
+- Event monitoring
+- Event recovery handling
+
+---
+
+# Primary Repository Component
+
+Main Module:
 
 ```
-Business Modules
-        │
-        ▼
- PIN Event Architecture
-        │
-        ▼
- Event Bus / Subscribers
-        │
-        ▼
- Listening Components
+pin_event_bus.js
 ```
 
-Business modules communicate through events instead of directly depending on one another.
-
----
-
-# 4. Architectural Philosophy
-
-The Event Layer follows a publish-subscribe architecture.
-
-A module that performs an operation simply publishes an event.
-
-Any interested module may subscribe and react independently.
-
-This architecture minimizes tight coupling while improving scalability and maintainability.
-
----
-
-# 5. Core Event Components
-
-The architecture includes:
-
-- Event Bus
-- Event Publisher
-- Event Subscriber
-- Event Listener Registry
-- Event Dispatcher
-- Event Wrapper Protection
-- Runtime Synchronization
-- Health Notification
-- Audit Notification
-- Live Refresh Coordination
-
----
-
-# 6. Primary Repository Components
-
-The Event Architecture is primarily implemented by:
-
-- `pin_live_orchestrator.js`
-- `pin_live_request_panel.js`
-- `pin_permission_audit_layer.js`
-- `pin_system_health_monitor.js`
-- `pin_ui_injector.js`
-- `pin_ui_launcher.js`
-- `pin_system_bootstrap_connector.js`
-
-These modules cooperate using event-driven communication without sharing ownership of business logic.
-
----
-
-# 7. Event Flow
+Supporting Modules:
 
 ```
-Business Action
-        │
-        ▼
-Publish Event
-        │
-        ▼
-PIN_EVENT_BUS
-        │
-        ▼
-Registered Listeners
-        │
-        ▼
-Independent Processing
+pin_live_bridge.js
+pin_live_orchestrator.js
+pin_live_intelligence_layer.js
+pin_system_health_monitor.js
+pin_engine_monitor.js
 ```
 
-Each subscriber processes the event independently.
-
-No listener blocks another listener.
-
 ---
 
-# 8. Event Categories
-
-The platform supports multiple categories of events including:
-
-## Request Events
-
-Examples include:
-
-- Request Created
-- Request Updated
-- Request Approved
-- Request Rejected
-- Request Processed
-
----
-
-## PIN Events
-
-Examples include:
-
-- PIN Created
-- PIN Assigned
-- PIN Activated
-- PIN Used
-- PIN Transferred
-
----
-
-## Product Events
-
-Examples include:
-
-- Product Created
-- Product Updated
-- Product Enabled
-- Product Disabled
-- Product Deleted
-
----
-
-## Security Events
-
-Examples include:
-
-- Permission Granted
-- Permission Denied
-- Unauthorized Attempt
-- Role Updated
-
----
-
-## Runtime Events
-
-Examples include:
-
-- Runtime Ready
-- Runtime Error
-- Module Loaded
-- Dependency Missing
-- Recovery Completed
-
----
-
-## Health Events
-
-Examples include:
-
-- Health Check
-- Warning Issued
-- Runtime Status
-- System Ready
-- Monitoring Update
-
----
-
-# 9. Event Lifecycle
-
-Every event follows the same lifecycle.
+# Event Flow
 
 ```
-Generate Event
-      ↓
-Validate
-      ↓
-Broadcast
-      ↓
-Listener Execution
-      ↓
-Safe Completion
+PIN Action
+     │
+     ▼
+Action Dispatcher
+     │
+     ▼
+Event Bus
+     │
+     ├────────► Monitoring Layer
+     │
+     ├────────► Live Dashboard
+     │
+     ├────────► Audit Layer
+     │
+     └────────► Dependent Modules
 ```
 
-Each event is processed independently.
+---
+
+# Event Categories
+
+## 1. Initialization Events
+
+Examples:
+
+```
+PIN_SYSTEM_INITIALIZED
+PIN_RUNTIME_READY
+PIN_UI_INJECTOR_READY
+PIN_UI_LAUNCHER_READY
+```
+
+Purpose:
+
+- Confirm module availability
+- Verify startup sequence
 
 ---
 
-# 10. Listener Management
+## 2. Request Events
 
-The Event Layer provides:
+Examples:
 
-- Listener registration
-- Listener removal
-- Duplicate listener prevention
-- Memory-safe execution
-- Exception isolation
-- Broadcast protection
+```
+PIN_REQUEST_CREATED
+PIN_REQUEST_SUBMITTED
+PIN_REQUEST_VALIDATED
+PIN_REQUEST_FAILED
+```
 
-Failures inside one listener never interrupt the remaining listeners.
+Purpose:
 
----
-
-# 11. Live Synchronization
-
-Events automatically synchronize connected components such as:
-
-- Live Request Panel
-- Administrative Dashboard
-- Monitoring Dashboard
-- Runtime Status
-- Health Monitor
-- Audit Viewer
-
-The Event Layer coordinates notifications only.
-
-It never performs UI rendering itself.
+- Track PIN request lifecycle
 
 ---
 
-# 12. Event Safety
+## 3. Approval Events
 
-The architecture includes multiple protection mechanisms.
+Examples:
 
-These include:
+```
+PIN_APPROVAL_STARTED
+PIN_APPROVAL_COMPLETED
+PIN_APPROVAL_REJECTED
+```
 
-- Duplicate wrapper prevention
-- Initialization guards
-- Safe listener execution
-- Exception isolation
-- Broadcast verification
-- Listener validation
-- Runtime protection
-- Controlled global exposure
+Purpose:
 
----
-
-# 13. Architectural Boundaries
-
-The Event Layer never performs:
-
-- PIN approval
-- PIN allocation
-- PIN routing
-- Permission decisions
-- Product management
-- Queue processing
-- Storage management
-- Business calculations
-
-Those responsibilities remain within their dedicated architectural layers.
+- Monitor approval workflow
 
 ---
 
-# 14. Enterprise Design Principles
+## 4. Allocation Events
 
-The Event Architecture follows these principles:
+Examples:
+
+```
+PIN_ALLOCATED
+PIN_ASSIGN_SUBMITTED
+PIN_ALLOCATION_FAILED
+```
+
+Purpose:
+
+- Track ownership assignment
+
+---
+
+## 5. Transfer Events
+
+Examples:
+
+```
+PIN_TRANSFER_STARTED
+PIN_TRANSFER_COMPLETED
+PIN_TRANSFER_FAILED
+```
+
+Purpose:
+
+- Monitor PIN movement
+
+---
+
+## 6. Security Events
+
+Examples:
+
+```
+PIN_PERMISSION_DENIED
+PIN_SECURITY_WARNING
+PIN_SESSION_FAILED
+```
+
+Purpose:
+
+- Detect unauthorized operations
+
+---
+
+## 7. Recovery Events
+
+Examples:
+
+```
+PIN_ERROR_RECOVERED
+PIN_REPLAY_STARTED
+PIN_AUTO_HEAL_COMPLETED
+```
+
+Purpose:
+
+- Coordinate recovery workflows
+
+---
+
+# Event Payload Structure
+
+Standard event format:
+
+```javascript
+{
+  eventName,
+  timestamp,
+  source,
+  payload,
+  status
+}
+```
+
+---
+
+# Event Security
+
+Events are protected through:
+
+- Permission verification
+- Source validation
+- Controlled publishing
+- Audit recording
+- Runtime checks
+
+---
+
+# Event Monitoring
+
+Events are monitored by:
+
+- Live Intelligence Layer
+- Live Failure Dashboard
+- System Health Monitor
+- Engine Monitor
+
+---
+
+# Failure Handling
+
+Event failures are handled through:
+
+- Error Handler
+- Recovery Engine
+- Replay Engine
+- Auto Heal Layer
+
+---
+
+# Integration Points
+
+Event Layer integrates with:
+
+- Runtime Layer
+- Request Layer
+- Approval Layer
+- Allocation Layer
+- Transfer Layer
+- Validation Layer
+- Security Layer
+- Monitoring Layer
+- Recovery Layer
+
+---
+
+# Architecture Principles
+
+The Event Layer follows:
 
 - Loose coupling
-- Event-driven communication
-- Publish-subscribe model
-- Independent listeners
-- Runtime safety
-- Scalability
-- Observability
-- Separation of concerns
-- Production resilience
+- Single event authority
+- Controlled communication
+- Traceable execution
+- Audit-first design
+- Real-time visibility
 
 ---
 
-# 15. Layer Summary
+# Related Documents
 
-The PIN Event Architecture serves as the communication backbone of the PIN ecosystem.
+- PIN_EVENT_FLOW.md
+- PIN_INITIALIZATION_SEQUENCE.md
+- PIN_EXECUTION_SEQUENCE.md
+- PIN_SECURITY_GUARD_FLOW.md
+- PIN_DEPENDENCY_FLOW.md
 
-By providing a centralized, production-safe event bus with independent listener execution, runtime synchronization, and observability support, this layer enables every subsystem to remain loosely coupled while maintaining real-time coordination across the entire PIN Management platform.
+---
+
+# Architecture Status
+
+**Subsystem:** PIN
+
+**Layer:** 13 – Event Architecture
+
+**Documentation Status:** Complete
+
+**Production Status:** Enterprise Ready
+
+**Version:** 2.0
