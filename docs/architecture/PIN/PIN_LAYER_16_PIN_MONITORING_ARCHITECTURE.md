@@ -1,258 +1,281 @@
-# PIN Layer 16 — Monitoring Architecture
+# PIN Layer 16 – Monitoring Architecture
 
-**Document:** `docs/architecture/PIN/PIN_LAYER_16_PIN_MONITORING_ARCHITECTURE.md`
-
----
-
-# 1. Purpose
-
-The PIN Monitoring Architecture provides continuous operational visibility across the entire PIN Management System by observing runtime status, subsystem availability, execution health, security activity, event propagation, and overall platform readiness.
-
-This layer enables administrators and support systems to monitor the platform in real time without interfering with business execution.
-
-The Monitoring Layer is strictly observational.
-
-It never executes business logic, modifies data, authorizes requests, or controls system behavior.
+**Document Location:** docs/architecture/PIN/PIN_LAYER_16_PIN_MONITORING_ARCHITECTURE.md
 
 ---
 
-# 2. Objectives
+# Purpose
 
-The Monitoring Layer is responsible for:
+This document defines the Monitoring Architecture of the PIN subsystem.
 
-- Runtime health monitoring
-- System diagnostics
-- Module availability verification
-- Operational status reporting
-- Event observation
+The Monitoring Layer provides continuous visibility into PIN operations, system health, execution status, failures, security events, and business workflow performance.
+
+---
+
+# Monitoring Objectives
+
+The Monitoring Architecture ensures:
+
+- Real-time system visibility
+- Operational transparency
+- Failure detection
+- Performance tracking
 - Security monitoring
-- Audit visualization
-- Live dashboard synchronization
-- Health score calculation
-- Platform observability
+- Business flow observation
+- Enterprise reporting readiness
 
 ---
 
-# 3. Architectural Position
+# Monitoring Responsibilities
+
+The Monitoring Layer manages:
+
+- System health monitoring
+- Execution monitoring
+- Failure tracking
+- Event monitoring
+- Performance observation
+- Live dashboard updates
+- Operational intelligence
+
+---
+
+# Primary Monitoring Components
+
+## PIN Engine Monitor
+
+Repository:
 
 ```
-PIN Runtime
-      │
-      ▼
-Monitoring Architecture
-      │
-      ▼
-Dashboards & Diagnostics
-      │
-      ▼
-Administrators
+pin_engine_monitor.js
 ```
 
-Monitoring continuously observes the platform without participating in business processing.
+Responsibilities:
+
+- Monitor execution engines
+- Detect abnormal behavior
+- Track module status
 
 ---
 
-# 4. Monitoring Philosophy
+## PIN System Health Monitor
 
-The architecture follows an **Observe Without Interference** model.
-
-Every subsystem exposes operational information while maintaining complete separation between monitoring and execution.
-
-This ensures:
-
-- Zero business interference
-- Reliable diagnostics
-- Continuous visibility
-- Safe operational reporting
-
----
-
-# 5. Core Monitoring Components
-
-The Monitoring Layer includes:
-
-- Health Monitor
-- Live Dashboard
-- Runtime Status Monitor
-- Event Monitor
-- Permission Audit Viewer
-- Security Status Monitor
-- Diagnostic Report Generator
-- Health Score Calculator
-- System Status Broadcaster
-
----
-
-# 6. Primary Repository Components
-
-The Monitoring Architecture is primarily implemented through:
-
-- `pin_system_health_monitor.js`
-- `pin_role_live_dashboard.js`
-- `pin_live_orchestrator.js`
-- `pin_live_request_panel.js`
-- `pin_permission_audit_layer.js`
-- `pin_system_finalization_layer.js`
-
-These modules cooperate to provide enterprise-grade operational visibility.
-
----
-
-# 7. Monitoring Flow
+Repository:
 
 ```
-Runtime Activity
-        │
-        ▼
-Observation
-        │
-        ▼
-Status Collection
-        │
-        ▼
-Health Analysis
-        │
-        ▼
-Dashboard Update
+pin_system_health_monitor.js
 ```
 
-Monitoring is passive and does not interrupt system execution.
+Responsibilities:
+
+- Verify subsystem health
+- Monitor runtime stability
+- Detect system issues
 
 ---
 
-# 8. Health Monitoring
+## Live Intelligence Layer
 
-The Health Monitor continuously validates:
+Repository:
 
-- Boot status
-- Runtime readiness
-- Router availability
-- UI readiness
-- Event system availability
-- Live synchronization
-- Engine availability
-- Critical module status
+```
+pin_live_intelligence_layer.js
+```
 
-The collected information forms the basis for platform diagnostics.
+Responsibilities:
+
+- Analyze live activity
+- Provide operational insights
+- Support decision visibility
 
 ---
 
-# 9. Health Score Calculation
+## Live Failure Dashboard
 
-System readiness is evaluated through multiple verification points including:
+Repository:
+
+```
+pin_live_failure_dashboard.js
+```
+
+Responsibilities:
+
+- Display failures
+- Track recovery status
+- Support troubleshooting
+
+---
+
+## Live Dashboard Components
+
+Repository:
+
+```
+pin_role_live_dashboard.js
+pin_live_orchestrator.js
+```
+
+Responsibilities:
+
+- Show role-based operational status
+- Provide live system updates
+
+---
+
+# Monitoring Flow
+
+```
+PIN Operation
+       │
+       ▼
+Event Generation
+       │
+       ▼
+Event Bus
+       │
+       ▼
+Monitoring Layer
+       │
+       ├────────► Health Monitor
+       │
+       ├────────► Failure Dashboard
+       │
+       ├────────► Live Intelligence
+       │
+       └────────► Audit System
+```
+
+---
+
+# Monitoring Categories
+
+## 1. Runtime Monitoring
+
+Tracks:
 
 - Module availability
-- Runtime integrity
-- Dependency resolution
-- Boot completion
-- Live service status
-- Event communication
-- UI infrastructure readiness
-
-These observations produce an overall operational health score.
+- Dependency status
+- Boot status
+- Runtime errors
 
 ---
 
-# 10. Live Monitoring
+## 2. Execution Monitoring
 
-The Monitoring Layer supports real-time observation of:
+Tracks:
 
-- Active PIN requests
-- Runtime events
-- Request processing
-- Approval activities
-- Assignment activities
-- PIN lifecycle transitions
-- Synchronization status
-
-Updates are coordinated through the centralized event architecture.
+- Active executions
+- Completed operations
+- Failed executions
+- Replay activities
 
 ---
 
-# 11. Security Monitoring
+## 3. Security Monitoring
 
-Monitoring includes visibility into:
+Tracks:
 
-- Permission decisions
-- Access denied events
-- Role validation
-- Security audit history
-- Authorization outcomes
-- Runtime security status
-
-Security observation remains read-only.
-
-Authorization decisions are handled by dedicated security layers.
+- Unauthorized actions
+- Permission failures
+- Session problems
+- Suspicious activity
 
 ---
 
-# 12. Diagnostic Reporting
+## 4. Business Monitoring
 
-Diagnostic reports may include:
+Tracks:
 
-- Overall health score
-- Runtime status
-- Loaded modules
-- Missing dependencies
-- Event bus status
-- Queue status
-- Live synchronization status
-- Recovery status
-
-These reports assist administrators in identifying operational issues.
+- PIN requests
+- Approvals
+- Allocation
+- Transfers
+- Consumption
 
 ---
 
-# 13. Monitoring Safety
+## 5. Recovery Monitoring
 
-The Monitoring Layer implements:
+Tracks:
 
-- Read-only observation
-- Safe diagnostics
-- Exception isolation
-- Controlled event subscriptions
-- Defensive dependency checks
-- Non-invasive reporting
-
-Monitoring never modifies operational state.
+- Error recovery
+- Auto healing
+- Replay execution
+- Recovery success
 
 ---
 
-# 14. Architectural Boundaries
+# Monitoring Events
 
-The Monitoring Layer never performs:
+Examples:
 
-- PIN approval
-- PIN allocation
-- PIN activation
-- Product management
-- Storage updates
-- Queue execution
-- Financial calculations
-- Permission enforcement
+```
+PIN_SYSTEM_HEALTH_CHECK
 
-Its sole responsibility is operational observation and reporting.
+PIN_EXECUTION_MONITOR_UPDATE
 
----
+PIN_FAILURE_DETECTED
 
-# 15. Enterprise Design Principles
+PIN_RECOVERY_STATUS_CHANGED
 
-The Monitoring Architecture follows:
-
-- Continuous observability
-- Passive monitoring
-- Read-only diagnostics
-- Health-first reporting
-- Event-driven synchronization
-- Runtime transparency
-- Operational visibility
-- Separation of concerns
-- Production-safe monitoring
+PIN_LIVE_REFRESH_TRIGGERED
+```
 
 ---
 
-# 16. Layer Summary
+# Monitoring Security
 
-The PIN Monitoring Architecture provides comprehensive operational visibility across the PIN Management System by continuously observing runtime health, subsystem availability, security activity, event propagation, and platform readiness.
+Monitoring data is protected through:
 
-Through centralized diagnostics, live dashboards, health scoring, and non-invasive monitoring, this layer enables administrators to maintain complete situational awareness while preserving the stability, integrity, and performance of the production environment.
+- Role-based access
+- Permission checks
+- Audit logging
+- Controlled dashboard access
+
+---
+
+# Monitoring Integration
+
+The Monitoring Layer integrates with:
+
+- Event Architecture
+- Security Architecture
+- Recovery Architecture
+- Execution Architecture
+- Runtime Architecture
+- Audit Architecture
+
+---
+
+# Enterprise Monitoring Principles
+
+- Continuous visibility
+- Early detection
+- Transparent reporting
+- Controlled access
+- Data-driven decisions
+- Operational reliability
+
+---
+
+# Related Documents
+
+- PIN_LAYER_13_PIN_EVENT_ARCHITECTURE.md
+- PIN_LAYER_15_PIN_RECOVERY_ARCHITECTURE.md
+- PIN_SECURITY_GUARD_FLOW.md
+- PIN_EXECUTION_SEQUENCE.md
+- PIN_RUNTIME_BOOT_FLOW.md
+
+---
+
+# Architecture Status
+
+**Subsystem:** PIN
+
+**Layer:** 16 – Monitoring Architecture
+
+**Documentation Status:** Complete
+
+**Production Status:** Enterprise Ready
+
+**Version:** 2.0
