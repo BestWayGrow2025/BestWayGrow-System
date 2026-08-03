@@ -1,253 +1,281 @@
-# PIN Layer 15 — Recovery Architecture
+# PIN Layer 15 – Recovery Architecture
 
-**Document:** `docs/architecture/PIN/PIN_LAYER_15_PIN_RECOVERY_ARCHITECTURE.md`
-
----
-
-# 1. Purpose
-
-The PIN Recovery Architecture provides the resilience framework for the entire PIN Management System by detecting failures, recovering from runtime disruptions, restoring operational continuity, and maintaining overall platform stability without compromising business integrity.
-
-This layer ensures that temporary failures, missing dependencies, execution exceptions, and runtime inconsistencies do not immediately interrupt the operation of the PIN ecosystem.
-
-The Recovery Layer supports continuity.
-
-It does not own business rules, storage logic, approval workflows, routing decisions, or user interface control.
+**Document Location:** `docs/architecture/PIN/PIN_LAYER_15_PIN_RECOVERY_ARCHITECTURE.md`
 
 ---
 
-# 2. Objectives
+# Purpose
 
-The Recovery Layer is responsible for:
+This document defines the Recovery Architecture of the PIN subsystem.
 
-- Runtime recovery
-- Failure detection
-- Safe retry management
-- Dependency restoration
-- Runtime continuity
-- Engine isolation
-- Health verification
-- Controlled fallback execution
-- Failure auditing
-- Platform resilience
+The Recovery Layer ensures that PIN operations can safely recover from failures, unexpected states, execution interruptions, and runtime errors while maintaining data integrity and system stability.
 
 ---
 
-# 3. Architectural Position
+# Recovery Objectives
+
+The Recovery Architecture provides:
+
+- Automatic failure detection
+- Safe recovery execution
+- Transaction protection
+- Error restoration
+- Execution replay support
+- System self-healing
+- Operational continuity
+
+---
+
+# Recovery Responsibilities
+
+The Recovery Layer manages:
+
+- Error capture
+- Failure classification
+- Recovery decisions
+- Retry execution
+- State restoration
+- Replay handling
+- Recovery reporting
+
+---
+
+# Primary Recovery Components
+
+## Error Handler
+
+Module:
 
 ```
-Business Execution
-         │
-         ▼
-Recovery Architecture
-         │
-         ▼
-Health Monitoring
-         │
-         ▼
-Runtime Continuity
+pin_error_handler.js
 ```
 
-Recovery operates alongside execution without changing business decisions.
+Responsibilities:
+
+- Capture runtime errors
+- Record failure details
+- Trigger recovery flow
 
 ---
 
-# 4. Recovery Philosophy
+## Error Recovery Engine
 
-The architecture follows four guiding principles:
-
-- Detect failures early
-- Recover safely
-- Isolate unstable components
-- Preserve system availability
-
-Recovery mechanisms prioritize maintaining platform stability while preventing repeated execution failures.
-
----
-
-# 5. Core Recovery Components
-
-The Recovery Layer includes:
-
-- Failure Detection Engine
-- Retry Manager
-- Self-Healing Engine
-- Runtime Validator
-- Engine Isolation Manager
-- Health Monitor Integration
-- Audit Recorder
-- Recovery Event Broadcaster
-
----
-
-# 6. Primary Repository Components
-
-The Recovery Architecture is primarily implemented through:
-
-- `pin_self_heal_layer.js`
-- `pin_system_finalization_layer.js`
-- `pin_system_health_monitor.js`
-- `pin_system_guard.js`
-- `pin_runtime_connector.js`
-- `pin_runtime_bootstrap.js`
-
-These modules cooperate to maintain runtime resilience while remaining independent of business logic.
-
----
-
-# 7. Recovery Lifecycle
+Module:
 
 ```
-Failure Detected
+pin_error_recovery_engine.js
+```
+
+Responsibilities:
+
+- Analyze failures
+- Execute recovery strategies
+- Restore normal operation
+
+---
+
+## Auto Heal Engine
+
+Module:
+
+```
+pin_auto_heal_engine.js
+```
+
+Responsibilities:
+
+- Detect known failures
+- Automatically repair safe issues
+- Restore module availability
+
+---
+
+## Self Heal Layer
+
+Module:
+
+```
+pin_self_heal_layer.js
+```
+
+Responsibilities:
+
+- Monitor subsystem health
+- Apply recovery actions
+- Maintain stability
+
+---
+
+## Execution Replay Engine
+
+Module:
+
+```
+pin_execution_replay_engine.js
+```
+
+Responsibilities:
+
+- Replay interrupted operations
+- Prevent transaction loss
+- Maintain execution consistency
+
+---
+
+# Recovery Flow
+
+```
+System Operation
         │
         ▼
-Validation
+Failure Detection
+        │
+        ▼
+Error Capture
+        │
+        ▼
+Failure Analysis
         │
         ▼
 Recovery Decision
         │
         ▼
-Retry / Heal
+Replay / Repair / Retry
         │
         ▼
-Health Verification
+State Validation
         │
         ▼
-Resume Operation
+System Restored
 ```
 
-Every recovery action is verified before normal execution resumes.
+---
+
+# Recovery Types
+
+## 1. Runtime Recovery
+
+Handles:
+
+- Module loading failure
+- Dependency issues
+- Initialization errors
 
 ---
 
-# 8. Failure Detection
+## 2. Transaction Recovery
 
-The Recovery Layer continuously monitors:
+Handles:
 
-- Runtime exceptions
-- Missing dependencies
-- Failed dispatcher execution
-- Repeated execution failures
-- Initialization failures
-- Invalid runtime state
-- Engine instability
-- Health degradation
+- Interrupted PIN request
+- Failed allocation
+- Incomplete approval
 
 ---
 
-# 9. Retry Management
+## 3. UI Recovery
 
-The architecture supports controlled retry operations.
+Handles:
 
-Retry processing includes:
-
-- Failure counting
-- Retry eligibility
-- Retry limits
-- Delay handling
-- Retry auditing
-- Recovery verification
-
-Retries are bounded to prevent infinite execution loops.
+- Modal failure
+- Event binding issues
+- UI state corruption
 
 ---
 
-# 10. Self-Healing
+## 4. Security Recovery
 
-The Self-Healing subsystem automatically detects missing runtime functions and injects safe fallback implementations where appropriate.
+Handles:
 
-Capabilities include:
-
-- Missing dependency detection
-- Safe stub generation
-- Runtime continuity
-- Controlled fallback execution
-- Recovery logging
-
-Self-healing allows unaffected modules to continue operating while preserving diagnostic visibility.
+- Invalid session
+- Unauthorized attempts
+- Permission failures
 
 ---
 
-# 11. Engine Isolation
+# Recovery Safety Rules
 
-If repeated failures exceed acceptable thresholds, unstable execution engines may be isolated.
+Recovery actions must:
 
-Isolation protects the remainder of the platform by:
-
-- Blocking repeated failures
-- Preventing cascading errors
-- Preserving healthy modules
-- Recording diagnostic information
-
-Engine isolation is protective rather than corrective.
+- Never bypass permissions
+- Preserve audit records
+- Maintain transaction history
+- Validate restored state
+- Prevent duplicate execution
 
 ---
 
-# 12. Runtime Health Verification
+# Recovery Monitoring
 
-Following recovery, the architecture verifies:
+Recovery status is monitored by:
 
-- Runtime readiness
-- Dependency availability
-- Engine status
-- Boot integrity
-- Event system availability
-- Execution capability
-
-Recovery is considered successful only after health validation passes.
+- PIN System Health Monitor
+- Live Intelligence Layer
+- Live Failure Dashboard
+- Engine Monitor
 
 ---
 
-# 13. Recovery Auditing
+# Recovery Events
 
-Every recovery action may generate audit records including:
+Examples:
 
-- Failure type
-- Recovery method
-- Retry count
-- Recovery timestamp
-- Engine status
-- Health result
+```
+PIN_ERROR_DETECTED
 
-These records support diagnostics and operational transparency.
+PIN_RECOVERY_STARTED
 
----
+PIN_REPLAY_STARTED
 
-# 14. Architectural Boundaries
+PIN_RECOVERY_COMPLETED
 
-The Recovery Layer never performs:
-
-- PIN approval
-- PIN allocation
-- PIN activation
-- Product configuration
-- Storage ownership
-- Financial calculations
-- Permission authorization
-- UI rendering
-
-Recovery restores operational capability but does not replace business execution layers.
+PIN_RECOVERY_FAILED
+```
 
 ---
 
-# 15. Enterprise Design Principles
+# Integration Points
 
-The Recovery Architecture follows:
+Recovery integrates with:
 
-- Fault tolerance
-- Defensive execution
-- Controlled retries
-- Runtime resilience
-- Self-healing
-- Health-first validation
-- Failure isolation
-- Separation of concerns
-- Production-safe recovery
+- Runtime Layer
+- Security Layer
+- Event Layer
+- Execution Layer
+- Monitoring Layer
+- Storage Layer
 
 ---
 
-# 16. Layer Summary
+# Enterprise Recovery Principles
 
-The PIN Recovery Architecture provides the operational resilience of the PIN Management System by detecting failures, coordinating controlled recovery, restoring runtime continuity, validating system health, and isolating unstable execution components.
+- Detect early
+- Recover safely
+- Preserve history
+- Validate after recovery
+- Maintain availability
+- Avoid data corruption
 
-Through intelligent recovery mechanisms, self-healing capabilities, bounded retry management, and continuous health verification, this layer enables the PIN platform to maintain stable, production-grade operation even when individual runtime components experience temporary failures.
+---
+
+# Related Documents
+
+- PIN_LAYER_11_PIN_SECURITY_ARCHITECTURE.md
+- PIN_LAYER_13_PIN_EVENT_ARCHITECTURE.md
+- PIN_LAYER_16_PIN_MONITORING_ARCHITECTURE.md
+- PIN_RUNTIME_BOOT_FLOW.md
+- PIN_EXECUTION_SEQUENCE.md
+
+---
+
+# Architecture Status
+
+**Subsystem:** PIN
+
+**Layer:** 15 – Recovery Architecture
+
+**Documentation Status:** Complete
+
+**Production Status:** Enterprise Ready
+
+**Version:** 2.0
