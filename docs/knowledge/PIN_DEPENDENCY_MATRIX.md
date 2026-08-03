@@ -1,183 +1,264 @@
-# PIN_DEPENDENCY_MATRIX.md
-
----
+# docs/knowledge/PIN_DEPENDENCY_MATRIX.md
 
 # PIN Dependency Matrix
 
-**Document Location**
-`docs/knowledge/PIN_DEPENDENCY_MATRIX.md`
-
-**Module**
-PIN
-
-**Document Type**
-Dependency Matrix
-
-**Version**
-1.0
-
-**Status**
-Enterprise Production Ready
+**Document:** `docs/knowledge/PIN_DEPENDENCY_MATRIX.md`
 
 ---
 
 # Purpose
 
-This document is the master dependency reference for the PIN subsystem.
+This document defines the dependency relationships for every major component within the PIN subsystem.
 
-It identifies the dependency relationships between all repository files, enabling safe maintenance, impact analysis, debugging, verification, and future development.
+It serves as the official reference for:
+
+- Repository dependency verification
+- Initialization order validation
+- Runtime dependency tracking
+- Architecture auditing
+- Future implementation planning
+- Refactoring safety
+- Production troubleshooting
 
 ---
 
 # Dependency Philosophy
 
-Every repository file should:
+The PIN subsystem follows a layered dependency architecture.
 
-- Have a clearly defined responsibility
-- Depend only on required modules
-- Avoid circular dependencies
-- Respect the architectural layer sequence
-- Follow the approved execution flow
+Rules:
+
+- Upper layers may depend on lower layers.
+- Lower layers must never depend on upper layers.
+- Circular dependencies are prohibited.
+- Every dependency must have a defined purpose.
+- All business execution flows through controlled interfaces.
 
 ---
 
-# Dependency Layers
+# Layer Dependency Order
 
 ```
-Foundation
+Zero Order Boot
+        ↓
+Bootstrap Layer
         ↓
 Core Engine
         ↓
-Security
+Configuration
         ↓
-Business Logic
+Module Registry
         ↓
-Runtime
+Dependency Wiring
         ↓
+Business Services
+        ↓
+Request Processing
+        ↓
+Permission Layer
+        ↓
+UI Layer
+        ↓
+Monitoring Layer
+        ↓
+Recovery Layer
+```
+
+---
+
+# Core Dependency Matrix
+
+| Module | Depends On |
+|----------|------------|
+| pin_zero_order_boot.js | None |
+| pin_bootloader.js | Zero Order Boot |
+| pin_runtime_bootstrap_engine.js | Bootloader |
+| pin_system_bootstrap_connector.js | Runtime Bootstrap |
+| pin_engine_core.js | Runtime Bootstrap |
+| pin_config_system.js | Engine Core |
+| pin_module_registry.js | Configuration |
+| pin_dependency_wiring_engine.js | Module Registry |
+| pin_global_contract.js | Dependency Wiring |
+| pin_master_system.js | Global Contract |
+
+---
+
+# Business Layer Dependencies
+
+| Module | Depends On |
+|----------|------------|
+| pin_product_master.js | Master System |
+| pin_request_system.js | Product Master |
+| pin_request_processor_engine.js | Request System |
+| pin_request_queue_engine.js | Request Processor |
+| pin_action_dispatcher.js | Queue Engine |
+| pin_action_permission_control.js | Dispatcher |
+| pin_role_access.js | Permission Control |
+| pin_role_access_controller.js | Role Access |
+| pin_access_router.js | Role Controller |
+
+---
+
+# Financial Dependencies
+
+| Module | Depends On |
+|----------|------------|
+| pin_bank_system.js | Product Master |
+| PIN Wallet | Future |
+| Ledger | Future |
+| Escrow | Future |
+
+---
+
+# UI Dependencies
+
+| Module | Depends On |
+|----------|------------|
+| pin_ui_binding.js | UI Injector |
+| pin_ui_injector.js | UI Launcher |
+| pin_ui_launcher.js | UI Router |
+| pin_ui_router.js | Dispatcher |
+| pin_ui_action_bridge.js | Dispatcher |
+
+---
+
+# Runtime Dependencies
+
+| Module | Depends On |
+|----------|------------|
+| pin_live_bridge.js | Event Bus |
+| pin_live_orchestrator.js | Live Bridge |
+| pin_live_request_panel.js | Live Orchestrator |
+| pin_live_failure_dashboard.js | Live Orchestrator |
+| pin_live_intelligence_layer.js | Live Orchestrator |
+
+---
+
+# Event Dependencies
+
+| Module | Depends On |
+|----------|------------|
+| pin_event_bus.js | Core Engine |
+| pin_flow_controller.js | Event Bus |
+| pin_flow_map_visual.js | Flow Controller |
+
+---
+
+# Monitoring Dependencies
+
+| Module | Depends On |
+|----------|------------|
+| pin_engine_monitor.js | Engine Core |
+| pin_system_health_monitor.js | Engine Monitor |
+| pin_permission_audit_layer.js | Dispatcher |
+| pin_role_live_dashboard.js | Monitoring Layer |
+
+---
+
+# Security Dependencies
+
+| Module | Depends On |
+|----------|------------|
+| pin_engine_guard.js | Core Engine |
+| pin_system_guard.js | Engine Guard |
+| pin_session_guard.js | Runtime Bootstrap |
+| pin_execution_lock.js | Engine Guard |
+| pin_final_integration_lock.js | Execution Lock |
+
+---
+
+# Recovery Dependencies
+
+| Module | Depends On |
+|----------|------------|
+| pin_error_handler.js | Event Bus |
+| pin_error_recovery_engine.js | Error Handler |
+| pin_self_heal_layer.js | Recovery Engine |
+| pin_auto_heal_engine.js | Self Heal Layer |
+| pin_execution_replay_engine.js | Queue Engine |
+
+---
+
+# Controller Dependencies
+
+```
 UI
-        ↓
-Initialization
+ ↓
+Router
+ ↓
+Dispatcher
+ ↓
+Permission
+ ↓
+Processor
+ ↓
+Queue
+ ↓
+Business Engine
 ```
 
 ---
 
-# Core Dependencies
+# Dependency Validation Rules
 
-| Repository File | Primary Dependencies |
-|-----------------|----------------------|
-| pin_access_router.js | pin_action_dispatcher.js, pin_role_access.js |
-| pin_action_dispatcher.js | pin_flow_controller.js, pin_request_processor_engine.js |
-| pin_action_permission_control.js | pin_role_access_controller.js, pin_session_guard.js |
-| pin_bank_system.js | pin_product_master.js |
-| pin_bootloader.js | pin_config_system.js, pin_dependency_wiring_engine.js |
-| pin_dependency_wiring_engine.js | pin_module_registry.js |
-| pin_engine_core.js | pin_global_contract.js |
-| pin_event_bus.js | All event-producing modules |
-| pin_execution_lock.js | pin_system_guard.js |
-| pin_flow_controller.js | pin_action_dispatcher.js |
-| pin_global_contract.js | All runtime modules |
-| pin_master_system.js | pin_module_registry.js |
-| pin_module_registry.js | Core modules |
-| pin_permission_audit_layer.js | pin_role_access.js |
-| pin_product_master.js | pin_bank_system.js |
-| pin_request_processor_engine.js | pin_request_queue_engine.js |
-| pin_request_queue_engine.js | pin_request_system.js |
-| pin_request_system.js | pin_access_router.js |
-| pin_role_access_controller.js | pin_role_access.js |
-| pin_runtime_bootstrap_engine.js | pin_system_initializer.js |
-| pin_runtime_connector.js | pin_runtime_bootstrap_engine.js |
-| pin_self_heal_layer.js | pin_error_recovery_engine.js |
-| pin_session_guard.js | pin_system_guard.js |
-| pin_system_controller.js | pin_action_dispatcher.js |
-| pin_system_initializer.js | Runtime and UI modules |
-| pin_ui_action_bridge.js | pin_action_dispatcher.js |
-| pin_ui_binding.js | pin_ui_injector.js, pin_ui_launcher.js |
-| pin_ui_injector.js | pin_ui_launcher.js |
-| pin_ui_launcher.js | pin_ui_router.js |
-| pin_ui_router.js | pin_access_router.js |
-| pin_zero_order_boot.js | Foundation modules |
+Every dependency must satisfy:
+
+- No circular references
+- No direct UI-to-database communication
+- No business logic inside UI
+- No controller bypass
+- No permission bypass
+- No direct financial manipulation
+- No unauthorized module execution
 
 ---
 
-# Dependency Rules
+# Future Service Dependencies
 
-- Foundation modules have no business-layer dependencies.
-- Core engine modules initialize before business modules.
-- Security modules execute before business processing.
-- Business modules execute before UI updates.
-- UI modules communicate through routers and dispatchers only.
-- Runtime initialization occurs after dependency verification.
+Future enterprise services:
 
----
+- PIN Service
+- Inventory Service
+- Approval Service
+- Wallet Service
+- Ledger Service
+- Audit Service
+- Notification Service
 
-# Circular Dependency Policy
-
-The PIN subsystem must avoid:
-
-- Direct circular imports
-- Mutual initialization loops
-- Recursive module loading
-- Cross-layer dependency violations
-
-All dependency chains should remain acyclic.
+Each service will consume existing repository interfaces without modifying repository responsibilities.
 
 ---
 
-# Dependency Verification Workflow
+# Dependency Verification Checklist
 
-```
-Repository File
-        ↓
-Identify Dependencies
-        ↓
-Verify Loading Order
-        ↓
-Validate Architecture Layer
-        ↓
-Update Matrix
-        ↓
-Mark Verified
-```
-
----
-
-# Related Documents
-
-Knowledge
-
-- PIN_KNOWLEDGE_INDEX.md
-- PIN_FUNCTION_INDEX.md
-- PIN_FUNCTION_RELATIONSHIPS.md
-- PIN_SCRIPT_SEQUENCE.md
-
-Architecture
-
-- PIN_ARCHITECTURE_INDEX.md
-- PIN_DEPENDENCY_FLOW.md
-- PIN_EXECUTION_SEQUENCE.md
-
-Implementation
-
-- IMPLEMENTATION_MASTER_PIN_INDEX.md
+- Bootstrap verified
+- Runtime verified
+- Core verified
+- Configuration verified
+- Registry verified
+- Wiring verified
+- Product verified
+- Request verified
+- Permission verified
+- UI verified
+- Monitoring verified
+- Recovery verified
+- Security verified
 
 ---
 
-# Documentation Status
-
-Module: PIN
-
-Dependency Matrix: Complete
+# Repository Status
 
 Knowledge Base: Complete
 
-Architecture: Complete
+Dependency Matrix: Complete
 
-Repository Verification: Complete
+Architecture Alignment: Verified
 
-Status: Enterprise Production Ready
+Repository Coverage: KB_121 – KB_175
 
----
+Status:
 
-**End of PIN Dependency Matrix**
+**Production Ready**minn
 
 
