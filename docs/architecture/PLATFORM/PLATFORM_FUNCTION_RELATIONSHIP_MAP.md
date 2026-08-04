@@ -1,451 +1,301 @@
-# PLATFORM_FUNCTION_RELATIONSHIP_MAP.md
-
 # PLATFORM FUNCTION RELATIONSHIP MAP
 
-Version: 1.0  
-Status: MASTER FUNCTION ARCHITECTURE DOCUMENT  
-Subsystem: PLATFORM  
-Owner: BestWayGrow Project  
+**Version:** 1.0  
+**Status:** MASTER ARCHITECTURE DOCUMENT  
+**Subsystem:** PLATFORM  
+**Owner:** BestWayGrow Project  
 
 ---
 
-# PURPOSE
+# 1. PURPOSE
 
-This document defines the relationship between Platform functions.
+This document defines the functional relationships between Platform subsystem functions.
 
-It maintains:
+It provides:
 
-- Function ownership
-- Function providers
-- Function consumers
-- Export relationships
-- Dashboard communication flow
-
-
----
-
-# FUNCTION ARCHITECTURE FLOW
-
-
-Core Functions
-
-↓
-
-Platform Functions
-
-↓
-
-Dashboard Functions
-
-↓
-
-UI Rendering Functions
-
-↓
-
-User Actions
-
+- Function ownership mapping
+- Function dependency visibility
+- Execution relationship
+- Controller and dashboard separation
+- Repository implementation guidance
 
 ---
 
-# PLATFORM FUNCTION GROUPS
+# 2. PLATFORM FUNCTION FLOW
+Core Initialization ↓ Platform Initialization ↓ Platform Controllers ↓ Platform Connectors ↓ Platform Dashboards ↓ Platform Monitoring ↓ Platform Audit
 
+---
 
-# 01. ACTIVITY AUDIT FUNCTIONS
+# 3. PLATFORM INITIALIZATION FUNCTIONS
 
+## initCoreSystem()
 
-## Provider
+Owner:
+CORE Layer
 
-platform_activity_audit.js
+Called by:
+Platform Modules Dashboard Modules Controllers
 
+Responsibilities:
+
+- Core startup
+- Global dependency loading
+- System preparation
+
+---
+
+## Platform Initialization Functions
+
+Future:
+initializePlatform()
+
+Responsibilities:
+
+- Register Platform modules
+- Verify dependencies
+- Start Platform services
+
+---
+
+# 4. DASHBOARD ORCHESTRATION FUNCTIONS
+
+## platform_dashboard_data_orchestrator.js
 
 Functions:
+loadDashboardData() refreshDashboardData() prepareDashboardView()
 
-- createAuditEvent()
-- getAuditEvents()
-- recordPlatformActivity()
+Relationships:
+Core Storage ↓ Dashboard Data Orchestrator ↓ Platform Dashboards
 
+Responsibilities:
 
-Consumers:
+- Central dashboard data preparation
+- Data aggregation
+- Dashboard support
 
-- platform_activity_audit_dashboard.js
-- enterprise audit modules
+---
+
+# 5. AUDIT FUNCTION RELATIONSHIP
+
+## platform_activity_audit.js
+
+Functions:
+recordActivity() createAuditEvent()
+
+↓
+
+## platform_audit_event_journal.js
+
+Functions:
+saveAuditEvent() getAuditEvents()
+
+↓
+
+## platform_enterprise_audit_monitor.js
+
+Functions:
+monitorAuditEvents() displayAuditSummary()
+
+↓
+
+## platform_event_operations_console.js
+
+Functions:
+processPlatformEvents()
 
 
 Relationship:
-
-Audit Engine
-
-↓
-
-Audit Dashboard
-
+User Action ↓ Activity Audit ↓ Event Journal ↓ Audit Monitor ↓ Operations Console
 
 ---
 
-# 02. DASHBOARD DATA FUNCTIONS
+# 6. HEALTH MONITORING FUNCTION RELATIONSHIP
 
-
-## Provider
-
-platform_dashboard_data_orchestrator.js
-
+## platform_health_monitoring_dashboard.js
 
 Functions:
+checkPlatformHealth() collectSystemStatus() renderHealthReport()
 
-- loadDashboardData()
-- prepareDashboardMetrics()
+Relationships:
+Core System ↓ Health Monitor ↓ Control Room Dashboard
 
+---
 
-Consumers:
+# 7. BUSINESS INTELLIGENCE FUNCTIONS
 
-- Enterprise BI Dashboard
-- Control Room Dashboard
+## platform_enterprise_business_intelligence_dashboard.js
 
+Functions:
+loadBusinessMetrics() calculateDashboardSummary() renderBusinessView()
 
 Relationship:
-
-Data Collection
-
-↓
-
-Dashboard Presentation
-
+Platform Data ↓ Business Intelligence ↓ Enterprise Dashboard
 
 ---
 
-# 03. INCOME POLICY FUNCTIONS
+# 8. CONTROL ROOM FUNCTIONS
 
-
-## Provider
-
-platform_income_policy_controller.js
-
+## platform_enterprise_control_room_dashboard.js
 
 Functions:
+loadControlRoomData() displaySystemOverview()
 
-- getIncomePolicy()
-- validateIncomeRule()
-
-
-Consumer:
-
-- platform_income_policy_dashboard.js
-
-
-Relationship:
-
-Policy Controller
-
-↓
-
-Policy Dashboard
-
+Depends on:
+Health Monitoring Audit Monitoring Business Intelligence
 
 ---
 
-# 04. PAYMENT REQUEST FUNCTIONS
+# 9. ESCROW FUNCTION RELATIONSHIP
 
-
-## Provider
-
-platform_payment_request_dashboard.js
-
+## platform_product_escrow_connector.js
 
 Functions:
-
-- submitPayment()
-- getPayments()
-- savePayments()
-- hasPendingPayment()
-
-
-Consumers:
-
-- Payment Request UI
-
-
-Relationship:
-
-User Request
+connectProductEscrow() getEscrowData()
 
 ↓
 
-Payment Queue
+## platform_escrow_flow_monitoring_dashboard.js
+
+Functions:
+monitorEscrowFlow() displayEscrowStatus()
 
 ↓
 
-Finance Verification
-
-
----
-
-# 05. PRODUCT MASTER FUNCTIONS
-
-
-## Provider
-
-platform_product_master_connector.js
-
+## platform_escrow_live_tree_dashboard.js
 
 Functions:
-
-- initProductMasterConnector()
-
-
-Consumers:
-
-- Product Master Dashboard
-
-
-Relationship:
-
-Product Registry
-
-↓
-
-Platform Connector
-
-↓
-
-Dashboard
-
-
----
-
-# 06. ESCROW FUNCTIONS
-
-
-## Provider
-
-platform_product_escrow_connector.js
-
-
-Functions:
-
-- escrowConnector initialization
-- escrow data access
-
-
-Consumers:
-
-- Escrow Flow Dashboard
-- Escrow Live Tree Dashboard
-
-
----
-
-# 07. HEALTH MONITORING FUNCTIONS
-
-
-## Provider
-
-platform_health_monitoring_dashboard.js
-
-
-Functions:
-
-- collectHealthStatus()
-- renderHealthStatus()
-
-
-Consumers:
-
-- Control Room Dashboard
-
-
----
-
-# 08. REGISTRY FUNCTIONS
-
-
-## Rank Registry
-
-
-Provider:
-
-core_rank_master_registry.js
-
-
-Functions:
-
-- getAllRanks()
-- getHighestRank()
-
-
-Consumer:
-
-platform_rank_registry_dashboard_view.js
-
+renderEscrowTree() displayEscrowHierarchy()
 
 Flow:
-
-Rank Master
-
-↓
-
-Rank View Dashboard
-
+Product Data ↓ Escrow Connector ↓ Escrow Monitoring ↓ Live Tree Dashboard
 
 ---
 
-## Registration Registry
+# 10. INCOME POLICY FUNCTION RELATIONSHIP
 
-
-Provider:
-
-Registration Queue System
-
+## platform_income_policy_controller.js
 
 Functions:
+loadIncomePolicy() validatePolicy() updatePolicyState()
 
-- getRegQueue()
-- approve()
-- reject()
+↓
 
-
-Consumers:
-
-- platform_registration_approval_dashboard.js
-- platform_status_audit_dashboard.js
-
-
----
-
-# 09. STATUS AUDIT FUNCTIONS
-
-
-## Provider
-
-platform_status_audit_dashboard.js
-
+## platform_income_policy_dashboard.js
 
 Functions:
+renderIncomePolicy() displayPolicyData()
 
-- checkRegistrationStatus()
-- getRegistrationQueueSafe()
-
-
-Consumers:
-
-Status Audit UI
-
+Flow:
+Income Rules ↓ Policy Controller ↓ Dashboard View
 
 ---
 
-# FUNCTION SECURITY RELATIONSHIP
+# 11. PAYMENT REQUEST FUNCTION RELATIONSHIP
 
+## platform_payment_request_dashboard.js
 
-Authentication Layer
+Functions:
+loadPaymentRequests() validatePaymentQueue() displayPaymentStatus()
 
-↓
+Flow:
+User Request ↓ Payment Storage ↓ Payment Dashboard ↓ Finance Verification
 
-getSession()
+Rules:
 
-↓
-
-getCurrentUser()
-
-↓
-
-hasRole()
-
-↓
-
-Platform Protected Functions
-
+- No wallet mutation
+- No withdrawal mutation
+- Read-only monitoring
 
 ---
 
-# STORAGE FUNCTION RELATIONSHIP
+# 12. PRODUCT MASTER FUNCTION RELATIONSHIP
 
+## platform_product_master_connector.js
 
-## Storage Providers
+Function:
+initProductMasterConnector()
 
+Relationship:
+Product Master Registry ↓ Product Connector ↓ Platform Modules
 
-safeGet()
+Purpose:
 
-safeSet()
-
-
-Used By:
-
-- Payment Module
-- Audit Module
-- Registry Modules
-
+- Product master connection
+- Future registry expansion
 
 ---
 
-# FUNCTION OWNERSHIP RULES
+# 13. RANK MASTER FUNCTION RELATIONSHIP
 
+## platform_rank_registry_dashboard_view.js
 
-✅ Every function has one primary owner
+Functions:
+initRankMasterView() renderSummary() renderRankTable()
 
-✅ Dashboards consume controller functions
+Uses:
+getAllRanks() getHighestRank()
 
-✅ Controllers manage business operations
+Relationship:
+core_rank_master_registry.js ↓ Rank Dashboard View ↓ Admin Display
 
-✅ Read-only views cannot mutate data
+Rules:
 
-✅ Core functions cannot depend on Platform modules
-
-
----
-
-# FUNCTION COMMUNICATION MODEL
-
-
-Module A
-
-↓
-
-Exported Function
-
-↓
-
-Module B
-
-↓
-
-Dashboard/UI
-
+- Read-only
+- No rank modification
+- No qualification calculation
 
 ---
 
-# ERROR HANDLING RELATIONSHIP
+# 14. REGISTRATION APPROVAL FUNCTION RELATIONSHIP
 
+## platform_registration_approval_dashboard.js
 
-Function Failure
+Functions:
+authPage() loadQueue() startAutoRefresh() forceLogout()
 
-↓
+Flow:
+Registration Queue ↓ Approval Dashboard ↓ Admin Action
 
-Safe Catch
+Security:
 
-↓
-
-Critical Logging
-
-↓
-
-User Safe Message
-
+- Admin role validation
+- Session verification
 
 ---
 
-# FINAL STATUS
+# 15. STATUS AUDIT FUNCTION RELATIONSHIP
 
+## platform_status_audit_dashboard.js
 
-Platform Function Relationship Map:
+Functions:
+bindStatusEvents() checkRegistrationStatus() getRegistrationQueueSafe()
 
-✅ COMPLETE
+Flow:
+Mobile Input ↓ User Registry ↓ Registration Queue ↓ Status Result
 
+Rules:
 
-Function Ownership:
+- Read-only
+- Safe lookup only
 
-✅ VERIFIED
+---
 
+# 16. FUNCTION OWNERSHIP RULES
 
-Architecture Alignment:
+| Function Type | Owner |
+|---|---|
+| Authentication | CORE |
+| Storage Access | CORE |
+| Business Rules | Controllers |
+| Data Connection | Connectors |
+| Display Rendering | Dashboards |
+| Monitoring | Monitoring Modules |
+| Audit Recording | Audit Modules |
 
-✅ APPROVED
+---
+
+# 17. FINAL STATUS
+Function Relationship Mapping: ✅ Complete
+Platform Function Ownership: ✅ Defined
+Repository Alignment: ✅ Verified
+Architecture Reference: ✅ MASTER
