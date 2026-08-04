@@ -1,512 +1,237 @@
-# PLATFORM_DEPENDENCY_MAP.md
-
 # PLATFORM DEPENDENCY MAP
 
-Version: 1.0  
-Status: MASTER ARCHITECTURE DOCUMENT  
-Subsystem: PLATFORM  
-Owner: BestWayGrow Project  
+**Version:** 1.0  
+**Status:** MASTER ARCHITECTURE DOCUMENT  
+**Subsystem:** PLATFORM  
+**Owner:** BestWayGrow Project  
 
 ---
 
-# PURPOSE
+# 1. PURPOSE
 
-This document defines the dependency relationship of the Platform subsystem.
+This document defines the dependency relationships between Platform modules.
 
-It identifies:
+The dependency map ensures:
 
-- Required Core dependencies
-- Platform module dependencies
-- Dashboard dependencies
-- Registry dependencies
-- Storage dependencies
-- Runtime execution flow
+- Correct module loading
+- Clear ownership boundaries
+- Safe future expansion
+- Repository alignment
+- Architecture verification
 
-
----
-
-# DEPENDENCY ARCHITECTURE FLOW
-
-
-CORE SYSTEM
-
-↓
-
-PLATFORM INITIALIZATION
-
-↓
-
-PLATFORM CONTROLLERS
-
-↓
-
-PLATFORM DASHBOARDS
-
-↓
-
-PLATFORM REGISTRIES
-
-↓
-
-STORAGE SERVICES
-
-↓
-
-USER INTERFACE
-
+Platform modules must follow this dependency hierarchy.
 
 ---
 
-# CORE DEPENDENCY LAYER
-
-
-Platform depends on Core services:
-
-
-## Core Boot
-
-
-Dependency:
-
-- core_boot_manager.js
-
-
-Responsibility:
-
-- System startup
-- Module loading preparation
-
+# 2. HIGH LEVEL DEPENDENCY FLOW
+CORE SYSTEM ↓ PLATFORM FOUNDATION ↓ PLATFORM SERVICES ↓ PLATFORM CONTROLLERS ↓ PLATFORM DASHBOARDS ↓ PLATFORM MONITORING ↓ PLATFORM AUDIT
 
 ---
 
-## Core Initialization
+# 3. CORE FOUNDATION DEPENDENCIES
 
-
-Dependency:
-
-- core_initializer.js
-
-
-Responsibility:
-
-- Global initialization sequence
-
-
----
-
-## Core Session Authority
-
-
-Dependency:
-
-- core_session_authority.js
-
-
-Responsibility:
-
-- Authentication
-- Session validation
-- Role checking
-
-
----
-
-## Core Storage
-
-
-Dependency:
-
-- safeGet()
-- safeSet()
-
-
-Responsibility:
-
-- Corruption-safe storage access
-
-
----
-
-# PLATFORM CONTROLLER LAYER
-
-
-## Activity Audit Controller
-
-
-File:
-
-platform_activity_audit.js
-
-
-Dependencies:
-
-- Core Storage
-- Audit Events
-
-
-Used By:
-
-- Activity Audit Dashboard
-
-
----
-
-## Income Policy Controller
-
-
-File:
-
-platform_income_policy_controller.js
-
-
-Dependencies:
-
-- Income Rules
-- Core Storage
-
-
-Used By:
-
-- Income Policy Dashboard
-
-
----
-
-## Payment Request Controller
-
-
-File:
-
-platform_payment_request_dashboard.js
-
-
-Dependencies:
-
-- Core Session Authority
-- Safe Storage
-
-
-Used By:
-
-- Payment Request Dashboard
-
-
----
-
-## Product Master Connector
-
-
-File:
-
-platform_product_master_connector.js
-
-
-Dependencies:
-
-- Product Master Registry
-
-
-Used By:
-
-- Product Master Dashboard
-
-
----
-
-# DASHBOARD DEPENDENCY MAP
-
-
-## Activity Audit Dashboard
-
-
-Depends On:
-
-- platform_activity_audit.js
-
+Platform depends on Core foundation modules.
+core_boot_manager.js ↓ core_initializer.js ↓ core_session_authority.js ↓ core_storage_manager.js ↓ core_security_manager.js
 
 Provides:
 
-- Audit visualization
-
+- Application startup
+- Global initialization
+- Authentication authority
+- Storage access
+- Security validation
 
 ---
 
-## Enterprise Business Intelligence Dashboard
+# 4. PLATFORM DASHBOARD DEPENDENCY
 
+## platform_dashboard_data_orchestrator.js
 
-Depends On:
+Depends on:
+Core Boot Core Initializer Core Storage
 
-- Platform Data Sources
-- Dashboard Orchestrator
+Used by:
+Platform Dashboards Control Room Modules Monitoring Modules
 
+---
 
-Provides:
+# 5. AUDIT MODULE DEPENDENCY MAP
+platform_activity_audit.js ↓ platform_audit_event_journal.js ↓ platform_enterprise_audit_monitor.js ↓ platform_event_diagnostics_dashboard.js ↓ platform_event_operations_console.js
+
+Dependencies:
+Core Storage Core Security Platform Logger
+
+Responsibilities:
+
+- Activity recording
+- Event journal storage
+- Enterprise audit visibility
+- Diagnostics
+- Operations monitoring
+
+---
+
+# 6. BUSINESS INTELLIGENCE DEPENDENCY MAP
+platform_enterprise_business_intelligence_dashboard.js ↓ platform_enterprise_control_room_dashboard.js
+
+Dependencies:
+platform_dashboard_data_orchestrator.js platform_health_monitoring_dashboard.js
+
+Responsibilities:
 
 - Business analytics
-
-
----
-
-## Control Room Dashboard
-
-
-Depends On:
-
-- Health Monitoring
-- Audit Monitoring
-- Event Monitoring
-
-
-Provides:
-
-- Enterprise monitoring
-
+- Enterprise overview
+- Decision support
 
 ---
 
-## Escrow Dashboards
+# 7. ESCROW MODULE DEPENDENCY MAP
+platform_product_escrow_connector.js ↓ platform_escrow_flow_monitoring_dashboard.js ↓ platform_escrow_live_tree_dashboard.js
 
+Dependencies:
+Product Master Core Storage Audit System
 
-Depends On:
+Responsibilities:
 
-- Product Escrow Connector
-- Escrow Data
-
-
-Provides:
-
-- Escrow visibility
-
+- Escrow connection
+- Escrow monitoring
+- Live tree visualization
 
 ---
 
-## Rank Registry Dashboard
+# 8. INCOME POLICY DEPENDENCY MAP
+platform_income_policy_controller.js ↓ platform_income_policy_dashboard.html ↓ platform_income_policy_dashboard.js
 
+Dependencies:
+Core Storage PIN Product Data Income Rules
 
-Depends On:
+Responsibilities:
 
-- core_rank_master_registry.js
-- platform_rank_registry_dashboard_view.js
+- Policy management
+- Rule display
+- Income dashboard control
 
+---
 
-Provides:
+# 9. PAYMENT REQUEST DEPENDENCY MAP
+platform_payment_request_dashboard.html ↓ platform_payment_request_dashboard.js
+
+Dependencies:
+Core Session Authority Payment Storage Audit Logging
+
+Responsibilities:
+
+- Payment request visibility
+- Queue handling
+- Verification tracking
+
+---
+
+# 10. PRODUCT MASTER DEPENDENCY MAP
+platform_product_master_connector.html ↓ platform_product_master_connector.js
+
+Dependencies:
+Product Master Registry Core Initialization
+
+Responsibilities:
+
+- Product master connection
+- Future product registry integration
+
+---
+
+# 11. RANK MASTER DEPENDENCY MAP
+core_rank_master_registry.js ↓ platform_rank_master_registry_dashboard.html ↓ platform_rank_registry_dashboard_view.js
+
+Dependencies:
+Rank Registry Core Data Layer
+
+Responsibilities:
 
 - Rank display
-
+- Rank summary
+- Read-only qualification visibility
 
 ---
 
-## Registration Approval Dashboard
+# 12. REGISTRATION APPROVAL DEPENDENCY MAP
+platform_registration_approval_dashboard.html ↓ platform_registration_approval_dashboard.js
 
+Dependencies:
+core_boot_manager.js core_initializer.js core_session_authority.js Registration Queue User Registry
 
-Depends On:
+Responsibilities:
 
-- core_session_authority.js
-- Registration Queue
-
-
-Provides:
-
+- Admin queue monitoring
 - Approval workflow
-
-
----
-
-## Status Audit Dashboard
-
-
-Depends On:
-
-- User Registry
-- Registration Queue
-
-
-Provides:
-
-- Registration status lookup
-
+- Registration validation
 
 ---
 
-# REGISTRY DEPENDENCY MAP
+# 13. STATUS AUDIT DEPENDENCY MAP
+platform_status_audit_dashboard.html ↓ platform_status_audit_dashboard.js
 
+Dependencies:
+User Registry Registration Queue Core Storage
 
-## Rank Registry
+Responsibilities:
 
-
-Source:
-
-core_rank_master_registry.js
-
-
-Consumers:
-
-- platform_rank_registry_dashboard_view.js
-
+- Status checking
+- Registration verification
+- Queue position tracking
 
 ---
 
-## User Registry
+# 14. GLOBAL PLATFORM DEPENDENCY RULES
 
+## Rule 1
 
-Source:
-
-Core User Storage
-
-
-Consumers:
-
-- Registration Approval Dashboard
-- Status Audit Dashboard
-
+Platform modules cannot bypass Core security.
 
 ---
 
-## Payment Registry
+## Rule 2
 
-
-Source:
-
-payments storage key
-
-
-Consumers:
-
-- Payment Request Dashboard
-
+Dashboard modules consume data from approved connectors only.
 
 ---
 
-# STORAGE DEPENDENCY MAP
+## Rule 3
 
-
-## Local Storage Keys
-
-
-| Storage Key | Owner |
-|-|-|
-|payments|Payment Request Module|
-|REG_QUEUE_DATA|Registration Queue|
-|loggedInUser|Session System|
-
+Read-only dashboards cannot perform direct data mutation.
 
 ---
 
-# SECURITY DEPENDENCY FLOW
+## Rule 4
 
-
-Authentication
-
-↓
-
-Session Validation
-
-↓
-
-Role Verification
-
-↓
-
-Permission Check
-
-↓
-
-Module Access
-
+Controllers own business interaction logic.
 
 ---
 
-# FUNCTION DEPENDENCY CHAIN
+## Rule 5
 
-
-Core Functions
-
-↓
-
-Session Functions
-
-↓
-
-Platform Controllers
-
-↓
-
-Dashboard Functions
-
-↓
-
-Rendering Functions
-
-↓
-
-Storage Functions
-
+Connectors isolate external or master data access.
 
 ---
 
-# RUNTIME LOAD ORDER
+# 15. CURRENT VERIFIED FILE RANGE
+Platform Knowledge Coverage:
+KB176 → KB206
 
-
-1. Core Boot
-
-↓
-
-2. Core Initialization
-
-↓
-
-3. Session Authority
-
-↓
-
-4. Platform Controllers
-
-↓
-
-5. Dashboard Modules
-
-↓
-
-6. Registry Modules
-
-↓
-
-7. UI Rendering
-
+Verified Areas:
+Audit Dashboard Monitoring Escrow Income Policy Payment Product Master Rank Master Registration Approval Status Audit
 
 ---
 
-# DEPENDENCY RULES
+# 16. FUTURE DEPENDENCY EXPANSION
 
-
-✅ Platform cannot bypass Core security
-
-✅ Dashboard cannot directly modify registry data
-
-✅ Read-only dashboards remain read-only
-
-✅ Controllers own business operations
-
-✅ Storage access must use safe methods
-
-✅ Modules must expose controlled functions only
-
+Future services:
+platform_service.js ↓ configuration_service.js ↓ monitoring_service.js ↓ settings_service.js ↓ platform_security_service.js ↓ platform_audit_service.js
 
 ---
 
 # FINAL STATUS
-
-
-Platform Dependency Map:
-
-✅ COMPLETE
-
-
-Architecture Verification:
-
-✅ PASSED
-
-
-Documentation Standard:
-
-Enterprise Production Ready
+Dependency Mapping: ✅ Complete
+Architecture Alignment: ✅ Verified
+Repository Alignment: ✅ Verified
+Platform Dependency Document: ✅ MASTER
