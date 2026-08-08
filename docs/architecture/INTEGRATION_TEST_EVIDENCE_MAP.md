@@ -1,0 +1,510 @@
+INTEGRATION TEST EVIDENCE MAP
+Document Name: INTEGRATION_TEST_EVIDENCE_MAP.md
+ Documentation Type: Enterprise Integration — Test Evidence Control
+ Subsystem: BestWayGrow — Complete System
+ Location: docs/architecture/INTEGRATION/INTEGRATION_TEST_EVIDENCE_MAP.md
+ Status: ✅ Complete
+ Version: 1.0
+ Last Updated: 2026-08-08
+
+1. PURPOSE
+This document defines what evidence must be recorded during integration testing.
+TEST CASE
+↓
+EXECUTION
+↓
+EXPECTED RESULT
+↓
+ACTUAL RESULT
+↓
+EVIDENCE
+↓
+VERIFICATION
+
+
+2. MASTER EVIDENCE RULE
+A test result is considered verified only when the actual result is supported by appropriate evidence.
+PASS
++
+EVIDENCE
+=
+VERIFIED
+
+
+3. EVIDENCE MUST IDENTIFY
+Every critical test should be traceable to:
+TEST CASE ID
+SYSTEM ID
+MODULE
+FUNCTION
+ACTION
+INPUT
+EXPECTED RESULT
+ACTUAL RESULT
+STATUS
+DATE / TIME
+
+
+4. SYSTEM ID EVIDENCE
+Because BestWayGrow is ID-oriented, critical evidence must identify the relevant system ID.
+SYSTEM ID
+↓
+ID RESOLUTION
+↓
+CURRENT STATE
+↓
+APPLICABLE RULE
+↓
+ACTION
+↓
+RESULT
+
+Do not use personal assumptions as the system reference.
+
+5. EVIDENCE TYPES
+E01 — Input Evidence
+E02 — Output Evidence
+E03 — State Evidence
+E04 — Data Evidence
+E05 — Authorization Evidence
+E06 — Transaction Evidence
+E07 — Ledger Evidence
+E08 — Wallet Evidence
+E09 — Audit Evidence
+E10 — Error Evidence
+E11 — Recovery Evidence
+E12 — End-to-End Evidence
+
+
+6. INPUT EVIDENCE
+Record the actual test input.
+TEST CASE
+SYSTEM ID
+REQUEST DATA
+ACTION
+
+Purpose:
+PROVE WHAT WAS TESTED
+
+
+7. OUTPUT EVIDENCE
+Record the actual system response.
+REQUEST
+↓
+SYSTEM RESPONSE
+↓
+RESULT
+
+Purpose:
+PROVE WHAT SYSTEM RETURNED
+
+
+8. STATE EVIDENCE
+For state-sensitive operations record:
+BEFORE STATE
+↓
+ACTION
+↓
+AFTER STATE
+
+Purpose:
+PROVE VALID STATE TRANSITION
+
+
+9. DATA EVIDENCE
+Verify important data before and after execution.
+SOURCE DATA
+↓
+PROCESSING
+↓
+STORED DATA
+↓
+RESULT
+
+Check:
+VALUE
+TYPE
+REFERENCE
+STATUS
+RELATIONSHIP
+
+
+10. AUTHORIZATION EVIDENCE
+For protected operations record:
+IDENTITY / SYSTEM ID
+ROLE
+SCOPE
+PERMISSION
+ACTION
+RESULT
+
+Purpose:
+PROVE
+ALLOWED = ALLOWED
+DENIED = DENIED
+
+
+11. TRANSACTION EVIDENCE
+For transactional operations record:
+TRANSACTION ID
+SYSTEM ID
+REQUEST
+AMOUNT / PARAMETERS
+STATUS
+RESULT
+
+
+12. LEDGER EVIDENCE
+For financial operations:
+TRANSACTION
+↓
+LEDGER ENTRY
+↓
+AMOUNT
+↓
+TYPE
+↓
+STATUS
+
+Verify that the ledger reflects the authoritative transaction result.
+
+13. WALLET EVIDENCE
+Where wallet changes occur:
+BEFORE BALANCE
+↓
+TRANSACTION
+↓
+LEDGER RESULT
+↓
+AFTER BALANCE
+
+Verify:
+LEDGER RESULT
+=
+WALLET RESULT
+
+
+14. AUDIT EVIDENCE
+Critical actions should be traceable through audit records.
+SYSTEM ID
+↓
+ACTION
+↓
+ACTOR / AUTHORIZATION CONTEXT
+↓
+RESULT
+↓
+AUDIT RECORD
+
+
+15. ERROR EVIDENCE
+For failed tests record:
+ERROR
+EXPECTED RESULT
+ACTUAL RESULT
+FIRST FAILURE POINT
+ROOT CAUSE
+
+Do not record only the final visible error.
+
+16. RECOVERY EVIDENCE
+For recovery tests:
+NORMAL STATE
+↓
+FAILURE
+↓
+FAILURE STATE
+↓
+RECOVERY
+↓
+FINAL STATE
+
+Verify that recovery does not create:
+DUPLICATE
+DATA LOSS
+WRONG STATE
+WRONG BALANCE
+BROKEN REFERENCE
+
+
+17. END-TO-END EVIDENCE
+For complete flow testing:
+REQUEST
+↓
+SYSTEM ID
+↓
+AUTHENTICATION
+↓
+SESSION
+↓
+AUTHORIZATION
+↓
+RULE
+↓
+FUNCTION
+↓
+STATE
+↓
+DATA
+↓
+TRANSACTION
+↓
+LEDGER / WALLET
+↓
+EVENT
+↓
+AUDIT
+↓
+FINAL RESULT
+
+Evidence should support the critical stages of the flow.
+
+18. POSITIVE TEST EVIDENCE
+For successful operations:
+INPUT
++
+EXPECTED
++
+ACTUAL
++
+PASS EVIDENCE
+
+
+19. NEGATIVE TEST EVIDENCE
+For rejected operations:
+INVALID INPUT / CONDITION
+↓
+SYSTEM REJECTION
+↓
+EXPECTED ERROR / DENIAL
+↓
+EVIDENCE
+
+
+20. SECURITY TEST EVIDENCE
+For security tests verify:
+UNAUTHORIZED REQUEST
+↓
+SERVER-SIDE VALIDATION
+↓
+DENIAL
+↓
+NO UNAUTHORIZED STATE CHANGE
+
+Evidence must prove that the protected operation did not execute.
+
+21. DATA INTEGRITY EVIDENCE
+Verify:
+NO DUPLICATE
+NO ORPHAN
+NO BROKEN REFERENCE
+NO UNEXPECTED VALUE
+NO INVALID STATE
+
+
+22. REGRESSION EVIDENCE
+After a correction:
+FAILED TEST
+↓
+CORRECTION
+↓
+ORIGINAL TEST
+↓
+DEPENDENCY TEST
+↓
+REGRESSION TEST
+
+Evidence must show that the correction did not introduce a new failure.
+
+23. EVIDENCE RECORD FORMAT
+Use:
+EVIDENCE ID:
+TEST CASE ID:
+SYSTEM ID:
+MODULE:
+FUNCTION:
+
+DATE / TIME:
+
+INPUT:
+EXPECTED:
+
+ACTUAL:
+
+STATUS:
+
+EVIDENCE TYPE:
+
+EVIDENCE LOCATION:
+
+FINDING:
+
+ROOT CAUSE:
+
+CORRECTION:
+
+RETEST:
+
+REGRESSION:
+
+FINAL STATUS:
+
+
+24. EVIDENCE LOCATION
+Evidence may reference the appropriate test artifact, such as:
+TEST RESULT
+LOG
+SCREENSHOT
+DATA RECORD
+TRANSACTION RECORD
+AUDIT RECORD
+ERROR RECORD
+RECOVERY RECORD
+
+Only record evidence that actually exists.
+
+25. PASS EVIDENCE RULE
+EXPECTED RESULT
+=
+ACTUAL RESULT
++
+EVIDENCE EXISTS
+
+Then:
+PASS
+
+Otherwise:
+NOT VERIFIED
+
+
+26. FAIL EVIDENCE RULE
+A failed test must preserve enough information to reproduce and investigate the failure.
+INPUT
++
+EXPECTED
++
+ACTUAL
++
+ERROR
++
+SYSTEM ID
+=
+REPRODUCIBLE DEFECT
+
+
+27. EVIDENCE TRACEABILITY
+Every critical evidence record must trace:
+TEST CASE
+↓
+SYSTEM ID
+↓
+FUNCTION
+↓
+RESULT
+↓
+EVIDENCE
+↓
+DEFECT / PASS
+
+
+28. EVIDENCE AND DEFECT LINK
+When a test fails:
+TEST CASE
+↓
+EVIDENCE
+↓
+DEFECT ID
+↓
+ROOT CAUSE
+↓
+CORRECTION
+↓
+RETEST EVIDENCE
+
+
+29. EVIDENCE AND AUDIT LINK
+For auditable operations:
+SYSTEM ID
+↓
+ACTION
+↓
+RESULT
+↓
+AUDIT RECORD
+↓
+TEST EVIDENCE
+
+
+30. EVIDENCE COMPLETION CHECK
+Before closing a critical test verify:
+✓ TEST CASE IDENTIFIED
+✓ SYSTEM ID IDENTIFIED
+✓ INPUT RECORDED
+✓ EXPECTED RESULT RECORDED
+✓ ACTUAL RESULT RECORDED
+✓ STATUS RECORDED
+✓ EVIDENCE AVAILABLE
+✓ DEFECT LINKED IF FAILED
+✓ RETEST LINKED IF CORRECTED
+✓ REGRESSION VERIFIED
+
+
+31. EVIDENCE RETENTION RULE
+Evidence must remain sufficient to answer:
+WHAT WAS TESTED?
+WHICH SYSTEM ID?
+WHICH FUNCTION?
+WHAT WAS EXPECTED?
+WHAT ACTUALLY HAPPENED?
+PASS OR FAIL?
+IF FAIL — WHY?
+WHAT WAS CORRECTED?
+WAS IT RETESTED?
+
+
+32. DOCUMENTATION-FIRST EVIDENCE RULE
+Do not collect unnecessary repository-wide evidence.
+TEST CASE
+↓
+EXPECTED FLOW
+↓
+TARGET
+↓
+EXECUTE
+↓
+COLLECT RELEVANT EVIDENCE
+
+
+33. MASTER EVIDENCE FLOW
+TEST
+↓
+CAPTURE
+↓
+IDENTIFY
+↓
+COMPARE
+↓
+VERIFY
+↓
+RECORD
+↓
+LINK
+
+
+34. FINAL EVIDENCE PRINCIPLE
+DOCUMENTED
++
+IMPLEMENTED
++
+EXECUTED
++
+EVIDENCE
++
+EXPECTED = ACTUAL
+=
+VERIFIED
+
+
+STATUS
+INTEGRATION_TEST_EVIDENCE_MAP.md
+Status: ✅ COMPLETE
