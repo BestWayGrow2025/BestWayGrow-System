@@ -99,7 +99,8 @@
 👉 LOADED BY: super_admin_dashboard.html
 👉 ENTRY FUNCTION: init()
 👉 DEPENDENCIES: core_enterprise_core_orchestrator.js, core_module_router.js, core_page_router_connector.js, ENTERPRISE_CORE_ENGINE.register(), super_admin_dashboard_controller.js
-👉 GLOBAL EXPORTS: window.SUPER_ADMIN_MODULE_ORCHESTRATION_CONTROLLER
+GLOBAL RUNTIME FLAG:
+window.__SUPER_ADMIN_MODULE_ORCHESTRATION_CONTROLLER__
 👉 CORE FUNCTIONS: waitForCore(), registerPages(), setContent(), init()
 👉 MODULE REGISTRATION: Home, Create System Admin, Users, System Settings, PIN Master, Product Master, Rank Master, Income Control, Audit Logs, Health Monitor, Backup System, AI Governor, Escrow Control, Enterprise Control Room, Business Intelligence, Strategic AI Advisor, Audit Blockchain, Realtime System, Payment Gateway, Orchestrator Kernel, Advanced Health Monitor, Event Monitor, Event Stream, Reports, Tree View, System Reset
 👉 ROUTING ENGINE: Enterprise Core Engine registry-based page routing with callback execution for each registered dashboard module.
