@@ -76,7 +76,8 @@
 👉 LOADED BY: super_admin_dashboard.html
 👉 ENTRY FUNCTION: initSuperAdminDashboard()
 👉 DEPENDENCIES: core_session_authority.js, super_admin_auth.js (session provider), super_admin_dashboard.html, openSystemPage(), getSession(), getUserById(), logoutSession()
-👉 GLOBAL EXPORTS: SuperAdminDashboard, SUPER_ADMIN_DASHBOARD
+👉 GLOBAL EXPORTS: window.SuperAdminDashboard
+👉 GLOBAL RUNTIME FLAG: window.__SUPER_ADMIN_DASHBOARD__
 👉 AUTHENTICATION: Validates active session through getSession(), verifies Super Admin role, retrieves authenticated user information using getUserById(), and redirects unauthorized users to the Super Admin Authentication page.
 👉 SESSION MANAGEMENT: Uses a single centralized session source, prevents duplicate dashboard initialization, maintains the current authenticated Super Admin instance, and supports secure logout through the Core Session Authority.
 👉 PROFILE MANAGEMENT: Loads authenticated Super Admin profile information and displays personalized dashboard welcome information.
