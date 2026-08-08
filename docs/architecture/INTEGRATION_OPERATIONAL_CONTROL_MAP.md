@@ -1,0 +1,672 @@
+INTEGRATION OPERATIONAL CONTROL MAP
+Document Name: INTEGRATION_OPERATIONAL_CONTROL_MAP.md
+ Documentation Type: Enterprise Integration — Operational Control Reference
+ Subsystem: BestWayGrow — Complete System
+ Location: docs/architecture/INTEGRATION/INTEGRATION_OPERATIONAL_CONTROL_MAP.md
+ Status: ✅ Complete
+ Version: 1.0
+ Last Updated: 2026-08-08
+
+1. PURPOSE
+This document defines the operational controls required to keep the integrated BestWayGrow system stable, controlled, observable, and recoverable during normal operation.
+Permanent objective:
+SYSTEM RUNNING
+↓
+CONTROL
+↓
+MONITOR
+↓
+DETECT
+↓
+RESPOND
+↓
+VERIFY
+
+
+2. MASTER OPERATIONAL RULE
+NORMAL OPERATION
++
+CONTINUOUS CONTROL
++
+OBSERVABILITY
++
+AUTHORIZED ACTION
++
+RECOVERY
+=
+STABLE SYSTEM
+
+
+3. ID-ORIENTED OPERATION
+The running system must remain ID-oriented.
+SYSTEM ID
+↓
+CURRENT STATE
+↓
+APPLICABLE RULE
+↓
+AUTHORIZED ACTION
+↓
+RESULT
+
+Operational processes must not depend on assumptions about a particular human body or identity representation.
+
+4. OPERATIONAL CONTROL BOUNDARY
+Operational control covers:
+APPLICATION
+AUTHENTICATION
+SESSION
+AUTHORIZATION
+DATA
+STORAGE
+PIN
+FINANCIAL
+LEDGER
+WALLET
+EVENTS
+AUDIT
+SECURITY
+PERFORMANCE
+DEPLOYMENT
+RECOVERY
+
+
+5. SYSTEM HEALTH
+System health must be continuously evaluated.
+SYSTEM
+↓
+HEALTH SIGNALS
+↓
+NORMAL?
+├─ YES → CONTINUE
+└─ NO → INVESTIGATE / RESPOND
+
+
+6. CORE HEALTH
+Core health includes:
+CORE INITIALIZATION
+DEPENDENCY AVAILABILITY
+STORAGE AVAILABILITY
+CONFIGURATION VALIDITY
+RUNTIME ERRORS
+
+A critical core failure may require stopping dependent operations.
+
+7. AUTHENTICATION CONTROL
+Authentication operations must verify:
+REQUEST
+↓
+CREDENTIAL / AUTHORITY
+↓
+VALIDATION
+↓
+AUTHENTICATED SESSION
+
+Authentication failure must not create protected access.
+
+8. SESSION CONTROL
+Session operations must maintain:
+SESSION
+↓
+SYSTEM ID
+↓
+VALIDITY
+↓
+ACCOUNT STATUS
+↓
+AUTHORIZED CONTEXT
+
+Invalid or expired sessions must not continue protected operations.
+
+9. AUTHORIZATION CONTROL
+Every protected operation must evaluate:
+SYSTEM ID
+↓
+SESSION
+↓
+ROLE
+↓
+SCOPE
+↓
+PERMISSION
+↓
+ACTION
+
+
+10. ACCOUNT STATE CONTROL
+Operational actions must respect account state.
+Examples:
+ACTIVE
+INACTIVE
+BLOCKED
+SUSPENDED
+RECOVERY
+
+A disallowed state must prevent the corresponding protected action.
+
+11. USER OPERATION CONTROL
+User operations must remain within the user's authorized scope.
+SYSTEM ID
+↓
+SESSION
+↓
+ACCOUNT
+↓
+AUTHORIZED FUNCTION
+↓
+RESULT
+
+
+12. ADMIN OPERATION CONTROL
+Administrative operations must preserve hierarchy and scope.
+SUPER ADMIN
+↓
+SYSTEM ADMIN
+↓
+ADMIN
+↓
+ASSIGNED SCOPE
+↓
+AUTHORIZED ACTION
+
+
+13. PIN OPERATION CONTROL
+PIN operations must use the authoritative product definitions.
+SYSTEM ID
+↓
+PIN REQUEST
+↓
+PRODUCT MASTER
+↓
+RULE VALIDATION
+↓
+PIN ACTION
+↓
+RESULT
+
+
+14. FINANCIAL OPERATION CONTROL
+Financial operations must follow:
+SYSTEM ID
+↓
+REQUEST
+↓
+AUTHORIZATION
+↓
+BUSINESS RULE
+↓
+TRANSACTION
+↓
+LEDGER
+↓
+WALLET
+↓
+RESULT
+
+
+15. LEDGER CONTROL
+Ledger operations must maintain authoritative transaction history.
+Required logical information:
+TRANSACTION ID
+SYSTEM ID
+TYPE
+AMOUNT
+STATUS
+TIMESTAMP
+
+Ledger state must not be silently overwritten.
+
+16. WALLET CONTROL
+Wallet operations must remain synchronized with authoritative financial outcomes.
+TRANSACTION
+↓
+VALIDATION
+↓
+LEDGER RESULT
+↓
+WALLET STATE
+
+Unexpected balance changes require investigation.
+
+17. EVENT CONTROL
+Business events must originate from authoritative outcomes.
+BUSINESS ACTION
+↓
+VALIDATION
+↓
+RESULT
+↓
+EVENT
+↓
+CONSUMER
+
+Duplicate or invalid events must be detected.
+
+18. AUDIT CONTROL
+Important operational actions must remain traceable.
+ACTION
+↓
+RESULT
+↓
+AUDIT RECORD
+
+Audit records should identify the relevant system ID and action context where required.
+
+19. DATA INTEGRITY CONTROL
+Operational monitoring must detect:
+INVALID RECORD
+BROKEN RELATIONSHIP
+MISSING DATA
+DUPLICATE DATA
+UNEXPECTED STATE
+ORPHAN DATA
+
+
+20. CONFIGURATION CONTROL
+Operational processes must use validated configuration.
+ACTIVE CONFIGURATION
+↓
+VALIDITY CHECK
+↓
+CONSUMER
+↓
+BUSINESS BEHAVIOR
+
+Configuration drift must be detected.
+
+21. VERSION CONTROL
+The running system should remain identifiable by:
+CODE VERSION
+CONFIGURATION VERSION
+DATA / STRUCTURE VERSION
+
+Unexpected version mismatch must be investigated.
+
+22. PERFORMANCE CONTROL
+Monitor:
+RESPONSE TIME
+EXECUTION TIME
+ERROR RATE
+RESOURCE USAGE
+REQUEST VOLUME
+
+Performance degradation must be investigated before it becomes a system-wide failure.
+
+23. AVAILABILITY CONTROL
+Availability monitoring should verify:
+SYSTEM
+CORE
+STORAGE
+CRITICAL SERVICES
+FINANCIAL FUNCTIONS
+AUTHENTICATION
+
+
+24. ERROR CONTROL
+Errors must be classified.
+ERROR
+↓
+CLASSIFY
+├─ EXPECTED
+├─ RECOVERABLE
+├─ CRITICAL
+└─ UNKNOWN
+
+Critical errors require controlled response.
+
+25. OPERATIONAL ALERTS
+Alerts may be triggered by:
+SYSTEM FAILURE
+AUTHENTICATION FAILURE
+SESSION FAILURE
+AUTHORIZATION FAILURE
+TRANSACTION FAILURE
+LEDGER ERROR
+WALLET ERROR
+DATA INTEGRITY FAILURE
+SECURITY EVENT
+PERFORMANCE DEGRADATION
+CONFIGURATION DRIFT
+
+
+26. ALERT RESPONSE
+Operational response:
+ALERT
+↓
+ASSESS
+↓
+IDENTIFY IMPACT
+↓
+CONTAIN
+↓
+CORRECT / RECOVER
+↓
+VERIFY
+↓
+CLOSE
+
+
+27. INCIDENT CONTROL
+An operational incident should follow:
+DETECT
+↓
+CLASSIFY
+↓
+CONTAIN
+↓
+INVESTIGATE
+↓
+RECOVER
+↓
+VERIFY
+↓
+DOCUMENT
+
+
+28. SECURITY INCIDENT CONTROL
+Security-related incidents require:
+DETECT
+↓
+PROTECT
+↓
+LIMIT ACCESS
+↓
+INVESTIGATE
+↓
+RECOVER
+↓
+AUDIT
+
+Security controls must not be bypassed during operational response.
+
+29. FINANCIAL INCIDENT CONTROL
+For financial incidents:
+DETECT
+↓
+STOP AFFECTED FLOW
+↓
+IDENTIFY SYSTEM IDs / TRANSACTIONS
+↓
+CHECK LEDGER
+↓
+CHECK WALLET
+↓
+RECONCILE
+↓
+RECOVER
+↓
+VERIFY
+
+
+30. DATA INCIDENT CONTROL
+For data integrity incidents:
+DETECT
+↓
+IDENTIFY AFFECTED DATA
+↓
+IDENTIFY SYSTEM IDs
+↓
+ISOLATE
+↓
+RECOVER / CORRECT
+↓
+RECONCILE
+↓
+VERIFY
+
+
+31. OPERATIONAL RECOVERY
+Recovery follows:
+FAILURE
+↓
+KNOWN RECOVERY POINT
+↓
+RECOVER
+↓
+VALIDATE
+↓
+RESTORE NORMAL OPERATION
+
+
+32. ROLLBACK CONTROL
+When a recent change causes instability:
+PROBLEM
+↓
+IDENTIFY CHANGE
+↓
+ROLLBACK / CORRECT
+↓
+VERIFY
+↓
+MONITOR
+
+
+33. BACKUP CONTROL
+Required critical data should have appropriate recovery protection.
+IMPORTANT DATA
+↓
+BACKUP / RECOVERY MECHANISM
+↓
+VERIFY RECOVERABILITY
+
+A backup that cannot be restored is not sufficient protection.
+
+34. OPERATIONAL MAINTENANCE
+Maintenance must be controlled.
+MAINTENANCE REQUEST
+↓
+AUTHORIZATION
+↓
+IMPACT CHECK
+↓
+EXECUTE
+↓
+VERIFY
+
+
+35. MAINTENANCE WINDOW
+Where required:
+NORMAL OPERATION
+↓
+MAINTENANCE WINDOW
+↓
+CONTROLLED CHANGE
+↓
+VERIFICATION
+↓
+NORMAL OPERATION
+
+
+36. OPERATIONAL ACCESS
+Operational access must follow:
+ADMIN ID
+↓
+SESSION
+↓
+ROLE
+↓
+SCOPE
+↓
+AUTHORIZED OPERATION
+
+No operational privilege should be granted merely because a user can reach a UI screen.
+
+37. OPERATIONAL LOGGING
+Operational logs should support:
+EVENT
+TIME
+SYSTEM ID WHERE APPLICABLE
+ACTION
+RESULT
+ERROR
+VERSION / CONTEXT WHERE REQUIRED
+
+Logging must support diagnosis without becoming a source of uncontrolled sensitive exposure.
+
+38. OPERATIONAL TRACEABILITY
+A significant operation should be traceable:
+SYSTEM ID
+↓
+REQUEST
+↓
+AUTHORIZATION
+↓
+ACTION
+↓
+RESULT
+↓
+AUDIT / EVENT
+
+
+39. OPERATIONAL RECONCILIATION
+For critical domains:
+EXPECTED STATE
+↓
+ACTUAL STATE
+↓
+COMPARE
+↓
+MATCH?
+├─ YES → NORMAL
+└─ NO → INVESTIGATE / RECOVER
+
+
+40. OPERATIONAL TESTING
+Operational readiness should verify:
+HEALTH
+AUTHENTICATION
+SESSION
+AUTHORIZATION
+DATA
+PIN
+FINANCIAL
+LEDGER
+WALLET
+EVENTS
+AUDIT
+RECOVERY
+
+
+41. OPERATIONAL CHANGE CONTROL
+No operational change should bypass change management.
+OPERATIONAL NEED
+↓
+CHANGE CONTROL
+↓
+TEST
+↓
+APPROVAL
+↓
+DEPLOY
+↓
+VERIFY
+
+
+42. OPERATIONAL MONITORING LOOP
+MONITOR
+↓
+DETECT
+↓
+ANALYZE
+↓
+RESPOND
+↓
+RECOVER
+↓
+VERIFY
+↓
+MONITOR AGAIN
+
+This is continuous.
+
+43. OPERATIONAL GOVERNANCE
+Permanent rules:
+NO UNAUTHORIZED OPERATION
+NO UNKNOWN SYSTEM STATE
+NO UNCONTROLLED FINANCIAL ACTION
+NO UNTRACEABLE CRITICAL ACTION
+NO SILENT DATA CORRECTION
+NO UNVERIFIED RECOVERY
+NO UNCONTROLLED CONFIGURATION CHANGE
+
+
+44. OPERATIONAL HEALTH DECISION
+SYSTEM HEALTH
+↓
+NORMAL?
+├─ YES → CONTINUE
+└─ NO
+    ↓
+    CLASSIFY
+    ↓
+    CONTAIN
+    ↓
+    RECOVER
+    ↓
+    VERIFY
+
+
+45. MASTER OPERATIONAL FLOW
+SYSTEM RUNNING
+↓
+AUTHENTICATION
+↓
+SESSION
+↓
+SYSTEM ID
+↓
+AUTHORIZATION
+↓
+FUNCTION
+↓
+BUSINESS RULE
+↓
+TRANSACTION / ACTION
+↓
+STATE UPDATE
+↓
+EVENT / AUDIT
+↓
+MONITORING
+↓
+RECONCILIATION
+↓
+RECOVERY IF REQUIRED
+
+
+46. FINAL OPERATIONAL CONTROL RULE
+KNOWN ID
++
+VALID SESSION
++
+AUTHORIZED ACTION
++
+VALID RULE
++
+CONTROLLED STATE
++
+TRACEABLE RESULT
++
+CONTINUOUS MONITORING
+=
+STABLE OPERATION
+
+The permanent objective is:
+RUN
+↓
+CONTROL
+↓
+OBSERVE
+↓
+PROTECT
+↓
+RECOVER
+↓
+VERIFY
+↓
+CONTINUE
+
+
+STATUS
+INTEGRATION_OPERATIONAL_CONTROL_MAP.md
+Status: ✅ COMPLETE
