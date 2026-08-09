@@ -184,4 +184,12 @@ window.initRegistrationApprovalDashboard =
 window.loadQueue =
   loadQueue;
 
+console.log(
+  "[REGISTRATION QUEUE JS LOADED]",
+  typeof window.initRegistrationApprovalDashboard,
+  typeof window.loadQueue
+);
+
+// ================= END MODULE =================
+
 })();
