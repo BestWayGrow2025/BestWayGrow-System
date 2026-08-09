@@ -187,6 +187,11 @@ window.addEventListener("beforeunload", function () {
 });
 
 // ================= EXPORT =================
-window.loadQueue = loadQueue;
+
+window.initRegistrationApprovalDashboard =
+  initRegistrationApprovalDashboard;
+
+window.loadQueue =
+  loadQueue;
 
 })();
