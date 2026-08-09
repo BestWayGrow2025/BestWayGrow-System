@@ -14,11 +14,21 @@ let currentUser = null;
 let refreshTimer = null;
 
 // ================= START =================
-document.addEventListener("DOMContentLoaded", function () {
+function initRegistrationApprovalDashboard() {
   authPage();
   loadQueue();
   startAutoRefresh();
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    initRegistrationApprovalDashboard,
+    { once: true }
+  );
+} else {
+  initRegistrationApprovalDashboard();
+}
 
 // ================= LOGOUT =================
 function forceLogout() {
