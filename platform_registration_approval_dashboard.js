@@ -16,6 +16,7 @@ let refreshTimer = null;
 // ================= START =================
 function initRegistrationApprovalDashboard() {
   authPage();
+  bindRegistrationApprovalEvents();
   loadQueue();
   startAutoRefresh();
 }
