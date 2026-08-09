@@ -222,17 +222,25 @@ async function loadRealModule(config={}) {
 
     }
 
-    await loadHtmlIntoMain(
-      config.html
-    );
 
-    if(config.js){
+const htmlLoaded =
+  await loadHtmlIntoMain(config.html);
 
-      await loadScriptOnce(
-        config.js
-      );
+if (!htmlLoaded) {
 
-    }
+  throw new Error(
+    "HTML module failed: " + config.html
+  );
+
+}
+
+if (config.js) {
+
+  await loadScriptOnce(
+    config.js
+  );
+
+}
 
     const initFn =
       config.init ||
