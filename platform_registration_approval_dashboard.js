@@ -153,6 +153,20 @@ function loadQueue() {
   });
 }
 
+  // ================= EVENT BINDINGS =================
+function bindRegistrationApprovalEvents() {
+
+  const refreshButton =
+    document.getElementById("refreshRegistrationQueue");
+
+  if (!refreshButton) return;
+
+  refreshButton.addEventListener(
+    "click",
+    loadQueue
+  );
+}
+
 // ================= AUTO REFRESH =================
 function startAutoRefresh() {
 
