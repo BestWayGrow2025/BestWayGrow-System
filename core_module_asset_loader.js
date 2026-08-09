@@ -139,22 +139,19 @@ function loadScriptOnce(scriptFile) {
 
       try {
 
-        const existing =
-          Array.from(
-            document.scripts
-          ).some(
-            function (script) {
+       const existing =
+  Array.from(
+    document.scripts
+  ).some(
+    function (script) {
 
-              return (
-                script.src &&
-                script.src.includes(
-                  scriptFile
-                )
-              );
+      return (
+        script.dataset.systemModule ===
+        scriptFile
+      );
 
-            }
-          );
-
+    }
+  );
 
         if (existing) {
 
