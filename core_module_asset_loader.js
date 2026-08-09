@@ -419,15 +419,18 @@ function loadReportsRealModule(){
 
 function loadUsersRealModule(){
 
- return loadRealModule({
+  return loadRealModule({
 
- html:
-"platform_registration_approval_dashboard.html",
+    html:
+      "platform_registration_approval_dashboard.html",
 
-js:
-"platform_registration_approval_dashboard.js"
+    js:
+      "platform_registration_approval_dashboard.js",
 
- });
+    init:
+      "initRegistrationApprovalDashboard"
+
+  });
 
 }
 
