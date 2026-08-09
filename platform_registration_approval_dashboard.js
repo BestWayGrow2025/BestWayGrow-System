@@ -21,16 +21,6 @@ function initRegistrationApprovalDashboard() {
   startAutoRefresh();
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener(
-    "DOMContentLoaded",
-    initRegistrationApprovalDashboard,
-    { once: true }
-  );
-} else {
-  initRegistrationApprovalDashboard();
-}
-
 // ================= LOGOUT =================
 function forceLogout() {
 
