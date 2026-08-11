@@ -208,7 +208,6 @@ function watchRegistrationStatus(
     }
 
 // ================= TIMEOUT =================
-// ================= TIMEOUT =================
 if (tries >= 20) {
   clearInterval(statusWatcher);
   statusWatcher = null;
@@ -250,10 +249,15 @@ function registerUser() {
       .value
       .trim();
 
-  const position =
-    document.querySelector(
-      'input[name="position"]:checked'
-    );
+ const positionInput =
+  document.querySelector(
+    'input[name="position"]:checked'
+  );
+
+const registrationPosition =
+  positionInput
+    ? positionInput.value
+    : "";
 
 // ================= VALIDATION AUTHORITY =================
 if (
@@ -275,10 +279,8 @@ const validation =
     password: password,
     introducerId:
       registrationIntroducerId,
-    position:
-      position
-        ? position.value
-        : ""
+  position:
+  registrationPosition
   });
 
 if (!validation || !validation.valid) {
@@ -317,7 +319,7 @@ const added =
     password: password,
     introducerId:
       registrationIntroducerId,
-    position: position.value,
+   position: registrationPosition,
     status: "PENDING"
   });
 
