@@ -338,7 +338,7 @@ msg.innerHTML = `
 // ================= WATCH FINAL STATUS =================
 watchRegistrationStatus(
   mobile,
-  position.value
+  registrationPosition
 );
 
 registrationSubmitLock = false;
