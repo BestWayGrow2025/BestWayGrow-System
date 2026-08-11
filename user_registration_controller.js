@@ -2,14 +2,13 @@
 ========================================
 USER REGISTER v5.0 (FINAL PRODUCTION LIFECYCLE)
 ========================================
-✔ Queue-only registration
-✔ Live post-submit watcher
-✔ Temporary ID → Real ID replacement
-✔ Real referral link update
+✔ Queue-only registration flow
+✔ Live post-submit status watcher
+✔ Real user ID → real referral link
 ✔ GitHub Pages repo path safe link
 ✔ Fast open referral link button
-✔ Duplicate mobile check
-✔ Duplicate email check
+✔ Centralized validation authority
+✔ Centralized duplicate protection
 ✔ Queue-safe submit
 ✔ Upgrade workflow activation
 ✔ Repurchase workflow activation
@@ -209,6 +208,7 @@ function watchRegistrationStatus(
     }
 
 // ================= TIMEOUT =================
+// ================= TIMEOUT =================
 if (tries >= 20) {
   clearInterval(statusWatcher);
   statusWatcher = null;
@@ -275,7 +275,10 @@ const validation =
     password: password,
     introducerId:
       registrationIntroducerId,
-    position: position.value
+    position:
+      position
+        ? position.value
+        : ""
   });
 
 if (!validation || !validation.valid) {
@@ -288,21 +291,22 @@ if (!validation || !validation.valid) {
   return;
 }
 
-// Duplicate mobile/email validation is owned by
+// Validation and duplicate protection are owned by
 // core_registration_validation_authority.js.
 // The controller must not independently inspect
 // the user repository for registration validation.
 
-  if (typeof addToRegistrationQueue !== "function") {
-    msg.innerText = "Queue system not loaded";
-    lock = false;
-    return;
-  }
+// ================= QUEUE AUTHORITY =================
+if (
+  typeof addToRegistrationQueue !==
+  "function"
+) {
+  msg.innerText =
+    "Registration queue authority not loaded";
 
-  // ================= TEMPORARY PREVIEW =================
-  const tempId = "BWG" + Date.now();
-  const tempLink =
-    generateShareLink(tempId, position.value);
+  registrationSubmitLock = false;
+  return;
+}
 
   // ================= QUEUE SUBMISSION =================
 const added =
@@ -324,37 +328,15 @@ if (!added) {
   registrationSubmitLock = false;
   return;
 }
-
   // ================= SUBMITTED MESSAGE =================
-  msg.innerHTML = `
-    ✅ Registration Submitted<br><br>
+msg.innerHTML = `
+  ✅ Registration Submitted<br><br>
+  Status: Processing Queue...
+`;
+// ================= WATCH FINAL STATUS =================
+watchRegistrationStatus(
+  mobile,
+  position.value
+);
 
-    <b>Temporary ID:</b> ${tempId}<br><br>
-
-    <b>Share Link:</b><br>
-    <input
-      value="${tempLink}"
-      readonly
-      style="width:100%"
-    ><br><br>
-
-    <button
-      type="button"
-      class="open-link-btn"
-      data-link="${tempLink}">
-      Open Referral Link
-    </button><br><br>
-
-    Status: Processing Queue...
-  `;
-
-  // ================= WATCH FINAL STATUS =================
-  watchRegistrationStatus(
-    mobile,
-    tempId,
-    tempLink,
-    position.value
-  );
-
-  lock = false;
-}
+registrationSubmitLock = false;
