@@ -18,8 +18,8 @@ USER REGISTER v5.0 (FINAL PRODUCTION LIFECYCLE)
 ========================================
 */
 
-let lock = false;
-let introducerId = "BWG000000";
+let registrationSubmitLock = false;
+let registrationIntroducerId = "";
 let statusWatcher = null;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -46,8 +46,13 @@ function initPage() {
 
 function authPage() {
   const params = new URLSearchParams(window.location.search);
-  introducerId = params.get("ref") || "BWG000000";
+
+  registrationIntroducerId =
+    String(params.get("ref") || "")
+      .trim();
 }
+Reason: URL ref is input only. It must not automatically become trusted identity.
+3. loadPage()
 
 function bindEvents() {
   const btn = document.getElementById("registerBtn");
@@ -57,17 +62,35 @@ function bindEvents() {
 }
 
 function loadPage() {
-  const intro =
-    typeof getUserById === "function"
-      ? getUserById(introducerId)
-      : null;
+  const introLabel =
+    document.getElementById("introLabel");
 
-  const introLabel = document.getElementById("introLabel");
-  const formArea = document.getElementById("formArea");
+  const formArea =
+    document.getElementById("formArea");
+
+  if (
+    !registrationIntroducerId ||
+    typeof getUserById !== "function"
+  ) {
+    if (introLabel) {
+      introLabel.innerText =
+        "Invalid Referral Link";
+    }
+
+    if (formArea) {
+      formArea.style.display = "none";
+    }
+
+    return;
+  }
+
+  const intro =
+    getUserById(registrationIntroducerId);
 
   if (!intro) {
     if (introLabel) {
-      introLabel.innerText = "Invalid Referral Link";
+      introLabel.innerText =
+        "Invalid Referral Link";
     }
 
     if (formArea) {
@@ -78,17 +101,15 @@ function loadPage() {
   }
 
   if (introLabel) {
-    introLabel.innerText = "Introducer: " + introducerId;
+    introLabel.innerText =
+      "Introducer: " +
+      registrationIntroducerId;
   }
 }
 
-function encodePass(password) {
-  try {
-    return btoa(password);
-  } catch (e) {
-    return password;
-  }
-}
+// Password security is NOT implemented in the registration controller.
+// The controller forwards the credential only to the designated
+// authentication/password authority through the approved registration flow.
 
 function generateShareLink(userId, position) {
   const origin = window.location.origin;
@@ -220,8 +241,11 @@ function watchRegistrationStatus(
 }
 
 function registerUser() {
-  if (lock) return;
-  lock = true;
+  if (registrationSubmitLock) {
+    return;
+  }
+
+  registrationSubmitLock = true;
 
   const msg = document.getElementById("msg");
 
@@ -250,48 +274,43 @@ function registerUser() {
       'input[name="position"]:checked'
     );
 
-  // ================= VALIDATION =================
-  if (!username || !email || !mobile || !password) {
-    msg.innerText = "Fill all fields";
-    lock = false;
-    return;
-  }
+// ================= VALIDATION AUTHORITY =================
+if (
+  typeof validateRegistration !==
+  "function"
+) {
+  msg.innerText =
+    "Registration validation authority not loaded";
 
-  if (!position) {
-    msg.innerText = "Select position";
-    lock = false;
-    return;
-  }
+  registrationSubmitLock = false;
+  return;
+}
 
-  if (!/^[6-9]\d{9}$/.test(mobile)) {
-    msg.innerText = "Invalid mobile";
-    lock = false;
-    return;
-  }
+const validation =
+  validateRegistration({
+    username: username,
+    email: email,
+    mobile: mobile,
+    password: password,
+    introducerId:
+      registrationIntroducerId,
+    position: position.value
+  });
 
-  const users =
-    typeof getUsers === "function"
-      ? getUsers()
-      : [];
+if (!validation || !validation.valid) {
+  msg.innerText =
+    validation && validation.message
+      ? validation.message
+      : "Registration validation failed";
 
-  if (users.find(function (u) {
-    return u.mobile === mobile;
-  })) {
-    msg.innerText = "Mobile already exists";
-    lock = false;
-    return;
-  }
+  registrationSubmitLock = false;
+  return;
+}
 
-  if (users.find(function (u) {
-    return (
-      (u.email || "").toLowerCase() ===
-      email.toLowerCase()
-    );
-  })) {
-    msg.innerText = "Email already exists";
-    lock = false;
-    return;
-  }
+// Duplicate mobile/email validation is owned by
+// core_registration_validation_authority.js.
+// The controller must not independently inspect
+// the user repository for registration validation.
 
   if (typeof addToRegistrationQueue !== "function") {
     msg.innerText = "Queue system not loaded";
@@ -305,22 +324,25 @@ function registerUser() {
     generateShareLink(tempId, position.value);
 
   // ================= QUEUE SUBMISSION =================
-  const added = addToRegistrationQueue({
+const added =
+  addToRegistrationQueue({
     username: username,
     email: email,
     mobile: mobile,
-    password: encodePass(password),
-    introducerId: introducerId,
+    password: password,
+    introducerId:
+      registrationIntroducerId,
     position: position.value,
     status: "PENDING"
   });
 
-  if (!added) {
-    msg.innerText =
-      "Registration failed (duplicate or error)";
-    lock = false;
-    return;
-  }
+if (!added) {
+  msg.innerText =
+    "Registration could not be submitted to the queue";
+
+  registrationSubmitLock = false;
+  return;
+}
 
   // ================= SUBMITTED MESSAGE =================
   msg.innerHTML = `
