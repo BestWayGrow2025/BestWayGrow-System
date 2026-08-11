@@ -47,59 +47,6 @@ function getRightChild(userId, users) {
 
   return user ? user.rightChild : null;
 }
-
-/* ================= PLACEMENT ENGINE ================= */
-
-function findPlacement(sponsorId, position, users) {
-  if (!Array.isArray(users)) {
-    throw new Error("Invalid users list");
-  }
-
-  let current = users.find(function (u) {
-    return u.userId === sponsorId;
-  });
-
-  if (!current) {
-    throw new Error("Invalid sponsor");
-  }
-
-  let safety = 0;
-
-  while (true) {
-    if (safety++ > 1000) {
-      throw new Error("Tree overflow detected");
-    }
-
-    if (position === "L") {
-      if (!current.leftChild) {
-        return {
-          parentId: current.userId,
-          side: "L"
-        };
-      }
-
-      current = users.find(function (u) {
-        return u.userId === current.leftChild;
-      });
-    } else {
-      if (!current.rightChild) {
-        return {
-          parentId: current.userId,
-          side: "R"
-        };
-      }
-
-      current = users.find(function (u) {
-        return u.userId === current.rightChild;
-      });
-    }
-
-    if (!current) {
-      throw new Error("Tree broken during traversal");
-    }
-  }
-}
-
 /* ================= USER ID GENERATOR ================= */
 
 function generateUserId(users) {
