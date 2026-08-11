@@ -123,8 +123,6 @@ function generateShareLink(userId, position) {
 
 function watchRegistrationStatus(
   mobile,
-  tempId,
-  tempLink,
   position
 ) {
   if (statusWatcher) {
@@ -210,33 +208,16 @@ function watchRegistrationStatus(
       return;
     }
 
-    // ================= TIMEOUT =================
-    if (tries >= 20) {
-      clearInterval(statusWatcher);
-      statusWatcher = null;
+// ================= TIMEOUT =================
+if (tries >= 20) {
+  clearInterval(statusWatcher);
+  statusWatcher = null;
 
-      msg.innerHTML = `
-        ⏳ Registration Submitted<br><br>
-
-        <b>Temporary ID:</b> ${tempId}<br><br>
-
-        <b>Share Link:</b><br>
-        <input
-          value="${tempLink}"
-          readonly
-          style="width:100%"
-        ><br><br>
-
-        <button
-          type="button"
-          class="open-link-btn"
-          data-link="${tempLink}">
-          Open Referral Link
-        </button><br><br>
-
-        Status: Still processing...
-      `;
-    }
+  msg.innerHTML = `
+    ⏳ Registration Submitted<br><br>
+    Status: Still processing...
+  `;
+}
   }, 1000);
 }
 
