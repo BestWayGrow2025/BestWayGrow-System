@@ -79,9 +79,12 @@ function acquireSystemLock(context = "unknown") {
 
   const verify = getGlobalLock();
 
-  return verify && verify.id === lockId;
-}
+  if (!verify || verify.id !== lockId) {
+    return false;
+  }
 
+  return lockId;
+}
 // ================= RELEASE LOCK =================
 function releaseSystemLock(lockId = null) {
 
@@ -101,32 +104,36 @@ function releaseSystemLock(lockId = null) {
 
 // ================= SAFE EXECUTION =================
 function executeWithSystemLock(fn, context = "generic") {
+  let lockId = null;
+
   try {
     if (typeof fn !== "function") {
       return false;
     }
 
-    if (!acquireSystemLock(context)) {
+    lockId = acquireSystemLock(context);
+
+    if (!lockId) {
       return false;
     }
 
-    const result = fn();
-
-    releaseSystemLock();
-
-    return result;
+    return fn();
 
   } catch (err) {
-    releaseSystemLock();
 
     if (typeof logCritical === "function") {
       logCritical("LOCK_EXEC_ERROR: " + err.message);
     }
 
     return false;
+
+  } finally {
+
+    if (lockId) {
+      releaseSystemLock(lockId);
+    }
   }
 }
-
 // ================= EXPORT =================
 window.getGlobalLock = getGlobalLock;
 window.isSystemLocked = isSystemLocked;
