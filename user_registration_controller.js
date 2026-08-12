@@ -342,3 +342,4 @@ watchRegistrationStatus(
 );
 
 registrationSubmitLock = false;
+}
