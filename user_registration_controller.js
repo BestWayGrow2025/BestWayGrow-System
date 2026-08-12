@@ -50,9 +50,6 @@ function authPage() {
     String(params.get("ref") || "")
       .trim();
 }
-Reason: URL ref is input only. It must not automatically become trusted identity.
-3. loadPage()
-
 function bindEvents() {
   const btn = document.getElementById("registerBtn");
   if (btn) {
