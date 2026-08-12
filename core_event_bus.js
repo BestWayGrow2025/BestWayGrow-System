@@ -15,6 +15,7 @@ SYSTEM EVENT HUB v2.2 (FINAL CLEAN)
 (function () {
 
   // ================= GUARD =================
+
   if (window.__SYSTEM_EVENT_HUB__) {
     console.log("[EVENT HUB] Already Loaded");
     return;
@@ -23,12 +24,14 @@ SYSTEM EVENT HUB v2.2 (FINAL CLEAN)
   window.__SYSTEM_EVENT_HUB__ = true;
 
   // ================= EVENT BUS =================
+
   const BUS = createEventBus();
 
   // expose SYSTEM_EVENTS globally
   window.SYSTEM_EVENTS = window.SYSTEM_EVENTS || BUS;
 
   // ================= INIT =================
+
   function initSystemEventHubLayer() {
     initSystemEventHub(BUS);
     console.log("[EVENT HUB] READY");
@@ -42,6 +45,7 @@ SYSTEM EVENT HUB v2.2 (FINAL CLEAN)
 
 })();
 
+
 /* ========================================
    EVENT BUS FACTORY
 ======================================== */
@@ -49,9 +53,11 @@ SYSTEM EVENT HUB v2.2 (FINAL CLEAN)
 function createEventBus() {
 
   return {
+
     listeners: {},
 
     on(event, fn) {
+
       if (!event || typeof fn !== "function") return;
 
       if (!this.listeners[event]) {
@@ -64,28 +70,42 @@ function createEventBus() {
     },
 
     off(event, fn) {
+
       if (!this.listeners[event]) return;
-      this.listeners[event] = this.listeners[event].filter(f => f !== fn);
+
+      this.listeners[event] =
+        this.listeners[event].filter(f => f !== fn);
     },
 
     emit(event, data) {
+
       const list = this.listeners[event] || [];
 
       list.forEach(fn => {
+
         try {
           fn(data);
         } catch (err) {
           console.error("[EVENT HUB ERROR]", event, err);
         }
+
       });
     },
 
     clear(event) {
-      if (event) delete this.listeners[event];
-      else this.listeners = {};
+
+      if (event) {
+        delete this.listeners[event];
+      } else {
+        this.listeners = {};
+      }
+
     }
+
   };
+
 }
+
 
 /* ========================================
    INIT HUB
@@ -98,36 +118,47 @@ function initSystemEventHub(bus) {
   bindBankSystemEvents(bus);
 
   console.log("[EVENT HUB] CORE HOOKS REGISTERED");
+
 }
+
 
 /* ========================================
    PIN EVENTS
 ======================================== */
 
 function bindPinSystemEvents(bus) {
+
   hook("executePinFlow", "PIN_EVENT", bus);
   hook("createPinRequest", "PIN_REQUEST_EVENT", bus);
   hook("routePinRequest", "PIN_ROUTE_EVENT", bus);
+
 }
+
 
 /* ========================================
    PAYOUT EVENTS
 ======================================== */
 
 function bindPayoutSystemEvents(bus) {
+
   hook("processPayout", "PAYOUT_EVENT", bus);
   hook("finalizePayout", "PAYOUT_FINALIZED", bus);
+
 }
+
 
 /* ========================================
    BANK EVENTS
 ======================================== */
 
 function bindBankSystemEvents(bus) {
+
   hook("updateBankBalance", "BANK_UPDATE", bus);
   hook("creditBank", "BANK_CREDIT", bus);
   hook("debitBank", "BANK_DEBIT", bus);
+
 }
+
 
 /* ========================================
    SAFE HOOK
@@ -141,35 +172,43 @@ function hook(fnName, eventName, bus) {
 
   if (original.__systemEventHooked) return;
 
- function wrapped(...args) {
+  function wrapped(...args) {
 
-  let result;
+    let result;
 
-  try {
+    try {
 
-    result = original.apply(this, args);
+      result = original.apply(this, args);
 
-  } finally {
+    } finally {
 
-    bus.emit(eventName, {
-      functionName: fnName,
-      eventName,
-      args,
-      result,
-      timestamp: Date.now()
-    });
+      bus.emit(eventName, {
+        functionName: fnName,
+        eventName,
+        args,
+        result,
+        timestamp: Date.now()
+      });
+
+    }
+
+    return result;
   }
-
-  return result;
-}
 
   wrapped.__systemEventHooked = true;
   wrapped.__originalFunction = original;
 
   window[fnName] = wrapped;
 
-  console.log("[EVENT HUB] Hooked:", fnName, "→", eventName);
+  console.log(
+    "[EVENT HUB] Hooked:",
+    fnName,
+    "→",
+    eventName
+  );
+
 }
+
 
 /* ========================================
    GLOBAL HELPERS
@@ -177,16 +216,29 @@ function hook(fnName, eventName, bus) {
 
 function exposeGlobalHub(bus) {
 
-  window.onSystemEvent = bus.on.bind(bus);
-  window.offSystemEvent = bus.off.bind(bus);
-  window.emitSystemEvent = bus.emit.bind(bus);
+  window.onSystemEvent =
+    bus.on.bind(bus);
 
-  window.broadcastSystemEvent = function (event, payload = {}) {
-    bus.emit(event, { ...payload, timestamp: Date.now() });
-  };
+  window.offSystemEvent =
+    bus.off.bind(bus);
+
+  window.emitSystemEvent =
+    bus.emit.bind(bus);
+
+  window.broadcastSystemEvent =
+    function (event, payload = {}) {
+
+      bus.emit(event, {
+        ...payload,
+        timestamp: Date.now()
+      });
+
+    };
 
   console.log("[EVENT HUB] GLOBAL REGISTRATION COMPLETE");
+
 }
+
 
 /* ========================================
    ENTERPRISE CONNECTION (OPTIONAL)
@@ -197,6 +249,7 @@ function connectEnterpriseToEventHub(bus) {
   return function wireCore() {
 
     if (window.__EVENT_HUB_CORE_CONNECTED__) return;
+
     window.__EVENT_HUB_CORE_CONNECTED__ = true;
 
     const core =
@@ -205,18 +258,42 @@ function connectEnterpriseToEventHub(bus) {
       null;
 
     if (!core) {
-      console.warn("[EVENT HUB] Enterprise Core not found");
+
+      console.warn(
+        "[EVENT HUB] Enterprise Core not found"
+      );
+
       return;
     }
 
-    console.log("[EVENT HUB] ENTERPRISE CORE CONNECTED");
+    console.log(
+      "[EVENT HUB] ENTERPRISE CORE CONNECTED"
+    );
 
-    bus.on("PIN_EVENT", d => core.analyze?.(d));
-    bus.on("PAYOUT_EVENT", d => core.analyze?.(d));
-    bus.on("BANK_UPDATE", d => core.analyze?.(d));
-    bus.on("SYSTEM_EVENT", d => core.analyze?.(d));
+    bus.on(
+      "PIN_EVENT",
+      d => core.analyze?.(d)
+    );
+
+    bus.on(
+      "PAYOUT_EVENT",
+      d => core.analyze?.(d)
+    );
+
+    bus.on(
+      "BANK_UPDATE",
+      d => core.analyze?.(d)
+    );
+
+    bus.on(
+      "SYSTEM_EVENT",
+      d => core.analyze?.(d)
+    );
+
   };
+
 }
+
 
 /* ========================================
    EXPORT
