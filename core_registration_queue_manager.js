@@ -289,10 +289,19 @@ function processRegistrationQueue() {
         continue;
       }
 
-      if (
+       if (
         queue[i].status !==
         "PENDING"
       ) {
+        continue;
+      }
+
+      if (!isValidQueueRow(queue[i])) {
+        queue[i].status = "FAILED";
+        queue[i].error =
+          "Invalid registration queue data";
+        queue[i].failedAt =
+          Date.now();
         continue;
       }
 
@@ -301,6 +310,7 @@ function processRegistrationQueue() {
           queue[i]
         );
 
+        
         queue[i].status = "DONE";
         queue[i].completedAt =
           Date.now();
