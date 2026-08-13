@@ -140,47 +140,136 @@ function watchRegistrationStatus(
       return u.mobile === mobile;
     });
 
-    // ================= SUCCESS =================
-    if (created && created.userId) {
-      clearInterval(statusWatcher);
-      statusWatcher = null;
+// ================= SUCCESS =================
+if (created && created.userId) {
+  clearInterval(statusWatcher);
+  statusWatcher = null;
 
-      const realLink =
-        generateShareLink(created.userId, position);
+  const realLink =
+    generateShareLink(
+      created.userId,
+      position
+    );
 
-      msg.innerHTML = `
-        ✅ Registration Complete<br><br>
+  msg.innerHTML = "";
 
-        <b>User ID:</b> ${created.userId}<br><br>
+  const successTitle =
+    document.createElement("div");
 
-        <b>Share Link:</b><br>
-        <input
-          value="${realLink}"
-          readonly
-          style="width:100%"
-        ><br><br>
+  successTitle.textContent =
+    "✅ Registration Complete";
 
-        <button
-          type="button"
-          class="open-link-btn"
-          data-link="${realLink}">
-          Open Referral Link
-        </button><br><br>
+  const userIdLine =
+    document.createElement("div");
 
-        <hr>
+  const userIdLabel =
+    document.createElement("b");
 
-        <b>Account Lifecycle Activated:</b><br>
-        ✔ Referral Link Ready<br>
-        ✔ Upgrade Available in User Dashboard<br>
-        ✔ Repurchase Available in User Dashboard<br>
-        ✔ Income Generation Activated<br>
-        ✔ CTOR Maintenance Lifecycle Started<br><br>
+  userIdLabel.textContent =
+    "User ID: ";
 
-        Status: Completed
-      `;
+  userIdLine.appendChild(
+    userIdLabel
+  );
 
-      return;
-    }
+  userIdLine.appendChild(
+    document.createTextNode(
+      created.userId
+    )
+  );
+
+  const shareLabel =
+    document.createElement("div");
+
+  shareLabel.innerHTML =
+    "<br><br><b>Share Link:</b><br>";
+
+  const linkInput =
+    document.createElement("input");
+
+  linkInput.value =
+    realLink;
+
+  linkInput.readOnly =
+    true;
+
+  linkInput.style.width =
+    "100%";
+
+  const openButton =
+    document.createElement("button");
+
+  openButton.type =
+    "button";
+
+  openButton.className =
+    "open-link-btn";
+
+  openButton.dataset.link =
+    realLink;
+
+  openButton.textContent =
+    "Open Referral Link";
+
+  const lifecycle =
+    document.createElement("div");
+
+  lifecycle.innerHTML = `
+    <br><br>
+    <hr>
+
+    <b>Account Lifecycle Activated:</b><br>
+    ✔ Referral Link Ready<br>
+    ✔ Upgrade Available in User Dashboard<br>
+    ✔ Repurchase Available in User Dashboard<br>
+    ✔ Income Generation Activated<br>
+    ✔ CTOR Maintenance Lifecycle Started<br><br>
+
+    Status: Completed
+  `;
+
+  msg.appendChild(
+    successTitle
+  );
+
+  msg.appendChild(
+    document.createElement("br")
+  );
+
+  msg.appendChild(
+    document.createElement("br")
+  );
+
+  msg.appendChild(
+    userIdLine
+  );
+
+  msg.appendChild(
+    shareLabel
+  );
+
+  msg.appendChild(
+    linkInput
+  );
+
+  msg.appendChild(
+    document.createElement("br")
+  );
+
+  msg.appendChild(
+    document.createElement("br")
+  );
+
+  msg.appendChild(
+    openButton
+  );
+
+  msg.appendChild(
+    lifecycle
+  );
+
+  return;
+}
 
     // ================= FAILURE =================
     const queue =
