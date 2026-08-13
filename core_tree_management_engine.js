@@ -83,16 +83,23 @@ function generateUserId(users) {
 
 /* ================= REFERRAL LINK ================= */
 
-function generateReferralLink(userId) {
-  const base =
-    (window.location &&
-      window.location.origin) ||
-    "https://yourdomain.com";
+function generateReferralLink(
+  userId,
+  position
+) {
+  const origin =
+    window.location.origin;
+
+  const path =
+    window.location.pathname
+      .split("/")
+      .slice(0, -1)
+      .join("/");
 
   return (
-    base +
-    "/register.html?ref=" +
-    encodeURIComponent(userId)
+    `${origin}${path}/user_registration_dashboard.html` +
+    `?ref=${encodeURIComponent(userId)}` +
+    `&pos=${encodeURIComponent(position || "")}`
   );
 }
 
@@ -280,7 +287,8 @@ function createUserWithTree(req) {
 
       referralLink:
         generateReferralLink(
-          userId
+          userId,
+          req.position
         ),
 
       createdAt:
