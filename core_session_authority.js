@@ -331,7 +331,7 @@ function isAuthenticated() {
 // =====================
 function logoutSession() {
   destroySession();
-  window.location.replace("user_login.html");
+ window.location.replace("user_auth.html");
 }
 
 // =====================
@@ -347,7 +347,7 @@ window.addEventListener("storage", function (e) {
 
     if (eventData?.type === "LOGOUT") {
       clearSessionStorage();
-      window.location.replace("user_login.html");
+      window.location.replace("user_auth.html");
     }
 
   } catch (_) {}
