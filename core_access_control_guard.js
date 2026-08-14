@@ -6,7 +6,7 @@ ROUTE GUARD SYSTEM V3.0 (UNIFIED FINAL)
 SINGLE ACCESS CONTROL AUTHORITY
 ========================================
 ✔ Single authentication guard
-✔ Uses session_manager.js only
+✔ Uses core_session_authority.js only
 ✔ Role-based access validation
 ✔ Role-specific login redirects
 ✔ Global auth failure flag
@@ -31,12 +31,12 @@ function requireAuth(allowedRoles = []) {
         : null;
 
     // ================= NO SESSION =================
-    if (!session || !session.userId) {
+  if (!session || !session.userId) {
 
-      window.__AUTH_FAILED__ = true;
-      window.location.replace("user_login.html");
-      return false;
-    }
+  window.__AUTH_FAILED__ = true;
+  window.location.replace("user_auth.html");
+  return false;
+}
 
    // ================= ROLE CHECK =================
 if (
@@ -56,25 +56,24 @@ if (
     })
   );
 
-  // role-based redirect
+   // role-based redirect
   switch (session.role) {
 
     case "admin":
-      window.location.replace("admin_login.html");
+      window.location.replace("admin_auth.html");
       break;
 
     case "system_admin":
-      window.location.replace("system_admin_login.html");
+      window.location.replace("system_admin_auth.html");
       break;
 
     case "super_admin":
-      window.location.replace("super_admin_login.html");
+      window.location.replace("super_admin_auth.html");
       break;
 
     default:
-      window.location.replace("user_login.html");
+      window.location.replace("user_auth.html");
   }
-
   return false;
 }
     
@@ -95,9 +94,8 @@ if (
   if (typeof logoutSession === "function") {
     logoutSession();
   } else {
-    window.location.replace("user_login.html");
+    window.location.replace("user_auth.html");
   }
-
   return false;
 }
 
@@ -109,8 +107,8 @@ if (
 
     console.error("Route guard error:", err);
 
-    window.__AUTH_FAILED__ = true;
-    window.location.replace("user_login.html");
+ window.__AUTH_FAILED__ = true;
+    window.location.replace("user_auth.html");
 
     return false;
   }
