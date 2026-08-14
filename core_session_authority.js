@@ -63,7 +63,10 @@ function sessionSafeGet(key, fallback) {
 function sessionSafeSet(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch (_) {}
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 // =====================
@@ -173,7 +176,10 @@ function setSession(user) {
       initialized: true
     };
 
-   sessionSafeSet(SESSION_KEY, sessionData);
+    if (!sessionSafeSet(SESSION_KEY, sessionData)) {
+      clearSessionStorage();
+      return false;
+    }
 
     localStorage.setItem(
       SESSION_EVENT_KEY,
