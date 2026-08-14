@@ -115,8 +115,14 @@ function isValidSessionShape(session) {
 // EXPIRY CHECK
 // =====================
 function isSessionExpired(session) {
+
   if (!session?.lastActivity) return true;
-  return (Date.now() - Number(session.lastActivity)) > SESSION_TIMEOUT;
+
+  const lastActivity = Number(session.lastActivity);
+
+  if (!Number.isFinite(lastActivity)) return true;
+
+  return (Date.now() - lastActivity) > SESSION_TIMEOUT;
 }
 
 // =====================
