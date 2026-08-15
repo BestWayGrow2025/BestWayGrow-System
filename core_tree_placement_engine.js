@@ -14,8 +14,6 @@ PLACEMENT ENGINE v1.0 (PRODUCTION)
 
 /* ================= PLACEMENT ENGINE ================= */
 
-/* ================= PLACEMENT ENGINE ================= */
-
 function findPlacement(introducerId, position, users) {
   if (!Array.isArray(users)) {
     throw new Error("Invalid users list");
@@ -26,7 +24,7 @@ function findPlacement(introducerId, position, users) {
   }
 
   let current = users.find(function (u) {
-    return u.userId === sponsorId;
+    return u.userId === introducerId;
   });
 
   if (!current) {
@@ -48,10 +46,10 @@ function findPlacement(introducerId, position, users) {
         };
       }
 
-       let current = users.find(function (u) {
-    return u.userId === introducerId;
-  });
-      
+      current = users.find(function (u) {
+        return u.userId === current.leftChild;
+      });
+
     } else {
       if (!current.rightChild) {
         return {
