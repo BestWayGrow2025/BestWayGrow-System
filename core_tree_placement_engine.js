@@ -14,7 +14,9 @@ PLACEMENT ENGINE v1.0 (PRODUCTION)
 
 /* ================= PLACEMENT ENGINE ================= */
 
-function findPlacement(sponsorId, position, users) {
+/* ================= PLACEMENT ENGINE ================= */
+
+function findPlacement(introducerId, position, users) {
   if (!Array.isArray(users)) {
     throw new Error("Invalid users list");
   }
@@ -28,7 +30,7 @@ function findPlacement(sponsorId, position, users) {
   });
 
   if (!current) {
-    throw new Error("Invalid sponsor");
+    throw new Error("Invalid introducer");
   }
 
   let safety = 0;
@@ -46,9 +48,10 @@ function findPlacement(sponsorId, position, users) {
         };
       }
 
-      current = users.find(function (u) {
-        return u.userId === current.leftChild;
-      });
+       let current = users.find(function (u) {
+    return u.userId === introducerId;
+  });
+      
     } else {
       if (!current.rightChild) {
         return {
