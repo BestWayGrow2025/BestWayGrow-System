@@ -297,10 +297,10 @@ position:
         totalDebit: 0
       },
 
-      referralLink:
+       referralLink:
         generateReferralLink(
           userId,
-          req.position
+          position
         ),
 
       createdAt:
