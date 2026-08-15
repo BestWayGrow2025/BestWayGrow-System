@@ -226,13 +226,6 @@ const position =
 if (position !== "L" && position !== "R") {
   throw new Error("Invalid position");
 }
-    if (
-      ["L", "R"].indexOf(
-        req.position
-      ) === -1
-    ) {
-      req.position = "L";
-    }
 
     if (
       users.some(function (u) {
