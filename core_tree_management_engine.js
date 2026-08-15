@@ -201,14 +201,31 @@ function createUserWithTree(req) {
       );
     }
 
-    req.introducerId =
-      req.introducerId ||
-      "BWG000000";
+ /* ================= INTRODUCER AUTHORITY ================= */
 
-    req.sponsorId =
-      req.sponsorId ||
-      req.introducerId;
+const introducerId =
+  String(req.introducerId || "").trim();
 
+if (!introducerId) {
+  throw new Error("Introducer ID required");
+}
+
+const introducer =
+  users.find(function (u) {
+    return u.userId === introducerId;
+  });
+
+if (!introducer) {
+  throw new Error("Invalid introducer");
+}
+/* ================= POSITION AUTHORITY ================= */
+
+const position =
+  String(req.position || "").toUpperCase();
+
+if (position !== "L" && position !== "R") {
+  throw new Error("Invalid position");
+}
     if (
       ["L", "R"].indexOf(
         req.position
@@ -232,12 +249,12 @@ function createUserWithTree(req) {
     const userId =
       generateUserId(users);
 
-    const placement =
-      findPlacement(
-        req.sponsorId,
-        req.position,
-        users
-      );
+const placement =
+  findPlacement(
+    introducerId,
+    position,
+    users
+  );
 
     const parent = users.find(
       function (u) {
@@ -267,12 +284,14 @@ function createUserWithTree(req) {
       role: "user",
       status: "active",
 
-      introducerId:
-        req.introducerId,
-      sponsorId:
-        placement.parentId,
-      position:
-        placement.side,
+     introducerId:
+  introducerId,
+
+sponsorId:
+  placement.parentId,
+
+position:
+  placement.side,
 
       leftChild: null,
       rightChild: null,
