@@ -5,7 +5,7 @@
 SYSTEM ADMIN LOGIN V4.0 FINAL STABLE
 ========================================
 ✔ Safe standalone initialization
-✔ Unified session_manager.js
+✔ Unified core_session_authority.js
 ✔ Safe login lock
 ✔ Automatic redirect if already logged in
 ✔ Strict system_admin role validation
