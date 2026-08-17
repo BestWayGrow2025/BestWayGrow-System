@@ -91,58 +91,33 @@ function recordBackupEvent(entry = {}) {
 }
 
 // =====================
-// SNAPSHOT GENERATORS
+// AUTHORITATIVE BACKUP BRIDGE
 // =====================
-function snapshotWallets() {
+function runScheduledBackup() {
+
   try {
-    if (typeof getWallets !== "function") return {};
 
-    return getWallets();
-  } catch {
-    return {};
-  }
-}
+    // KB_042 is the single backup creation authority.
+    if (typeof window.createSystemBackup !== "function") {
 
-function snapshotLedger() {
-  try {
-    if (typeof getLedger !== "function") return {};
+      recordBackupEvent({
+        status: "FAILED",
+        type: "BACKUP_AUTHORITY_MISSING",
+        details: {
+          authority: "core_backup_recovery_manager.js"
+        }
+      });
 
-    return getLedger();
-  } catch {
-    return {};
-  }
-}
+      return false;
+    }
 
-function snapshotPayouts() {
-  try {
-    if (typeof getPayouts !== "function") return [];
-
-    return getPayouts();
-  } catch {
-    return [];
-  }
-}
-
-function snapshotWithdrawals() {
-  try {
-    if (typeof getWithdrawals !== "function") return [];
-
-    return getWithdrawals();
-  } catch {
-    return [];
-  }
-}
-
-// =====================
-// CORE BACKUP ENGINE
-// =====================
-function createSystemBackup() {
-  try {
-    // Health gate check
+    // Optional health gate for scheduled execution.
     if (typeof getSystemHealth === "function") {
+
       const health = getSystemHealth();
 
       if (!health?.healthy) {
+
         recordBackupEvent({
           status: "SKIPPED",
           type: "HEALTH_BLOCKED_BACKUP",
@@ -153,40 +128,30 @@ function createSystemBackup() {
       }
     }
 
-    const backup = {
-      id:
-        "BKP_" +
-        Date.now() +
-        "_" +
-        Math.random().toString(36).slice(2, 8),
-
-      timestamp: Date.now(),
-
-      wallets: snapshotWallets(),
-      ledger: snapshotLedger(),
-      payouts: snapshotPayouts(),
-      withdrawals: snapshotWithdrawals()
-    };
-
-    const store = getBackupStore();
-    store.push(backup);
-
-    const saved = saveBackupStore(store);
+    const result =
+      window.createSystemBackup(
+        "Scheduled Backup"
+      );
 
     recordBackupEvent({
-      status: saved ? "SUCCESS" : "FAILED",
-      type: "FULL_BACKUP",
+      status: result ? "SUCCESS" : "FAILED",
+      type: "SCHEDULED_BACKUP",
       details: {
-        backupId: backup.id
+        backupId:
+          result?.backupId || null
       }
     });
 
-    return saved ? backup : false;
+    return result || false;
+
   } catch (err) {
+
     recordBackupEvent({
       status: "ERROR",
       type: "BACKUP_ERROR",
-      details: { error: err.message }
+      details: {
+        error: err.message
+      }
     });
 
     return false;
@@ -197,11 +162,22 @@ function createSystemBackup() {
 // BACKUP RESTORE (SAFE READ-ONLY)
 // =====================
 function getLatestBackup() {
+
   try {
-    const store = getBackupStore();
-    return store.length ? store[store.length - 1] : null;
+
+    if (
+      typeof window.getLatestSystemBackup !==
+      "function"
+    ) {
+      return null;
+    }
+
+    return window.getLatestSystemBackup();
+
   } catch {
+
     return null;
+
   }
 }
 
@@ -215,7 +191,7 @@ function startBackupScheduler(interval = BACKUP_INTERVAL_DEFAULT) {
 
   setInterval(() => {
     try {
-      createSystemBackup();
+        runScheduledBackup();
     } catch (err) {
       if (typeof logCritical === "function") {
         logCritical("BACKUP_SCHEDULER_CRASH: " + err.message);
@@ -227,8 +203,8 @@ function startBackupScheduler(interval = BACKUP_INTERVAL_DEFAULT) {
 // =====================
 // MANUAL BACKUP TRIGGER
 // =====================
-function triggerManualBackup() {
-  return createSystemBackup();
+   function triggerManualBackup() {
+  return runScheduledBackup();
 }
 
 // =====================
@@ -247,10 +223,8 @@ function getBackupStatus() {
 // =====================
 // EXPORTS
 // =====================
-window.createSystemBackup = createSystemBackup;
+window.runScheduledBackup = runScheduledBackup;
 window.triggerManualBackup = triggerManualBackup;
 window.getLatestBackup = getLatestBackup;
 window.getBackupStatus = getBackupStatus;
 window.startBackupScheduler = startBackupScheduler;
-
-window.__BACKUP_SCHEDULER_ACTIVE__ = true;
