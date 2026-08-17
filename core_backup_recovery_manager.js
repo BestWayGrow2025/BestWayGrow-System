@@ -134,25 +134,39 @@ function restoreSystemBackup(backupId) {
 
     if (!parsed || !parsed.snapshot) return false;
 
-    // Clear all keys except backup storage and backup snapshots
+   // ================= SAFE RESTORE =================
+
     const keysToRemove = [];
 
     for (let i = 0; i < localStorage.length; i++) {
+
       const key = localStorage.key(i);
 
+      if (!key) continue;
+
       if (key === BACKUP_STORAGE_KEY) continue;
-      if (key && key.startsWith(BACKUP_PREFIX)) continue;
+
+      if (key.startsWith(BACKUP_PREFIX)) continue;
 
       keysToRemove.push(key);
     }
 
-    keysToRemove.forEach(key => {
+    keysToRemove.forEach(function (key) {
+
       localStorage.removeItem(key);
+
     });
 
-    // Restore snapshot
-    Object.keys(parsed.snapshot).forEach(key => {
-      localStorage.setItem(key, parsed.snapshot[key]);
+    // Restore snapshot safely
+    Object.keys(parsed.snapshot).forEach(function (key) {
+
+      if (!key) return;
+
+      localStorage.setItem(
+        key,
+        parsed.snapshot[key]
+      );
+
     });
 
     // Broadcast event if event hub exists
