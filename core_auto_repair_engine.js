@@ -234,11 +234,13 @@ function runAutoRepair() {
 // SIMPLE API
 // ========================================
 function isAutoRepairSuccessful() {
-  const result = runAutoRepair();
+
+  const status = getAutoRepairStatus();
 
   return (
-    result &&
-    result.repaired === true
+    status &&
+    status.active === true &&
+    status.lastRepairSuccessful === true
   );
 }
 
