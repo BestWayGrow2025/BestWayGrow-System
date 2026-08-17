@@ -62,22 +62,37 @@ function recordComplianceDecision(entry = {}) {
       reason: entry.reason || "NONE",
       context: entry.context || {},
       systemState: {
-        certified: typeof isSystemCertified === "function"
-          ? isSystemCertified()
-          : null,
-        integrity: typeof runFinancialIntegrityCheck === "function"
-          ? runFinancialIntegrityCheck()
-          : null,
-        replay: !!window.__SYSTEM_REPLAY_ENGINE_ACTIVE__,
-        audit: !!window.__EVENT_ORCHESTRATOR_ACTIVE__
+        certified:
+          entry.systemState &&
+          typeof entry.systemState.certified === "boolean"
+            ? entry.systemState.certified
+            : null,
+
+        integrity:
+          entry.systemState &&
+          typeof entry.systemState.integrity === "boolean"
+            ? entry.systemState.integrity
+            : null,
+
+        replay:
+          !!window.__SYSTEM_REPLAY_ENGINE_ACTIVE__,
+
+        audit:
+          !!window.EVENT_ORCHESTRATOR_ACTIVE
       }
     });
 
     return saveComplianceLog(log);
+
   } catch (err) {
+
     if (typeof logCritical === "function") {
-      logCritical("COMPLIANCE_RECORD_FAILED: " + err.message);
+      logCritical(
+        "COMPLIANCE_RECORD_FAILED: " +
+        err.message
+      );
     }
+
     return false;
   }
 }
