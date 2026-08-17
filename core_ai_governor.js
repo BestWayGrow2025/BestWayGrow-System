@@ -4,13 +4,14 @@
 ========================================
 CORE AI GOVERNOR
 ========================================
-✔ Controls system behavior
-✔ Enforces safety rules
-✔ Snapshot-based decision engine
-✔ Single initialization path
-✔ Single signal binding
-✔ Single governor timer
-✔ Single CRITICAL freeze authority
+✔ Single AI risk/governance authority
+✔ Evaluates system alerts/failures/warnings
+✔ Evaluates control snapshots
+✔ Requests system freeze through SYSTEM_EVENTS
+✔ Delegates system state to SystemOSMode
+✔ Protected single initialization
+✔ Protected single governor loop
+✔ No UI / routing / authentication logic
 ========================================
 */
 
@@ -20,13 +21,26 @@ CORE AI GOVERNOR
 
   window.__AI_GOVERNOR__ = true;
 
+  document.addEventListener(
+    "DOMContentLoaded",
+    initGovernor,
+    { once: true }
+  );
+
 })();
+
+// ================= STATE =================
+
+let GOV_TIMER = null;
+let GOV_SIGNALS_BOUND = false;
 
 // ================= INIT =================
 
 function initGovernor() {
 
-  if (window.__AI_GOVERNOR_INITIALIZED__) return;
+  console.log(
+    "[CORE AI GOVERNOR] INITIALIZED"
+  );
 
   if (!window.SYSTEM_EVENTS) {
 
@@ -35,38 +49,34 @@ function initGovernor() {
     );
 
     return;
+
   }
 
-  window.__AI_GOVERNOR_INITIALIZED__ = true;
-
-  console.log(
-    "[CORE AI GOVERNOR] INITIALIZED"
-  );
-
   bindGovernorSignals();
-
   startGovernorLoop();
 
 }
-
 
 // ================= SIGNAL BIND =================
 
 function bindGovernorSignals() {
 
-  if (window.__AI_GOVERNOR_SIGNALS_BOUND__) return;
+  if (GOV_SIGNALS_BOUND) return;
 
-  const hub =
-    window.SYSTEM_EVENTS;
+  const hub = window.SYSTEM_EVENTS;
 
   if (
     !hub ||
     typeof hub.on !== "function"
   ) {
-    return;
-  }
 
-  window.__AI_GOVERNOR_SIGNALS_BOUND__ = true;
+    console.warn(
+      "[CORE AI GOVERNOR] Event Hub unavailable"
+    );
+
+    return;
+
+  }
 
   hub.on(
     "SYSTEM_ALERT",
@@ -88,8 +98,9 @@ function bindGovernorSignals() {
     handleSnapshot
   );
 
-}
+  GOV_SIGNALS_BOUND = true;
 
+}
 
 // ================= SNAPSHOT HANDLER =================
 
@@ -99,7 +110,6 @@ function handleSnapshot(snapshot) {
 
   const health =
     snapshot.health?.overall;
-
 
   // ================= CRITICAL =================
 
@@ -113,7 +123,11 @@ function handleSnapshot(snapshot) {
       "CRITICAL_HEALTH"
     );
 
-    if (window.SYSTEM_EVENTS) {
+    if (
+      window.SYSTEM_EVENTS &&
+      typeof window.SYSTEM_EVENTS.emit ===
+        "function"
+    ) {
 
       window.SYSTEM_EVENTS.emit(
         "GOVERNOR_ACTION",
@@ -126,8 +140,9 @@ function handleSnapshot(snapshot) {
 
     }
 
-  }
+    return;
 
+  }
 
   // ================= WARNING =================
 
@@ -140,7 +155,7 @@ function handleSnapshot(snapshot) {
     if (
       window.SystemOSMode &&
       typeof window.SystemOSMode.setMode ===
-      "function"
+        "function"
     ) {
 
       window.SystemOSMode.setMode(
@@ -153,37 +168,36 @@ function handleSnapshot(snapshot) {
 
 }
 
-
 // ================= LOOP =================
-
-let GOV_TIMER = null;
 
 function startGovernorLoop() {
 
-  if (GOV_TIMER) return;
+  if (GOV_TIMER !== null) return;
 
-  GOV_TIMER = setInterval(() => {
+  GOV_TIMER = setInterval(
+    function () {
 
-    const snapshot =
-      window.__SYSTEM_SNAPSHOT__;
+      const snapshot =
+        window.__SYSTEM_SNAPSHOT__;
 
-    if (!snapshot) return;
+      if (!snapshot) return;
 
-    if (
-      snapshot.health?.overall ===
-      "CRITICAL"
-    ) {
+      if (
+        snapshot.health?.overall ===
+        "CRITICAL"
+      ) {
 
-      triggerFreeze(
-        "CRITICAL STATE DETECTED"
-      );
+        triggerFreeze(
+          "CRITICAL_STATE_DETECTED"
+        );
 
-    }
+      }
 
-  }, 60000);
+    },
+    60000
+  );
 
 }
-
 
 // ================= RISK =================
 
@@ -197,19 +211,19 @@ function evaluateRisk(data) {
   );
 
   if (
-    data.level === "CRITICAL"
+    String(data.level || "")
+      .toUpperCase() === "CRITICAL"
   ) {
 
     triggerFreeze(
-      "CRITICAL EVENT"
+      "CRITICAL_EVENT"
     );
 
   }
 
 }
 
-
-// ================= FREEZE =================
+// ================= FREEZE REQUEST =================
 
 function triggerFreeze(reason) {
 
@@ -221,20 +235,21 @@ function triggerFreeze(reason) {
   if (
     window.SYSTEM_EVENTS &&
     typeof window.SYSTEM_EVENTS.emit ===
-    "function"
+      "function"
   ) {
 
     window.SYSTEM_EVENTS.emit(
       "SYSTEM_FREEZE",
       {
-        reason
+        reason,
+        source: "CORE_AI_GOVERNOR",
+        time: Date.now()
       }
     );
 
   }
 
 }
-
 
 // ================= GLOBAL MODULE EXPORT =================
 
@@ -256,4 +271,3 @@ window.system_ai_governor = {
     startGovernorLoop
 
 };
-
