@@ -2,84 +2,66 @@
 
 /*
 ========================================
-SYSTEM BOOT CONTROLLER v1.0 FINAL
-SINGLE ENTRY POINT - STRICT PIPELINE
+SYSTEM BOOT PIPELINE — COMPATIBILITY LAYER
+========================================
+✔ Does NOT create a second boot authority
+✔ Delegates system startup to KB_044
+✔ Preserves initSystemBoot() compatibility API
+✔ Prevents duplicate boot execution
+✔ Keeps boot authority centralized
 ========================================
 */
 
 (function () {
-  if (window.__BOOT_LOCK__) return;
-  window.__BOOT_LOCK__ = true;
 
-  console.log("[BOOT] CONTROLLER START");
+  // ========================================
+  // DUPLICATE LOAD PROTECTION
+  // ========================================
 
-  // ================= BOOT STATE =================
-  window.__BOOT_STATE__ = {
-    started: false,
-    dependencies: false,
-    session: false,
-    autoWiring: false,
-    orchestrator: false,
-    pin: false,
-    ai: false,
-    router: false,
-    complete: false
-  };
+  if (window.__BOOT_PIPELINE_COMPAT__) {
+    return;
+  }
 
-  // ================= SAFE RUN =================
-  function safeRun(fn, name) {
-    try {
-      if (typeof fn === "function") {
-        fn();
-        console.log("[BOOT]", name, "OK");
-        return true;
-      }
-      console.warn("[BOOT]", name, "NOT A FUNCTION");
-      return false;
-    } catch (err) {
-      console.error("[BOOT ERROR]", name, err);
+  window.__BOOT_PIPELINE_COMPAT__ = true;
+
+  // ========================================
+  // COMPATIBILITY BOOT ENTRY
+  // ========================================
+
+  function initSystemBoot() {
+
+    /*
+    ========================================
+    AUTHORITATIVE BOOT DELEGATION
+    ========================================
+
+    KB_044:
+    core_boot_manager.js
+
+    Authoritative function:
+    window.bootSystem()
+
+    KB_045 must not independently execute
+    dependencies, session, wiring, PIN, AI,
+    orchestrator, or router initialization.
+    */
+
+    if (typeof window.bootSystem !== "function") {
+
+      console.error(
+        "[BOOT PIPELINE] Authoritative bootSystem() NOT FOUND"
+      );
+
       return false;
     }
+
+    return window.bootSystem();
   }
 
-  // ================= BOOT PIPELINE =================
-  const BOOT_STEPS = [
-    ["dependencies", () => window.startDependencyMonitor?.()],
-    ["session", () => window.getSession?.()],
-    ["autoWiring", () => window.initAutoWiring?.()],
-    ["orchestrator", () => window.initOrchestrator?.()],
-    ["pin", () => window.initPinLiveOrchestrator?.()],
-    ["ai", () => window.initAIOrchestrator?.()],
-    ["router", () => window.initSystemPageRouter?.()]
-  ];
+  // ========================================
+  // GLOBAL COMPATIBILITY EXPORT
+  // ========================================
 
-  // ================= BOOT EXECUTOR =================
-  function runBoot() {
-    window.__BOOT_STATE__.started = true;
+  window.initSystemBoot = initSystemBoot;
 
-    console.log("[BOOT] SEQUENCE START");
-
-    for (const [key, fn] of BOOT_STEPS) {
-      const ok = safeRun(fn, key);
-      window.__BOOT_STATE__[key] = ok;
-    }
-
-    window.__BOOT_STATE__.complete = true;
-
-    console.log("[BOOT] COMPLETE ✔", window.__BOOT_STATE__);
-  }
-
-  // ================= ENTRY =================
-  function init() {
-    runBoot();
-  }
-
-  window.initSystemBoot = init;
-
-  // ================= TRIGGER =================
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
 })();
