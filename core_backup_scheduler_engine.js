@@ -15,40 +15,8 @@ AUTOMATED SYSTEM BACKUP LAYER
 ========================================
 */
 
-const BACKUP_KEY = "SYSTEM_BACKUP_STORE";
 const BACKUP_LOG_KEY = "SYSTEM_BACKUP_LOG";
 const BACKUP_INTERVAL_DEFAULT = 60000; // 1 min
-const BACKUP_LIMIT = 50;
-
-// =====================
-// STORAGE HELPERS
-// =====================
-function getBackupStore() {
-  try {
-    const data = safeGet(BACKUP_KEY, []);
-    return Array.isArray(data) ? data : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveBackupStore(data) {
-  try {
-    if (!Array.isArray(data)) data = [];
-
-    if (data.length > BACKUP_LIMIT) {
-      data = data.slice(-BACKUP_LIMIT);
-    }
-
-    safeSet(BACKUP_KEY, data);
-    return true;
-  } catch (err) {
-    if (typeof logCritical === "function") {
-      logCritical("BACKUP_SAVE_FAILED: " + err.message);
-    }
-    return false;
-  }
-}
 
 // =====================
 // BACKUP LOG
@@ -174,10 +142,14 @@ function getLatestBackup() {
 
     return window.getLatestSystemBackup();
 
-  } catch {
+  } catch (err) {
+
+    console.error(
+      "[BACKUP SCHEDULER] LATEST BACKUP READ ERROR:",
+      err
+    );
 
     return null;
-
   }
 }
 
@@ -211,13 +183,40 @@ function startBackupScheduler(interval = BACKUP_INTERVAL_DEFAULT) {
 // STATUS
 // =====================
 function getBackupStatus() {
-  const store = getBackupStore();
 
-  return {
-    active: true,
-    totalBackups: store.length,
-    lastBackup: store.length ? store[store.length - 1] : null
-  };
+  try {
+
+    const authority =
+      typeof window.getBackupSystemStatus ===
+      "function"
+        ? window.getBackupSystemStatus()
+        : null;
+
+    return {
+      active: true,
+      authority:
+        "core_backup_recovery_manager.js",
+      totalBackups:
+        authority?.totalBackups || 0,
+      lastBackup:
+        authority?.latestBackup || null
+    };
+
+  } catch (err) {
+
+    console.error(
+      "[BACKUP SCHEDULER] STATUS ERROR:",
+      err
+    );
+
+    return {
+      active: false,
+      authority:
+        "core_backup_recovery_manager.js",
+      totalBackups: 0,
+      lastBackup: null
+    };
+  }
 }
 
 // =====================
