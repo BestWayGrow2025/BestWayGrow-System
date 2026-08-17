@@ -52,13 +52,11 @@ function handleSnapshot(snapshot) {
 
   const health = snapshot.health?.overall;
 
-  if (health === "CRITICAL") {
+ if (health === "CRITICAL") {
 
-    console.warn("[CORE AI GOVERNOR] CRITICAL → SYSTEM THROTTLE");
+    console.warn("[CORE AI GOVERNOR] CRITICAL → SYSTEM FREEZE");
 
-    if (window.SystemOSMode) {
-      window.SystemOSMode.setMode("FROZEN");
-    }
+    triggerFreeze("CRITICAL_HEALTH");
 
     if (window.SYSTEM_EVENTS) {
       window.SYSTEM_EVENTS.emit("GOVERNOR_ACTION", {
@@ -68,6 +66,7 @@ function handleSnapshot(snapshot) {
       });
     }
   }
+
 
   if (health === "WARNING") {
 
