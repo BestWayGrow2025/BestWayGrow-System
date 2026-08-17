@@ -248,21 +248,35 @@ function isAutoRepairSuccessful() {
 // STATUS API
 // ========================================
 function getAutoRepairStatus() {
+
   const log = getAutoRepairLog();
+
+  const lastEntry =
+    log.length
+      ? log[log.length - 1]
+      : null;
 
   return {
     active: true,
-    totalRepairs: log.length,
-    storageKey: AUTO_REPAIR_LOG_KEY,
+
+    totalRepairs:
+      log.length,
+
+    storageKey:
+      AUTO_REPAIR_LOG_KEY,
+
+    lastRepairSuccessful:
+      lastEntry?.success === true,
+
     financialIntegrityAvailable:
       typeof runFinancialIntegrityCheck ===
       "function",
+
     replayAvailable:
       typeof replayFullSystem ===
       "function"
   };
 }
-
 // ========================================
 // GLOBAL EXPORTS
 // ========================================
