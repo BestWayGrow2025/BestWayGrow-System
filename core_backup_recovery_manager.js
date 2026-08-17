@@ -127,12 +127,51 @@ function restoreSystemBackup(backupId) {
 
     if (!backupId) return false;
 
-    const raw = localStorage.getItem(backupId);
+   // ================= VALIDATE REGISTERED BACKUP =================
+
+    const backups = getBackupRegistry();
+
+    const registeredBackup =
+      backups.find(function (item) {
+        return item &&
+          item.backupId === backupId;
+      });
+
+    if (!registeredBackup) {
+      console.warn(
+        "[BACKUP RESTORE] Unregistered backup rejected:",
+        backupId
+      );
+      return false;
+    }
+
+    const raw =
+      localStorage.getItem(backupId);
+
     if (!raw) return false;
 
-    const parsed = JSON.parse(raw);
+    const parsed =
+      JSON.parse(raw);
 
-    if (!parsed || !parsed.snapshot) return false;
+    if (
+      !parsed ||
+      !parsed.metadata ||
+      !parsed.snapshot ||
+      typeof parsed.snapshot !== "object"
+    ) {
+      return false;
+    }
+
+    if (
+      parsed.metadata.backupId !==
+      registeredBackup.backupId
+    ) {
+      console.warn(
+        "[BACKUP RESTORE] Backup metadata mismatch:",
+        backupId
+      );
+      return false;
+    }
 
    // ================= SAFE RESTORE =================
 
