@@ -68,8 +68,8 @@ if (
       break;
 
     case "super_admin":
-      window.location.replace("super_admin_auth.html");
-      break;
+  window.location.replace("super_admin_auth.html");
+  break;
 
     default:
       window.location.replace("user_auth.html");
