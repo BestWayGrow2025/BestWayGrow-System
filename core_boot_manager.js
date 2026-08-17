@@ -44,20 +44,10 @@ MASTER BOOT CONTROLLER v1.2 (ENTERPRISE FINAL)
     completedAt: null
   };
 
-  // ================= EVENT BUS (SAFE GLOBAL) =================
-  window.SYSTEM_EVENTS = window.SYSTEM_EVENTS || {
-    emit(event, data) {
-      window.dispatchEvent(
-        new CustomEvent(event, { detail: data })
-      );
-    },
-
-    on(event, callback) {
-      window.addEventListener(event, function (e) {
-        callback(e.detail);
-      });
-    }
-  };
+  // ================= EVENT BUS =================
+  // Authoritative event bus is provided by
+  // core_event_bus.js (KB_062).
+  // Boot Manager must not create a competing SYSTEM_EVENTS authority.
 
   // ================= SAFE CALL WRAPPER =================
   function safeCall(fn, label) {
