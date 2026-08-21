@@ -55,3 +55,50 @@ For each function, identify:
 ## Important
 Never assume a function owner from filename alone.
 Verify the actual function definition in the repository.
+
+01_FUNCTION_SEARCH_MASTER.md
+# ADMIN MODULE — FUNCTION SEARCH
+
+## KB_001 — admin_activity_audit_controller.js
+
+| Function | Role | File |
+|---|---|---|
+| initAdminActivityAudit() | Controller initialization | admin_activity_audit_controller.js |
+| initAdminAuditPage() | Core initialization bridge | admin_activity_audit_controller.js |
+| redirectLogin() | Login redirection/session cleanup | admin_activity_audit_controller.js |
+| authenticateAdminAudit() | Admin authentication/status check | admin_activity_audit_controller.js |
+| bindAdminAuditEvents() | Bind dashboard actions | admin_activity_audit_controller.js |
+| goAdminDashboard() | Admin dashboard navigation | admin_activity_audit_controller.js |
+| getAdminAuditRoleClass() | UI role classification | admin_activity_audit_controller.js |
+| loadAdminActivityLogs() | Load/render activity logs | admin_activity_audit_controller.js |
+| applyAdminAuditFilter() | Apply audit filters | admin_activity_audit_controller.js |
+| clearAdminActivityLogs() | Clear activity logs | admin_activity_audit_controller.js |
+
+### Anonymous callback
+DOMContentLoaded callback → starts initAdminActivityAudit().
+
+### Global exports
+applyAdminAuditFilter
+clearAdminActivityLogs
+initAdminActivityAudit
+loadAdminActivityLogs
+
+
+## KB_002 — admin_activity_audit_dashboard.html
+
+No named JavaScript functions defined.
+
+UI actions are delegated to:
+admin_activity_audit_controller.js
+
+UI elements:
+backBtn
+refreshBtn
+filterUser
+filterRole
+filterKeyword
+applyBtn
+clearBtn
+logs
+
+
