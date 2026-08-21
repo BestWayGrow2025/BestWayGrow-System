@@ -54,3 +54,40 @@ Do not infer authority only from:
 ## Important
 This document is a search/navigation master.
 Actual authority changes are made only in the repository after verification.
+
+# ADMIN ACTIVITY AUDIT — AUTHORITY SEARCH
+
+## KB_001
+File: admin_activity_audit_controller.js
+
+Primary authority:
+Admin Activity Audit page/controller behavior.
+
+Authentication dependency:
+core_session_authority.js
+
+Activity-log operations are delegated to existing functions:
+getActivityLogs()
+filterLogsAdvanced()
+clearActivityLogs()
+logActivity()
+
+## KB_002
+File: admin_activity_audit_dashboard.html
+
+Authority:
+UI/presentation only.
+
+No independent business authority.
+
+Action authority:
+admin_activity_audit_controller.js
+
+Session/Core authority:
+Core files loaded by the page.
+
+### Authority separation
+Dashboard HTML = UI
+Controller JS = page/controller behavior
+Core session = session authority
+Activity-log functions = external existing authorities; ownership must be confirmed from their actual definition files.
