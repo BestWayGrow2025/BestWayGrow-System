@@ -111,13 +111,19 @@ function getRegLock() {
 }
 
 function isRegLocked() {
-  let lock = getRegLock();
+  const lock = getRegLock();
 
   if (!lock) {
     return false;
   }
 
-  if (Date.now() - lock.time > 5000) {
+  const lockTime =
+    Number(lock.time);
+
+  if (
+    !Number.isFinite(lockTime) ||
+    Date.now() - lockTime > 5000
+  ) {
     return false;
   }
 
@@ -125,17 +131,60 @@ function isRegLocked() {
 }
 
 function setRegLock(val) {
-  if (val) {
+  if (!val) {
+    const current = getRegLock();
+
+    if (
+      current &&
+      current.owner === REG_LOCK_OWNER
+    ) {
+      localStorage.removeItem(
+        REG_LOCK_KEY
+      );
+    }
+
+    return;
+  }
+
+  const now = Date.now();
+
+  const existing = getRegLock();
+
+  if (
+    existing &&
+    Number(existing.time) &&
+    Date.now() - Number(existing.time) <= 5000
+  ) {
+    return false;
+  }
+
+  const lockData = {
+    status: true,
+    time: now,
+    owner: REG_LOCK_OWNER
+  };
+
+  try {
     localStorage.setItem(
       REG_LOCK_KEY,
-      JSON.stringify({
-        status: true,
-        time: Date.now(),
-        owner: REG_LOCK_OWNER
-      })
+      JSON.stringify(lockData)
     );
-  } else {
-    localStorage.removeItem(REG_LOCK_KEY);
+
+    const verify = getRegLock();
+
+    if (
+      verify &&
+      verify.status === true &&
+      verify.owner === REG_LOCK_OWNER &&
+      Number(verify.time) === now
+    ) {
+      return true;
+    }
+
+    return false;
+
+  } catch (e) {
+    return false;
   }
 }
 
