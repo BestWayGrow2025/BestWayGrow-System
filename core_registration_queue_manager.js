@@ -149,9 +149,8 @@ function isValidQueueRow(row) {
     row.mobile &&
     row.username &&
     row.password &&
-    row.status &&
+    row.status === "PENDING" &&
     row.introducerId &&
-    row.sponsorId &&
     (row.position === "L" || row.position === "R")
   );
 }
