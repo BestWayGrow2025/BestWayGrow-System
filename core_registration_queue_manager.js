@@ -146,15 +146,14 @@ function setRegLock(val) {
 function isValidQueueRow(row) {
   return (
     row &&
-    row.mobile &&
-    row.username &&
-    row.password &&
+    String(row.mobile || "").trim() &&
+    String(row.username || "").trim() &&
+    String(row.password || "").trim() &&
+    String(row.introducerId || "").trim() &&
     row.status === "PENDING" &&
-    row.introducerId &&
     (row.position === "L" || row.position === "R")
   );
 }
-
 // ================= ADD TO QUEUE =================
 function addToRegistrationQueue(data) {
   if (!data || !data.mobile) {
