@@ -35,39 +35,168 @@ function isValidPosition(position) {
 
 // ================= DUPLICATE MOBILE =================
 function isDuplicateMobile(mobile) {
+
+  const target =
+    String(mobile || "").trim();
+
+  if (!target) {
+    return false;
+  }
+
   const users =
     typeof getUsers === "function"
       ? getUsers()
       : [];
 
-  return users.some(function (u) {
-    return String(u.mobile || "").trim() === String(mobile || "").trim();
-  });
+  const userDuplicate =
+    Array.isArray(users) &&
+    users.some(function (u) {
+      return (
+        String(u.mobile || "").trim() ===
+        target
+      );
+    });
+
+  if (userDuplicate) {
+    return true;
+  }
+
+  // Check pending registration queue
+  if (typeof getRegQueue === "function") {
+
+    const queue =
+      getRegQueue() || [];
+
+    return queue.some(function (q) {
+
+      if (!q) return false;
+
+      const status =
+        String(q.status || "").toUpperCase();
+
+      if (
+        status !== "PENDING" &&
+        status !== "PROCESSING"
+      ) {
+        return false;
+      }
+
+      return (
+        String(q.mobile || "").trim() ===
+        target
+      );
+    });
+  }
+
+  return false;
 }
 
 // ================= DUPLICATE EMAIL =================
 function isDuplicateEmail(email) {
+
+  const target =
+    String(email || "")
+      .trim()
+      .toLowerCase();
+
+  if (!target) {
+    return false;
+  }
+
   const users =
     typeof getUsers === "function"
       ? getUsers()
       : [];
 
-  const target = String(email || "").trim().toLowerCase();
+  const userDuplicate =
+    Array.isArray(users) &&
+    users.some(function (u) {
 
-  return users.some(function (u) {
-    return String(u.email || "").trim().toLowerCase() === target;
-  });
+      return (
+        String(u.email || "")
+          .trim()
+          .toLowerCase() ===
+        target
+      );
+    });
+
+  if (userDuplicate) {
+    return true;
+  }
+
+  // Check pending registration queue
+  if (typeof getRegQueue === "function") {
+
+    const queue =
+      getRegQueue() || [];
+
+    return queue.some(function (q) {
+
+      if (!q) return false;
+
+      const status =
+        String(q.status || "").toUpperCase();
+
+      if (
+        status !== "PENDING" &&
+        status !== "PROCESSING"
+      ) {
+        return false;
+      }
+
+      return (
+        String(q.email || "")
+          .trim()
+          .toLowerCase() ===
+        target
+      );
+    });
+  }
+
+  return false;
 }
-
 // ================= INTRODUCER VALIDATION =================
 function isValidIntroducer(introducerId) {
+
+  const id =
+    String(introducerId || "").trim();
+
+  if (!id) {
+    return false;
+  }
+
   if (typeof getUserById !== "function") {
     return false;
   }
 
-  return !!getUserById(introducerId);
-}
+  const introducer =
+    getUserById(id);
 
+  if (!introducer) {
+    return false;
+  }
+
+  const role =
+    String(introducer.role || "")
+      .toLowerCase();
+
+  const status =
+    String(
+      introducer.accountStatus ||
+      introducer.status ||
+      "active"
+    ).toLowerCase();
+
+  if (role !== "user") {
+    return false;
+  }
+
+  if (status !== "active") {
+    return false;
+  }
+
+  return true;
+}
 // ================= MAIN VALIDATION =================
 function validateRegistration(data) {
   if (!data || typeof data !== "object") {
