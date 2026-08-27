@@ -306,6 +306,7 @@ function processOneRegistration(req) {
 
 // ================= MAIN PROCESS =================
 function processRegistrationQueue() {
+
   if (isRegLocked()) {
     return;
   }
@@ -316,7 +317,9 @@ function processRegistrationQueue() {
     return;
   }
 
-  setRegLock(true);
+  if (!setRegLock(true)) {
+    return;
+  }
 
   try {
     let processed = 0;
@@ -326,6 +329,7 @@ function processRegistrationQueue() {
       i < queue.length;
       i++
     ) {
+
       if (
         processed >= REG_MAX_BATCH
       ) {
@@ -336,7 +340,7 @@ function processRegistrationQueue() {
         continue;
       }
 
-       if (
+      if (
         queue[i].status !==
         "PENDING"
       ) {
@@ -344,35 +348,47 @@ function processRegistrationQueue() {
       }
 
       if (!isValidQueueRow(queue[i])) {
-        queue[i].status = "FAILED";
+
+        queue[i].status =
+          "FAILED";
+
         queue[i].error =
           "Invalid registration queue data";
+
         queue[i].failedAt =
           Date.now();
+
         continue;
       }
 
       try {
+
         processOneRegistration(
           queue[i]
         );
 
-        
-        queue[i].status = "DONE";
+        queue[i].status =
+          "DONE";
+
         queue[i].completedAt =
           Date.now();
 
         processed++;
+
       } catch (err) {
+
         queue[i].retry =
           (queue[i].retry || 0) + 1;
 
         queue[i].error =
-          err.message;
+          err && err.message
+            ? err.message
+            : "Registration processing failed";
 
         if (
           queue[i].retry >= 3
         ) {
+
           queue[i].status =
             "FAILED";
 
@@ -384,12 +400,13 @@ function processRegistrationQueue() {
 
     saveRegQueue(queue);
     cleanupRegistrationQueue();
+
   } finally {
+
     setRegLock(false);
     scheduleRegistrationQueue();
   }
 }
-
 // ================= CLEANUP =================
 function cleanupRegistrationQueue() {
   let queue = getRegQueue();
