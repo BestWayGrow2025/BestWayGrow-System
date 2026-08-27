@@ -81,12 +81,9 @@ function saveRegArchive(data) {
 
 // ================= FINGERPRINT =================
 function makeRegFingerprint(data) {
-  let raw = [
-    data.mobile || "",
-    data.username || "",
-    data.sponsorId || "",
-    data.parentId || "",
-    data.position || ""
+  const raw = [
+    String(data.mobile || "").trim(),
+    String(data.email || "").trim().toLowerCase()
   ].join("|");
 
   let hash = 0;
