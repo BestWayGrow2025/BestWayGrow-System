@@ -67,19 +67,34 @@ function acquireSystemLock(context = "unknown") {
     "_" +
     Math.random().toString(36).slice(2);
 
-  if (isSystemLocked()) {
+  const now = Date.now();
+  const existing = getGlobalLock();
+
+  // Existing valid lock is owned by another execution.
+  if (
+    existing &&
+    existing.id &&
+    Number.isFinite(Number(existing.timestamp)) &&
+    now - Number(existing.timestamp) <= LOCK_TTL
+  ) {
     return false;
   }
 
-  setGlobalLock({
+  const lockData = {
     id: lockId,
-    context,
-    timestamp: Date.now()
-  });
+    context: String(context || "unknown"),
+    timestamp: now
+  };
+
+  setGlobalLock(lockData);
 
   const verify = getGlobalLock();
 
-  if (!verify || verify.id !== lockId) {
+  if (
+    !verify ||
+    verify.id !== lockId ||
+    Number(verify.timestamp) !== now
+  ) {
     return false;
   }
 
@@ -88,17 +103,25 @@ function acquireSystemLock(context = "unknown") {
 // ================= RELEASE LOCK =================
 function releaseSystemLock(lockId = null) {
 
+  if (!lockId) {
+    return false;
+  }
+
   const current = getGlobalLock();
 
-  if (
-    lockId &&
-    current &&
-    current.id !== lockId
-  ) {
+  if (!current || current.id !== lockId) {
     return false;
   }
 
   clearGlobalLock();
+
+  // Verify that this execution actually released its lock.
+  const verify = getGlobalLock();
+
+  if (verify && verify.id === lockId) {
+    return false;
+  }
+
   return true;
 }
 
