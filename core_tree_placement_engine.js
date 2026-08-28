@@ -32,11 +32,22 @@ function findPlacement(introducerId, position, users) {
   }
 
   let safety = 0;
+  const visited = new Set();
 
   while (true) {
     if (safety++ > 1000) {
       throw new Error("Tree overflow detected");
     }
+
+    if (!current || !current.userId) {
+      throw new Error("Tree broken during traversal");
+    }
+
+    if (visited.has(current.userId)) {
+      throw new Error("Tree cycle detected");
+    }
+
+    visited.add(current.userId);
 
     if (position === "L") {
       if (!current.leftChild) {
@@ -68,7 +79,6 @@ function findPlacement(introducerId, position, users) {
     }
   }
 }
-
 /* ================= EXPORT ================= */
 
 window.findPlacement = findPlacement;
