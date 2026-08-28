@@ -4,10 +4,11 @@
 ========================================
 INTEGRATION LOCK LAYER V1.0 (BANK CORE SAFETY)
 ========================================
-✔ Global atomic execution lock
-✔ Prevents race conditions
+✔ Global execution-lock coordination
+✔ Prevents normal concurrent execution conflicts
 ✔ Auto-expiring stale lock
-✔ System-wide transaction safety
+✔ Owner-protected lock release
+✔ System-wide transaction coordination
 ========================================
 */
 
