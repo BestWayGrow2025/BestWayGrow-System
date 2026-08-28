@@ -13,12 +13,6 @@ REGISTRATION QUEUE SYSTEM v10.2 (FINAL FIXED)
 
 var REG_QUEUE_KEY = "REG_QUEUE_DATA";
 var REG_QUEUE_ARCHIVE_KEY = "REG_QUEUE_ARCHIVE";
-var REG_LOCK_KEY = "REG_QUEUE_LOCK";
-var REG_LOCK_OWNER =
-  "TAB_" +
-  Date.now() +
-  "_" +
-  Math.random().toString(36).slice(2, 8);
 
 var REG_MAX_BATCH = 5;
 var REG_FAILED_TTL = 24 * 60 * 60 * 1000;
@@ -99,95 +93,9 @@ function makeRegFingerprint(data) {
   return "REGFP_" + Math.abs(hash);
 }
 
-// ================= LOCK =================
-function getRegLock() {
-  try {
-    return JSON.parse(
-      localStorage.getItem(REG_LOCK_KEY)
-    );
-  } catch {
-    return null;
-  }
-}
-
-function isRegLocked() {
-  const lock = getRegLock();
-
-  if (!lock) {
-    return false;
-  }
-
-  const lockTime =
-    Number(lock.time);
-
-  if (
-    !Number.isFinite(lockTime) ||
-    Date.now() - lockTime > 5000
-  ) {
-    return false;
-  }
-
-  return lock.status === true;
-}
-
-function setRegLock(val) {
-  if (!val) {
-    const current = getRegLock();
-
-    if (
-      current &&
-      current.owner === REG_LOCK_OWNER
-    ) {
-      localStorage.removeItem(
-        REG_LOCK_KEY
-      );
-    }
-
-    return;
-  }
-
-  const now = Date.now();
-
-  const existing = getRegLock();
-
-  if (
-    existing &&
-    Number(existing.time) &&
-    Date.now() - Number(existing.time) <= 5000
-  ) {
-    return false;
-  }
-
-  const lockData = {
-    status: true,
-    time: now,
-    owner: REG_LOCK_OWNER
-  };
-
-  try {
-    localStorage.setItem(
-      REG_LOCK_KEY,
-      JSON.stringify(lockData)
-    );
-
-    const verify = getRegLock();
-
-    if (
-      verify &&
-      verify.status === true &&
-      verify.owner === REG_LOCK_OWNER &&
-      Number(verify.time) === now
-    ) {
-      return true;
-    }
-
-    return false;
-
-  } catch (e) {
-    return false;
-  }
-}
-
+// ================= GLOBAL EXECUTION LOCK =================
+// RBK-004 does not own a separate registration lock.
+// All queue execution must use RBK-018.
 // ================= VALIDATION =================
 function isValidQueueRow(row) {
   return (
