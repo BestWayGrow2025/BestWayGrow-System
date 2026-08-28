@@ -140,19 +140,10 @@ function addToRegistrationQueue(data) {
     return false;
   }
 
-  // Prevent duplicates in users
-  let users =
-    typeof getUsers === "function"
-      ? getUsers()
-      : [];
-
-  if (
-    users.find(function (u) {
-      return u.mobile === data.mobile;
-    })
-  ) {
-    return false;
-  }
+   // Repository duplicate validation is owned by
+  // core_registration_validation_authority.js.
+  // RBK-004 does not independently inspect
+  // the user repository for registration duplicates.
 
   queue.push({
     ...data,
