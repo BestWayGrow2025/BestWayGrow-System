@@ -101,6 +101,7 @@ function isValidQueueRow(row) {
   return (
     row &&
     String(row.mobile || "").trim() &&
+    String(row.email || "").trim() &&
     String(row.username || "").trim() &&
     String(row.password || "").trim() &&
     String(row.introducerId || "").trim() &&
@@ -175,34 +176,48 @@ function processOneRegistration(req) {
     );
   }
 
-  let result =
+  const result =
     createUserWithTree(req);
 
-  let users =
+  if (!result) {
+    throw new Error(
+      "User creation returned no result"
+    );
+  }
+
+  const returnedUserId =
+    result && result.userId
+      ? String(result.userId).trim()
+      : "";
+
+  if (!returnedUserId) {
+    throw new Error(
+      "User creation did not return a valid User ID"
+    );
+  }
+
+  const users =
     typeof getUsers === "function"
       ? getUsers()
       : [];
 
-  let created =
+  const created =
     users.find(function (u) {
       return (
-        u.userId ===
-        (result && result.userId)
+        u &&
+        String(u.userId || "").trim() ===
+        returnedUserId
       );
-    }) ||
-    users.find(function (u) {
-      return u.mobile === req.mobile;
     });
 
   if (!created) {
     throw new Error(
-      "User creation verification failed"
+      "Created user could not be verified by User ID"
     );
   }
 
   return true;
 }
-
 // ================= MAIN PROCESS =================
 function processRegistrationQueue() {
 
@@ -331,7 +346,12 @@ function cleanupRegistrationQueue() {
       continue;
     }
 
-    if (row.status === "DONE") {
+    if (
+      row.status === "DONE" &&
+      row.completedAt &&
+      now - row.completedAt >
+        REG_DONE_TTL
+    ) {
       archive.push(row);
       continue;
     }
@@ -352,7 +372,6 @@ function cleanupRegistrationQueue() {
   saveRegArchive(archive);
   saveRegQueue(keep);
 }
-
 // ================= LOOP =================
 function scheduleRegistrationQueue() {
   setTimeout(
