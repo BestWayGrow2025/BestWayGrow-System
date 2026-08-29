@@ -106,48 +106,69 @@ function generateReferralLink(
 /* ================= TREE VIEW ENGINE ================= */
 
 function getUserTree(userId) {
-  let users =
-    typeof getUsers === "function"
-      ? getUsers()
-      : [];
+let users =
+typeof getUsers === "function"
+? getUsers()
+: [];
 
-  if (!Array.isArray(users)) {
-    return null;
-  }
+if (!Array.isArray(users)) {
+return null;
+}
 
-  const root = users.find(function (u) {
-    return u.userId === userId;
-  });
+const root = users.find(function (u) {
+return u.userId === userId;
+});
 
-  if (!root) {
-    return null;
-  }
+if (!root) {
+return null;
+}
 
-  function build(nodeId) {
-    const node = users.find(function (u) {
-      return u.userId === nodeId;
-    });
+const visited = new Set();
 
-    if (!node) {
-      return null;
-    }
+function build(nodeId) {
+if (!nodeId) {
+return null;
+}
 
-    return {
-      userId: node.userId,
-      name:
-        node.name ||
-        node.username ||
-        "",
-      left: node.leftChild
-        ? build(node.leftChild)
-        : null,
-      right: node.rightChild
-        ? build(node.rightChild)
-        : null
-    };
-  }
+if (visited.has(nodeId)) {
+  console.error(
+    "[TREE SYSTEM] Tree cycle detected:",
+    nodeId
+  );
+  return null;
+}
 
-  return build(userId);
+const node = users.find(function (u) {
+  return u.userId === nodeId;
+});
+
+if (!node) {
+  console.error(
+    "[TREE SYSTEM] Broken tree reference:",
+    nodeId
+  );
+  return null;
+}
+
+visited.add(nodeId);
+
+return {
+  userId: node.userId,
+  name:
+    node.name ||
+    node.username ||
+    "",
+  left: node.leftChild
+    ? build(node.leftChild)
+    : null,
+  right: node.rightChild
+    ? build(node.rightChild)
+    : null
+};
+
+}
+
+return build(userId);
 }
 
 /* ================= DIAGNOSTIC TREE DATA ================= */
