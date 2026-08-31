@@ -105,7 +105,7 @@ function isValidQueueRow(row) {
     String(row.username || "").trim() &&
     String(row.password || "").trim() &&
     String(row.introducerId || "").trim() &&
-    row.status === "PENDING" &&
+    row.status === "APPROVED" &&
     (row.position === "L" || row.position === "R")
   );
 }
@@ -258,12 +258,15 @@ function processRegistrationQueue() {
             continue;
           }
 
-          if (
-            queue[i].status !==
-            "PENDING"
-          ) {
-            continue;
-          }
+         // Only APPROVED registrations may proceed to user creation.
+// PENDING registrations remain in the queue awaiting approval.
+if (
+  queue[i].status !==
+  "APPROVED"
+) {
+  continue;
+}
+
 
           if (!isValidQueueRow(queue[i])) {
 
