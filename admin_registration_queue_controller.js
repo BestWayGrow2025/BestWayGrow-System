@@ -56,11 +56,34 @@ function authPage() {
 
 function bindEvents() {
   const refreshBtn = document.getElementById("refreshBtn");
+
   if (refreshBtn) {
     refreshBtn.addEventListener("click", loadQueue);
   }
-}
 
+  document.addEventListener("click", function (e) {
+
+    const approveBtn =
+      e.target.closest(".approve-btn");
+
+    if (approveBtn) {
+      approveUser(
+        approveBtn.dataset.fingerprint || ""
+      );
+      return;
+    }
+
+    const rejectBtn =
+      e.target.closest(".reject-btn");
+
+    if (rejectBtn) {
+      rejectUser(
+        rejectBtn.dataset.fingerprint || ""
+      );
+    }
+
+  });
+}
 function loadPage() {
   loadQueue();
 }
@@ -105,10 +128,16 @@ function loadQueue() {
 
         ${q.error ? `Error: ${escapeHtml(q.error)}<br>` : ""}
 
-        <div style="margin-top:8px;">
-          <button onclick="approveUser('${fp}')">Approve</button>
-          <button onclick="rejectUser('${fp}')">Reject</button>
-        </div>
+       <div style="margin-top:8px;">
+  <button class="approve-btn" data-fingerprint="${escapeHtml(fp)}">
+    Approve
+  </button>
+
+  <button class="reject-btn" data-fingerprint="${escapeHtml(fp)}">
+    Reject
+  </button>
+</div>
+
       </div>
     `;
   }).join("");
