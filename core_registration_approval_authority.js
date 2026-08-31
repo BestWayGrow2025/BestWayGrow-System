@@ -4,12 +4,14 @@
 ========================================
 REGISTRATION APPROVAL AUTHORITY V1.0
 ========================================
+
 Single authority for:
 • Approval
 • Rejection
 • Queue status update
 • Queue persistence
 • Audit/Event notification
+
 ========================================
 */
 
@@ -41,8 +43,8 @@ function approveRegistration(fingerprint) {
 
   saveRegQueue(queue);
 
-  if (typeof dispatchSystemEvent === "function") {
-    dispatchSystemEvent(
+  if (typeof emitSystemEvent === "function") {
+    emitSystemEvent(
       "REGISTRATION_APPROVED",
       {
         fingerprint: fingerprint
@@ -82,8 +84,8 @@ function rejectRegistration(fingerprint) {
 
   saveRegQueue(queue);
 
-  if (typeof dispatchSystemEvent === "function") {
-    dispatchSystemEvent(
+  if (typeof emitSystemEvent === "function") {
+    emitSystemEvent(
       "REGISTRATION_REJECTED",
       {
         fingerprint: fingerprint
