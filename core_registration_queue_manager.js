@@ -156,11 +156,9 @@ function addToRegistrationQueue(data) {
   });
 
   saveRegQueue(queue);
-  processRegistrationQueue();
 
   return true;
 }
-
 // ================= PROCESS ONE =================
 function processOneRegistration(req) {
   if (!req) {
