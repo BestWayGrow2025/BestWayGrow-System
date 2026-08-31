@@ -116,7 +116,7 @@ function loadQueue() {
 
   tbody.innerHTML = "";
 
-  queue.forEach(function (item, index) {
+  queue.forEach(function (item) {
 
     const requestTime =
       item.requestTime
@@ -142,8 +142,19 @@ function loadQueue() {
         <td>
           ${item.status === "PENDING"
             ? `
-              <button class="approve" onclick="approve(${index})">Approve</button>
-              <button class="reject" onclick="reject(${index})">Reject</button>
+              <button
+                class="approve"
+                data-fingerprint="${escapeHtml(item.fingerprint || "")}"
+              >
+                Approve
+              </button>
+
+              <button
+                class="reject"
+                data-fingerprint="${escapeHtml(item.fingerprint || "")}"
+              >
+                Reject
+              </button>
             `
             : "-"}
         </td>
@@ -158,11 +169,56 @@ function bindRegistrationApprovalEvents() {
   const refreshButton =
     document.getElementById("refreshRegistrationQueue");
 
-  if (!refreshButton) return;
+  if (refreshButton) {
+    refreshButton.addEventListener(
+      "click",
+      loadQueue
+    );
+  }
 
-  refreshButton.addEventListener(
+  const tbody =
+    document.getElementById("list");
+
+  if (!tbody) return;
+
+  tbody.addEventListener(
     "click",
-    loadQueue
+    function (event) {
+
+      const button =
+        event.target.closest("button");
+
+      if (!button) return;
+
+      const fingerprint =
+        button.dataset.fingerprint;
+
+      if (!fingerprint) return;
+
+      if (button.classList.contains("approve")) {
+
+        if (
+          typeof approveRegistration ===
+          "function"
+        ) {
+          approveRegistration(fingerprint);
+          loadQueue();
+        }
+
+        return;
+      }
+
+      if (button.classList.contains("reject")) {
+
+        if (
+          typeof rejectRegistration ===
+          "function"
+        ) {
+          rejectRegistration(fingerprint);
+          loadQueue();
+        }
+      }
+    }
   );
 }
 
