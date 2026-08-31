@@ -11,8 +11,8 @@ let refreshInterval = null;
 
 function forceLogout() {
 
-  if (typeof destroySession === "function") {
-    destroySession();
+  if (typeof logoutSession === "function") {
+    logoutSession();
   }
 
   window.location.replace("admin_auth.html");
