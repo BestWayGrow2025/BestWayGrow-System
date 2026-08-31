@@ -118,13 +118,55 @@ function startAutoRefresh() {
   refreshInterval = setInterval(loadQueue, 10000);
 }
 
-// hooks (future backend integration)
+// ================= APPROVAL / REJECTION CALLERS =================
+
 function approveUser(fp) {
-  if (!fp) return console.warn("Missing fingerprint");
-  console.log("Approve:", fp);
+
+  if (!fp) {
+    console.warn("Missing fingerprint");
+    return false;
+  }
+
+  if (
+    typeof approveRegistration !==
+    "function"
+  ) {
+    console.error(
+      "Registration approval authority unavailable"
+    );
+    return false;
+  }
+
+  const result =
+    approveRegistration(fp);
+
+  loadQueue();
+
+  return result;
 }
 
+
 function rejectUser(fp) {
-  if (!fp) return console.warn("Missing fingerprint");
-  console.log("Reject:", fp);
+
+  if (!fp) {
+    console.warn("Missing fingerprint");
+    return false;
+  }
+
+  if (
+    typeof rejectRegistration !==
+    "function"
+  ) {
+    console.error(
+      "Registration rejection authority unavailable"
+    );
+    return false;
+  }
+
+  const result =
+    rejectRegistration(fp);
+
+  loadQueue();
+
+  return result;
 }
