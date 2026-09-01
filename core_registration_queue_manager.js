@@ -483,26 +483,20 @@ function cleanupRegistrationQueue() {
   const queueBefore =
     getRegQueue();
 
-  if (
-    window.__REG_QUEUE_STORAGE_ERROR__
-  ) {
+  if (window.__REG_QUEUE_STORAGE_ERROR__) {
     console.error(
       "[REGISTRATION QUEUE] Cleanup aborted: queue storage unavailable"
     );
-
     return false;
   }
 
   const archiveBefore =
     getRegArchive();
 
-  if (
-    window.__REG_QUEUE_STORAGE_ERROR__
-  ) {
+  if (window.__REG_QUEUE_STORAGE_ERROR__) {
     console.error(
       "[REGISTRATION QUEUE] Cleanup aborted: archive storage unavailable"
     );
-
     return false;
   }
 
@@ -530,8 +524,7 @@ function cleanupRegistrationQueue() {
     if (
       row.status === "DONE" &&
       row.completedAt &&
-      now - row.completedAt >
-        REG_DONE_TTL
+      now - row.completedAt > REG_DONE_TTL
     ) {
       archiveAdditions.push(row);
       continue;
@@ -540,8 +533,7 @@ function cleanupRegistrationQueue() {
     if (
       row.status === "FAILED" &&
       row.failedAt &&
-      now - row.failedAt >
-        REG_FAILED_TTL
+      now - row.failedAt > REG_FAILED_TTL
     ) {
       archiveAdditions.push(row);
       continue;
@@ -551,8 +543,14 @@ function cleanupRegistrationQueue() {
   }
 
   if (archiveAdditions.length === 0) {
+    window.__REG_QUEUE_CLEANUP_INCONSISTENT__ =
+      false;
+
     return true;
   }
+
+  const originalQueue =
+    queue.slice();
 
   const originalArchive =
     archive.slice();
@@ -566,8 +564,13 @@ function cleanupRegistrationQueue() {
   ========================================
   */
 
+  const archiveExpected =
+    updatedArchive.length > 2000
+      ? updatedArchive.slice(-2000)
+      : updatedArchive;
+
   const archiveSaved =
-    saveRegArchive(updatedArchive);
+    saveRegArchive(archiveExpected);
 
   if (!archiveSaved) {
 
@@ -584,26 +587,32 @@ function cleanupRegistrationQueue() {
   if (!queueSaved) {
 
     console.error(
-      "[REGISTRATION QUEUE] Queue persistence failed. Restoring original archive."
+      "[REGISTRATION QUEUE] Queue persistence failed. Restoring original state."
     );
 
-    const rollbackArchive =
+    const queueRestored =
+      saveRegQueue(originalQueue);
+
+    const archiveRestored =
       saveRegArchive(originalArchive);
 
-    if (!rollbackArchive) {
+    const verifiedQueue =
+      getRegQueue();
 
-      console.error(
-        "[REGISTRATION QUEUE] CRITICAL: archive rollback failed"
-      );
+    const verifiedArchive =
+      getRegArchive();
 
-      window.__REG_QUEUE_CLEANUP_INCONSISTENT__ =
-        true;
-
-      return false;
-    }
+    const recoveryVerified =
+      queueRestored &&
+      archiveRestored &&
+      !window.__REG_QUEUE_STORAGE_ERROR__ &&
+      JSON.stringify(verifiedQueue) ===
+        JSON.stringify(originalQueue) &&
+      JSON.stringify(verifiedArchive) ===
+        JSON.stringify(originalArchive);
 
     window.__REG_QUEUE_CLEANUP_INCONSISTENT__ =
-      false;
+      !recoveryVerified;
 
     return false;
   }
@@ -617,47 +626,51 @@ function cleanupRegistrationQueue() {
   const verifiedQueue =
     getRegQueue();
 
-  if (
-    window.__REG_QUEUE_STORAGE_ERROR__ ||
-    JSON.stringify(verifiedQueue) !==
-      JSON.stringify(keep)
-  ) {
-
-    console.error(
-      "[REGISTRATION QUEUE] Cleanup verification failed. Restoring archive."
-    );
-
-    saveRegQueue(queue);
-    saveRegArchive(originalArchive);
-
-    window.__REG_QUEUE_CLEANUP_INCONSISTENT__ =
-      true;
-
-    return false;
-  }
-
   const verifiedArchive =
     getRegArchive();
 
+  const queueVerified =
+    !window.__REG_QUEUE_STORAGE_ERROR__ &&
+    JSON.stringify(verifiedQueue) ===
+      JSON.stringify(keep);
+
+  const archiveVerified =
+    !window.__REG_QUEUE_STORAGE_ERROR__ &&
+    JSON.stringify(verifiedArchive) ===
+      JSON.stringify(archiveExpected);
+
   if (
-    window.__REG_QUEUE_STORAGE_ERROR__ ||
-    JSON.stringify(verifiedArchive) !==
-      JSON.stringify(
-        updatedArchive.length > 2000
-          ? updatedArchive.slice(-2000)
-          : updatedArchive
-      )
+    !queueVerified ||
+    !archiveVerified
   ) {
 
     console.error(
-      "[REGISTRATION QUEUE] Archive verification failed. Restoring original state."
+      "[REGISTRATION QUEUE] Cleanup verification failed. Restoring original state."
     );
 
-    saveRegQueue(queue);
-    saveRegArchive(originalArchive);
+    const queueRestored =
+      saveRegQueue(originalQueue);
+
+    const archiveRestored =
+      saveRegArchive(originalArchive);
+
+    const restoredQueue =
+      getRegQueue();
+
+    const restoredArchive =
+      getRegArchive();
+
+    const recoveryVerified =
+      queueRestored &&
+      archiveRestored &&
+      !window.__REG_QUEUE_STORAGE_ERROR__ &&
+      JSON.stringify(restoredQueue) ===
+        JSON.stringify(originalQueue) &&
+      JSON.stringify(restoredArchive) ===
+        JSON.stringify(originalArchive);
 
     window.__REG_QUEUE_CLEANUP_INCONSISTENT__ =
-      true;
+      !recoveryVerified;
 
     return false;
   }
