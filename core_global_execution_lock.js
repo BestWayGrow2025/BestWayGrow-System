@@ -26,21 +26,51 @@ function getGlobalLock() {
 
 function setGlobalLock(data) {
   try {
+
     localStorage.setItem(
       GLOBAL_LOCK_KEY,
       JSON.stringify(data || null)
     );
+
+    return true;
+
   } catch (e) {
+
     if (typeof logCritical === "function") {
-      logCritical("LOCK_SAVE_FAILED: " + e.message);
+      logCritical(
+        "LOCK_SAVE_FAILED: " +
+        (e && e.message
+          ? e.message
+          : "Unknown lock storage error")
+      );
     }
+
+    return false;
   }
 }
 
 function clearGlobalLock() {
   try {
-    localStorage.removeItem(GLOBAL_LOCK_KEY);
-  } catch {}
+
+    localStorage.removeItem(
+      GLOBAL_LOCK_KEY
+    );
+
+    return true;
+
+  } catch (e) {
+
+    if (typeof logCritical === "function") {
+      logCritical(
+        "LOCK_CLEAR_FAILED: " +
+        (e && e.message
+          ? e.message
+          : "Unknown lock storage error")
+      );
+    }
+
+    return false;
+  }
 }
 
 // ================= LOCK CHECK =================
