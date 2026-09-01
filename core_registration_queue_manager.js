@@ -477,14 +477,52 @@ if (
   scheduleRegistrationQueue();
 }
 // ================= CLEANUP =================
+
 function cleanupRegistrationQueue() {
-  let queue = getRegQueue();
-  let archive = getRegArchive();
-  let now = Date.now();
 
-  let keep = [];
+  const queueBefore =
+    getRegQueue();
 
-  for (let row of queue) {
+  if (
+    window.__REG_QUEUE_STORAGE_ERROR__
+  ) {
+    console.error(
+      "[REGISTRATION QUEUE] Cleanup aborted: queue storage unavailable"
+    );
+
+    return false;
+  }
+
+  const archiveBefore =
+    getRegArchive();
+
+  if (
+    window.__REG_QUEUE_STORAGE_ERROR__
+  ) {
+    console.error(
+      "[REGISTRATION QUEUE] Cleanup aborted: archive storage unavailable"
+    );
+
+    return false;
+  }
+
+  const queue =
+    Array.isArray(queueBefore)
+      ? queueBefore
+      : [];
+
+  const archive =
+    Array.isArray(archiveBefore)
+      ? archiveBefore
+      : [];
+
+  const now = Date.now();
+
+  const keep = [];
+  const archiveAdditions = [];
+
+  for (const row of queue) {
+
     if (!row) {
       continue;
     }
@@ -495,7 +533,7 @@ function cleanupRegistrationQueue() {
       now - row.completedAt >
         REG_DONE_TTL
     ) {
-      archive.push(row);
+      archiveAdditions.push(row);
       continue;
     }
 
@@ -505,15 +543,129 @@ function cleanupRegistrationQueue() {
       now - row.failedAt >
         REG_FAILED_TTL
     ) {
-      archive.push(row);
+      archiveAdditions.push(row);
       continue;
     }
 
     keep.push(row);
   }
 
-  saveRegArchive(archive);
-  saveRegQueue(keep);
+  if (archiveAdditions.length === 0) {
+    return true;
+  }
+
+  const originalArchive =
+    archive.slice();
+
+  const updatedArchive =
+    archive.concat(archiveAdditions);
+
+  /*
+  ========================================
+  CONTROLLED TWO-KEY PERSISTENCE
+  ========================================
+  */
+
+  const archiveSaved =
+    saveRegArchive(updatedArchive);
+
+  if (!archiveSaved) {
+
+    console.error(
+      "[REGISTRATION QUEUE] Cleanup aborted: archive persistence failed"
+    );
+
+    return false;
+  }
+
+  const queueSaved =
+    saveRegQueue(keep);
+
+  if (!queueSaved) {
+
+    console.error(
+      "[REGISTRATION QUEUE] Queue persistence failed. Restoring original archive."
+    );
+
+    const rollbackArchive =
+      saveRegArchive(originalArchive);
+
+    if (!rollbackArchive) {
+
+      console.error(
+        "[REGISTRATION QUEUE] CRITICAL: archive rollback failed"
+      );
+
+      window.__REG_QUEUE_CLEANUP_INCONSISTENT__ =
+        true;
+
+      return false;
+    }
+
+    window.__REG_QUEUE_CLEANUP_INCONSISTENT__ =
+      false;
+
+    return false;
+  }
+
+  /*
+  ========================================
+  FINAL STATE VERIFICATION
+  ========================================
+  */
+
+  const verifiedQueue =
+    getRegQueue();
+
+  if (
+    window.__REG_QUEUE_STORAGE_ERROR__ ||
+    JSON.stringify(verifiedQueue) !==
+      JSON.stringify(keep)
+  ) {
+
+    console.error(
+      "[REGISTRATION QUEUE] Cleanup verification failed. Restoring archive."
+    );
+
+    saveRegQueue(queue);
+    saveRegArchive(originalArchive);
+
+    window.__REG_QUEUE_CLEANUP_INCONSISTENT__ =
+      true;
+
+    return false;
+  }
+
+  const verifiedArchive =
+    getRegArchive();
+
+  if (
+    window.__REG_QUEUE_STORAGE_ERROR__ ||
+    JSON.stringify(verifiedArchive) !==
+      JSON.stringify(
+        updatedArchive.length > 2000
+          ? updatedArchive.slice(-2000)
+          : updatedArchive
+      )
+  ) {
+
+    console.error(
+      "[REGISTRATION QUEUE] Archive verification failed. Restoring original state."
+    );
+
+    saveRegQueue(queue);
+    saveRegArchive(originalArchive);
+
+    window.__REG_QUEUE_CLEANUP_INCONSISTENT__ =
+      true;
+
+    return false;
+  }
+
+  window.__REG_QUEUE_CLEANUP_INCONSISTENT__ =
+    false;
+
+  return true;
 }
 // ================= LOOP =================
 function scheduleRegistrationQueue() {
