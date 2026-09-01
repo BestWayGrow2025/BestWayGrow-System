@@ -20,59 +20,173 @@ var REG_DONE_TTL = 6 * 60 * 60 * 1000;
 var REG_ACTIVE_TIMER = null;
 
 // ================= LOAD / SAVE =================
+
 function getRegQueue() {
+
   try {
-    let data = JSON.parse(
-      localStorage.getItem(REG_QUEUE_KEY)
-    );
-    return Array.isArray(data) ? data : [];
+
+    const raw =
+      localStorage.getItem(REG_QUEUE_KEY);
+
+    if (raw === null || raw === "") {
+      return [];
+    }
+
+    const data =
+      JSON.parse(raw);
+
+    if (!Array.isArray(data)) {
+      throw new Error(
+        "Registration queue data is invalid"
+      );
+    }
+
+    return data;
+
   } catch (e) {
-    localStorage.setItem(REG_QUEUE_KEY, "[]");
+
+    console.error(
+      "[REGISTRATION QUEUE] Queue storage read failed:",
+      e.message
+    );
+
+    window.__REG_QUEUE_STORAGE_ERROR__ = true;
+
     return [];
   }
 }
+
 
 function saveRegQueue(data) {
-  localStorage.setItem(
-    REG_QUEUE_KEY,
-    JSON.stringify(
-      Array.isArray(data) ? data : []
-    )
-  );
+
+  try {
+
+    if (!Array.isArray(data)) {
+      throw new Error(
+        "Invalid registration queue data"
+      );
+    }
+
+    const encoded =
+      JSON.stringify(data);
+
+    localStorage.setItem(
+      REG_QUEUE_KEY,
+      encoded
+    );
+
+    const verify =
+      localStorage.getItem(REG_QUEUE_KEY);
+
+    if (verify !== encoded) {
+      throw new Error(
+        "Registration queue write verification failed"
+      );
+    }
+
+    window.__REG_QUEUE_STORAGE_ERROR__ = false;
+
+    return true;
+
+  } catch (e) {
+
+    console.error(
+      "[REGISTRATION QUEUE] Queue storage write failed:",
+      e.message
+    );
+
+    window.__REG_QUEUE_STORAGE_ERROR__ = true;
+
+    return false;
+  }
 }
 
+
 function getRegArchive() {
+
   try {
-    let data = JSON.parse(
+
+    const raw =
       localStorage.getItem(
         REG_QUEUE_ARCHIVE_KEY
-      )
-    );
-    return Array.isArray(data) ? data : [];
+      );
+
+    if (raw === null || raw === "") {
+      return [];
+    }
+
+    const data =
+      JSON.parse(raw);
+
+    if (!Array.isArray(data)) {
+      throw new Error(
+        "Registration archive data is invalid"
+      );
+    }
+
+    return data;
+
   } catch (e) {
-    localStorage.setItem(
-      REG_QUEUE_ARCHIVE_KEY,
-      "[]"
+
+    console.error(
+      "[REGISTRATION QUEUE] Archive storage read failed:",
+      e.message
     );
+
+    window.__REG_QUEUE_STORAGE_ERROR__ = true;
+
     return [];
   }
 }
 
+
 function saveRegArchive(data) {
-  if (!Array.isArray(data)) {
-    data = [];
-  }
 
-  if (data.length > 2000) {
-    data = data.slice(-2000);
-  }
+  try {
 
-  localStorage.setItem(
-    REG_QUEUE_ARCHIVE_KEY,
-    JSON.stringify(data)
-  );
+    if (!Array.isArray(data)) {
+      throw new Error(
+        "Invalid registration archive data"
+      );
+    }
+
+    if (data.length > 2000) {
+      data = data.slice(-2000);
+    }
+
+    const encoded =
+      JSON.stringify(data);
+
+    localStorage.setItem(
+      REG_QUEUE_ARCHIVE_KEY,
+      encoded
+    );
+
+    const verify =
+      localStorage.getItem(
+        REG_QUEUE_ARCHIVE_KEY
+      );
+
+    if (verify !== encoded) {
+      throw new Error(
+        "Registration archive write verification failed"
+      );
+    }
+
+    return true;
+
+  } catch (e) {
+
+    console.error(
+      "[REGISTRATION QUEUE] Archive storage write failed:",
+      e.message
+    );
+
+    window.__REG_QUEUE_STORAGE_ERROR__ = true;
+
+    return false;
+  }
 }
-
 // ================= FINGERPRINT =================
 function makeRegFingerprint(data) {
   const raw = [
@@ -110,20 +224,47 @@ function isValidQueueRow(row) {
   );
 }
 // ================= ADD TO QUEUE =================
+
 function addToRegistrationQueue(data) {
+
   if (!data || !data.mobile) {
     return false;
   }
 
+  window.__REG_QUEUE_STORAGE_ERROR__ = false;
+
   let queue = getRegQueue();
+
+  if (
+    window.__REG_QUEUE_STORAGE_ERROR__
+  ) {
+    console.error(
+      "[REGISTRATION QUEUE] Cannot add request: queue storage unavailable"
+    );
+
+    return false;
+  }
+
   let archive = getRegArchive();
-  let fingerprint =
+
+  if (
+    window.__REG_QUEUE_STORAGE_ERROR__
+  ) {
+    console.error(
+      "[REGISTRATION QUEUE] Cannot add request: archive storage unavailable"
+    );
+
+    return false;
+  }
+
+  const fingerprint =
     makeRegFingerprint(data);
 
   // Prevent duplicates in queue
   if (
     queue.find(function (q) {
       return (
+        q &&
         q.fingerprint === fingerprint &&
         q.status !== "FAILED"
       );
@@ -135,13 +276,16 @@ function addToRegistrationQueue(data) {
   // Prevent duplicates in archive
   if (
     archive.find(function (a) {
-      return a.fingerprint === fingerprint;
+      return (
+        a &&
+        a.fingerprint === fingerprint
+      );
     })
   ) {
     return false;
   }
 
-   // Repository duplicate validation is owned by
+  // Repository duplicate validation is owned by
   // core_registration_validation_authority.js.
   // RBK-004 does not independently inspect
   // the user repository for registration duplicates.
@@ -155,9 +299,7 @@ function addToRegistrationQueue(data) {
     error: ""
   });
 
-  saveRegQueue(queue);
-
-  return true;
+  return saveRegQueue(queue);
 }
 // ================= PROCESS ONE =================
 function processOneRegistration(req) {
@@ -405,11 +547,3 @@ window.processOneRegistration =
   processOneRegistration;
 window.startRegistrationQueue =
   startRegistrationQueue;
-
-// ================= START =================
-if (!window.__REG_QUEUE_STARTED__) {
-  window.__REG_QUEUE_STARTED__ =
-    true;
-
-  startRegistrationQueue();
-}
