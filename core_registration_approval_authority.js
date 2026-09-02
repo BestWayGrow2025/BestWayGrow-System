@@ -43,7 +43,7 @@ function approveRegistration(fingerprint) {
 
   saveRegQueue(queue);
 
-  if (typeof emitSystemEvent === "function") {
+ if (typeof emitSystemEvent === "function") {
     emitSystemEvent(
       "REGISTRATION_APPROVED",
       {
@@ -52,10 +52,29 @@ function approveRegistration(fingerprint) {
     );
   }
 
+  /*
+  ========================================
+  APPROVAL → REGISTRATION QUEUE PROCESSING
+  ========================================
+  Existing queue authority remains in
+  core_registration_queue_manager.js.
+
+  RBK-019 does NOT redefine:
+  • processRegistrationQueue()
+  • startRegistrationQueue()
+  • createUserWithTree()
+
+  It only triggers the existing queue processor
+  after successful approval.
+  ========================================
+  */
+
+  if (typeof processRegistrationQueue === "function") {
+    processRegistrationQueue();
+  }
+
   return true;
 }
-
-
 function rejectRegistration(fingerprint) {
 
   if (!fingerprint) return false;
