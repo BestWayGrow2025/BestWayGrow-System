@@ -121,11 +121,11 @@ case "incomecontrol":
   return safeCall(
     loadRealModule,
     false,
-    {
-     html: "system_income_policy_dashboard.html",
-js: "system_income_policy_dashboard.js",
-init: "initIncomeControlUI"
-    }
+   {
+  html: "platform_income_policy_dashboard.html",
+  js: "platform_income_policy_dashboard.js",
+  init: "initIncomeControlUI"
+}
   );
         
 // ================= PRODUCT MASTER =================
@@ -134,11 +134,11 @@ case "productmaster":
   return safeCall(
     loadRealModule,
     false,
-    {
-      html: "product_master_connector.html",
-      js: "product_master_connector.js",
-      init: "initProductMasterConnector"
-    }
+ {
+  html: "platform_product_master_connector.html",
+  js: "platform_product_master_connector.js",
+  init: "initProductMasterConnector"
+}
   );
 
   // ================= RANK MASTER =================
