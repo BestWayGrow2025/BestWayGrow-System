@@ -1,3 +1,4 @@
+
 "use strict";
 
 /*
@@ -21,7 +22,7 @@ COMPATIBILITY WRAPPER
   // Ensure required functions exist
   if (typeof window.createUserWithTree !== "function") {
     console.error(
-      "[REGISTRATION TREE ENGINE] createUserWithTree not found. Load tree_system.js first."
+     "[REGISTRATION TREE ENGINE] createUserWithTree not found. Load core_tree_management_engine.js first."
     );
     return;
   }
