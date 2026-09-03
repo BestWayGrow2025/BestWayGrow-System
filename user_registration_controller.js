@@ -80,8 +80,8 @@ function loadPage() {
     return;
   }
 
-  const intro =
-    getUserById(registrationIntroducerId);
+ const intro =
+  getIntroducerById(registrationIntroducerId);
 
   if (!intro) {
     if (introLabel) {
