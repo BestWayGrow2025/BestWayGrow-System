@@ -8,7 +8,7 @@ SYSTEM REPLAY ENGINE V1.0 (BANK CORE RECOVERY)
 ✔ Detects balance inconsistencies
 ✔ Restores corrupted wallet state
 ✔ Audit-grade financial reconstruction
-✔ Uses ledger_engine.js as source of truth
+✔ Uses core_financial_ledger_journal.js as source of truth
 ✔ Uses wallet_engine.js as state layer
 ========================================
 */
