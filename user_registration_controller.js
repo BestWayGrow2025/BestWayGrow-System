@@ -64,23 +64,23 @@ function loadPage() {
   const formArea =
     document.getElementById("formArea");
 
-  if (
-    !registrationIntroducerId ||
-    typeof getUserById !== "function"
-  ) {
-    if (introLabel) {
-      introLabel.innerText =
-        "Invalid Referral Link";
-    }
-
-    if (formArea) {
-      formArea.style.display = "none";
-    }
-
-    return;
+if (
+  !registrationIntroducerId ||
+  typeof getIntroducerById !== "function"
+) {
+  if (introLabel) {
+    introLabel.innerText =
+      "Invalid Referral Link";
   }
 
- const intro =
+  if (formArea) {
+    formArea.style.display = "none";
+  }
+
+  return;
+}
+
+const intro =
   getIntroducerById(registrationIntroducerId);
 
   if (!intro) {
