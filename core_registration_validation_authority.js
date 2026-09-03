@@ -165,12 +165,12 @@ function isValidIntroducer(introducerId) {
     return false;
   }
 
-  if (typeof getUserById !== "function") {
-    return false;
-  }
+if (typeof getIntroducerById !== "function") {
+  return false;
+}
 
-  const introducer =
-    getUserById(id);
+const introducer =
+  getIntroducerById(id);
 
   if (!introducer) {
     return false;
