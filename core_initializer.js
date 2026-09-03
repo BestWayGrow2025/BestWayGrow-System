@@ -474,7 +474,7 @@ function initCoreSystem() {
 // GLOBAL EXPORTS
 // ========================================
 
-// Critical export for boot_manager.js
+// Critical export for core_boot_manager.js
 window.initCoreSystem = initCoreSystem;
 
 // Helper exports
