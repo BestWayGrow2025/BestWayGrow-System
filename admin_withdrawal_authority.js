@@ -31,7 +31,7 @@ function initPage() {
   if (typeof initCoreSystem === "function") {
     initCoreSystem();
   } else {
-    alert("core_system.js missing");
+   alert("core_initializer.js missing");
     throw new Error("STOP");
   }
 }
