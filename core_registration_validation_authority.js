@@ -165,23 +165,31 @@ function isValidIntroducer(introducerId) {
     return false;
   }
 
-if (typeof getIntroducerById !== "function") {
-  return false;
-}
+  if (typeof getIntroducerById !== "function") {
+    return false;
+  }
 
-const introducer =
-  getIntroducerById(id);
+  const introducer =
+    getIntroducerById(id);
 
   if (!introducer) {
     return false;
   }
 
- const status =
+  const role =
+    String(introducer.role || "")
+      .toLowerCase();
+
+  const status =
     String(
       introducer.accountStatus ||
       introducer.status ||
       "active"
     ).toLowerCase();
+
+  if (role !== "introducer") {
+    return false;
+  }
 
   if (status !== "active") {
     return false;
