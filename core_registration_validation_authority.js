@@ -176,20 +176,13 @@ const introducer =
     return false;
   }
 
- const role =
-  String(introducer.role || "")
-    .toLowerCase();
+ const status =
+    String(
+      introducer.accountStatus ||
+      introducer.status ||
+      "active"
+    ).toLowerCase();
 
-const status =
-  String(
-    introducer.accountStatus ||
-    introducer.status ||
-    "active"
-  ).toLowerCase();
-
-if (role !== "introducer") {
-  return false;
-}
   if (status !== "active") {
     return false;
   }
