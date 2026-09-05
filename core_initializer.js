@@ -290,6 +290,11 @@ function getUserById(userId) {
   return getUsers().find(user => user.userId === userId) || null;
 }
 
+function getIntroducerById(introducerId) {
+
+  return getUserById(introducerId);
+}
+
 function getDirectUsers(userId) {
 
   if (!userId) return [];
@@ -478,6 +483,7 @@ function initCoreSystem() {
 window.initCoreSystem = initCoreSystem;
 
 // Helper exports
+window.initCoreSystem = initCoreSystem;
 window.isStorageAvailable = isStorageAvailable;
 window.safeGet = safeGet;
 window.safeSet = safeSet;
@@ -487,6 +493,7 @@ window.saveUsers = saveUsers;
 window.getSystemSettings = getSystemSettings;
 window.saveSystemSettings = saveSystemSettings;
 window.getUserById = getUserById;
+window.getIntroducerById = getIntroducerById;
 window.getDirectUsers = getDirectUsers;
 window.getChildren = getChildren;
 window.isSystemSafe = isSystemSafe;
