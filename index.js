@@ -81,7 +81,7 @@ function loadLoginArea() {
 
   if (!session) {
     loginArea.innerHTML = `
-      <a href="user_login.html">
+      <a href="user_auth.html">
         <button type="button">Login</button>
       </a>
     `;
