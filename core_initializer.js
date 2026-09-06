@@ -290,6 +290,15 @@ function getUserById(userId) {
   return getUsers().find(user => user.userId === userId) || null;
 }
 
+// Registration / referral purpose:
+// Finds the existing user identified as the Introducer.
+function getIntroducerById(introducerId) {
+
+  if (!introducerId) return null;
+
+  return getUserById(introducerId);
+}
+
 function getDirectUsers(userId) {
 
   if (!userId) return [];
@@ -488,6 +497,7 @@ window.saveUsers = saveUsers;
 window.getSystemSettings = getSystemSettings;
 window.saveSystemSettings = saveSystemSettings;
 window.getUserById = getUserById;
+window.getIntroducerById = getIntroducerById;
 window.getDirectUsers = getDirectUsers;
 window.getChildren = getChildren;
 window.isSystemSafe = isSystemSafe;
