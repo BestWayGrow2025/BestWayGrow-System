@@ -176,27 +176,20 @@ function isValidIntroducer(introducerId) {
     return false;
   }
 
-  const role =
-    String(introducer.role || "")
-      .toLowerCase();
-
-  const status =
+    const status =
     String(
       introducer.accountStatus ||
       introducer.status ||
       "active"
     ).toLowerCase();
 
-  if (role !== "introducer") {
-    return false;
-  }
-
-  if (status !== "active") {
+   if (status !== "active") {
     return false;
   }
 
   return true;
 }
+
 // ================= MAIN VALIDATION =================
 function validateRegistration(data) {
   if (!data || typeof data !== "object") {
