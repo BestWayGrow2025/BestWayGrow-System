@@ -339,15 +339,6 @@ function seedSystemUsers(users) {
   let changed = false;
   const now = Date.now();
 
-// ========================================
-// SEED USERS
-// ========================================
-
-function seedSystemUsers(users) {
-
-  let changed = false;
-  const now = Date.now();
-
   // ========================================
   // PERMANENT ROOT — SUPER ADMIN
   // ========================================
@@ -416,6 +407,7 @@ function seedSystemUsers(users) {
 // ========================================
 // CORE INITIALIZATION
 // ========================================
+
 
 function initCoreSystem() {
 
