@@ -340,19 +340,24 @@ function seedSystemUsers(users) {
   const now = Date.now();
 
   // ========================================
-  // PERMANENT ROOT — SUPER ADMIN
-  // ========================================
+// PERMANENT ROOT — ROOT ADMIN / USER TREE ROOT
+// ========================================
 
-  const rootUser = {
-    userId: "BWG000000",
-    username: "Root Super Admin",
-    password: btoa("123"),
-    role: "super_admin",
-    status: "active",
-    accountStatus: "active",
-    createdAt: now
-  };
-
+const rootUser = {
+  userId: "BWG000000",
+  username: "Root Admin",
+  password: btoa("123"),
+  role: "admin",
+  adminType: "root_admin",
+  tree: "field",
+  hiddenAccount: true,
+  permissions: ["tree_root"],
+  departments: ["all"],
+  status: "active",
+  accountStatus: "active",
+  createdAt: now
+};
+  
   const rootExists = users.some(
     user => user.userId === "BWG000000"
   );
