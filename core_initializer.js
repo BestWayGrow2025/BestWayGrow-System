@@ -339,25 +339,25 @@ function seedSystemUsers(users) {
   let changed = false;
   const now = Date.now();
 
+    // ========================================
+  // PERMANENT ROOT — ROOT ADMIN / USER TREE ROOT
   // ========================================
-// PERMANENT ROOT — ROOT ADMIN / USER TREE ROOT
-// ========================================
 
-const rootUser = {
-  userId: "BWG000000",
-  username: "Root Admin",
-  password: btoa("123"),
-  role: "admin",
-  adminType: "root_admin",
-  tree: "field",
-  hiddenAccount: true,
-  permissions: ["tree_root"],
-  departments: ["all"],
-  status: "active",
-  accountStatus: "active",
-  createdAt: now
-};
-  
+  const rootUser = {
+    userId: "BWG000000",
+    username: "Root Admin",
+    password: btoa("123"),
+    role: "admin",
+    adminType: "root_admin",
+    tree: "field",
+    hiddenAccount: true,
+    permissions: ["tree_root"],
+    departments: ["all"],
+    status: "active",
+    accountStatus: "active",
+    createdAt: now
+  };
+
   const rootExists = users.some(
     user => user.userId === "BWG000000"
   );
@@ -539,4 +539,3 @@ window.isSystemSafe = isSystemSafe;
 window.__CORE_SYSTEM_LOADED__ = true;
 
 console.log("[CORE] LOADED v10.2");
-
