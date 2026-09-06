@@ -339,6 +339,42 @@ function seedSystemUsers(users) {
   let changed = false;
   const now = Date.now();
 
+// ========================================
+// SEED USERS
+// ========================================
+
+function seedSystemUsers(users) {
+
+  let changed = false;
+  const now = Date.now();
+
+  // ========================================
+  // PERMANENT ROOT — SUPER ADMIN
+  // ========================================
+
+  const rootUser = {
+    userId: "BWG000000",
+    username: "Root Super Admin",
+    password: btoa("123"),
+    role: "super_admin",
+    status: "active",
+    accountStatus: "active",
+    createdAt: now
+  };
+
+  const rootExists = users.some(
+    user => user.userId === "BWG000000"
+  );
+
+  if (!rootExists) {
+    users.push(normalizeUser(rootUser));
+    changed = true;
+  }
+
+  // ========================================
+  // NON-PERMANENT SYSTEM SEEDS
+  // ========================================
+
   const seeds = [
     {
       userId: "SUPERADMIN",
