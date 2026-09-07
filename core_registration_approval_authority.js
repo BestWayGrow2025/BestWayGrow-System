@@ -108,7 +108,7 @@ if (!saveRegQueue(queue)) {
 
 if (typeof emitSystemEvent === "function") {
     emitSystemEvent(
-      "REGISTRATION_REJECTED",
+      "REGISTRATION_APPROVED",
       {
         fingerprint: fingerprint
       }
