@@ -76,10 +76,8 @@ function clearSessionStorage() {
   try {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(SESSION_EVENT_KEY);
-    sessionStorage.clear();
   } catch (_) {}
 }
-
 // =====================
 // TOKEN GENERATOR
 // =====================
@@ -87,14 +85,15 @@ function generateSessionToken(user) {
 
   if (!user || !user.userId) return null;
 
-  return btoa([
-    user.userId,
-    user.role || "user",
-    navigator.userAgent.length,
-    window.location.host
-  ].join("|"));
-}
+  if (
+    typeof crypto === "undefined" ||
+    typeof crypto.randomUUID !== "function"
+  ) {
+    return null;
+  }
 
+  return crypto.randomUUID();
+}
 // =====================
 // VALIDATION
 // =====================
@@ -271,13 +270,6 @@ function getSession() {
       return null;
     }
 
-    const expectedToken = generateSessionToken(user);
-
-    if (session.token !== expectedToken) {
-      destroySession();
-      return null;
-    }
-
     session.lastActivity = Date.now();
     session.treeScope = getTreeAccessScope(session);
 
@@ -330,8 +322,32 @@ function isAuthenticated() {
 // LOGOUT
 // =====================
 function logoutSession() {
+
+  const currentSession =
+    sessionSafeGet(SESSION_KEY, null);
+
+  const role =
+    String(currentSession?.role || "").toLowerCase();
+
   destroySession();
- window.location.replace("user_auth.html");
+
+  switch (role) {
+
+    case "admin":
+      window.location.replace("admin_auth.html");
+      break;
+
+    case "system_admin":
+      window.location.replace("system_admin_auth.html");
+      break;
+
+    case "super_admin":
+      window.location.replace("super_admin_auth.html");
+      break;
+
+    default:
+      window.location.replace("user_auth.html");
+  }
 }
 
 // =====================
