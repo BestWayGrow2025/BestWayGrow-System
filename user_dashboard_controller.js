@@ -155,6 +155,33 @@ function countTree(userId, users) {
 
 /* ================= HOME ================= */
 
+function loadReferralLink() {
+
+  const user = getSafeUser();
+  const main = document.getElementById("mainContent");
+
+  if (!user || !main) return;
+
+  const refLink =
+    typeof generateReferralLink === "function"
+      ? generateReferralLink(user.userId)
+      : "";
+
+  main.innerHTML = `
+    <h3>Referral Link</h3>
+
+    <input
+      id="referralLinkBox"
+      value="${refLink}"
+      readonly
+    >
+
+    <button onclick="copyReferralLink()">
+      Copy
+    </button>
+  `;
+}
+
 function loadHome() {
 
   const user = getSafeUser();
@@ -315,6 +342,7 @@ window.location.replace("user_auth.html");
 
 /* ================= EXPORTS ================= */
 
+window.loadReferralLink = loadReferralLink;
 window.loadHome = loadHome;
 window.loadPinSection = loadPinSection;
 window.loadDirectTeam = loadDirectTeam;
