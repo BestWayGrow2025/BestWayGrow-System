@@ -25,10 +25,12 @@ SYSTEM EVENT HUB v2.2 (FINAL CLEAN)
 
   // ================= EVENT BUS =================
 
-  const BUS = createEventBus();
+ const BUS =
+  window.SYSTEM_EVENTS ||
+  createEventBus();
 
-  // expose SYSTEM_EVENTS globally
-  window.SYSTEM_EVENTS = window.SYSTEM_EVENTS || BUS;
+// expose SYSTEM_EVENTS globally
+window.SYSTEM_EVENTS = BUS;
 
   // ================= INIT =================
 
@@ -248,23 +250,23 @@ function connectEnterpriseToEventHub(bus) {
 
   return function wireCore() {
 
-    if (window.__EVENT_HUB_CORE_CONNECTED__) return;
+   if (window.__EVENT_HUB_CORE_CONNECTED__) return;
 
-    window.__EVENT_HUB_CORE_CONNECTED__ = true;
+const core =
+  window.ENTERPRISE_CORE_ENGINE ||
+  window.__ENTERPRISE_CORE_ENGINE__ ||
+  null;
 
-    const core =
-      window.ENTERPRISE_CORE_ENGINE ||
-      window.__ENTERPRISE_CORE_ENGINE__ ||
-      null;
+if (!core) {
 
-    if (!core) {
+  console.warn(
+    "[EVENT HUB] Enterprise Core not found"
+  );
 
-      console.warn(
-        "[EVENT HUB] Enterprise Core not found"
-      );
+  return;
+}
 
-      return;
-    }
+window.__EVENT_HUB_CORE_CONNECTED__ = true;
 
     console.log(
       "[EVENT HUB] ENTERPRISE CORE CONNECTED"
