@@ -39,12 +39,13 @@ function approveRegistration(fingerprint) {
   if (index === -1) return false;
 
   queue[index].status = "APPROVED";
-  queue[index].approvedAt = Date.now();
+queue[index].approvedAt = Date.now();
 
-  saveRegQueue(queue);
+if (!saveRegQueue(queue)) {
+  return false;
+}
 
- if (typeof emitSystemEvent === "function") {
-    emitSystemEvent(
+if (typeof emitSystemEvent === "function") {
       "REGISTRATION_APPROVED",
       {
         fingerprint: fingerprint
@@ -98,12 +99,14 @@ function rejectRegistration(fingerprint) {
 
   if (index === -1) return false;
 
-  queue[index].status = "REJECTED";
-  queue[index].rejectedAt = Date.now();
+queue[index].status = "REJECTED";
+queue[index].rejectedAt = Date.now();
 
-  saveRegQueue(queue);
+if (!saveRegQueue(queue)) {
+  return false;
+}
 
-  if (typeof emitSystemEvent === "function") {
+if (typeof emitSystemEvent === "function") {
     emitSystemEvent(
       "REGISTRATION_REJECTED",
       {
