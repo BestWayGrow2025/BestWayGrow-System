@@ -171,15 +171,19 @@ function setSession(user) {
 
     const now = Date.now();
 
-    const sessionData = {
-      userId: user.userId,
-      role: user.role,
-      loginTime: now,
-      lastActivity: now,
-      token: generateSessionToken(user),
-      version: 4,
-      initialized: true
-    };
+    const token = generateSessionToken(user);
+
+if (!token) return false;
+
+const sessionData = {
+  userId: user.userId,
+  role: user.role,
+  loginTime: now,
+  lastActivity: now,
+  token: token,
+  version: 4,
+  initialized: true
+};
 
     if (!sessionSafeSet(SESSION_KEY, sessionData)) {
       clearSessionStorage();
@@ -215,11 +219,13 @@ function destroySession() {
    
     localStorage.setItem(
       SESSION_EVENT_KEY,
-      JSON.stringify({
-        type: "LOGOUT",
-        userId: old?.userId || null,
-        time: Date.now()
-      })
+     JSON.stringify({
+  type: "LOGOUT",
+  userId: old?.userId || null,
+  role: old?.role || null,
+  time: Date.now()
+})
+
     );
 
   } catch (_) {}
@@ -362,9 +368,37 @@ window.addEventListener("storage", function (e) {
     const eventData = JSON.parse(e.newValue || "{}");
 
     if (eventData?.type === "LOGOUT") {
-      clearSessionStorage();
+
+  const currentSession =
+    sessionSafeGet(SESSION_KEY, null);
+
+  const role =
+    String(
+      currentSession?.role ||
+      eventData?.role ||
+      ""
+    ).toLowerCase();
+
+  clearSessionStorage();
+
+  switch (role) {
+
+    case "admin":
+      window.location.replace("admin_auth.html");
+      break;
+
+    case "system_admin":
+      window.location.replace("system_admin_auth.html");
+      break;
+
+    case "super_admin":
+      window.location.replace("super_admin_auth.html");
+      break;
+
+    default:
       window.location.replace("user_auth.html");
-    }
+  }
+}
 
   } catch (_) {}
 });
