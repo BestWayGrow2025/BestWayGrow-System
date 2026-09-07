@@ -6,7 +6,7 @@
 REGISTRATION TREE ENGINE V5.0
 COMPATIBILITY WRAPPER
 ========================================
-✔ Reuses tree_system.js implementation
+✔ Reuses core_tree_management_engine.js implementation
 ✔ No duplicate business logic
 ✔ Safe fallback compatibility layer
 ✔ Production LOCKED
@@ -33,14 +33,6 @@ COMPATIBILITY WRAPPER
   // Required diagnostics compatibility
   window.__TREE_ENGINE_ACTIVE__ = true;
 
-  if (typeof window.getTreeData !== "function") {
-    window.getTreeData = function () {
-      if (typeof window.getUsers === "function") {
-        return window.getUsers() || [];
-      }
-      return [];
-    };
-  }
 
   console.log("[REGISTRATION TREE ENGINE] Compatibility wrapper loaded");
 
