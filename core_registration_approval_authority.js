@@ -108,13 +108,12 @@ if (!saveRegQueue(queue)) {
 
 if (typeof emitSystemEvent === "function") {
     emitSystemEvent(
-      "REGISTRATION_APPROVED",
+      "REGISTRATION_REJECTED",
       {
         fingerprint: fingerprint
       }
     );
   }
-
   return true;
 }
 
