@@ -117,9 +117,11 @@ function acquireSystemLock(context = "unknown") {
     timestamp: now
   };
 
-  setGlobalLock(lockData);
+ if (!setGlobalLock(lockData)) {
+  return false;
+}
 
-  const verify = getGlobalLock();
+const verify = getGlobalLock();
 
   if (
     !verify ||
@@ -144,10 +146,12 @@ function releaseSystemLock(lockId = null) {
     return false;
   }
 
-  clearGlobalLock();
+  if (!clearGlobalLock()) {
+  return false;
+}
 
-  // Verify that this execution actually released its lock.
-  const verify = getGlobalLock();
+// Verify that this execution actually released its lock.
+const verify = getGlobalLock();
 
   if (verify && verify.id === lockId) {
     return false;
