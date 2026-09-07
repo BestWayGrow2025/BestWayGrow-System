@@ -24,12 +24,6 @@ function findUser(userId) {
   return users.find(u => u.userId === userId) || null;
 }
 
-/* ================= TREE ROOT ================= */
-
-function getTreeRoot(userId) {
-  return findUser(userId);
-}
-
 /* ================= LEVEL SAFE BFS ================= */
 
 function getLevelUsers(userId, level) {
