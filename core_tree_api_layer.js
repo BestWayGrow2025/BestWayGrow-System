@@ -92,10 +92,8 @@ function getUserTreeByRole(userId, role) {
     if (!node) return null;
 
     // 🔐 ROLE FILTERING RULE
-    if (role === "user" && depth > 30) return null;
-    if (role === "admin" && depth > 100) return null;
-    // super_admin = no limit
-
+if (role === "user" && depth > 30) return null;
+    
     return {
       userId: node.userId,
       name: node.name || node.username || "",
