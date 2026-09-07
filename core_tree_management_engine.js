@@ -383,16 +383,12 @@ position:
 
 /* ================= EXPORT ================= */
 
-window.createUserWithTree =
-  createUserWithTree;
-window.findPlacement =
-  findPlacement;
-window.getUserTree =
-  getUserTree;
-window.generateUserId =
-  generateUserId;
-window.getTreeData =
-  getTreeData;
+window.createUserWithTree = createUserWithTree;
+window.findPlacement = findPlacement;
+window.getUserTree = getUserTree;
+window.generateUserId = generateUserId;
+window.generateReferralLink = generateReferralLink;
+window.getTreeData = getTreeData;
 
 /* ================= REQUIRED FLAGS ================= */
 
