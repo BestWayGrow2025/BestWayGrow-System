@@ -520,7 +520,6 @@ function initCoreSystem() {
 window.initCoreSystem = initCoreSystem;
 
 // Helper exports
-window.initCoreSystem = initCoreSystem;
 window.isStorageAvailable = isStorageAvailable;
 window.safeGet = safeGet;
 window.safeSet = safeSet;
