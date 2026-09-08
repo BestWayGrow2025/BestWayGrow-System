@@ -46,12 +46,13 @@ if (!saveRegQueue(queue)) {
 }
 
 if (typeof emitSystemEvent === "function") {
-      "REGISTRATION_APPROVED",
-      {
-        fingerprint: fingerprint
-      }
-    );
-  }
+  emitSystemEvent(
+    "REGISTRATION_APPROVED",
+    {
+      fingerprint: fingerprint
+    }
+  );
+}
 
   /*
   ========================================
