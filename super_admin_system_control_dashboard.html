@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
   <title>Super Admin Controls</title>
-  <link rel="icon" href="data:,">
-
-  <style>
+  <link rel="icon" href="data:,">  <style>
     body {
       font-family: Arial;
       padding: 20px;
@@ -19,7 +16,7 @@
       background: white;
       padding: 20px;
       margin: 15px auto;
-      max-width: 500px;
+      max-width: 900px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
@@ -36,59 +33,65 @@
       background: #dc3545;
       color: white;
     }
-  </style>
-</head>
-<body>
 
-  <h2>⚡ SUPER ADMIN CONTROL PANEL</h2>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-  <div class="box">
-    <h3>System Toggles</h3>
+    th,
+    td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ccc;
+    }
+  </style></head><body>  <h2>⚡ SUPER ADMIN CONTROL PANEL</h2>  <div class="box"><h3>System Toggles</h3>
 
-  <p id="systemStatus"></p>
+<p id="systemStatus"></p>
 
-   <button id="backBtn">⬅ Back</button>
-<button id="toggleWithdrawBtn">💸 Withdraw Stop</button>
-<button id="toggleRegisterBtn">🧾 Registration</button>
-  </div>
+<button id="backBtn">
+  ⬅ Back
+</button>
 
-  <div class="box">
+<button id="toggleWithdrawBtn">
+  💸 Withdraw Stop
+</button>
 
-  <h3>Admin Management</h3>
+<button id="toggleRegisterBtn">
+  🧾 Registration
+</button>
 
-  <table border="1" width="100%">
+  </div>  <div class="box"><h3>Admin Management</h3>
 
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Role</th>
-        <th>Type</th>
-        <th>Tree</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
+<table>
 
-    <tbody id="adminTable"></tbody>
+  <thead>
 
-   </table>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Type</th>
+      <th>Tree</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
 
-  </div>
+  </thead>
 
-  <div class="box">
+  <tbody id="adminTable"></tbody>
 
-    <h3>Danger Zone ⚠️</h3>
+</table>
 
-    <button
-      id="clearLogsBtn"
-      class="off">
+  </div>  <div class="box"><h3>Danger Zone ⚠️</h3>
 
-      🧹 Clear All Logs
+<button
+  id="clearLogsBtn"
+  class="off">
 
-    </button>
+  🧹 Clear All Logs
 
-  </div>
+</button>
 
-</body>
+  </div>  <!-- CORE DEPENDENCIES -->  <script src="core_boot_manager.js"></script>  <script src="core_initializer.js"></script>  <script src="core_session_authority.js"></script>  <!-- SUPER ADMIN AUTHORITY -->  <script src="super_admin_system_control_authority.js"></script></body>
 </html>
