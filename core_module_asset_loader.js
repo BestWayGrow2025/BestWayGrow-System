@@ -145,10 +145,37 @@ function loadScriptOnce(scriptFile) {
   ).some(
     function (script) {
 
-      return (
+      if (
         script.dataset.systemModule ===
         scriptFile
-      );
+      ) {
+        return true;
+      }
+
+      try {
+
+        const loadedUrl =
+          new URL(
+            script.src,
+            window.location.href
+          );
+
+        const requestedUrl =
+          new URL(
+            scriptFile,
+            window.location.href
+          );
+
+        return (
+          loadedUrl.href ===
+          requestedUrl.href
+        );
+
+      } catch (err) {
+
+        return false;
+
+      }
 
     }
   );
