@@ -209,34 +209,8 @@ function bindEvents() {
       };
 
   }
-
-
-  document
-    .querySelectorAll("[data-page]")
-    .forEach(function(button){
-
-
-      if (button.dataset.bound)
-        return;
-
-
-      button.dataset.bound = "true";
-
-
-      button.onclick =
-        function(){
-
-          openModule(
-            button.dataset.page
-          );
-
-        };
-
-
-    });
-
+  
 }
-
 
 // ===============================
 // MODULE OPEN
