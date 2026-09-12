@@ -77,18 +77,6 @@ if (
   );
 
 }
-
-  if (
-    typeof window.initSystemPageRouter ===
-    "function"
-  ) {
-    window.initSystemPageRouter();
-  } else {
-    console.error(
-      "[SUPER ADMIN DASHBOARD] CORE PAGE ROUTER INIT NOT FOUND"
-    );
-  }
-
   loadProfile();
 
   bindEvents();
