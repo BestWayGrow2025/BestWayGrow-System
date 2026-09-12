@@ -139,51 +139,37 @@ function loadScriptOnce(scriptFile) {
 
       try {
 
-       const existing =
-  Array.from(
-    document.scripts
-  ).some(
-    function (script) {
+        /*
+        ========================================
+        EXECUTED MODULE CHECK
+        ========================================
+        A script element existing in the DOM
+        does NOT prove that the JavaScript
+        actually executed.
+        ========================================
+        */
 
-      if (
-        script.dataset.systemModule ===
-        scriptFile
-      ) {
-        return true;
-      }
+        const existingExecuted =
+          Array.from(
+            document.scripts
+          ).some(
+            function (script) {
 
-      try {
+              return (
+                script.dataset.systemModule ===
+                  scriptFile &&
+                script.dataset.systemModuleExecuted ===
+                  "true"
+              );
 
-        const loadedUrl =
-          new URL(
-            script.src,
-            window.location.href
+            }
           );
 
-        const requestedUrl =
-          new URL(
-            scriptFile,
-            window.location.href
-          );
 
-        return (
-          loadedUrl.href ===
-          requestedUrl.href
-        );
-
-      } catch (err) {
-
-        return false;
-
-      }
-
-    }
-  );
-
-        if (existing) {
+        if (existingExecuted) {
 
           console.log(
-            "[MODULE SCRIPT ALREADY LOADED]",
+            "[MODULE SCRIPT ALREADY EXECUTED]",
             scriptFile
           );
 
@@ -193,6 +179,75 @@ function loadScriptOnce(scriptFile) {
 
         }
 
+
+        /*
+        ========================================
+        EXISTING SCRIPT TAG CHECK
+        ========================================
+        This is only diagnostic information.
+        It is NOT treated as proof of execution.
+        ========================================
+        */
+
+        const existingScript =
+          Array.from(
+            document.scripts
+          ).find(
+            function (script) {
+
+              if (
+                script.dataset.systemModule ===
+                scriptFile
+              ) {
+
+                return true;
+
+              }
+
+              try {
+
+                const loadedUrl =
+                  new URL(
+                    script.src,
+                    window.location.href
+                  );
+
+                const requestedUrl =
+                  new URL(
+                    scriptFile,
+                    window.location.href
+                  );
+
+                return (
+                  loadedUrl.href ===
+                  requestedUrl.href
+                );
+
+              } catch (err) {
+
+                return false;
+
+              }
+
+            }
+          );
+
+
+        if (existingScript) {
+
+          console.log(
+            "[MODULE SCRIPT TAG FOUND - EXECUTING EXPLICITLY]",
+            scriptFile
+          );
+
+        }
+
+
+        /*
+        ========================================
+        CONTROLLED SCRIPT LOAD
+        ========================================
+        */
 
         const script =
           document.createElement(
@@ -213,6 +268,9 @@ function loadScriptOnce(scriptFile) {
         script.onload =
           function () {
 
+            script.dataset.systemModuleExecuted =
+              "true";
+
             console.log(
               "[MODULE SCRIPT LOADED]",
               scriptFile
@@ -225,6 +283,11 @@ function loadScriptOnce(scriptFile) {
 
         script.onerror =
           function () {
+
+            console.error(
+              "[MODULE SCRIPT LOAD FAILED]",
+              scriptFile
+            );
 
             reject(
               new Error(
@@ -251,129 +314,6 @@ function loadScriptOnce(scriptFile) {
   );
 
 }
-
-
-// ================= GENERIC MODULE LOADER =================
-
-async function loadRealModule(config = {}) {
-
-  try {
-
-    if (!config.html) {
-
-      throw new Error(
-        "Missing html file"
-      );
-
-    }
-
-
-    // ========================================
-    // STEP 1 — LOAD HTML
-    // ========================================
-
-    const htmlLoaded =
-      await loadHtmlIntoMain(
-        config.html
-      );
-
-
-    if (!htmlLoaded) {
-
-      throw new Error(
-        "HTML module failed: " +
-        config.html
-      );
-
-    }
-
-
-    // ========================================
-    // STEP 2 — LOAD JAVASCRIPT
-    // ========================================
-
-    if (config.js) {
-
-      await loadScriptOnce(
-        config.js
-      );
-
-    }
-
-
-    // ========================================
-    // STEP 3 — RESOLVE INITIALIZER
-    // ========================================
-
-    const initFn =
-      config.init ||
-      config.initFunction;
-
-
-    if (initFn) {
-
-      if (
-        typeof window[initFn] !==
-        "function"
-      ) {
-
-        throw new Error(
-          "Module initializer not found: " +
-          initFn
-        );
-
-      }
-
-
-      console.log(
-        "[MODULE INIT]",
-        initFn
-      );
-
-
-      const result =
-        await window[initFn]();
-
-
-      console.log(
-        "[MODULE INIT COMPLETE]",
-        initFn,
-        result
-      );
-
-    }
-
-
-    // ========================================
-    // SUCCESS
-    // ========================================
-
-    console.log(
-      "[REAL MODULE LOADER] SUCCESS:",
-      config.html
-    );
-
-
-    return true;
-
-
-  } catch (err) {
-
-    console.error(
-      "[REAL MODULE LOADER ERROR]",
-      err
-    );
-
-    return false;
-
-  }
-
-}
-
-
-// ========================================
-// HOME MODULE
-// ========================================
 
 function loadHomeDashboardModule() {
 
