@@ -64,9 +64,15 @@ function authPage() {
     return forceLogout();
   }
 
-  if (typeof hasRole !== "function" || !hasRole("admin")) {
-    return forceLogout();
-  }
+ const role =
+  currentUser.role;
+
+if (
+  role !== "admin" &&
+  role !== "super_admin"
+) {
+  return forceLogout();
+}
 
   const status =
     currentUser.accountStatus ||
