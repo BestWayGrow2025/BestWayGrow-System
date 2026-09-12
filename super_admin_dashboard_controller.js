@@ -78,12 +78,22 @@ if (
 
 }
 
-loadProfile();
+  if (
+    typeof window.initSystemPageRouter ===
+    "function"
+  ) {
+    window.initSystemPageRouter();
+  } else {
+    console.error(
+      "[SUPER ADMIN DASHBOARD] CORE PAGE ROUTER INIT NOT FOUND"
+    );
+  }
+
+  loadProfile();
 
   bindEvents();
 
   openModule("home");
-
   console.log(
     "[SUPER ADMIN DASHBOARD] READY"
   );
