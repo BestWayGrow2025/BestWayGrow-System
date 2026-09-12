@@ -315,6 +315,125 @@ function loadScriptOnce(scriptFile) {
 
 }
 
+// ========================================
+// REAL MODULE LOADER
+// ========================================
+
+async function loadRealModule(config = {}) {
+
+  try {
+
+    // ================= CONFIG CHECK =================
+
+    if (!config.html) {
+
+      throw new Error(
+        "Missing html file"
+      );
+
+    }
+
+
+    // ================= HTML LOAD =================
+
+    const htmlLoaded =
+      await loadHtmlIntoMain(
+        config.html
+      );
+
+
+    if (!htmlLoaded) {
+
+      throw new Error(
+        "HTML module failed: " +
+        config.html
+      );
+
+    }
+
+
+    // ================= SCRIPT LOAD =================
+
+    if (config.js) {
+
+      await loadScriptOnce(
+        config.js
+      );
+
+    }
+
+
+    // ================= MODULE INIT =================
+
+    const initFn =
+      config.init ||
+      config.initFunction;
+
+
+    if (initFn) {
+
+      if (
+        typeof window[initFn] !==
+        "function"
+      ) {
+
+        throw new Error(
+          "Module initializer not found: " +
+          initFn
+        );
+
+      }
+
+
+      console.log(
+        "[MODULE INIT]",
+        initFn
+      );
+
+
+      const result =
+        await window[initFn]();
+
+
+      console.log(
+        "[MODULE INIT COMPLETE]",
+        initFn,
+        result
+      );
+
+    }
+
+
+    // ================= SUCCESS =================
+
+    console.log(
+      "[REAL MODULE LOADER] SUCCESS:",
+      config.html
+    );
+
+
+    return true;
+
+
+  } catch (err) {
+
+    console.error(
+      "[REAL MODULE LOADER ERROR]",
+      err
+    );
+
+
+    return false;
+
+  }
+
+}
+
+
+// ========================================
+// HOME DASHBOARD
+// ========================================
+
 function loadHomeDashboardModule() {
 
   const html = `
