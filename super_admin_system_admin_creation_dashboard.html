@@ -1,40 +1,97 @@
 <div class="box">
 
-  <h2 style="text-align:center;">
-    CREATE SYSTEM ADMIN
-  </h2>
+  <div class="create-header">
+
+    <div class="create-icon">
+      👑
+    </div>
+
+    <h2>
+      CREATE SYSTEM ADMIN
+    </h2>
+
+    <p>
+      Create and manage System Administrator accounts
+    </p>
+
+  </div>
 
 
-  <input
-    id="sysId"
-    placeholder="System Admin ID"
+  <div class="form-group">
+
+    <label for="sysId">
+      System Admin ID
+    </label>
+
+    <input
+      id="sysId"
+      type="text"
+      placeholder="Enter System Admin ID"
+      autocomplete="off"
+    >
+
+  </div>
+
+
+  <div class="form-group">
+
+    <label for="sysName">
+      Name
+    </label>
+
+    <input
+      id="sysName"
+      type="text"
+      placeholder="Enter Name"
+      autocomplete="off"
+    >
+
+  </div>
+
+
+  <div class="form-group">
+
+    <label for="sysPass">
+      Password
+    </label>
+
+    <input
+      id="sysPass"
+      type="password"
+      placeholder="Enter Password"
+      autocomplete="new-password"
+    >
+
+  </div>
+
+
+  <button
+    id="createBtn"
+    type="button"
+    class="create-admin-btn"
   >
-
-
-  <input
-    id="sysName"
-    placeholder="Name"
-  >
-
-
-  <input
-    id="sysPass"
-    type="password"
-    placeholder="Password"
-  >
-
-
-  <button id="createBtn">
-    Create
+    <span class="btn-icon">＋</span>
+    <span class="btn-text">Create System Admin</span>
+    <span class="btn-arrow">→</span>
   </button>
 
 
   <p id="msg"></p>
 
 
-  <h3>
-    System Admin List
-  </h3>
+  <div class="list-header">
+
+    <div>
+      <h3>
+        System Admin List
+      </h3>
+
+      <span>
+        Active System Administrators
+      </span>
+    </div>
+
+  </div>
 
 
   <div id="systemAdminList">
@@ -48,116 +105,467 @@
 
 <style>
 
+/* ========================================
+   CSA006 — CREATE SYSTEM ADMIN DASHBOARD
+   PREMIUM SUPER ADMIN UI
+   ======================================== */
+
 .box {
 
-  background:white;
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f8fbff 100%
+    );
 
-  padding:20px;
+  padding:28px;
 
-  border-radius:10px;
+  border-radius:16px;
 
-  width:300px;
+  width:360px;
 
-  margin:20px auto;
+  max-width:calc(100% - 32px);
+
+  margin:24px auto;
+
+  box-sizing:border-box;
+
+  border:1px solid #e4eaf2;
 
   box-shadow:
-    0 4px 10px rgba(0,0,0,0.1);
+    0 12px 30px rgba(15, 35, 70, 0.10),
+    0 3px 8px rgba(15, 35, 70, 0.05);
 
 }
 
+
+/* ================= HEADER ================= */
+
+.create-header {
+
+  text-align:center;
+
+  margin-bottom:24px;
+
+}
+
+
+.create-icon {
+
+  width:48px;
+
+  height:48px;
+
+  margin:0 auto 10px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  border-radius:14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #172554,
+      #2563eb
+    );
+
+  box-shadow:
+    0 7px 16px rgba(37, 99, 235, 0.25);
+
+  font-size:22px;
+
+}
+
+
+.create-header h2 {
+
+  margin:0;
+
+  color:#172033;
+
+  font-size:20px;
+
+  font-weight:800;
+
+  letter-spacing:0.4px;
+
+}
+
+
+.create-header p {
+
+  margin:7px 0 0;
+
+  color:#718096;
+
+  font-size:12px;
+
+  line-height:1.5;
+
+}
+
+
+/* ================= FORM ================= */
+
+.form-group {
+
+  margin-bottom:15px;
+
+}
+
+
+.form-group label {
+
+  display:block;
+
+  margin-bottom:6px;
+
+  color:#334155;
+
+  font-size:12px;
+
+  font-weight:700;
+
+}
 
 
 input {
 
   width:100%;
 
-  margin-bottom:10px;
+  height:43px;
 
-  padding:8px;
+  padding:10px 12px;
 
   box-sizing:border-box;
 
+  border:1px solid #d7dee9;
+
+  border-radius:9px;
+
+  background:#ffffff;
+
+  color:#172033;
+
+  font-size:14px;
+
+  outline:none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+
 }
 
 
+input::placeholder {
 
-button {
+  color:#9aa6b5;
 
-  padding:8px 12px;
+}
 
-  cursor:pointer;
+
+input:focus {
+
+  border-color:#2563eb;
+
+  background:#ffffff;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.10);
+
+}
+
+
+/* ================= CREATE BUTTON ================= */
+
+.create-admin-btn {
+
+  position:relative;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  gap:9px;
 
   width:100%;
 
-  background:#0077b5;
+  min-height:48px;
 
-  color:white;
+  margin-top:5px;
 
-  border:none;
+  padding:12px 16px;
 
-  border-radius:5px;
+  border:0;
+
+  border-radius:10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #172554 0%,
+      #1d4ed8 52%,
+      #2563eb 100%
+    );
+
+  color:#ffffff;
+
+  font-size:14px;
+
+  font-weight:800;
+
+  letter-spacing:0.2px;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 8px 18px rgba(29, 78, 216, 0.25);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
 
 }
 
 
+.create-admin-btn:hover {
 
-button:hover {
+  transform:translateY(-2px);
 
-  background:#005f8a;
+  filter:brightness(1.06);
+
+  box-shadow:
+    0 12px 24px rgba(29, 78, 216, 0.32);
 
 }
 
 
+.create-admin-btn:active {
 
-#msg {
+  transform:translateY(1px);
 
-  margin-top:10px;
+  box-shadow:
+    0 5px 12px rgba(29, 78, 216, 0.22);
+
+}
+
+
+.create-admin-btn:focus-visible {
+
+  outline:none;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.18),
+    0 8px 18px rgba(29, 78, 216, 0.25);
+
+}
+
+
+.btn-icon {
+
+  font-size:19px;
+
+  line-height:1;
+
+  font-weight:400;
+
+}
+
+
+.btn-text {
+
+  flex:1;
 
   text-align:center;
 
-  font-weight:bold;
+}
+
+
+.btn-arrow {
+
+  font-size:18px;
+
+  line-height:1;
+
+  opacity:0.85;
 
 }
 
 
+/* ================= MESSAGE ================= */
+
+#msg {
+
+  min-height:20px;
+
+  margin-top:12px;
+
+  text-align:center;
+
+  font-size:13px;
+
+  font-weight:700;
+
+  line-height:1.4;
+
+}
+
+
+/* ================= LIST HEADER ================= */
+
+.list-header {
+
+  margin-top:24px;
+
+  padding-top:18px;
+
+  border-top:1px solid #e5eaf1;
+
+}
+
+
+.list-header h3 {
+
+  margin:0;
+
+  color:#172033;
+
+  font-size:15px;
+
+  font-weight:800;
+
+}
+
+
+.list-header span {
+
+  display:block;
+
+  margin-top:4px;
+
+  color:#8a96a6;
+
+  font-size:11px;
+
+}
+
+
+/* ================= ADMIN LIST ================= */
 
 #systemAdminList {
 
-  margin-top:20px;
+  margin-top:12px;
 
 }
-
 
 
 .admin-card {
 
-  background:#f5f5f5;
+  position:relative;
 
-  padding:12px;
+  background:#ffffff;
+
+  padding:14px 15px;
 
   margin-top:10px;
 
-  border-radius:8px;
+  border-radius:10px;
 
-  border-left:4px solid #0077b5;
+  border:1px solid #e5eaf1;
+
+  border-left:4px solid #2563eb;
+
+  box-shadow:
+    0 3px 9px rgba(15, 35, 70, 0.05);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 
 }
 
+
+.admin-card:hover {
+
+  transform:translateY(-1px);
+
+  box-shadow:
+    0 6px 14px rgba(15, 35, 70, 0.08);
+
+}
 
 
 .admin-card h4 {
 
   margin:0 0 8px 0;
 
-}
+  color:#172033;
 
+  font-size:14px;
+
+  font-weight:800;
+
+}
 
 
 .admin-card p {
 
   margin:4px 0;
 
+  color:#64748b;
+
+  font-size:12px;
+
 }
 
+
+.admin-card p:nth-of-type(2) {
+
+  color:#2563eb;
+
+  font-weight:700;
+
+}
+
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width:480px) {
+
+  .box {
+
+    width:calc(100% - 20px);
+
+    max-width:none;
+
+    padding:22px;
+
+    margin:15px auto;
+
+  }
+
+  .create-header h2 {
+
+    font-size:18px;
+
+  }
+
+  .create-admin-btn {
+
+    min-height:46px;
+
+  }
+
+}
 
 </style>
