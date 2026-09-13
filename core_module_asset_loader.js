@@ -352,7 +352,24 @@ async function loadRealModule(config = {}) {
     }
 
 
-    // ================= SCRIPT LOAD =================
+    // ================= DEPENDENCY SCRIPTS =================
+
+    if (Array.isArray(config.dependencies)) {
+
+      for (const dependency of config.dependencies) {
+
+        if (!dependency) continue;
+
+        await loadScriptOnce(
+          dependency
+        );
+
+      }
+
+    }
+
+
+    // ================= MAIN SCRIPT =================
 
     if (config.js) {
 
@@ -428,7 +445,6 @@ async function loadRealModule(config = {}) {
   }
 
 }
-
 
 // ========================================
 // HOME DASHBOARD
@@ -595,6 +611,10 @@ function loadUsersRealModule() {
     html:
       "platform_registration_approval_dashboard.html",
 
+    dependencies: [
+      "core_registration_queue_manager.js"
+    ],
+
     js:
       "platform_registration_approval_dashboard.js",
 
@@ -604,7 +624,6 @@ function loadUsersRealModule() {
   });
 
 }
-
 
 // ========================================
 // INCOME CONTROL
