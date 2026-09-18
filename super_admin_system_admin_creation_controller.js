@@ -2,15 +2,19 @@
 
 /*
 ========================================
-SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
+SUPER ADMIN SYSTEM ADMIN CREATION
+CONTROLLER
+
+CSA007
 ========================================
-✔ PIN Registry Connected
-✔ Super Admin Auth Only
-✔ Create System Admin
-✔ Save User Data
-✔ Auto Refresh Admin List
-✔ Clean Production Flow
-✔ Internal State Isolated
+✔ Super Admin authentication
+✔ Automatic unique System Admin ID
+✔ Automatic random initial password
+✔ Active account creation
+✔ Existing user storage preserved
+✔ Existing System Admin list preserved
+✔ Duplicate ID protection
+✔ Generated credential display
 ========================================
 */
 
@@ -19,6 +23,7 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
   let session = null;
   let currentUser = null;
   let lock = false;
+
 
   console.log(
     "[SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER] INIT"
@@ -34,7 +39,6 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
         ? window.getSession()
         : null;
 
-
     if (!session) return false;
 
     if (!session.userId) return false;
@@ -42,20 +46,18 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
     if (session.role !== "super_admin")
       return false;
 
-
     currentUser =
       typeof getUserById === "function"
         ? getUserById(session.userId)
         : null;
-
 
     if (!currentUser) return false;
 
     if (currentUser.role !== "super_admin")
       return false;
 
-
     return true;
+
   }
 
 
@@ -77,17 +79,143 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
 
   /* ================= PASSWORD ================= */
 
-  function encodePassword(p) {
+  function encodePassword(password) {
 
     try {
 
-      return btoa(p);
+      return btoa(password);
 
     } catch (e) {
 
-      return p;
+      return password;
 
     }
+
+  }
+
+
+  /* ================= RANDOM STRING ================= */
+
+  function randomString(length) {
+
+    const chars =
+      "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+
+    let result = "";
+
+
+    if (
+      window.crypto &&
+      window.crypto.getRandomValues
+    ) {
+
+      const values =
+        new Uint32Array(length);
+
+      window.crypto.getRandomValues(values);
+
+      for (let i = 0; i < length; i++) {
+
+        result +=
+          chars[
+            values[i] % chars.length
+          ];
+
+      }
+
+      return result;
+
+    }
+
+
+    for (let i = 0; i < length; i++) {
+
+      result +=
+        chars[
+          Math.floor(
+            Math.random() * chars.length
+          )
+        ];
+
+    }
+
+    return result;
+
+  }
+
+
+  /* ================= UNIQUE SYSTEM ADMIN ID ================= */
+
+  function generateSystemAdminId(users) {
+
+    let id = "";
+
+    do {
+
+      id =
+        "SYS-" +
+        randomString(8);
+
+    } while (
+
+      users.some(
+        user =>
+          String(user?.userId || "")
+            .toLowerCase()
+            === id.toLowerCase()
+      )
+
+    );
+
+    return id;
+
+  }
+
+
+  /* ================= RANDOM PASSWORD ================= */
+
+  function generateInitialPassword() {
+
+    return (
+      randomString(14) +
+      "!"
+    );
+
+  }
+
+
+  /* ================= DISPLAY GENERATED CREDENTIALS ================= */
+
+  function showGeneratedCredentials(
+    id,
+    password
+  ) {
+
+    const box =
+      document.getElementById(
+        "generatedCredentials"
+      );
+
+    const idEl =
+      document.getElementById(
+        "generatedSysId"
+      );
+
+    const passEl =
+      document.getElementById(
+        "generatedSysPass"
+      );
+
+
+    if (!box || !idEl || !passEl)
+      return;
+
+
+    idEl.textContent = id;
+
+    passEl.textContent = password;
+
+    box.hidden = false;
 
   }
 
@@ -96,12 +224,9 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
 
   function createSystemAdmin() {
 
-    console.log("[CREATE SYSTEM ADMIN CALLED]");
-
-    const id =
-      document.getElementById("sysId")
-        ?.value
-        ?.trim();
+    console.log(
+      "[CREATE SYSTEM ADMIN CALLED]"
+    );
 
 
     const name =
@@ -110,15 +235,11 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
         ?.trim();
 
 
-    const pass =
-      document.getElementById("sysPass")
-        ?.value
-        ?.trim();
+    if (!name) {
 
-
-    if (!id || !name || !pass) {
-
-      showMsg("❌ Fill all fields");
+      showMsg(
+        "❌ Enter System Admin Name"
+      );
 
       return;
 
@@ -131,21 +252,12 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
         : [];
 
 
-    const exists =
-      users.find(
-        u =>
-          (u.userId || "").toLowerCase()
-          === id.toLowerCase()
-      );
+    const id =
+      generateSystemAdminId(users);
 
 
-    if (exists) {
-
-      showMsg("⚠️ ID already exists");
-
-      return;
-
-    }
+    const initialPassword =
+      generateInitialPassword();
 
 
     const newAdmin = {
@@ -155,7 +267,9 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
       username: name,
 
       password:
-        encodePassword(pass),
+        encodePassword(
+          initialPassword
+        ),
 
       role: "system_admin",
 
@@ -163,6 +277,9 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
 
       createdBy:
         currentUser?.userId || "SYSTEM",
+
+      createdByRole:
+        "super_admin",
 
       createdAt:
         Date.now()
@@ -173,11 +290,15 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
     users.push(newAdmin);
 
 
-    if (typeof saveUsers === "function") {
+    if (
+      typeof saveUsers === "function"
+    ) {
 
       saveUsers(users);
 
-    } else {
+    }
+
+    else {
 
       localStorage.setItem(
         "users",
@@ -192,9 +313,22 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
     );
 
 
-    document.getElementById("sysId").value = "";
-    document.getElementById("sysName").value = "";
-    document.getElementById("sysPass").value = "";
+    showGeneratedCredentials(
+      id,
+      initialPassword
+    );
+
+
+    const nameInput =
+      document.getElementById(
+        "sysName"
+      );
+
+    if (nameInput) {
+
+      nameInput.value = "";
+
+    }
 
 
     loadSystemAdminList();
@@ -229,8 +363,8 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
 
     const admins =
       users.filter(
-        u =>
-          u.role === "system_admin"
+        user =>
+          user.role === "system_admin"
       );
 
 
@@ -252,19 +386,19 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
         <div class="admin-card">
 
           <h4>
-          ${admin.username}
+            ${admin.username}
           </h4>
 
           <p>
-          ID: ${admin.userId}
+            ID: ${admin.userId}
           </p>
 
           <p>
-          Role: ${admin.role}
+            Role: ${admin.role}
           </p>
 
           <p>
-          Status: ${admin.status}
+            Status: ${admin.status}
           </p>
 
         </div>
@@ -287,20 +421,29 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
 
       fn();
 
-    } catch (e) {
+    }
+
+    catch (e) {
 
       console.error(
         "[SUPER ADMIN ERROR]",
         e
       );
 
-      showMsg("❌ System Error");
+      showMsg(
+        "❌ System Error"
+      );
 
-    } finally {
+    }
 
-      setTimeout(() => {
-        lock = false;
-      }, 300);
+    finally {
+
+      setTimeout(
+        () => {
+          lock = false;
+        },
+        300
+      );
 
     }
 
@@ -311,15 +454,10 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
 
   function bindCreateSystemAdminEvents() {
 
-    console.log("[BIND EVENTS START]");
-
     const btn =
-      document.getElementById("createBtn");
-
-    console.log(
-      "[BUTTON FOUND]",
-      btn
-    );
+      document.getElementById(
+        "createBtn"
+      );
 
 
     if (!btn) {
@@ -333,26 +471,14 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
     }
 
 
-    console.log(
-      "[ATTACHING CLICK HANDLER]"
-    );
+    btn.onclick =
+      function () {
 
+        safeClick(
+          createSystemAdmin
+        );
 
-    btn.onclick = function () {
-
-      console.log(
-        "[CREATE BUTTON CLICKED]"
-      );
-
-      createSystemAdmin();
-
-    };
-
-
-    console.log(
-      "[ONCLICK AFTER ASSIGN]",
-      btn.onclick
-    );
+      };
 
   }
 
@@ -360,9 +486,6 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
   /* ================= START ================= */
 
   function startModule() {
-
-    console.log("[START MODULE]");
-
 
     if (!checkAuth()) {
 
@@ -375,32 +498,9 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
     }
 
 
-    console.log(
-      "[TYPEOF bindCreateSystemAdminEvents]",
-      typeof bindCreateSystemAdminEvents
-    );
-
-
-    console.log(
-      "[FUNCTION]",
-      bindCreateSystemAdminEvents
-    );
-
-
     bindCreateSystemAdminEvents();
 
-
-    console.log(
-      "[BIND EVENTS DONE]"
-    );
-
-
     loadSystemAdminList();
-
-
-    console.log(
-      "[LIST LOADED]"
-    );
 
 
     console.log(
@@ -410,7 +510,14 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
   }
 
 
-  /* ================= CREATE MODULE LOADER ================= */
+  /* ================= LEGACY RENDER BRIDGE ================= */
+
+  /*
+  Retained internally for compatibility.
+
+  CSA005 does NOT use this renderer.
+  The live CSA path loads CSA006 directly.
+  */
 
   function renderCreateAdmin() {
 
@@ -424,14 +531,6 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
 
       <div class="info-box">
 
-        <label>User ID</label>
-
-        <input
-          id="sysId"
-          type="text"
-          placeholder="Enter System Admin ID"
-        >
-
         <label>Name</label>
 
         <input
@@ -440,22 +539,17 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
           placeholder="Enter Name"
         >
 
-        <label>Password</label>
-
-        <input
-          id="sysPass"
-          type="password"
-          placeholder="Enter Password"
-        >
-
         <button
           id="createBtn"
           class="action-btn"
+          type="button"
         >
           Create System Admin
         </button>
 
       </div>
+
+      <div id="generatedCredentials"></div>
 
       <hr>
 
@@ -505,15 +599,9 @@ SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER V1.0
   }
 
 
-  /* ================= FINAL ================= */
-
   console.log(
     "[SUPER ADMIN SYSTEM ADMIN CREATION CONTROLLER] LOADED"
   );
 
-
-  console.log(
-    "★★★★★ FILE VERSION 2026-07-20 05:40 ★★★★★"
-  );
 
 })();
