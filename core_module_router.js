@@ -1,9 +1,9 @@
 "use strict";
 
 /*
-
+========================================
 CORE MODULE ROUTER V1.0
-
+========================================
 ✔ Pure connector layer
 ✔ One-way execution flow
 ✔ SAFE module dispatching
@@ -14,259 +14,242 @@ CORE MODULE ROUTER V1.0
 ✔ Loader-compatible architecture
 ✔ mainContent protection added
 ✔ HTML injection removed
-
+========================================
 */
 
 // ================= INIT GUARD =================
 (function () {
 
-if (window.CORE_MODULE_ROUTER ) return;
+  if (window.__CORE_MODULE_ROUTER__ ) return;
 
-window.CORE_MODULE_ROUTER = true;
+  window.__CORE_MODULE_ROUTER__ = true;
 
-console.log("[CORE MODULE ROUTER] READY");
+ console.log("[CORE MODULE ROUTER] READY");
 
 })();
 
 // ================= SAFE CALL WRAPPER =================
 function safeCall(fn, fallback, ...args) {
 
-try {
+  try {
 
-if (typeof fn === "function") {  
-  return fn(...args);  
-}  
+    if (typeof fn === "function") {
+      return fn(...args);
+    }
 
-console.warn("[MODULE MISSING FUNCTION]", fn);  
+    console.warn("[MODULE MISSING FUNCTION]", fn);
 
-return fallback || false;
+    return fallback || false;
 
-} catch (err) {
+  } catch (err) {
 
-console.error("[SAFE CALL ERROR]", err);  
+    console.error("[SAFE CALL ERROR]", err);
 
-return false;
-
-}
+    return false;
+  }
 }
 
 // ================= MAIN CONNECTOR =================
 function connectCoreModule(page) {
 
-try {
+  try {
 
-const main =  
-  document.getElementById("mainContent");
+    const main =
+      document.getElementById("mainContent");
 
-if (!main) {
+   if (!main) {
 
-console.error(
-"[CORE MODULE ROUTER] mainContent missing"
-);
+  console.error(
+    "[CORE MODULE ROUTER] mainContent missing"
+  );
 
-return false;
+  return false;
 }
 
-const route = String(page || "")  
-  .trim()  
-  .toLowerCase();  
+    const route = String(page || "")
+      .trim()
+      .toLowerCase();
 
-switch (route) {  
+    switch (route) {
 
-  // ================= HOME =================  
-  case "home":  
+      // ================= HOME =================
+      case "home":
 
-    return safeCall(  
-      loadHomeDashboardModule  
-    );  
+        return safeCall(
+          loadHomeDashboardModule
+        );
 
-  // ================= CREATE SYS ADMIN =================  
-  case "create":  
+      // ================= CREATE SYS ADMIN =================
+      case "create":
 
-    return safeCall(  
-      loadCreateSystemAdminRealModule  
-    );  
+        return safeCall(
+          loadCreateSystemAdminRealModule
+        );
 
-  // ================= USERS =================  
-  case "users":  
+      // ================= USERS =================
+      case "users":
 
-    return safeCall(  
-      loadUsersRealModule  
-    );  
+        return safeCall(
+          loadUsersRealModule
+        );
 
-  // ================= SYSTEM =================  
-  case "system":  
+      // ================= SYSTEM =================
+      case "system":
 
-    return safeCall(  
-      loadSystemAdminPanelModule  
-    );  
+        return safeCall(
+          loadSystemAdminPanelModule
+        );
 
-  // ================= PIN MASTER =================  
-  case "pinmaster":  
+      // ================= PIN MASTER =================
+      case "pinmaster":
 
-    return safeCall(  
-      loadPinMasterRealModule  
-    );  
+        return safeCall(
+          loadPinMasterRealModule
+        );
 
- // ================= REPORTS =================
-
+     // ================= REPORTS =================
 case "reports":
 
-return safeCall(
-loadReportsRealModule
-);
+  return safeCall(
+    loadReportsRealModule
+  );
+
 
 // ================= INCOME CONTROL =================
 case "incomecontrol":
 
-return safeCall(
-loadRealModule,
-false,
-{
-html: "platform_income_policy_dashboard.html",
-js: "platform_income_policy_dashboard.js",
-init: "initIncomeControlUI"
+  return safeCall(
+    loadRealModule,
+    false,
+   {
+  html: "platform_income_policy_dashboard.html",
+  js: "platform_income_policy_dashboard.js",
+  init: "initIncomeControlUI"
 }
-);
-
+  );
+        
 // ================= PRODUCT MASTER =================
 case "productmaster":
 
-return safeCall(
-loadRealModule,
-false,
-{
-html: "platform_product_master_connector.html",
-js: "platform_product_master_connector.js",
-init: "initProductMasterConnector"
+  return safeCall(
+    loadRealModule,
+    false,
+ {
+  html: "platform_product_master_connector.html",
+  js: "platform_product_master_connector.js",
+  init: "initProductMasterConnector"
 }
-);
+  );
 
-// ================= RANK MASTER =================
-case "rankmaster":
+  // ================= RANK MASTER =================
+  case "rankmaster":
 
-return safeCall(  
-  loadRealModule,  
-  false,  
-  {  
-   html: "platform_rank_master_registry_dashboard.html",
-
+    return safeCall(
+      loadRealModule,
+      false,
+      {
+       html: "platform_rank_master_registry_dashboard.html",
 js: "platform_rank_registry_dashboard_view.js"
-}
-);
+      }
+    );
 
-// ================= TREE VIEW =================
-case "tree":
+  // ================= TREE VIEW =================
+  case "tree":
 
-return safeCall(  
-  loadRealModule,  
-  false,  
-  {  
-    html: "user_tree.html",  
-   js: "user_tree.js"  
-  }  
-);  
+    return safeCall(
+      loadRealModule,
+      false,
+      {
+        html: "user_tree.html",
+       js: "user_tree.js"
+      }
+    );
 
-  // ================= AUDIT =================  
-  case "audit":  
+      // ================= AUDIT =================
+      case "audit":
 
-    return safeCall(  
-      loadRealModule,  
-      false,  
-      {  
-       html: "platform_activity_audit_dashboard.html",
-
+        return safeCall(
+          loadRealModule,
+          false,
+          {
+           html: "platform_activity_audit_dashboard.html",
 js: "platform_activity_audit_dashboard.js"
-}
-);
+          }
+        );
 
-// ================= HEALTH =================  
-  case "health":  
+      // ================= HEALTH =================
+      case "health":
 
-    return safeCall(  
-      loadRealModule,  
-      false,  
-      {  
-       html: "platform_status_audit_dashboard.html",
-
+        return safeCall(
+          loadRealModule,
+          false,
+          {
+           html: "platform_status_audit_dashboard.html",
 js: "platform_status_audit_dashboard.js"
-}
+          }
+        );
+
+      // ================= BACKUP =================
+     case "backup":
+
+  return safeCall(
+    loadRealModule,
+    false,
+    {
+      html: "platform_backup_management_dashboard.html",
+      js: "platform_backup_management_dashboard.js"
+    }
+  );
+
+      // ================= DEFAULT =================
+      default:
+
+       return loadUnknownCoreModule(
+  route
+);
+    }
+
+  } catch (err) {
+
+    console.error(
+  "[CORE MODULE ROUTER ERROR]",
+  err
 );
 
-// ================= BACKUP =================  
- case "backup":
-
-return safeCall(
-loadRealModule,
-false,
-{
-html: "platform_backup_management_dashboard.html",
-js: "platform_backup_management_dashboard.js"
-}
-);
-
-// ================= RESET ROUTE TEST =================
-case "reset":
-
-console.log(
-"[RESET ROUTE TEST] CSA004 RESET REACHED"
-);
-
-return true;
-
-// ================= DEFAULT =================  
-  default:  
-
-   return loadUnknownCoreModule(
-
-route
-);
-}
-
-} catch (err) {
-
-console.error(
-
-"[CORE MODULE ROUTER ERROR]",
-err
-);
-
-return false;
-
-}
+    return false;
+  }
 }
 
 // ================= UNKNOWN MODULE =================
 function loadUnknownCoreModule(page) {
 
-try {
+  try {
 
-const main =  
-  document.getElementById("mainContent");  
+    const main =
+      document.getElementById("mainContent");
 
-if (!main) return false;  
+    if (!main) return false;
 
-main.textContent =  
-  "MODULE NOT FOUND : " + page;  
+    main.textContent =
+      "MODULE NOT FOUND : " + page;
 
-return false;
+    return false;
 
-} catch (err) {
+  } catch (err) {
 
-console.error(  
-  "[UNKNOWN MODULE ERROR]",  
-  err  
-);  
+    console.error(
+      "[UNKNOWN MODULE ERROR]",
+      err
+    );
 
-return false;
-
-}
+    return false;
+  }
 }
 
 /* ================= EXPORT ================= */
 
 window.connectCoreModule =
-connectCoreModule;
+  connectCoreModule;
 
 window.loadUnknownCoreModule = loadUnknownCoreModule;
 
