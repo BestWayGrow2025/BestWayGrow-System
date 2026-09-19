@@ -213,8 +213,11 @@ function loadHome() {
 // ================= USERS =================
 function loadUsers() {
 
-  const users =
-    (getUsers?.() || []).filter(u => !u.hiddenAccount);
+ const users =
+  (getUsers?.() || []).filter(u =>
+    !u.hiddenAccount &&
+    (u.role === "admin" || u.role === "user")
+  );
 
   let html = `
     <h3>All Users</h3>
