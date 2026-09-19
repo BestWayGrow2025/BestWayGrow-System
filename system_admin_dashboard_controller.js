@@ -213,10 +213,9 @@ function loadHome() {
 // ================= USERS =================
 function loadUsers() {
 
- const users =
+const users =
   (getUsers?.() || []).filter(u =>
-    !u.hiddenAccount &&
-    (u.role === "admin" || u.role === "user")
+    u.role === "admin" || u.role === "user"
   );
 
   let html = `
