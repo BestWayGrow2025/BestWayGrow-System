@@ -74,12 +74,12 @@ function isDuplicateMobile(mobile) {
       const status =
         String(q.status || "").toUpperCase();
 
-      if (
-        status !== "PENDING" &&
-        status !== "PROCESSING"
-      ) {
-        return false;
-      }
+     if (
+  status !== "QUEUED" &&
+  status !== "PROCESSING"
+) {
+  return false;
+}
 
       return (
         String(q.mobile || "").trim() ===
@@ -137,12 +137,12 @@ function isDuplicateEmail(email) {
       const status =
         String(q.status || "").toUpperCase();
 
-      if (
-        status !== "PENDING" &&
-        status !== "PROCESSING"
-      ) {
-        return false;
-      }
+     if (
+  status !== "QUEUED" &&
+  status !== "PROCESSING"
+) {
+  return false;
+}
 
       return (
         String(q.email || "")
