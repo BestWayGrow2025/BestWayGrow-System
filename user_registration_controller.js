@@ -397,8 +397,7 @@ const added =
     password: password,
     introducerId:
       registrationIntroducerId,
-   position: registrationPosition,
-    status: "PENDING"
+    position: registrationPosition
   });
 
 if (!added) {
