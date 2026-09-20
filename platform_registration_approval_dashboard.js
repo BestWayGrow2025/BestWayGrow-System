@@ -1,51 +1,233 @@
 "use strict";
 
+(function () {
+
 /*
 ========================================
-REGISTRATION APPROVAL AUTHORITY
-RETIRED FROM ACTIVE REGISTRATION FLOW
+PLATFORM REGISTRATION QUEUE MONITOR v2.2
 ========================================
-
-RBK-004 is the sole authority for:
-• QUEUED
-• PROCESSING
-• DONE
-• FAILED
-• Registration processing
-
-RBK-019 no longer:
-• Approves registration
-• Rejects registration
-• Changes registration queue status
-• Starts registration processing
-
-The Registration Approval Dashboard may remain
-as a separate monitoring/history surface.
+✔ Platform registration queue monitor
+✔ Admin authentication
+✔ Registration queue display
+✔ QUEUED / PROCESSING / DONE / FAILED status
+✔ Queue authority remains RBK-004
+✔ No manual approval
+✔ No manual rejection
+✔ No registration processing trigger
+✔ Automatic registration lifecycle preserved
 ========================================
 */
 
-function approveRegistration(fingerprint) {
+let session = null;
+let currentUser = null;
+let refreshTimer = null;
 
-  console.warn(
-    "[REGISTRATION APPROVAL] Manual approval is disabled. Registration is automatic."
-  );
+// ================= START =================
+function initRegistrationApprovalDashboard() {
 
-  return false;
+  authPage();
+  bindRegistrationApprovalEvents();
+  loadQueue();
+  startAutoRefresh();
+
 }
 
+// ================= LOGOUT =================
+function forceLogout() {
 
-function rejectRegistration(fingerprint) {
+  if (typeof logoutSession === "function") {
+    logoutSession();
+    return;
+  }
 
-  console.warn(
-    "[REGISTRATION APPROVAL] Manual rejection is disabled. Registration is automatic."
-  );
+  window.location.replace("admin_auth.html");
 
-  return false;
 }
 
+// ================= AUTH =================
+function authPage() {
 
-window.approveRegistration =
-  approveRegistration;
+  if (typeof getSession !== "function") {
+    return forceLogout();
+  }
 
-window.rejectRegistration =
-  rejectRegistration;
+  session = getSession();
+
+  if (!session) {
+    return forceLogout();
+  }
+
+  if (typeof getCurrentUser !== "function") {
+    return forceLogout();
+  }
+
+  currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    return forceLogout();
+  }
+
+  const role =
+    currentUser.role;
+
+  if (
+    role !== "admin" &&
+    role !== "super_admin"
+  ) {
+    return forceLogout();
+  }
+
+  const status =
+    currentUser.accountStatus ||
+    currentUser.status ||
+    "active";
+
+  if (status !== "active") {
+    return forceLogout();
+  }
+
+}
+
+// ================= HTML ESCAPE =================
+function escapeHtml(value = "") {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+// ================= LOAD QUEUE =================
+function loadQueue() {
+
+  const tbody =
+    document.getElementById("list");
+
+  if (!tbody) return;
+
+  if (typeof getRegQueue !== "function") {
+
+    tbody.innerHTML =
+      '<tr><td colspan="9">Registration queue system not available.</td></tr>';
+
+    return;
+  }
+
+  const queue =
+    getRegQueue() || [];
+
+  if (!queue.length) {
+
+    tbody.innerHTML =
+      '<tr><td colspan="9">No registration requests found</td></tr>';
+
+    return;
+  }
+
+  tbody.innerHTML = "";
+
+  queue.forEach(function (item) {
+
+    const requestTime =
+      item.requestTime
+        ? new Date(item.requestTime).toLocaleString()
+        : "N/A";
+
+    const retry =
+      item.retry || 0;
+
+    const error =
+      item.error || "-";
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${escapeHtml(item.mobile || "")}</td>
+        <td>${escapeHtml(item.username || "")}</td>
+        <td>${escapeHtml(item.email || "")}</td>
+        <td>${escapeHtml(item.position || "")}</td>
+        <td>${escapeHtml(item.status || "")}</td>
+        <td>${requestTime}</td>
+        <td>${retry}</td>
+        <td>${escapeHtml(error)}</td>
+        <td>-</td>
+      </tr>
+    `;
+
+  });
+
+}
+
+// ================= EVENT BINDINGS =================
+function bindRegistrationApprovalEvents() {
+
+  const refreshButton =
+    document.getElementById(
+      "refreshRegistrationQueue"
+    );
+
+  if (refreshButton) {
+
+    refreshButton.addEventListener(
+      "click",
+      loadQueue
+    );
+
+  }
+
+}
+
+// ================= AUTO REFRESH =================
+function startAutoRefresh() {
+
+  if (refreshTimer) {
+
+    clearInterval(
+      refreshTimer
+    );
+
+  }
+
+  refreshTimer =
+    setInterval(
+      loadQueue,
+      10000
+    );
+
+}
+
+// ================= CLEANUP =================
+window.addEventListener(
+  "beforeunload",
+  function () {
+
+    if (refreshTimer) {
+
+      clearInterval(
+        refreshTimer
+      );
+
+    }
+
+  }
+);
+
+// ================= EXPORT =================
+
+window.initRegistrationApprovalDashboard =
+  initRegistrationApprovalDashboard;
+
+window.loadQueue =
+  loadQueue;
+
+console.log(
+  "[REGISTRATION QUEUE MONITOR JS LOADED]",
+  typeof window.initRegistrationApprovalDashboard,
+  typeof window.loadQueue
+);
+
+// ================= END MODULE =================
+
+})();
