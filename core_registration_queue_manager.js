@@ -385,91 +385,91 @@ function processRegistrationQueue() {
         let processed = 0;
 
         for (
-          let i = 0;
-          i < queue.length;
-          i++
-        ) {
-
-          if (
-            processed >= REG_MAX_BATCH
-          ) {
-            break;
-          }
-
-          if (!queue[i]) {
-            continue;
-          }
-
-        if (queue[i].status !== "QUEUED") {
-  continue;
-}
-
-
-          if (!isValidQueueRow(queue[i])) {
-
-            queue[i].status =
-              "FAILED";
-
-            queue[i].error =
-              "Invalid registration queue data";
-
-            queue[i].failedAt =
-              Date.now();
-
-            continue;
-          }
-
-try {
-
-  queue[i].status =
-    "PROCESSING";
-
-  processOneRegistration(
-    queue[i]
-  );
-
-  queue[i].status =
-    "DONE";
-
-  queue[i].completedAt =
-    Date.now();
-
-  queue[i].error =
-    "";
-
-  processed++;
-
-} catch (err) {
-
-  queue[i].retry =
-    (queue[i].retry || 0) + 1;
-
-  queue[i].error =
-    err && err.message
-      ? err.message
-      : "Registration processing failed";
+  let i = 0;
+  i < queue.length;
+  i++
+) {
 
   if (
-    queue[i].retry >= 3
+    processed >= REG_MAX_BATCH
   ) {
+    break;
+  }
+
+  if (!queue[i]) {
+    continue;
+  }
+
+  if (queue[i].status !== "QUEUED") {
+    continue;
+  }
+
+  if (!isValidQueueRow(queue[i])) {
 
     queue[i].status =
       "FAILED";
 
+    queue[i].error =
+      "Invalid registration queue data";
+
     queue[i].failedAt =
       Date.now();
 
-  } else {
-
-    // ADD HERE
-    queue[i].status =
-      "QUEUED";
+    continue;
   }
-}
-        saveRegQueue(queue);
-        cleanupRegistrationQueue();
 
-        return true;
+  try {
+
+    queue[i].status =
+      "PROCESSING";
+
+    processOneRegistration(
+      queue[i]
+    );
+
+    queue[i].status =
+      "DONE";
+
+    queue[i].completedAt =
+      Date.now();
+
+    queue[i].error =
+      "";
+
+    processed++;
+
+  } catch (err) {
+
+    queue[i].retry =
+      (queue[i].retry || 0) + 1;
+
+    queue[i].error =
+      err && err.message
+        ? err.message
+        : "Registration processing failed";
+
+    if (
+      queue[i].retry >= 3
+    ) {
+
+      queue[i].status =
+        "FAILED";
+
+      queue[i].failedAt =
+        Date.now();
+
+    } else {
+
+      queue[i].status =
+        "QUEUED";
+    }
+  }
+}   // closes FOR loop
+
+saveRegQueue(queue);
+cleanupRegistrationQueue();
+
+return true;
 
       },
       "registration_queue"
