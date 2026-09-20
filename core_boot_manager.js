@@ -106,16 +106,24 @@ MASTER BOOT CONTROLLER v1.2 (ENTERPRISE FINAL)
   // ================= FINALIZE SYSTEM =================
   function finalizeBoot() {
 
-    window.__SYSTEM_BOOT__.ready = true;
-    window.__SYSTEM_BOOT__.completedAt = Date.now();
+  window.__SYSTEM_BOOT__.ready = true;
+  window.__SYSTEM_BOOT__.completedAt = Date.now();
 
-    console.log("[BOOT] SYSTEM FULLY READY");
+  console.log("[BOOT] SYSTEM FULLY READY");
 
-    window.SYSTEM_EVENTS.emit("SYSTEM_READY", {
-      timestamp: Date.now(),
-      state: window.__SYSTEM_BOOT__
-    });
+  window.SYSTEM_EVENTS.emit("SYSTEM_READY", {
+    timestamp: Date.now(),
+    state: window.__SYSTEM_BOOT__
+  });
+
+  // 🧪 TEMPORARY REGISTRATION QUEUE TEST
+  if (typeof window.startRegistrationQueue === "function") {
+    console.log("[TEST] Starting Registration Queue after SYSTEM_READY");
+    window.startRegistrationQueue();
+  } else {
+    console.warn("[TEST] startRegistrationQueue NOT FOUND");
   }
+}
 
   // ================= BOOT SEQUENCE =================
 function bootSystem() {
