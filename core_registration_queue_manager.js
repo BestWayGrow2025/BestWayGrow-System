@@ -219,7 +219,7 @@ function isValidQueueRow(row) {
     String(row.username || "").trim() &&
     String(row.password || "").trim() &&
     String(row.introducerId || "").trim() &&
-    row.status === "APPROVED" &&
+    row.status === "QUEUED" &&
     (row.position === "L" || row.position === "R")
   );
 }
@@ -294,7 +294,7 @@ function addToRegistrationQueue(data) {
     ...data,
     fingerprint: fingerprint,
     requestTime: Date.now(),
-    status: "PENDING",
+   status: "QUEUED",
     retry: 0,
     error: ""
   });
@@ -400,12 +400,7 @@ function processRegistrationQueue() {
             continue;
           }
 
-         // Only APPROVED registrations may proceed to user creation.
-// PENDING registrations remain in the queue awaiting approval.
-if (
-  queue[i].status !==
-  "APPROVED"
-) {
+        if (queue[i].status !== "QUEUED") {
   continue;
 }
 
@@ -424,21 +419,27 @@ if (
             continue;
           }
 
-          try {
+try {
 
-            processOneRegistration(
-              queue[i]
-            );
+  queue[i].status =
+    "PROCESSING";
 
-            queue[i].status =
-              "DONE";
+  processOneRegistration(
+    queue[i]
+  );
 
-            queue[i].completedAt =
-              Date.now();
+  queue[i].status =
+    "DONE";
 
-            processed++;
+  queue[i].completedAt =
+    Date.now();
 
-          } catch (err) {
+  queue[i].error =
+    "";
+
+  processed++;
+
+} catch (err) {
 
             queue[i].retry =
               (queue[i].retry || 0) + 1;
