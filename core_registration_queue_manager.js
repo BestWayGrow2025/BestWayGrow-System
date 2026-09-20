@@ -441,27 +441,31 @@ try {
 
 } catch (err) {
 
-            queue[i].retry =
-              (queue[i].retry || 0) + 1;
+  queue[i].retry =
+    (queue[i].retry || 0) + 1;
 
-            queue[i].error =
-              err && err.message
-                ? err.message
-                : "Registration processing failed";
+  queue[i].error =
+    err && err.message
+      ? err.message
+      : "Registration processing failed";
 
-            if (
-              queue[i].retry >= 3
-            ) {
+  if (
+    queue[i].retry >= 3
+  ) {
 
-              queue[i].status =
-                "FAILED";
+    queue[i].status =
+      "FAILED";
 
-              queue[i].failedAt =
-                Date.now();
-            }
-          }
-        }
+    queue[i].failedAt =
+      Date.now();
 
+  } else {
+
+    // ADD HERE
+    queue[i].status =
+      "QUEUED";
+  }
+}
         saveRegQueue(queue);
         cleanupRegistrationQueue();
 
