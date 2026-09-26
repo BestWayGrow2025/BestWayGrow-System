@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>User Logout Trial</title>
+</head>
+<body>
+
+  <h3>Temporary User Logout Trial</h3>
+
+  <p>Click below to call the existing session authority.</p>
+
+  <button id="trialLogout">Logout Current Session</button>
+
+  <pre id="result">Waiting...</pre>
+
+  <script src="core_initializer.js"></script>
+  <script src="core_session_authority.js"></script>
+
+  <script>
+    document.getElementById("trialLogout").onclick = function () {
+      const result = document.getElementById("result");
+
+      try {
+        if (typeof logoutSession !== "function") {
+          result.textContent =
+            "STOP: Existing logoutSession authority not loaded.";
+          return;
+        }
+
+        logoutSession();
+
+        result.textContent =
+          "Logout authority called. Now open user_auth.html manually.";
+      } catch (error) {
+        result.textContent = "Logout error: " + error.message;
+      }
+    };
+  </script>
+
+</body>
+</html>
