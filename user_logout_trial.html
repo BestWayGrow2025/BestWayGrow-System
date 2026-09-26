@@ -2,42 +2,92 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>User Logout Trial</title>
+  <title>User Dashboard Trial</title>
 </head>
+
 <body>
 
-  <h3>Temporary User Logout Trial</h3>
+  <h3>Temporary User Dashboard Trial</h3>
 
-  <p>Click below to call the existing session authority.</p>
+  <!-- EXISTING DASHBOARD UI -->
+  <div class="user-dashboard-module">
 
-  <button id="trialLogout">Logout Current Session</button>
+    <div class="dashboard-layout">
 
-  <pre id="result">Waiting...</pre>
+      <aside class="sidebar">
 
+        <div class="logo">User Panel</div>
+
+        <button onclick="loadHome()">Home</button>
+        <button onclick="loadPinSection()">Pin Section</button>
+        <button onclick="loadTree()">My Tree</button>
+        <button onclick="loadWallet()">Wallet</button>
+        <button onclick="loadWalletHistory()">Wallet History</button>
+        <button onclick="loadDirectTeam()">Direct Team</button>
+        <button onclick="loadProfile()">Profile</button>
+        <button onclick="loadIncomeHistory()">Income History</button>
+        <button onclick="loadWithdrawSection()">Withdraw</button>
+        <button onclick="loadWithdrawHistory()">Withdraw History</button>
+        <button onclick="loadNotifications()">Notifications</button>
+        <button onclick="loadSupportTickets()">Support Tickets</button>
+        <button onclick="loadEditProfile()">Edit Profile</button>
+        <button onclick="loadChangePassword()">Change Password</button>
+        <button onclick="loadActivityLogs()">Activity Logs</button>
+        <button onclick="loadLoginHistory()">Login History</button>
+        <button onclick="loadKYCSection()">KYC Upload</button>
+        <button onclick="loadRankReward()">Rank / Reward</button>
+        <button onclick="loadReferralLink()">Referral Link</button>
+
+        <button id="logoutBtn">Logout</button>
+
+      </aside>
+
+      <main class="main-panel">
+
+        <div id="welcome" class="welcome-bar">
+          Welcome
+        </div>
+
+        <div id="mainContent">
+          Loading...
+        </div>
+
+      </main>
+
+    </div>
+
+  </div>
+
+
+  <!-- EXISTING CORE -->
   <script src="core_initializer.js"></script>
   <script src="core_session_authority.js"></script>
-  <script src="user_dashboard_controller.js"></script>
 
+
+  <!-- TEMPORARY BOOT TEST ONLY -->
   <script>
-    document.getElementById("trialLogout").onclick = function () {
-      const result = document.getElementById("result");
+    window.BOOT = {
 
-      try {
-        if (typeof logoutSession !== "function") {
-          result.textContent =
-            "STOP: Existing logoutSession authority not loaded.";
-          return;
+      register: function(name, fn) {
+        window.__TRIAL_BOOT_FN__ = fn;
+      },
+
+      start: function(name) {
+        if (
+          name === "user_dashboard" &&
+          typeof window.__TRIAL_BOOT_FN__ === "function"
+        ) {
+          window.__TRIAL_BOOT_FN__();
         }
-
-        logoutSession();
-
-        result.textContent =
-          "Logout authority called. Now open user_auth.html manually.";
-      } catch (error) {
-        result.textContent = "Logout error: " + error.message;
       }
+
     };
   </script>
 
+
+  <!-- EXISTING USER DASHBOARD CONTROLLER -->
+  <script src="user_dashboard_controller.js"></script>
+
 </body>
 </html>
+
