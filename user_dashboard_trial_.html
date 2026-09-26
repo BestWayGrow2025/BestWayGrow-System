@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Dashboard - Temporary Trial</title>
+</head>
+
+<body>
+
+  <!-- TEMPORARY BOOT SHIM: TEST FILE ONLY -->
+  <script>
+    window.BOOT = {
+      modules: {},
+
+      register: function (name, callback) {
+        this.modules[name] = callback;
+      },
+
+      start: function (name) {
+        if (typeof this.modules[name] === "function") {
+          this.modules[name]();
+        } else {
+          console.error("Trial BOOT: module not registered:", name);
+        }
+      }
+    };
+  </script>
+
+  <!-- EXISTING DASHBOARD HTML -->
+  <div class="user-dashboard-module">
+    <div class="dashboard-layout">
+
+      <aside class="sidebar">
+        <div class="logo">User Panel</div>
+
+        <button onclick="loadHome()">Home</button>
+        <button onclick="loadPinSection()">Pin Section</button>
+        <button onclick="loadTree()">My Tree</button>
+        <button onclick="loadWallet()">Wallet</button>
+        <button onclick="loadWalletHistory()">Wallet History</button>
+        <button onclick="loadDirectTeam()">Direct Team</button>
+        <button onclick="loadProfile()">Profile</button>
+        <button onclick="loadIncomeHistory()">Income History</button>
+        <button onclick="loadWithdrawSection()">Withdraw</button>
+        <button onclick="loadWithdrawHistory()">Withdraw History</button>
+        <button onclick="loadNotifications()">Notifications</button>
+        <button onclick="loadSupportTickets()">Support Tickets</button>
+        <button onclick="loadEditProfile()">Edit Profile</button>
+        <button onclick="loadChangePassword()">Change Password</button>
+        <button onclick="loadActivityLogs()">Activity Logs</button>
+        <button onclick="loadLoginHistory()">Login History</button>
+        <button onclick="loadKYCSection()">KYC Upload</button>
+        <button onclick="loadRankReward()">Rank / Reward</button>
+        <button onclick="loadReferralLink()">Referral Link</button>
+
+        <button id="logoutBtn">Logout</button>
+      </aside>
+
+      <main class="main-panel">
+        <div id="welcome" class="welcome-bar">Welcome</div>
+        <div id="mainContent">Loading...</div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- EXISTING CORE / SESSION SCRIPTS -->
+  <script src="core_boot_manager.js"></script>
+  <script src="core_initializer.js"></script>
+  <script src="core_session_authority.js"></script>
+
+  <!-- EXISTING USER DASHBOARD CONTROLLER -->
+  <script src="user_dashboard_controller.js"></script>
+
+</body>
+</html>
