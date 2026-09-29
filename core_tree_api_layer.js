@@ -31,6 +31,12 @@ function getLevelUsers(userId, level) {
   const users = getAllUsersSafe();
   if (!Array.isArray(users)) return [];
 
+  const targetLevel = Number(level);
+
+  if (!Number.isInteger(targetLevel) || targetLevel < 1 || targetLevel > 30) {
+    return [];
+  }
+
   const result = [];
   const queue = [{ id: userId, level: 0 }];
   const visited = new Set();
@@ -38,33 +44,29 @@ function getLevelUsers(userId, level) {
   while (queue.length) {
 
     const current = queue.shift();
-    if (!current || visited.has(current.id)) continue;
 
-    visited.add(current.id);
-
-    const user = users.find(u => u.userId === current.id);
-    if (!user) continue;
-
-    if (current.level === level) {
-      result.push(user);
+    if (!current || visited.has(current.id)) {
       continue;
     }
 
-    if (current.level < level) {
+    visited.add(current.id);
 
-      if (user.leftChild) {
+    const children = users.filter(function (u) {
+      return u.introducerId === current.id;
+    });
+
+    if (current.level + 1 === targetLevel) {
+      result.push(...children);
+      continue;
+    }
+
+    if (current.level + 1 < targetLevel) {
+      children.forEach(function (child) {
         queue.push({
-          id: user.leftChild,
+          id: child.userId,
           level: current.level + 1
         });
-      }
-
-      if (user.rightChild) {
-        queue.push({
-          id: user.rightChild,
-          level: current.level + 1
-        });
-      }
+      });
     }
   }
 
