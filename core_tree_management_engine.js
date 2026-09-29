@@ -384,7 +384,6 @@ position:
 /* ================= EXPORT ================= */
 
 window.createUserWithTree = createUserWithTree;
-window.findPlacement = findPlacement;
 window.getUserTree = getUserTree;
 window.generateUserId = generateUserId;
 window.generateReferralLink = generateReferralLink;
