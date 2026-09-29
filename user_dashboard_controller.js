@@ -16,22 +16,19 @@ let currentUser = null;
 
 /* ================= MODULE START ================= */
 
-if (typeof BOOT !== "undefined" && BOOT.register && BOOT.start) {
+document.addEventListener("DOMContentLoaded", function () {
 
-  BOOT.register("user_dashboard", function () {
+  initPage();
 
-    initPage();
+  if (!authPage()) {
+    window.location.href = "user_auth.html";
+    return;
+  }
 
-    if (!authPage()) {
-     window.location.href = "user_auth.html";
-      return;
-    }
+  bindEvents();
+  loadHome();
 
-    bindEvents();
-    loadHome();
-  });
-
-}
+});
 
 /* ================= INIT ================= */
 
@@ -352,6 +349,4 @@ window.logout = logout;
 
 /* ================= START ================= */
 
-if (typeof BOOT !== "undefined" && BOOT.start) {
-  BOOT.start("user_dashboard");
-}
+/* Dashboard startup is handled by DOMContentLoaded above. */
