@@ -115,6 +115,12 @@ function getAllUsers() {
 
 /* ================= TREE ================= */
 
+function loadTree() {
+
+  window.location.href = "user_tree.html";
+
+}
+
 function countTree(userId, users) {
 
   const user =
@@ -342,6 +348,7 @@ window.location.replace("user_auth.html");
 window.loadReferralLink = loadReferralLink;
 window.loadHome = loadHome;
 window.loadPinSection = loadPinSection;
+window.loadTree = loadTree;
 window.loadDirectTeam = loadDirectTeam;
 window.copyReferralLink = copyReferralLink;
 window.requestPin = requestPin;
