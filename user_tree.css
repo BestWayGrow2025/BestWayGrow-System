@@ -1,66 +1,291 @@
 /*
 ========================================
-USER TREE CSS (STANDARD 2 - BINANCE STYLE)
+USER TREE CSS
+RDI-007 — MY TEAM INTRODUCER TREE
 ========================================
-✔ Clean Binance dark theme
-✔ Responsive layout
-✔ Smooth spacing
-✔ Mobile safe
+✔ L1 → L30
+✔ Left → Right
+✔ Top → Bottom
+✔ Circle member nodes
+✔ User ID / Name / Mobile
+✔ Click / Inspect visual support
+✔ Responsive
+✔ No tree business logic
 ========================================
 */
 
+/* ===============================
+   TREE MAIN CONTAINER
+================================ */
+
 .mlm-tree {
-  display: flex;
-  justify-content: center;
-  padding: 25px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
   overflow-x: auto;
+  overflow-y: visible;
   font-family: Arial, sans-serif;
 }
 
-.mlm-node {
+/* ===============================
+   ROOT / LEVEL WRAPPER
+================================ */
+
+.mlm-level {
+  width: max-content;
+  min-width: 100%;
+  margin: 0 auto 28px auto;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.mlm-card {
-  background: #0b1220;
-  color: #ffffff;
-  padding: 12px 16px;
-  border-radius: 12px;
-  min-width: 150px;
-  text-align: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
+/* ===============================
+   LEVEL LABEL
+================================ */
 
-.mlm-card .uid {
-  font-weight: bold;
+.mlm-level-title {
+  margin-bottom: 12px;
   font-size: 14px;
+  font-weight: bold;
+  text-align: center;
 }
 
-.mlm-card .name {
-  font-size: 12px;
-  opacity: 0.85;
-  margin-top: 4px;
-}
-
-.mlm-card .mobile {
-  font-size: 11px;
-  opacity: 0.6;
-  margin-top: 2px;
-}
+/* ===============================
+   MEMBERS IN SAME LEVEL
+================================ */
 
 .mlm-children {
   display: flex;
-  justify-content: space-between;
-  gap: 70px;
-  margin-top: 25px;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 24px;
+  width: max-content;
 }
+
+/* ===============================
+   MEMBER NODE
+================================ */
+
+.mlm-node {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* ===============================
+   MEMBER CIRCLE
+================================ */
+
+.mlm-card {
+  width: 105px;
+  height: 105px;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px;
+  border-radius: 50%;
+
+  background: #0b1220;
+  color: #ffffff;
+
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.30);
+
+  text-align: center;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+/* ===============================
+   CLICK / INSPECT SUPPORT
+================================ */
+
+.mlm-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.40);
+}
+
+.mlm-card:active {
+  transform: scale(0.97);
+}
+
+/* ===============================
+   USER ID
+================================ */
+
+.mlm-card .uid {
+  max-width: 90px;
+
+  font-size: 12px;
+  font-weight: bold;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===============================
+   USER NAME
+================================ */
+
+.mlm-card .name {
+  max-width: 90px;
+
+  margin-top: 4px;
+
+  font-size: 11px;
+  line-height: 14px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===============================
+   MOBILE
+================================ */
+
+.mlm-card .mobile {
+  max-width: 90px;
+
+  margin-top: 2px;
+
+  font-size: 10px;
+  line-height: 13px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===============================
+   REGISTRATION / UPGRADE STATUS
+================================ */
+
+.mlm-status {
+  margin-top: 5px;
+
+  font-size: 9px;
+  line-height: 12px;
+
+  text-align: center;
+}
+
+/* ===============================
+   LEFT / RIGHT COMPATIBILITY
+================================ */
 
 .mlm-left,
 .mlm-right {
-  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+/* ===============================
+   LEVEL CONNECTOR
+================================ */
+
+.mlm-connector {
+  width: 2px;
+  height: 25px;
+  margin: 0 auto;
+
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ===============================
+   BREADCRUMB / INSPECT PATH
+================================ */
+
+.mlm-breadcrumb {
+  width: 100%;
+  box-sizing: border-box;
+
+  margin-bottom: 15px;
+  padding: 8px 10px;
+
+  font-size: 12px;
+  line-height: 18px;
+
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* ===============================
+   TREE ACTIONS
+================================ */
+
+.mlm-actions {
   display: flex;
   justify-content: center;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 15px;
+}
+
+.mlm-actions button {
+  padding: 7px 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+
+  cursor: pointer;
+
+  background: #0b1220;
+  color: #ffffff;
+}
+
+.mlm-actions button:hover {
+  border-color: rgba(255, 255, 255, 0.40);
+}
+
+/* ===============================
+   MOBILE
+================================ */
+
+@media (max-width: 600px) {
+
+  .mlm-tree {
+    padding: 12px;
+  }
+
+  .mlm-children {
+    gap: 14px;
+  }
+
+  .mlm-card {
+    width: 90px;
+    height: 90px;
+  }
+
+  .mlm-card .uid {
+    font-size: 11px;
+  }
+
+  .mlm-card .name {
+    font-size: 10px;
+  }
+
+  .mlm-card .mobile {
+    font-size: 9px;
+  }
+
 }
