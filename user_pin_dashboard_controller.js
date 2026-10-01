@@ -2,13 +2,13 @@
 
 /*
 ========================================
-USER PIN DASHBOARD CONTROLLER V1.0
+USER PIN DASHBOARD CONTROLLER V1.1
 ========================================
 ✔ UI controller only
 ✔ Session protected
-✔ Reads user PIN data safely
-✔ No direct HTML business logic
-✔ No duplicate PIN creation logic
+✔ Reads PIN data from central PIN authority
+✔ Uses assignedTo / usedBy user relationship
+✔ No direct PIN business mutation
 ========================================
 */
 
@@ -38,7 +38,6 @@ function initPinDashboard() {
   loadUserPins();
 
 }
-
 
 
 /* ================= AUTH ================= */
@@ -91,7 +90,6 @@ function authPinDashboard() {
 }
 
 
-
 /* ================= EVENTS ================= */
 
 function bindPinDashboardEvents() {
@@ -104,7 +102,7 @@ function bindPinDashboardEvents() {
 
     btn.addEventListener(
       "click",
-      function(){
+      function () {
 
         window.location.href =
           "user_pin_activation.html";
@@ -117,28 +115,35 @@ function bindPinDashboardEvents() {
 }
 
 
-
-/* ================= PIN READ ================= */
+/* ================= CENTRAL PIN READ ================= */
 
 function getUserPinsSafe() {
 
+  if (typeof getAllPins !== "function") {
 
-  if (typeof getPins === "function") {
+    console.error(
+      "[USER PIN DASHBOARD] Central PIN read function not available"
+    );
 
-    return getPins();
+    return [];
 
   }
 
 
   try {
 
-    return JSON.parse(
-      localStorage.getItem("pins") || "[]"
-    );
+    const pins = getAllPins();
+
+    return Array.isArray(pins) ? pins : [];
 
   }
 
-  catch(err){
+  catch (err) {
+
+    console.error(
+      "[USER PIN DASHBOARD] PIN read failed",
+      err
+    );
 
     return [];
 
@@ -147,11 +152,9 @@ function getUserPinsSafe() {
 }
 
 
-
 /* ================= LOAD ================= */
 
 function loadUserPins() {
-
 
   const table =
     document.getElementById("pinTable");
@@ -166,24 +169,30 @@ function loadUserPins() {
     getUserPinsSafe();
 
 
+  /*
+  ========================================
+  MY PIN RULE
+  ========================================
+  assignedTo → PIN assigned to current user
+  usedBy     → PIN previously used by current user
+  ========================================
+  */
+
   const userPins =
-    pins.filter(function(p){
+    pins.filter(function (pin) {
 
       return (
-        p.ownerId === pinDashboardUser.userId ||
-        p.usedBy === pinDashboardUser.userId
+        pin.assignedTo === pinDashboardUser.userId ||
+        pin.usedBy === pinDashboardUser.userId
       );
 
     });
 
 
-
   table.innerHTML = "";
 
 
-
   if (!userPins.length) {
-
 
     table.innerHTML =
       "<tr><td colspan='3'>No PINs Found</td></tr>";
@@ -193,12 +202,10 @@ function loadUserPins() {
   }
 
 
-
-  userPins.forEach(function(pin){
-
+  userPins.forEach(function (pin) {
 
     const status =
-      pin.used ? "USED" : "AVAILABLE";
+      String(pin.status || "unknown").toUpperCase();
 
 
     const row =
@@ -207,7 +214,7 @@ function loadUserPins() {
 
     row.innerHTML = `
 
-      <td>${pin.pin || "-"}</td>
+      <td>${pin.pinId || "-"}</td>
 
       <td>
         ₹${Number(pin.amount || 0).toFixed(2)}
@@ -222,17 +229,12 @@ function loadUserPins() {
 
     table.appendChild(row);
 
-
   });
 
-
 }
-
 
 
 /* ================= EXPORT ================= */
 
 window.loadUserPins =
   loadUserPins;
-
-
