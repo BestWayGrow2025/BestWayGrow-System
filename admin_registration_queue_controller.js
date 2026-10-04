@@ -1,8 +1,10 @@
+"use strict";
+
 let session = null;
 let currentUser = null;
 let refreshInterval = null;
 
- document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   authPage();
   bindEvents();
   loadPage();
@@ -55,40 +57,26 @@ function authPage() {
 }
 
 function bindEvents() {
-  const refreshBtn = document.getElementById("refreshBtn");
+
+  const refreshBtn =
+    document.getElementById("refreshBtn");
 
   if (refreshBtn) {
-    refreshBtn.addEventListener("click", loadQueue);
+
+    refreshBtn.addEventListener(
+      "click",
+      loadQueue
+    );
+
   }
-
-  document.addEventListener("click", function (e) {
-
-    const approveBtn =
-      e.target.closest(".approve-btn");
-
-    if (approveBtn) {
-      approveUser(
-        approveBtn.dataset.fingerprint || ""
-      );
-      return;
-    }
-
-    const rejectBtn =
-      e.target.closest(".reject-btn");
-
-    if (rejectBtn) {
-      rejectUser(
-        rejectBtn.dataset.fingerprint || ""
-      );
-    }
-
-  });
 }
+
 function loadPage() {
   loadQueue();
 }
 
 function escapeHtml(str = "") {
+
   return String(str)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -98,104 +86,80 @@ function escapeHtml(str = "") {
 }
 
 function loadQueue() {
+
   if (typeof getRegQueue !== "function") {
+
     console.warn("Queue system missing");
     return;
   }
 
-  const container = document.getElementById("queueList");
+  const container =
+    document.getElementById("queueList");
+
   if (!container) return;
 
-  const queue = (getRegQueue() || []).filter(Boolean);
+  const queue =
+    (getRegQueue() || []).filter(Boolean);
 
   if (queue.length === 0) {
-    container.innerHTML = `<div class="empty-state">No registration requests found</div>`;
+
+    container.innerHTML =
+      `<div class="empty-state">No registration requests found</div>`;
+
     return;
   }
 
-  container.innerHTML = queue.map(q => {
-    const time = q.requestTime ? new Date(q.requestTime) : null;
-    const formattedTime = time && !isNaN(time) ? time.toLocaleString() : "N/A";
+  container.innerHTML =
+    queue.map(q => {
 
-    const fp = q.fingerprint || "";
+      const time =
+        q.requestTime
+          ? new Date(q.requestTime)
+          : null;
 
-    return `
-      <div class="item">
-        <b>${escapeHtml(q.username || "")}</b><br>
-        Mobile: ${escapeHtml(q.mobile || "")}<br>
-        Status: ${escapeHtml(q.status || "UNKNOWN")}<br>
-        Request Time: ${formattedTime}<br>
+      const formattedTime =
+        time && !isNaN(time)
+          ? time.toLocaleString()
+          : "N/A";
 
-        ${q.error ? `Error: ${escapeHtml(q.error)}<br>` : ""}
+      return `
+        <div class="item">
 
-       <div style="margin-top:8px;">
-  <button class="approve-btn" data-fingerprint="${escapeHtml(fp)}">
-    Approve
-  </button>
+          <b>${escapeHtml(q.username || "")}</b><br>
 
-  <button class="reject-btn" data-fingerprint="${escapeHtml(fp)}">
-    Reject
-  </button>
-</div>
+          Mobile:
+          ${escapeHtml(q.mobile || "")}<br>
 
-      </div>
-    `;
-  }).join("");
+          Status:
+          ${escapeHtml(q.status || "UNKNOWN")}<br>
+
+          Request Time:
+          ${formattedTime}<br>
+
+          ${
+            q.error
+              ? `Error: ${escapeHtml(q.error)}<br>`
+              : ""
+          }
+
+        </div>
+      `;
+
+    }).join("");
 }
 
 function startAutoRefresh() {
-  refreshInterval = setInterval(loadQueue, 10000);
-}
 
-// ================= APPROVAL / REJECTION CALLERS =================
+  if (refreshInterval) {
 
-function approveUser(fp) {
+    clearInterval(refreshInterval);
 
-  if (!fp) {
-    console.warn("Missing fingerprint");
-    return false;
   }
 
-  if (
-    typeof approveRegistration !==
-    "function"
-  ) {
-    console.error(
-      "Registration approval authority unavailable"
+  refreshInterval =
+    setInterval(
+      loadQueue,
+      10000
     );
-    return false;
-  }
-
-  const result =
-    approveRegistration(fp);
-
-  loadQueue();
-
-  return result;
 }
 
-
-function rejectUser(fp) {
-
-  if (!fp) {
-    console.warn("Missing fingerprint");
-    return false;
-  }
-
-  if (
-    typeof rejectRegistration !==
-    "function"
-  ) {
-    console.error(
-      "Registration rejection authority unavailable"
-    );
-    return false;
-  }
-
-  const result =
-    rejectRegistration(fp);
-
-  loadQueue();
-
-  return result;
-}
