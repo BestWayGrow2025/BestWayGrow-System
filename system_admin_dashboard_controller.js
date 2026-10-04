@@ -139,8 +139,8 @@ function bindEvents() {
             break;
 
           case "pinmaster":
-            loadPinsSafe();
-            break;
+  connectCoreModule("pinmaster");
+  break;
 
           case "settings":
             loadSettings();
