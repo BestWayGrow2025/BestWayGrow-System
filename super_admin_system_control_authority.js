@@ -245,7 +245,7 @@ ${settings.upgradesOpen ? "RUNNING 🟢" : "STOPPED 🔴"}<br>
 
 Repurchase System :
 ${settings.repurchaseOpen ? "RUNNING 🟢" : "STOPPED 🔴"}
-
+  `;
 }
 
 // ================= ADMINS =================
