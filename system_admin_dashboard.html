@@ -18,18 +18,17 @@
   </header>
 
   <div class="menu">
-
     <button data-page="home">Home</button>
     <button data-page="users">Users</button>
     <button data-page="create">Create Admin</button>
     <button data-page="pinmaster">Pins</button>
     <button data-page="settings">Settings</button>
-
   </div>
 
   <div id="mainContent"></div>
 
 </div>
+
 
 <!-- CORE -->
 <script src="core_boot_manager.js"></script>
@@ -45,13 +44,25 @@
 <!-- AUTO WIRING -->
 <script src="core_enterprise_auto_wiring_layer.js"></script>
 
-<!-- PIN -->
+
+<!-- PIN CORE -->
 <script src="pin_master_system.js"></script>
+
+<!-- PIN RUNTIME DEPENDENCIES -->
+<script src="pin_error_handler.js"></script>
+<script src="pin_system_guard.js"></script>
+<script src="pin_session_guard.js"></script>
+<script src="pin_execution_lock.js"></script>
+<script src="pin_action_permission_control.js"></script>
+<script src="pin_engine_core.js"></script>
+<script src="pin_action_dispatcher.js"></script>
+<script src="pin_flow_controller.js"></script>
+<script src="pin_request_system.js"></script>
+<script src="pin_product_master.js"></script>
+
 
 <!-- SYSTEM ADMIN -->
 <script src="system_admin_dashboard_controller.js"></script>
 
 </body>
 </html>
-
-
