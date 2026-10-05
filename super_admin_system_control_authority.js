@@ -121,10 +121,16 @@ function bindEvents() {
     document.getElementById("toggleWithdrawBtn");
 
   const toggleRegisterBtn =
-    document.getElementById("toggleRegisterBtn");
+  document.getElementById("toggleRegisterBtn");
 
-  const clearLogsBtn =
-    document.getElementById("clearLogsBtn");
+const toggleUpgradeBtn =
+  document.getElementById("toggleUpgradeBtn");
+
+const toggleRepurchaseBtn =
+  document.getElementById("toggleRepurchaseBtn");
+
+const clearLogsBtn =
+  document.getElementById("clearLogsBtn");
 
   if (backBtn && !backBtn.dataset.bound) {
 
