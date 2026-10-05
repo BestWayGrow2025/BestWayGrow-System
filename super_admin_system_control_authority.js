@@ -152,23 +152,46 @@ const clearLogsBtn =
 
   }
 
-  if (
-    toggleRegisterBtn &&
-    !toggleRegisterBtn.dataset.bound
-  ) {
+ if (
+  toggleRegisterBtn &&
+  !toggleRegisterBtn.dataset.bound
+) {
 
-    toggleRegisterBtn.dataset.bound = "true";
+  toggleRegisterBtn.dataset.bound = "true";
 
-    toggleRegisterBtn.onclick =
-      toggleRegisterSystem;
+  toggleRegisterBtn.onclick =
+    toggleRegisterSystem;
 
-  }
+}
 
-  if (
-    clearLogsBtn &&
-    !clearLogsBtn.dataset.bound
-  ) {
+if (
+  toggleUpgradeBtn &&
+  !toggleUpgradeBtn.dataset.bound
+) {
 
+  toggleUpgradeBtn.dataset.bound = "true";
+
+  toggleUpgradeBtn.onclick =
+    toggleUpgradeSystem;
+
+}
+
+if (
+  toggleRepurchaseBtn &&
+  !toggleRepurchaseBtn.dataset.bound
+) {
+
+  toggleRepurchaseBtn.dataset.bound = "true";
+
+  toggleRepurchaseBtn.onclick =
+    toggleRepurchaseSystem;
+
+}
+
+if (
+  clearLogsBtn &&
+  !clearLogsBtn.dataset.bound
+) {
     clearLogsBtn.dataset.bound = "true";
 
     clearLogsBtn.onclick = clearLogs;
@@ -214,9 +237,14 @@ function loadSystemStatus() {
     Withdraw System :
     ${settings.withdrawOpen ? "RUNNING 🟢" : "STOPPED 🔴"}<br>
 
-    Registration System :
-    ${settings.registrationOpen ? "RUNNING 🟢" : "STOPPED 🔴"}
-  `;
+   Registration System :
+${settings.registrationOpen ? "RUNNING 🟢" : "STOPPED 🔴"}<br>
+
+Upgrade System :
+${settings.upgradesOpen ? "RUNNING 🟢" : "STOPPED 🔴"}<br>
+
+Repurchase System :
+${settings.repurchaseOpen ? "RUNNING 🟢" : "STOPPED 🔴"}
 
 }
 
@@ -349,6 +377,70 @@ function toggleRegisterSystem() {
 
 }
 
+// ================= UPGRADE =================
+
+function toggleUpgradeSystem() {
+
+  if (lock) return;
+
+  lock = true;
+
+  try {
+
+    const settings =
+      getSystemSettings?.() || {};
+
+    settings.upgradesOpen =
+      !settings.upgradesOpen;
+
+    saveSystemSettings?.(settings);
+
+    loadSystemStatus();
+
+    logAction("TOGGLE_UPGRADE");
+
+  }
+
+  finally {
+
+    lock = false;
+
+  }
+
+}
+
+// ================= REPURCHASE =================
+
+function toggleRepurchaseSystem() {
+
+  if (lock) return;
+
+  lock = true;
+
+  try {
+
+    const settings =
+      getSystemSettings?.() || {};
+
+    settings.repurchaseOpen =
+      !settings.repurchaseOpen;
+
+    saveSystemSettings?.(settings);
+
+    loadSystemStatus();
+
+    logAction("TOGGLE_REPURCHASE");
+
+  }
+
+  finally {
+
+    lock = false;
+
+  }
+
+}
+
 // ================= ADMIN STATUS =================
 
 function toggleAdminStatus(userId) {
@@ -444,6 +536,12 @@ window.SuperAdminSystemControlAuthority = {
 
   toggleRegistration:
     toggleRegisterSystem,
+
+  toggleUpgrade:
+    toggleUpgradeSystem,
+
+  toggleRepurchase:
+    toggleRepurchaseSystem,
 
   toggleAdmin:
     toggleAdminStatus
