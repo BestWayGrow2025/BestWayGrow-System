@@ -84,24 +84,20 @@ function generateUserId(users) {
 /* ================= REFERRAL LINK ================= */
 
 function generateReferralLink(
-  userId,
-  position
-) {
-  const origin =
-    window.location.origin;
+   userId,
+   position
+ ) {
+   const origin =
+     window.location.origin;
 
-  const path =
-    window.location.pathname
-      .split("/")
-      .slice(0, -1)
-      .join("/");
+   const path =
+     window.location.pathname
+       .split("/")
+       .slice(0, -1)
+       .join("/");
 
-  return (
-    `${origin}${path}/user_registration_dashboard.html` +
-    `?ref=${encodeURIComponent(userId)}` +
-    `&pos=${encodeURIComponent(position || "")}`
-  );
-}
+   return `${origin}${path}/user_registration_dashboard.html?ref=${encodeURIComponent(userId)}&pos=${encodeURIComponent(position || "")}`;
+ }
 
 /* ================= TREE VIEW ENGINE ================= */
 
