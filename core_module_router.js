@@ -154,17 +154,24 @@ js: "platform_rank_registry_dashboard_view.js"
     );
 
   // ================= TREE VIEW =================
-  case "tree":
+ case "tree":
 
-    return safeCall(
-      loadRealModule,
-      false,
-      {
-        html: "user_tree.html",
-       js: "user_tree.js"
-      }
-    );
+  return safeCall(
+    loadRealModule,
+    false,
+    {
+      html: "user_tree.html",
 
+      dependencies: [
+        "core_tree_placement_engine.js",
+        "core_tree_management_engine.js",
+        "core_tree_api_layer.js"
+      ],
+
+      js: "user_tree.js"
+    }
+  );
+        
       // ================= AUDIT =================
       case "audit":
 
