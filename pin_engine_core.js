@@ -86,6 +86,18 @@ PIN ENGINE CORE v1.0
     }
   }
 
+  // ================= UPGRADE PIN CONTROLS =================
+window.PIN_ENGINE_CORE.register("startUpgrade", function () { const products = getPinProducts().filter( product => product.pinType === "upgrade" );
+if (!products.length) { return { success: false, error: "UPGRADE_PRODUCT_NOT_FOUND" }; }
+let changed = false;
+products.forEach(product => { if (product.status !== "active") { changed = togglePinProduct(product.productId) || changed; } });
+return { success: true, changed }; });
+window.PIN_ENGINE_CORE.register("stopUpgrade", function () { const products = getPinProducts().filter( product => product.pinType === "upgrade" );
+if (!products.length) { return { success: false, error: "UPGRADE_PRODUCT_NOT_FOUND" }; }
+let changed = false;
+products.forEach(product => { if (product.status === "active") { changed = togglePinProduct(product.productId) || changed; } });
+return { success: true, changed }; });
+
   // ================= EXPORT =================
   window.PIN_ENGINE_CORE = {
     register,
