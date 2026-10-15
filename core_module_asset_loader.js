@@ -567,17 +567,13 @@ function loadSystemAdminPanelModule() {
 // ========================================
 
 function loadPinMasterRealModule() {
-
   return loadRealModule({
-
-    html:
-      "system_admin_pin_request_panel.html",
-
-    js:
-      "system_admin_pin_request_dashboard.js"
-
+    html: "system_admin_pin_request_panel.html",
+    dependencies: [
+      "pin_upgrade_control_engine.js"
+    ],
+    js: "system_admin_pin_request_dashboard.js"
   });
-
 }
 
 
