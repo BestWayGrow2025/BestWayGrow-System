@@ -18,13 +18,12 @@ Clean UI orchestration only
 ========================================
 */
 
-// ================= GLOBAL STATE =================
+ // ================= GLOBAL STATE =================
 
-let currentUser = null;
+window.pinAdminCurrentUser = null;
 
 let pinAdminLock = false;
 let pinRefreshTimer = null;
-
 
 // ================= INIT =================
 
@@ -79,25 +78,42 @@ function checkAuth() {
     return;
   }
 
-  currentUser = getUserById(session.userId);
+window.pinAdminCurrentUser = getUserById(session.userId);
 
-  if (!currentUser || currentUser.role !== "system_admin") {
-    logout();
-    return;
-  }
+if (
+  !window.pinAdminCurrentUser ||
+  window.pinAdminCurrentUser.role !== "system_admin"
+) {
+  logout();
+  return;
+}
 
-  if ((currentUser.status || "active") !== "active") {
-    logout();
-    return;
-  }
+if (
+  (window.pinAdminCurrentUser.status || "active") !== "active"
+) {
+  logout();
+  return;
+}
 
   const welcome = document.getElementById("welcome");
 
   if (welcome) {
-    welcome.innerText =
-      "Welcome " +
-      (currentUser.username || currentUser.userId) +
-      " (" + currentUser.userId + ")";
+   window.pinAdminCurrentUser = getUserById(session.userId);
+
+if (
+  !window.pinAdminCurrentUser ||
+  window.pinAdminCurrentUser.role !== "system_admin"
+) {
+  logout();
+  return;
+}
+
+if (
+  (window.pinAdminCurrentUser.status || "active") !== "active"
+) {
+  logout();
+  return;
+}
   }
 
 }
