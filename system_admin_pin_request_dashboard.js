@@ -42,7 +42,7 @@ function initAdminPinPanel() {
 
 checkAuth();
 
-if (!currentUser) {
+if (!window.pinAdminCurrentUser) {
   return;
 }
 
@@ -65,8 +65,10 @@ startPinPanelAutoRefresh();
 // ================= AUTH =================
 
 function checkAuth() {
-
-  const session = getSession?.();
+  const session =
+    typeof getSession === "function"
+      ? getSession()
+      : null;
 
   if (!session || session.role !== "system_admin") {
     logout();
@@ -78,44 +80,29 @@ function checkAuth() {
     return;
   }
 
-window.pinAdminCurrentUser = getUserById(session.userId);
+  window.pinAdminCurrentUser = getUserById(session.userId);
 
-if (
-  !window.pinAdminCurrentUser ||
-  window.pinAdminCurrentUser.role !== "system_admin"
-) {
-  logout();
-  return;
-}
-
-if (
-  (window.pinAdminCurrentUser.status || "active") !== "active"
-) {
-  logout();
-  return;
-}
+  if (
+    !window.pinAdminCurrentUser ||
+    window.pinAdminCurrentUser.role !== "system_admin" ||
+    (window.pinAdminCurrentUser.status || "active") !== "active"
+  ) {
+    window.pinAdminCurrentUser = null;
+    logout();
+    return;
+  }
 
   const welcome = document.getElementById("welcome");
 
   if (welcome) {
-   window.pinAdminCurrentUser = getUserById(session.userId);
-
-if (
-  !window.pinAdminCurrentUser ||
-  window.pinAdminCurrentUser.role !== "system_admin"
-) {
-  logout();
-  return;
-}
-
-if (
-  (window.pinAdminCurrentUser.status || "active") !== "active"
-) {
-  logout();
-  return;
-}
+    welcome.innerText =
+      "Welcome " +
+      (window.pinAdminCurrentUser.username ||
+        window.pinAdminCurrentUser.userId) +
+      " (" +
+      window.pinAdminCurrentUser.userId +
+      ")";
   }
-
 }
 // ================= EVENTS =================
 
