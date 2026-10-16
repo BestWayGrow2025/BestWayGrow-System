@@ -27,10 +27,13 @@ let pinRefreshTimer = null;
 
 // ================= INIT =================
 
-document.addEventListener("DOMContentLoaded", function () {
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initAdminPinPanel, {
+    once: true
+  });
+} else {
   initAdminPinPanel();
-});
-
+}
 
 // ================= INIT PANEL =================
 
