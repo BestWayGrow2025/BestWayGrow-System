@@ -79,27 +79,43 @@ function handleCreatePin() {
 }
 
 
-// ================= ASSIGN PIN =================
+ // ================= ASSIGN PIN =================
 function handleAssignPin() {
-  let pinId = document.getElementById("assignPinId").value.trim();
-  let userId = document.getElementById("assignUserId").value.trim();
+  const pinId = document.getElementById("assignPinId").value.trim();
+  const userId = document.getElementById("assignUserId").value.trim();
+  const msg = document.getElementById("assignMsg");
 
   if (!pinId || !userId) {
-    alert("Enter PIN ID and User ID");
+    msg.innerText = "Enter PIN ID and User ID.";
     return;
   }
 
   try {
-    assignPin(pinId, userId, "user", currentUser.userId);
+    if (typeof getUserById !== "function") {
+      msg.innerText = "User lookup is unavailable.";
+      return;
+    }
 
-    document.getElementById("assignMsg").innerText = "✅ PIN Assigned";
+    const recipient = getUserById(userId);
 
+    if (!recipient || recipient.role !== "user") {
+      msg.innerText = "Invalid User ID. Enter an existing user.";
+      return;
+    }
+
+    const result = assignPin(pinId, userId);
+
+    if (result !== true) {
+      msg.innerText = "PIN assignment failed. Check PIN status and try again.";
+      return;
+    }
+
+    msg.innerText = "✅ PIN Assigned Successfully";
     loadAllPins();
   } catch (err) {
-    alert(err.message);
+    msg.innerText = "PIN assignment failed: " + (err.message || "Unknown error");
   }
 }
-
 
 // ================= DELETE PIN =================
 function handleDeletePin() {
